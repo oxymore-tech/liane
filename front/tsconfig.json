@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
     "lib": [

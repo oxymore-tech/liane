@@ -1,7 +1,9 @@
 import React from 'react';
+import registerRootComponent from 'expo/build/launch/registerRootComponent';
+
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function App() {
+function App() {
   return (
     <View style={styles.container}>
       <Text>Open up App.tsx tppo start working on your app!</Text>
@@ -17,3 +19,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   }
 });
+
+registerRootComponent(App);
