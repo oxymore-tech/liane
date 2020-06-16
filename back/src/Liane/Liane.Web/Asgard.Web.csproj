@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Edda\Edda.Client\Edda.Client.csproj" />
+        <ProjectReference Include="..\..\Mimir\Mimir.Client\Mimir.Client.csproj" />
+        <ProjectReference Include="..\..\Odin\Odin.Web\Odin.Web.csproj" />
+        <ProjectReference Include="..\..\Vili\Vili.Client\Vili.Client.csproj" />
+        <ProjectReference Include="..\..\Vili\Vili.Service\Vili.Service.csproj" />
+        <ProjectReference Include="..\Asgard.Service\Asgard.Service.csproj" />
+    </ItemGroup>
+</Project>
