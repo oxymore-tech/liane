@@ -21,4 +21,8 @@
       <Folder Include="Resources" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Liane.Service\Liane.Service.csproj" />
+    </ItemGroup>
+
 </Project>

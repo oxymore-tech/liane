@@ -17,9 +17,9 @@ namespace Liane.Service.Internal
             this.logger = logger;
         }
 
-        public async Task<bool> ExampleMethod()
+        public async Task<Route> ExampleMethod()
         {
-            var result = await client.GetAsyncAs<bool>("https://url");
+            var result = await client.GetAsyncAs<Route>("http://localhost:5000/nearest/v1/driving/0,0");
             logger.LogInformation("Call returns ", result);
             return result;
         }

@@ -4,6 +4,6 @@ namespace Liane.Api
 {
     public interface IExampleService
     {
-        Task<bool> ExampleMethod();
+        Task<Route> ExampleMethod();
     }
 }

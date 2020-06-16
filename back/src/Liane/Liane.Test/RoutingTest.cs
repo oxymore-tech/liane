@@ -1,4 +1,8 @@
+using System;
 using System.Threading.Tasks;
+using Liane.Service.Internal;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
 
 namespace Liane.Test
@@ -22,7 +26,10 @@ namespace Liane.Test
             // using var connection = await "";
             // var count = await connection.QuerySingleAsync<int>("SELECT count(*) FROM test_global_table");
             // Assert.AreEqual(3, count);
-            Assert.IsFalse(true);
+            var service = new ExampleServiceImpl(new Mock<ILogger<ExampleServiceImpl>>().Object);
+            var result = await service.ExampleMethod();
+            //Assert.IsFalse(result);
+            Console.WriteLine(result);
         }
     }
 }

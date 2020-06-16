@@ -16,7 +16,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("example")]
-        public async Task<ActionResult<bool>> GetListItems()
+        public async Task<ActionResult<object>> GetListItems()
         {
             return await exampleService.ExampleMethod();
         }
