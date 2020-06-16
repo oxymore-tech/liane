@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dapper;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal;
@@ -195,8 +194,6 @@ namespace Liane.Web.Extensions
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
             app.UseSwagger();
             app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/liane/swagger.json", "Synergee Liane API"); });
-
-            DefaultTypeMap.MatchNamesWithUnderscores = true;
 
             StartServicesHook(app.ApplicationServices)
                 .GetAwaiter()

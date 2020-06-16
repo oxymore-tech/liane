@@ -11,9 +11,9 @@ namespace Liane.Service.Internal
         private readonly HttpClient client;
         private readonly ILogger<ExampleServiceImpl> logger;
 
-        public ExampleServiceImpl(IHttpClientFactory httpClientFactory, ILogger<ExampleServiceImpl> logger)
+        public ExampleServiceImpl(ILogger<ExampleServiceImpl> logger)
         {
-            client = httpClientFactory.CreateClient("HttpClientName");
+            client = new HttpClient();
             this.logger = logger;
         }
 
