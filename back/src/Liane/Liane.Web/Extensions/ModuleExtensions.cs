@@ -127,7 +127,7 @@ namespace Liane.Web.Extensions
                     config.AddJsonFile("appsettings.json", true, true);
                     config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
                     config.AddCommandLine(args);
-                    config.AddEnvironmentVariables("SYNERGEE_");
+                    config.AddEnvironmentVariables("LIANE_");
                 })
                 .ConfigureServices(ConfigureServices)
                 .Configure(Configure)

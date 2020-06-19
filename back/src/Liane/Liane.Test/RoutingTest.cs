@@ -30,6 +30,7 @@ namespace Liane.Test
             var result = await service.ExampleMethod();
             //Assert.IsFalse(result);
             Console.WriteLine(result);
+            Assert.AreEqual("Ok", result.Code);
         }
     }
 }

@@ -4,7 +4,11 @@ import 'leaflet/dist/leaflet.css';
 import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
 import { LatLngLiteral } from "leaflet";
 
-function OurMap({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
+interface Route {
+  readonly code: string;
+}
+
+function OurMap({start, end, route}: { start: LatLngLiteral, end: LatLngLiteral, route?: Route }) {
 
   const zoom = 11;
   const center = {
@@ -25,14 +29,25 @@ function OurMap({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
   );
 }
 
-function App() {
-  const start = {lat: 44.5180226, lng: 3.4991057};
-  const end = {lat: 44.31901305, lng: 3.57802065202088};
-  return (
-    <div className="App">
-      <OurMap start={start} end={end}/>
-    </div>
-  );
+class App extends React.Component {
+
+  route!: Route;
+
+  async componentDidMount() {
+    const response = await fetch("http://localhost:8081/api/example");
+    this.route = await response.json();
+    console.log("Route", this.route);
+  }
+
+  render() {
+    const start = {lat: 44.5180226, lng: 3.4991057};
+    const end = {lat: 44.31901305, lng: 3.57802065202088};
+    return (
+      <div className="App">
+        <OurMap start={start} end={end} route={this.route}/>
+      </div>
+    );
+  }
 }
 
 export default App;
