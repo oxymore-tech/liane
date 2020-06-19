@@ -1,0 +1,28 @@
+
+- eco system
+- mobicoop
+- appeler les equipements : les traffics
+- trendline
+
+- monnaie locale (parc régional de l'aubrac)
+- voir le coût des trajets de bus
+
+- DDE
+- parc
+- tourisme
+
+
+
+--> Compte rendu à envoyer à christian et michèle et aux autres
+rester humble et ancré dans le réel
+non dépendance à google : open street map, rue des villages non répertoriés
+prendre le trajet le plus rapide : pas le plus court
+visibilité des trajets / demande
+temps réel
+on programme un RDV en janvier pour faire un support synthétique, une maquette
+montré que c'est adapté au territoire !
+possibilités, prospectives : système de paiement ? porte monnaie subventionné ? services.
+Economies sur les coûts des trajets de bus ?
+phase de test en sud lozère puis l'étendre
+
+Nous : on va voir comment on peut bosser dessus : quel temps on peut consacrer

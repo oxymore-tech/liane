@@ -1,0 +1,7 @@
+- Sandrine : employée au PETR SUd Lozère : envie de faire des actions concrète au niveau de la mobilité sur le territoire. Notre relaie au PETR et au GAL (Groupe d’Action Locale)
+- Vincent Kopff : investigateur du projet. Vincent est un "faiseur", directeur de cinéco, il a notamment réaliser un logiciel de gestion de cinéma itinérant
+- Christian Malhomme : maire adjoint à la mairie Gorges du Tarn Causses (habite à Montbrun = mon voisin), notre élu, relai, testeur
+- Michèle Manoa : Vice présidente du conseil département de la Lozère. Soutiens le projet/
+- Hermelen Péris :  développeur informatique, habite Chanac (nous travaillons ensemble)
+- Théo Gjini : (mon frère) vit au québec et est fortement intérréssé par le projet (musicien, suit une formation de développeur informatique)
+- Augustin Gjini (moi même) : développeur informatique freelance habite à Blajoux, envie de réaliser des projets innovant sur le territoire
