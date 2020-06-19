@@ -1,0 +1,17 @@
+.App {
+}
+
+html, body {
+  padding:0;
+  margin: 0;
+}
+
+.route {
+  width: 100vw;
+  height: 10vh;
+}
+
+.map {
+  width: 100vw;
+  height: 90vh;
+}

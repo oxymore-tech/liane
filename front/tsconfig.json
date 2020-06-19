@@ -1,16 +1,25 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
-    "allowSyntheticDefaultImports": true,
-    "jsx": "react-native",
+    "target": "es5",
     "lib": [
       "dom",
+      "dom.iterable",
       "esnext"
     ],
-    "moduleResolution": "node",
-    "noEmit": true,
+    "allowJs": true,
     "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
-    "strict": true
-  }
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react"
+  },
+  "include": [
+    "src"
+  ]
 }
