@@ -18,9 +18,44 @@ namespace Liane.Service.Internal
             this.logger = logger;
         }
 
-        public async Task<Routing> RouteMethod()
+        public async Task<Routing> DefaultRouteMethod()
         {
-            var result = await client.GetAsyncAs<Routing>("http://localhost:5000/nearest/v1/driving/0,0");
+
+            const string uri = "http://localhost:5000/route/v1/driving/3.4991057,44.5180226;3.57802065202088,44.31901305?geometries=geojson";
+            var result = await client.GetAsyncAs<Routing>(uri);
+            logger.LogInformation("Call returns ", result);
+            return result;
+        }
+
+
+        public async Task<Routing> StepsRouteMethod()
+        {
+            const string uri = "http://localhost:5000/route/v1/driving/3.4991057,44.5180226;3.57802065202088,44.31901305?steps=true&geometries=geojson";
+            var result = await client.GetAsyncAs<Routing>(uri);
+            logger.LogInformation("Call returns ", result);
+            return result;
+        }
+
+        public async Task<Routing> AnnotationsRouteMethod()
+        {
+            const string uri = "http://localhost:5000/route/v1/driving/3.4991057,44.5180226;3.57802065202088,44.31901305?annotations=true&geometries=geojson";
+            var result = await client.GetAsyncAs<Routing>(uri);
+            logger.LogInformation("Call returns ", result);
+            return result;
+        }
+
+        public async Task<Routing> FullOveriewRouteMethod()
+        {
+            const string uri = "http://localhost:5000/route/v1/driving/3.4991057,44.5180226;3.57802065202088,44.31901305?overview=full&geometries=geojson";
+            var result = await client.GetAsyncAs<Routing>(uri);
+            logger.LogInformation("Call returns ", result);
+            return result;
+        }
+
+        public async Task<Routing> NoOverviewRouteMethod()
+        {
+            const string uri = "http://localhost:5000/route/v1/driving/3.4991057,44.5180226;3.57802065202088,44.31901305?overview=false&geometries=geojson";
+            var result = await client.GetAsyncAs<Routing>(uri);
             logger.LogInformation("Call returns ", result);
             return result;
         }

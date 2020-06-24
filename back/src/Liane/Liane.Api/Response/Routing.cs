@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Liane.Api.Object;
+using Liane.Api.Util;
 
 namespace Liane.Api.Response
 {
@@ -20,5 +21,10 @@ namespace Liane.Api.Response
         // ordered by descending recommendation rank.
         public ImmutableArray<Route> Routes { get; }
         
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
     }
 }

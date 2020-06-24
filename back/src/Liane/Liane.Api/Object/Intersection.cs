@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using Liane.Api.Util;
 
 namespace Liane.Api.Object
 {
@@ -8,7 +9,6 @@ namespace Liane.Api.Object
     // for every cross-way until the next turn instruction.
     public class Intersection
     {
-        // A [longitude, latitude] pair describing the location of the turn.
         public Intersection(ImmutableList<float> location, ImmutableList<int> bearings, ImmutableList<string> classes, ImmutableList<string> entry, int @in, int @out, ImmutableList<Lane> lanes)
         {
             Location = location;
@@ -19,7 +19,8 @@ namespace Liane.Api.Object
             Out = @out;
             Lanes = lanes;
         }
-
+        
+        // A [longitude, latitude] pair describing the location of the turn.
         public ImmutableList<float> Location { get; }
         // A list of bearing values (e.g. [0,90,180,270]) that are available at the intersection. The bearings describe all available roads at the intersection.
         // Values are between 0-359 (0=true north)
@@ -42,5 +43,10 @@ namespace Liane.Api.Object
         // the lanes property will not be present.
         public ImmutableList<Lane> Lanes { get; }
         
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
     }
 }

@@ -1,27 +1,26 @@
 ﻿using System.Collections.Immutable;
+using Liane.Api.Util;
 
 namespace Liane.Api.Object
 {
     public sealed class Geojson
     {
-        public Geojson(string type, ImmutableList<Coordinate> coordinates)
+        // TODO: comment on GeoJSON structure
+        public Geojson(string type, ImmutableList<ImmutableList<float>> coordinates)
         {
             Type = type;
-            Coordinates = coordinates; // TODO
+            Coordinates = coordinates; 
         }
 
         public string Type { get; }
-        public ImmutableList<Coordinate> Coordinates { get; }
+        public ImmutableList<ImmutableList<float>> Coordinates { get; }
         
-    }
-
-    public sealed class Coordinate
-    {
-        public Coordinate(ImmutableList<float> coord)
+        public override string ToString()
         {
-            Coord = coord;
+            return "Geometry object here"; // raccourci car trop gros
+            //            return StringUtils.ToString(this);
         }
 
-        public ImmutableList<float> Coord { get; } 
+        
     }
 }

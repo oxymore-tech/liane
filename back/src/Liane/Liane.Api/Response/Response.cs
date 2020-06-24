@@ -1,4 +1,5 @@
 ﻿using Liane.Api.Object;
+using Liane.Api.Util;
 
 namespace Liane.Api.Response
 {
@@ -11,5 +12,11 @@ namespace Liane.Api.Response
         // All other status types are service dependent.
         public string ?Message { get; }
         public string ?Data_version { get; }
+        
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
     }
 }

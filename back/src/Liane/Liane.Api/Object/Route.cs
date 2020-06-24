@@ -5,7 +5,7 @@ namespace Liane.Api.Object
 {
     public sealed class Route
     {
-        // The distance traveled by the route, in float meters.
+
         public Route(float distance, float duration, float weight, string weightName, Geojson geometry, ImmutableList<Leg> legs)
         {
             Distance = distance;
@@ -15,7 +15,8 @@ namespace Liane.Api.Object
             Geometry = geometry;
             Legs = legs;
         }
-
+        
+        // The distance traveled by the route, in float meters.
         public float Distance { get; }
         // The estimated travel time, in float number of seconds.
         public float Duration { get; }

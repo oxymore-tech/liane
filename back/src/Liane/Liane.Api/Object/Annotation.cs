@@ -1,10 +1,11 @@
 ﻿using System.Collections.Immutable;
+using Liane.Api.Util;
 
 namespace Liane.Api.Object
 {
+    // TODO: comment explaining Annotation object
     public sealed class Annotation
     {
-        // The distance, in metres, between each pair of coordinates.
         public Annotation(ImmutableList<int> distance, ImmutableList<int> duration, ImmutableList<int> weight, ImmutableList<int> nodes, ImmutableList<float>? speed, ImmutableList<int> datasources, ImmutableList<string> datasourceNames)
         {
             Distance = distance;
@@ -16,6 +17,7 @@ namespace Liane.Api.Object
             DatasourceNames = datasourceNames;
         }
 
+        // The distance, in metres, between each pair of coordinates.
         public ImmutableList<int> Distance { get; }
         // The duration between each pair of coordinates, in seconds. Does not include the duration of any turns.
         public ImmutableList<int> Duration { get; }
@@ -32,5 +34,11 @@ namespace Liane.Api.Object
         public ImmutableList<int> Datasources { get; }
         //  The names of the datasources used for the speed between each pair of coordinates. lua profile is the default profile, other values arethe filenames supplied via --segment-speed-file to osrm-contract or osrm-customize
         public ImmutableList<string> DatasourceNames { get; } // ATTENTION contenu dans metadata
+        
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
     }
 }

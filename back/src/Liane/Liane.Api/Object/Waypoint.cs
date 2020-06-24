@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Liane.Api.Util;
 
 namespace Liane.Api.Object
 {
@@ -7,6 +8,15 @@ namespace Liane.Api.Object
     {
         
         // Name of the street the coordinate snapped to
+        public Waypoint(string name, ImmutableList<float> location, float distance, string hint, ImmutableArray<int>? nodes)
+        {
+            Name = name;
+            Location = location;
+            Distance = distance;
+            Hint = hint;
+            Nodes = nodes;
+        }
+
         public string Name { get; }
         // Array that contains the [longitude, latitude]
         // pair of the snapped coordinate
@@ -23,5 +33,10 @@ namespace Liane.Api.Object
         // Array of OpenStreetMap node ids.
         public ImmutableArray<int> ?Nodes { get; }
         
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
     }
 }

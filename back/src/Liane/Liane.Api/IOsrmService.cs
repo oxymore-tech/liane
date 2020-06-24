@@ -5,7 +5,7 @@ namespace Liane.Api
 {
     public interface IOsrmService
     {
-        Task<Routing> RouteMethod();
+        Task<Routing> DefaultRouteMethod();
         
         // TODO customized scenario method
         

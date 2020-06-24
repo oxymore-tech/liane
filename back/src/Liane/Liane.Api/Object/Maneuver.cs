@@ -1,10 +1,11 @@
 ﻿using System.Collections.Immutable;
+using Liane.Api.Util;
 
 namespace Liane.Api.Object
 {
+    // TODO: comment explaining Maneuver object
     public sealed class Maneuver
     {
-        // A [longitude, latitude] pair describing the location of the turn.
         public Maneuver(ImmutableList<float> location, string type, int bearingBefore, int bearingAfter, string? modifier, int? exit)
         {
             this.location = location;
@@ -15,6 +16,7 @@ namespace Liane.Api.Object
             Exit = exit;
         }
 
+        // A [longitude, latitude] pair describing the location of the turn.
         public ImmutableList<float> location { get; }
 
         // A string indicating the type of maneuver. new identifiers might be introduced without API change Types unknown to the client should be handled like the turn type,
@@ -32,6 +34,12 @@ namespace Liane.Api.Object
         // An optional integer indicating number of the exit to take.
         // The property exists for the roundabout / rotary property: Number of the roundabout exit to take. If exit is undefined the destination is on the roundabout.
         public int ?Exit { get; }
+        
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
         
     }
 }

@@ -1,9 +1,16 @@
 ﻿using System.Collections.Immutable;
+using Liane.Api.Util;
 
 namespace Liane.Api.Object
 {
+    // TODO: comment explaining Step object
     public sealed class Step
     {
+        public Step(float distance)
+        {
+            Distance = distance;
+        }
+
         // The distance of travel from the maneuver to the subsequent step, in float meters.
         public float Distance { get; }
         // The estimated travel time, in float number of seconds.
@@ -39,5 +46,10 @@ namespace Liane.Api.Object
         // The legal driving side at the location for this step. Either left or right.
         public string ?Driving_side { get; }
         
+        public override string ToString()
+        {
+            return StringUtils.ToString(this);
+        }
+
     }
 }
