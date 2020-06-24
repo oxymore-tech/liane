@@ -26,8 +26,8 @@ namespace Liane.Test
             // using var connection = await "";
             // var count = await connection.QuerySingleAsync<int>("SELECT count(*) FROM test_global_table");
             // Assert.AreEqual(3, count);
-            var service = new ExampleServiceImpl(new Mock<ILogger<ExampleServiceImpl>>().Object);
-            var result = await service.ExampleMethod();
+            var service = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object);
+            var result = await service.RouteMethod();
             //Assert.IsFalse(result);
             Console.WriteLine(result);
             Assert.AreEqual("Ok", result.Code);

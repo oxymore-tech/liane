@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Liane.Api;
+using Liane.Api.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
@@ -8,17 +9,17 @@ namespace Liane.Web.Controllers
     [ApiController]
     public class CommonController : ControllerBase
     {
-        private readonly IExampleService exampleService;
+        private readonly IOsrmService _osrmService;
 
-        public CommonController(IExampleService exampleService)
+        public CommonController(IOsrmService osrmService)
         {
-            this.exampleService = exampleService;
+            this._osrmService = osrmService;
         }
 
         [HttpGet("example")]
-        public async Task<ActionResult<Route>> GetListItems()
+        public async Task<ActionResult<Routing>> GetListItems()
         {
-            return await exampleService.ExampleMethod();
+            return await _osrmService.RouteMethod();
         }
     }
 }
