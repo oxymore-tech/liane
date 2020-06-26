@@ -139,7 +139,7 @@ namespace Liane.Web.Extensions
 
         private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
         {
-            services.AddService<OsrmServiceImpl>();
+            services.AddService<RoutingServiceImpl>();
             services.AddService<FileStreamResultExecutor>();
             services.AddControllers().AddNewtonsoftJson();
             services.AddCors(options =>

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Immutable;
-using Liane.Api.Object;
 
-namespace Liane.Api.Response
+namespace Liane.Api.Osrm.Response
 {
     public sealed class Nearest : Response
     {

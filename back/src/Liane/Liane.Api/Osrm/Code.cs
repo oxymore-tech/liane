@@ -1,4 +1,4 @@
-namespace Liane.Api.Object
+namespace Liane.Api.Osrm
 {
     public enum Code
     {

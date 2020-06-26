@@ -11,8 +11,7 @@ namespace Liane.Api.Util.Http
 {
     public static class HttpClientExtensions
     {
-        public static async Task<HttpResponseMessage> GetAsync(this HttpClient client, string uri,
-            object? parameters = null)
+        public static async Task<HttpResponseMessage> GetAsync(this HttpClient client, string uri, object? parameters = null)
         {
             var response = await client.GetAsync(CreateUri(uri, parameters));
             await CheckResponse(response);
@@ -25,8 +24,7 @@ namespace Liane.Api.Util.Http
             return await CheckAndReadResponseAs<T>(response);
         }
 
-        public static async Task<string> PostAsyncAsString(this HttpClient client, string uri, object body,
-            object? parameters = null)
+        public static async Task<string> PostAsyncAsString(this HttpClient client, string uri, object body, object? parameters = null)
         {
             var response = await client.PostAsJsonAsync(CreateUri(uri, parameters), body);
             await CheckResponse(response);
@@ -39,15 +37,13 @@ namespace Liane.Api.Util.Http
             await CheckResponse(response);
         }
 
-        public static async Task<T> PostAsyncAs<T>(this HttpClient client, string uri, object body,
-            object? parameters = null)
+        public static async Task<T> PostAsyncAs<T>(this HttpClient client, string uri, object body, object? parameters = null)
         {
             var response = await client.PostAsJsonAsync(CreateUri(uri, parameters), body);
             return await CheckAndReadResponseAs<T>(response);
         }
 
-        public static async Task<T> PostAsyncAs<T>(this HttpClient client, string uri, HttpContent body,
-            object? parameters = null)
+        public static async Task<T> PostAsyncAs<T>(this HttpClient client, string uri, HttpContent body, object? parameters = null)
         {
             var response = await client.PostAsync(CreateUri(uri, parameters), body);
             return await CheckAndReadResponseAs<T>(response);
@@ -65,15 +61,13 @@ namespace Liane.Api.Util.Http
             await CheckResponse(response);
         }
 
-        public static async Task<T> PutAsyncAs<T>(this HttpClient client, string uri, object? body,
-            object? parameters = null)
+        public static async Task<T> PutAsyncAs<T>(this HttpClient client, string uri, object? body, object? parameters = null)
         {
             var response = await client.PutAsJsonAsync(CreateUri(uri, parameters), body);
             return await CheckAndReadResponseAs<T>(response);
         }
 
-        public static async Task<T> PatchAsyncAs<T>(this HttpClient client, string uri, object body,
-            object? parameters = null)
+        public static async Task<T> PatchAsyncAs<T>(this HttpClient client, string uri, object body, object? parameters = null)
         {
             var response = await client.PatchAsync(CreateUri(uri, parameters),
                 new ObjectContent(body.GetType(), body, new JsonMediaTypeFormatter()));

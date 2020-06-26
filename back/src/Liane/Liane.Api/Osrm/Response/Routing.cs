@@ -1,8 +1,7 @@
 ﻿using System.Collections.Immutable;
-using Liane.Api.Object;
 using Liane.Api.Util;
 
-namespace Liane.Api.Response
+namespace Liane.Api.Osrm.Response
 {
     public sealed class Routing : Response
     {

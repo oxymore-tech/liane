@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Liane.Api.Util;
 
-namespace Liane.Api.Object
+namespace Liane.Api.Osrm
 {
     // TODO: comment explaining Maneuver object
     public sealed class Maneuver
