@@ -167,7 +167,70 @@ namespace Liane.Service.Internal
             // Here need to check the entry values before sending an alternative request
             // If the entry values not corresponding then go find an other step ( start: Steps[i-1], end: Steps[i+1] )
             
+            
+            // looking for an exits to not cross the detourPoint
+            var search = true;
+            var stepsId = routeResponse.Routes[0].Legs[0].Steps.Count;
+            do
+            {
+                var nbOfExits = 0;
+                foreach (var anEntry in startIntersections[0].Entry)
+                {
+                    if (anEntry.Equals("true"))
+                    {
+                        nbOfExits += 1;
+                    }
+                }
+
+                if (nbOfExits > 1 )
+                {
+                    search = false;
+                }
+                else
+                {
+                    stepsId -= 1;
+                    if (stepsId < 0)
+                    {
+                        // No solution
+                        return (geojson, duration, distance, -1);
+                    }
+                    startIntersections = routeResponse.Routes[0].Legs[0].Steps[stepsId].Intersections;
+                }              
+            } while (search);
+            
+            // Looking for an entry after the detourPoint
+            stepsId = 0;
+            var maxStepsId = routeResponse.Routes[0].Legs[1].Steps.Count ;
+            search = true;
+            do
+            {
+                var nbOfEntries = 0;
+                foreach (var anEntry in endIntersections[0].Entry)
+                {
+                    if (anEntry.Equals("false"))
+                    {
+                        nbOfEntries += 1;
+                    }
+                }
+
+                if (nbOfEntries > 1 )
+                {
+                    search = false;
+                }
+                else
+                {
+                    stepsId += 1;
+                    if (stepsId > maxStepsId)
+                    {
+                        // No solution
+                        return (geojson, duration, distance, -1);
+                    }
+                    endIntersections = routeResponse.Routes[0].Legs[1].Steps[stepsId].Intersections;
+                }              
+            } while (search);
+            
             // TODO: Then generate the final route which is not crossing detourPoint
+            
             
             return (newGeojson, newDuration, newDistance, 0);
         }
