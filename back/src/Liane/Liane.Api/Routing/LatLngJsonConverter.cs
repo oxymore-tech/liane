@@ -3,9 +3,9 @@ using Newtonsoft.Json;
 
 namespace Liane.Api.Routing
 {
-    public sealed class LatLngJsonConverter : JsonConverter<LatLng?>
+    public sealed class LatLngJsonConverter : JsonConverter<LatLng>
     {
-        public override void WriteJson(JsonWriter writer, LatLng? value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, LatLng value, JsonSerializer serializer)
         {
             writer.WriteStartArray();
             writer.WriteValue(value.Lat);
@@ -13,13 +13,12 @@ namespace Liane.Api.Routing
             writer.WriteEndArray();
         }
 
-        public override LatLng? ReadJson(JsonReader reader, Type objectType, LatLng? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override LatLng ReadJson(JsonReader reader, Type objectType, LatLng existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             return reader.TokenType switch
             {
                 JsonToken.StartArray => FromArray(reader, serializer),
                 JsonToken.StartObject => serializer.Deserialize<LatLng>(reader),
-                JsonToken.Null => null,
                 _ => throw new JsonException($"Unexpected token type {reader.TokenType}")
             };
         }

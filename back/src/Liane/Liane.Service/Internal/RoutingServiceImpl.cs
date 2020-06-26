@@ -62,7 +62,7 @@ namespace Liane.Service.Internal
         // param: startPoint, endPoint, wayPoint(, duration, distance) ; return: geojson LineString, newDuration, newDistance, delta
         public async Task<(Geojson geojson, float duration, float distance, float delta)> DetourRouteMethod(
             LatLng startPoint, LatLng endPoint, LatLng detourPoint,
-            float duration = -1, float distance = -1, Geojson geojson = null)
+            float duration = -1, float distance = -1, Geojson? geojson = null)
         {
             if (duration < 0 || distance < 0 || geojson == null)
             {
