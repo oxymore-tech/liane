@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Liane.Api.Routing
 {
@@ -18,9 +19,15 @@ namespace Liane.Api.Routing
             return reader.TokenType switch
             {
                 JsonToken.StartArray => FromArray(reader, serializer),
-                JsonToken.StartObject => serializer.Deserialize<LatLng>(reader),
+                JsonToken.StartObject => FromObject(reader),
                 _ => throw new JsonException($"Unexpected token type {reader.TokenType}")
             };
+        }
+
+        private static LatLng FromObject(JsonReader reader)
+        {
+            var obj = JObject.Load(reader);
+            return new LatLng(obj.GetValue("Lat", StringComparison.InvariantCultureIgnoreCase).ToObject<double>(), obj.GetValue("Lng", StringComparison.InvariantCultureIgnoreCase).ToObject<double>());
         }
 
         private static LatLng FromArray(JsonReader reader, JsonSerializer serializer)

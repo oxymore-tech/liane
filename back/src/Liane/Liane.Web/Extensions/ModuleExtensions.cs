@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal;
+using Liane.Service.Internal.Osrm;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
@@ -139,6 +140,7 @@ namespace Liane.Web.Extensions
 
         private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
         {
+            services.AddService<OsrmServiceImpl>();
             services.AddService<RoutingServiceImpl>();
             services.AddService<FileStreamResultExecutor>();
             services.AddControllers().AddNewtonsoftJson();
