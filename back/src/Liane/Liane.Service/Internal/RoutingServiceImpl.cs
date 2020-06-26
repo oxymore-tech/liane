@@ -20,7 +20,7 @@ namespace Liane.Service.Internal
 
         public async Task<Route> BasicRouteMethod(RoutingQuery query)
         {
-            var coordinates = ImmutableList.Create(query.start, query.end);
+            var coordinates = ImmutableList.Create(query.Start, query.End);
             var routeResponse = await osrmService.Route(coordinates, overview: "full");
 
             var geojson = routeResponse.Routes[0].Geometry;
@@ -94,7 +94,7 @@ namespace Liane.Service.Internal
             var endIntersections = routeResponse.Routes[0].Legs[1].Steps[0].Intersections;
 
             // Normally startIntersection[1].Location == endIntersection[0].Location == detourPoint
-            Console.Write(startIntersections[1].Location[0] + "==" + endIntersections[0].Location[0]);
+            Console.Write(startIntersections[1].Location.Lat + "==" + endIntersections[0].Location.Lat);
 
             // TODO: Then find alternatives routes between startIntersection[0].Location endIntersection[1].Location
             // Here need to check the entry values before sending an alternative request

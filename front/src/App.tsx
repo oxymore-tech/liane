@@ -1,12 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
 import { LatLngLiteral } from "leaflet";
-
-interface Route {
-  readonly code: string;
-}
+import { routingService } from "./api/routing-service";
+import { Route } from "./api/route";
 
 function OurMap({start, end, route}: { start: LatLngLiteral, end: LatLngLiteral, route?: Route }) {
 
@@ -29,25 +27,22 @@ function OurMap({start, end, route}: { start: LatLngLiteral, end: LatLngLiteral,
   );
 }
 
-class App extends React.Component {
+function App() {
 
-  route!: Route;
+  const [route, setRoute] = useState<Route>();
 
-  async componentDidMount() {
-    const response = await fetch("http://localhost:8081/api/example");
-    this.route = await response.json();
-    console.log("Route", this.route);
-  }
+  useEffect(() => {
+    routingService.basicRouteMethod({start, end})
+      .then(r => setRoute(r))
+  });
 
-  render() {
-    const start = {lat: 44.5180226, lng: 3.4991057};
-    const end = {lat: 44.31901305, lng: 3.57802065202088};
-    return (
-      <div className="App">
-        <OurMap start={start} end={end} route={this.route}/>
-      </div>
-    );
-  }
+  const start = {lat: 44.5180226, lng: 3.4991057};
+  const end = {lat: 44.31901305, lng: 3.57802065202088};
+  return (
+    <div className="App">
+      <OurMap start={start} end={end} route={route}/>
+    </div>
+  );
 }
 
 export default App;

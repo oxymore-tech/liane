@@ -15,7 +15,7 @@ namespace Liane.Web.Controllers
             this.routingService = routingService;
         }
 
-        [HttpGet("route")]
+        [HttpPost("route")]
         public async Task<ActionResult<Route>> BasicRouteMethod([FromBody] RoutingQuery query)
         {
             return await routingService.BasicRouteMethod(query);

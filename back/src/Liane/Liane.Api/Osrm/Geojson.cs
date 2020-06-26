@@ -1,25 +1,24 @@
 ﻿using System.Collections.Immutable;
+using Liane.Api.Routing;
 
 namespace Liane.Api.Osrm
 {
     public sealed class Geojson
     {
         // TODO: comment on GeoJSON structure
-        public Geojson(string type, ImmutableList<ImmutableList<float>> coordinates)
+        public Geojson(string type, ImmutableList<LatLng> coordinates)
         {
             Type = type;
-            Coordinates = coordinates; 
+            Coordinates = coordinates;
         }
 
         public string Type { get; }
-        public ImmutableList<ImmutableList<float>> Coordinates { get; }
-        
+        public ImmutableList<LatLng> Coordinates { get; }
+
         public override string ToString()
         {
             return "Geometry object here"; // raccourci car trop gros
             //            return StringUtils.ToString(this);
         }
-
-        
     }
 }
