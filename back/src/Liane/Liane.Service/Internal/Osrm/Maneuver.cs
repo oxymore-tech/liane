@@ -1,7 +1,7 @@
 ﻿using Liane.Api.Routing;
 using Liane.Api.Util;
 
-namespace Liane.Api.Osrm
+namespace Liane.Service.Internal.Osrm
 {
     // TODO: comment explaining Maneuver object
     public sealed class Maneuver

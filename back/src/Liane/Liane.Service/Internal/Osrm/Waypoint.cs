@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Liane.Api.Routing;
 using Liane.Api.Util;
 
-namespace Liane.Api.Osrm
+namespace Liane.Service.Internal.Osrm
 {
     // Object used to describe waypoint on a route.
     public sealed class Waypoint

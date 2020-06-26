@@ -2,7 +2,7 @@
 using Liane.Api.Routing;
 using Liane.Api.Util;
 
-namespace Liane.Api.Osrm
+namespace Liane.Service.Internal.Osrm
 {
     // An intersection gives a full representation of any cross-way the path passes bay.
     // For every step, the very first intersection (intersections[0]) corresponds to

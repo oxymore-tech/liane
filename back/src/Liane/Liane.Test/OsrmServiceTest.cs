@@ -10,12 +10,12 @@ using NUnit.Framework;
 namespace Liane.Test
 {
     [TestFixture]
-    public sealed class RoutingTest
+    public sealed class OsrmServiceTest
     {
         private readonly OsrmServiceImpl tested;
         private readonly ImmutableList<LatLng> coordinates;
 
-        public RoutingTest()
+        public OsrmServiceTest()
         {
             tested = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object);
             coordinates = ImmutableList.Create(new LatLng(44.5180226, 3.4991057), new LatLng(44.31901305, 3.57802065202088));

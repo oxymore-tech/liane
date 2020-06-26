@@ -2,12 +2,11 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Osrm;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Osrm;
 using Route = Liane.Api.Routing.Route;
 
-namespace Liane.Service.Internal
+namespace Liane.Service.Internal.Routing
 {
     public sealed class RoutingServiceImpl : IRoutingService
     {

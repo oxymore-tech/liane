@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Liane.Api.Util;
 
-namespace Liane.Api.Osrm
+namespace Liane.Service.Internal.Osrm
 {
     public sealed class Route
     {

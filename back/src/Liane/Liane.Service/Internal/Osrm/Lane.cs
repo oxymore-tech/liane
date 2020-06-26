@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Liane.Api.Util;
 
-namespace Liane.Api.Osrm
+namespace Liane.Service.Internal.Osrm
 {
     // A Lane represents a turn lane at the corresponding turn location.
     public sealed class Lane

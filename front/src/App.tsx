@@ -15,9 +15,8 @@ function formatDistance(distance: number) {
   return unit.format({notation: 'fixed', precision: 2});
 }
 
-
 function formatDuration(duration: number) {
-    return moment.duration(duration,'seconds').humanize();
+  return moment.duration(duration, 'seconds').humanize();
 }
 
 function createOverlay(start: LatLngLiteral, end: LatLngLiteral, center: LatLngLiteral, route?: Route) {
@@ -49,7 +48,7 @@ function createOverlay(start: LatLngLiteral, end: LatLngLiteral, center: LatLngL
 function OurMapComponent({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
 
   const [route, setRoute] = useState<Route>();
-  
+
   useEffect(() => {
     routingService.basicRouteMethod({start, end})
       .then(r => setRoute(r))

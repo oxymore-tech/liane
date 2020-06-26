@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Liane.Api.Osrm.Response;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Microsoft.Extensions.Logging;
@@ -31,7 +30,7 @@ namespace Liane.Service.Internal.Osrm
         /// <param name="annotations"></param>
         /// <param name="continueStraight"></param>
         /// <returns></returns>
-        public async Task<Routing> Route(ImmutableList<LatLng> coordinates,
+        public async Task<Response.Routing> Route(ImmutableList<LatLng> coordinates,
             string alternatives = "false",
             string steps = "false",
             string geometries = "geojson",
@@ -43,7 +42,7 @@ namespace Liane.Service.Internal.Osrm
 
             logger.LogInformation("Call returns ", uri);
 
-            var result = await client.GetAsyncAs<Routing>(uri, new
+            var result = await client.GetAsyncAs<Response.Routing>(uri, new
             {
                 alternatives,
                 steps,
