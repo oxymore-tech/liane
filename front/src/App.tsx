@@ -34,7 +34,7 @@ function App() {
   useEffect(() => {
     routingService.basicRouteMethod({start, end})
       .then(r => setRoute(r))
-  });
+  }, []);
 
   const start = {lat: 44.5180226, lng: 3.4991057};
   const end = {lat: 44.31901305, lng: 3.57802065202088};
