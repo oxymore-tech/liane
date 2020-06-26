@@ -1,12 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
-import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
+import { Map, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 import { LatLngLiteral } from "leaflet";
 import { routingService } from "./api/routing-service";
 import { Route } from "./api/route";
+import * as math from "mathjs";
 
-function OurMap({start, end, route}: { start: LatLngLiteral, end: LatLngLiteral, route?: Route }) {
+function formatDistance(distance: number) {
+  const unit = math.unit(distance, 'm');
+  return unit.format({notation: 'fixed', precision: 2});
+}
+
+function createOverlay(start: LatLngLiteral, end: LatLngLiteral, center: LatLngLiteral, route?: Route) {
+  if (route) {
+    return <>
+      <Marker position={center}>
+        <Popup>
+          <div>Distance: {formatDistance(route.distance)}</div>
+          <div>Durée: {route.duration}</div>
+        </Popup>
+      </Marker>
+      <Marker position={start}>
+        <Popup>A pretty CSS3 popup.<br/>Easily customizable.</Popup>
+      </Marker>
+      <Marker position={end}>
+        <Popup>A pretty CSS3 popup.<br/>Easily customizable.</Popup>
+      </Marker>
+      <Polyline positions={route.coordinates}/>
+    </>;
+  } else {
+    return null;
+  }
+}
+
+function OurMapComponent({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
+
+  const [route, setRoute] = useState<Route>();
+
+  useEffect(() => {
+    routingService.basicRouteMethod({start, end})
+      .then(r => setRoute(r))
+  }, [start, end]);
 
   const zoom = 11;
   const center = {
@@ -14,33 +49,27 @@ function OurMap({start, end, route}: { start: LatLngLiteral, end: LatLngLiteral,
     lng: (start.lng + end.lng) / 2
   };
 
-  return (
-    <Map className="map" center={center} zoom={zoom}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-      />
-      <Marker position={[51.505, -0.09]}>
-        <Popup>A pretty CSS3 popup.<br/>Easily customizable.</Popup>
-      </Marker>
-    </Map>
-  );
+  const overlay = createOverlay(start, end, center, route);
+
+  return <Map className="map" center={center} zoom={zoom}>
+    <TileLayer
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+    />
+    {overlay}
+  </Map>;
 }
+
+const OurMap = memo(OurMapComponent);
 
 function App() {
 
-  const [route, setRoute] = useState<Route>();
-
-  useEffect(() => {
-    routingService.basicRouteMethod({start, end})
-      .then(r => setRoute(r))
-  }, []);
-
   const start = {lat: 44.5180226, lng: 3.4991057};
   const end = {lat: 44.31901305, lng: 3.57802065202088};
+
   return (
     <div className="App">
-      <OurMap start={start} end={end} route={route}/>
+      <OurMap start={start} end={end}/>
     </div>
   );
 }

@@ -9,8 +9,8 @@ namespace Liane.Api.Routing
         public override void WriteJson(JsonWriter writer, LatLng value, JsonSerializer serializer)
         {
             writer.WriteStartArray();
-            writer.WriteValue(value.Lat);
             writer.WriteValue(value.Lng);
+            writer.WriteValue(value.Lat);
             writer.WriteEndArray();
         }
 

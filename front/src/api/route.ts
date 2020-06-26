@@ -1,7 +1,7 @@
-import { GeoJSON } from "leaflet";
+import { LatLng } from "leaflet";
 
 export interface Route {
-  readonly Geojson: GeoJSON;
-  readonly Duration: number;
-  readonly Distance: number;
+  readonly coordinates: LatLng[];
+  readonly duration: number;
+  readonly distance: number;
 }

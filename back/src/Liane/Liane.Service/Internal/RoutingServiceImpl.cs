@@ -26,7 +26,7 @@ namespace Liane.Service.Internal
             var geojson = routeResponse.Routes[0].Geometry;
             var duration = routeResponse.Routes[0].Duration;
             var distance = routeResponse.Routes[0].Distance;
-            return new Route(geojson, duration, distance);
+            return new Route(geojson.Coordinates, duration, distance);
         }
 
         public async Task<ImmutableList<Route>> GetAlternatives(LatLng start, LatLng end)
@@ -34,7 +34,7 @@ namespace Liane.Service.Internal
             var coordinates = ImmutableList.Create(start, end);
             var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
 
-            return routeResponse.Routes.Select(r => new Route(r.Geometry, r.Duration, r.Distance))
+            return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
                 .ToImmutableList();
         }
 
