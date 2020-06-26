@@ -13,6 +13,7 @@
     "@types/react-dom": "^16.9.0",
     "leaflet": "^1.6.0",
     "mathjs": "^7.0.2",
+    "moment": "^2.27.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-leaflet": "^2.7.0",

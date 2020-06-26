@@ -6,19 +6,36 @@ import { LatLngLiteral } from "leaflet";
 import { routingService } from "./api/routing-service";
 import { Route } from "./api/route";
 import * as math from "mathjs";
+import moment from 'moment';
+
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
 
 function formatDistance(distance: number) {
   const unit = math.unit(distance, 'm');
   return unit.format({notation: 'fixed', precision: 2});
 }
 
+
+function formatDuration(duration: number) {
+    
+    return moment.duration(duration,'seconds').humanize();
+}
+
 function createOverlay(start: LatLngLiteral, end: LatLngLiteral, center: LatLngLiteral, route?: Route) {
+  
+  const DefaultIcon = icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow
+  });
+  
   if (route) {
     return <>
       <Marker position={center}>
         <Popup>
           <div>Distance: {formatDistance(route.distance)}</div>
-          <div>Durée: {route.duration}</div>
+          <div>Durée: {formatDuration(route.duration)}</div>
         </Popup>
       </Marker>
       <Marker position={start}>
@@ -37,7 +54,7 @@ function createOverlay(start: LatLngLiteral, end: LatLngLiteral, center: LatLngL
 function OurMapComponent({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
 
   const [route, setRoute] = useState<Route>();
-
+  
   useEffect(() => {
     routingService.basicRouteMethod({start, end})
       .then(r => setRoute(r))
