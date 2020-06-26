@@ -2,15 +2,13 @@ import React, { memo, useEffect, useState } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import { Map, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
-import { LatLngLiteral } from "leaflet";
+import { icon, LatLngLiteral } from "leaflet";
 import { routingService } from "./api/routing-service";
 import { Route } from "./api/route";
 import * as math from "mathjs";
 import moment from 'moment';
-
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerIconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 function formatDistance(distance: number) {
   const unit = math.unit(distance, 'm');
@@ -19,29 +17,26 @@ function formatDistance(distance: number) {
 
 
 function formatDuration(duration: number) {
-    
     return moment.duration(duration,'seconds').humanize();
 }
 
 function createOverlay(start: LatLngLiteral, end: LatLngLiteral, center: LatLngLiteral, route?: Route) {
-  
-  const DefaultIcon = icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow
+  const customIcon = icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerIconShadow
   });
-  
   if (route) {
     return <>
-      <Marker position={center}>
+      <Marker position={center} icon={customIcon}>
         <Popup>
           <div>Distance: {formatDistance(route.distance)}</div>
           <div>Durée: {formatDuration(route.duration)}</div>
         </Popup>
       </Marker>
-      <Marker position={start}>
+      <Marker position={start} icon={customIcon}>
         <Popup>A pretty CSS3 popup.<br/>Easily customizable.</Popup>
       </Marker>
-      <Marker position={end}>
+      <Marker position={end} icon={customIcon}>
         <Popup>A pretty CSS3 popup.<br/>Easily customizable.</Popup>
       </Marker>
       <Polyline positions={route.coordinates}/>
