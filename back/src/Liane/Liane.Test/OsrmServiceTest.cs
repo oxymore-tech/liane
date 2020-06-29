@@ -23,10 +23,6 @@ namespace Liane.Test
 
         // DONE: test with default routing
         // TODO: test with default routing but no route found
-        // TODO: test with steps=true
-        // TODO: test with annotations=true
-        // TODO: test with overview=full
-        // TODO: test with overview=false
         // TODO: see how waypoints is useful in routing and test it        
         // + Add assertions
         [Test]
