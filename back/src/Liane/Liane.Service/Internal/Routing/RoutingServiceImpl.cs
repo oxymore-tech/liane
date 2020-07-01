@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Drawing.Printing;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
@@ -40,13 +41,18 @@ namespace Liane.Service.Internal.Routing
         public async Task<DeltaRoute> CrossAWayPoint(RoutingWithPointQuery query)
         {
             var wayPoint = query.Point;
-            var duration = query.Duration;
-            if (query.Duration < 0)
+            float duration;
+            if (query.Duration <= 0)
             {
                 // Calculate the fastest route without necessarily passing by the waypoint
                 var fastestRouteResponse =
                     await osrmService.Route(ImmutableList.Create(query.Start, query.End), overview: "full");
                 duration = fastestRouteResponse.Routes[0].Duration;
+                
+            }
+            else
+            {
+                duration = query.Duration;
             }
 
             var coordinates = ImmutableList.Create(query.Start, wayPoint, query.End);
@@ -55,8 +61,9 @@ namespace Liane.Service.Internal.Routing
             coordinates = routeResponse.Routes[0].Geometry.Coordinates;
             var newDuration = routeResponse.Routes[0].Duration;
             var newDistance = routeResponse.Routes[0].Distance;
-            var delta = Math.Abs(newDuration - duration);
-            return new DeltaRoute(coordinates, newDuration, newDistance, delta);
+            var delta = duration - newDuration;
+            Console.Write($" duration = {duration}, newDuration = {newDuration}, delta = {delta} ");
+            return new DeltaRoute(coordinates, newDuration, newDistance, Math.Abs(delta));
         }
 
         // ROUTE excluding POINT
@@ -68,7 +75,7 @@ namespace Liane.Service.Internal.Routing
             var distance = query.Distance;
             Geojson geojson = new Geojson("LineString",query.Coordinates);
             
-            if (duration < 0 || distance < 0 )
+            if (duration <= 0 || distance <= 0 )
             {
                 // Calculate the fastest route to compare
                 var fastestRouteResponse =
@@ -80,7 +87,7 @@ namespace Liane.Service.Internal.Routing
 
             var coordinates = ImmutableList.Create(query.Start, detourPoint, query.End);
             var routeResponse = await osrmService.Route(coordinates, steps: "true", overview: "full");
-
+            Console.Write($"nb Leg: {routeResponse.Routes[0].Legs.Count}");
             var newGeojson = routeResponse.Routes[0].Geometry;
             var newDuration = routeResponse.Routes[0].Duration;
             var newDistance = routeResponse.Routes[0].Distance;
@@ -91,15 +98,16 @@ namespace Liane.Service.Internal.Routing
             {
                 
                 // Then the fastest route not passing by the detourPoint is simply the fastestRoute and delta = 0
-                return new DeltaRoute( geojson.Coordinates, duration, distance, 0 );
+                return new DeltaRoute( ImmutableList<LatLng>.Empty , duration, distance, -1 );
             }
 
             // Else find the steps where the route cross the detourPoint 
-            var startIntersections = routeResponse.Routes[0].Legs[0].Steps[-1].Intersections;
-            var endIntersections = routeResponse.Routes[0].Legs[1].Steps[0].Intersections;
+            var l = routeResponse.Routes[0].Legs[0].Steps.Count;// at least > 2
+            var startIntersections = routeResponse.Routes[0].Legs[0].Steps[ l -2].Intersections;
+            var endIntersections = routeResponse.Routes[0].Legs[1].Steps[1].Intersections;
 
-            // Normally startIntersection[1].Location == endIntersection[0].Location == detourPoint
-            Console.Write(startIntersections[1].Location.Lat + "==" + endIntersections[0].Location.Lat);
+            // Normally routeResponse.Routes[0].Legs[0].Steps[ l-1].Location == routeResponse.Routes[0].Legs[1].Steps[0].Location == detourPoint
+            Console.Write(startIntersections[0] + ", " + endIntersections[0] +"\n");
 
             // Then find alternatives routes between startIntersection[0].Location endIntersection[1].Location
             // Here need to check the entry values before sending an alternative request
@@ -108,7 +116,7 @@ namespace Liane.Service.Internal.Routing
 
             // looking for an exits to not cross the detourPoint
             var search = true;
-            var stepsId = routeResponse.Routes[0].Legs[0].Steps.Count;
+            var stepsId = routeResponse.Routes[0].Legs[0].Steps.Count-2;
             
             do
             {
@@ -123,23 +131,25 @@ namespace Liane.Service.Internal.Routing
 
                 if (nbOfExits > 1)
                 {
+                    
                     search = false;
                 }
-                else
-                {
+                //else
+                //{
                     stepsId -= 1;
                     if (stepsId < 0)
                     {
                         // No solution
-                        return new DeltaRoute(geojson.Coordinates, duration, distance, -1);
+                        return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -2);
                     }
 
                     startIntersections = routeResponse.Routes[0].Legs[0].Steps[stepsId].Intersections;
-                }
+                //}
+                Console.WriteLine($"Search: stepsId = {stepsId}, start = {startIntersections[0].Location}");
             } while (search);
 
             // Looking for an entry after the detourPoint
-            stepsId = 0;
+            stepsId = 1;
             var maxStepsId = routeResponse.Routes[0].Legs[1].Steps.Count;
             search = true;
             do
@@ -147,7 +157,7 @@ namespace Liane.Service.Internal.Routing
                 var nbOfEntries = 0;
                 foreach (var anEntry in endIntersections[0].Entry)
                 {
-                    if (anEntry.Equals("false"))
+                    if (anEntry.Equals("true"))
                     {
                         nbOfEntries += 1;
                     }
@@ -157,33 +167,36 @@ namespace Liane.Service.Internal.Routing
                 {
                     search = false;
                 }
-                else
-                {
+                //else
+                //{
                     stepsId += 1;
                     if (stepsId > maxStepsId)
                     {
                         // No solution
-                        return new DeltaRoute(geojson.Coordinates, duration, distance, -1);
+                        return new DeltaRoute(geojson.Coordinates, duration, distance, -3);
                     }
 
                     endIntersections = routeResponse.Routes[0].Legs[1].Steps[stepsId].Intersections;
-                }
+                    Console.WriteLine($"Search: stepsId = {stepsId}, end = {endIntersections[0].Location}");
+                //}
             } while (search);
 
             // Then generate the final route which is not crossing detourPoint
-            var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location,endIntersections[1].Location));
+            Console.Write($"start: {startIntersections[0].Location}, end: {endIntersections[0].Location}\n");
+            var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location.ToLatLng(),endIntersections[0].Location.ToLatLng()));
 
             if (alternatives.Count >1)
             {
+                Console.Write($" nb alts:{alternatives.Count}, coord start:{alternatives[0].Coordinates}\n");
                 var alternativePath = alternatives[1];
                 // TODO: Get the coordinates before and after the deviation
                 // final coordinates = ( path between start and startInstersections, alternative path, path between endIntersections and end)
-                return new DeltaRoute(alternativePath.Coordinates, newDuration, newDistance, 0);
+                return new DeltaRoute(alternativePath.Coordinates, newDuration, newDistance, Math.Abs(alternatives[0].Duration - alternativePath.Duration) );
             }
             else
             {
                 // No solution
-                return new DeltaRoute(geojson.Coordinates, duration, distance, -1);
+                return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -4);
             }
             
         }
