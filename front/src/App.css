@@ -6,7 +6,20 @@ html, body {
   margin: 0;
 }
 
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  
+}
+table {
+  width: 100%;
+}
+th, td {
+  padding: 5px;
+}
+
 .map {
-  width: 100vw;
-  height: 100vh;
+  alignment: center;
+  width: 60vw;
+  height: 30vh;
 }

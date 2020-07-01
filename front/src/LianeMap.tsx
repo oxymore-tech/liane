@@ -7,12 +7,12 @@ import { icon, LatLngLiteral } from "leaflet";
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-function formatDistance(distance: number) {
+export function formatDistance(distance: number) {
   const unit = math.unit(distance, 'm');
   return unit.format({notation: 'fixed', precision: 2});
 }
 
-function formatDuration(duration: number) {
+export function formatDuration(duration: number) {
   return moment.duration(duration, 'seconds').humanize();
 }
 
