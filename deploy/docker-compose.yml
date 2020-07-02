@@ -15,4 +15,4 @@ services:
     ports:
       - 7070:8080
     volumes:
-      - "/data/liane/osm/postgresdata:/var/lib/postgresql/12/main:ro"
+      - "/data/liane/osm/postgresdata:/var/lib/postgresql/12/main"
