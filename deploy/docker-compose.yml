@@ -5,7 +5,7 @@ services:
     image: "osrm/osrm-backend"
     command: osrm-routed --algorithm mld /data/all.osrm
     ports:
-      5000:5000
+      - 5000:5000
     volumes:
       - "/data/liane/osm:/data:ro"
 
@@ -13,6 +13,6 @@ services:
     image: "docker.synergee.com/library/nominatim:3.5"
     command: bash /app/start.sh
     ports:
-      7070:8080
+      - 7070:8080
     volumes:
       - "/data/liane/osm/postgresdata:/var/lib/postgresql/12/main:ro"
