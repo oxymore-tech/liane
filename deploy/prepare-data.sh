@@ -2,7 +2,7 @@
 
 BASEDIR=$(dirname "$0")
 
-mkdir -p /data/liane/osm
+sudo mkdir -p /data/liane/osm
 
 function download() {
     wget -P data -N http://download.geofabrik.de/europe/france/midi-pyrenees-latest.osm.pbf
