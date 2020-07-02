@@ -2,4 +2,4 @@
 
 BASEDIR=$(dirname "$0")
 
-docker-compose -f ${BASEDIR}/deploy/docker-compose.yml -p liane
+docker-compose -f ${BASEDIR}/deploy/docker-compose.yml -p liane up -d
