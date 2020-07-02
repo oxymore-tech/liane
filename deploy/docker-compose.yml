@@ -7,7 +7,7 @@ services:
     ports:
       5000:5000
     volumes:
-      - "./data:/data:ro"
+      - "/data/liane/osm:/data:ro"
 
   nominatim:
     image: "docker.synergee.com/library/nominatim:3.5"
@@ -15,4 +15,4 @@ services:
     ports:
       7070:8080
     volumes:
-      - "./data/postgresdata:/var/lib/postgresql/12/main:ro"
+      - "/data/liane/osm/postgresdata:/var/lib/postgresql/12/main:ro"
