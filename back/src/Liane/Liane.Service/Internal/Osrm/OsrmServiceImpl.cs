@@ -38,7 +38,7 @@ namespace Liane.Service.Internal.Osrm
             string annotations = "false",
             string continueStraight = "default")
         {
-            string uri = $"http://localhost:5000/route/v1/driving/{Format(coordinates)}";
+            string uri = $"http://51.178.19.201:5000/route/v1/driving/{Format(coordinates)}";
 
             logger.LogInformation("Call returns ", uri);
 
