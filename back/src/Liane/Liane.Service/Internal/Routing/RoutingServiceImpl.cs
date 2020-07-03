@@ -134,8 +134,8 @@ namespace Liane.Service.Internal.Routing
                     
                     search = false;
                 }
-                //else
-                //{
+                else
+                {
                     stepsId -= 1;
                     if (stepsId < 0)
                     {
@@ -144,7 +144,7 @@ namespace Liane.Service.Internal.Routing
                     }
 
                     startIntersections = routeResponse.Routes[0].Legs[0].Steps[stepsId].Intersections;
-                //}
+                }
                 Console.WriteLine($"Search: stepsId = {stepsId}, start = {startIntersections[0].Location}");
             } while (search);
 
@@ -196,7 +196,7 @@ namespace Liane.Service.Internal.Routing
             else
             {
                 // No solution
-                return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -4);
+                return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location.ToLatLng(),endIntersections[0].Location.ToLatLng()), duration, distance, -4);
             }
             
         }

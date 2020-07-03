@@ -41,7 +41,12 @@ function App() {
             <WaypointRoute start={start} end={end} point={waypoint}/>
           </td>
         </tr>
-        
+        <tr>
+          <td>Point de passage :</td>
+          <td>
+            <DetourRoute start={start} end={end} point={detour}/>
+          </td>
+        </tr>
       </table>
 
 
