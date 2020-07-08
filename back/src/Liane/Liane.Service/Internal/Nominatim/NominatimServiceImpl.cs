@@ -19,7 +19,7 @@ namespace Liane.Service.Internal.Nominatim
         // http://nominatim.openstreetmap.org/search/gb/birmingham/pilkington%20avenue/135?format=xml&polygon=1&addressdetails=1
         public async Task<Response> Search()
         {
-            string uri = $"http://51.178.19.201:7070/search/fr/florac/florac/?format=json";
+            string uri = $"http://liane.gjini.co:7070/search/fr/florac/florac/?format=json";
 
             logger.LogInformation("Call returns ", uri);
 

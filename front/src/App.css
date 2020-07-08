@@ -6,20 +6,23 @@ html, body {
   margin: 0;
 }
 
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-  
-}
-table {
-  width: 100%;
-}
-th, td {
-  padding: 5px;
-}
-
 .map {
   alignment: center;
-  width: 60vh;
-  height: 60vh;
+  width: 100vw;
+  height: 100vh;
+}
+
+.pointsInterface {
+  padding: 1vw;
+  position: absolute;
+  width: 28vw;
+  top: 0vh;
+  left: 70vw;
+  z-index: 1000;
+
+  background-color: #f4f4f4;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+  border-radius: 4px;
+
+  font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
 }

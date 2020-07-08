@@ -5,6 +5,7 @@ import {routingService} from "./api/routing-service";
 import {RoutingQuery} from "./api/routing-query";
 import {customIcon, LianeMap, routeOverlay} from "./LianeMap";
 import {Marker} from "react-leaflet";
+import {PointsInterface} from "./PointsInterface";
 
 
 
@@ -19,6 +20,7 @@ export function defaultRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, ro
         return <></>;
     }
 }
+
 
 
 export function DefaultRouteComponent({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
@@ -37,9 +39,12 @@ export function DefaultRouteComponent({start, end}: { start: LatLngLiteral, end:
     }, [start, end]);
 
     let overlay = defaultRouteOverlay(start, end, route);
-    return <LianeMap center={center} zoom={zoom}>
-        {overlay}
-    </LianeMap>;
+    return <>
+        <LianeMap center={center} zoom={zoom}>
+            {overlay}
+        </LianeMap>
+        <PointsInterface start={start} end={end}/>
+    </>;
 
 
 }

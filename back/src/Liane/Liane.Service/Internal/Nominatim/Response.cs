@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Liane.Service.Internal.Nominatim
 {
     public sealed class Response
@@ -15,20 +17,39 @@ namespace Liane.Service.Internal.Nominatim
         //         "class":"building",
         //         "type":"residential",
         //         "importance":0.411,
-        //         "address":{
-        //             "house_number":"135",
-        //             "road":"Pilkington Avenue",
-        //             "town":"Sutton Coldfield",
-        //             "city":"Birmingham",
-        //             "county":"West Midlands Combined Authority",
-        //             "state_district":"West Midlands",
-        //             "state":"England",
-        //             "postcode":"B72 1LH",
-        //             "country":"Royaume-Uni",
-        //             "country_code":"gb"}
+        //         
         //     }
         // ]
-        
-        
+        public Response(int placeId, string licence, string osmType, int osmId, ImmutableArray<double> boudingbox, double lat, double lng, string displayName, string @class, string type, float importance, Address address)
+        {
+            PlaceId = placeId;
+            Licence = licence;
+            OsmType = osmType;
+            OsmId = osmId;
+            Boudingbox = boudingbox;
+            Lat = lat;
+            Lng = lng;
+            DisplayName = displayName;
+            Class = @class;
+            Type = type;
+            Importance = importance;
+            Address = address;
+        }
+
+        public int PlaceId { get; }
+        public string Licence { get; }
+        public string OsmType { get; }
+        public int OsmId { get; }
+        public ImmutableArray<double> Boudingbox { get; }
+        public double Lat { get; }
+        public double Lng { get; }
+        public string DisplayName { get; }
+        public string Class { get; }
+        public string Type { get; }
+        public float Importance { get; } 
+        public Address Address { get; }
+    
+
+
     }
 }

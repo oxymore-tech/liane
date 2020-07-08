@@ -18,6 +18,11 @@ function App() {
   const end2 = {lat: 44.376555, lng: 3.521215};
   return (
     <div className="App">
+
+      <DefaultRoute start={start} end={end}/>
+
+      
+      {/*
       <table>
         <tr>
           <th>Scenario</th>
@@ -47,13 +52,7 @@ function App() {
             <DetourRoute start={start} end={end} point={detour}/>
           </td>
         </tr>
-      </table>
-
-
-      
-      {/*
-            <Alternatives start={start2} end={end2}/>
-      <DetourRoute start={start} end={end} point={detour}/>      
+      </table>  
       
       */}
     </div>
