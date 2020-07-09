@@ -3,24 +3,27 @@ import React, {Component, useState} from "react";
 import {Map, TileLayer, Popup, Marker} from "react-leaflet";
 
 export interface Point {
-
     readonly coordinate:LatLngLiteral;
     readonly address:string;
     readonly exclude:boolean;
 }
 
 
-export function PointComponent({onClick,point,optional}:{onClick?:Function,point:Point,optional?:boolean}) {
+export function PointComponent({onChange,index,point,optional}:{onChange?:(i:number,p?:Point)=>void,index:number,point:Point,optional?:boolean}) {
     const [modifiedPoint,setModifiedPoint] = useState(point);
     
     function excludeClick(){
         setModifiedPoint(point => ({...point, exclude:!point.exclude}) );
+        if (onChange){ onChange(-1,modifiedPoint) }
     }
-
+    
+    function selectClick(){
+        if (onChange){ onChange(index) }
+    }
+    
     function pointOverlay(point:Point,optional:boolean){
         return <>
-            <div> {JSON.stringify(point)} </div>
-            {/* if optional show this button and onClick={excludeClick}*/}
+            <div onClick={selectClick}> {JSON.stringify(point)} </div>
             {
                 optional||false?<button onClick={excludeClick} > {point.exclude} </button>:null
             }
