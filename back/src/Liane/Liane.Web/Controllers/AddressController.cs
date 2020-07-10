@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Address;
 using Liane.Api.Routing;
@@ -9,9 +10,9 @@ namespace Liane.Web.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
-        private readonly IAddressServiceNominatim addressService;
+        private readonly IAddressService addressService;
 
-        public AddressController(IAddressServiceNominatim addressService)
+        public AddressController(IAddressService addressService)
         {
             this.addressService = addressService;
         }
@@ -22,11 +23,16 @@ namespace Liane.Web.Controllers
             return await addressService.GetDisplayName(new LatLng(lat, lng));
         }
 
-
         [HttpGet("address/coordinate")]
         public async Task<ActionResult<Address>> GetCoordinate([FromQuery] string displayName)
         {
             return await addressService.GetCoordinate(displayName);
+        }
+
+        [HttpGet("address/search")]
+        public async Task<ActionResult<ImmutableList<Address>>> Search([FromQuery] string displayName)
+        {
+            return await addressService.Search(displayName);
         }
     }
 }

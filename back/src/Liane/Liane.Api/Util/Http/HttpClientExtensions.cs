@@ -91,23 +91,36 @@ namespace Liane.Api.Util.Http
 
         public static string CreateUri(string uri, object? parameters = null)
         {
-            if (parameters == null) return uri;
+            if (parameters == null)
+            {
+                return uri;
+            }
 
             var properties = parameters.GetType().GetProperties();
-            if (properties.Length == 0) return uri;
+            if (properties.Length == 0)
+            {
+                return uri;
+            }
 
             var queryString = HttpUtility.ParseQueryString(string.Empty);
             foreach (var propertyInfo in properties)
             {
                 var value = propertyInfo.GetValue(parameters);
 
-                if (value == null) continue;
+                if (value == null)
+                {
+                    continue;
+                }
 
                 if (value is ICollection e)
                 {
                     foreach (var item in e)
+                    {
                         if (item != null)
+                        {
                             queryString.Add(propertyInfo.Name, item.ToString());
+                        }
+                    }
                 }
                 else if (value is DateTime d)
                 {

@@ -4,23 +4,8 @@ namespace Liane.Service.Internal.Nominatim
 {
     public sealed class Response
     {
-        // [
-        //     {
-        //         "place_id":105581712,
-        //         "licence":"Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
-        //         "osm_type":"way",
-        //         "osm_id":90394480,
-        //         "boundingbox":["52.5487473","52.5488481","-1.816513","-1.8163464"],
-        //         "lat":"52.5487921",
-        //         "lon":"-1.8164308339635031",
-        //         "display_name":"135, Pilkington Avenue, Sutton Coldfield, Birmingham, West Midlands Combined Authority, West Midlands, England, B72 1LH, Royaume-Uni",
-        //         "class":"building",
-        //         "type":"residential",
-        //         "importance":0.411,
-        //         
-        //     }
-        // ]
-        public Response(int placeId, string licence, string osmType, int osmId, ImmutableArray<double> boudingbox, double lat, double lng, string displayName, string @class, string type, float importance, Address address)
+        public Response(int placeId, string licence, string osmType, int osmId, ImmutableArray<double> boudingbox, double lat, double lon, string display_name, string @class, string type,
+            float importance, Address address)
         {
             PlaceId = placeId;
             Licence = licence;
@@ -28,8 +13,8 @@ namespace Liane.Service.Internal.Nominatim
             OsmId = osmId;
             Boudingbox = boudingbox;
             Lat = lat;
-            Lng = lng;
-            DisplayName = displayName;
+            Lon = lon;
+            DisplayName = display_name;
             Class = @class;
             Type = type;
             Importance = importance;
@@ -42,14 +27,11 @@ namespace Liane.Service.Internal.Nominatim
         public int OsmId { get; }
         public ImmutableArray<double> Boudingbox { get; }
         public double Lat { get; }
-        public double Lng { get; }
+        public double Lon { get; }
         public string DisplayName { get; }
         public string Class { get; }
         public string Type { get; }
-        public float Importance { get; } 
+        public float Importance { get; }
         public Address Address { get; }
-    
-
-
     }
 }

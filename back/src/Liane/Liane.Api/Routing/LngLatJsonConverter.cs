@@ -6,13 +6,14 @@ namespace Liane.Api.Routing
 {
     public sealed class LngLatJsonConverter : JsonConverter<LngLat>
     {
-
         public override void WriteJson(JsonWriter writer, LngLat value, JsonSerializer serializer)
         {
-            writer.WriteStartArray();
-            writer.WriteValue(value.Lng);
+            writer.WriteStartObject();
+            writer.WritePropertyName("lat");
             writer.WriteValue(value.Lat);
-            writer.WriteEndArray();
+            writer.WritePropertyName("lng");
+            writer.WriteValue(value.Lng);
+            writer.WriteEndObject();
         }
 
         public override LngLat ReadJson(JsonReader reader, Type objectType, LngLat existingValue, bool hasExistingValue, JsonSerializer serializer)

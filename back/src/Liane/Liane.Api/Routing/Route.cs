@@ -4,14 +4,14 @@ namespace Liane.Api.Routing
 {
     public sealed class Route
     {
-        public Route(ImmutableList<LatLng> coordinates, float duration, float distance)
+        public Route(ImmutableList<LngLat> coordinates, float duration, float distance)
         {
             Coordinates = coordinates;
             Duration = duration;
             Distance = distance;
         }
 
-        public ImmutableList<LatLng> Coordinates { get; }
+        public ImmutableList<LngLat> Coordinates { get; }
         public float Duration { get; }
         public float Distance { get; }
     }

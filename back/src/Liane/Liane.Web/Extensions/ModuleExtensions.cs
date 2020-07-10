@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
+using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Web.Internal.Exception;
@@ -142,6 +143,7 @@ namespace Liane.Web.Extensions
         {
             services.AddService<OsrmServiceImpl>();
             services.AddService<RoutingServiceImpl>();
+            services.AddService<AddressServiceNominatimImpl>();
             services.AddService<FileStreamResultExecutor>();
             services.AddControllers().AddNewtonsoftJson();
             services.AddCors(options =>

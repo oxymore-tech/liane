@@ -11,7 +11,7 @@ import { addressService } from "./api/address-service";
 
 export interface Points {
   readonly waypoints: Point[];
-  readonly selectedPoint?: number;
+  readonly selectedPoint: number;
 }
 
 export function defaultRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, route?: Route) {
@@ -36,7 +36,8 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
   };
 
   const [points, setPoints] = useState<Points>({
-    waypoints: [start, end]
+    waypoints: [start, end],
+    selectedPoint: 0
   });
 
   const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
@@ -52,7 +53,7 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
   }, [internalStart, internalEnd]);
 
   useEffect(() => {
-    if (points.selectedPoint) {
+    if (points.selectedPoint > -1) {
       addressService.GetDisplayName(lastClickCoordinate)
         .then(a => ({...points.waypoints[points.selectedPoint!], coordinate: a.coordinate, address: a.displayName}))
         .then(p => {
@@ -62,7 +63,7 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
             }
             return w;
           });
-          setPoints(({waypoints, selectedPoint: -1}));
+          setPoints(({...points, waypoints}));
         });
     }
   }, [lastClickCoordinate])

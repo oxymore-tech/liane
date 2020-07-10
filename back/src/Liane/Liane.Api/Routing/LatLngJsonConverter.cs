@@ -8,10 +8,12 @@ namespace Liane.Api.Routing
     {
         public override void WriteJson(JsonWriter writer, LatLng value, JsonSerializer serializer)
         {
-            writer.WriteStartArray();
-            writer.WriteValue(value.Lng);
+            writer.WriteStartObject();
+            writer.WritePropertyName("lat");
             writer.WriteValue(value.Lat);
-            writer.WriteEndArray();
+            writer.WritePropertyName("lng");
+            writer.WriteValue(value.Lng);
+            writer.WriteEndObject();
         }
 
         public override LatLng ReadJson(JsonReader reader, Type objectType, LatLng existingValue, bool hasExistingValue, JsonSerializer serializer)

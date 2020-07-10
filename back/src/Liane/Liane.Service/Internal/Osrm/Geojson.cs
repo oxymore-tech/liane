@@ -6,14 +6,14 @@ namespace Liane.Service.Internal.Osrm
     public sealed class Geojson
     {
         // TODO: comment on GeoJSON structure
-        public Geojson(string type, ImmutableList<LatLng> coordinates)
+        public Geojson(string type, ImmutableList<LngLat> coordinates)
         {
             Type = type;
             Coordinates = coordinates;
         }
 
         public string Type { get; }
-        public ImmutableList<LatLng> Coordinates { get; }
+        public ImmutableList<LngLat> Coordinates { get; }
 
         public override string ToString()
         {

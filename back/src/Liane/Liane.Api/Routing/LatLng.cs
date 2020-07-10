@@ -25,5 +25,10 @@ namespace Liane.Api.Routing
         {
             return StringUtils.ToString(this);
         }
+
+        public LngLat ToLngLat()
+        {
+            return new LngLat(Lng, Lat);
+        }
     }
 }

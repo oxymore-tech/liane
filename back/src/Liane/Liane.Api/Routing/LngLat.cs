@@ -1,4 +1,6 @@
+using System.Collections.Immutable;
 using System.Globalization;
+using System.Linq;
 using Liane.Api.Util;
 using Newtonsoft.Json;
 
@@ -30,5 +32,12 @@ namespace Liane.Api.Routing
         {
             return new LatLng(Lat, Lng);
         }
+    }
+
+    public static class LatLngExtensions
+    {
+        public static ImmutableList<LatLng> ToLatLng(this ImmutableList<LngLat> coordinates) => coordinates.Select(c => c.ToLatLng()).ToImmutableList();
+
+        public static ImmutableList<LngLat> ToLngLat(this ImmutableList<LatLng> coordinates) => coordinates.Select(c => c.ToLngLat()).ToImmutableList();
     }
 }

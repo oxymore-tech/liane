@@ -1,14 +1,17 @@
+using System.Collections.Immutable;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Liane.Api.Address;
 using Liane.Api.Routing;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Nominatim;
 using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Address
 {
-    public sealed class AddressServiceNominatimImpl : IAddressServiceNominatim
+    public sealed class AddressServiceNominatimImpl : IAddressService
     {
         private readonly HttpClient client;
         private readonly ILogger<AddressServiceNominatimImpl> logger;
@@ -21,7 +24,7 @@ namespace Liane.Service.Internal.Address
 
         public async Task<Api.Address.Address> GetDisplayName(LatLng coordinate)
         {
-            string uri = $"http://liane.gjini.co:7070/search/fr/reverse";
+            const string uri = "http://liane.gjini.co:7070/reverse";
 
             var response = await client.GetAsyncAs<Response>(uri, new
             {
@@ -29,26 +32,40 @@ namespace Liane.Service.Internal.Address
                 lon = coordinate.Lng,
                 format = "json"
             });
-
-            logger.LogInformation("Call returns ", response);
-
-            return new Api.Address.Address(response.DisplayName, new LatLng(response.Lat, response.Lng));
+            
+            return MapAddress(response);
         }
 
         public async Task<Api.Address.Address> GetCoordinate(string displayName)
         {
-            string uri = $"http://liane.gjini.co:7070/search/fr";
+            var addresses = await Search(displayName);
+            if (addresses.IsEmpty)
+            {
+                throw new ResourceNotFoundException($"Address '{displayName}' not found");
+            }
 
-            var response = await client.GetAsyncAs<Response>(uri, new
+            return addresses[0];
+        }
+
+        public async Task<ImmutableList<Api.Address.Address>> Search(string displayName)
+        {
+            const string uri = "http://liane.gjini.co:7070/search/fr";
+
+            var responses = await client.GetAsyncAs<ImmutableList<Response>>(uri, new
             {
                 q = displayName,
                 format = "json"
             });
 
+            logger.LogInformation("Call returns ", responses);
 
-            logger.LogInformation("Call returns ", response);
+            return responses.Select(MapAddress)
+                .ToImmutableList();
+        }
 
-            return new Api.Address.Address(response.DisplayName, new LatLng(response.Lat, response.Lng));
+        private static Api.Address.Address MapAddress(Response r)
+        {
+            return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon));
         }
     }
 }
