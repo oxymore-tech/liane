@@ -18,7 +18,7 @@ export function PointsInterface({pts,onChange}:{pts:Points,onChange:(pts:Points)
         <PointComponent  point={points.waypoints[0]} index={0} onChange={onPointChange} />
         {/* TODO: Insert here loop on waypoints from index 2 to last index
         {
-            points.waypoints.map(w => <PointComponent point={w} optional={true} />)
+            points.waypoints.slice(2).map(w => <PointComponent point={w} optional={true} />)
         }
         */}
         <PointComponent  point={points.waypoints[1]} index={1} onChange={onPointChange}/>
