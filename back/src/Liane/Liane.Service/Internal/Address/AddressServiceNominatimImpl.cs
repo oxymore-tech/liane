@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Address
 {
-    public sealed class AddressServiceNominatimImpl : IAddressService
+    public sealed class AddressServiceNominatimImpl : IAddressServiceNominatim
     {
         private readonly HttpClient client;
         private readonly ILogger<AddressServiceNominatimImpl> logger;

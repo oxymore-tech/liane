@@ -3,7 +3,7 @@ using Liane.Api.Routing;
 
 namespace Liane.Api.Address
 {
-    public interface IAddressService
+    public interface IAddressServiceNominatim
     {
         
         Task<Address> GetDisplayName(LatLng coordinate);

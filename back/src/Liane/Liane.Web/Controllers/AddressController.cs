@@ -9,21 +9,21 @@ namespace Liane.Web.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
-        private readonly IAddressService addressService;
+        private readonly IAddressServiceNominatim addressService;
 
-        public AddressController(IAddressService addressService)
+        public AddressController(IAddressServiceNominatim addressService)
         {
             this.addressService = addressService;
         }
 
-        [HttpGet("address")]
+        [HttpGet("address/displayName")]
         public async Task<ActionResult<Address>> GetDisplayName([FromQuery] double lat, [FromQuery] double lng)
         {
             return await addressService.GetDisplayName(new LatLng(lat, lng));
         }
 
 
-        [HttpGet("address")]
+        [HttpGet("address/coordinate")]
         public async Task<ActionResult<Address>> GetCoordinate([FromQuery] string displayName)
         {
             return await addressService.GetCoordinate(displayName);
