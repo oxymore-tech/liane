@@ -190,11 +190,9 @@ namespace Liane.Service.Internal.Routing
                 // final coordinates = ( path between start and startInstersections, alternative path, path between endIntersections and end)
                 return new DeltaRoute(alternativePath.Coordinates.ToLatLng(), newDuration, newDistance, Math.Abs(alternatives[0].Duration - alternativePath.Duration));
             }
-            else
-            {
-                // No solution
-                return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()), duration, distance, -4);
-            }
+
+            // No solution
+            return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()), duration, distance, -4);
         }
     }
 }
