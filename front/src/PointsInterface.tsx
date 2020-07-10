@@ -12,7 +12,7 @@ export function PointsInterface({pts, onChange}: { pts: Points, onChange: (pts: 
         if (p) {
             newWaypoints[i] = p
         }
-        setPoints({waypoints: newWaypoints, indexSelected: i})
+        setPoints({waypoints: newWaypoints, selectedPoint: i})
     }
 
 

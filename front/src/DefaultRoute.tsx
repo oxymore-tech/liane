@@ -1,82 +1,79 @@
-import {LatLngLiteral} from "leaflet";
-import React, {memo, useEffect, useState} from "react";
-import {Route} from "./api/route";
-import {routingService} from "./api/routing-service";
-import {RoutingQuery} from "./api/routing-query";
-import {customIcon, LianeMap, routeOverlay} from "./LianeMap";
-import {Marker} from "react-leaflet";
-import {PointsInterface} from "./PointsInterface";
-import {Point} from "./Point";
-import {addressService} from "./api/address-service";
-
+import { LatLngLiteral } from "leaflet";
+import React, { memo, useEffect, useState } from "react";
+import { Route } from "./api/route";
+import { routingService } from "./api/routing-service";
+import { RoutingQuery } from "./api/routing-query";
+import { customIcon, LianeMap, routeOverlay } from "./LianeMap";
+import { Marker } from "react-leaflet";
+import { PointsInterface } from "./PointsInterface";
+import { Point } from "./Point";
+import { addressService } from "./api/address-service";
 
 export interface Points {
-    readonly waypoints: Point[];
-    readonly indexSelected: number;// 0:start, 1:end, -1:none
+  readonly waypoints: Point[];
+  readonly selectedPoint?: number;
 }
 
 export function defaultRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, route?: Route) {
 
-    if (route) {
-        return <>
-            <Marker position={start} icon={customIcon}/>
-            <Marker position={end} icon={customIcon}/>
-            {routeOverlay(route, 0)}
-        </>;
-    } else {
-        return <></>;
-    }
+  if (route) {
+    return <>
+      <Marker position={start} icon={customIcon}/>
+      <Marker position={end} icon={customIcon}/>
+      {routeOverlay(route, 0)}
+    </>;
+  } else {
+    return <></>;
+  }
 }
 
+export function DefaultRouteComponent({start, end}: { start: Point, end: Point }) {
+  const zoom = 11;
 
-export function DefaultRouteComponent({start, end}: { start: LatLngLiteral, end: LatLngLiteral }) {
-    const zoom = 11;
+  const center = {
+    lat: (start.coordinate.lat + end.coordinate.lat) / 2,
+    lng: (start.coordinate.lng + end.coordinate.lng) / 2
+  };
 
-    const center = {
-        lat: (start.lat + end.lat) / 2,
-        lng: (start.lng + end.lng) / 2
-    };
+  const [points, setPoints] = useState<Points>({
+    waypoints: [start, end]
+  });
 
-// au lieu de start et end faire tableau pour distinguer point en fonction d'index
-    const [points, setPoints] = useState({
-        waypoints: [{coordinate: start, address: "Mende", exclude: false}, {
-            coordinate: end,
-            address: "Florac",
-            exclude: false
-        }],
-        indexSelected: -1
-    });
+  const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
 
-    const [lastClickCoordinate, setLastClickCoordinate] = useState(start);
+  const [route, setRoute] = useState<Route>();
 
-    const [route, setRoute] = useState<Route>();
+  const internalStart = points.waypoints[0].coordinate;
+  const internalEnd = points.waypoints[points.waypoints.length - 1].coordinate;
 
-    useEffect(() => {
-        routingService.DefaultRouteMethod(new RoutingQuery(points.waypoints[0].coordinate, points.waypoints[1].coordinate))
-            .then(r => setRoute(r));
-    }, [points.waypoints[0].coordinate, points.waypoints[1].coordinate]);
+  useEffect(() => {
+    routingService.DefaultRouteMethod(new RoutingQuery(internalStart, internalEnd))
+      .then(r => setRoute(r));
+  }, [internalStart, internalEnd]);
 
-    useEffect(() => {
-        if (points.indexSelected != -1) {
-            addressService.GetDisplayName(lastClickCoordinate)
-                .then(a => ({ ...points.waypoints[points.indexSelected], coordinate: a.coordinate, address: a.displayName}) )
-                .then(p => {{
-                    const newWaypoints = [];
-                    setPoints(points => ({waypoints: newWaypoints, indexSelected: -1}));
-                }})
-            let newWaypoints = points.waypoints;
-        }
-    }, [lastClickCoordinate])
+  useEffect(() => {
+    if (points.selectedPoint) {
+      addressService.GetDisplayName(lastClickCoordinate)
+        .then(a => ({...points.waypoints[points.selectedPoint!], coordinate: a.coordinate, address: a.displayName}))
+        .then(p => {
+          const waypoints = points.waypoints.map((w, i) => {
+            if (i === points.selectedPoint) {
+              return p;
+            }
+            return w;
+          });
+          setPoints(({waypoints, selectedPoint: -1}));
+        });
+    }
+  }, [lastClickCoordinate])
 
-
-    let overlay = defaultRouteOverlay(points.waypoints[0].coordinate, points.waypoints[1].coordinate, route);
-    return <>
-        <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
-            {overlay}
-        </LianeMap>
-        <PointsInterface pts={points} onChange={pts => setPoints(pts)}/>
-    </>;
-
+  let overlay = defaultRouteOverlay(points.waypoints[0].coordinate, points.waypoints[1].coordinate, route);
+  return <>
+    <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
+      {overlay}
+    </LianeMap>
+    <PointsInterface pts={points} onChange={pts => setPoints(pts)}/>
+  </>;
 
 }
 

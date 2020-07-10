@@ -4,7 +4,7 @@ namespace Liane.Service.Internal.Osrm.Response
 {
     public sealed class Nearest : Response
     {
-        public Nearest(ImmutableArray<Waypoint> waypoints)
+        public Nearest(Code code, string? message, string? dataVersion, ImmutableArray<Waypoint> waypoints) : base(code, message, dataVersion)
         {
             Waypoints = waypoints;
         }
@@ -13,6 +13,5 @@ namespace Liane.Service.Internal.Osrm.Response
         // Each object has at least the following additional properties:
         // nodes
         public ImmutableArray<Waypoint> Waypoints { get; }
-        
     }
 }

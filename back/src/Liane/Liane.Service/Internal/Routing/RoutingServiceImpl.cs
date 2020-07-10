@@ -87,7 +87,6 @@ namespace Liane.Service.Internal.Routing
             var coordinates = ImmutableList.Create(query.Start, detourPoint, query.End);
             var routeResponse = await osrmService.Route(coordinates, steps: "true", overview: "full");
             Console.Write($"nb Leg: {routeResponse.Routes[0].Legs.Count}");
-            var newGeojson = routeResponse.Routes[0].Geometry;
             var newDuration = routeResponse.Routes[0].Duration;
             var newDistance = routeResponse.Routes[0].Distance;
             // Assumption made : if with the same startPoint and same endPoint, two routes return the same value for duration and distance, then the routes are equals.

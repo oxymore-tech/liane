@@ -12,6 +12,5 @@ namespace Liane.Api.Address
 
         public string DisplayName { get; }
         public LatLng Coordinate { get; }
-        
     }
 }

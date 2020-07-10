@@ -5,25 +5,25 @@ namespace Liane.Service.Internal.Osrm.Response
 {
     public sealed class Routing : Response
     {
-        public Routing(ImmutableArray<Route> routes, ImmutableArray<Waypoint> waypoints)
+        public Routing(Code code, string? message, string? dataVersion, ImmutableArray<Waypoint> waypoints, ImmutableArray<Route> routes) : base(code, message, dataVersion)
         {
-            Routes = routes;
             Waypoints = waypoints;
+            Routes = routes;
         }
         // Inherit code status from Response
         // In case of error, code = NoRoute
-        
+
         // Array of Waypoint objects
         // representing all waypoints in order.
         public ImmutableArray<Waypoint> Waypoints { get; }
+
         // An array of Route objects,
         // ordered by descending recommendation rank.
         public ImmutableArray<Route> Routes { get; }
-        
+
         public override string ToString()
         {
             return StringUtils.ToString(this);
         }
-
     }
 }
