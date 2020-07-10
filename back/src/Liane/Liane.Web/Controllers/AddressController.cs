@@ -11,20 +11,20 @@ namespace Liane.Web.Controllers
     {
         private readonly IAddressService addressService;
 
-        public AddressController(IAddressService routingService)
+        public AddressController(IAddressService addressService)
         {
             this.addressService = addressService;
         }
 
-        [HttpGet("address_name")]
-        public async Task<ActionResult<Address>> GetDisplayName(LatLng coordinate )
+        [HttpGet("address")]
+        public async Task<ActionResult<Address>> GetDisplayName([FromQuery] LatLng coordinate)
         {
             return await addressService.GetDisplayName(coordinate);
         }
-        
-        
-        [HttpGet("address_coord")]
-        public async Task<ActionResult<Address>> GetCoordinate(string displayName)
+
+
+        [HttpGet("address")]
+        public async Task<ActionResult<Address>> GetCoordinate([FromQuery] string displayName)
         {
             return await addressService.GetCoordinate(displayName);
         }
