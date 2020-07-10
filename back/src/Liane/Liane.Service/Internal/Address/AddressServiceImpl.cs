@@ -14,16 +14,16 @@ namespace Liane.Service.Internal.Address
             this.nominatimService = nominatimService;
         }
             
-        public async Task<Api.Address.Address> GetAddressName(AddressNameQuery addressQuery)
+        public async Task<Api.Address.Address> GetDisplayName(LatLng coordinate)
         {
-            var response = await nominatimService.AddressSearch(addressQuery.Coord);
+            var response = await nominatimService.AddressSearch(coordinate);
             
             return new Api.Address.Address( response.DisplayName,new LatLng(response.Lat,response.Lng));
         }
 
-        public async Task<Api.Address.Address> GetAddressCoord(AddressCoordQuery addressQuery)
+        public async Task<Api.Address.Address> GetCoordinate(string displayName)
         {
-            var response = await nominatimService.CoordSearch(addressQuery.Address);
+            var response = await nominatimService.CoordSearch(displayName);
             
             return new Api.Address.Address( response.DisplayName,new LatLng(response.Lat,response.Lng));
         }

@@ -1,13 +1,14 @@
 using System.Threading.Tasks;
+using Liane.Api.Routing;
 
 namespace Liane.Api.Address
 {
     public interface IAddressService
     {
         
-        Task<Address> GetAddressName(AddressNameQuery addressQuery);
+        Task<Address> GetDisplayName(LatLng coordinate);
         
-        Task<Address> GetAddressCoord(AddressCoordQuery addressQuery);
+        Task<Address> GetCoordinate(string displayName);
         
     }
 }

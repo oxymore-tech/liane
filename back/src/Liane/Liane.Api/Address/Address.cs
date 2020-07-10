@@ -4,14 +4,14 @@ namespace Liane.Api.Address
 {
     public sealed class Address
     {
-        public Address(string address, LatLng coord)
+        public Address(string displayName, LatLng coordinate)
         {
-            this.address = address;
-            this.coord = coord;
+            DisplayName = displayName;
+            Coordinate = coordinate;
         }
 
-        public string address { get; }
-        public LatLng coord { get; }
+        public string DisplayName { get; }
+        public LatLng Coordinate { get; }
         
     }
 }
