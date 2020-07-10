@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -118,7 +119,7 @@ namespace Liane.Api.Util.Http
                     {
                         if (item != null)
                         {
-                            queryString.Add(propertyInfo.Name, item.ToString());
+                            queryString.Add(propertyInfo.Name, Convert.ToString(item, CultureInfo.InvariantCulture));
                         }
                     }
                 }
@@ -128,11 +129,14 @@ namespace Liane.Api.Util.Http
                 }
                 else
                 {
-                    queryString.Add(propertyInfo.Name, value.ToString());
+                    queryString.Add(propertyInfo.Name, Convert.ToString(value, CultureInfo.InvariantCulture));
                 }
             }
+            //TODO: Mettre un log ici
 
-            return $"{uri}?{queryString}";
+            var s = $"{uri}?{queryString}";
+            Console.WriteLine($"url : {s}");
+            return s;
         }
     }
 }
