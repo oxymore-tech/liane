@@ -17,9 +17,9 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("address")]
-        public async Task<ActionResult<Address>> GetDisplayName([FromQuery] LatLng coordinate)
+        public async Task<ActionResult<Address>> GetDisplayName([FromQuery] double lat, [FromQuery] double lng)
         {
-            return await addressService.GetDisplayName(coordinate);
+            return await addressService.GetDisplayName(new LatLng(lat, lng));
         }
 
 

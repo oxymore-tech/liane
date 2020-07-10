@@ -1,25 +1,31 @@
-import { AddressLatLngQuery, AddressNameQuery } from "./address-query";
-import { Address } from "./address";
+import {Address} from "./address";
+import {LatLngLiteral} from "leaflet";
 
 class AddressService {
 
-    async GetAddressName(query: AddressNameQuery): Promise<Address> {
-        const response = await fetch("http://localhost:8081/api/address_name", {
+    async GetDisplayName(coordinate: LatLngLiteral): Promise<Address> {
+        const url = new URL("http://localhost:8081/api/address");
+        url.searchParams.append("lat", coordinate.lat.toString());
+        url.searchParams.append("lng", coordinate.lng.toString());
+
+        const response = await fetch(url.toString(), {
             headers: {
                 "Content-Type": "application/json"
             },
-            method: "POST",
-            body: JSON.stringify(query)
+            method: "GET"
         });
         return await response.json();
     }
-    async GetAddressCoord(query: AddressLatLngQuery): Promise<Address> {
-        const response = await fetch("http://localhost:8081/api/address_coord", {
+
+    async GetCoordinate(displayName: string): Promise<Address> {
+        const url = new URL("http://localhost:8081/api/address");
+        url.searchParams.append("displayName", displayName);
+
+        const response = await fetch(url.toString(), {
             headers: {
                 "Content-Type": "application/json"
             },
-            method: "POST",
-            body: JSON.stringify(query)
+            method: "GET"
         });
         return await response.json();
     }

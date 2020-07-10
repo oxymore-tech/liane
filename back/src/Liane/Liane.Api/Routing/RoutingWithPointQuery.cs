@@ -4,7 +4,7 @@ namespace Liane.Api.Routing
 {
     public sealed class RoutingWithPointQuery
     {
-        public RoutingWithPointQuery(LatLng start, LatLng end, LatLng point, float duration = -1, float distance = -1, ImmutableList<LatLng> coordinates = null )
+        public RoutingWithPointQuery(LatLng start, LatLng end, LatLng point, float duration = -1, float distance = -1, ImmutableList<LatLng>? coordinates = null)
         {
             Start = start;
             End = end;
