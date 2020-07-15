@@ -8,11 +8,7 @@ function App() {
 
   const start = {coordinate: {lat: 44.5180226, lng: 3.4991057}, address: "Mende", exclude: false};
   const end = {coordinate: {lat: 44.31901305, lng: 3.57802065202088}, address: "Florac", exclude: false};
-  const waypoint = {lat: 44.38624954223633, lng: 3.6189568042755127};
-  const detour = {lat: 44.46151681242642, lng: 3.459056828828282};
-
-  const start2 = {lat: 44.480286, lng: 3.456429};
-  const end2 = {lat: 44.376555, lng: 3.521215};
+  
   return (
     <div className="App">
 
@@ -20,6 +16,13 @@ function App() {
 
 
       {/*
+      const waypoint = {lat: 44.38624954223633, lng: 3.6189568042755127};
+  const detour = {lat: 44.46151681242642, lng: 3.459056828828282};
+
+  const start2 = {lat: 44.480286, lng: 3.456429};
+  const end2 = {lat: 44.376555, lng: 3.521215};
+  
+      
       <table>
         <tr>
           <th>Scenario</th>

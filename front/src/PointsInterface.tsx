@@ -1,28 +1,39 @@
 import React, {useEffect, useState} from "react";
-import {LatLngLiteral} from "leaflet";
 import {Point, PointComponent} from "./Point";
 import {Points} from "./DefaultRoute";
 
 export function PointsInterface({pts, onChange}: { pts: Points, onChange: (pts: Points) => void }) {
     const [points, setPoints] = useState(pts);
-    useEffect(() => onChange(points), [points]);
+    useEffect(() => {
+        console.log("onChangePointsInterface");
+        onChange(points);
+    }, [points]);
 
-    function onPointChange(i: number, p?: Point) {
-        let newWaypoints = points.waypoints;
-        if (p) {
-            newWaypoints[i] = p
+    function onPointChange(index: number, newp?: Point) {
+        console.log("onPointChange")
+        if (newp) {
+            console.log("with newPoint")
+            const waypoints = points.waypoints.map((p, i) => {
+                if (i === index) {
+                    return newp;
+                }
+                return p;
+            });
+            setPoints({...points, waypoints: waypoints, selectedPoint: -1})
+
+        } else {
+            console.log("with index alone")
+            setPoints({...points, selectedPoint: index})
         }
-        setPoints({waypoints: newWaypoints, selectedPoint: i})
     }
-
-
-    return <div className={"pointsInterface .leaflet-bar"}>
-        <PointComponent point={points.waypoints[0]} index={0} onChange={onPointChange}/>
-        {/* TODO: Insert here loop on waypoints from index 2 to last index
-        {
-            points.waypoints.slice(2).map(w => <PointComponent point={w} optional={true} />)
+    let pointsOverlay = points.waypoints.map((p, i) => {
+        if (i === 0 || i === points.waypoints.length - 1) {
+            return <PointComponent key={i} point={p} index={i} onChange={onPointChange}/>;
+        } else {
+            return <PointComponent key={i} point={p} index={i} onChange={onPointChange} optional={true}/>;
         }
-        */}
-        <PointComponent point={points.waypoints[1]} index={1} onChange={onPointChange}/>
+    });
+    return <div className={"pointsInterface .leaflet-bar"}>
+        {pointsOverlay}
     </div>;
 }
