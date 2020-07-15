@@ -1,36 +1,42 @@
-import { LatLngLiteral } from "leaflet";
-import React, { useState } from "react";
+import {LatLngLiteral} from "leaflet";
+import React, {ChangeEvent, InputHTMLAttributes, useState} from "react";
 
 export interface Point {
-  readonly coordinate: LatLngLiteral;
-  readonly address: string;
-  readonly exclude: boolean;
+    readonly coordinate: LatLngLiteral;
+    readonly address: string;
+    readonly exclude: boolean;
 }
 
 export interface PointComponentProps {
-  index: number,
-  point: Point,
-  optional: boolean,
-  onChange: (i: number, p: Point) => void
-  onSelect: (i: number) => void
+    index: number,
+    point: Point,
+    optional: boolean,
+    onChange: (i: number, p: Point) => void
+    onSelect: (i: number) => void
+    onInput: (a: string) => void
 }
 
-export function PointComponent({index, point, optional, onChange, onSelect}: PointComponentProps) {
-  const [modifiedPoint, setModifiedPoint] = useState(point);
+export function PointComponent({index, point, optional, onChange, onSelect, onInput}: PointComponentProps) {
 
-  function excludeClick() {
-    setModifiedPoint(point => ({...point, exclude: !point.exclude}));
-    onChange(index, modifiedPoint);
-  }
-
-  function selectClick() {
-    onSelect(index);
-  }
-
-  return <>
-    <div onClick={selectClick}> {JSON.stringify(point)} </div>
-    {
-      optional ? <button onClick={excludeClick}> {point.exclude} </button> : null
+    function excludeClick() {
+        onChange(index, {...point, exclude: !point.exclude});
     }
-  </>;
+
+    function selectClick() {
+        onSelect(index);
+    }
+
+    function inputChange(event: InputEvent) {
+        const a = event.data ||"toulouse";
+        
+        onInput(a);
+    }
+
+    return <>
+        
+        <input type="text" value={point.address} onClick={selectClick} onChange={inputChange}/>
+        {
+            optional ? <button onClick={excludeClick}> {point.exclude} </button> : null
+        }
+    </>;
 }
