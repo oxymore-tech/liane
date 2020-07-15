@@ -27,7 +27,6 @@ function detourFound(detour: Route){
     
     const index = Math.round(detour.coordinates.length / 2);
 
-    console.log(detour);
     if(index <0){
         const center = detour.coordinates[index];
 /*

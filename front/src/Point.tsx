@@ -1,5 +1,5 @@
-import {LatLngLiteral} from "leaflet";
-import React, {useEffect, useState} from "react";
+import { LatLngLiteral } from "leaflet";
+import React, { useState } from "react";
 
 export interface Point {
   readonly coordinate: LatLngLiteral;
@@ -7,27 +7,30 @@ export interface Point {
   readonly exclude: boolean;
 }
 
-export function PointComponent({onChange, index, point, optional}: { onChange: (i: number, p?: Point) => void, index: number, point: Point, optional?: boolean }) {
+export interface PointComponentProps {
+  index: number,
+  point: Point,
+  optional: boolean,
+  onChange: (i: number, p: Point) => void
+  onSelect: (i: number) => void
+}
+
+export function PointComponent({index, point, optional, onChange, onSelect}: PointComponentProps) {
   const [modifiedPoint, setModifiedPoint] = useState(point);
-  useEffect(()=>onChange(index, modifiedPoint),[modifiedPoint]);
-  
+
   function excludeClick() {
     setModifiedPoint(point => ({...point, exclude: !point.exclude}));
+    onChange(index, modifiedPoint);
   }
 
   function selectClick() {
-    console.log("selectClick");
-    onChange(index);
+    onSelect(index);
   }
 
-  function pointOverlay(point: Point, optional: boolean) {
-    return <>
-      <div onClick={selectClick}> {JSON.stringify(point)} </div>
-      {
-        optional || false ? <button onClick={excludeClick}> {point.exclude} </button> : null
-      }
-    </>
-  }
-
-  return pointOverlay(point, optional || false);
+  return <>
+    <div onClick={selectClick}> {JSON.stringify(point)} </div>
+    {
+      optional ? <button onClick={excludeClick}> {point.exclude} </button> : null
+    }
+  </>;
 }
