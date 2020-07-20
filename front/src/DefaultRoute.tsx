@@ -3,11 +3,13 @@ import React, {memo, useEffect, useState} from "react";
 import {Route} from "./api/route";
 import {routingService} from "./api/routing-service";
 import {RoutingQuery} from "./api/routing-query";
-import {customIcon, LianeMap, routeOverlay} from "./LianeMap";
+import {endIcon, LianeMap, routeOverlay, startIcon} from "./LianeMap";
 import {Marker} from "react-leaflet";
 import {PointsOverlay} from "./PointsOverlay";
 import {Point} from "./Point";
 import {addressService} from "./api/address-service";
+import {Address} from "./api/address";
+import VirtualizedSelect from "react-virtualized-select";
 
 export interface Points {
     readonly waypoints: Point[];
@@ -18,8 +20,8 @@ export function defaultRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, ro
 
     if (route) {
         return <>
-            <Marker position={start} icon={customIcon}/>
-            <Marker position={end} icon={customIcon}/>
+            <Marker position={start} icon={startIcon}/>
+            <Marker position={end} icon={endIcon}/>
             {routeOverlay(route, 0)}
         </>;
     } else {
@@ -41,7 +43,13 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
 
     const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
 
-    const [lastAddressName, setLastAddressName] = useState("");
+    const [lastAddressName, setLastAddressName] = useState(start.address);
+
+    const [selectedAddress, setSelectedAddress] = useState<Address>({
+        displayName: "default",
+        coordinate: start.coordinate
+    });
+    const [addresses, setAddresses] = useState<Address[]>([]);
 
     const [route, setRoute] = useState<Route>();
 
@@ -52,6 +60,7 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
         routingService.DefaultRouteMethod(new RoutingQuery(internalStart, internalEnd))
             .then(r => setRoute(r));
     }, [internalStart, internalEnd]);
+
     useEffect(() => {
         if (selectedPoint > -1) {
             addressService.GetDisplayName(lastClickCoordinate)
@@ -100,14 +109,62 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
         }))
     }
 
+    // Option<TValue> | Options<TValue> | null
+    // OnChangeHandler<OptionValues, Option<OptionValues> | Options<OptionValues>>
+    const onChange = (sa: Address | null) => {
+        if (sa != null) {
+            setSelectedAddress(selectedAddress);
+        } else {
+            setSelectedAddress({
+                coordinate: start.coordinate,
+                displayName: start.address
+            })
+        }
+    }
+    
+    function loadAddresses(displayName: string) {
+        return addressService.Search(displayName)
+            .then((a) => {
+                setAddresses(a);
+                return {options:new Array(a)};
+            })
+    }
+    
+
+    function onSelectClick() {
+// equals to previous selectClick in point
+    }
+
     let routeOverlay = defaultRouteOverlay(waypoints[0].coordinate, waypoints[1].coordinate, route);
+
     return <>
         <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
             {routeOverlay}
         </LianeMap>
+
         <PointsOverlay waypoints={waypoints} onChange={setWaypoint} onSelect={setSelectedPoint}
                        onInput={setLastAddressName}>
-            <div>{lastAddressName}</div>
+            <div>
+                <VirtualizedSelect
+                    async
+                    backspaceRemoves={false}
+                    labelKey='displayName' 
+                    
+                    loadOptions={loadAddresses}
+                    options={new Array(addresses)}
+                    
+                    /*onChange={selectedOption => {
+                        if (selectedOption?.hasOwnProperty("coordinate") && selectedOption?.hasOwnProperty("displayName")) {
+                            onChange({coordinate: selectedOption?.coordinate, displayName: selectedOption?.displayName});
+                        }
+                    }
+                    }*/
+                    
+                    onValueClick={onSelectClick}
+                    value={selectedAddress}
+                    valueKey='displayName'
+                />
+            </div>
         </PointsOverlay>
     </>;
 

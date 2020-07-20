@@ -26,10 +26,10 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
         onSelect(index);
     }
 
-    function inputChange(event: InputEvent) {
-        const a = event.data ||"toulouse";
+    function inputChange(event: ChangeEvent<HTMLInputElement>) {
+        // TODO: debounce, filtre les events et merge en seul, checker librairies eg. lodash
         
-        onInput(a);
+        onInput(event.target.value);
     }
 
     return <>
