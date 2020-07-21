@@ -5,7 +5,7 @@ namespace Liane.Service.Internal.Nominatim
     public sealed class Response
     {
         public Response(int placeId, string licence, string osmType, int osmId, ImmutableArray<double> boudingbox, double lat, double lon, string display_name, string @class, string type,
-            float importance, Address address)
+            float importance, AddressDetails address)
         {
             PlaceId = placeId;
             Licence = licence;
@@ -32,6 +32,6 @@ namespace Liane.Service.Internal.Nominatim
         public string Class { get; }
         public string Type { get; }
         public float Importance { get; }
-        public Address Address { get; }
+        public AddressDetails Address { get; }
     }
 }

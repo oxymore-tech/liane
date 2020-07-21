@@ -1,22 +1,28 @@
 import React from "react";
-import './App.css';
 import 'leaflet/dist/leaflet.css';
-import { DefaultRoute } from "./DefaultRoute";
+import 'react-select/dist/react-select.css';
+import './App.css';
+import {Alternatives} from "./Alternatives";
+import {WaypointRoute} from "./WaypointRoute";
+import {DetourRoute} from "./DetourRoute";
 
 
 function App() {
 
-  const start = {coordinate: {lat: 44.5180226, lng: 3.4991057}, address: "Mende", exclude: false};
-  const end = {coordinate: {lat: 44.31901305, lng: 3.57802065202088}, address: "Florac", exclude: false};
-  
-  return (
-    <div className="App">
+    const start = {coordinate: {lat: 44.5180226, lng: 3.4991057}, address: "Mende", exclude: false};
+    const end = {coordinate: {lat: 44.31901305, lng: 3.57802065202088}, address: "Florac", exclude: false};
+    const waypoint = {
+        coordinate: {lat: 44.38624954223633, lng: 3.6189568042755127},
+        address: "Point de passage",
+        exclude: false
+    };
 
-      <DefaultRoute start={start} end={end}/>
+    return (
+        <div className="App">
+            <DetourRoute start={start} end={end} point={waypoint}/>
 
 
-      {/*
-      const waypoint = {lat: 44.38624954223633, lng: 3.6189568042755127};
+            {/*
   const detour = {lat: 44.46151681242642, lng: 3.459056828828282};
 
   const start2 = {lat: 44.480286, lng: 3.456429};
@@ -55,8 +61,8 @@ function App() {
       </table>  
       
       */}
-    </div>
-  );
+        </div>
+    );
 }
 
 

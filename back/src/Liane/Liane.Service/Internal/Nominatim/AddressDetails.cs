@@ -1,9 +1,7 @@
 namespace Liane.Service.Internal.Nominatim
 {
-    public class Address
+    public sealed class AddressDetails
     {
-
-        
         //"address":{
         //             "house_number":"135",
         //             "road":"Pilkington Avenue",
@@ -16,7 +14,7 @@ namespace Liane.Service.Internal.Nominatim
         //             "country":"Royaume-Uni",
         //             "country_code":"gb"}
 
-        public Address(string houseNumber, string road, string town, string city, string county, string stateDistrict, string state, string postcode, string country, string countryCode)
+        public AddressDetails(string houseNumber, string road, string town, string city, string county, string stateDistrict, string state, string postcode, string country, string countryCode)
         {
             HouseNumber = houseNumber;
             Road = road;
@@ -40,6 +38,5 @@ namespace Liane.Service.Internal.Nominatim
         public string Postcode { get; }
         public string Country { get; }
         public string CountryCode { get; }
-        
     }
 }

@@ -1,8 +1,9 @@
 import {LatLngLiteral} from "leaflet";
-import React, {ChangeEvent, InputHTMLAttributes, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import VirtualizedSelect from "react-virtualized-select";
 import {Address} from "./api/address";
 import {addressService} from "./api/address-service";
+import {debounce} from "lodash";
 
 export interface Point {
     readonly coordinate: LatLngLiteral;
@@ -30,12 +31,15 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
     });
 
     useEffect(() => {
+
         if (input) {
             addressService.Search(input)
                 .then(a => setAddresses(a));
         } else {
             setAddresses([]);
         }
+
+
     }, [input])
 
     function excludeClick() {
@@ -46,48 +50,46 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
         onSelect(index);
     }
 
-    function inputChange(event: ChangeEvent<HTMLInputElement>) {
-        // TODO: debounce, filtre les events et merge en seul, checker librairies eg. lodash
-
-        onInput(event.target.value);
-    }
-
     useEffect(() => {
         onChange(index, {...point, coordinate: selectedAddress.coordinate, address: selectedAddress.displayName})
     }, [selectedAddress]);
 
     return <>
+        <div className={"liane-point"}>
+            <td>
+                {optional ? <input defaultChecked={!(point.exclude)} type={"checkbox"} onClick={excludeClick}/> :
+                    null}
+            </td>
+            <td className={"liane-point-select"}>
+                <VirtualizedSelect
 
-        {
-            optional ? <button onClick={excludeClick}> {point.exclude} </button> : null
-//                <input type="text" value={point.address} onClick={selectClick} onChange={inputChange}/>
+                    backspaceRemoves={false}
 
-        }
+                    labelKey='displayName'
 
-        <VirtualizedSelect
+                    options={addresses}
 
-            backspaceRemoves={false}
+                    onInputChange={debounce(input => {
+                        setInput(input);
+                        return input;
+                    }, 1200)}
 
-            labelKey='displayName'
+                    onValueClick={selectClick}
+                    value={selectedAddress}
 
-            options={addresses}
-
-            onInputChange={input => {
-                setInput(input);
-                return input;
-            }}
-
-            onValueClick={selectClick}
-            value={selectedAddress}
-
-            onChange={option => {
-                if (option) {
-                    setSelectedAddress((option.valueOf() as Address));
-                }
-            }}
+                    onChange={option => {
+                        if (option) {
+                            setSelectedAddress((option.valueOf() as Address));
+                        }
+                    }}
 
 
-        />
+                />
+            </td>
+        </div>
+
 
     </>;
 }
+
+//optionRenderer={(optionRender: VirtualizedOptionRenderOptions<Address>) => (<div> {optionRender.option.displayName}</div>)}

@@ -103,24 +103,16 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
         }))
     }
 
-    // Option<TValue> | Options<TValue> | null
-    // OnChangeHandler<OptionValues, Option<OptionValues> | Options<OptionValues>>
-
-
     let routeOverlay = defaultRouteOverlay(waypoints[0].coordinate, waypoints[1].coordinate, route);
 
     return <>
         <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
-            {routeOverlay}
+            <>
+                {routeOverlay}
+            </>
         </LianeMap>
-
         <PointsOverlay waypoints={waypoints} onChange={setWaypoint} onSelect={setSelectedPoint}
-                       onInput={setLastAddressName}>
-            <div>
-
-
-            </div>
-        </PointsOverlay>
+                       onInput={setLastAddressName}/>
     </>;
 
 }
