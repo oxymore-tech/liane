@@ -3,7 +3,7 @@ import {Map, Marker, Polyline, Popup, TileLayer} from "react-leaflet";
 import React from "react";
 import * as math from "mathjs";
 import moment from "moment";
-import {icon, LatLngLiteral, LeafletMouseEvent} from "leaflet";
+import {icon, LatLngBounds, LatLngLiteral, LeafletMouseEvent} from "leaflet";
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import infoIconImg from "./data/icon/info-icon.png"
 import startIconImg from "./data/icon/start-icon.png"
@@ -63,7 +63,13 @@ export function routeOverlay(r: Route, i: number) {
 }
 
 
-export function LianeMap({onClick, children, center, zoom}: { onClick?: (c: LatLngLiteral) => void, children: JSX.Element | null, center: LatLngLiteral, zoom: number }) {
+export function LianeMap({onClick, children, start, end}: { onClick?: (c: LatLngLiteral) => void, children: JSX.Element | null, start: LatLngLiteral, end: LatLngLiteral }) {
+    const bounds = new LatLngBounds(start, end);
+
+    const center = {
+        lat: (start.lat + end.lat) / 2,
+        lng: (start.lng + end.lng) / 2
+    };
 
     function handleClick(e: LeafletMouseEvent) {
         if (onClick) {
@@ -71,7 +77,7 @@ export function LianeMap({onClick, children, center, zoom}: { onClick?: (c: LatL
         }
     }
 
-    return <Map onclick={handleClick} className="map" center={center} zoom={zoom}>
+    return <Map onclick={handleClick} className="map" center={center} bounds={bounds}>
         <TileLayer
             key="tiles"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

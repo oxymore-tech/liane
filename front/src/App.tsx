@@ -1,10 +1,20 @@
-import React from "react";
+import React, {useState} from "react";
 import 'leaflet/dist/leaflet.css';
 import 'react-select/dist/react-select.css';
 import './App.css';
 import {Alternatives} from "./Alternatives";
 import {WaypointRoute} from "./WaypointRoute";
 import {DetourRoute} from "./DetourRoute";
+import {DefaultRoute} from "./DefaultRoute";
+import {Point} from "./Point";
+
+
+enum scenarios {
+    defaultRoute,
+    alternatives,
+    detourRoute,
+    waypointRoute
+}
 
 
 function App() {
@@ -17,50 +27,41 @@ function App() {
         exclude: false
     };
 
+
+    const [waypoints, setWaypoints] = useState([start,waypoint, end]);
+    
+    const [scenario, setScenario] = useState<number>(scenarios.defaultRoute);
+
+    function selectedScenarioOverlay(s: scenarios) {
+        switch (s) {
+            case scenarios.defaultRoute:
+                return <DefaultRoute waypoints={waypoints} setWaypoints={setWaypoints}/>;
+            case scenarios.alternatives:
+                return <Alternatives waypoints={waypoints} setWaypoints={setWaypoints}/>;
+            case scenarios.detourRoute:
+                return <DetourRoute waypoints={waypoints} setWaypoints={setWaypoints}/>;
+            case scenarios.waypointRoute:
+                return <WaypointRoute waypoints={waypoints} setWaypoints={setWaypoints}/>;
+        }
+    }
+
+    function onChange() {
+
+    }
+
+    const overlay = selectedScenarioOverlay(scenario);
+
     return (
         <div className="App">
-            <DetourRoute start={start} end={end} point={waypoint}/>
-
-
-            {/*
-  const detour = {lat: 44.46151681242642, lng: 3.459056828828282};
-
-  const start2 = {lat: 44.480286, lng: 3.456429};
-  const end2 = {lat: 44.376555, lng: 3.521215};
-  
-      
-      <table>
-        <tr>
-          <th>Scenario</th>
-          <th>Route</th>
-        </tr>
-        <tr>
-        <td>Route par défaut (la plus rapide)</td>
-        <td>
-          <DefaultRoute start={start} end={end}/>
-        </td>
-      </tr>
-        <tr>
-          <td>Alternatives :</td>
-          <td>
-            <Alternatives start={start} end={end}/>
-          </td>
-        </tr>
-        <tr>
-          <td>Point de passage :</td>
-          <td>
-            <WaypointRoute start={start} end={end} point={waypoint}/>
-          </td>
-        </tr>
-        <tr>
-          <td>Point de passage :</td>
-          <td>
-            <DetourRoute start={start} end={end} point={detour}/>
-          </td>
-        </tr>
-      </table>  
-      
-      */}
+            <select className={"scenario-select"}
+                    value={scenario}
+                    onChange={e => setScenario(parseInt(e.target.value))}>
+                <option value={scenarios.defaultRoute}>defaultRoute</option>
+                <option value={scenarios.alternatives}>alternatives</option>
+                <option value={scenarios.detourRoute}>detourRoute</option>
+                <option value={scenarios.waypointRoute}>waypointRoute</option>
+            </select>
+            {overlay}
         </div>
     );
 }

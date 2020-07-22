@@ -30,7 +30,8 @@ namespace Liane.Service.Internal.Address
             {
                 lat = coordinate.Lat,
                 lon = coordinate.Lng,
-                format = "json"
+                format = "json",
+                addressdetails = 1
             });
 
             return MapAddress(response);
@@ -54,7 +55,8 @@ namespace Liane.Service.Internal.Address
             var responses = await client.GetAsyncAs<ImmutableList<Response>>(uri, new
             {
                 q = displayName,
-                format = "json"
+                format = "json",
+                addressdetails = 1
             });
 
             logger.LogInformation("Call returns ", responses);
@@ -66,9 +68,7 @@ namespace Liane.Service.Internal.Address
         private static Api.Address.Address MapAddress(Response r)
         {
             return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon),
-                new Api.Address.AddressDetails(r.Address.HouseNumber,
-                    r.Address.Road, r.Address.Town, r.Address.City, r.Address.County, r.Address.StateDistrict,
-                    r.Address.State, r.Address.Postcode, r.Address.Country, r.Address.CountryCode));
+                new Api.Address.AddressDetails(r.Address.HouseNumber, r.Address.Road, r.Address.Town, r.Address.City, r.Address.County, r.Address.StateDistrict, r.Address.State, r.Address.Postcode, r.Address.Country, r.Address.CountryCode));// 
         }
     }
 }

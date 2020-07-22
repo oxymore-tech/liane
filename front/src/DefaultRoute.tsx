@@ -27,32 +27,22 @@ export function defaultRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, ro
     }
 }
 
-export function DefaultRouteComponent({start, end}: { start: Point, end: Point }) {
-    const zoom = 10;
-
-    const center = {
-        lat: (start.coordinate.lat + end.coordinate.lat) / 2,
-        lng: (start.coordinate.lng + end.coordinate.lng) / 2
-    };
-
-    const [waypoints, setWaypoints] = useState([start, end]);
-
+export function DefaultRouteComponent({waypoints, setWaypoints}: { waypoints: Point[], setWaypoints:(w:Point[])=>void }) {
+    const startPoint = waypoints[0];
+    const endPoint = waypoints[waypoints.length - 1];
+    
     const [selectedPoint, setSelectedPoint] = useState(-1);
-
-    const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
-
-    const [lastAddressName, setLastAddressName] = useState(start.address);
+    const [lastClickCoordinate, setLastClickCoordinate] = useState(startPoint.coordinate);
+    const [lastAddressName, setLastAddressName] = useState(startPoint.address);
 
 
     const [route, setRoute] = useState<Route>();
 
-    const internalStart = waypoints[0].coordinate;
-    const internalEnd = waypoints[waypoints.length - 1].coordinate;
 
     useEffect(() => {
-        routingService.DefaultRouteMethod(new RoutingQuery(internalStart, internalEnd))
+        routingService.DefaultRouteMethod(new RoutingQuery(startPoint.coordinate, endPoint.coordinate))
             .then(r => setRoute(r));
-    }, [internalStart, internalEnd]);
+    }, [startPoint, endPoint]);
 
     useEffect(() => {
         if (selectedPoint > -1) {
@@ -103,10 +93,10 @@ export function DefaultRouteComponent({start, end}: { start: Point, end: Point }
         }))
     }
 
-    let routeOverlay = defaultRouteOverlay(waypoints[0].coordinate, waypoints[1].coordinate, route);
+    let routeOverlay = defaultRouteOverlay(startPoint.coordinate, endPoint.coordinate, route);
 
     return <>
-        <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
+        <LianeMap onClick={c => setLastClickCoordinate(c)} start={startPoint.coordinate} end={endPoint.coordinate}>
             <>
                 {routeOverlay}
             </>

@@ -5,6 +5,7 @@ export interface Address {
     readonly displayName: string;
     readonly addressDetails?:AddressDetails;
 }
+
 interface AddressDetails {
     readonly houseNumber: string;
     readonly road:string;
@@ -14,6 +15,10 @@ interface AddressDetails {
     readonly state:string;
     readonly country:string;
     readonly countryCode:string;
+}
+
+export function showAddress(a:Address){
+    return a.displayName;
 }
 /*
 boundingbox - area of corner coordinates

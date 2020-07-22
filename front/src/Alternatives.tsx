@@ -21,28 +21,29 @@ function alternativesOverlay(start: LatLngLiteral, end: LatLngLiteral, routes?: 
     }
 }
 
-function AlternativesComponent({start, end}: { start: Point, end: Point }) {
+function AlternativesComponent({waypoints, setWaypoints}: { waypoints: Point[], setWaypoints: (w: Point[]) => void }) {
     const zoom = 10;
 
+    const startPoint = waypoints[0];
+    const endPoint = waypoints[waypoints.length - 1];
+
+
     const center = {
-        lat: (start.coordinate.lat + end.coordinate.lat) / 2,
-        lng: (start.coordinate.lng + end.coordinate.lng) / 2
+        lat: (startPoint.coordinate.lat + endPoint.coordinate.lat) / 2,
+        lng: (startPoint.coordinate.lng + endPoint.coordinate.lng) / 2
     };
 
     const [alternatives, setAlternatives] = useState<Route[]>()
 
-    const [waypoints, setWaypoints] = useState([start, end]);
     const [selectedPoint, setSelectedPoint] = useState(-1);
-    const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
-    const [lastAddressName, setLastAddressName] = useState(start.address);
+    const [lastClickCoordinate, setLastClickCoordinate] = useState(startPoint.coordinate);
+    const [lastAddressName, setLastAddressName] = useState(startPoint.address);
 
-    const internalStart = waypoints[0].coordinate;
-    const internalEnd = waypoints[waypoints.length - 1].coordinate;
 
     useEffect(() => {
-        routingService.GetAlternatives(new RoutingQuery(internalStart, internalEnd))
+        routingService.GetAlternatives(new RoutingQuery(startPoint.coordinate, endPoint.coordinate))
             .then(r => setAlternatives(r));
-    }, [internalStart, internalEnd]);
+    }, [startPoint, endPoint]);
 
 
     let overlay = alternativesOverlay(waypoints[0].coordinate, waypoints[1].coordinate, alternatives);
@@ -99,7 +100,7 @@ function AlternativesComponent({start, end}: { start: Point, end: Point }) {
 
 
     return <>
-        <LianeMap  onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
+        <LianeMap onClick={c => setLastClickCoordinate(c)} start={startPoint.coordinate} end={endPoint.coordinate}>
             {overlay}
         </LianeMap>
         <PointsOverlay waypoints={waypoints} onChange={setWaypoint} onSelect={setSelectedPoint}

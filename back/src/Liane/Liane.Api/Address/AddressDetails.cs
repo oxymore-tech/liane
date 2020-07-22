@@ -28,6 +28,23 @@ namespace Liane.Api.Address
             CountryCode = countryCode;
         }
 
+        /*
+         * public AddressDetails(Liane.Service.Internal.Nominatim.AddressDetails r)
+        {
+            
+            HouseNumber = r.Address.HouseNumber;
+            Road = r.Address.Road;
+            Town = r.Address.Town;
+            City = r.Address.City;
+            County = r.Address.County;
+            StateDistrict = r.Address.StateDistrict;
+            State = r.Address.State;
+            Postcode = r.Address.Postcode;
+            Country = r.Address.Country;
+            CountryCode = r.Address.CountryCode;
+        }
+
+         */
         public string HouseNumber { get; }
         public string Road { get; }
         public string Town { get; }

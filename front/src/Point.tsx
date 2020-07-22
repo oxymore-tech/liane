@@ -1,7 +1,7 @@
 import {LatLngLiteral} from "leaflet";
 import React, {useEffect, useState} from "react";
 import VirtualizedSelect from "react-virtualized-select";
-import {Address} from "./api/address";
+import {Address, showAddress} from "./api/address";
 import {addressService} from "./api/address-service";
 import {debounce} from "lodash";
 
@@ -51,7 +51,7 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
     }
 
     useEffect(() => {
-        onChange(index, {...point, coordinate: selectedAddress.coordinate, address: selectedAddress.displayName})
+        onChange(index, {...point, coordinate: selectedAddress.coordinate, address: showAddress(selectedAddress)})
     }, [selectedAddress]);
 
     return <>

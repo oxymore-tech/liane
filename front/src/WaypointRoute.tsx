@@ -28,18 +28,13 @@ function waypointRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, point: L
     }
 }
 
-function WaypointRouteComponent({start, end, point}: { start: Point, end: Point, point: Point }) {
-    const zoom = 10;
+function WaypointRouteComponent({waypoints, setWaypoints}: { waypoints: Point[], setWaypoints: (w: Point[]) => void }) {
+    const startPoint = waypoints[0];
+    const endPoint = waypoints[waypoints.length - 1];
 
-    const center = {
-        lat: (start.coordinate.lat + end.coordinate.lat) / 2,
-        lng: (start.coordinate.lng + end.coordinate.lng) / 2
-    };
-
-    const [waypoints, setWaypoints] = useState([start, point, end]);
     const [selectedPoint, setSelectedPoint] = useState(-1);
-    const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
-    const [lastAddressName, setLastAddressName] = useState(start.address);
+    const [lastClickCoordinate, setLastClickCoordinate] = useState(startPoint.coordinate);
+    const [lastAddressName, setLastAddressName] = useState(startPoint.address);
 
     function setWaypoint(i: number, p: Point) {
         setWaypoints(waypoints.map((w, wi) => {
@@ -108,9 +103,9 @@ function WaypointRouteComponent({start, end, point}: { start: Point, end: Point,
                 });
         }
     }, [lastAddressName]);
-    
+
     return <>
-        <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
+        <LianeMap onClick={c => setLastClickCoordinate(c)} start={startPoint.coordinate} end={endPoint.coordinate}>
             {overlay}
         </LianeMap>
         <PointsOverlay waypoints={waypoints} onChange={setWaypoint} onSelect={setSelectedPoint}

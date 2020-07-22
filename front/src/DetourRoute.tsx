@@ -4,7 +4,7 @@ import {Route} from "./api/route";
 import {routingService} from "./api/routing-service";
 import {RoutingQuery} from "./api/routing-query";
 import {defaultRouteOverlay} from "./DefaultRoute";
-import {customIcon, formatDistance, formatDuration, LianeMap} from "./LianeMap";
+import {customIcon, LianeMap} from "./LianeMap";
 import {Marker, Polyline, Popup} from "react-leaflet";
 import {Point} from "./Point";
 import {PointsOverlay} from "./PointsOverlay";
@@ -53,18 +53,13 @@ function detourFound(detour: Route) {
 
 }
 
-function DetourRouteComponent({start, end, point}: { start: Point, end: Point, point: Point }) {
-    const zoom = 10;
+function DetourRouteComponent({waypoints, setWaypoints}: { waypoints: Point[], setWaypoints: (w: Point[]) => void }) {
+    const startPoint = waypoints[0];
+    const endPoint = waypoints[waypoints.length - 1];
 
-    const center = {
-        lat: (start.coordinate.lat + end.coordinate.lat) / 2,
-        lng: (start.coordinate.lng + end.coordinate.lng) / 2
-    };
-
-    const [waypoints, setWaypoints] = useState([start, point, end]);
     const [selectedPoint, setSelectedPoint] = useState(-1);
-    const [lastClickCoordinate, setLastClickCoordinate] = useState(start.coordinate);
-    const [lastAddressName, setLastAddressName] = useState(start.address);
+    const [lastClickCoordinate, setLastClickCoordinate] = useState(startPoint.coordinate);
+    const [lastAddressName, setLastAddressName] = useState(startPoint.address);
 
     function setWaypoint(i: number, p: Point) {
         setWaypoints(waypoints.map((w, wi) => {
@@ -135,7 +130,7 @@ function DetourRouteComponent({start, end, point}: { start: Point, end: Point, p
     }, [lastAddressName]);
 
     return <>
-        <LianeMap onClick={c => setLastClickCoordinate(c)} center={center} zoom={zoom}>
+        <LianeMap onClick={c => setLastClickCoordinate(c)} start={startPoint.coordinate} end={endPoint.coordinate}>
             {overlay}
         </LianeMap>
         <PointsOverlay waypoints={waypoints} onChange={setWaypoint} onSelect={setSelectedPoint}
