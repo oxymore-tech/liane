@@ -5,7 +5,7 @@ import {debounce} from "lodash";
 
 import {AutoComplete} from 'antd';
 import {SelectProps} from 'antd/es/select';
-import {showAddress} from "AddressLine";
+import {AddressLine, formatAddress} from "map/AddressLine";
 
 
 export interface Point {
@@ -22,14 +22,11 @@ export interface PointComponentProps {
     onInput: (a: string) => void
 }
 
-export function PointComponent({index, point, optional, onChange, onSelect, onInput}: PointComponentProps) {
+export function PointComponent({index, point, optional, onChange, onSelect}: PointComponentProps) {
 
     const [input, setInput] = useState("");
 
-    const [selectedAddress, setSelectedAddress] = useState<Address>({
-        displayName: point.address,
-        coordinate: point.address.coordinate
-    });
+    const [selectedAddress, setSelectedAddress] = useState<Address>(point.address);
 
     useEffect(() => {
 
@@ -39,7 +36,7 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
                         addresses.map(
                             a => ({
                                 value: a.displayName,
-                                label: showAddress(a),
+                                label: <AddressLine address={a}/>,
                                 address: a
                             })
                         ))
@@ -64,8 +61,7 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
     useEffect(() => {
         onChange(index, {
             ...point,
-            coordinate: selectedAddress.coordinate,
-            address: showAddress(selectedAddress)
+            address: selectedAddress
         })
     }, [selectedAddress]);
 
@@ -92,9 +88,9 @@ export function PointComponent({index, point, optional, onChange, onSelect, onIn
                             setSelectedAddress(option.address);
                         }
                     }
-                    defaultValue={point.address}
+                    defaultValue={formatAddress(point.address)}
 
-                    // onClick={selectClick}
+                    onClick={selectClick}
 
                     onSearch={debounce(input => setInput(input), 500)}
                 >
