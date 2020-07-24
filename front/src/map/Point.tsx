@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from "react";
-import {Address} from "@/api/address";
-import {addressService} from "@/api/address-service";
+import {Address} from "api/address";
+import {addressService} from "api/address-service";
 import {debounce} from "lodash";
 
 import {AutoComplete} from 'antd';
 import {SelectProps} from 'antd/es/select';
-import {showAddress} from "@/AddressLine";
+import {showAddress} from "AddressLine";
 
 
 export interface Point {

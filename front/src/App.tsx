@@ -4,8 +4,8 @@ import 'react-select/dist/react-select.css';
 import 'antd/dist/antd.css';
 import '/App.css';
 import {Select} from 'antd';
-import {Scenario} from "@/api/scenario";
-import {RouteMap} from "@/map/RouteMap";
+import {Scenario} from "api/scenario";
+import {RouteMap} from "map/RouteMap";
 
 const {Option} = Select;
 

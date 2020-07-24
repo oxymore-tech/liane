@@ -1,11 +1,11 @@
 import React, {memo, useEffect, useState} from "react";
-import {customIcon, formatDistance, formatDuration} from "@/map/LianeMap";
-import {defaultRouteOverlay} from "@/scenario/DefaultRoute";
-import {routingService} from "@/api/routing-service";
-import {RoutingQuery} from "@/api/routing-query";
-import {Route} from "@/api/route";
+import {customIcon, formatDistance, formatDuration} from "map/LianeMap";
+import {defaultRouteOverlay} from "scenario/DefaultRoute";
+import {routingService} from "api/routing-service";
+import {RoutingQuery} from "api/routing-query";
+import {Route} from "api/route";
 import {Marker, Polyline, Popup} from "react-leaflet";
-import {Point} from "@/map/Point";
+import {Point} from "map/Point";
 
 
 function WaypointRouteComponent({waypoints}: { waypoints: Point[] }) {

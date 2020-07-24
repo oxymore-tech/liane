@@ -1,15 +1,15 @@
-import {Route} from "./api/route";
+import {Route} from "map/api/route";
 import {Map, Marker, Polyline, Popup, TileLayer} from "react-leaflet";
 import React from "react";
 import * as math from "mathjs";
 import moment from "moment";
 import {icon, latLngBounds, LatLngLiteral, LeafletMouseEvent} from "leaflet";
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import infoIconImg from "./data/icon/info-icon.png"
-import startIconImg from "./data/icon/start-icon.png"
-import endIconImg from "./data/icon/end-icon.png"
+import infoIconImg from "map/data/icon/info-icon.png"
+import startIconImg from "map/data/icon/start-icon.png"
+import endIconImg from "map/data/icon/end-icon.png"
 import markerIconShadow from 'leaflet/dist/images/marker-shadow.png';
-import {Point} from "./Point";
+import {Point} from "map/Point";
 
 export function formatDistance(distance: number) {
     const unit = math.unit(distance, 'm');

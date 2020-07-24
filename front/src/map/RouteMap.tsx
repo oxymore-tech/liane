@@ -1,10 +1,10 @@
 import React, {memo, useEffect, useState} from "react";
-import {LianeMap} from "@/map/LianeMap";
-import {PointsOverlay} from "@/map/PointsOverlay";
-import {Point} from "@/map/Point";
-import {addressService} from "@/api/address-service";
-import {Scenario} from "@/api/scenario";
-import {RoutingScenario} from "@/scenario/RoutingScenario";
+import {LianeMap} from "map/LianeMap";
+import {PointsOverlay} from "map/PointsOverlay";
+import {Point} from "map/Point";
+import {addressService} from "api/address-service";
+import {Scenario} from "api/scenario";
+import {RoutingScenario} from "scenario/RoutingScenario";
 
 export function RouteMapComponent({scenario}: { scenario: Scenario }) {
     const defaultStart = {

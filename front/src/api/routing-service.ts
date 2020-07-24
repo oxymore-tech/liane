@@ -1,5 +1,5 @@
-import { RoutingQuery } from "./routing-query";
-import { Route } from "./route";
+import { RoutingQuery } from "api/routing-query";
+import { Route } from "api/route";
 
 class RoutingService {
 

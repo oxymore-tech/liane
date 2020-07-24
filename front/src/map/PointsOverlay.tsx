@@ -1,5 +1,5 @@
 import React from "react";
-import {Point, PointComponent} from "./Point";
+import {Point, PointComponent} from "map/Point";
 
 export interface PointsOverlayProps {
     waypoints: Point[],

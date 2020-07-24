@@ -1,10 +1,10 @@
 import React, {memo, useEffect, useState} from "react";
 import {Polyline} from "react-leaflet";
-import {defaultRouteOverlay} from "@/scenario/DefaultRoute";
-import {RoutingQuery} from "@/api/routing-query";
-import {routingService} from "@/api/routing-service";
-import {Route} from "@/api/route";
-import {Point} from "@/map/Point";
+import {defaultRouteOverlay} from "scenario/DefaultRoute";
+import {RoutingQuery} from "api/routing-query";
+import {routingService} from "api/routing-service";
+import {Route} from "api/route";
+import {Point} from "map/Point";
 
 function DetourRouteComponent({waypoints}: { waypoints: Point[] }) {
 

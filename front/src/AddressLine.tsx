@@ -1,5 +1,5 @@
 import React from "react";
-import {Address} from "./api/address";
+import {Address} from "api/address";
 
 function show(...params: Array<string | undefined>) {
     const filter = params.filter(p => p);

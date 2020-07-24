@@ -1,11 +1,11 @@
 import {LatLngLiteral} from "leaflet";
 import React, {memo, useEffect, useState} from "react";
-import {endIcon, routeOverlay, startIcon} from "@/map/LianeMap";
-import {Route} from "@/api/route";
-import {Point} from "@/map/Point";
+import {endIcon, routeOverlay, startIcon} from "map/LianeMap";
+import {Route} from "api/route";
+import {Point} from "map/Point";
 import {Marker} from "react-leaflet";
-import {routingService} from "@/api/routing-service";
-import {RoutingQuery} from "@/api/routing-query";
+import {routingService} from "api/routing-service";
+import {RoutingQuery} from "api/routing-query";
 
 
 export function defaultRouteOverlay(start: LatLngLiteral, end: LatLngLiteral, route?: Route) {

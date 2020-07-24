@@ -1,4 +1,4 @@
-import { Address } from "./address";
+import { Address } from "api/address";
 import { LatLngLiteral } from "leaflet";
 
 class AddressService {

@@ -1,10 +1,10 @@
 import React, {memo, useEffect, useState} from "react";
-import {Route} from "@/api/route";
-import {routingService} from "@/api/routing-service";
-import {RoutingQuery} from "@/api/routing-query";
+import {Route} from "api/route";
+import {routingService} from "api/routing-service";
+import {RoutingQuery} from "api/routing-query";
 import {Marker} from "react-leaflet";
-import {endIcon, routeOverlay, startIcon} from "@/map/LianeMap";
-import {Point} from "@/map/Point";
+import {endIcon, routeOverlay, startIcon} from "map/LianeMap";
+import {Point} from "map/Point";
 
 
 function AlternativesComponent({waypoints}: { waypoints: Point[] }) {
