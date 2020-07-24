@@ -3,12 +3,13 @@ import {Map, Marker, Polyline, Popup, TileLayer} from "react-leaflet";
 import React from "react";
 import * as math from "mathjs";
 import moment from "moment";
-import {icon, LatLngBounds, LatLngLiteral, LeafletMouseEvent} from "leaflet";
+import {icon, latLngBounds, LatLngLiteral, LeafletMouseEvent} from "leaflet";
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import infoIconImg from "./data/icon/info-icon.png"
 import startIconImg from "./data/icon/start-icon.png"
 import endIconImg from "./data/icon/end-icon.png"
 import markerIconShadow from 'leaflet/dist/images/marker-shadow.png';
+import {Point} from "./Point";
 
 export function formatDistance(distance: number) {
     const unit = math.unit(distance, 'm');
@@ -63,8 +64,11 @@ export function routeOverlay(r: Route, i: number) {
 }
 
 
-export function LianeMap({onClick, children, start, end}: { onClick?: (c: LatLngLiteral) => void, children: JSX.Element | null, start: LatLngLiteral, end: LatLngLiteral }) {
-    const bounds = new LatLngBounds(start, end);
+export function LianeMap({onClick, children, waypoints}: { onClick?: (c: LatLngLiteral) => void, children: JSX.Element | null, waypoints: Point[] }) {
+    const bounds = latLngBounds(waypoints.map(p => p.address.coordinate));
+
+    const start = waypoints[0].address.coordinate;
+    const end = waypoints[waypoints.length - 1].address.coordinate;
 
     const center = {
         lat: (start.lat + end.lat) / 2,

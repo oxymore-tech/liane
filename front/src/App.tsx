@@ -1,67 +1,30 @@
 import React, {useState} from "react";
 import 'leaflet/dist/leaflet.css';
 import 'react-select/dist/react-select.css';
-import './App.css';
-import {Alternatives} from "./Alternatives";
-import {WaypointRoute} from "./WaypointRoute";
-import {DetourRoute} from "./DetourRoute";
-import {DefaultRoute} from "./DefaultRoute";
-import {Point} from "./Point";
+import 'antd/dist/antd.css';
+import '/App.css';
+import {Select} from 'antd';
+import {Scenario} from "@/api/scenario";
+import {RouteMap} from "@/map/RouteMap";
 
-
-enum scenarios {
-    defaultRoute,
-    alternatives,
-    detourRoute,
-    waypointRoute
-}
-
+const {Option} = Select;
 
 function App() {
 
-    const start = {coordinate: {lat: 44.5180226, lng: 3.4991057}, address: "Mende", exclude: false};
-    const end = {coordinate: {lat: 44.31901305, lng: 3.57802065202088}, address: "Florac", exclude: false};
-    const waypoint = {
-        coordinate: {lat: 44.38624954223633, lng: 3.6189568042755127},
-        address: "Point de passage",
-        exclude: false
-    };
-
-
-    const [waypoints, setWaypoints] = useState([start,waypoint, end]);
-    
-    const [scenario, setScenario] = useState<number>(scenarios.defaultRoute);
-
-    function selectedScenarioOverlay(s: scenarios) {
-        switch (s) {
-            case scenarios.defaultRoute:
-                return <DefaultRoute waypoints={waypoints} setWaypoints={setWaypoints}/>;
-            case scenarios.alternatives:
-                return <Alternatives waypoints={waypoints} setWaypoints={setWaypoints}/>;
-            case scenarios.detourRoute:
-                return <DetourRoute waypoints={waypoints} setWaypoints={setWaypoints}/>;
-            case scenarios.waypointRoute:
-                return <WaypointRoute waypoints={waypoints} setWaypoints={setWaypoints}/>;
-        }
-    }
-
-    function onChange() {
-
-    }
-
-    const overlay = selectedScenarioOverlay(scenario);
+    const [scenario, setScenario] = useState<number>(Scenario.defaultRoute);
 
     return (
         <div className="App">
-            <select className={"scenario-select"}
+            <Select className={"scenario-select"}
                     value={scenario}
-                    onChange={e => setScenario(parseInt(e.target.value))}>
-                <option value={scenarios.defaultRoute}>defaultRoute</option>
-                <option value={scenarios.alternatives}>alternatives</option>
-                <option value={scenarios.detourRoute}>detourRoute</option>
-                <option value={scenarios.waypointRoute}>waypointRoute</option>
-            </select>
-            {overlay}
+                    onChange={setScenario}>
+                <Option value={Scenario.defaultRoute}>defaultRoute</Option>
+                <Option value={Scenario.alternatives}>alternatives</Option>
+                <Option value={Scenario.detourRoute}>detourRoute</Option>
+                <Option value={Scenario.waypointRoute}>waypointRoute</Option>
+            </Select>
+
+            <RouteMap scenario={scenario}/>
         </div>
     );
 }

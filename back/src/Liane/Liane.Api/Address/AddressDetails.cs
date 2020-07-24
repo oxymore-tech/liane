@@ -2,57 +2,35 @@ namespace Liane.Api.Address
 {
     public sealed class AddressDetails
     {
-        //"address":{
-        //             "house_number":"135",
-        //             "road":"Pilkington Avenue",
-        //             "town":"Sutton Coldfield",
-        //             "city":"Birmingham",
-        //             "county":"West Midlands Combined Authority",
-        //             "state_district":"West Midlands",
-        //             "state":"England",
-        //             "postcode":"B72 1LH",
-        //             "country":"Royaume-Uni",
-        //             "country_code":"gb"}
-
-        public AddressDetails(string houseNumber, string road, string town, string city, string county, string stateDistrict, string state, string postcode, string country, string countryCode)
+        public AddressDetails(string? houseNumber, string? road, string? town, string? city, string? county, string? state_district, string? state, string? postcode, string country,
+            string country_code, string? isolated_dwelling, string? municipality, string? village)
         {
             HouseNumber = houseNumber;
             Road = road;
             Town = town;
             City = city;
             County = county;
-            StateDistrict = stateDistrict;
+            StateDistrict = state_district;
             State = state;
             Postcode = postcode;
             Country = country;
-            CountryCode = countryCode;
+            CountryCode = country_code;
+            IsolatedDwelling = isolated_dwelling;
+            Municipality = municipality;
+            Village = village;
         }
 
-        /*
-         * public AddressDetails(Liane.Service.Internal.Nominatim.AddressDetails r)
-        {
-            
-            HouseNumber = r.Address.HouseNumber;
-            Road = r.Address.Road;
-            Town = r.Address.Town;
-            City = r.Address.City;
-            County = r.Address.County;
-            StateDistrict = r.Address.StateDistrict;
-            State = r.Address.State;
-            Postcode = r.Address.Postcode;
-            Country = r.Address.Country;
-            CountryCode = r.Address.CountryCode;
-        }
-
-         */
-        public string HouseNumber { get; }
-        public string Road { get; }
-        public string Town { get; }
-        public string City { get; }
-        public string County { get; }
-        public string StateDistrict { get; }
-        public string State { get; }
-        public string Postcode { get; }
+        public string? HouseNumber { get; }
+        public string? Road { get; }
+        public string? IsolatedDwelling { get; }
+        public string? Municipality { get; }
+        public string? Village { get; }
+        public string? Town { get; }
+        public string? City { get; }
+        public string? County { get; }
+        public string? StateDistrict { get; }
+        public string? State { get; }
+        public string? Postcode { get; }
         public string Country { get; }
         public string CountryCode { get; }
     }

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Liane.Api.Address;
 
 namespace Liane.Service.Internal.Nominatim
 {

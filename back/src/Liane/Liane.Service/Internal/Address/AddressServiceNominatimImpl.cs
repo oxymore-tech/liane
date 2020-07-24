@@ -67,8 +67,7 @@ namespace Liane.Service.Internal.Address
 
         private static Api.Address.Address MapAddress(Response r)
         {
-            return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon),
-                new Api.Address.AddressDetails(r.Address.HouseNumber, r.Address.Road, r.Address.Town, r.Address.City, r.Address.County, r.Address.StateDistrict, r.Address.State, r.Address.Postcode, r.Address.Country, r.Address.CountryCode));// 
+            return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon), r.Address);
         }
     }
 }
