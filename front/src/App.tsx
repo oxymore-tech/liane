@@ -1,6 +1,5 @@
 import React, {useState} from "react";
 import 'leaflet/dist/leaflet.css';
-import 'react-select/dist/react-select.css';
 import 'antd/dist/antd.css';
 import 'App.css';
 import {Select} from 'antd';
