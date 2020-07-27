@@ -1,20 +1,36 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Liane.Api.Routing;
 
 namespace Liane.Api.Matching
 {
     public sealed class Passenger
     {
-        public Passenger(Travel travel, DateTime maxArrivalTime, LatLng waypoint)
+        public Passenger(LatLng waypoint, string id)
         {
-            Travel = travel;
-            MaxArrivalTime = maxArrivalTime;
             Waypoint = waypoint;
+            Passengers.Add(id, this);
         }
 
-        public Travel Travel { get; }
-        public DateTime MaxArrivalTime { get; }
         public LatLng Waypoint { get; }
-        
+        private static readonly ImmutableDictionary<string, Passenger> Passengers = ImmutableDictionary<string, Passenger>.Empty;
+
+        public static Dictionary<string, Passenger> GetPassengers()
+        {
+            return new Dictionary<string,Passenger>(Passengers);
+        }
+
+        // public static Driver GetPassenger(string id)
+        // {
+        //     if (Passengers.TryGetValue(id, out var passenger))
+        //         return passenger;
+        //     throw new NotSupportedException();
+        // }
+
+        // public static void ResetDriverList()
+        // {
+        //     Passengers = ImmutableDictionary<string, Driver>.Empty;
+        // }
     }
 }
