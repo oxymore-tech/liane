@@ -4,7 +4,7 @@ import { LatLngLiteral } from "leaflet";
 class AddressService {
 
   async GetDisplayName(coordinate: LatLngLiteral): Promise<Address> {
-    const url = new URL("http://localhost:8081/api/address/displayName");
+    const url = new URL("http://localhost:80/api/address/displayName");
     url.searchParams.append("lat", coordinate.lat.toString());
     url.searchParams.append("lng", coordinate.lng.toString());
 
