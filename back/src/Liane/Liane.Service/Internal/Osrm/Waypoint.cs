@@ -8,7 +8,7 @@ namespace Liane.Service.Internal.Osrm
     public sealed class Waypoint
     {
         // Name of the street the coordinate snapped to
-        public Waypoint(string name, LatLng location, float distance, string hint, ImmutableArray<int>? nodes)
+        public Waypoint(string name, LatLng location, float distance, string hint, ImmutableList<int>? nodes)
         {
             Name = name;
             Location = location;
@@ -34,7 +34,7 @@ namespace Liane.Service.Internal.Osrm
 
         // Additional properties seen in a Nearest Response
         // Array of OpenStreetMap node ids.
-        public ImmutableArray<int>? Nodes { get; }
+        public ImmutableList<int>? Nodes { get; }
 
         public override string ToString()
         {

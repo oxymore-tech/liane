@@ -5,7 +5,7 @@ namespace Liane.Service.Internal.Nominatim
 {
     public sealed class Response
     {
-        public Response(int placeId, string licence, string osmType, int osmId, ImmutableArray<double> boudingbox, double lat, double lon, string display_name, string @class, string type,
+        public Response(int placeId, string licence, string osmType, int osmId, ImmutableList<double> boudingbox, double lat, double lon, string display_name, string @class, string type,
             float importance, AddressDetails address)
         {
             PlaceId = placeId;
@@ -26,7 +26,7 @@ namespace Liane.Service.Internal.Nominatim
         public string Licence { get; }
         public string OsmType { get; }
         public int OsmId { get; }
-        public ImmutableArray<double> Boudingbox { get; }
+        public ImmutableList<double> Boudingbox { get; }
         public double Lat { get; }
         public double Lon { get; }
         public string DisplayName { get; }

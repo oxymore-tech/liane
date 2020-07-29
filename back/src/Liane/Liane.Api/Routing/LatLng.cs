@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using Liane.Api.Util;
 using Newtonsoft.Json;
@@ -29,6 +30,21 @@ namespace Liane.Api.Routing
         public LngLat ToLngLat()
         {
             return new LngLat(Lng, Lat);
+        }
+
+        private bool Equals(LatLng other)
+        {
+            return Lat.Equals(other.Lat) && Lng.Equals(other.Lng);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is LatLng other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Lat, Lng);
         }
     }
 }
