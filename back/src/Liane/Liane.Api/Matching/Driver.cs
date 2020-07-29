@@ -9,10 +9,12 @@ namespace Liane.Api.Matching
             Start = start;
             End = end;
             MaxDelta = maxDelta;
+            NbOfSeat = 1;
         }
 
         public LatLng Start { get; }
         public LatLng End { get; }
         public float MaxDelta { get; }
+        public int NbOfSeat { get; }
     }
 }

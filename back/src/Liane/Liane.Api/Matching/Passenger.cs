@@ -9,9 +9,11 @@ namespace Liane.Api.Matching
         {
             Waypoint = waypoint;
             ArrivalTime = DateTime.Today;
+            HasMatch = false;
         }
 
         public LatLng Waypoint { get; }
         public DateTime ArrivalTime { get; }
+        public bool HasMatch { get; }
     }
 }

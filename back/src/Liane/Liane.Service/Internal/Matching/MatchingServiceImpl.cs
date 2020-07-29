@@ -23,24 +23,27 @@ namespace Liane.Service.Internal.Matching
             var driver = UserService.GetDriver(userId);
             var passengers = UserService.GetAllPassengers();
             
-            if (driver == null)
-            {
+            if (driver == null )
                 return result;
-            }
 
+            if (driver.NbOfSeat == 0)
+                return result;
+            
+            var route = await osrmService.Route(ImmutableList.Create(driver.Start, driver.End), overview: "false");            
             foreach (var passenger in passengers)
             {
-                var route = await osrmService.Route(ImmutableList.Create(driver.Start, driver.End), overview: "false");
-                var routeWithWaypoint = await osrmService.Route(ImmutableList.Create(driver.Start, passenger.Waypoint, driver.End), overview: "false");
-
-                Console.WriteLine($"route: {route}\nwaypointRoute: {routeWithWaypoint}");// both null ?
+                if (passenger.HasMatch) continue;
                 
+                var routeWithWaypoint = await osrmService.Route(ImmutableList.Create(driver.Start, passenger.Waypoint, driver.End), overview: "false");
+                Console.WriteLine($"route: {route}\nwaypointRoute: {routeWithWaypoint}");// both null ?
                 var delta = route.Routes[0].Duration - routeWithWaypoint.Routes[0].Duration;
-                if (delta < driver.MaxDelta && delta > -1)
-                {
-                    var id = UserService.GetId(passenger);
-                    result.Add(new PassengerProposal(id ?? "noId found"));
-                }
+                if ( delta > driver.MaxDelta || delta < 0 ) continue;
+
+                // TODO: Test here if arrival time < maximum Arrival Time of the Passenger
+                
+                
+                var id = UserService.GetId(passenger);
+                result.Add(new PassengerProposal(id ?? "noId found"));
             }
 
             return result;
