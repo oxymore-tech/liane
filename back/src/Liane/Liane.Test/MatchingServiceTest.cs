@@ -42,20 +42,6 @@ namespace Liane.Test
             passengerB = new Passenger(Fixtures.LeCrouzet);
         }
 
-        private static void SetupRouteMock(Mock<IOsrmService> mock, ImmutableList<LatLng> input, string file)
-        {
-            mock.Setup(service =>
-                    service.Route(
-                        It.Is<ImmutableList<LatLng>>(l => input.SequenceEqual(l)),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>(),
-                        It.IsAny<string>()))
-                .ReturnsAsync(() => AssertJson.ReadJson<Routing>(file));
-        }
-
         [Test]
         public async Task ShouldMatchNoPassenger()
         {
@@ -82,6 +68,20 @@ namespace Liane.Test
         public void ShouldMatchNoDriver()
         {
             tested.SearchDrivers("");
+        }
+
+        private static void SetupRouteMock(Mock<IOsrmService> mock, ImmutableList<LatLng> input, string file)
+        {
+            mock.Setup(service =>
+                    service.Route(
+                        It.Is<ImmutableList<LatLng>>(l => input.SequenceEqual(l)),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>(),
+                        It.IsAny<string>()))
+                .ReturnsAsync(() => AssertJson.ReadJson<Routing>(file));
         }
     }
 }
