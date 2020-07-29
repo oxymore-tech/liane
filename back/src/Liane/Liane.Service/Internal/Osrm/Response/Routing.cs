@@ -5,7 +5,7 @@ namespace Liane.Service.Internal.Osrm.Response
 {
     public sealed class Routing : Response
     {
-        public Routing(Code code, string? message, string? dataVersion, ImmutableArray<Waypoint> waypoints, ImmutableArray<Route> routes) : base(code, message, dataVersion)
+        public Routing(Code code, string? message, string? data_version, ImmutableArray<Waypoint> waypoints, ImmutableArray<Route> routes) : base(code, message, data_version)
         {
             Waypoints = waypoints;
             Routes = routes;

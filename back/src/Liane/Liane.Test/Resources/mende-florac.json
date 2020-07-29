@@ -1,0 +1,45 @@
+{
+  "Waypoints": [
+    {
+      "Name": "Rue de la Liberté",
+      "Location": {
+        "lat": 3.499085,
+        "lng": 44.51815
+      },
+      "Distance": 14.210834,
+      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAA0SM7QXTuGkE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATWQ1AAZLpwJiZDUAh0qnAgEAPwWLWyP5",
+      "Nodes": null
+    },
+    {
+      "Name": "",
+      "Location": {
+        "lat": 3.582862,
+        "lng": 44.32323
+      },
+      "Distance": 607.20026,
+      "Hint": "6LgAgEZTBoAAAAAACQAAAMcEAADoAgAAAAAAALFcJUEafapEjrZPRAAAAAAJAAAAxwQAAOgCAABxAwAAjqs2AJ5RpAKlmDYAJUGkAm0AbxOLWyP5",
+      "Nodes": null
+    }
+  ],
+  "Routes": [
+    {
+      "Distance": 37971.2,
+      "Duration": 2328.5,
+      "Weight": 2328.5,
+      "WeightName": null,
+      "Geometry": null,
+      "Legs": [
+        {
+          "Distance": 37971.2,
+          "Duration": 2328.5,
+          "Steps": [],
+          "Weight": 2328.5,
+          "Annotation": null
+        }
+      ]
+    }
+  ],
+  "Code": 0,
+  "Message": null,
+  "DataVersion": null
+}

@@ -1,43 +1,45 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Matching;
-using Liane.Api.Routing;
-using Liane.Api.Util;
-using Microsoft.AspNetCore.Routing;
+using Liane.Service.Internal.Osrm;
 
 namespace Liane.Service.Internal.Matching
 {
     public class MatchingServiceImpl : IMatchingService
     {
-        private readonly IRoutingService routingService;
+        private readonly IOsrmService osrmService;
+        public readonly IUserService UserService;
 
-        public MatchingServiceImpl(IRoutingService routingService)
+        public MatchingServiceImpl(IOsrmService osrmService, IUserService userService)
         {
-            this.routingService = routingService;
+            this.osrmService = osrmService;
+            UserService = userService;
         }
 
         public async Task<ImmutableList<PassengerProposal>> SearchPassengers(string userId)
         {
-            Dictionary<string, Driver> drivers = Driver.GetDrivers();
-            drivers.TryGetValue(userId, out var driver);
-            
-            Dictionary<string, Passenger> passengers = Passenger.GetPassengers();
-
             var result = ImmutableList<PassengerProposal>.Empty;
+            var driver = UserService.GetDriver(userId);
+            var passengers = UserService.GetAllPassengers();
+            
             if (driver == null)
             {
                 return result;
             }
-            
-            foreach (var (id, passenger) in passengers)
+
+            foreach (var passenger in passengers)
             {
-                DeltaRoute route = await routingService.CrossAWayPoint(new RoutingWithPointQuery(driver.Start, driver.End, passenger.Waypoint));
-                if (route.Delta < driver.MaxDelta && route.Delta > -1)
+                var route = await osrmService.Route(ImmutableList.Create(driver.Start, driver.End), overview: "false");
+                var routeWithWaypoint = await osrmService.Route(ImmutableList.Create(driver.Start, passenger.Waypoint, driver.End), overview: "false");
+
+                Console.WriteLine($"route: {route}\nwaypointRoute: {routeWithWaypoint}");// both null ?
+                
+                var delta = route.Routes[0].Duration - routeWithWaypoint.Routes[0].Duration;
+                if (delta < driver.MaxDelta && delta > -1)
                 {
-                    result.Add(new PassengerProposal(id));
+                    var id = UserService.GetId(passenger);
+                    result.Add(new PassengerProposal(id ?? "noId found"));
                 }
             }
 

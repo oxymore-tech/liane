@@ -1,0 +1,62 @@
+{
+  "Waypoints": [
+    {
+      "Name": "Rue de la Liberté",
+      "Location": {
+        "lat": 3.499085,
+        "lng": 44.51815
+      },
+      "Distance": 14.210834,
+      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAA0SM7QXTuGkE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATWQ1AAZLpwJiZDUAh0qnAgEAPwWLWyP5",
+      "Nodes": null
+    },
+    {
+      "Name": "",
+      "Location": {
+        "lat": 3.623187,
+        "lng": 44.377737
+      },
+      "Distance": 8.579707,
+      "Hint": "6VUGgFlWBoANAAAAAgAAANYKAAAhAQAAfAV2QThz0D8BWUBFuV6gQw0AAAACAAAA1goAACEBAABxAwAAE0k3AIkmpQImSTcA1SalAocAjxGLWyP5",
+      "Nodes": null
+    },
+    {
+      "Name": "",
+      "Location": {
+        "lat": 3.582862,
+        "lng": 44.32323
+      },
+      "Distance": 607.20026,
+      "Hint": "6LgAgEZTBoAAAAAACQAAAMcEAADoAgAAAAAAALFcJUEafapEjrZPRAAAAAAJAAAAxwQAAOgCAABxAwAAjqs2AJ5RpAKlmDYAJUGkAm0AbxOLWyP5",
+      "Nodes": null
+    }
+  ],
+  "Routes": [
+    {
+      "Distance": 45681.7,
+      "Duration": 3390.5,
+      "Weight": 3390.5,
+      "WeightName": null,
+      "Geometry": null,
+      "Legs": [
+        {
+          "Distance": 34402.9,
+          "Duration": 2455.8,
+          "Steps": [],
+          "Weight": 2455.8,
+          "Annotation": null
+        },
+        {
+          "Distance": 11278.8,
+          "Duration": 934.7,
+          "Steps": [],
+          "Weight": 934.7,
+          "Annotation": null
+        }
+      ]
+    }
+  ],
+  "Code": 0,
+  "Message": null,
+  "DataVersion": null
+}
