@@ -1,37 +1,36 @@
 using System.Collections.Immutable;
 using System.Linq;
-using Liane.Api.Matching;
 
-namespace Liane.Service.Internal.Matching
+namespace Liane.Api.Matching
 {
-    public class UserServiceImpl : IUserService
+    public static class UserUtils
     {
-        private ImmutableDictionary<string, User> users = ImmutableDictionary<string, User>.Empty;
+        private static ImmutableDictionary<string, User> users = ImmutableDictionary<string, User>.Empty;
 
 
-        public User? GetUser(string userId)
+        public static User? GetUser(string userId)
         {
             return null;
         }
 
-        public string? GetId(User user)
+        public static string? GetId(User user)
         {
             return users.ContainsValue(user) ? users.First(u => u.Value.Equals(user)).Key : null;
         }
 
-        public bool IsPassenger(string userId)
+        public static bool IsPassenger(string userId)
         {
             var user = GetUser(userId);
             return user is Passenger;
         }
 
-        public bool IsDriver(string userId)
+        public static bool IsDriver(string userId)
         {
             var user = GetUser(userId);
             return user is Driver;
         }
 
-        public bool AddUser(string id, User user)
+        public static bool AddUser(string id, User user)
         {
             if (users.ContainsKey(id))
                 return false;
@@ -39,76 +38,67 @@ namespace Liane.Service.Internal.Matching
             return true;
         }
 
-        public void EmptyUsersList()
+        public static void EmptyUsersList()
         {
             users = ImmutableDictionary<string, User>.Empty;
         }
-        
-        
-        public bool HasMatched(string passengerId)
+
+
+        public static bool HasMatched(string passengerId)
         {
             return false;
         }
-        
-        public Passenger? GetPassenger(string passengerId)
+
+        public static Passenger? GetPassenger(string passengerId)
         {
             if (users.TryGetValue(passengerId, out var user))
-            {
                 if (user is Passenger passenger)
                     return passenger;
-            }
 
-            ;
             return null;
         }
 
-        public ImmutableList<Passenger> GetAllPassengers()
+        public static ImmutableList<Passenger> GetAllPassengers()
         {
             ImmutableList<Passenger> result = ImmutableList<Passenger>.Empty;
             foreach (var (_, user) in users)
-            {
                 if (user is Passenger p)
                     result = result.Add(p);
-            }
 
             return result;
         }
 
-        public void EmptyPassengersList()
+        public static void EmptyPassengersList()
         {
             users = users.Where(user => user is Driver).ToImmutableDictionary();
         }
 
-        public bool IsDriving(string driverId)
+        public static bool IsDriving(string driverId)
         {
             return false;
         }
-        
-        public Driver? GetDriver(string driverId)
+
+        public static Driver? GetDriver(string driverId)
         {
             if (users.TryGetValue(driverId, out var user))
-            {
                 if (user is Driver driver)
                     return driver;
-            }
 
             ;
             return null;
         }
 
-        public ImmutableList<Driver> GetAllDrivers()
+        public static ImmutableList<Driver> GetAllDrivers()
         {
             ImmutableList<Driver> result = ImmutableList<Driver>.Empty;
             foreach (var (_, user) in users)
-            {
                 if (user is Driver p)
                     result = result.Add(p);
-            }
 
             return result;
         }
 
-        public void EmptyDriversList()
+        public static void EmptyDriversList()
         {
             users = users.Where(user => user is Passenger).ToImmutableDictionary();
         }

@@ -16,9 +16,11 @@ namespace Liane.Test
     public sealed class MatchingServiceTest
     {
         private readonly MatchingServiceImpl tested;
-        private readonly Driver driver;
-        private readonly Passenger passengerA;
-        private readonly Passenger passengerB;
+        private Driver driver;
+        private Passenger tooFarAwayStart;
+        private Passenger matching;
+        private Passenger tooLateArrival;
+        private Passenger tooLongDetour;
 
         public MatchingServiceTest()
         {
@@ -31,43 +33,44 @@ namespace Liane.Test
             SetupRouteMock(mock,
                 ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac),
                 "mende-leCrouzet-florac.json");
-
+            
             SetupRouteMock(mock,
                 ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac),
                 "mende-gorgesDuTarnCausses-florac.json");
-
-            tested = new MatchingServiceImpl(mock.Object, new UserServiceImpl());
-            driver = new Driver(Fixtures.Mende, Fixtures.Florac, 500);
-            passengerA = new Passenger(Fixtures.GorgesDuTarnCausses);
-            passengerB = new Passenger(Fixtures.LeCrouzet);
+            
+            SetupRouteMock(mock,
+                ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac),
+                "mende-gorgesDuTarnCausses-prades-florac.json");
+            
+            SetupRouteMock(mock,
+                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac),
+                "mende-leCrouzet-cocures-florac.json");
+            
+            SetupRouteMock(mock,
+                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac),
+                "mende-leCrouzet-rampon-florac.json");
+            
+            SetupUsers();
+            tested = new MatchingServiceImpl(mock.Object);
         }
 
-        [Test]
-        public async Task ShouldMatchNoPassenger()
+        private void SetupUsers(bool sameEnd = true,bool noPassengerAlready = true)
         {
-            tested.userService.EmptyUsersList();
-            tested.userService.AddUser("Conducteur", driver);
-            tested.userService.AddUser("Passager gorgesDuTarnCausses", passengerA);
+            
+            driver = new Driver(Fixtures.Mende, Fixtures.Florac,1200);
+            if(noPassengerAlready && !sameEnd)
+            {
+                tooFarAwayStart = new Passenger(Fixtures.GorgesDuTarnCausses,Fixtures.Prades,100000);
+                matching = new Passenger(Fixtures.LeCrouzet,Fixtures.Cocures, 100000);
+                tooLateArrival = new Passenger(Fixtures.LeCrouzet,Fixtures.Cocures, 3000);
+                tooLongDetour = new Passenger(Fixtures.LeCrouzet,Fixtures.Rampon, 100000);
+                return;
+            }
+            tooFarAwayStart = new Passenger(Fixtures.GorgesDuTarnCausses,Fixtures.Florac,100000);
+            matching = new Passenger(Fixtures.LeCrouzet,Fixtures.Florac, 4000);
+            tooLateArrival = new Passenger(Fixtures.LeCrouzet,Fixtures.Florac, 3000);
+            tooLongDetour = new Passenger(Fixtures.LeCrouzet,Fixtures.Rampon);
 
-            var passengers = await tested.SearchPassengers("Conducteur");
-            CollectionAssert.IsEmpty(passengers);
-        }
-
-        [Test]
-        public async Task ShouldMatchOnePassengerWithSameDestination()
-        {
-            tested.userService.EmptyUsersList();
-            tested.userService.AddUser("Conducteur", driver);
-            tested.userService.AddUser("Passager leCrouzet", passengerB);
-
-            var passengers = await tested.SearchPassengers("Conducteur");
-            CollectionAssert.IsNotEmpty(passengers);
-        }
-
-        [Test]
-        public void ShouldMatchNoDriver()
-        {
-            tested.SearchDrivers("");
         }
 
         private static void SetupRouteMock(Mock<IOsrmService> mock, ImmutableList<LatLng> input, string file)
@@ -82,6 +85,78 @@ namespace Liane.Test
                         It.IsAny<string>(),
                         It.IsAny<string>()))
                 .ReturnsAsync(() => AssertJson.ReadJson<Routing>(file));
+        }
+
+        [Test]
+        public void ShouldMatchNoDriver()
+        {
+            tested.SearchDrivers("");
+        }
+
+        [Test]
+        public async Task ShouldMatchNoPassenger()
+        {
+            UserUtils.EmptyUsersList();
+            UserUtils.AddUser("Conducteur", driver);
+            UserUtils.AddUser("Passager gorgesDuTarnCausses, trop long détour", tooFarAwayStart);
+
+            var passengers = await tested.SearchPassengers("Conducteur");
+            CollectionAssert.IsEmpty(passengers);
+        }
+
+        [Test]
+        public async Task ShouldMatchOnePassengerWithSameDestination()
+        {
+            SetupUsers();
+            UserUtils.AddUser("Passager leCrouzet, à l'heure", matching);
+            UserUtils.AddUser("Passager leCrouzet, en retard", tooLateArrival);
+            
+            var passengers = await tested.SearchPassengers("Conducteur");
+            Assert.AreEqual(1, passengers.Count);
+            Assert.AreEqual("Passager leCrouzet",passengers[0].PassengerId);
+        }
+
+        [Test]
+        public async Task ShouldMatchOnePassengerWithAnotherDestination()
+        {    
+            UserUtils.EmptyPassengersList();
+            SetupUsers(false);
+            UserUtils.AddUser("Passager gorgesDuTarnCausses récup' trop loin", tooFarAwayStart);
+            UserUtils.AddUser("Passager leCrouzet à l'heure, déposé en cours de route", matching);
+            UserUtils.AddUser("Passager leCrouzet en retard, déposable en cours de route", tooLateArrival);
+            UserUtils.AddUser("Passager leCrouzet à l'heure mais détour globalement trop long", tooLongDetour);
+            
+            var passengers = await tested.SearchPassengers("Conducteur");
+            Assert.AreEqual(1, passengers.Count);
+            Assert.AreEqual("Passager leCrouzet à l'heure, déposé en cours de route",passengers[0].PassengerId);
+        }
+
+
+        [Test]
+        public async Task ShouldMatchOnePassengerWithSameDestinationAndAlreadyHas0nePassenger()
+        {
+            
+        }
+        [Test]
+        public async Task ShouldMatchOnePassengerWithSameDestinationAndAlreadyHasMultiplePassengers()
+        {
+            
+        }
+        
+        
+        [Test]
+        public async Task ShouldMatchOnePassengerWithAnotherDestinationAndAlreadyHas0nePassenger()
+        {
+            // UserUtils.EmptyDriversList();
+            // UserUtils.AddUser("Conducteur avec 1 passager", driver);
+            // var passengers = await tested.SearchPassengers("Conducteur avec 1 passager");
+        }
+        [Test]
+        public async Task ShouldMatchOnePassengerWithAnotherDestinationAndAlreadyHasMultiplePassengers()
+        {
+            // UserUtils.EmptyDriversList();
+            // UserUtils.AddUser("Conducteur avec 2+ passagers", driver);
+            // var passengers = await tested.SearchPassengers("Conducteur avec 2+ passagers");
         }
     }
 }

@@ -19,48 +19,21 @@ namespace Liane.Test
         public OsrmServiceTest()
         {
             tested = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object);
-            coordinates = ImmutableList.Create(new LatLng(44.5180226, 3.4991057), new LatLng(44.31901305, 3.57802065202088));
+            coordinates = ImmutableList.Create(Fixtures.Mende, Fixtures.Florac);
         }
 
-        // DONE: test with default routing
-        // TODO: test with default routing but no route found
-        // TODO: see how waypoints is useful in routing and test it        
-        // + Add assertions
         [Test]
         public async Task ShouldGetADefaultRoute()
         {
             var result = await tested.Route(coordinates);
-            Console.WriteLine(result.ToString());
+            Assert.IsNotNull(result.Routes[0]);
         }
 
         [Test]
         public async Task ShouldGetARouteWithSteps()
         {
             var result = await tested.Route(coordinates, steps: "true");
-            Console.WriteLine(result.ToString());
-        }
-
-        [Test]
-        public async Task ShouldGetRouteWithAnnotations()
-        {
-            var result = await tested.Route(coordinates, annotations: "true");
-            Console.WriteLine(result.ToString());
-        }
-
-        [Test]
-        public async Task ShouldGetRouteWithFullOverview()
-        {
-            var result = await tested.Route(coordinates, overview: "full");
-            Console.WriteLine(result.ToString());
-            Assert.IsNotNull(result.Routes[0].Geometry);
-        }
-
-        [Test]
-        public async Task ShouldGetRouteWithNoOverview()
-        {
-            var result = await tested.Route(coordinates, overview: "false");
-            Console.WriteLine(result.ToString());
-            Assert.IsNull(result.Routes[0].Geometry);
+            Assert.IsNotNull(result.Routes[0].Legs[0].Steps);
         }
 
 
@@ -73,6 +46,14 @@ namespace Liane.Test
         }
 
         [Test]
+        public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCausses()
+        {
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac), overview: "false");
+            AssertJson.AreEqual("mende-gorgesDuTarnCausses-florac.json", route);
+            Assert.IsNotNull(route.Routes[0].Duration);
+        }
+
+        [Test]
         public async Task ShouldGetRouteFromMendeToFloracByLeCrouzet()
         {
             var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac), overview: "false");
@@ -80,13 +61,55 @@ namespace Liane.Test
             AssertJson.AreEqual("mende-leCrouzet-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
+        
+            
+        [Test]
+        public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCaussesAndPrades()
+        {
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende,Fixtures.GorgesDuTarnCausses, Fixtures.Prades, Fixtures.Florac), overview: "false");
+
+            AssertJson.AreEqual("mende-gorgesDuTarnCausses-prades-florac.json", route);
+            Assert.IsNotNull(route.Routes[0].Duration);
+        }
+        
+        [Test]
+        public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndCocures()
+        {
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende,Fixtures.LeCrouzet, Fixtures.Cocures, Fixtures.Florac), overview: "false");
+
+            AssertJson.AreEqual("mende-leCrouzet-cocures-florac.json", route);
+            Assert.IsNotNull(route.Routes[0].Duration);
+        }
+        [Test]
+        public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndRampon()
+        {
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende,Fixtures.LeCrouzet, Fixtures.Rampon, Fixtures.Florac), overview: "false");
+
+            AssertJson.AreEqual("mende-leCrouzet-rampon-florac.json", route);
+            Assert.IsNotNull(route.Routes[0].Duration);
+        }
+        
+        
+        [Test]
+        public async Task ShouldGetRouteWithAnnotations()
+        {
+            var result = await tested.Route(coordinates, annotations: "true");
+            Assert.IsNotNull(result.Routes[0].Legs[0].Annotation);
+        }
 
         [Test]
-        public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCausses()
+        public async Task ShouldGetRouteWithFullOverview()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac), overview: "false");
-            AssertJson.AreEqual("mende-gorgesDuTarnCausses-florac.json", route);
-            Assert.IsNotNull(route.Routes[0].Duration);
+            var result = await tested.Route(coordinates, overview: "full");
+            Assert.IsNotNull(result.Routes[0].Geometry);
+        }
+
+        [Test]
+        public async Task ShouldGetRouteWithNoOverview()
+        {
+            var result = await tested.Route(coordinates, overview: "false");
+            Console.WriteLine(result.ToString());
+            Assert.IsNull(result.Routes[0].Geometry);
         }
     }
 }
