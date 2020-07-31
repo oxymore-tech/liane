@@ -5,9 +5,8 @@ namespace Liane.Test
 {
     public sealed class Fixtures
     {
-        public static readonly DateTime Aujourdhui = new DateTime(year: 2020, month: 8, day: 7, hour: 10, minute: 30, second:0);
-        public static readonly DateTime DansLaJournee = new DateTime(year: 2020, month: 8, day: 7, hour: 20, minute: 30, second:0); 
-        public static readonly DateTime AvantMidi = new DateTime(year: 2020, month: 8, day: 7, hour: 20, minute: 30, second:0);
+        public static readonly DateTime SeptAoutMatin = new DateTime(year: 2020, month: 8, day: 7, hour: 11, minute: 30, second:0);
+        public static readonly DateTime SeptAoutSoir = new DateTime(year: 2020, month: 8, day: 7, hour: 20, minute: 30, second:0);
         public static readonly LatLng Mende = new LatLng(44.5180226, 3.4991057);
         public static readonly LatLng Florac = new LatLng(44.31901305, 3.57802065202088);
         public static readonly LatLng LeCrouzet = new LatLng(44.37781287399747, 3.6232057825605857);

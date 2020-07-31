@@ -5,11 +5,11 @@ namespace Liane.Api.Matching
 {
     public sealed class Passenger : User
     {
-        public Passenger(LatLng start, LatLng end, double arriveInMaxSecondsFromNow = 0)
+        public Passenger(LatLng start, LatLng end, DateTime maxArrivalTime)
         {
             Start = start;
             End = end;
-            MaxArrivalTime = DateTime.Now.AddSeconds(arriveInMaxSecondsFromNow);
+            MaxArrivalTime = maxArrivalTime;
             HasMatch = false;
         }
 

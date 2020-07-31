@@ -55,7 +55,7 @@ namespace Liane.Service.Internal.Matching
                     continue;
                 }
 
-                var currentArrivalTime = System.DateTime.Now.AddSeconds(routeWithWaypoint.Routes[0].Duration);
+                var currentArrivalTime = driver.DepartureTime.AddSeconds(routeWithWaypoint.Routes[0].Duration);
                 if (currentArrivalTime > passenger.MaxArrivalTime)
                 {
                     continue;

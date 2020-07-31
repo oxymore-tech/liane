@@ -39,15 +39,15 @@ namespace Liane.Test
                 "mende-gorgesDuTarnCausses-florac.json");
             
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac),
+                ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses,Fixtures.Prades , Fixtures.Florac),
                 "mende-gorgesDuTarnCausses-prades-florac.json");
             
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac),
+                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet,Fixtures.Cocures, Fixtures.Florac),
                 "mende-leCrouzet-cocures-florac.json");
             
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac),
+                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet,Fixtures.Rampon, Fixtures.Florac),
                 "mende-leCrouzet-rampon-florac.json");
             
             SetupUsers();
@@ -57,22 +57,22 @@ namespace Liane.Test
         private void SetupUsers(bool sameEnd = true,bool noPassengerAlready = true)
         {
             
-            driver = new Driver(Fixtures.Mende, Fixtures.Florac,1200);
+            driver = new Driver(Fixtures.Mende, Fixtures.Florac,1200,Fixtures.SeptAoutMatin);
+            
             if(noPassengerAlready && !sameEnd)
             {
-                tooFarAwayStart = new Passenger(Fixtures.GorgesDuTarnCausses,Fixtures.Prades,100000);
-                matching = new Passenger(Fixtures.LeCrouzet,Fixtures.Cocures, 100000);
-                tooLateArrival = new Passenger(Fixtures.LeCrouzet,Fixtures.Cocures, 3000);
-                tooLongDetour = new Passenger(Fixtures.LeCrouzet,Fixtures.Rampon, 100000);
+                tooFarAwayStart = new Passenger(Fixtures.GorgesDuTarnCausses,Fixtures.Prades,Fixtures.SeptAoutSoir);
+                matching = new Passenger(Fixtures.LeCrouzet,Fixtures.Cocures, Fixtures.SeptAoutSoir);
+                tooLateArrival = new Passenger(Fixtures.LeCrouzet,Fixtures.Cocures, Fixtures.SeptAoutMatin.AddMinutes(15));
+                tooLongDetour = new Passenger(Fixtures.LeCrouzet,Fixtures.Rampon, Fixtures.SeptAoutSoir);
                 return;
             }
-            tooFarAwayStart = new Passenger(Fixtures.GorgesDuTarnCausses,Fixtures.Florac,100000);
-            matching = new Passenger(Fixtures.LeCrouzet,Fixtures.Florac, 4000);
-            tooLateArrival = new Passenger(Fixtures.LeCrouzet,Fixtures.Florac, 3000);
-            tooLongDetour = new Passenger(Fixtures.LeCrouzet,Fixtures.Rampon);
+            tooFarAwayStart = new Passenger(Fixtures.GorgesDuTarnCausses,Fixtures.Florac,Fixtures.SeptAoutSoir);
+            matching = new Passenger(Fixtures.LeCrouzet,Fixtures.Florac, Fixtures.SeptAoutSoir);
+            tooLateArrival = new Passenger(Fixtures.LeCrouzet,Fixtures.Florac, Fixtures.SeptAoutMatin.AddMinutes(15));
+            tooLongDetour = new Passenger(Fixtures.LeCrouzet,Fixtures.Rampon,Fixtures.SeptAoutSoir);
 
         }
-
         private static void SetupRouteMock(Mock<IOsrmService> mock, ImmutableList<LatLng> input, string file)
         {
             mock.Setup(service =>
@@ -107,7 +107,10 @@ namespace Liane.Test
         [Test]
         public async Task ShouldMatchOnePassengerWithSameDestination()
         {
+            UserUtils.EmptyUsersList();
             SetupUsers();
+            UserUtils.AddUser("Conducteur", driver);
+            UserUtils.AddUser("Passager gorgesDuTarnCausses, trop long détour", tooFarAwayStart);
             UserUtils.AddUser("Passager leCrouzet, à l'heure", matching);
             UserUtils.AddUser("Passager leCrouzet, en retard", tooLateArrival);
             
@@ -119,8 +122,9 @@ namespace Liane.Test
         [Test]
         public async Task ShouldMatchOnePassengerWithAnotherDestination()
         {    
-            UserUtils.EmptyPassengersList();
+            UserUtils.EmptyUsersList();
             SetupUsers(false);
+            UserUtils.AddUser("Conducteur", driver);
             UserUtils.AddUser("Passager gorgesDuTarnCausses récup' trop loin", tooFarAwayStart);
             UserUtils.AddUser("Passager leCrouzet à l'heure, déposé en cours de route", matching);
             UserUtils.AddUser("Passager leCrouzet en retard, déposable en cours de route", tooLateArrival);
