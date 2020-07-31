@@ -13,9 +13,9 @@ namespace Liane.Service.Internal.Osrm
         private readonly HttpClient client;
         private readonly ILogger<OsrmServiceImpl> logger;
 
-        public OsrmServiceImpl(ILogger<OsrmServiceImpl> logger)
+        public OsrmServiceImpl(ILogger<OsrmServiceImpl> logger, OsrmSettings settings)
         {
-            client = new HttpClient();
+            client = new HttpClient {BaseAddress = settings.Url};
             this.logger = logger;
         }
 
@@ -38,7 +38,7 @@ namespace Liane.Service.Internal.Osrm
             string annotations = "false",
             string continueStraight = "default")
         {
-            string uri = $"http://liane.gjini.co:5000/route/v1/driving/{Format(coordinates)}";
+            string uri = $"/route/v1/driving/{Format(coordinates)}";
 
             logger.LogInformation("Call returns ", uri);
 

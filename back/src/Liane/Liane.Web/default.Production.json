@@ -6,5 +6,11 @@
       "Microsoft": "Error",
       "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
     }
+  },
+  "Nominatim": {
+    "Url": "http://nominatim:8080"
+  },
+  "Osrm": {
+    "Url": "http://osrm:5000"
   }
 }

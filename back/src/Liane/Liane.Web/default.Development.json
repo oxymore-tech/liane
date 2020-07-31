@@ -6,5 +6,11 @@
       "Microsoft": "Error",
       "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
     }
+  },
+  "Nominatim": {
+    "Url": "http://liane.gjini.co:7070"
+  },
+  "Osrm": {
+    "Url": "http://liane.gjini.co:5000"
   }
 }

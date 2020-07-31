@@ -16,17 +16,15 @@ namespace Liane.Service.Internal.Address
         private readonly HttpClient client;
         private readonly ILogger<AddressServiceNominatimImpl> logger;
 
-        public AddressServiceNominatimImpl(ILogger<AddressServiceNominatimImpl> logger)
+        public AddressServiceNominatimImpl(ILogger<AddressServiceNominatimImpl> logger, NominatimSettings settings)
         {
-            client = new HttpClient();
+            client = new HttpClient {BaseAddress = settings.Url};
             this.logger = logger;
         }
 
         public async Task<Api.Address.Address> GetDisplayName(LatLng coordinate)
         {
-            const string uri = "http://liane.gjini.co:7070/reverse";
-
-            var response = await client.GetAsyncAs<Response>(uri, new
+            var response = await client.GetAsyncAs<Response>("/reverse", new
             {
                 lat = coordinate.Lat,
                 lon = coordinate.Lng,
@@ -50,9 +48,7 @@ namespace Liane.Service.Internal.Address
 
         public async Task<ImmutableList<Api.Address.Address>> Search(string displayName)
         {
-            const string uri = "http://liane.gjini.co:7070/search/fr";
-
-            var responses = await client.GetAsyncAs<ImmutableList<Response>>(uri, new
+            var responses = await client.GetAsyncAs<ImmutableList<Response>>("/search/fr", new
             {
                 q = displayName,
                 format = "json",

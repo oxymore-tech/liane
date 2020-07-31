@@ -18,7 +18,7 @@ namespace Liane.Test
 
         public OsrmServiceTest()
         {
-            tested = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object);
+            tested = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             coordinates = ImmutableList.Create(Fixtures.Mende, Fixtures.Florac);
         }
 
@@ -61,35 +61,36 @@ namespace Liane.Test
             AssertJson.AreEqual("mende-leCrouzet-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
-        
-            
+
+
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCaussesAndPrades()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende,Fixtures.GorgesDuTarnCausses, Fixtures.Prades, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Prades, Fixtures.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-gorgesDuTarnCausses-prades-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
-        
+
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndCocures()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende,Fixtures.LeCrouzet, Fixtures.Cocures, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Cocures, Fixtures.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-leCrouzet-cocures-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
+
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndRampon()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende,Fixtures.LeCrouzet, Fixtures.Rampon, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Rampon, Fixtures.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-leCrouzet-rampon-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
-        
-        
+
+
         [Test]
         public async Task ShouldGetRouteWithAnnotations()
         {

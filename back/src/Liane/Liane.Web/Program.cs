@@ -1,5 +1,3 @@
-using Liane.Web.Extensions;
-
 namespace Liane.Web
 {
     public sealed class Program

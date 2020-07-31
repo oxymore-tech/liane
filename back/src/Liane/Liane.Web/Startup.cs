@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Web.Internal.Exception;
@@ -28,10 +29,21 @@ using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using LogLevel = NLog.LogLevel;
 
-namespace Liane.Web.Extensions
+namespace Liane.Web
 {
     public static class ModuleExtensions
     {
+        private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
+        {
+            services.AddService<OsrmServiceImpl>();
+            services.AddService<RoutingServiceImpl>();
+            services.AddService<AddressServiceNominatimImpl>();
+            services.AddService<UserServiceImpl>();
+            services.AddService<MatchingServiceImpl>();
+            services.AddSettings<OsrmSettings>(context);
+            services.AddSettings<NominatimSettings>(context);
+        }
+
         public static void StartCurrentModule(string[] args)
         {
             var logger = ConfigureLogger();
@@ -141,9 +153,7 @@ namespace Liane.Web.Extensions
 
         private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
         {
-            services.AddService<OsrmServiceImpl>();
-            services.AddService<RoutingServiceImpl>();
-            services.AddService<AddressServiceNominatimImpl>();
+            ConfigureLianeServices(context, services);
             services.AddService<FileStreamResultExecutor>();
             services.AddControllers().AddNewtonsoftJson();
             services.AddCors(options =>
