@@ -35,5 +35,4 @@ namespace Liane.Api.Matching
             return HashCode.Combine(Start, End, MaxDelta, NbOfSeat, DepartureTime);
         }
     }
-    
 }

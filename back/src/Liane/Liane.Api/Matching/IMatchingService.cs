@@ -7,7 +7,5 @@ namespace Liane.Api.Matching
     {
         Task<ImmutableList<PassengerProposal>> SearchPassengers(string userId);
         Task<ImmutableList<DriverProposal>> SearchDrivers(string userId);
-        
-        
     }
 }
