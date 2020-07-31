@@ -43,5 +43,4 @@ export function DefaultRouteComponent({waypoints}: { waypoints: Point[] }) {
     }
 
 }
-
-export const DefaultRoute = memo(DefaultRouteComponent);
+export const DefaultRoute = DefaultRouteComponent;

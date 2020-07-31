@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Address } from "api/address";
-import { addressService } from "api/address-service";
-import { debounce } from "lodash";
+import React, {useEffect, useState} from "react";
+import {Address} from "api/address";
+import {addressService} from "api/address-service";
+import {debounce} from "lodash";
 
-import { AutoComplete, Checkbox } from 'antd';
-import { SelectProps } from 'antd/es/select';
-import { AddressLine, formatAddress } from "map/AddressLine";
+import {AutoComplete, Checkbox} from 'antd';
+import {SelectProps} from 'antd/es/select';
+import {AddressLine, formatAddress} from "map/AddressLine";
 
 import styles from "./Point.module.css";
 
@@ -26,7 +26,7 @@ export interface PointComponentProps {
 
 export function PointComponent({className, index, point, optional, onChange, onSelect}: PointComponentProps) {
 
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(formatAddress(point.address));
 
   const [selectedAddress, setSelectedAddress] = useState<Address>(point.address);
 
@@ -37,7 +37,7 @@ export function PointComponent({className, index, point, optional, onChange, onS
           .then(addresses =>
             addresses.map(
               a => ({
-                value: a.displayName,
+                value: formatAddress(a),
                 label: <AddressLine address={a}/>,
                 address: a
               })
@@ -49,8 +49,15 @@ export function PointComponent({className, index, point, optional, onChange, onS
 
 
     },
-    [input]
+    [input, point]
   )
+
+  useEffect(() => {
+    onChange(index, {
+      ...point,
+      address: selectedAddress
+    })
+  }, [selectedAddress]);
 
   function excludeClick() {
     onChange(index, {...point, exclude: !point.exclude});
@@ -59,13 +66,6 @@ export function PointComponent({className, index, point, optional, onChange, onS
   function selectClick() {
     onSelect(index);
   }
-
-  useEffect(() => {
-    onChange(index, {
-      ...point,
-      address: selectedAddress
-    })
-  }, [selectedAddress]);
 
   const [options, setOptions] = useState<SelectProps<Address>['options']>([]);
 
@@ -85,7 +85,7 @@ export function PointComponent({className, index, point, optional, onChange, onS
           }
         }
         defaultValue={formatAddress(point.address)}
-
+        
         onClick={selectClick}
 
         onSearch={debounce(input => setInput(input), 200)}
@@ -94,7 +94,9 @@ export function PointComponent({className, index, point, optional, onChange, onS
 
     </div>
     {optional ?
-      <Checkbox className={styles.pointSelect} onChange={excludeClick} checked={!point.exclude}>Exclure</Checkbox> :
+      <Checkbox className={styles.pointSelect} onChange={excludeClick}
+                checked={!point.exclude}>{point.exclude ? "Exclus" : "Inclus"}</Checkbox> :
       null}
   </div>;
+
 }

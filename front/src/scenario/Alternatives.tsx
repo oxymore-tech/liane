@@ -32,4 +32,4 @@ function AlternativesComponent({waypoints}: { waypoints: Point[] }) {
     }
 }
 
-export const Alternatives = memo(AlternativesComponent);
+export const Alternatives = AlternativesComponent;

@@ -17,7 +17,13 @@ export function formatDistance(distance: number) {
 }
 
 export function formatDuration(duration: number) {
-    return moment.duration(duration, 'seconds').humanize();
+    const time = moment.duration(duration, 'seconds');
+    if(time.hours()<1){
+        return `${time.minutes()} minute${time.minutes()<2?"":"s"}`;
+    }else{
+        return `${time.hours()} heure${time.hours()<2?"":"s"} et ${time.minutes()} minute${time.minutes()<2?"":"s"}`;
+    }
+    return ;
 }
 
 export const customIcon = icon({

@@ -50,4 +50,4 @@ function DetourRouteComponent({waypoints}: { waypoints: Point[] }) {
 
 }
 
-export const DetourRoute = memo(DetourRouteComponent);
+export const DetourRoute = DetourRouteComponent;

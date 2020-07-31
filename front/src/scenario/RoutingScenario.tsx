@@ -20,4 +20,4 @@ function RoutingScenarioComponent({selected, waypoints}: { selected: Scenario, w
 
 }
 
-export const RoutingScenario = memo(RoutingScenarioComponent);
+export const RoutingScenario = RoutingScenarioComponent;

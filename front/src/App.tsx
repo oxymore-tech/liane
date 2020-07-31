@@ -23,7 +23,7 @@ function App() {
                 <Option value={Scenario.waypointRoute}>waypointRoute</Option>
             </Select>
 
-            <RouteMap scenario={scenario}/>
+            <RouteMap scenario={scenario} onChange={setScenario}/>
         </div>
     );
 }
