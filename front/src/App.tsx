@@ -1,53 +1,32 @@
-import React from 'react';
-import './App.css';
+import React, {useState} from "react";
 import 'leaflet/dist/leaflet.css';
-import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
-import { LatLngLiteral } from "leaflet";
+import 'antd/dist/antd.css';
+import 'App.css';
+import {Select} from 'antd';
+import {Scenario} from "api/scenario";
+import {RouteMap} from "map/RouteMap";
 
-interface Route {
-  readonly code: string;
-}
+const {Option} = Select;
 
-function OurMap({start, end, route}: { start: LatLngLiteral, end: LatLngLiteral, route?: Route }) {
+function App() {
 
-  const zoom = 11;
-  const center = {
-    lat: (start.lat + end.lat) / 2,
-    lng: (start.lng + end.lng) / 2
-  };
+    const [scenario, setScenario] = useState<number>(Scenario.defaultRoute);
 
-  return (
-    <Map className="map" center={center} zoom={zoom}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-      />
-      <Marker position={[51.505, -0.09]}>
-        <Popup>A pretty CSS3 popup.<br/>Easily customizable.</Popup>
-      </Marker>
-    </Map>
-  );
-}
-
-class App extends React.Component {
-
-  route!: Route;
-
-  async componentDidMount() {
-    const response = await fetch("http://localhost:8081/api/example");
-    this.route = await response.json();
-    console.log("Route", this.route);
-  }
-
-  render() {
-    const start = {lat: 44.5180226, lng: 3.4991057};
-    const end = {lat: 44.31901305, lng: 3.57802065202088};
     return (
-      <div className="App">
-        <OurMap start={start} end={end} route={this.route}/>
-      </div>
+        <div className="App">
+            <Select className={"scenario-select"}
+                    value={scenario}
+                    onChange={setScenario}>
+                <Option value={Scenario.defaultRoute}>defaultRoute</Option>
+                <Option value={Scenario.alternatives}>alternatives</Option>
+                <Option value={Scenario.detourRoute}>detourRoute</Option>
+                <Option value={Scenario.waypointRoute}>waypointRoute</Option>
+            </Select>
+
+            <RouteMap scenario={scenario}/>
+        </div>
     );
-  }
 }
+
 
 export default App;

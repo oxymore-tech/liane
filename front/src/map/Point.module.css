@@ -1,0 +1,13 @@
+
+.point {
+    display: flex;
+    flex: 1;
+}
+
+.autocomplete {
+    flex: 1;
+}
+
+.pointSelect {
+    margin-left: 1rem;
+}
