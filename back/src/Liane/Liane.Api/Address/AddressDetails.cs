@@ -2,25 +2,27 @@ namespace Liane.Api.Address
 {
     public sealed class AddressDetails
     {
-        public AddressDetails(string? houseNumber, string? road, string? town, string? city, string? county, string? state_district, string? state, string? postcode, string country,
-            string country_code, string? isolated_dwelling, string? municipality, string? village)
+        public AddressDetails(string? houseNumber, string? hamlet, string? road, string? isolatedDwelling, string? municipality, string? village, string? town, string? city, string? county,
+            string? stateDistrict, string? state, string? postcode, string country, string countryCode)
         {
             HouseNumber = houseNumber;
+            Hamlet = hamlet;
             Road = road;
+            IsolatedDwelling = isolatedDwelling;
+            Municipality = municipality;
+            Village = village;
             Town = town;
             City = city;
             County = county;
-            StateDistrict = state_district;
+            StateDistrict = stateDistrict;
             State = state;
             Postcode = postcode;
             Country = country;
-            CountryCode = country_code;
-            IsolatedDwelling = isolated_dwelling;
-            Municipality = municipality;
-            Village = village;
+            CountryCode = countryCode;
         }
 
         public string? HouseNumber { get; }
+        public string? Hamlet { get; }
         public string? Road { get; }
         public string? IsolatedDwelling { get; }
         public string? Municipality { get; }
