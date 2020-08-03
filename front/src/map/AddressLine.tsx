@@ -1,5 +1,6 @@
 import React from "react";
-import { Address } from "api/address";
+import {Address} from "api/address";
+import {Avatar} from "antd";
 
 function show(...params: Array<string | undefined>) {
   const filter = params.filter(p => p);
@@ -18,13 +19,17 @@ export function formatAddress(a: Address) {
 
 export function AddressLine({address}: { address: Address }) {
   if (address.addressDetails) {
-    return <span>
-            {
-              show(address.addressDetails.houseNumber, address.addressDetails.road)
-              + show(address.addressDetails.isolatedDwelling || address.addressDetails.hamlet)
-            }
+    return <span>{address.icon ?
+      <Avatar shape="square" size={16} src={address.icon} style={{marginRight: "1rem"}}/>
+      : null
+    }
+      {
+        show(address.addressDetails.houseNumber, address.addressDetails.road)
+        + show(address.addressDetails.isolatedDwelling)
+        + show(address.addressDetails.hamlet)
+      }
       <span style={{fontWeight: "bold"}}>
-                {address.addressDetails.village || address.addressDetails.town || address.addressDetails.city || address.addressDetails.municipality}        
+        {address.addressDetails.postcode} {address.addressDetails.village || address.addressDetails.town || address.addressDetails.city || address.addressDetails.municipality}        
             </span>
         </span>;
 

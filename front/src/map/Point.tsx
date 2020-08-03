@@ -24,6 +24,7 @@ export interface PointComponentProps {
   onInput: (a: string) => void
 }
 
+
 export function PointComponent({className, index, point, optional, onChange, onSelect}: PointComponentProps) {
 
   const [input, setInput] = useState(formatAddress(point.address));
@@ -41,7 +42,7 @@ export function PointComponent({className, index, point, optional, onChange, onS
                 label: <AddressLine address={a}/>,
                 address: a
               })
-            ))
+            ).filter(o => o.address.addressDetails?.postcode ))
           .then(options => setOptions(options));
       } else {
         setOptions([]);
@@ -51,7 +52,10 @@ export function PointComponent({className, index, point, optional, onChange, onS
     },
     [input, point]
   )
-
+  useEffect( ()=> {
+    setSelectedAddress(point.address);
+  }, [point])
+  
   useEffect(() => {
     onChange(index, {
       ...point,
@@ -64,14 +68,15 @@ export function PointComponent({className, index, point, optional, onChange, onS
   }
 
   function selectClick() {
+    
     onSelect(index);
   }
 
   const [options, setOptions] = useState<SelectProps<Address>['options']>([]);
 
+  
   return <div className={className}>
     <div className={styles.point}>
-
       <AutoComplete
         dropdownMatchSelectWidth={252}
         showArrow={false}
@@ -84,14 +89,11 @@ export function PointComponent({className, index, point, optional, onChange, onS
             setSelectedAddress(option.address);
           }
         }
-        defaultValue={formatAddress(point.address)}
-        
+        defaultValue={formatAddress(selectedAddress)}
         onClick={selectClick}
 
         onSearch={debounce(input => setInput(input), 200)}
-      >
-      </AutoComplete>
-
+      />
     </div>
     {optional ?
       <Checkbox className={styles.pointSelect} onChange={excludeClick}

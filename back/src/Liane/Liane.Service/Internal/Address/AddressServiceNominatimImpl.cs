@@ -6,7 +6,6 @@ using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.Nominatim;
 using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Address
@@ -63,7 +62,7 @@ namespace Liane.Service.Internal.Address
 
         private static Api.Address.Address MapAddress(Response r)
         {
-            return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon), r.Address);
+            return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon),r.Icon, r.Address);
         }
     }
 }
