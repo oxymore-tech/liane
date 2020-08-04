@@ -28,34 +28,39 @@ export interface PointComponentProps {
 export function PointComponent({className, index, point, optional, onChange, onSelect}: PointComponentProps) {
 
   const [input, setInput] = useState(formatAddress(point.address));
-
   const [selectedAddress, setSelectedAddress] = useState<Address>(point.address);
 
   useEffect(() => {
+    setInput(formatAddress(point.address))
+  }, [point.address]);
 
+  const debouncedSearch = debounce(() => {
+    addressService.Search(input)
+      .then(addresses =>
+        addresses.map(
+          a => ({
+            value: formatAddress(a),
+            label: <AddressLine address={a}/>,
+            address: a
+          })
+        ).filter(o => o.address.addressDetails?.postcode))
+      .then(options => setOptions(options));
+  }, 500, {
+    'leading': true,
+    'trailing': false
+  });
+  
+  useEffect(() => {
       if (input) {
-        addressService.Search(input)
-          .then(addresses =>
-            addresses.map(
-              a => ({
-                value: formatAddress(a),
-                label: <AddressLine address={a}/>,
-                address: a
-              })
-            ).filter(o => o.address.addressDetails?.postcode ))
-          .then(options => setOptions(options));
+        debouncedSearch();
       } else {
         setOptions([]);
       }
-
-
+      setInput(input)
     },
-    [input, point]
+    [input]
   )
-  useEffect( ()=> {
-    setSelectedAddress(point.address);
-  }, [point])
-  
+
   useEffect(() => {
     onChange(index, {
       ...point,
@@ -68,19 +73,18 @@ export function PointComponent({className, index, point, optional, onChange, onS
   }
 
   function selectClick() {
-    
     onSelect(index);
   }
 
   const [options, setOptions] = useState<SelectProps<Address>['options']>([]);
 
-  
+
   return <div className={className}>
     <div className={styles.point}>
       <AutoComplete
-        dropdownMatchSelectWidth={252}
-        showArrow={false}
-        filterOption={false}
+        dropdownMatchSelectWidth={false}
+        value={input}
+
         options={options}
         className={styles.autocomplete}
 
@@ -89,10 +93,8 @@ export function PointComponent({className, index, point, optional, onChange, onS
             setSelectedAddress(option.address);
           }
         }
-        defaultValue={formatAddress(selectedAddress)}
         onClick={selectClick}
-
-        onSearch={debounce(input => setInput(input), 200)}
+        onSearch={setInput}
       />
     </div>
     {optional ?
