@@ -5,7 +5,7 @@ import { BaseUrl } from "./url";
 class AddressService {
 
   async GetDisplayName(coordinate: LatLngLiteral): Promise<Address> {
-    const url = new URL(`${BaseUrl}/api/address/displayName`);
+    const url = new URL("/api/address/displayName", BaseUrl);
     url.searchParams.append("lat", coordinate.lat.toString());
     url.searchParams.append("lng", coordinate.lng.toString());
 
@@ -19,7 +19,7 @@ class AddressService {
   }
 
   async GetCoordinate(displayName: string): Promise<Address> {
-    const url = new URL(`${BaseUrl}/api/address/coordinate`);
+    const url = new URL("/api/address/coordinate", BaseUrl);
     url.searchParams.append("displayName", displayName);
 
     const response = await fetch(url.toString(), {
@@ -32,7 +32,7 @@ class AddressService {
   }
 
   async Search(displayName: string): Promise<Address[]> {
-    const url = new URL(`${BaseUrl}/api/address/search`);
+    const url = new URL("/api/address/search", BaseUrl);
     url.searchParams.append("displayName", displayName);
 
     const response = await fetch(url.toString(), {
