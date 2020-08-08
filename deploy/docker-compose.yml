@@ -8,6 +8,8 @@ services:
       - 5000:5000
     volumes:
       - "/data/liane/osm:/data:ro"
+    networks:
+      - internal
 
   nominatim:
     image: "docker.synergee.com/library/nominatim:3.5"
@@ -16,6 +18,29 @@ services:
       - 7070:8080
     volumes:
       - "/data/liane/osm/postgresdata:/var/lib/postgresql/12/main"
-        
+    networks:
+      - internal
+
   back:
     build: ../back
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "gateway"
+      traefik.http.routers.liane-back.rule: "Host(`liane.gjini.co`) && PathPrefix(`/api`)"
+      traefik.http.routers.liane-back.entrypoints: "web"
+      traefik.http.routers.liane-back.middlewares: "redirect@file"
+      traefik.http.routers.liane-back-secure.rule: "Host(`liane.gjini.co`) && PathPrefix(`/api`)"
+      traefik.http.routers.liane-back-secure.entrypoints: "web-secure"
+      traefik.http.routers.liane-back-secure.middlewares: "compress@file"
+      traefik.http.routers.liane-back-secure.tls.certResolver: "gjinico"
+      traefik.http.services.liane-back.loadbalancer.server.port: "80"
+    networks:
+      - gateway
+      - internal
+        
+networks:
+  gateway:
+    external:
+      name: gateway
+  internal:
+    driver: bridge
