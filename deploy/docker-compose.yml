@@ -19,5 +19,3 @@ services:
         
   back:
     build: ../back
-    ports:
-      - 80:8081
