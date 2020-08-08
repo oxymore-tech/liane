@@ -1,22 +1,22 @@
-FROM node:12-alpine AS build
+FROM node:14-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json ./
+COPY yarn.lock ./
 
-RUN npm ci
+RUN yarn
 
-COPY . .
+COPY . ./
 
-ARG version
-RUN sed -i "s|\${VERSION}|$version|g" ./src/app/shared/components/user/login/login.component.ts
-
-RUN npm run build
+RUN yarn build
 
 
 
-FROM nginx:1.17.6-alpine
+FROM nginx:stable-alpine
 
-COPY deploy/default.conf /etc/nginx/conf.d/
+COPY --from=build /app/build /usr/share/nginx/html
 
-COPY --from=build /app/dist/synergee-frontend /usr/share/nginx/html/
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
