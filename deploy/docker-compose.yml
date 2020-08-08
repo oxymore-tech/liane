@@ -33,7 +33,7 @@ services:
       traefik.http.routers.liane-back-secure.entrypoints: "web-secure"
       traefik.http.routers.liane-back-secure.middlewares: "compress@file"
       traefik.http.routers.liane-back-secure.tls.certResolver: "gjinico"
-      traefik.http.services.liane-back.loadbalancer.server.port: "80"
+      traefik.http.services.liane-back.loadbalancer.server.port: "8081"
     networks:
       - gateway
       - internal
