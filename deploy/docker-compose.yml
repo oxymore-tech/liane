@@ -50,7 +50,7 @@ services:
       traefik.http.routers.liane-front-secure.entrypoints: "web-secure"
       traefik.http.routers.liane-front-secure.middlewares: "compress@file"
       traefik.http.routers.liane-front-secure.tls.certResolver: "gjinico"
-      traefik.http.services.liane-front.loadbalancer.server.port: "8081"
+      traefik.http.services.liane-front.loadbalancer.server.port: "80"
     networks:
       - gateway
       - internal
