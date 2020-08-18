@@ -145,7 +145,7 @@ namespace Liane.Service.Internal.Routing
             } while (search);
 
             // Looking for an entry after the detourPoint
-            stepsId = 1;
+            stepsId = 0;
             var maxStepsId = routeResponse.Routes[0].Legs[1].Steps.Count;
             search = true;
             do

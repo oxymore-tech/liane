@@ -1,10 +1,11 @@
 import React, {memo, useEffect, useState} from "react";
-import {Polyline} from "react-leaflet";
+import {Marker, Polyline, Popup} from "react-leaflet";
 import {defaultRouteOverlay} from "scenario/DefaultRoute";
 import {RoutingQuery} from "api/routing-query";
 import {routingService} from "api/routing-service";
 import {Route} from "api/route";
 import {Point} from "map/Point";
+import {customIcon, formatDistance, formatDuration} from "../map/LianeMap";
 
 function DetourRouteComponent({waypoints}: { waypoints: Point[] }) {
 
@@ -31,21 +32,33 @@ function DetourRouteComponent({waypoints}: { waypoints: Point[] }) {
     const index = Math.round(detour.coordinates.length / 2);
     if (index > 0) {
         const center = detour.coordinates[index];
-        /*
-            <Marker position={point} icon={customIcon}/>
+        
+        
+        return <>
+            <Marker position={waypoints[1].address.coordinate} icon={customIcon}/>
+            {/*
             <Marker position={center} icon={customIcon}>
                 <Popup>
                     <div>Distance: {formatDistance(detour.distance)}</div>
                     <div>Durée: {formatDuration(detour.duration)}</div>
                     <div>Delta: {detour.delta ? formatDuration(detour.delta) : null}</div>
                 </Popup>
-            </Marker>                
-        */
-        return <>
+            </Marker>
+
+            */}
             <Polyline positions={detour.coordinates}/>
         </>
     } else {
-        return null;
+        // Show shortest route between start and end
+        return <>
+            {route?
+                <>
+                    {defaultRouteOverlay(internalStart,internalEnd,route)}
+                    <Marker position={waypoints[1].address.coordinate} icon={customIcon}/>
+                </>:
+                null
+            }
+        </>;
     }
 
 }

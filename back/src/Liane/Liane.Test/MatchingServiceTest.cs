@@ -111,31 +111,6 @@ namespace Liane.Test
         }
 
 
-        [Test]
-        public async Task ShouldMatchOnePassengerWithSameEndAndAlreadyHas0nePassenger()
-        {
-        }
-
-        [Test]
-        public async Task ShouldMatchOnePassengerWithSameEndAndAlreadyHasMultiplePassengers()
-        {
-        }
-
-
-        [Test]
-        public async Task ShouldMatchOnePassengerWithAnotherEndAndAlreadyHas0nePassenger()
-        {
-            // userServiceImpl.EmptyDriversList();
-            // userServiceImpl.AddUser("Conducteur avec 1 passager", Users.Driver);
-            // var passengers = await tested.SearchPassengers("Conducteur avec 1 passager");
-        }
-
-        [Test]
-        public async Task ShouldMatchOnePassengerWithAnotherEndAndAlreadyHasMultiplePassengers()
-        {
-            // userServiceImpl.EmptyDriversList();
-            // userServiceImpl.AddUser("Conducteur avec 2+ passagers", Users.Driver);
-            // var passengers = await tested.SearchPassengers("Conducteur avec 2+ passagers");
-        }
+        
     }
 }
