@@ -14,7 +14,7 @@ function download() {
 function merge() {
     if [[ ! -f ${OSM_DATA}/all.osm.pbf ]]
     then
-        docker run -t -v "${OSM_DATA}:/data" yagajs/osmosis osmosis --read-pbf /data/midi-pyrenees-latest.osm.pbf --read-pbf /data/languedoc-roussillon-latest.osm.pbf --merge --write-pbf /data/all.osm.pbf
+        docker run -t -v "${OSM_DATA}:/data" -u $(id -u ${USER}):$(id -g ${USER}) yagajs/osmosis osmosis --read-pbf /data/midi-pyrenees-latest.osm.pbf --read-pbf /data/languedoc-roussillon-latest.osm.pbf --merge --write-pbf /data/all.osm.pbf
     fi;
 }
 
