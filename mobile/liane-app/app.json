@@ -1,0 +1,12 @@
+{
+  "name": "liane-app",
+  "displayName": "liane-app",
+  "expo": {
+    "name": "liane-app",
+    "slug": "liane-app",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
