@@ -14,6 +14,7 @@ namespace Liane.Test
         public async Task ShouldMatchNoDriverAsync()
         {
             var trips = await displayService.DisplayTrips();
+            Assert.IsNotNull(trips);
         }    
 
     }

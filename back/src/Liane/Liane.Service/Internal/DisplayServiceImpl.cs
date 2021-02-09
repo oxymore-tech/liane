@@ -8,7 +8,7 @@ namespace Liane.Service.Internal
     {
         public Task<ImmutableList<Trip>> DisplayTrips()
         {
-            throw new System.NotImplementedException();
+            return Task.FromResult(ImmutableList<Trip>.Empty);
         }
     }
 }
