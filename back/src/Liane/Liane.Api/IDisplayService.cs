@@ -6,6 +6,6 @@ namespace Liane.Api
     public interface IDisplayService
     {
 
-        Task<ImmutableList<Trip>> DisplayTrips(string userId);
+        Task<ImmutableList<Trip>> DisplayTrips();
     }
 }
