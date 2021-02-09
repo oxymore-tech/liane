@@ -16,10 +16,10 @@ const customIcon = icon({
 
 function Map({className}: MapProps) {
 
-  return <MapContainer className={className} center={[44.3352152, 3.3837138]}
-                       zoom={14}
+  return <MapContainer className={className} center={[44.38624954223633, 3.6189568042755127]}
+                       zoom={12}
                        scrollWheelZoom={true}
-                       dragging={false}
+                       dragging={true}
                        touchZoom={false}
                        style={{zIndex: 2}}>
     <TileLayer
@@ -36,7 +36,9 @@ function Map({className}: MapProps) {
         </a>
       </Popup>
     </Marker>
-    <Polyline positions={[[44.5180226, 3.4991057], [44.31901305, 3.57802065202088]]} color={"#ff0000"}/>
+    <Polyline positions={[[44.5180226, 3.4991057], [44.38624954223633, 3.6189568042755127], [44.31901305, 3.57802065202088]]} 
+              color={"#ff0000"} 
+              weight={10}/>
   </MapContainer>;
 }
 
