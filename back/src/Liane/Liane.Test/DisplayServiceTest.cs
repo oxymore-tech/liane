@@ -11,11 +11,18 @@ namespace Liane.Test
         private IDisplayService displayService = new DisplayServiceImpl();
 
         [Test]
-        public async Task ShouldMatchNoDriverAsync()
+        public async Task DisplayTripsShouldBeNotNull()
         {
             var trips = await displayService.DisplayTrips();
             Assert.IsNotNull(trips);
-        }    
+        }
+
+        [Test]
+        public async Task DisplayTripsCouldBeEmpty()
+        {
+            var trips = await displayService.DisplayTrips();
+            CollectionAssert.IsEmpty(trips);
+        }        
 
     }
 }
