@@ -1,6 +1,6 @@
 interface BlablaProps {
     text: string;
-    content: boolean
+    content?: boolean;
 }
 
 export function Blabla({text, content}: BlablaProps) {
