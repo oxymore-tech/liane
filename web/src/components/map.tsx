@@ -1,6 +1,6 @@
 import React from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
 import { icon } from "leaflet";
 
 interface MapProps {
@@ -36,6 +36,7 @@ function Map({className}: MapProps) {
         </a>
       </Popup>
     </Marker>
+    <Polyline positions={[[44.5180226, 3.4991057], [44.31901305, 3.57802065202088]]} color={"#ff0000"}/>
   </MapContainer>;
 }
 

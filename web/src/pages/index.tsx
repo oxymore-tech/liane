@@ -5,6 +5,6 @@ const Map = dynamic(() => import("../components/map"), {ssr: false});
 
 export default function Home() {
   return <div>
-    <Map className="w-full h-screen"/>
+    <Map className="w-full h-screen"></Map>
   </div>;
 }
