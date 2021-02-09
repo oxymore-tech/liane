@@ -12,6 +12,13 @@
       "infoPlist": {
         "UIBackgroundModes": ["location", "fetch"]
       }
+    },
+    "android" : {
+      "permissions": [
+      "CAMERA",
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_BACKGROUND_LOCATION"
+    ]
     }
   }
 }
