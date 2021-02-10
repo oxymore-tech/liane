@@ -18,7 +18,10 @@ namespace Liane.Api.Util.Startup
             var type = typeof(T);
 
             services.AddSingleton(t);
-            foreach (var i in type.GetInterfaces()) services.AddSingleton(i, provider => provider.GetService<T>());
+            foreach (var i in type.GetInterfaces())
+            {
+                services.AddSingleton(i, provider => provider.GetService<T>()!);
+            }
 
             return services;
         }
@@ -28,7 +31,10 @@ namespace Liane.Api.Util.Startup
             var type = typeof(T);
 
             services.AddSingleton(type);
-            foreach (var i in type.GetInterfaces()) services.AddSingleton(i, provider => provider.GetService<T>());
+            foreach (var i in type.GetInterfaces())
+            {
+                services.AddSingleton(i, provider => provider.GetService<T>()!);
+            }
 
             return services;
         }
