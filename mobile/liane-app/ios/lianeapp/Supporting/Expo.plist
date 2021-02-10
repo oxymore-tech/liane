@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+<<<<<<< HEAD
 <dict>
         <key>EXUpdatesSDKVersion</key>
         <string>YOUR-APP-SDK-VERSION-HERE</string>
@@ -8,3 +9,14 @@
         <string>YOUR-APP-URL-HERE</string>
 </dict>
 </plist>
+=======
+  <dict>
+    <key>EXUpdatesSDKVersion</key>
+    <string>40.0.0</string>
+    <key>EXUpdatesURL</key>
+    <string>https://exp.host/@augustingjini/liane-app</string>
+    <key>EXUpdatesReleaseChannel</key>
+    <string>default</string>
+  </dict>
+</plist>
+>>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f

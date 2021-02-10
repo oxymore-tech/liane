@@ -10,6 +10,7 @@
     ],
     "ios": {
       "infoPlist": {
+<<<<<<< HEAD
         "UIBackgroundModes": ["location", "fetch"]
       }
     },
@@ -20,5 +21,22 @@
       "ACCESS_BACKGROUND_LOCATION"
     ]
     }
+=======
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
+      }
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
+      "package": "tech.oxymore.liane",
+      "versionCode": 4
+    },
+    "description": ""
+>>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
   }
 }

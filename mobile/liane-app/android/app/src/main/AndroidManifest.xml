@@ -29,10 +29,19 @@
     android:allowBackup="false"
     android:theme="@style/AppTheme"
   >
+<<<<<<< HEAD
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="YOUR-APP-URL-HERE"/>
     <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="YOUR-APP-SDK-VERSION-HERE"/>
     <activity
       android:name=".MainActivity"
+=======
+    <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://exp.host/@augustingjini/liane-app" />
+    <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="40.0.0" />
+    <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="default" />
+
+  <activity
+    android:name=".MainActivity"
+>>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
       android:label="@string/app_name"
       android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
       android:launchMode="singleTask"

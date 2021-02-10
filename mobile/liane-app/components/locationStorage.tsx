@@ -37,7 +37,6 @@ export async function getLocations(keys = []) : Promise<LocationObject[]> {
             console.log('Impossible de récupérer les localisations : ', e);
             return [];
         }
-
 }
 
 /**

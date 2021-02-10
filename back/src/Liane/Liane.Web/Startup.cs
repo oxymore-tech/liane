@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
+using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
@@ -42,6 +44,9 @@ namespace Liane.Web
             services.AddService<MatchingServiceImpl>();
             services.AddSettings<OsrmSettings>(context);
             services.AddSettings<NominatimSettings>(context);
+
+            services.AddService<FakeCurrentContextImpl>();
+            services.AddService<LocationServiceImpl>();
         }
 
         public static void StartCurrentModule(string[] args)

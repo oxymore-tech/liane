@@ -33,7 +33,7 @@ namespace Liane.Api.Util.Exception
             {
                 case ValidationException e:
 
-                    var errors = new ModelStateDictionary(modelState);
+                    var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
                     foreach (var (field, message) in e.Errors) errors.AddModelError(field, message);
 
                     var validationErrorResponse = new Dictionary<string, object>();
