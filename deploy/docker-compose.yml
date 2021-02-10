@@ -38,15 +38,15 @@ services:
       - gateway
       - internal
         
-  front:
-    build: ../front
+  scenari:
+    build: ../scenari
     labels:
       traefik.enable: "true"
       traefik.docker.network: "gateway"
-      traefik.http.routers.liane-front.rule: "Host(`liane.gjini.co`) && PathPrefix(`/`)"
+      traefik.http.routers.liane-front.rule: "Host(`liane.gjini.co`) && PathPrefix(`/scenari`)"
       traefik.http.routers.liane-front.entrypoints: "web"
       traefik.http.routers.liane-front.middlewares: "redirect@file"
-      traefik.http.routers.liane-front-secure.rule: "Host(`liane.gjini.co`) && PathPrefix(`/`)"
+      traefik.http.routers.liane-front-secure.rule: "Host(`liane.gjini.co`) && PathPrefix(`/scenari`)"
       traefik.http.routers.liane-front-secure.entrypoints: "web-secure"
       traefik.http.routers.liane-front-secure.middlewares: "compress@file"
       traefik.http.routers.liane-front-secure.tls.certResolver: "gjinico"
