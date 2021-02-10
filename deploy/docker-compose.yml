@@ -3,9 +3,7 @@ services:
 
   redis:
     image: 'redis:6.0'
-    command: ["sh", "-c", "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}"]
-    ports:
-      - 6379:6379
+    command: [ "sh", "-c", "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}" ]
     volumes:
       - "/data/liane/redis:/data"
 
@@ -46,10 +44,12 @@ services:
       - redis
       - osrm
       - nominatim
+    environment:
+      LIANE__REDIS__PASSWORD: ${REDIS_PASSWORD}
     networks:
       - gateway
       - internal
-        
+
   scenari:
     build: ../scenari
     labels:
@@ -66,7 +66,7 @@ services:
     networks:
       - gateway
       - internal
-        
+
 networks:
   gateway:
     external:

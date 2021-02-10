@@ -17,7 +17,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("")]
-        public async Task BasicRouteMethod([FromBody] ImmutableList<UserLocation> userLocations)
+        public async Task LogLocation([FromBody] ImmutableList<UserLocation> userLocations)
         {
             await locationService.LogLocation(userLocations);
         }
