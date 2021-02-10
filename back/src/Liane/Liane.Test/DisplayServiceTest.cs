@@ -24,5 +24,11 @@ namespace Liane.Test
             CollectionAssert.IsEmpty(trips);
         }        
 
+        [Test]
+        public async Task DisplayTripsDestinationsFromARandomPosition()
+        {
+            var trips = await displayService.DisplayTrips();
+            CollectionAssert.IsEmpty(trips);
+        }     
     }
 }
