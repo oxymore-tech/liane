@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Display;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Osrm;
@@ -46,7 +47,9 @@ namespace Liane.Web
             services.AddSettings<NominatimSettings>(context);
 
             services.AddService<FakeCurrentContextImpl>();
+            services.AddService<DisplayServiceImpl>();
             services.AddService<LocationServiceImpl>();
+            services.AddSettings<RedisSettings>(context);
         }
 
         public static void StartCurrentModule(string[] args)

@@ -28,7 +28,6 @@ namespace Liane.Test
         }
 
         [Test]
-        [Ignore("Redis is not here")]
         public async Task ShouldNotSnapPositionFromATooFarPosition()
         {
             var labeledPosition = await displayService.SnapPosition(Fixtures.Montbrun_Mairie);
@@ -36,11 +35,10 @@ namespace Liane.Test
         }
 
         [Test]
-        [Ignore("Redis is not here")]
         public async Task GuessStartFromARandomPosition()
         {
             var labeledPosition = await displayService.SnapPosition(Fixtures.Blajoux_Pelardon);
-            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux-Parking", Fixtures.Blajoux_Parking)), labeledPosition);
+            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux-Parking", Fixtures.Blajoux_Parking, 187.3471)), labeledPosition);
         }
 
         [Test]
