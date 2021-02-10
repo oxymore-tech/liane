@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS compiler
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS compiler
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN dotnet restore && dotnet test && dotnet publish -c Release
 
 
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1.4
+FROM mcr.microsoft.com/dotnet/runtime:5.0
 EXPOSE 8081
 
 WORKDIR /app
