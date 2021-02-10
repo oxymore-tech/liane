@@ -14,6 +14,6 @@ EXPOSE 8081
 
 WORKDIR /app
 
-COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/netcoreapp3.1/publish .
+COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/net5.0/publish .
 
 ENTRYPOINT [ "/app/Liane.Web" ]
