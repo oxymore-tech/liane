@@ -9,7 +9,7 @@ RUN dotnet restore && dotnet test && dotnet publish -c Release
 
 
 
-FROM mcr.microsoft.com/dotnet/runtime:5.0
+FROM mcr.microsoft.com/dotnet/aspnet:5.0
 EXPOSE 8081
 
 WORKDIR /app
