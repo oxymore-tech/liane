@@ -1,6 +1,16 @@
 version: "3.7"
 services:
 
+  redis:
+    image: 'redis:6.0'
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass $$(cat /run/secrets/REDIS_PASSWORD)"]
+    ports:
+      - 6379:6379
+    volumes:
+      - "/data/liane/redis:/data"
+    secrets:
+      - REDIS_PASSWORD
+
   osrm:
     image: "osrm/osrm-backend"
     command: osrm-routed --algorithm mld /data/all.osrm
@@ -34,6 +44,10 @@ services:
       traefik.http.routers.liane-back-secure.middlewares: "compress@file"
       traefik.http.routers.liane-back-secure.tls.certResolver: "gjinico"
       traefik.http.services.liane-back.loadbalancer.server.port: "8081"
+    depends_on:
+      - redis
+      - osrm
+      - nominatim
     networks:
       - gateway
       - internal
