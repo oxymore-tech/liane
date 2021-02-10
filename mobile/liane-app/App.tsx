@@ -1,10 +1,9 @@
-import React, { useState, useEffect} from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
+import { LocationObject } from 'expo-location';
 import * as BackgroundFetch from "expo-background-fetch"
 import * as TaskManager from "expo-task-manager"
-import { LocationObject } from 'expo-location';
-import * as Permissions from 'expo-permissions';
 
 const TASK_NAME = 'test';
 
@@ -27,12 +26,12 @@ export default function App() {
 
   useEffect(() => {
     registerTask().then(() => console.log("OK !"))
-    .catch(err => console.error(err));
+      .catch(err => console.error(err));
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.container}>Hello</Text>
+      <Text style={styles.container}>Bonjour !</Text>
     </View>
   );
 }
@@ -41,10 +40,10 @@ async function registerTask() {
   // let { status } = await Permissions.askAsync(Permissions.LOCATION);
   try {
     await Location.startLocationUpdatesAsync(TASK_NAME, {
-      distanceInterval : 0,
-      foregroundService : {
-        notificationTitle : "LianeApp",
-        notificationBody : "Service actif"
+      distanceInterval: 0,
+      foregroundService: {
+        notificationTitle: "LianeApp",
+        notificationBody: "Service actif"
       }
     });
     /*

@@ -3636,7 +3636,7 @@ expo-task-manager@~8.6.0:
   dependencies:
     unimodules-app-loader "~1.4.0"
 
-expo-updates@~0.4.0:
+expo-updates@~0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/expo-updates/-/expo-updates-0.4.1.tgz#74288a9950d137df62577278879c2ce61f9d6be1"
   integrity sha512-nRUJlGWaZ2o2shKpfYs9ZOMQjyozQYc+6i3baOpptTJCBDHL5cq7IzjEwfyI1Eii6MqP2pMmvT+kLJiux25tMw==
