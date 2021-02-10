@@ -23,20 +23,21 @@ namespace Liane.Test
         {
             var trips = await displayService.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
             CollectionAssert.IsEmpty(trips);
-        }        
+        }
 
         [Test]
+        [Ignore("Redis is not here")]
         public async Task GuessStartFromARandomPosition()
         {
             var labeledPosition = await displayService.SnapPosition(new LatLng(44.3388629, 3.4831178));
             Assert.AreEqual(new LabeledPosition("Blajoux-Parking", new LatLng(44.33719040451529, 3.4833812113191227)), labeledPosition);
-        }     
+        }
 
         [Test]
         public async Task DisplayTripsDestinationsFromARandomPosition()
         {
             var trips = await displayService.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
             CollectionAssert.IsEmpty(trips);
-        }     
+        }
     }
 }
