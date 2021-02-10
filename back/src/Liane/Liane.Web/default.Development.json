@@ -7,6 +7,10 @@
       "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
     }
   },
+  "Redis": {
+    "Host": "localhost",
+    "Password": ""
+  },
   "Nominatim": {
     "Url": "http://liane.gjini.co:7070"
   },

@@ -8,6 +8,6 @@ namespace Liane.Api.Display
     {
 
         Task<ImmutableList<Trip>> DisplayTrips(DisplayQuery displayQuery);
-        Task<LabeledPosition> SnapPosition(LatLng latLng);
+        Task<ImmutableList<LabeledPosition>> SnapPosition(LatLng latLng);
     }
 }

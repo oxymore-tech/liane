@@ -1,7 +1,9 @@
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Display;
 using Liane.Api.Routing;
-using Liane.Service.Internal;
+using Liane.Service.Internal.Display;
+using Liane.Test.Util;
 using NUnit.Framework;
 
 namespace Liane.Test
@@ -9,7 +11,7 @@ namespace Liane.Test
     [TestFixture]
     public sealed class DisplayServiceTest
     {
-        private IDisplayService displayService = new DisplayServiceImpl();
+        private readonly IDisplayService displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisSettings("localhost"));
 
         [Test]
         public async Task DisplayTripsShouldBeNotNull()
@@ -27,10 +29,18 @@ namespace Liane.Test
 
         [Test]
         [Ignore("Redis is not here")]
+        public async Task ShouldNotSnapPositionFromATooFarPosition()
+        {
+            var labeledPosition = await displayService.SnapPosition(Fixtures.Montbrun_Mairie);
+            CollectionAssert.IsEmpty(labeledPosition);
+        }
+
+        [Test]
+        [Ignore("Redis is not here")]
         public async Task GuessStartFromARandomPosition()
         {
-            var labeledPosition = await displayService.SnapPosition(new LatLng(44.3388629, 3.4831178));
-            Assert.AreEqual(new LabeledPosition("Blajoux-Parking", new LatLng(44.33719040451529, 3.4833812113191227)), labeledPosition);
+            var labeledPosition = await displayService.SnapPosition(Fixtures.Blajoux_Pelardon);
+            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux-Parking", Fixtures.Blajoux_Parking)), labeledPosition);
         }
 
         [Test]

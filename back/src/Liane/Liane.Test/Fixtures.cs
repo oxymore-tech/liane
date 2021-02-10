@@ -14,5 +14,9 @@ namespace Liane.Test
         public static readonly LatLng Prades = new LatLng(44.35107686706473,3.459664135275373);
         public static readonly LatLng Cocures = new LatLng(44.34718334543894,3.618854797141151);
         public static readonly LatLng Rampon = new LatLng(44.355594731781366,3.656352079169509);
+        public static readonly LatLng Montbrun_Mairie = new LatLng(44.337007, 3.503399);
+        public static readonly LatLng Blajoux_Pelardon = new LatLng(44.3388629, 3.4831178);
+        public static readonly LatLng Blajoux_Parking = new LatLng(44.33718916852679, 3.4833821654319763);
+        
     }
 }
