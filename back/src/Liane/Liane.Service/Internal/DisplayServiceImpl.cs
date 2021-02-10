@@ -15,7 +15,8 @@ namespace Liane.Service.Internal
 
         public Task<LabeledPosition> SnapPosition(LatLng latLng)
         {
-            throw new System.NotImplementedException();
+            var rallyingPoints = ImmutableList.Create(new LabeledPosition("Blajoux-Parking", new LatLng(44.33719040451529, 3.4833812113191227)));
+            return Task.FromResult(rallyingPoints[0]);
         }
     }
 }
