@@ -33,7 +33,7 @@ namespace Liane.Test
         [Category("Integration")]
         public async Task ShouldNotSnapPositionFromATooFarPosition()
         {
-            var labeledPosition = await displayService.SnapPosition(Positions.Montbrun_Mairie);
+            var labeledPosition = await displayService.SnapPosition(new LatLng(44.402029649783, 3.8582611083984));
             CollectionAssert.IsEmpty(labeledPosition);
         }
 
@@ -41,8 +41,9 @@ namespace Liane.Test
         [Category("Integration")]
         public async Task GuessStartFromARandomPosition()
         {
+            await SetUpRedisAsync();
             var labeledPosition = await displayService.SnapPosition(Positions.Blajoux_Pelardon);
-            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux-Parking", Positions.Blajoux_Parking, 187.3471)), labeledPosition);
+            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux_Parking", Positions.Blajoux_Parking, 187.3471)), labeledPosition);
         }
 
         [Test]
