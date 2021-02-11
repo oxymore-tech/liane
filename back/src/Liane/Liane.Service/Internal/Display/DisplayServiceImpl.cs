@@ -13,6 +13,7 @@ namespace Liane.Service.Internal.Display
     {
         private readonly ILogger<DisplayServiceImpl> logger;
         private readonly RedisSettings redisSettings;
+        private ConnectionMultiplexer? redis;
 
         public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, RedisSettings redisSettings)
         {
@@ -27,8 +28,7 @@ namespace Liane.Service.Internal.Display
 
         public async Task<ImmutableList<LabeledPosition>> SnapPosition(LatLng position)
         {
-            var redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
-            var database = redis.GetDatabase();
+            var database = await GetRedis();
             var redisKey = new RedisKey("rallying points");
             await database.GeoAddAsync(redisKey, 3.4833821654319763, 44.33718916852679, new RedisValue("Blajoux-Parking"));
             var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
@@ -38,6 +38,18 @@ namespace Liane.Service.Internal.Display
                     return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                 })
                 .ToImmutableList();
+        }
+
+        private async Task<IDatabase> GetRedis()
+        {
+            if (redis == null)
+            {
+                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
+                logger.LogInformation("Successfully connected to redis");
+                return redis.GetDatabase();
+            }
+
+            return redis.GetDatabase();
         }
     }
 }
