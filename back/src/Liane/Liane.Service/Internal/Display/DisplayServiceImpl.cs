@@ -40,11 +40,26 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
         }
 
+        public async Task<ImmutableList<LabeledPosition>> ListDestinationsFrom(LabeledPosition start)
+        {
+            var database = await GetRedis();
+            var redisKey = new RedisKey("rallying points");
+            var results = await database.GeoRadiusAsync(redisKey, start.Label, 500, unit: GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+            return results
+                .Where(r => r.Member != start.Label)
+                .Select(r =>
+                {
+                    var geoPosition = r.Position!.Value;
+                    return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                })
+                .ToImmutableList();
+        }
+
         private async Task<IDatabase> GetRedis()
         {
             if (redis == null)
             {
-                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
+                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions { EndPoints = { { redisSettings.Host, 6379 } }, Password = redisSettings.Password });
                 logger.LogInformation("Successfully connected to redis");
                 return redis.GetDatabase();
             }

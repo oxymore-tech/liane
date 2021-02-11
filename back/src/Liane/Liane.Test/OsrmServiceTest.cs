@@ -19,7 +19,7 @@ namespace Liane.Test
         public OsrmServiceTest()
         {
             tested = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
-            coordinates = ImmutableList.Create(Fixtures.Mende, Fixtures.Florac);
+            coordinates = ImmutableList.Create(Positions.Mende, Positions.Florac);
         }
 
         [Test]
@@ -40,7 +40,7 @@ namespace Liane.Test
         [Test]
         public async Task ShouldGetRouteFromMendeToFlorac()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.Florac), overview: "false");
             AssertJson.AreEqual("mende-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
@@ -48,7 +48,7 @@ namespace Liane.Test
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCausses()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.GorgesDuTarnCausses, Positions.Florac), overview: "false");
             AssertJson.AreEqual("mende-gorgesDuTarnCausses-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
         }
@@ -56,7 +56,7 @@ namespace Liane.Test
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByLeCrouzet()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-leCrouzet-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
@@ -66,7 +66,7 @@ namespace Liane.Test
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCaussesAndPrades()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Prades, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.GorgesDuTarnCausses, Positions.Prades, Positions.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-gorgesDuTarnCausses-prades-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
@@ -75,7 +75,7 @@ namespace Liane.Test
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndCocures()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Cocures, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Cocures, Positions.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-leCrouzet-cocures-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);
@@ -84,7 +84,7 @@ namespace Liane.Test
         [Test]
         public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndRampon()
         {
-            var route = await tested.Route(ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Rampon, Fixtures.Florac), overview: "false");
+            var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Rampon, Positions.Florac), overview: "false");
 
             AssertJson.AreEqual("mende-leCrouzet-rampon-florac.json", route);
             Assert.IsNotNull(route.Routes[0].Duration);

@@ -1,10 +1,13 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using DeepEqual.Syntax;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Display;
 using Liane.Test.Util;
 using NUnit.Framework;
+using StackExchange.Redis;
 
 namespace Liane.Test
 {
@@ -31,7 +34,7 @@ namespace Liane.Test
         [Category("Integration")]
         public async Task ShouldNotSnapPositionFromATooFarPosition()
         {
-            var labeledPosition = await displayService.SnapPosition(Fixtures.Montbrun_Mairie);
+            var labeledPosition = await displayService.SnapPosition(Positions.Montbrun_Mairie);
             CollectionAssert.IsEmpty(labeledPosition);
         }
 
@@ -39,15 +42,32 @@ namespace Liane.Test
         [Category("Integration")]
         public async Task GuessStartFromARandomPosition()
         {
-            var labeledPosition = await displayService.SnapPosition(Fixtures.Blajoux_Pelardon);
-            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux-Parking", Fixtures.Blajoux_Parking, 187.3471)), labeledPosition);
+            var labeledPosition = await displayService.SnapPosition(Positions.Blajoux_Pelardon);
+            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux-Parking", Positions.Blajoux_Parking, 187.3471)), labeledPosition);
         }
 
         [Test]
-        public async Task DisplayTripsDestinationsFromARandomPosition()
+        [Category("Integration")]
+        public async Task ListDestinationsFromAStart()
         {
-            var trips = await displayService.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
-            CollectionAssert.IsEmpty(trips);
+            await SetUpRedisAsync();
+            var actual = await displayService.ListDestinationsFrom(LabeledPositions.Blajoux_Parking);
+            var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
+            actual.WithDeepEqual(expected)
+                .IgnoreProperty<LabeledPosition>(l => l.Distance)
+                .Assert();            
+        }
+
+        private async Task SetUpRedisAsync()
+        {
+            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var redisKey = new RedisKey("rallying points");
+            var database = redis.GetDatabase();
+            await database.KeyDeleteAsync(redisKey);
+            foreach (var labeledPosition in LabeledPositions.RallyingPoints)
+            {
+                await database.GeoAddAsync(redisKey, labeledPosition.Position.Lng, labeledPosition.Position.Lat, new RedisValue(labeledPosition.Label));
+            }            
         }
     }
 }

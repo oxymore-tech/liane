@@ -23,27 +23,27 @@ namespace Liane.Test
             var mock = new Mock<IOsrmService>();
 
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.Florac),
+                ImmutableList.Create(Positions.Mende, Positions.Florac),
                 "mende-florac.json");
 
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Florac),
+                ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Florac),
                 "mende-leCrouzet-florac.json");
 
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Florac),
+                ImmutableList.Create(Positions.Mende, Positions.GorgesDuTarnCausses, Positions.Florac),
                 "mende-gorgesDuTarnCausses-florac.json");
 
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.GorgesDuTarnCausses, Fixtures.Prades, Fixtures.Florac),
+                ImmutableList.Create(Positions.Mende, Positions.GorgesDuTarnCausses, Positions.Prades, Positions.Florac),
                 "mende-gorgesDuTarnCausses-prades-florac.json");
 
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Cocures, Fixtures.Florac),
+                ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Cocures, Positions.Florac),
                 "mende-leCrouzet-cocures-florac.json");
 
             SetupRouteMock(mock,
-                ImmutableList.Create(Fixtures.Mende, Fixtures.LeCrouzet, Fixtures.Rampon, Fixtures.Florac),
+                ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Rampon, Positions.Florac),
                 "mende-leCrouzet-rampon-florac.json");
 
             userServiceImpl = new UserServiceImpl();
