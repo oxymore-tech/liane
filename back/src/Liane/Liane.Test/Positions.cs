@@ -1,4 +1,3 @@
-using System;
 using Liane.Api.Routing;
 
 namespace Liane.Test
@@ -6,7 +5,7 @@ namespace Liane.Test
     public sealed class Positions
     {
         public static readonly LatLng Blajoux_Pelardon = new LatLng(44.3388629, 3.4831178);
-        public static readonly LatLng Blajoux_Parking = new LatLng(44.33718916852679, 3.4833821654319763);
+        public static readonly LatLng Blajoux_Parking = new LatLng(44.33718916852679, 3.483382165431976);
         public static readonly LatLng Montbrun_En_Bas = new LatLng(44.335774794119885, 3.495934903621674);
         public static readonly LatLng Montbrun_Mairie = new LatLng(44.33700666860332, 3.503396809101105);
         public static readonly LatLng Montbrun_Parking_Village = new LatLng(44.33810420286531, 3.504281938076019);
