@@ -42,8 +42,11 @@ namespace Liane.Test
         public async Task GuessStartFromARandomPosition()
         {
             await SetUpRedisAsync();
-            var labeledPosition = await displayService.SnapPosition(Positions.Blajoux_Pelardon);
-            CollectionAssert.AreEqual(ImmutableList.Create(new LabeledPosition("Blajoux_Parking", Positions.Blajoux_Parking, 187.3471)), labeledPosition);
+            var actual = await displayService.SnapPosition(Positions.Blajoux_Pelardon);
+            actual.WithDeepEqual(ImmutableList.Create(new LabeledPosition("Blajoux_Parking", Positions.Blajoux_Parking, 187.3471)))
+                .WithFloatingPointTolerance()
+                .IgnoreProperty<LabeledPosition>(l => l.Distance)
+                .Assert();
         }
 
         [Test]
@@ -55,10 +58,10 @@ namespace Liane.Test
             var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
             actual.WithDeepEqual(expected)
                 .IgnoreProperty<LabeledPosition>(l => l.Distance)
-                .Assert();            
+                .Assert();
         }
 
-        private async Task SetUpRedisAsync()
+        private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
             var redisKey = new RedisKey("rallying points");
@@ -67,7 +70,7 @@ namespace Liane.Test
             foreach (var labeledPosition in LabeledPositions.RallyingPoints)
             {
                 await database.GeoAddAsync(redisKey, labeledPosition.Position.Lng, labeledPosition.Position.Lat, new RedisValue(labeledPosition.Label));
-            }            
+            }
         }
     }
 }

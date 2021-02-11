@@ -3,21 +3,21 @@
     {
       "Name": "Rue de la Liberté",
       "Location": {
-        "lat": 3.499085,
-        "lng": 44.51815
+        "lat": 3.499084,
+        "lng": 44.518149
       },
-      "Distance": 14.210834,
-      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAA0SM7QXTuGkE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATWQ1AAZLpwJiZDUAh0qnAgEAPwWLWyP5",
+      "Distance": 13.990154,
+      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATGQ1AAVLpwJhZDUAiEqnAgEAPwWLWyP5",
       "Nodes": null
     },
     {
       "Name": "",
       "Location": {
-        "lat": 3.414956,
+        "lat": 3.414958,
         "lng": 44.366033
       },
       "Distance": 101.104355,
-      "Hint": "DR0AgMccAIAKAAAABgAAALUAAABfAAAAzWBBQRswxUAh50lDspXTQgoAAAAGAAAAtQAAAF8AAABxAwAArBs0ANH4pAI3GzQAR_WkAg4A_wWLWyP5",
+      "Hint": "DR0AgMccAIAKAAAABgAAALUAAABfAAAA_epDQbwbwEAh50lDspXTQgoAAAAGAAAAtQAAAF8AAABxAwAArhs0ANH4pAI5GzQAR_WkAg4A_wWLWyP5",
       "Nodes": null
     },
     {
@@ -40,14 +40,14 @@
       "Geometry": null,
       "Legs": [
         {
-          "Distance": 27304.4,
+          "Distance": 27304.6,
           "Duration": 1704.6,
           "Steps": [],
           "Weight": 1704.6,
           "Annotation": null
         },
         {
-          "Distance": 28458.1,
+          "Distance": 28457.9,
           "Duration": 1945.5,
           "Steps": [],
           "Weight": 1945.5,

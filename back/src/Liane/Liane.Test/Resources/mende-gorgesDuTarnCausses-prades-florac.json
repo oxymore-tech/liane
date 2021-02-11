@@ -3,31 +3,31 @@
     {
       "Name": "Rue de la Liberté",
       "Location": {
-        "lat": 3.499085,
-        "lng": 44.51815
+        "lat": 3.499084,
+        "lng": 44.518149
       },
-      "Distance": 14.210834,
-      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAA0SM7QXTuGkE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATWQ1AAZLpwJiZDUAh0qnAgEAPwWLWyP5",
+      "Distance": 13.990154,
+      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATGQ1AAVLpwJhZDUAiEqnAgEAPwWLWyP5",
       "Nodes": null
     },
     {
       "Name": "",
       "Location": {
-        "lat": 3.414956,
+        "lat": 3.414958,
         "lng": 44.366033
       },
       "Distance": 101.104355,
-      "Hint": "DR0AgMccAIAKAAAABgAAALUAAABfAAAAzWBBQRswxUAh50lDspXTQgoAAAAGAAAAtQAAAF8AAABxAwAArBs0ANH4pAI3GzQAR_WkAg4A_wWLWyP5",
+      "Hint": "DR0AgMccAIAKAAAABgAAALUAAABfAAAA_epDQbwbwEAh50lDspXTQgoAAAAGAAAAtQAAAF8AAABxAwAArhs0ANH4pAI5GzQAR_WkAg4A_wWLWyP5",
       "Nodes": null
     },
     {
       "Name": "",
       "Location": {
-        "lat": 3.459656,
-        "lng": 44.351077
+        "lat": 3.45947,
+        "lng": 44.35214
       },
-      "Distance": 0.637613,
-      "Hint": "qlIGgNZSBoAKAAAAEgAAAHEAAAAXAAAAYThAQU9tlkEPlPtCvBTLQQoAAAASAAAAcQAAABcAAABxAwAASMo0AGW-pAJQyjQAZb6kAggAbwuLWyP5",
+      "Distance": 1.578213,
+      "Hint": "qlIGgNZSBoAFAAAAEgAAAAoAAACDAAAAhWyxQLCKnEGsED5BDwARQwUAAAASAAAACgAAAIMAAABxAwAAjsk0AIzCpAJ7yTQAiMKkAgIAPwqLWyP5",
       "Nodes": null
     },
     {
@@ -43,31 +43,31 @@
   ],
   "Routes": [
     {
-      "Distance": 55762.4,
+      "Distance": 55762.5,
       "Duration": 3650.1,
       "Weight": 3650.1,
       "WeightName": null,
       "Geometry": null,
       "Legs": [
         {
-          "Distance": 27304.4,
+          "Distance": 27304.6,
           "Duration": 1704.6,
           "Steps": [],
           "Weight": 1704.6,
           "Annotation": null
         },
         {
-          "Distance": 5052.0,
-          "Duration": 344.7,
+          "Distance": 4931.4,
+          "Duration": 333.9,
           "Steps": [],
-          "Weight": 344.7,
+          "Weight": 333.9,
           "Annotation": null
         },
         {
-          "Distance": 23406.0,
-          "Duration": 1600.8,
+          "Distance": 23526.5,
+          "Duration": 1611.6,
           "Steps": [],
-          "Weight": 1600.8,
+          "Weight": 1611.6,
           "Annotation": null
         }
       ]

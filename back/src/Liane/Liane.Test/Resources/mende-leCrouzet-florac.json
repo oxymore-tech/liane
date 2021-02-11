@@ -3,11 +3,11 @@
     {
       "Name": "Rue de la Liberté",
       "Location": {
-        "lat": 3.499085,
-        "lng": 44.51815
+        "lat": 3.499084,
+        "lng": 44.518149
       },
-      "Distance": 14.210834,
-      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAA0SM7QXTuGkE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATWQ1AAZLpwJiZDUAh0qnAgEAPwWLWyP5",
+      "Distance": 13.990154,
+      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATGQ1AAVLpwJhZDUAiEqnAgEAPwWLWyP5",
       "Nodes": null
     },
     {
@@ -33,14 +33,14 @@
   ],
   "Routes": [
     {
-      "Distance": 45681.7,
+      "Distance": 45681.8,
       "Duration": 3390.5,
       "Weight": 3390.5,
       "WeightName": null,
       "Geometry": null,
       "Legs": [
         {
-          "Distance": 34402.9,
+          "Distance": 34403.0,
           "Duration": 2455.8,
           "Steps": [],
           "Weight": 2455.8,
