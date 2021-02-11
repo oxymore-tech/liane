@@ -6,6 +6,8 @@ services:
     command: [ "sh", "-c", "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}" ]
     volumes:
       - "/data/liane/redis:/data"
+    networks:
+      - internal
 
   osrm:
     image: "osrm/osrm-backend"
