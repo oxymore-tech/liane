@@ -5,5 +5,5 @@ using Liane.Api.Routing;
 
 namespace Liane.Api.Trip
 {
-    public sealed record Trip(ImmutableList<LatLng> coordinates);
+    public sealed record Trip(ImmutableList<LatLng> Coordinates);
 }

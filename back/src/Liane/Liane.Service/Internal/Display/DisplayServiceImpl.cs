@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -46,7 +45,8 @@ namespace Liane.Service.Internal.Display
         {
             var database = await GetRedis();
             var redisKey = new RedisKey("rallying points");
-            var results = await database.GeoRadiusAsync(redisKey, start.Label, 500, unit: GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+            var results = await database.GeoRadiusAsync(redisKey, start.Label, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
+                options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results
                 .Where(r => r.Member != start.Label)
                 .Select(r =>
@@ -63,19 +63,22 @@ namespace Liane.Service.Internal.Display
             var redisKey = new RedisKey("rallying points");
             foreach (var trip in await tripService.List())
             {
-                foreach (var position in trip)
+                foreach (var position in trip.Coordinates)
                 {
-                    
                 }
             }
-            var results = await database.GeoRadiusAsync(redisKey, labeledPosition.Label, 500, unit: GeoUnit.Meters, order: Order.Ascending, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-            return results;
+
+            // var results = await database.GeoRadiusAsync(redisKey, labeledPosition.Label, 500, unit: GeoUnit.Meters, order: Order.Ascending,
+            //     options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+            // return results;
+            return ImmutableList<Trip>.Empty;
         }
+
         private async Task<IDatabase> GetRedis()
         {
             if (redis == null)
             {
-                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions { EndPoints = { { redisSettings.Host, 6379 } }, Password = redisSettings.Password });
+                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
                 logger.LogInformation("Successfully connected to redis");
                 return redis.GetDatabase();
             }

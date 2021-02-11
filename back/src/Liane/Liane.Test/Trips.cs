@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
-using Liane.Api;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 
 namespace Liane.Test
 {
@@ -16,7 +16,4 @@ namespace Liane.Test
             Blajoux_Mende
         );
     }
-
-    
-
 }

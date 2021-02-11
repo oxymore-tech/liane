@@ -22,7 +22,7 @@ namespace Liane.Test
         {
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
-                .ReturnsAsync(() => Trips.AllTrips);
+                .ReturnsAsync(Trips.AllTrips);
 
             displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisSettings("localhost"), tripService.Object);
         }
@@ -30,14 +30,14 @@ namespace Liane.Test
         [Test]
         public async Task DisplayTripsShouldBeNotNull()
         {
-            var trips = await displayService.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
+            var trips = await displayService!.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
             Assert.IsNotNull(trips);
         }
 
         [Test]
         public async Task DisplayTripsCouldBeEmpty()
         {
-            var trips = await displayService.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
+            var trips = await displayService!.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
             CollectionAssert.IsEmpty(trips);
         }
 
@@ -45,7 +45,7 @@ namespace Liane.Test
         [Category("Integration")]
         public async Task ShouldNotSnapPositionFromATooFarPosition()
         {
-            var labeledPosition = await displayService.SnapPosition(new LatLng(44.402029649783, 3.8582611083984));
+            var labeledPosition = await displayService!.SnapPosition(new LatLng(44.402029649783, 3.8582611083984));
             CollectionAssert.IsEmpty(labeledPosition);
         }
 
@@ -54,7 +54,7 @@ namespace Liane.Test
         public async Task GuessStartFromARandomPosition()
         {
             await SetUpRedisAsync();
-            var actual = await displayService.SnapPosition(Positions.Blajoux_Pelardon);
+            var actual = await displayService!.SnapPosition(Positions.Blajoux_Pelardon);
             actual.WithDeepEqual(ImmutableList.Create(new LabeledPosition("Blajoux_Parking", Positions.Blajoux_Parking, 187.3471)))
                 .WithFloatingPointTolerance()
                 .IgnoreProperty<LabeledPosition>(l => l.Distance)
@@ -66,7 +66,7 @@ namespace Liane.Test
         public async Task ListDestinationsFromAStart()
         {
             await SetUpRedisAsync();
-            var actual = await displayService.ListDestinationsFrom(LabeledPositions.Blajoux_Parking);
+            var actual = await displayService!.ListDestinationsFrom(LabeledPositions.Blajoux_Parking);
             var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
             actual.WithDeepEqual(expected)
                 .IgnoreProperty<LabeledPosition>(l => l.Distance)
@@ -78,7 +78,7 @@ namespace Liane.Test
         public async Task ListTripsFromAPosition()
         {
             await SetUpRedisAsync();
-            var actual = await displayService.ListTripsFrom(LabeledPositions.Blajoux_Parking);
+            var actual = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
             var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
             actual.WithDeepEqual(expected)
                 .IgnoreProperty<LabeledPosition>(l => l.Distance)
