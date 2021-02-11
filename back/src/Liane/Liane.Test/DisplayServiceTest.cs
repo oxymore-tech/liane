@@ -28,7 +28,7 @@ namespace Liane.Test
         }
 
         [Test]
-        [Ignore("Redis is not here")]
+        [Category("Integration")]
         public async Task ShouldNotSnapPositionFromATooFarPosition()
         {
             var labeledPosition = await displayService.SnapPosition(Fixtures.Montbrun_Mairie);
@@ -36,7 +36,7 @@ namespace Liane.Test
         }
 
         [Test]
-        [Ignore("Redis is not here")]
+        [Category("Integration")]
         public async Task GuessStartFromARandomPosition()
         {
             var labeledPosition = await displayService.SnapPosition(Fixtures.Blajoux_Pelardon);

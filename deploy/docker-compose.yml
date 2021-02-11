@@ -45,7 +45,7 @@ services:
       - osrm
       - nominatim
     environment:
-      LIANE__REDIS__PASSWORD: ${REDIS_PASSWORD}
+      LIANE_REDIS__PASSWORD: ${REDIS_PASSWORD}
     networks:
       - gateway
       - internal
