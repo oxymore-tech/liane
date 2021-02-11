@@ -30,7 +30,7 @@ namespace Liane.Service.Internal.Display
         {
             var database = await GetRedis();
             var redisKey = new RedisKey("rallying points");
-            await database.GeoAddAsync(redisKey, 3.4833821654319763, 44.33718916852679, new RedisValue("Blajoux-Parking"));
+            await database.GeoAddAsync(redisKey, 3.483382165431976, 44.33718916852679, new RedisValue("Blajoux-Parking"));
             var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results.Select(r =>
                 {
