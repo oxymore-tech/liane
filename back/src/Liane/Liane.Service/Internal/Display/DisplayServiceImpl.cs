@@ -65,6 +65,7 @@ namespace Liane.Service.Internal.Display
             {
                 foreach (var position in trip.Coordinates)
                 {
+                    // on teste si la position est proche d'un point de ralliement, si oui, on garde le trip
                 }
             }
 
