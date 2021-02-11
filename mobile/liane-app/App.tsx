@@ -1,31 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import * as Location from 'expo-location';
-import { LocationObject } from 'expo-location';
-import * as BackgroundFetch from "expo-background-fetch"
-import * as TaskManager from "expo-task-manager"
-
-const TASK_NAME = 'test';
+import { registerLocationTask, initializeLocationTask } from './components/locationTask';
 
 
-TaskManager.defineTask(TASK_NAME, async (location) => {
-  try {
-    // fetch data here...
-    console.log('On traite la tache', location);
-    // let location = await Location.getCurrentPositionAsync({});
-    console.log("Tache traitée : ");
-    return;
-  } catch (err) {
-    return BackgroundFetch.Result.Failed
-  }
-})
+initializeLocationTask();
 
 export default function App() {
-  const [location, setLocation] = useState<LocationObject>();
-  const [errorMsg, setErrorMsg] = useState<String>();
-
   useEffect(() => {
-    registerTask().then(() => console.log("OK !"))
+    registerLocationTask().then(() => console.log("Task registred !"))
       .catch(err => console.error(err));
   }, []);
 
@@ -34,27 +16,6 @@ export default function App() {
       <Text style={styles.container}>Bonjourno !</Text>
     </View>
   );
-}
-
-async function registerTask() {
-  // let { status } = await Permissions.askAsync(Permissions.LOCATION);
-  try {
-    await Location.startLocationUpdatesAsync(TASK_NAME, {
-      distanceInterval: 0,
-      foregroundService: {
-        notificationTitle: "LianeApp",
-        notificationBody: "Service actif"
-      }
-    });
-    /*
-    await BackgroundFetch.registerTaskAsync(TASK_NAME, {
-      minimumInterval: 5, // milliseconds,
-    })
-    */
-    console.log("Task registered")
-  } catch (err) {
-    console.log("Task Register failed:", err)
-  }
 }
 
 const styles = StyleSheet.create({

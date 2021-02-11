@@ -51,18 +51,3 @@ export async function deleteLocations(keys : string[]) {
         console.log('Erreur en supprimant des clées  :', e);
     }
 }
-
-
-/* TODO IN API
-export async function sendAndDeleteLocations(keys = []) {
-    const locations: LocationObject[] = await getLocations(keys);
-    try {
-        // Send data to API
-
-        // Delete objects
-        deleteLocations(keys);
-    } catch(e) {
-
-    }
-}
-*/
