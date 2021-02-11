@@ -10,18 +10,6 @@
     ],
     "ios": {
       "infoPlist": {
-<<<<<<< HEAD
-        "UIBackgroundModes": ["location", "fetch"]
-      }
-    },
-    "android" : {
-      "permissions": [
-      "CAMERA",
-      "ACCESS_FINE_LOCATION",
-      "ACCESS_BACKGROUND_LOCATION"
-    ]
-    }
-=======
         "UIBackgroundModes": [
           "location",
           "fetch"
@@ -37,6 +25,5 @@
       "versionCode": 4
     },
     "description": ""
->>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
   }
 }

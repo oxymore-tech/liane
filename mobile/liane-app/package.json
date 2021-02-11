@@ -15,11 +15,7 @@
     "expo-permissions": "~10.0.0",
     "expo-splash-screen": "~0.8.0",
     "expo-task-manager": "~8.6.0",
-<<<<<<< HEAD
-    "expo-updates": "~0.4.0",
-=======
     "expo-updates": "~0.4.1",
->>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "~0.63.4",

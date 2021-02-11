@@ -1,19 +1,9 @@
-<<<<<<< HEAD
-import React, { useState, useEffect} from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import * as Location from 'expo-location';
-import * as BackgroundFetch from "expo-background-fetch"
-import * as TaskManager from "expo-task-manager"
-import { LocationObject } from 'expo-location';
-import * as Permissions from 'expo-permissions';
-=======
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import * as BackgroundFetch from "expo-background-fetch"
 import * as TaskManager from "expo-task-manager"
->>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
 
 const TASK_NAME = 'test';
 
@@ -36,20 +26,12 @@ export default function App() {
 
   useEffect(() => {
     registerTask().then(() => console.log("OK !"))
-<<<<<<< HEAD
-    .catch(err => console.error(err));
-=======
       .catch(err => console.error(err));
->>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
   }, []);
 
   return (
     <View style={styles.container}>
-<<<<<<< HEAD
-      <Text style={styles.container}>Hello</Text>
-=======
-      <Text style={styles.container}>Bonjour !</Text>
->>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
+      <Text style={styles.container}>Bonjourno !</Text>
     </View>
   );
 }
@@ -58,17 +40,10 @@ async function registerTask() {
   // let { status } = await Permissions.askAsync(Permissions.LOCATION);
   try {
     await Location.startLocationUpdatesAsync(TASK_NAME, {
-<<<<<<< HEAD
-      distanceInterval : 0,
-      foregroundService : {
-        notificationTitle : "LianeApp",
-        notificationBody : "Service actif"
-=======
       distanceInterval: 0,
       foregroundService: {
         notificationTitle: "LianeApp",
         notificationBody: "Service actif"
->>>>>>> 3568add24342f2e76090cd7ea3ccde0c0fb0a50f
       }
     });
     /*
