@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using DeepEqual.Syntax;
 using Liane.Api.Display;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
 using Liane.Test.Util;
+using Moq;
 using NUnit.Framework;
 using StackExchange.Redis;
 
@@ -13,7 +15,17 @@ namespace Liane.Test
     [TestFixture]
     public sealed class DisplayServiceTest
     {
-        private readonly IDisplayService displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisSettings("localhost"));
+        private IDisplayService? displayService;
+
+        [SetUp]
+        public void SetUp()
+        {
+            var tripService = new Mock<ITripService>();
+            tripService.Setup(s => s.List())
+                .ReturnsAsync(() => Trips.AllTrips);
+
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisSettings("localhost"), tripService.Object);
+        }
 
         [Test]
         public async Task DisplayTripsShouldBeNotNull()
@@ -55,6 +67,18 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService.ListDestinationsFrom(LabeledPositions.Blajoux_Parking);
+            var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
+            actual.WithDeepEqual(expected)
+                .IgnoreProperty<LabeledPosition>(l => l.Distance)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task ListTripsFromAPosition()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService.ListTripsFrom(LabeledPositions.Blajoux_Parking);
             var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
             actual.WithDeepEqual(expected)
                 .IgnoreProperty<LabeledPosition>(l => l.Distance)

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Liane.Api;
 using Liane.Api.Display;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
@@ -14,11 +15,13 @@ namespace Liane.Service.Internal.Display
         private readonly ILogger<DisplayServiceImpl> logger;
         private readonly RedisSettings redisSettings;
         private ConnectionMultiplexer? redis;
+        private readonly ITripService tripService;
 
-        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, RedisSettings redisSettings)
+        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, RedisSettings redisSettings, ITripService tripService)
         {
             this.logger = logger;
             this.redisSettings = redisSettings;
+            this.tripService = tripService;
         }
 
         public Task<ImmutableList<Trip>> DisplayTrips(DisplayQuery displayQuery)
@@ -54,6 +57,20 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
         }
 
+        public async Task<ImmutableList<Trip>> ListTripsFrom(LabeledPosition labeledPosition)
+        {
+            var database = await GetRedis();
+            var redisKey = new RedisKey("rallying points");
+            foreach (var trip in await tripService.List())
+            {
+                foreach (var position in trip)
+                {
+                    
+                }
+            }
+            var results = await database.GeoRadiusAsync(redisKey, labeledPosition.Label, 500, unit: GeoUnit.Meters, order: Order.Ascending, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+            return results;
+        }
         private async Task<IDatabase> GetRedis()
         {
             if (redis == null)

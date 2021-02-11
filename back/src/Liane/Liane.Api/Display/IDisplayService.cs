@@ -10,5 +10,6 @@ namespace Liane.Api.Display
         Task<ImmutableList<Trip>> DisplayTrips(DisplayQuery displayQuery);
         Task<ImmutableList<LabeledPosition>> SnapPosition(LatLng latLng);
         Task<ImmutableList<LabeledPosition>> ListDestinationsFrom(LabeledPosition labeledPosition);
+        Task<ImmutableList<Trip>> ListTripsFrom(LabeledPosition labeledPosition);
     }
 }
