@@ -81,7 +81,7 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
-            var expected = ImmutableList.Create(Trips.Blajoux_Mende, Trips.Blajoux_Florac);
+            var expected = ImmutableHashSet.Create(Trips.Blajoux_Mende, Trips.Blajoux_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
         }
@@ -92,7 +92,7 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.LesBondons_Parking);
-            var expected = ImmutableList.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
+            var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
             actual.WithDeepEqual(expected)
                 .Assert();
         }

@@ -58,7 +58,7 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
         }
 
-        public async Task<ImmutableList<Trip>> ListTripsFrom(LabeledPosition start)
+        public async Task<ImmutableHashSet<Trip>> ListTripsFrom(LabeledPosition start)
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
@@ -86,7 +86,7 @@ namespace Liane.Service.Internal.Display
                     }
                 }
             }
-            return tripsFromStart.ToImmutableList();
+            return tripsFromStart.ToImmutableHashSet();
         }
 
         private IImmutableSet<LabeledPosition> ListDestinationsFrom(ImmutableList<Trip> trips) {
