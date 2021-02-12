@@ -14,24 +14,18 @@ namespace Liane.Service.Internal.User
     {
         private readonly ILogger<AuthServiceImpl> logger;
         private readonly IRedis redis;
+        private readonly TwilioSettings settings;
 
-        public AuthServiceImpl(ILogger<AuthServiceImpl> logger, IRedis redis)
+        public AuthServiceImpl(ILogger<AuthServiceImpl> logger, IRedis redis, TwilioSettings settings)
         {
             this.logger = logger;
             this.redis = redis;
+            this.settings = settings;
         }
 
         public async Task SendSms(string number)
         {
-            var accountSid = Environment.GetEnvironmentVariable("TWILIO_ACCOUNT_SID");
-            var authToken = Environment.GetEnvironmentVariable("TWILIO_AUTH_TOKEN");
-
-            if (accountSid == null || authToken == null)
-            {
-                throw new ArgumentException("Twilio env var must be set : TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN");
-            }
-
-            TwilioClient.Init(accountSid, authToken);
+            TwilioClient.Init(settings.Account, settings.Token);
 
             var phoneNumber = ParseNumber(number);
 
@@ -44,7 +38,7 @@ namespace Liane.Service.Internal.User
 
             var message = await MessageResource.CreateAsync(
                 body: $"Voici votre code liane : {code}",
-                from: new PhoneNumber("+13043086200"),
+                from: new PhoneNumber(settings.From),
                 to: phoneNumber
             );
             logger.LogInformation("SMS sent {message}", message);
