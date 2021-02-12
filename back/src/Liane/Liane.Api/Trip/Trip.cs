@@ -1,9 +1,7 @@
-
-
 using System.Collections.Immutable;
-using Liane.Api.Routing;
+using Liane.Api.Display;
 
 namespace Liane.Api.Trip
 {
-    public sealed record Trip(ImmutableList<LatLng> Coordinates);
+    public sealed record Trip(ImmutableList<LabeledPosition> Coordinates);
 }

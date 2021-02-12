@@ -81,7 +81,7 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
-            var expected = Trips.AllTrips.Remove(Trips.Mende_Florac);
+            var expected = ImmutableList.Create(Trips.Blajoux_Mende, Trips.Blajoux_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
         }
@@ -92,20 +92,8 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.LesBondons_Parking);
-            var expected = Trips.AllTrips.Remove(Trips.Blajoux_Mende).Remove(Trips.Blajoux_Florac);
+            var expected = ImmutableList.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
             actual.WithDeepEqual(expected)
-                .Assert();
-        }
-
-        [Test]
-        [Category("Integration")]
-        public async Task ListDestinationsFromTrips()
-        {
-            await SetUpRedisAsync();
-            var actual = await displayService!.ListDestinationsFrom(Trips.AllTrips);
-            var expected = ImmutableHashSet.Create(LabeledPositions.Florac, LabeledPositions.Mende);
-            actual.WithDeepEqual(expected)
-                .IgnoreProperty<LabeledPosition>(l => l.Distance)
                 .Assert();
         }
 

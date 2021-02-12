@@ -62,12 +62,12 @@ namespace Liane.Service.Internal.Display
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
-            var closestTrips = new List<Trip>();
+            var tripsFromStart = new List<Trip>();
             foreach (var trip in await tripService.List())
             {
                 foreach (var position in trip.Coordinates)
                 {
-                    var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                    var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     var nearestPoint = results
                     .Where(r => r.Member == start.Label)
                     .Select(r =>
@@ -76,21 +76,22 @@ namespace Liane.Service.Internal.Display
                         return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                     });
                     if (nearestPoint.LongCount() > 0) {
-                        closestTrips.Add(trip);
+                        var pointDepart = new List<LabeledPosition>();
+                        pointDepart.Add(start);
+                        var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
+                        var coordinatesFromStart = pointDepart.Concat(coordinatesAfterPosition).ToImmutableList();
+                        var aTripFromStart = new Trip(coordinatesFromStart);
+                        tripsFromStart.Add(aTripFromStart);
                         break;
                     }
                 }
             }
-            return closestTrips.ToImmutableList();
+            return tripsFromStart.ToImmutableList();
         }
 
-        public async Task<IImmutableSet<LabeledPosition>> ListDestinationsFrom(ImmutableList<Trip> trips) {
-            HashSet<LabeledPosition> destinations = new HashSet<LabeledPosition>();
-            foreach (var trip in trips) {
-                var destination = await SnapPosition(trip.Coordinates.Last());
-                destinations.Add(destination[0]);
-            }
-            return destinations.ToImmutableHashSet();
+        private IImmutableSet<LabeledPosition> ListDestinationsFrom(ImmutableList<Trip> trips) {
+            return trips.Select(t => t.Coordinates.Last())
+                .ToImmutableHashSet();
         }
     }
 }
