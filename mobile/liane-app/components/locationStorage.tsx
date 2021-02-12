@@ -8,10 +8,13 @@ import { LocationObject } from 'expo-location';
  */
 export async function storeLocation(location : LocationObject) {
     try {
-        const jsonValue = JSON.stringify(location);
-        await AsyncStorage.setItem(location.timestamp.toString(), jsonValue);
+        //const jsonValue = JSON.stringify(location);
+        let previousLocs = AsyncStorage.getItem("Location");
+        previousLocs = (previousLocs == null) ? [] : JSON.parse(previousLocs);
+        previousLocs.push(location);
+        await AsyncStorage.setItem("Location", previousLocs);
     } catch (e) {
-        console.log()
+        console.log();
     }
 }
 
@@ -21,17 +24,10 @@ export async function storeLocation(location : LocationObject) {
  * @param keys : keys to get associated LocationObjects list
  * @return Promise<LocationObject[]>
  */
-export async function getLocations(keys = []) : Promise<LocationObject[]> {
-        let lkeys : string[] = [];
-        let locations : LocationObject[] = [];
+export async function getLocations() : Promise<LocationObject[]> {
+    let locations =  AsyncStorage.getItem("Location")
         try {
-            lkeys = keys.length != 0 ? keys : await AsyncStorage.getAllKeys();
-            const jsonLocationObjects = await AsyncStorage.multiGet(lkeys);
-            jsonLocationObjects.forEach(locationObject => {
-                let location = locationObject[1] != null ? JSON.parse(locationObject[1]) : null;
-                locations.push(location);
-            }); 
-            return locations;
+            return ( (locations == null) ? [] : JSON.parse(locations));
         } catch(e) {
             // read key error
             console.log('Impossible de récupérer les localisations : ', e);
@@ -44,9 +40,9 @@ export async function getLocations(keys = []) : Promise<LocationObject[]> {
  * @param keys : keys of items to remove
  * @return void
  */
-export async function deleteLocations(keys : string[]) {
+export async function deleteLocations(timeStamps : string[]) {
     try {
-        await AsyncStorage.multiRemove(keys);
+        await AsyncStorage.setItem("Location", AsyncStorage.getItem("Locations").filter(((element : LocationObject) => !(element.timestamp in timeStamps))));
       } catch(e) {
         console.log('Erreur en supprimant des clées  :', e);
     }

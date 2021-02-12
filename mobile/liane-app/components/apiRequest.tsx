@@ -60,7 +60,7 @@ export function userLogin(phoneNumber : string, code : string) {
     .then((data) => {
         console.log('TOKEN : ', data);
         const token = data.body;
-        // On stocke le token dans AsyncStorage 
+        AsyncStorage.setIem("tokenJWT", token);
         return true;
     })
     .catch((error) => {
