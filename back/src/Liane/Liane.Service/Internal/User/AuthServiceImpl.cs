@@ -1,7 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Liane.Api.User;
+using Liane.Api.Util.Exception;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
@@ -12,15 +18,21 @@ namespace Liane.Service.Internal.User
 {
     public sealed class AuthServiceImpl : IAuthService
     {
+        private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
         private readonly ILogger<AuthServiceImpl> logger;
         private readonly IRedis redis;
         private readonly TwilioSettings settings;
+        private readonly AuthSettings authSettings;
+        private readonly SymmetricSecurityKey signinKey;
 
-        public AuthServiceImpl(ILogger<AuthServiceImpl> logger, IRedis redis, TwilioSettings settings)
+        public AuthServiceImpl(ILogger<AuthServiceImpl> logger, IRedis redis, TwilioSettings settings, AuthSettings authSettings)
         {
             this.logger = logger;
             this.redis = redis;
             this.settings = settings;
+            this.authSettings = authSettings;
+            var keyByteArray = Encoding.ASCII.GetBytes(authSettings.SecretKey);
+            signinKey = new SymmetricSecurityKey(keyByteArray);
         }
 
         public async Task SendSms(string number)
@@ -29,12 +41,12 @@ namespace Liane.Service.Internal.User
 
             var phoneNumber = ParseNumber(number);
 
-            var database = await redis.Get();
             var generator = new Random();
             var code = generator.Next(0, 1000000).ToString("D6");
-            var redisKey = new RedisKey($"auth_sms_token_{phoneNumber}");
+            var redisKey = AuthSmsTokenRedisKey(phoneNumber);
+            var database = await redis.Get();
             await database.StringSetAsync(redisKey, code);
-            await database.KeyExpireAsync(redisKey, TimeSpan.FromSeconds(10));
+            await database.KeyExpireAsync(redisKey, TimeSpan.FromSeconds(30));
 
             var message = await MessageResource.CreateAsync(
                 body: $"Voici votre code liane : {code}",
@@ -42,6 +54,48 @@ namespace Liane.Service.Internal.User
                 to: phoneNumber
             );
             logger.LogInformation("SMS sent {message}", message);
+        }
+
+        public async Task<string> Login(string number, string code)
+        {
+            var phoneNumber = ParseNumber(number);
+            var database = await redis.Get();
+            var redisKey = AuthSmsTokenRedisKey(phoneNumber);
+            var value = await database.StringGetAsync(redisKey);
+            if (value.IsNullOrEmpty)
+            {
+                throw new UnauthorizedAccessException("Code expired");
+            }
+
+            if (value != code)
+            {
+                throw new UnauthorizedAccessException("Invalid code");
+            }
+
+            return GenerateToken(phoneNumber.ToString());
+        }
+
+        public ClaimsPrincipal IsTokenValid(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                IssuerSigningKey = signinKey,
+                ValidIssuer = authSettings.Issuer,
+                ValidAudience = authSettings.Audience
+            };
+            try
+            {
+                return JwtTokenHandler.ValidateToken(token, tokenValidationParameters, out _);
+            }
+            catch
+            {
+                throw new ForbiddenException("Invalid token");
+            }
+        }
+
+        private static RedisKey AuthSmsTokenRedisKey(PhoneNumber phoneNumber)
+        {
+            return $"auth_sms_token_${phoneNumber}";
         }
 
         private static PhoneNumber ParseNumber(string number)
@@ -53,6 +107,28 @@ namespace Liane.Service.Internal.User
             }
 
             return new PhoneNumber(trim);
+        }
+
+        private string GenerateToken(string phoneNumber)
+        {
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, phoneNumber)
+            };
+
+            var now = DateTime.UtcNow;
+            var expires = now.Add(authSettings.Validity);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Issuer = authSettings.Issuer,
+                Subject = new ClaimsIdentity(claims),
+                Audience = authSettings.Audience,
+                IssuedAt = now,
+                Expires = expires,
+                SigningCredentials = new SigningCredentials(signinKey, SecurityAlgorithms.HmacSha256)
+            };
+            return JwtTokenHandler.CreateEncodedJwt(tokenDescriptor);
         }
     }
 }

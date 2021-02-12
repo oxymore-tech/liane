@@ -51,6 +51,8 @@ services:
       LIANE_TWILIO__ACCOUNT: ${TWILIO_ACCOUNT}
       LIANE_TWILIO__TOKEN: ${TWILIO_TOKEN}
       LIANE_TWILIO__FROM: ${TWILIO_FROM}
+      LIANE_AUTH__VALIDITY: ${AUTH_VALIDITY}
+      LIANE_AUTH__SECRET_KEY: ${AUTH_SECRET_KEY}
     networks:
       - gateway
       - internal

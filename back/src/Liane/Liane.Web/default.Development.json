@@ -16,5 +16,9 @@
   },
   "Osrm": {
     "Url": "http://liane.gjini.co:5000"
+  },
+  "Auth": {
+    "Validity": "7.00:00:00",
+    "SecretKey": "dRfUjXn2r5u8x/A?D(G+KbPeShVkYp3s"
   }
 }

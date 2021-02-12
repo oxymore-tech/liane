@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace Liane.Service.Internal.Util
 {
-    public sealed class FakeCurrentContextImpl : ICurrentContext
+    public sealed class CurrentContextImpl : ICurrentContext
     {
         private readonly IHttpContextAccessor httpContextAccessor;
 
-        public FakeCurrentContextImpl(IHttpContextAccessor httpContextAccessor)
+        public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
         {
             this.httpContextAccessor = httpContextAccessor;
         }
@@ -20,12 +20,14 @@ namespace Liane.Service.Internal.Util
                 throw new ForbiddenException();
             }
 
-            if (httpContextAccessor.HttpContext.Request.Headers.TryGetValue("Authorization", out var auth))
+            var claimsPrincipal = httpContextAccessor.HttpContext.User;
+
+            if (claimsPrincipal == null)
             {
-                return auth;
+                throw new ForbiddenException();
             }
 
-            throw new ForbiddenException();
+            return claimsPrincipal.Identity!.Name!;
         }
     }
 }

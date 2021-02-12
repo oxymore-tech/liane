@@ -50,8 +50,9 @@ namespace Liane.Web
             services.AddSettings<RedisSettings>(context);
             services.AddService<RedisClient>();
 
-            services.AddService<FakeCurrentContextImpl>();
+            services.AddService<CurrentContextImpl>();
             services.AddSettings<TwilioSettings>(context);
+            services.AddSettings<AuthSettings>(context);
             services.AddService<AuthServiceImpl>();
 
             services.AddService<DisplayServiceImpl>();

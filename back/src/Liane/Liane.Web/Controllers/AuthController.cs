@@ -20,5 +20,11 @@ namespace Liane.Web.Controllers
         {
             return authService.SendSms(number);
         }
+
+        [HttpPost("login")]
+        public Task<string> Login([FromQuery] string number, [FromQuery] string code)
+        {
+            return authService.Login(number, code);
+        }
     }
 }
