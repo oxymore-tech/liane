@@ -1,7 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 import { getLocations, deleteLocations } from './locationStorage';
 
-const endpoint = "https://liane.gjini.co/api/location";
+const endpoint = "https://liane.gjini.co/api";
 
 /**
  * Send user position (location) to server
@@ -50,7 +51,7 @@ export function sendLocation(location : LocationObject) {
  * @param code code received by the user
  */
 export function userLogin(phoneNumber : string, code : string) {
-    return fetch(endpoint + "/api/auth/login?number="+phoneNumber+"&code="+code, {
+    return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
         method: 'POST',
         headers: {
 /*            Accept: 'application/json',
@@ -59,8 +60,7 @@ export function userLogin(phoneNumber : string, code : string) {
     })
     .then((data) => {
         console.log('TOKEN : ', data);
-        const token = data.body;
-        AsyncStorage.setIem("tokenJWT", token);
+        AsyncStorage.setItem("tokenJWT", 'TOKEN_TO_SAVE');
         return true;
     })
     .catch((error) => {
@@ -73,8 +73,8 @@ export function userLogin(phoneNumber : string, code : string) {
  * Ask for an SMS code to the backend
  * @param phoneNumber phone number of the user
  */
-export function UserSendSms(phoneNumber : string) {
-    return fetch(endpoint + "/api/auth/sms?number="+phoneNumber, {
+export function userSendSms(phoneNumber : string) {
+    return fetch(endpoint + "/auth/sms?number="+phoneNumber, {
         method: 'POST',
         headers: {
    /*         Accept: 'application/json',

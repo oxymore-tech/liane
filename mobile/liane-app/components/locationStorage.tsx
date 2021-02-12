@@ -9,10 +9,10 @@ import { LocationObject } from 'expo-location';
 export async function storeLocation(location : LocationObject) {
     try {
         //const jsonValue = JSON.stringify(location);
-        let previousLocs = AsyncStorage.getItem("Location");
-        previousLocs = (previousLocs == null) ? [] : JSON.parse(previousLocs);
-        previousLocs.push(location);
-        await AsyncStorage.setItem("Location", previousLocs);
+        let previousLocs = await AsyncStorage.getItem("Location");
+        let previousLocsList : LocationObject[] = (previousLocs == null) ? [] : JSON.parse(previousLocs);
+        previousLocsList.push(location);
+        await AsyncStorage.setItem("Location", JSON.stringify(previousLocsList));
     } catch (e) {
         console.log();
     }
@@ -25,9 +25,9 @@ export async function storeLocation(location : LocationObject) {
  * @return Promise<LocationObject[]>
  */
 export async function getLocations() : Promise<LocationObject[]> {
-    let locations =  AsyncStorage.getItem("Location")
+    let locations =  await AsyncStorage.getItem("Location")
         try {
-            return ( (locations == null) ? [] : JSON.parse(locations));
+            return ((locations == null) ? [] : JSON.parse(locations));
         } catch(e) {
             // read key error
             console.log('Impossible de récupérer les localisations : ', e);
@@ -42,7 +42,8 @@ export async function getLocations() : Promise<LocationObject[]> {
  */
 export async function deleteLocations(timeStamps : string[]) {
     try {
-        await AsyncStorage.setItem("Location", AsyncStorage.getItem("Locations").filter(((element : LocationObject) => !(element.timestamp in timeStamps))));
+        const locationsList = await getLocations();
+        await AsyncStorage.setItem("Location", JSON.stringify(locationsList.filter(((element : LocationObject) => !(element.timestamp in timeStamps)))));
       } catch(e) {
         console.log('Erreur en supprimant des clées  :', e);
     }
