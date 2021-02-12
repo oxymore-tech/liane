@@ -23,7 +23,7 @@ namespace Liane.Test
         {
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
-                .ReturnsAsync(Trips.AllTrips);
+                .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
 
             var redisSettings = new RedisSettings("localhost");
             displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object);
