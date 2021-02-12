@@ -8,14 +8,14 @@ namespace Liane.Service.Internal.Matching
 {
     public sealed class UserServiceImpl : IUserService
     {
-        private ImmutableDictionary<string, User> users = ImmutableDictionary<string, User>.Empty;
+        private ImmutableDictionary<string, Api.User.User> users = ImmutableDictionary<string, Api.User.User>.Empty;
 
-        public User? GetUser(string userId)
+        public Api.User.User? GetUser(string userId)
         {
             return null;
         }
 
-        public Task<string?> GetId(User user)
+        public Task<string?> GetId(Api.User.User user)
         {
             return Task.FromResult(
                 users.ContainsValue(user) ? users.First(u => u.Value.Equals(user)).Key : null
@@ -34,7 +34,7 @@ namespace Liane.Service.Internal.Matching
             return user is Driver;
         }
 
-        public bool AddUser(string id, User user)
+        public bool AddUser(string id, Api.User.User user)
         {
             if (users.ContainsKey(id))
                 return false;
@@ -44,7 +44,7 @@ namespace Liane.Service.Internal.Matching
 
         public void EmptyUsersList()
         {
-            users = ImmutableDictionary<string, User>.Empty;
+            users = ImmutableDictionary<string, Api.User.User>.Empty;
         }
 
 

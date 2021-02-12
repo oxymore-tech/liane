@@ -7,6 +7,6 @@ namespace Liane.Api.Matching
     {
         Task<Driver> GetDriver(string userId);
         Task<ImmutableList<Passenger>> GetAllPassengers();
-        Task<string?> GetId(User user);
+        Task<string?> GetId(User.User user);
     }
 }

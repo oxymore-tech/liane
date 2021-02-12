@@ -5,6 +5,7 @@ using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
+using Liane.Service.Internal.Util;
 using Liane.Test.Util;
 using Moq;
 using NUnit.Framework;
@@ -24,7 +25,8 @@ namespace Liane.Test
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips);
 
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisSettings("localhost"), tripService.Object);
+            var redisSettings = new RedisSettings("localhost");
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object);
         }
 
         [Test]

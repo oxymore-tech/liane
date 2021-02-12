@@ -8,21 +8,21 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using IRedis = Liane.Api.Util.IRedis;
 
 namespace Liane.Service.Internal.Display
 {
     public class DisplayServiceImpl : IDisplayService
     {
         private readonly ILogger<DisplayServiceImpl> logger;
-        private readonly RedisSettings redisSettings;
-        private ConnectionMultiplexer? redis;
+        private readonly IRedis redis;
         private readonly ITripService tripService;
 
-        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, RedisSettings redisSettings, ITripService tripService)
+        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService)
         {
             this.logger = logger;
-            this.redisSettings = redisSettings;
             this.tripService = tripService;
+            this.redis = redis;
         }
 
         public Task<ImmutableList<Trip>> DisplayTrips(DisplayQuery displayQuery)
@@ -32,7 +32,7 @@ namespace Liane.Service.Internal.Display
 
         public async Task<ImmutableList<LabeledPosition>> SnapPosition(LatLng position)
         {
-            var database = await GetRedis();
+            var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
             var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results.Select(r =>
@@ -45,7 +45,7 @@ namespace Liane.Service.Internal.Display
 
         public async Task<ImmutableList<LabeledPosition>> ListDestinationsFrom(LabeledPosition start)
         {
-            var database = await GetRedis();
+            var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
             var results = await database.GeoRadiusAsync(redisKey, start.Label, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
                 options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
@@ -61,7 +61,7 @@ namespace Liane.Service.Internal.Display
 
         public async Task<ImmutableList<Trip>> ListTripsFrom(LabeledPosition start)
         {
-            var database = await GetRedis();
+            var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
             var closestTrips = new List<Trip>();
             foreach (var trip in await tripService.List())
