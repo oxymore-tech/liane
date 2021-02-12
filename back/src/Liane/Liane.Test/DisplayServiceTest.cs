@@ -75,11 +75,22 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task ListTripsFromAPosition()
+        public async Task ListTripsFromBlajouxParking()
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
             var expected = Trips.AllTrips.Remove(Trips.Mende_Florac);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task ListTripsFromLesBondons()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.ListTripsFrom(LabeledPositions.LesBondons_Parking);
+            var expected = Trips.AllTrips.Remove(Trips.Blajoux_Mende).Remove(Trips.Blajoux_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
         }

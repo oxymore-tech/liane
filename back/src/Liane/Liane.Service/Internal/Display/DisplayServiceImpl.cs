@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -61,7 +63,7 @@ namespace Liane.Service.Internal.Display
         {
             var database = await GetRedis();
             var redisKey = new RedisKey("rallying points");
-            var closestTrips = ImmutableList.Create<Trip>();
+            var closestTrips = new List<Trip>();
             foreach (var trip in await tripService.List())
             {
                 foreach (var position in trip.Coordinates)
@@ -74,13 +76,13 @@ namespace Liane.Service.Internal.Display
                         var geoPosition = r.Position!.Value;
                         return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                     });
-                    if (nearestPoint != null) {
+                    if (nearestPoint.LongCount() > 0) {
                         closestTrips.Add(trip);
                         break;
                     }
                 }
             }
-            return closestTrips;
+            return closestTrips.ToImmutableList();
         }
 
         private async Task<IDatabase> GetRedis()
