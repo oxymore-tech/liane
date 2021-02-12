@@ -92,17 +92,5 @@ namespace Liane.Service.Internal.Display
             }
             return destinations.IImmutableSet();
         }
-
-        private async Task<IDatabase> GetRedis()
-        {
-            if (redis == null)
-            {
-                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
-                logger.LogInformation("Successfully connected to redis");
-                return redis.GetDatabase();
-            }
-
-            return redis.GetDatabase();
-        }
     }
 }
