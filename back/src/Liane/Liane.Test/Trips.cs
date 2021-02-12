@@ -10,7 +10,7 @@ namespace Liane.Test
         public static readonly Trip Blajoux_Florac = new Trip(ImmutableList.Create(Positions.Blajoux_Parking, Positions.Florac));
         public static readonly Trip Blajoux_Mende = new Trip(ImmutableList.Create(Positions.Blajoux_Pelardon, Positions.Mende));
 
-        public static readonly IImmutableSet<Trip> AllTrips = ImmutableHashSet.Create(
+        public static readonly ImmutableList<Trip> AllTrips = ImmutableList.Create(
             Mende_Florac,
             Blajoux_Florac,
             Blajoux_Mende

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -85,12 +84,13 @@ namespace Liane.Service.Internal.Display
             return closestTrips.ToImmutableList();
         }
 
-        public async Task<IImmutableSet<LabeledPosition>> ListDestinationsFrom(ImmutableList<Trip.Trip> trips) {
-            HashSet<Position> destinations = new HashSet<Position>();
+        public async Task<IImmutableSet<LabeledPosition>> ListDestinationsFrom(ImmutableList<Trip> trips) {
+            HashSet<LabeledPosition> destinations = new HashSet<LabeledPosition>();
             foreach (var trip in trips) {
-                destinations.Add(trip.Coordinates[trip.Coordinates.LongCount-1]);
+                var destination = await SnapPosition(trip.Coordinates.Last());
+                destinations.Add(destination[0]);
             }
-            return destinations.IImmutableSet();
+            return destinations.ToImmutableHashSet();
         }
     }
 }
