@@ -103,8 +103,9 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListDestinationsFrom(Trips.AllTrips);
-            var expected = ImmutableHashSet.Create(Positions.Florac, Positions.Mende);
+            var expected = ImmutableHashSet.Create(LabeledPositions.Florac, LabeledPositions.Mende);
             actual.WithDeepEqual(expected)
+                .IgnoreProperty<LabeledPosition>(l => l.Distance)
                 .Assert();
         }
 
