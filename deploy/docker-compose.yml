@@ -1,6 +1,14 @@
 version: "3.7"
 services:
 
+  redis:
+    image: 'redis:6.0'
+    command: [ "sh", "-c", "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}" ]
+    volumes:
+      - "/data/liane/redis:/data"
+    networks:
+      - internal
+
   osrm:
     image: "osrm/osrm-backend"
     command: osrm-routed --algorithm mld /data/all.osrm
@@ -34,10 +42,21 @@ services:
       traefik.http.routers.liane-back-secure.middlewares: "compress@file"
       traefik.http.routers.liane-back-secure.tls.certResolver: "gjinico"
       traefik.http.services.liane-back.loadbalancer.server.port: "8081"
+    depends_on:
+      - redis
+      - osrm
+      - nominatim
+    environment:
+      LIANE_Redis__Password: ${REDIS_PASSWORD}
+      LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
+      LIANE_Twilio__Token: ${TWILIO_TOKEN}
+      LIANE_Twilio__From: ${TWILIO_FROM}
+      LIANE_Auth__Validity: ${AUTH_VALIDITY}
+      LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
     networks:
       - gateway
       - internal
-        
+
   scenari:
     build: ../scenari
     labels:
@@ -54,7 +73,7 @@ services:
     networks:
       - gateway
       - internal
-        
+
 networks:
   gateway:
     external:

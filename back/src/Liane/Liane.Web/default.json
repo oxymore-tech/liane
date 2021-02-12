@@ -6,5 +6,9 @@
       "Microsoft": "Error",
       "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
     }
+  },
+  "Auth": {
+    "Issuer": "Liane",
+    "Audience": "Liane"
   }
 }

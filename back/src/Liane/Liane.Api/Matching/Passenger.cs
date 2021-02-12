@@ -3,7 +3,7 @@ using Liane.Api.Routing;
 
 namespace Liane.Api.Matching
 {
-    public sealed class Passenger : User
+    public sealed class Passenger : User.User
     {
         public Passenger(LatLng start, LatLng end, DateTime maxArrivalTime)
         {

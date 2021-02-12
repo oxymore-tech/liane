@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Display;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
+using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
@@ -45,7 +47,15 @@ namespace Liane.Web
             services.AddSettings<OsrmSettings>(context);
             services.AddSettings<NominatimSettings>(context);
 
-            services.AddService<FakeCurrentContextImpl>();
+            services.AddSettings<RedisSettings>(context);
+            services.AddService<RedisClient>();
+
+            services.AddService<CurrentContextImpl>();
+            services.AddSettings<TwilioSettings>(context);
+            services.AddSettings<AuthSettings>(context);
+            services.AddService<AuthServiceImpl>();
+
+            services.AddService<DisplayServiceImpl>();
             services.AddService<LocationServiceImpl>();
         }
 

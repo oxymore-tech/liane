@@ -5,7 +5,7 @@ WORKDIR /app
 COPY Liane.sln ./
 COPY src/ ./src/
 
-RUN dotnet restore && dotnet test && dotnet publish -c Release
+RUN dotnet restore && dotnet test --filter Category\!=Integration && dotnet publish -c Release
 
 
 

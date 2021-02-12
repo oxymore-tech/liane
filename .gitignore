@@ -16,3 +16,5 @@ data/
 
 # macOS
 .DS_Store
+
+deploy/.env
