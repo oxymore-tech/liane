@@ -57,22 +57,30 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
         }
 
-        public async Task<ImmutableList<Trip>> ListTripsFrom(LabeledPosition labeledPosition)
+        public async Task<ImmutableList<Trip>> ListTripsFrom(LabeledPosition start)
         {
             var database = await GetRedis();
             var redisKey = new RedisKey("rallying points");
+            var closestTrips = ImmutableList.Create<Trip>();
             foreach (var trip in await tripService.List())
             {
                 foreach (var position in trip.Coordinates)
                 {
-                    // on teste si la position est proche d'un point de ralliement, si oui, on garde le trip
+                    var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                    var nearestPoint = results
+                    .Where(r => r.Member == start.Label)
+                    .Select(r =>
+                    {
+                        var geoPosition = r.Position!.Value;
+                        return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                    });
+                    if (nearestPoint != null) {
+                        closestTrips.Add(trip);
+                        break;
+                    }
                 }
             }
-
-            // var results = await database.GeoRadiusAsync(redisKey, labeledPosition.Label, 500, unit: GeoUnit.Meters, order: Order.Ascending,
-            //     options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-            // return results;
-            return ImmutableList<Trip>.Empty;
+            return closestTrips;
         }
 
         private async Task<IDatabase> GetRedis()

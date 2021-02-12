@@ -79,9 +79,8 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
-            var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
+            var expected = Trips.AllTrips.Remove(Trips.Mende_Florac);
             actual.WithDeepEqual(expected)
-                .IgnoreProperty<LabeledPosition>(l => l.Distance)
                 .Assert();
         }
 
