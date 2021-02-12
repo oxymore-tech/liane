@@ -95,6 +95,17 @@ namespace Liane.Test
                 .Assert();
         }
 
+        [Test]
+        [Category("Integration")]
+        public async Task ListDestinationsFromTrips()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.ListDestinationsFrom(Trips.AllTrips);
+            var expected = ImmutableHashSet.Create(Positions.Florac, Positions.Mende);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
         private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");

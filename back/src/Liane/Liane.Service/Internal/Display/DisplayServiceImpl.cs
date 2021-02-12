@@ -85,6 +85,14 @@ namespace Liane.Service.Internal.Display
             return closestTrips.ToImmutableList();
         }
 
+        public async Task<IImmutableSet<LabeledPosition>> ListDestinationsFrom(ImmutableList<Trip.Trip> trips) {
+            HashSet<Position> destinations = new HashSet<Position>();
+            foreach (var trip in trips) {
+                destinations.Add(trip.Coordinates[trip.Coordinates.LongCount-1]);
+            }
+            return destinations.IImmutableSet();
+        }
+
         private async Task<IDatabase> GetRedis()
         {
             if (redis == null)
