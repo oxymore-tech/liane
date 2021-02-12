@@ -33,3 +33,60 @@ export function sendLocation(location : LocationObject) {
       return false;
     });
 }
+
+
+/* ===== Auth system ========= *
+
+1) Utilisateur demande SMS (entre son numéro de tel)
+2) Utilisateur reçois son SMS
+3) Utilisateur envoi son code (et son numéro) et reçois token JWT
+4) L'app stocke le token
+5) Toutes les requetes contiennent en header le token
+*/
+
+/**
+ * Log-in a user 
+ * @param phoneNumber phone number of the user
+ * @param code code received by the user
+ */
+export function userLogin(phoneNumber : string, code : string) {
+    return fetch(endpoint + "/api/auth/login?number="+phoneNumber+"&code="+code, {
+        method: 'POST',
+        headers: {
+/*            Accept: 'application/json',
+            'Content-Type': 'application/json'  */
+        }
+    })
+    .then((data) => {
+        console.log('TOKEN : ', data);
+        const token = data.body;
+        // On stocke le token dans AsyncStorage 
+        return true;
+    })
+    .catch((error) => {
+      console.error(error);
+      return false;
+    });
+}
+
+/**
+ * Ask for an SMS code to the backend
+ * @param phoneNumber phone number of the user
+ */
+export function UserSendSms(phoneNumber : string) {
+    return fetch(endpoint + "/api/auth/sms?number="+phoneNumber, {
+        method: 'POST',
+        headers: {
+   /*         Accept: 'application/json',
+            'Content-Type': 'application/json' */
+        }
+    })
+    // .then((response) => response.json())
+    .then(() => {
+      return true;
+    })
+    .catch((error) => {
+      console.error(error);
+      return false;
+    });
+}
