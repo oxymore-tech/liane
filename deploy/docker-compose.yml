@@ -47,12 +47,12 @@ services:
       - osrm
       - nominatim
     environment:
-      LIANE_REDIS__PASSWORD: ${REDIS_PASSWORD}
-      LIANE_TWILIO__ACCOUNT: ${TWILIO_ACCOUNT}
-      LIANE_TWILIO__TOKEN: ${TWILIO_TOKEN}
-      LIANE_TWILIO__FROM: ${TWILIO_FROM}
-      LIANE_AUTH__VALIDITY: ${AUTH_VALIDITY}
-      LIANE_AUTH__SECRET_KEY: ${AUTH_SECRET_KEY}
+      LIANE_Redis__Password: ${REDIS_PASSWORD}
+      LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
+      LIANE_Twilio__Token: ${TWILIO_TOKEN}
+      LIANE_Twilio__From: ${TWILIO_FROM}
+      LIANE_Auth__Validity: ${AUTH_VALIDITY}
+      LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
     networks:
       - gateway
       - internal
