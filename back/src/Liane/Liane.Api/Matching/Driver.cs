@@ -3,7 +3,7 @@ using Liane.Api.Routing;
 
 namespace Liane.Api.Matching
 {
-    public sealed class Driver : User
+    public sealed class Driver : User.User
     {
         public Driver(LatLng start, LatLng end, float maxDelta, DateTime departureTime)
         {
