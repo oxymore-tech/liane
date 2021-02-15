@@ -9,6 +9,7 @@ import { userSendSms } from './components/apiRequest';
 
 initializeLocationTask();
 
+
 export default function App() {
 
   const [phoneNumber, onChangeText] = React.useState('Entrez votre 06');
