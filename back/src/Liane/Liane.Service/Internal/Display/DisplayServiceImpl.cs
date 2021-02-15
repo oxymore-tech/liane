@@ -11,7 +11,7 @@ using IRedis = Liane.Api.Util.IRedis;
 
 namespace Liane.Service.Internal.Display
 {
-    public class DisplayServiceImpl : IDisplayService
+    public sealed class DisplayServiceImpl : IDisplayService
     {
         private readonly ILogger<DisplayServiceImpl> logger;
         private readonly IRedis redis;
@@ -29,7 +29,7 @@ namespace Liane.Service.Internal.Display
             return Task.FromResult(ImmutableList<Trip>.Empty);
         }
 
-        public async Task<ImmutableList<LabeledPosition>> SnapPosition(LatLng position)
+        public async Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng position)
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
@@ -37,12 +37,12 @@ namespace Liane.Service.Internal.Display
             return results.Select(r =>
                 {
                     var geoPosition = r.Position!.Value;
-                    return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                    return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                 })
                 .ToImmutableList();
         }
 
-        public async Task<ImmutableList<LabeledPosition>> ListDestinationsFrom(LabeledPosition start)
+        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
@@ -53,12 +53,12 @@ namespace Liane.Service.Internal.Display
                 .Select(r =>
                 {
                     var geoPosition = r.Position!.Value;
-                    return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                    return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                 })
                 .ToImmutableList();
         }
 
-        public async Task<ImmutableHashSet<Trip>> ListTripsFrom(LabeledPosition start)
+        public async Task<ImmutableHashSet<Trip>> ListTripsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
@@ -73,10 +73,10 @@ namespace Liane.Service.Internal.Display
                     .Select(r =>
                     {
                         var geoPosition = r.Position!.Value;
-                        return new LabeledPosition(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                        return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                     });
                     if (nearestPoint.LongCount() > 0) {
-                        var pointDepart = new List<LabeledPosition>();
+                        var pointDepart = new List<RallyingPoint>();
                         pointDepart.Add(start);
                         var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
                         var coordinatesFromStart = pointDepart.Concat(coordinatesAfterPosition).ToImmutableList();
@@ -89,7 +89,7 @@ namespace Liane.Service.Internal.Display
             return tripsFromStart.ToImmutableHashSet();
         }
 
-        private IImmutableSet<LabeledPosition> ListDestinationsFrom(ImmutableList<Trip> trips) {
+        private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
         }

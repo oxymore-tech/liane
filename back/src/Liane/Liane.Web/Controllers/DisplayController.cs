@@ -18,7 +18,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("snap")]
-        public async Task<ImmutableList<LabeledPosition>> SnapPosition([FromQuery] double lat, [FromQuery] double lng)
+        public async Task<ImmutableList<RallyingPoint>> SnapPosition([FromQuery] double lat, [FromQuery] double lng)
         {
             return await displayService.SnapPosition(new LatLng(lat, lng));
         }

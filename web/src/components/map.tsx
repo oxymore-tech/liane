@@ -2,12 +2,12 @@ import React from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
 import { icon} from "leaflet";
-import { LabeledPosition, LatLng} from "../api";
+import { RallyingPoint, LatLng} from "../api";
 
 interface MapProps {
   className?: string;
   center: LatLng;
-  start?: LabeledPosition;
+  start?: RallyingPoint;
 }
 
 const customIcon = icon({
@@ -32,7 +32,7 @@ function Map({className, center, start}: MapProps) {
     />
     {start && <Marker position={start.position} icon={customIcon}>
       <Popup>
-        <h3>{start.label}</h3>
+        <h3>{start.id}</h3>
       </Popup>
     </Marker>}
     
