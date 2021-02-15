@@ -105,7 +105,7 @@ namespace Liane.Test
             await database.KeyDeleteAsync(redisKey);
             foreach (var labeledPosition in LabeledPositions.RallyingPoints)
             {
-                await database.GeoAddAsync(redisKey, labeledPosition.Position.Lng, labeledPosition.Position.Lat, new RedisValue(labeledPosition.Label));
+                await database.GeoAddAsync(redisKey, labeledPosition.Position.Lng, labeledPosition.Position.Lat, new RedisValue(labeledPosition.Id));
             }
         }
     }

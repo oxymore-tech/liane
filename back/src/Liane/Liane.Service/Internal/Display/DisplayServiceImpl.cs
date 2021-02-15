@@ -46,10 +46,10 @@ namespace Liane.Service.Internal.Display
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
-            var results = await database.GeoRadiusAsync(redisKey, start.Label, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
+            var results = await database.GeoRadiusAsync(redisKey, start.Id, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
                 options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results
-                .Where(r => r.Member != start.Label)
+                .Where(r => r.Member != start.Id)
                 .Select(r =>
                 {
                     var geoPosition = r.Position!.Value;
@@ -69,7 +69,7 @@ namespace Liane.Service.Internal.Display
                 {
                     var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     var nearestPoint = results
-                    .Where(r => r.Member == start.Label)
+                    .Where(r => r.Member == start.Id)
                     .Select(r =>
                     {
                         var geoPosition = r.Position!.Value;
