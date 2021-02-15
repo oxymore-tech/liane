@@ -100,7 +100,7 @@ namespace Liane.Test
         private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var redisKey = new RedisKey("rallying points");
+            var redisKey = new RedisKey("RallyingPoints");
             var database = redis.GetDatabase();
             await database.KeyDeleteAsync(redisKey);
             foreach (var labeledPosition in LabeledPositions.RallyingPoints)
