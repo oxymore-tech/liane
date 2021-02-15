@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, Button, Alert } from 'react-native';
 import { registerLocationTask, initializeLocationTask } from './components/locationTask';
 
-
-// TEST
-import { Button, TextInput } from 'react-native'
+import {create} from 'tailwind-rn';
+import styles from './styles.json';
+import { useHover, useFocus, useActive, } from 'react-native-web-hooks';
+import {getColor, t, mapFromStyles, tailwind } from './tailwind_fcts'
+import { TextInput } from 'react-native-gesture-handler';
+import Login from './frontEndReactNative'
 import { userSendSms } from './components/apiRequest';
+import AppContainer from './AppContainer'
 
 initializeLocationTask();
 
@@ -24,27 +28,9 @@ export default function App() {
     userSendSms(phoneNumber).then((result) => setMyText("RESULT : " + result)).catch(e => console.log('error : ', e));
   }
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.container}>Bonjourno !</Text>
-        <TextInput
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-        onChangeText={text => onChangeText(text)}
-        value={phoneNumber}
-        />
-        <Button title="Register" onPress={sendSMS}/>
-        <View>
-            <Text>{myText}</Text>
-        </View>
-    </View>
+  return ( 
+    <AppContainer>
+    </AppContainer>   
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
