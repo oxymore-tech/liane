@@ -24,9 +24,9 @@ namespace Liane.Service.Internal.Display
             this.redis = redis;
         }
 
-        public Task<ImmutableList<Trip>> DisplayTrips(DisplayQuery displayQuery)
+        public Task<ImmutableList<Api.Trip.Trip>> DisplayTrips(DisplayQuery displayQuery)
         {
-            return Task.FromResult(ImmutableList<Trip>.Empty);
+            return Task.FromResult(ImmutableList<Api.Trip.Trip>.Empty);
         }
 
         public async Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng position)
@@ -58,11 +58,11 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
         }
 
-        public async Task<ImmutableHashSet<Trip>> ListTripsFrom(RallyingPoint start)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("rallying points");
-            var tripsFromStart = new List<Trip>();
+            var tripsFromStart = new List<Api.Trip.Trip>();
             foreach (var trip in await tripService.List())
             {
                 foreach (var position in trip.Coordinates)
@@ -80,7 +80,7 @@ namespace Liane.Service.Internal.Display
                         pointDepart.Add(start);
                         var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
                         var coordinatesFromStart = pointDepart.Concat(coordinatesAfterPosition).ToImmutableList();
-                        var aTripFromStart = new Trip(coordinatesFromStart);
+                        var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
                         tripsFromStart.Add(aTripFromStart);
                         break;
                     }
@@ -89,7 +89,7 @@ namespace Liane.Service.Internal.Display
             return tripsFromStart.ToImmutableHashSet();
         }
 
-        private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Trip> trips) {
+        private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
         }
