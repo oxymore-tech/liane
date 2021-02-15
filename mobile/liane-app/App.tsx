@@ -3,13 +3,11 @@ import { StyleSheet, Text, View, SafeAreaView, Button, Alert } from 'react-nativ
 import { registerLocationTask, initializeLocationTask } from './components/locationTask';
 
 import {create} from 'tailwind-rn';
-import styles from './styles.json';
-import { useHover, useFocus, useActive, } from 'react-native-web-hooks';
-import {getColor, t, mapFromStyles, tailwind } from './tailwind_fcts'
-import { TextInput } from 'react-native-gesture-handler';
-import Login from './frontEndReactNative'
+// import styles from './styles.json';
+// import { useHover, useFocus, useActive, } from 'react-native-web-hooks';
+// import {getColor, t, mapFromStyles, tailwind } from './tailwind_fcts'
 import { userSendSms } from './components/apiRequest';
-import AppContainer from './AppContainer'
+import AppContainer from './components/AppContainer'
 
 initializeLocationTask();
 

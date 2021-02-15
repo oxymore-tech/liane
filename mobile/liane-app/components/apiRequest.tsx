@@ -53,14 +53,17 @@ export function sendLocation(location : LocationObject) {
 export function userLogin(phoneNumber : string, code : string) {
     return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
         method: 'POST',
+        /*
         headers: {
-/*            Accept: 'application/json',
-            'Content-Type': 'application/json'  */
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
         }
+        */
     })
-    .then((data) => {
-        console.log('TOKEN : ', data);
-        AsyncStorage.setItem("tokenJWT", 'TOKEN_TO_SAVE');
+    .then(result => result.text())
+    .then((token) => {
+        console.log('TOKEN : ', token);
+        AsyncStorage.setItem("tokenJWT", token);
         return true;
     })
     .catch((error) => {

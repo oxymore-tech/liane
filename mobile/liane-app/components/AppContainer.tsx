@@ -11,12 +11,12 @@ import  {
     Button
   } from 'react-native'
   import React from 'react'
-  import {userLogin, userSendSms} from './components/apiRequest';
+  import {userLogin, userSendSms} from './apiRequest';
   import { NavigationContainer } from '@react-navigation/native';
   import { createStackNavigator } from '@react-navigation/stack';
 
 
-const image = require("./Images/PS5_2.jpg");//Mountains_2_smartphone.jpeg"); // Images/coucouToi.jpg"); 
+const image = require("../Images/Mountains_2_smartphone.jpeg"); // Images/coucouToi.jpg"); 
 
 const LoginPage = ({navigation} : any) => {
     const [phoneNumber, setPhoneNumber] = React.useState('Entrez votre 06');
