@@ -32,7 +32,7 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng position)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("rallying points");
+            var redisKey = new RedisKey("RallyingPoints");
             var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results.Select(r =>
                 {
@@ -45,7 +45,7 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("rallying points");
+            var redisKey = new RedisKey("RallyingPoints");
             var results = await database.GeoRadiusAsync(redisKey, start.Id, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
                 options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results
@@ -61,7 +61,7 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("rallying points");
+            var redisKey = new RedisKey("RallyingPoints");
             var tripsFromStart = new List<Api.Trip.Trip>();
             foreach (var trip in await tripService.List())
             {
