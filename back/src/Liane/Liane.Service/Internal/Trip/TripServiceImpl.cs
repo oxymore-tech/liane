@@ -23,9 +23,9 @@ namespace Liane.Service.Internal.Trip
         private readonly IRedis redis;
 
         public TripServiceImpl(IRedis redis)
-                {
-                    this.redis = redis;
-                }
+        {
+            this.redis = redis;
+        }
 
         public async Task<RallyingPoint?> GetRallyingPoint(string id)
         {

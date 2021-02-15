@@ -12,8 +12,8 @@ export default function Home() {
   
   useEffect(() => {
     displayService.SnapPosition(blajoux_pelardon.lat, blajoux_pelardon.lng)
-      .then(result => {console.log(result[0]);setStart(result[0])});
-  })  
+      .then(result => setStart(result[0]));
+  }, []);
 
   return <div>
     <Map className="w-full h-screen" center={center} start={start}></Map>
