@@ -80,14 +80,14 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "gateway"
-      traefik.http.routers.liane-front.rule: "Host(`liane.gjini.co`) && PathPrefix(`/`)"
-      traefik.http.routers.liane-front.entrypoints: "web"
-      traefik.http.routers.liane-front.middlewares: "redirect@file"
-      traefik.http.routers.liane-front-secure.rule: "Host(`liane.gjini.co`) && PathPrefix(`/`)"
-      traefik.http.routers.liane-front-secure.entrypoints: "web-secure"
-      traefik.http.routers.liane-front-secure.middlewares: "compress@file"
-      traefik.http.routers.liane-front-secure.tls.certResolver: "gjinico"
-      traefik.http.services.liane-front.loadbalancer.server.port: "3000"
+      traefik.http.routers.liane-web.rule: "Host(`liane.gjini.co`) && PathPrefix(`/`)"
+      traefik.http.routers.liane-web.entrypoints: "web"
+      traefik.http.routers.liane-web.middlewares: "redirect@file"
+      traefik.http.routers.liane-web-secure.rule: "Host(`liane.gjini.co`) && PathPrefix(`/`)"
+      traefik.http.routers.liane-web-secure.entrypoints: "web-secure"
+      traefik.http.routers.liane-web-secure.middlewares: "compress@file"
+      traefik.http.routers.liane-web-secure.tls.certResolver: "gjinico"
+      traefik.http.services.liane-web.loadbalancer.server.port: "3000"
     networks:
       - gateway
       - internal
