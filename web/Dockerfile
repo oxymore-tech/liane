@@ -1,4 +1,4 @@
-FROM node:14-alpine AS build
+FROM node:15.2 AS build
 
 WORKDIR /app
 
@@ -9,14 +9,23 @@ RUN yarn
 
 COPY . ./
 
+ENV NEXT_PUBLIC_APP_URL https://liane.gjini.co
+
 RUN yarn build
 
 
 
-FROM nginx:stable-alpine
+FROM node:15.2
 
-COPY --from=build /app/build /usr/share/nginx/html
+WORKDIR /app
+
+COPY --from=build /app /app
+
+ENV HOST 0.0.0.0
+ENV PORT 80
+ENV NEXT_PUBLIC_APP_URL https://liane.gjini.co
+ENV NEXT_PUBLIC_GOOGLE_ANALYTICS_ID 000
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["yarn", "start"]
