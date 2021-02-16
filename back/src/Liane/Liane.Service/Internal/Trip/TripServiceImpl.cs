@@ -30,7 +30,7 @@ namespace Liane.Service.Internal.Trip
         public async Task<RallyingPoint?> GetRallyingPoint(string id)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("rallying points");
+            var redisKey = new RedisKey("RallyingPoints");
             var result = await database.GeoPositionAsync(redisKey, id);
             return new RallyingPoint(id, new LatLng(result.Value.Latitude, result.Value.Longitude));
         }

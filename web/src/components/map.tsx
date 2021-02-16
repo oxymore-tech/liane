@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
 import { icon} from "leaflet";
 import { RallyingPoint, LatLng} from "../api";
+import { displayService } from "../api/display-service";
 
 interface MapProps {
   className?: string;
@@ -17,6 +18,24 @@ const customIcon = icon({
   iconAnchor: [12, 41]
 });
 
+export function printTrips(start: RallyingPoint) {
+  var routes = [];
+  displayService.ListTripsFrom(start.id, start.position.lat, start.position.lng).then(
+    trips => {
+      trips.forEach(trip => {
+          var route = [];
+          trip.coordinates.forEach(point => {
+              route.push([point.position.lat, point.position.lng]);
+            }
+          );
+          routes.push(<Polyline positions={route}/>)
+        }
+      );
+    }
+  );
+  return routes;
+}
+
 function Map({className, center, start}: MapProps) {
 
   return <MapContainer className={className} center={center}
@@ -30,12 +49,18 @@ function Map({className, center, start}: MapProps) {
       zIndex={2}
 
     />
-    {start && <Marker position={start.position} icon={customIcon}>
-      <Popup>
-        <h3>{start.id}</h3>
-      </Popup>
-    </Marker>}
-    
+    {
+      start && 
+      <Marker position={start.position} icon={customIcon}>
+        <Popup>
+          <h3>{start.id}</h3>
+        </Popup>
+      </Marker>
+    }
+    {
+      start &&
+      <div>{printTrips(start)}</div>
+    }
     <Polyline positions={[[44.5180226, 3.4991057], [44.38624954223633, 3.6189568042755127], [44.31901305, 3.57802065202088]]} 
               color={"#ff0000"} 
               weight={10}/>
