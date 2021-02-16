@@ -52,13 +52,7 @@ export function sendLocation(location : LocationObject) {
  */
 export function userLogin(phoneNumber : string, code : string) {
     return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
-        method: 'POST',
-        /*
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-        }
-        */
+        method: 'POST'
     })
     .then(result => result.text())
     .then((token) => {
@@ -78,11 +72,7 @@ export function userLogin(phoneNumber : string, code : string) {
  */
 export function userSendSms(phoneNumber : string) {
     return fetch(endpoint + "/auth/sms?number="+phoneNumber, {
-        method: 'POST',
-        headers: {
-   /*         Accept: 'application/json',
-            'Content-Type': 'application/json' */
-        }
+        method: 'POST'
     })
     // .then((response) => response.json())
     .then(() => {
