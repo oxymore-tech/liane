@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { icon } from "leaflet";
+import { icon, LatLngExpression} from "leaflet";
+import { RallyingPoint, LatLng, Trip} from "../api";
+import { displayService } from "../api/display-service";
 
 interface MapProps {
   className?: string;
+  center: LatLng;
+  start?: RallyingPoint;
 }
 
 const customIcon = icon({
@@ -14,9 +18,39 @@ const customIcon = icon({
   iconAnchor: [12, 41]
 });
 
-function Map({className}: MapProps) {
+const customIconGray = icon({
+  iconUrl: "/images/leaflet/marker-icon-gray.png",
+  shadowUrl: "/images/leaflet/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
 
-  return <MapContainer className={className} center={[44.38624954223633, 3.6189568042755127]}
+export function getRoutes(trips: Trip[]) {
+  let routes = [];
+  trips.forEach(trip => {
+    let route = [];
+    trip.coordinates.forEach(point => {
+        route.push([point.position.lat, point.position.lng]);
+      }
+    );
+    routes.push(<Polyline positions={route}/>);
+  });
+  return routes
+}
+
+
+function Map({className, center, start}: MapProps) {
+  const [routes, setRoutes] = useState<LatLngExpression[][]>([]);
+  const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
+  useEffect(() => {
+    if (start != null) {
+      displayService.ListTripsFrom(start.id, start.position.lat, start.position.lng).then(
+        result => setRoutes(getRoutes(result)));
+      displayService.ListDestinationsFrom(start.id, start.position.lat, start.position.lng).then(
+        result => {console.log(result); setDestinations(result)});
+      }
+  }, [start]);
+  return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}
                        dragging={true}
@@ -27,18 +61,33 @@ function Map({className}: MapProps) {
       zIndex={2}
 
     />
-    <Marker position={[44.3352152, 3.3837138]} icon={customIcon}>
-      <Popup>
-        <h3>Le Moulin de Cénaret</h3>
-        <a
-          href="https://www.google.com/maps/dir//BJL+Consultants,+31+Avenue+Jean+Fran%C3%A7ois+Champollion,+31100+Toulouse/@43.5472928,1.3944018,19z/data=!4m9!4m8!1m0!1m5!1m1!1s0x12aeb98f54f29755:0xafb963b11ecf5bbf!2m2!1d1.394949!2d43.5472928!3e0">
-          Itinéraire
-        </a>
-      </Popup>
-    </Marker>
+    {
+      start && 
+      <Marker position={start.position} icon={customIcon}>
+        <Popup>
+          <h3>{start.id}</h3>
+        </Popup>
+      </Marker>
+    }
+    {
+      start &&
+      <div> { routes } </div>
+    }
+    {
+      start &&
+      <div>
+        {destinations.map((point, index) => (
+          <Marker key={index} position={point.position} icon={customIconGray}>
+          <Popup>
+            <h3>{point.id}</h3>
+          </Popup>
+          </Marker>
+        ))}
+      </div>
+        }
     <Polyline positions={[[44.5180226, 3.4991057], [44.38624954223633, 3.6189568042755127], [44.31901305, 3.57802065202088]]} 
-              color={"#ff0000"} 
-              weight={10}/>
+              color={"#00ff00"} 
+              weight={5}/>
   </MapContainer>;
 }
 

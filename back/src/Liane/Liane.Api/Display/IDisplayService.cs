@@ -7,8 +7,8 @@ namespace Liane.Api.Display
     public interface IDisplayService
     {
         Task<ImmutableList<Trip.Trip>> DisplayTrips(DisplayQuery displayQuery);
-        Task<ImmutableList<LabeledPosition>> SnapPosition(LatLng latLng);
-        Task<ImmutableList<LabeledPosition>> ListDestinationsFrom(LabeledPosition labeledPosition);
-        Task<ImmutableHashSet<Trip.Trip>> ListTripsFrom(LabeledPosition labeledPosition);
+        Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng latLng);
+        Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
+        Task<ImmutableHashSet<Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
     }
 }
