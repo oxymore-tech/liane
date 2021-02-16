@@ -8,7 +8,6 @@ import { LocationObject } from 'expo-location';
  */
 export async function storeLocation(location : LocationObject) {
     try {
-        //const jsonValue = JSON.stringify(location);
         let previousLocs = await AsyncStorage.getItem("Location");
         let previousLocsList : LocationObject[] = (previousLocs == null) ? [] : JSON.parse(previousLocs);
         previousLocsList.push(location);

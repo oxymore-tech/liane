@@ -31,9 +31,7 @@ export async  function sendLocation(location : LocationObject) {
             },
             timestamp: location.timestamp
         }])
-    })//.then((json0) => (json0 == null) ? "" : json0.text())
-    .then((json) => {
-      //console.log("JSON RECUP : ", json);
+    }).then(() => {
       return true;
     })
     .catch((error) => {
@@ -59,7 +57,7 @@ export async function userLogin(phoneNumber : string, code : string) {
     .then((token) => {
         console.log('TOKEN ? : ', JSON.stringify(token));
         AsyncStorage.setItem("tokenJWT", token);
-        return true;
+        return token;
     })
     .catch((error) => {
       console.log("ERREUR dans userLogin");
