@@ -17,7 +17,22 @@ class DisplayService {
         return await response.json();
       }
 
-      async ListTripsFrom(id: string,  lat: number, lng: number): Promise<Trip[]> {
+    async ListDestinationsFrom(id: string,  lat: number, lng: number): Promise<RallyingPoint[]> {
+        const url = new URL("/api/display/listdestinations", BaseUrl);
+        url.searchParams.append("id", id.toString());
+        url.searchParams.append("lat", lat.toString());
+        url.searchParams.append("lng", lng.toString());
+    
+        const response = await fetch(url.toString(), {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "GET"
+        });
+        return await response.json();
+      }
+
+    async ListTripsFrom(id: string,  lat: number, lng: number): Promise<Trip[]> {
         const url = new URL("/api/display/listtrips", BaseUrl);
         url.searchParams.append("id", id.toString());
         url.searchParams.append("lat", lat.toString());

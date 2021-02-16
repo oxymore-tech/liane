@@ -23,6 +23,12 @@ namespace Liane.Web.Controllers
             return await displayService.SnapPosition(new LatLng(lat, lng));
         }
 
+        [HttpGet("listdestinations")]
+        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom([FromQuery] string id, [FromQuery] double lat, [FromQuery] double lng)
+        {
+            return await displayService.ListDestinationsFrom(new RallyingPoint(id, new LatLng(lat, lng)));
+        }
+
         [HttpGet("listtrips")]
         public async Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom([FromQuery] string id, [FromQuery] double lat, [FromQuery] double lng)
         {

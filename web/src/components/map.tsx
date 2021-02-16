@@ -18,6 +18,13 @@ const customIcon = icon({
   iconAnchor: [12, 41]
 });
 
+const customIconGray = icon({
+  iconUrl: "/images/leaflet/marker-icon-gray.png",
+  shadowUrl: "/images/leaflet/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
 export function getRoutes(trips: Trip[]) {
   let routes = [];
   trips.forEach(trip => {
@@ -33,11 +40,14 @@ export function getRoutes(trips: Trip[]) {
 
 
 function Map({className, center, start}: MapProps) {
-  const [routes, setRoutes] = useState<LatLngExpression[][]>();
+  const [routes, setRoutes] = useState<LatLngExpression[][]>([]);
+  const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   useEffect(() => {
     if (start != null) {
       displayService.ListTripsFrom(start.id, start.position.lat, start.position.lng).then(
-        result => setRoutes(getRoutes(result)))
+        result => setRoutes(getRoutes(result)));
+      displayService.ListDestinationsFrom(start.id, start.position.lat, start.position.lng).then(
+        result => {console.log(result); setDestinations(result)});
       }
   }, [start]);
   return <MapContainer className={className} center={center}
@@ -63,6 +73,18 @@ function Map({className, center, start}: MapProps) {
       start &&
       <div> { routes } </div>
     }
+    {
+      start &&
+      <div>
+        {destinations.map((point, index) => (
+          <Marker key={index} position={point.position} icon={customIconGray}>
+          <Popup>
+            <h3>{point.id}</h3>
+          </Popup>
+          </Marker>
+        ))}
+      </div>
+        }
     <Polyline positions={[[44.5180226, 3.4991057], [44.38624954223633, 3.6189568042755127], [44.31901305, 3.57802065202088]]} 
               color={"#00ff00"} 
               weight={5}/>
