@@ -29,7 +29,7 @@ export default function Page() {
     phone vulnerable to malware/viruses/malicious programs,
     compromise your phone’s security features and it could mean
     that the Liane app won’t work properly or at all.
-  </p> <!----> <p>
+  </p> <p>
     You should be aware that there are certain things that
     Augustin Gjini will not take responsibility for. Certain
     functions of the app will require the app to have an active

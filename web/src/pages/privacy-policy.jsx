@@ -25,7 +25,7 @@ export default function Page() {
     identifiable information, including but not limited to gps location, phone number, firstname, lastname, email. The
     information that
     I request will be retained on your device and is not collected by me in any way.
-  </p> <!----> <p><strong>Log Data</strong></p> <p>
+  </p> <p><strong>Log Data</strong></p> <p>
     I want to inform you that whenever you
     use my Service, in a case of an error in the app
     I collect data and information (through third party
