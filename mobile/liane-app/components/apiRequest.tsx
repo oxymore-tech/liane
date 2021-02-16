@@ -9,12 +9,16 @@ const endpoint = "https://liane.gjini.co/api";
  * @param location : LocationObject
  * @result boolean : true is success else false
  */
-export function sendLocation(location : LocationObject) {
-    return fetch(endpoint + "/api", {
+export async  function sendLocation(location : LocationObject) {
+    let token0 = await AsyncStorage.getItem("tokenJWT");
+    let token = (token0 == null) ? "" : token0;
+    console.log("token : ", token)
+    fetch(endpoint + "/api", {
         method: 'POST',
         headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization' :  token
         },
         body: JSON.stringify({
             coords: {
@@ -25,9 +29,10 @@ export function sendLocation(location : LocationObject) {
             },
             timestamp: location.timestamp
         })
-    }).then((response) => response.json())
+    }).then((json0) => json0.json())
     .then((json) => {
-      return json.result == true;
+      console.log("JSON : ", json);
+      return true;
     })
     .catch((error) => {
       console.error(error);
@@ -35,38 +40,27 @@ export function sendLocation(location : LocationObject) {
     });
 }
 
-
-/* ===== Auth system ========= *
-
-1) Utilisateur demande SMS (entre son numéro de tel)
-2) Utilisateur reçois son SMS
-3) Utilisateur envoi son code (et son numéro) et reçois token JWT
-4) L'app stocke le token
-5) Toutes les requetes contiennent en header le token
-*/
-
 /**
  * Log-in a user 
  * @param phoneNumber phone number of the user
  * @param code code received by the user
  */
-export function userLogin(phoneNumber : string, code : string) {
+export async function userLogin(phoneNumber : string, code : string) {
     return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
         method: 'POST',
-        /*
         headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
+/*            Accept: 'application/json',
+            'Content-Type': 'application/json'  */
         }
-        */
     })
     .then(result => result.text())
     .then((token) => {
-        console.log('TOKEN : ', token);
+        console.log('TOKEN ? : ', JSON.stringify(token));
         AsyncStorage.setItem("tokenJWT", token);
         return true;
     })
     .catch((error) => {
+      console.log("ERREUR dans userLogin");
       console.error(error);
       return false;
     });
@@ -89,6 +83,7 @@ export function userSendSms(phoneNumber : string) {
       return true;
     })
     .catch((error) => {
+      console.log("ERREUR dans userSensSms");
       console.error(error);
       return false;
     });
