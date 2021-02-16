@@ -22,10 +22,9 @@ WORKDIR /app
 COPY --from=build /app /app
 
 ENV HOST 0.0.0.0
-ENV PORT 80
 ENV NEXT_PUBLIC_APP_URL https://liane.gjini.co
 ENV NEXT_PUBLIC_GOOGLE_ANALYTICS_ID 000
 
-EXPOSE 80
+EXPOSE 3000
 
 CMD ["yarn", "start"]
