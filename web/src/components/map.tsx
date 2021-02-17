@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { icon, LatLngExpression} from "leaflet";
+import { icon, LatLngExpression, marker} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 
@@ -40,16 +40,20 @@ export function getRoutes(trips: Trip[]) {
 
 
 function Map({className, center, start}: MapProps) {
+  const [myStart, setMyStart] = useState(start);
   const [routes, setRoutes] = useState<LatLngExpression[][]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   useEffect(() => {
-    if (start != null) {
-      displayService.ListTripsFrom(start.id, start.position.lat, start.position.lng).then(
-        result => setRoutes(getRoutes(result)));
-      displayService.ListDestinationsFrom(start.id, start.position.lat, start.position.lng).then(
-        result => {console.log(result); setDestinations(result)});
-      }
+    setMyStart(start);
   }, [start]);
+  useEffect(() => {
+    if (myStart != null) {
+      displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => setRoutes(getRoutes(result)));
+      displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => {setDestinations(result)});
+      }
+  }, [myStart]);
   return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}
@@ -62,25 +66,27 @@ function Map({className, center, start}: MapProps) {
 
     />
     {
-      start && 
-      <Marker position={start.position} icon={customIcon}>
+      myStart && 
+      <Marker position={myStart.position} icon={customIcon}>
         <Popup>
-          <h3>{start.id}</h3>
+          <h3>{myStart.id}</h3>
         </Popup>
       </Marker>
     }
     {
-      start &&
+      myStart &&
       <div> { routes } </div>
     }
     {
-      start &&
+      myStart &&
       <div>
         {destinations.map((point, index) => (
-          <Marker key={index} position={point.position} icon={customIconGray}>
-          <Popup>
-            <h3>{point.id}</h3>
-          </Popup>
+          <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
+            click: () => {
+              setMyStart(point);
+                            
+            },
+          }}>
           </Marker>
         ))}
       </div>
