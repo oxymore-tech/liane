@@ -1,12 +1,10 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import { Text } from 'react-native';
-import React, { useEffect, useState } from "react";
 import { sendLocation } from './apiRequest';
 import {storeLocation, getLocations, deleteLocations } from './locationStorage';
 import { LocationObject } from 'expo-location';
-
 const TASK_LOCATION = 'TASK_LOCATION';
+
 /**
  * 
  * @param locations 

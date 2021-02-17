@@ -16,11 +16,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { stateConditionString } from './utils/helpers'; 
 import { AuthContext } from './utils/authContext';
 
+// Screens
 import SplashScreen from './screens/SplashScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import HomeScreen from './screens/HomeScreen';
 import SecondScreen from './screens/SecondScreen';
 import SignUpCodeScreen from './screens/SignUpCodeScreen';
+
 
 initializeLocationTask();
 const Stack = createStackNavigator();
@@ -30,11 +32,7 @@ const createHomeStack = () => {
   const { signOut } = useContext(AuthContext);
   return (
       <Stack.Navigator>
-          <Stack.Screen
-              name="Home Screen"
-              component={createDrawer}
-              initialParams={{ signOut }}
-          />
+          <Stack.Screen name="Home Screen" component={createDrawer}/>
       </Stack.Navigator>
   );
 };
@@ -44,7 +42,7 @@ const createLoginStack = () => {
   return (
       <Stack.Navigator>
         <Stack.Screen name="SignIn" component={SignUpScreen} />
-        <Stack.Screen name="SignInSms" component={SignUpCodeScreen} initialParams={{ signIn, phoneNumber : null }}/>
+        <Stack.Screen name="SignInSms" component={SignUpCodeScreen} />
       </Stack.Navigator>
   );
 };
@@ -57,10 +55,9 @@ const createDrawer = () => {
               name="Home Screen"
               component={HomeScreen}
               initialParams={{
-                  id: 111,
                   SignOutButton: () => (
                       <Button
-                          title="Sign Me out"
+                          title="Deconnexion"
                           onPress={signOut}
                       />
                   )
@@ -235,6 +232,7 @@ export default function App() {
       try {
           userToken = await AsyncStorage.getItem('tokenJWT');
           if(userToken != null) {
+            console.log('Toke here');
             dispatch({ type: 'SIGNED_UP', token: userToken });
           } else {
             // dispatch({ type: 'TO_SIGNUP_PAGE' });

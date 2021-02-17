@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, ImageBackground, StyleSheet, Alert } from 'react-native';
 import { Button } from 'react-native-elements';
 import {userLogin} from '../components/apiRequest';

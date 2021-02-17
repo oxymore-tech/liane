@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
-import { getLocations, deleteLocations } from './locationStorage';
 
 const endpoint = "https://liane.gjini.co/api";
 
@@ -15,7 +14,7 @@ export async  function sendLocation(location : LocationObject) {
     let accur = location.coords.accuracy;
     let accurInteger = (accur == null) ? 0 : Number.parseInt(Math.round(accur).toString());
     console.log("token : ", token)
-    fetch(endpoint + "/location", {
+    return fetch(endpoint + "/location", {
         method: 'POST',
         headers: {
             Accept: 'application/json',
@@ -47,11 +46,7 @@ export async  function sendLocation(location : LocationObject) {
  */
 export async function userLogin(phoneNumber : string, code : string) {
     return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
-        method: 'POST',
-        headers: {
-/*            Accept: 'application/json',
-            'Content-Type': 'application/json'  */
-        }
+        method: 'POST'
     })
     .then(result => result.text())
     .then((token) => {
@@ -70,15 +65,10 @@ export async function userLogin(phoneNumber : string, code : string) {
  * Ask for an SMS code to the backend
  * @param phoneNumber phone number of the user
  */
-export function userSendSms(phoneNumber : string) {
+export async function userSendSms(phoneNumber : string) {
     return fetch(endpoint + "/auth/sms?number="+phoneNumber, {
-        method: 'POST',
-        headers: {
-   /*         Accept: 'application/json',
-            'Content-Type': 'application/json' */
-        }
+        method: 'POST'
     })
-    // .then((response) => response.json())
     .then(() => {
       return true;
     })

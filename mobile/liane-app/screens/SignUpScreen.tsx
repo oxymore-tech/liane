@@ -1,9 +1,7 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React from 'react';
 import { View, Text, TextInput, ImageBackground, StyleSheet, Alert } from 'react-native';
-import { Input, Card, Button } from 'react-native-elements';
-
-import {userLogin, userSendSms} from '../components/apiRequest';
-import { AuthContext } from '../utils/authContext';
+import { Button } from 'react-native-elements';
+import { userSendSms} from '../components/apiRequest';
 const image = require("../Images/Mountains_2_smartphone.jpeg"); 
 
 const SignUpScreen = ({ navigation } : any) => {
