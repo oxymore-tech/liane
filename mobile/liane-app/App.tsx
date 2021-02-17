@@ -3,11 +3,6 @@ import { Button } from 'react-native';
 import { registerLocationTask, initializeLocationTask } from './components/locationTask';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// import {create} from 'tailwind-rn';
-// import styles from './styles.json';
-// import { useHover, useFocus, useActive, } from 'react-native-web-hooks';
-// import {getColor, t, mapFromStyles, tailwind } from './tailwind_fcts'
-
 import { useReducer } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -32,7 +27,7 @@ const createHomeStack = () => {
   const { signOut } = useContext(AuthContext);
   return (
       <Stack.Navigator>
-          <Stack.Screen name="Home Screen" component={createDrawer}/>
+          <Stack.Screen name="Home Screen" component={createDrawer} options={{ headerShown : false }}/>
       </Stack.Navigator>
   );
 };
@@ -41,8 +36,8 @@ const createLoginStack = () => {
   const { signIn } = useContext(AuthContext);
   return (
       <Stack.Navigator>
-        <Stack.Screen name="SignIn" component={SignUpScreen} />
-        <Stack.Screen name="SignInSms" component={SignUpCodeScreen} />
+        <Stack.Screen name="SignIn" component={SignUpScreen}  options={{ headerShown : false }}/>
+        <Stack.Screen name="SignInSms" component={SignUpCodeScreen} options={{ headerShown : false }} />
       </Stack.Navigator>
   );
 };
@@ -73,7 +68,7 @@ const chooseScreen = (state : any) => {
   let arr = [];
   switch (navigateTo) {
       case 'LOAD_APP':
-          arr.push(<Stack.Screen name="Splash" component={SplashScreen} />);
+          arr.push(<Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown : false }}/>);
           break;
       case 'LOAD_SIGNUP':
           arr.push(
@@ -85,7 +80,8 @@ const chooseScreen = (state : any) => {
                       // When logging out, a pop animation feels intuitive
                       animationTypeForReplace: state.isSignout
                           ? 'pop'
-                          : 'push'
+                          : 'push',
+                           headerShown : false 
                   }}
               />
           );
@@ -98,7 +94,8 @@ const chooseScreen = (state : any) => {
                 options={{
                     title: 'Login Screen Parent',
                     headerStyle: { backgroundColor: 'black' },
-                    headerTintColor: 'white'
+                    headerTintColor: 'white',
+                    headerShown : false 
                 }}
             />
           );
@@ -111,7 +108,8 @@ const chooseScreen = (state : any) => {
                   options={{
                       title: 'Home Screen Parent',
                       headerStyle: { backgroundColor: 'black' },
-                      headerTintColor: 'white'
+                      headerTintColor: 'white',
+                      headerShown : false 
                   }}
               />
           );
@@ -124,7 +122,8 @@ const chooseScreen = (state : any) => {
                 options={{
                     title: 'Login Screen Parent',
                     headerStyle: { backgroundColor: 'black' },
-                    headerTintColor: 'white'
+                    headerTintColor: 'white',
+                    headerShown : false 
                 }}
             />
           );

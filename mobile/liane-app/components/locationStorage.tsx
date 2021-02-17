@@ -28,7 +28,6 @@ export async function getLocations() : Promise<LocationObject[]> {
         try {
             return ((locations == null) ? [] : JSON.parse(locations));
         } catch(e) {
-            // read key error
             console.log('Impossible de récupérer les localisations : ', e);
             return [];
         }

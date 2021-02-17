@@ -1,12 +1,22 @@
 import React from 'react';
-import { View, Text, TextInput, ImageBackground, StyleSheet, Alert } from 'react-native';
-import { Button } from 'react-native-elements';
+import { View, Text, TextInput, ImageBackground, StyleSheet, Alert, Button } from 'react-native';
 import { userSendSms} from '../components/apiRequest';
-const image = require("../Images/Mountains_2_smartphone.jpeg"); 
+
+
+//the image set in the background of the app at start
+const image = require("../Images/Mountains_2_smartphone.jpeg"); // Images/coucouToi.jpg"); 
+
+// the color of the borders of the view containing the text written by the user.
+const colorButton : string = '#00716F';
 
 const SignUpScreen = ({ navigation } : any) => {
     const [phoneNumber, setPhoneNumber] = React.useState('Entrez votre 06');
   
+    /** A set of actins triggered when the user press the button
+        First we call the function that will send a SMS to the user.
+        Then we print a "pop-up"  to inform the user.
+        Finally we move to the second view, the page where it is asked to the user to write the code sent by SMS
+    **/
     function actionsOnPress(){
         userSendSms(phoneNumber);
         console.log("PHONE NUMBER : ", phoneNumber);
@@ -16,8 +26,9 @@ const SignUpScreen = ({ navigation } : any) => {
 
     return (
             <View style={{backgroundColor:"#FFF",height:"100%"}}>
-                <ImageBackground source = {image} style = {styles.image}>
-                <Text
+                <ImageBackground source = {image} style = {styles.image} // image in the background
+                >
+                <Text // we print "Liane"
                 style={{
                     fontSize:50,
                     fontFamily:"normal",
@@ -55,8 +66,9 @@ const SignUpScreen = ({ navigation } : any) => {
                         placeholder = "Tapez ICI"
                         placeholderTextColor = 'black'
                         returnKeyLabel = {"next"}
-                        keyboardType = "numeric"
                         onChangeText = {(text) =>setPhoneNumber(text)}
+                        keyboardType = {"numeric"}
+                        underlineColorAndroid = {'transparent'}
                     />
   
                 </View>
@@ -70,12 +82,9 @@ const SignUpScreen = ({ navigation } : any) => {
                     paddingVertical:10,
                     borderRadius:23
                 }}>
-                    <Text style={{
-                        color:"white",
-                        fontFamily:"normal"
-                    }}>Soumettre</Text>
                     
                     <Button  
+                      color = {colorButton}
                       onPress = {actionsOnPress} 
                       title = "Soumettre"
                     />
@@ -93,8 +102,12 @@ const styles = StyleSheet.create({
       justifyContent: "center"
     },
     textInput : {
-    paddingHorizontal : 10,
-    color : 'red',
+        flex : 1,
+        paddingHorizontal : 5,
+        paddingVertical : 0,
+        marginLeft :  5,
+        color : 'red',
+        borderColor: colorButton,
     }
   });
 

@@ -3,12 +3,16 @@ import * as TaskManager from 'expo-task-manager';
 import { sendLocation } from './apiRequest';
 import {storeLocation, getLocations, deleteLocations } from './locationStorage';
 import { LocationObject } from 'expo-location';
+
+// the name of our task
 const TASK_LOCATION = 'TASK_LOCATION';
 
 /**
- * 
- * @param locations 
- * @param stored 
+ * function that try to send all the new locations to the server
+ * and delete them if the sending was successful.
+ * Otherwise we store them and will try to send them later.
+ * @param locations : the data to send.
+ * @param stored : indicates if the data is already stored in AsynStorage.
  */
 function sendLocations(locations : LocationObject[], stored = false) {
   return locations.forEach(location => {
@@ -26,6 +30,11 @@ function sendLocations(locations : LocationObject[], stored = false) {
 }
 
 /**
+ * We define a task function with the help of the "defineTask" function.
+ * This "task" function will be invoked when the task "TASK_LOCATION"
+ * is executed.
+ * Here we simply send the new locations data to the server.
+ * @param result : new location data
  * 
  */
 export function initializeLocationTask() {
@@ -45,6 +54,10 @@ export function initializeLocationTask() {
   });
 }
 
+/**
+ * the function executed in the background which look at the 
+ * current position of the smartphone.
+ */
 export async function registerLocationTask() {
   try {
     await Location.startLocationUpdatesAsync(TASK_LOCATION, {
