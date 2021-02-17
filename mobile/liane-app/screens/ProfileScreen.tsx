@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 
-const SecondScreen = () => {
+const ProfileScreen = () => {
     return (
         <View>
-            <Text>Ceci est la page secondaire</Text>
+            <Text>Ceci est la page ProfileScreen</Text>
         </View>
     );
 };
 
-export default SecondScreen;
+export default ProfileScreen;

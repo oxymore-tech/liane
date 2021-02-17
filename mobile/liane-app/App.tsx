@@ -15,8 +15,13 @@ import { AuthContext } from './utils/authContext';
 import SplashScreen from './screens/SplashScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import HomeScreen from './screens/HomeScreen';
-import SecondScreen from './screens/SecondScreen';
 import SignUpCodeScreen from './screens/SignUpCodeScreen';
+
+import ProfileScreen from './screens/ProfileScreen';
+import FilterAndSearch from './screens/FilterAndSearchScreen';
+import MapScreen from './screens/MapScreen';
+import MapAndResultsScreen from './screens/MapAndResultsScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 
 initializeLocationTask();
@@ -58,7 +63,12 @@ const createDrawer = () => {
                   )
               }}
           />
-          <Drawer.Screen name="SecondScreen" component={SecondScreen} />
+          <Drawer.Screen name="Profile" component={ProfileScreen} />
+          <Drawer.Screen name="Recherche trajets" component={FilterAndSearch} />
+          <Drawer.Screen name="Carte" component={MapScreen} />
+          <Drawer.Screen name="Carte et résultats" component={MapAndResultsScreen} />
+          <Drawer.Screen name="Paramètres" component={SettingsScreen} />
+
       </Drawer.Navigator>
   );
 };
