@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
@@ -5,6 +6,7 @@ using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
+using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
 using Moq;
@@ -17,16 +19,18 @@ namespace Liane.Test
     public sealed class DisplayServiceTest
     {
         private IDisplayService? displayService;
+        private readonly OsrmServiceImpl? osrmService;
 
         [SetUp]
         public void SetUp()
         {
+            var osrmService = new OsrmServiceImpl(new Mock<Microsoft.Extensions.Logging.ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
 
             var redisSettings = new RedisSettings("localhost");
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object);
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmService);
         }
 
         [Test]
@@ -92,6 +96,17 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.LesBondons_Parking);
+            var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task ListRoutesFromBlajoux()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.ListRoutesEdgesFrom(displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking));
             var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
             actual.WithDeepEqual(expected)
                 .Assert();
