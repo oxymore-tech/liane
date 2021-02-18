@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, Animated, StyleSheet, ScrollView, Button} from 'react-native';
-import { SearchBar, Icon } from 'react-native-elements';
+import { SearchBar, Icon, Slider } from 'react-native-elements';
 import tailwind from 'tailwind-rn'
-import * as rs from 'rn-range-slider';
 
 // <>
 
@@ -66,18 +65,13 @@ const FilterAndSearchScreen = () => {
             <View style={styles.container}>
                 <Text> {hourFrom} </Text>
                 <Text> {hourTo}</Text>
-                
-                <rs.RangeSlider 
-                minimumValue = {0}
-                maximumValue = {144} // 24 * 6
-                minimumTrackTintColor="#307ecc"
-                maximumTrackTintColor="#000000"
-                value = {sliderValue}
-                allowTouchTrack = {true}
-                step = {2}
-                onValueChange = {(currentVal : number) =>  updateSliderValues(currentVal)}
-                />
-                
+                <View style={{ flex: 1, alignItems: 'stretch', justifyContent: 'center' }}>
+                    <Slider
+                        value={sliderValue}
+                        onValueChange={(currentVal : number) =>  updateSliderValues(currentVal)}
+                    />
+                    <Text>Value: {sliderValue}</Text>
+                </View>                
             </View>
 
             <Text style = {tailwind('text-blue-500')}>
@@ -95,6 +89,18 @@ const FilterAndSearchScreen = () => {
         
     );
 };
+/*
+                <rs.RangeSlider 
+                minimumValue = {0}
+                maximumValue = {144} // 24 * 6
+                minimumTrackTintColor="#307ecc"
+                maximumTrackTintColor="#000000"
+                value = {sliderValue}
+                allowTouchTrack = {true}
+                step = {2}
+                onValueChange = {(currentVal : number) =>  updateSliderValues(currentVal)}
+                />
+*/
 
 const styles = StyleSheet.create({
     container: {

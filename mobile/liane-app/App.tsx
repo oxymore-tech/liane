@@ -67,7 +67,7 @@ const createDrawer = () => {
           <Drawer.Screen name="Recherche trajets" component={FilterAndSearch} />
           <Drawer.Screen name="Carte" component={MapScreen} />
           <Drawer.Screen name="Carte et résultats" component={MapAndResultsScreen} />
-          <Drawer.Screen name="Paramètres" component={SettingsScreen} />
+          <Drawer.Screen name="Réglages" component={SettingsScreen} />
 
       </Drawer.Navigator>
   );
