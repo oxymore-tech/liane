@@ -12,7 +12,7 @@ namespace Liane.Service.Internal.Osrm
     {
         private readonly HttpClient client;
         private readonly ILogger<OsrmServiceImpl> logger;
-
+        
         public OsrmServiceImpl(ILogger<OsrmServiceImpl> logger, OsrmSettings settings)
         {
             client = new HttpClient {BaseAddress = settings.Url};
@@ -30,6 +30,7 @@ namespace Liane.Service.Internal.Osrm
         /// <param name="annotations"></param>
         /// <param name="continueStraight"></param>
         /// <returns></returns>
+        
         public async Task<Response.Routing> Route(ImmutableList<LatLng> coordinates,
             string alternatives = "false",
             string steps = "false",

@@ -32,7 +32,6 @@ namespace Liane.Service.Internal.Routing
         {
             var coordinates = ImmutableList.Create(query.Start, query.End);
             var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
-
             return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
                 .ToImmutableList();
         }
@@ -72,7 +71,6 @@ namespace Liane.Service.Internal.Routing
             var duration = query.Duration;
             var distance = query.Distance;
             Geojson geojson = new Geojson("LineString", query.Coordinates.ToLngLat());
-
             if (duration <= 0 || distance <= 0)
             {
                 // Calculate the fastest route to compare

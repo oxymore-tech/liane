@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
 using Liane.Api.Display;
@@ -103,11 +105,15 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task ListRoutesFromBlajoux()
+        public async Task ListRoutesFromMende()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.ListRoutesEdgesFrom(displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking));
-            var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
+            var actual = await displayService!.ListRoutesEdgesFrom(displayService!.ListTripsFrom(LabeledPositions.Mende));
+            var expected = new Dictionary<string, ImmutableList<LatLng>>();
+            var preExpected1 = await osrmService!.Route(ImmutableList.Create(Positions.Mende, Positions.LesBondons_Parking));
+            var preExpected2 = await osrmService!.Route(ImmutableList.Create(Positions.LesBondons_Parking, Positions.Florac));
+            expected.Add("Mende_LesBondons_Parking", preExpected1.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
+            expected.Add("LesBondons_Parking_Florac", preExpected2.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
             actual.WithDeepEqual(expected)
                 .Assert();
         }

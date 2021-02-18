@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Service.Internal.Osrm;
+using IOsrmService = Liane.Service.Internal.Osrm.IOsrmService ;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
@@ -96,9 +96,17 @@ namespace Liane.Service.Internal.Display
             var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
             foreach (var trip in await trips)
             {
-                
+                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 2) {
+                    var vertex1 = trip.Coordinates[i];
+                    var vertex2 = trip.Coordinates[i + 1];
+                    var key = vertex1.Id + "_" + vertex2.Id;
+                    if (routesEdges.ContainsKey(key)){
+                        var route = await osrmService.Route(ImmutableList.Create(vertex1.Position, vertex2.Position));
+                        routesEdges.Add(key, route.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
+                    }
+                }
             }
-                     
+            return routesEdges;
         }
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
