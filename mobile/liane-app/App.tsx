@@ -23,6 +23,7 @@ import MapScreen from './screens/MapScreen';
 import MapAndResultsScreen from './screens/MapAndResultsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
+import AcceptTripScreen from './screens/AcceptTripScreen';
 
 
 initializeLocationTask();
@@ -34,6 +35,7 @@ const createHomeStack = () => {
   return (
       <Stack.Navigator>
           <Stack.Screen name="Home Screen" component={createDrawer} options={{ headerShown : false }}/>
+          <Stack.Screen name="AcceptTrip" component={AcceptTripScreen} options={{ headerShown : false }}/>
       </Stack.Navigator>
   );
 };

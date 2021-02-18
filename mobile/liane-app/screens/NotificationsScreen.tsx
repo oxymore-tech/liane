@@ -12,18 +12,21 @@ const NotificationsScreen = ({ route, navigation } : any) => {
         {
           name: 'Martin souhaite covoiturer avec vous !',
           avatar_url: 'https://s3.amazonaws.com/uifaces/faces/twitter/ladylexy/128.jpg',
-          subtitle: 'Demande du 12/12/12 à 12h12'
+          subtitle: 'Demande du 12/12/12 à 12h12',
+          tripId : 999
         },
         {
           name: 'Chris souhaite covoiturer avec vous :',
           avatar_url: 'https://s3.amazonaws.com/uifaces/faces/twitter/adhamdannaway/128.jpg',
-          subtitle: 'Vice Chairman'
+          subtitle: 'Vice Chairman',
+          tripId : 444
         }
       ]
     const keyExtractor = (item: any, index: { toString: () => any; }) => index.toString()
+    const acceptTrip = (tripId : number) => navigation.navigate('AcceptTrip', {tripId});
 
     const renderItem = ({ item } : any) => (
-    <ListItem bottomDivider onPress={() => console.log('Clic sur la notif')}>
+    <ListItem bottomDivider onPress={() => acceptTrip(item.tripId)}>
         <Avatar source={{uri: item.avatar_url}} />
         <ListItem.Content>
         <ListItem.Title>{item.name}</ListItem.Title>
