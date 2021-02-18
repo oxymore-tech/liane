@@ -66,7 +66,7 @@ const createDrawer = () => {
                   )
               }}
           />
-          <Drawer.Screen name="Profile" component={ProfileScreen} />
+          <Drawer.Screen name="Profil" component={ProfileScreen} />
           <Drawer.Screen name="Recherche trajets" component={FilterAndSearch} />
           <Drawer.Screen name="Carte" component={MapScreen} />
           <Drawer.Screen name="Carte et résultats" component={MapAndResultsScreen} />
