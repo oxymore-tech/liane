@@ -4,6 +4,7 @@ import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet"
 import { icon, LatLngExpression, marker} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
+import { Console } from "console";
 
 interface MapProps {
   className?: string;
@@ -25,14 +26,19 @@ const customIconGray = icon({
   iconAnchor: [12, 41]
 });
 
-export function getRoutes(trips: Trip[]) {
+export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
   let routes = [];
   trips.forEach(trip => {
     let route = [];
-    trip.coordinates.forEach(point => {
-        route.push([point.position.lat, point.position.lng]);
+    trip.coordinates.forEach(
+      (point, index)  => {
+        if (index != (trip.coordinates.length - 1)) {
+          let key = trip.coordinates[index].id + "_" + trip.coordinates[index + 1].id;
+          route.push(routesEdges[key]);
+        }
       }
     );
+    route.flat;
     routes.push(<Polyline positions={route}/>);
   });
   return routes
@@ -41,15 +47,20 @@ export function getRoutes(trips: Trip[]) {
 
 function Map({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
-  const [routes, setRoutes] = useState<LatLngExpression[][]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
+  const [routes, setRoutes] = useState<LatLngExpression[][]>();
+
   useEffect(() => {
     setMyStart(start);
   }, [start]);
+
   useEffect(() => {
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
-        result => setRoutes(getRoutes(result)));
+        result => setTrips(result));
+      displayService.ListRoutesEdgesFrom(trips).then(
+          result => setRoutes(getRoutes(trips, result)));
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
       }
