@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StatusBar, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-
+import {Picker} from '@react-native-picker/picker';
 
 import tailwind from 'tailwind-rn';
 import { CheckBox } from 'react-native-elements'
@@ -12,6 +12,7 @@ const SettingsScreen = ({ navigation } : any) => {
 
     // const [toggleCheckBox, setToggleCheckBox] = React.useState(false)
     const [checked, setToggleCheckBox] = React.useState(false)
+    const [carPoolersAmount, setCoDrivers] = React.useState(0);
 
     const [
       nonCollidingMultiSliderValue,
@@ -19,6 +20,12 @@ const SettingsScreen = ({ navigation } : any) => {
     ] = React.useState([0, 100]);
     const nonCollidingMultiSliderValuesChange = (values:any) => setNonCollidingMultiSliderValue(values);
     const toggleCheckBoxChange = () => setToggleCheckBox(!checked);
+
+    const carPoolersAmountN = {
+        1: 1,
+        2: 2,
+        3: 3,
+      }
 
     return (
         <View style={tailwind('container')}>
@@ -62,6 +69,17 @@ const SettingsScreen = ({ navigation } : any) => {
                         Places disponibles
                     </Text>
                 </View>
+
+                <Picker
+                    selectedValue={carPoolersAmount}
+                    style={{height: 50, width: 100}}
+                    onValueChange={(itemValue, itemIndex) =>
+                        setCoDrivers(itemIndex+1)
+                    }>
+                    <Picker.Item label="1" value={1} />
+                    <Picker.Item label="2" value={2} />
+                    <Picker.Item label="3" value={3} />
+                </Picker>
             </View>
 
             <View style={tailwind('pt-12')}>
