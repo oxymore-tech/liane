@@ -33,8 +33,7 @@ const FilterAndSearchScreen = ({ route, navigation } : any) => {
             <Header
                 leftComponent={{ icon: 'menu', color: '#fff', onPress: () => navigation.openDrawer()}}
                 centerComponent={{ text: 'LIANE APP', style: { color: '#fff' } }}
-                rightComponent={{ icon: 'home', color: '#fff' }}
-            />
+                rightComponent={<Icon name='bell' type='font-awesome' color="white"/>}/>
 
             <View style={tailwind('pt-8 items-center')}>
                 <View style={tailwind('bg-blue-200 px-3 py-1 rounded-full')}>
