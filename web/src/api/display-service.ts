@@ -50,7 +50,7 @@ class DisplayService {
 
       async ListRoutesEdgesFrom(trips: Trip[]): Promise<Map<string, LatLngExpression[][]>> {
         const url = new URL("/api/display/listedges", BaseUrl);
-        url.searchParams.append("id", trips.toString());
+        url.searchParams.append("trips", trips.toString());
         const response = await fetch(url.toString(), {
           headers: {
             "Content-Type": "application/json"
