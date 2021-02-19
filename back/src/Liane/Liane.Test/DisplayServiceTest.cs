@@ -108,7 +108,10 @@ namespace Liane.Test
         public async Task ListRoutesFromMende()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.ListRoutesEdgesFrom(displayService!.ListTripsFrom(LabeledPositions.Mende));
+            var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            Console.WriteLine(trips);
+            var actual = await displayService!.ListRoutesEdgesFrom(trips);
+            Console.WriteLine(actual["LesBondons_Parking_Florac"].Count);
             var expected = new Dictionary<string, ImmutableList<LatLng>>();
             var preExpected1 = await osrmService!.Route(ImmutableList.Create(Positions.Mende, Positions.LesBondons_Parking));
             var preExpected2 = await osrmService!.Route(ImmutableList.Create(Positions.LesBondons_Parking, Positions.Florac));

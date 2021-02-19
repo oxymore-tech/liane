@@ -95,7 +95,7 @@ namespace Liane.Service.Internal.Display
         }
         
         public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips) {
-            Console.WriteLine("TRIPS : ", trips);
+            Console.WriteLine("nombre de trajets :", trips.Count);
             var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
             foreach (var trip in trips)
             {

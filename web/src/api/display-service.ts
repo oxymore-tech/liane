@@ -47,7 +47,6 @@ class DisplayService {
           },
           method: "POST", body: JSON.stringify(trips)
         });
-        //console.log("RESPONSE DISPLAY SERVICE : ", response);
         return await response.json();
       }
 }

@@ -69,7 +69,7 @@ function  Map({className, center, start}: MapProps) {
       }
       
   }, [myStart]);
-  //console.log("TRIPS : ", trips);
+  console.log("TRIPS : ", trips);
   return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}
