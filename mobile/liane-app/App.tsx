@@ -25,7 +25,7 @@ import MapAndResultsScreen from './screens/MapAndResultsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import AcceptTripScreen from './screens/AcceptTripScreen';
-import { Constants } from 'expo';
+import Constants from 'expo-constants';
 
 
 // Initialize Notifications
@@ -284,7 +284,10 @@ export default function App() {
 
   useEffect(() => {
 
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+    registerForPushNotificationsAsync().then(token => {
+        console.log('TOKEN :', token);
+        setExpoPushToken(token)
+    });
 
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
