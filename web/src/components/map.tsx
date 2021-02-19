@@ -60,9 +60,10 @@ function  Map({className, center, start}: MapProps) {
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {console.log("RESULT : ", result); setTrips(result)});
-        
-      displayService.ListRoutesEdgesFrom(trips).then(
-          result => {setRoutes(getRoutes(trips, result))});
+      if (trips != null) {
+        displayService.ListRoutesEdgesFrom(trips).then(
+            result => {setRoutes(getRoutes(trips, result))});
+        }
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
       }

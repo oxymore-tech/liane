@@ -37,7 +37,7 @@ namespace Liane.Web.Controllers
             return await displayService.ListTripsFrom(new RallyingPoint(id, new LatLng(lat, lng)));
         }
 
-        [HttpGet("listedges")]
+        [HttpPost("listedges")]
         public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips)
         {
             return await displayService.ListRoutesEdgesFrom(trips);

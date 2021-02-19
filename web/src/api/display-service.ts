@@ -10,9 +10,6 @@ class DisplayService {
         url.searchParams.append("lng", lng.toString());
     
         const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
           method: "GET"
         });
         return await response.json();
@@ -25,9 +22,6 @@ class DisplayService {
         url.searchParams.append("lng", lng.toString());
     
         const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
           method: "GET"
         });
         return await response.json();
@@ -40,9 +34,6 @@ class DisplayService {
         url.searchParams.append("lng", lng.toString());
         
         const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
           method: "GET"
         });
         return await response.json();
@@ -50,12 +41,11 @@ class DisplayService {
 
       async ListRoutesEdgesFrom(trips: Trip[]): Promise<Map<string, LatLngExpression[][]>> {
         const url = new URL("/api/display/listedges", BaseUrl);
-        url.searchParams.append("trips", trips.toString());
         const response = await fetch(url.toString(), {
           headers: {
             "Content-Type": "application/json"
           },
-          method: "GET"
+          method: "POST", body: JSON.stringify(trips)
         });
         //console.log("RESPONSE DISPLAY SERVICE : ", response);
         return await response.json();
