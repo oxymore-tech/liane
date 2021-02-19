@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Display;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
@@ -37,7 +38,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("listedges")]
-        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom([FromQuery] Task<ImmutableHashSet<Api.Trip.Trip>> trips)
+        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips)
         {
             return await displayService.ListRoutesEdgesFrom(trips);
         }

@@ -45,7 +45,7 @@ export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpressi
 }
 
 
-function Map({className, center, start}: MapProps) {
+function  Map({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
@@ -56,15 +56,19 @@ function Map({className, center, start}: MapProps) {
   }, [start]);
 
   useEffect(() => {
+    console.log("MYSTART : ", myStart)
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
-        result => setTrips(result));
+        result => {console.log("RESULT : ", result); setTrips(result)});
+        
       displayService.ListRoutesEdgesFrom(trips).then(
-          result => setRoutes(getRoutes(trips, result)));
+          result => {setRoutes(getRoutes(trips, result))});
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
       }
+      
   }, [myStart]);
+  //console.log("TRIPS : ", trips);
   return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}

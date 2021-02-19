@@ -93,16 +93,17 @@ namespace Liane.Service.Internal.Display
             }
             return tripsFromStart.ToImmutableHashSet();
         }
-        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(Task<ImmutableHashSet<Api.Trip.Trip>> trips) {
+        
+        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips) {
+            Console.WriteLine("TRIPS : ", trips);
             var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
-            foreach (var trip in await trips)
+            foreach (var trip in trips)
             {
                 for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 2) {
                     var vertex1 = trip.Coordinates[i];
                     var vertex2 = trip.Coordinates[i + 1];
                     var key = vertex1.Id + "_" + vertex2.Id;
                     if (!routesEdges.ContainsKey(key)){
-                        Console.WriteLine("HHHHHHHHHHHHHHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRRRRRRRRRRREEEEEEEEEEEEEEEEEEEEEEEEEEEE");
                         var route = await osrmService.Route(ImmutableList.Create(vertex1.Position, vertex2.Position));
                         routesEdges.Add(key, route.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
                     }

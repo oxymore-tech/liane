@@ -57,6 +57,7 @@ class DisplayService {
           },
           method: "GET"
         });
+        //console.log("RESPONSE DISPLAY SERVICE : ", response);
         return await response.json();
       }
 }
