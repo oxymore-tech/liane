@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { Button } from 'react-native';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { registerLocationTask, initializeLocationTask } from './components/locationTask';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -24,7 +25,17 @@ import MapAndResultsScreen from './screens/MapAndResultsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import AcceptTripScreen from './screens/AcceptTripScreen';
+import { Constants } from 'expo';
 
+
+// Initialize Notifications
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+});
 
 initializeLocationTask();
 const Stack = createStackNavigator();
@@ -146,7 +157,43 @@ const chooseScreen = (state : any) => {
   return arr[0];
 };
 
+async function registerForPushNotificationsAsync() {
+    let token;
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log(token);
+    } else {
+      alert('Must use physical device for Push Notifications');
+    }
+  
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+  
+    return token;
+}
+
 export default function App() {
+    const [expoPushToken, setExpoPushToken] = useState('');
+    const [notification, setNotification] = useState(false);
+    const notificationListener = useRef();
+    const responseListener = useRef();
+    
   const authContextValue = useMemo(
     () => ({
         signIn: async (data : any) => {
@@ -236,6 +283,19 @@ export default function App() {
   );
 
   useEffect(() => {
+
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
     registerLocationTask().then(() => console.log("Task registred !"))
       .catch(err => console.error(err));
 
@@ -260,6 +320,12 @@ export default function App() {
       // dispatch({ type: 'SIGN_IN', token: userToken });
     };
     bootstrapAsync();
+
+    return () => {
+        Notifications.removeNotificationSubscription(notificationListener);
+        Notifications.removeNotificationSubscription(responseListener);
+    };
+
   }, []);
 
   return ( 
