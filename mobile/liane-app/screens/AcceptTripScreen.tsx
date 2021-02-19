@@ -32,6 +32,7 @@ const AcceptTripScreen = ({ route, navigation } : any) => {
                             type='font-awesome'
                             />
                         }
+                        onPress={() => navigation.navigate('Profil')}
                         title="Accepter"
                     />
                 </View>
