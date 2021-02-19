@@ -67,27 +67,28 @@ namespace Liane.Service.Internal.Display
             var database = await redis.Get();
             var redisKey = new RedisKey("RallyingPoints");
             var tripsFromStart = new List<Api.Trip.Trip>();
-            var routesFromStart = new List<List<LatLng>>();
             foreach (var trip in await tripService.List())
             {
                 foreach (var position in trip.Coordinates)
                 {
-                    var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-                    var nearestPoint = results
-                    .Where(r => r.Member == start.Id)
-                    .Select(r =>
-                    {
-                        var geoPosition = r.Position!.Value;
-                        return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
-                    });
-                    if (nearestPoint.LongCount() > 0) {
-                        var startPoint = new List<RallyingPoint>();
-                        startPoint.Add(start);
-                        var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
-                        var coordinatesFromStart = startPoint.Concat(coordinatesAfterPosition).ToImmutableList();
-                        var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
-                        tripsFromStart.Add(aTripFromStart);
-                        break;
+                    if (position != trip.Coordinates[trip.Coordinates.Count - 1]) {
+                        var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                        var nearestPoint = results
+                        .Where(r => r.Member == start.Id)
+                        .Select(r =>
+                        {
+                            var geoPosition = r.Position!.Value;
+                            return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                        });
+                        if (nearestPoint.LongCount() > 0) {
+                            var startPoint = new List<RallyingPoint>();
+                            startPoint.Add(start);
+                            var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
+                            var coordinatesFromStart = startPoint.Concat(coordinatesAfterPosition).ToImmutableList();
+                            var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
+                            tripsFromStart.Add(aTripFromStart);
+                            break;
+                        }
                     }
                 }
             }

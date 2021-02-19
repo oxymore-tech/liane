@@ -105,11 +105,22 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
+        public async Task ListTripsFromMende()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            var expected = ImmutableHashSet.Create(Trips.Mende_Florac);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
         public async Task ListRoutesFromMende()
         {
             await SetUpRedisAsync();
             var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
-            Console.WriteLine(trips);
+            Console.WriteLine(trips.Count);
             var actual = await displayService!.ListRoutesEdgesFrom(trips);
             Console.WriteLine(actual["LesBondons_Parking_Florac"].Count);
             var expected = new Dictionary<string, ImmutableList<LatLng>>();
