@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\N7_3A\\Projet_Long_Liane\\liane\\liane.csproj": {}
+    "C:\\Users\\Fanfois\\Documents\\ENSEEIHT\\Annee_3\\Projet_long\\liane\\liane.csproj": {}
   },
   "projects": {
-    "D:\\N7_3A\\Projet_Long_Liane\\liane\\liane.csproj": {
+    "C:\\Users\\Fanfois\\Documents\\ENSEEIHT\\Annee_3\\Projet_long\\liane\\liane.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\N7_3A\\Projet_Long_Liane\\liane\\liane.csproj",
+        "projectUniqueName": "C:\\Users\\Fanfois\\Documents\\ENSEEIHT\\Annee_3\\Projet_long\\liane\\liane.csproj",
         "projectName": "liane",
-        "projectPath": "D:\\N7_3A\\Projet_Long_Liane\\liane\\liane.csproj",
-        "packagesPath": "C:\\Users\\FPL45\\.nuget\\packages\\",
-        "outputPath": "D:\\N7_3A\\Projet_Long_Liane\\liane\\obj\\",
+        "projectPath": "C:\\Users\\Fanfois\\Documents\\ENSEEIHT\\Annee_3\\Projet_long\\liane\\liane.csproj",
+        "packagesPath": "C:\\Users\\Fanfois\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Fanfois\\Documents\\ENSEEIHT\\Annee_3\\Projet_long\\liane\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\FPL45\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Fanfois\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0"

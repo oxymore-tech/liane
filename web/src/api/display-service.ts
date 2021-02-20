@@ -1,5 +1,5 @@
 import { LatLngExpression } from "leaflet";
-import { RallyingPoint, Trip } from ".";
+import { LatLng, RallyingPoint, Trip } from ".";
 import { BaseUrl } from "./url";
 
 class DisplayService {
@@ -39,7 +39,7 @@ class DisplayService {
         return await response.json();
       }
 
-      async ListRoutesEdgesFrom(trips: Trip[]): Promise<Map<string, LatLngExpression[][]>> {
+      async ListRoutesEdgesFrom(trips: Trip[]): Promise<LatLng[][]> {
         const url = new URL("/api/display/listedges", BaseUrl);
         const response = await fetch(url.toString(), {
           headers: {
@@ -47,7 +47,7 @@ class DisplayService {
           },
           method: "POST", body: JSON.stringify(trips)
         });
-        return await response.json();
+        return Object.values(await response.json());
       }
 }
 

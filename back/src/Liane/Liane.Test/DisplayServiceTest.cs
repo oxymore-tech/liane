@@ -127,10 +127,12 @@ namespace Liane.Test
             var stringDict = Print.DictToString(actual);
             Console.WriteLine($"\n \n acutal : {stringDict}");
             var expected = new Dictionary<string, ImmutableList<LatLng>>();
-            var preExpected1 = await osrmService!.Route(ImmutableList.Create(Positions.Mende, Positions.LesBondons_Parking));
-            var preExpected2 = await osrmService!.Route(ImmutableList.Create(Positions.LesBondons_Parking, Positions.Florac));
-            expected.Add("Mende_LesBondons_Parking", preExpected1.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
-            expected.Add("LesBondons_Parking_Florac", preExpected2.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
+            var preExpected1 = await osrmService!.Route(Positions.Mende, Positions.LesBondons_Parking);
+            var expected1 = preExpected1.Routes[0].Geometry;
+            var preExpected2 = await osrmService!.Route(Positions.LesBondons_Parking, Positions.Florac);
+            var expected2 = preExpected2.Routes[0].Geometry;
+            expected.Add("Mende_LesBondons_Parking", expected1.Coordinates.ToLatLng());
+            expected.Add("LesBondons_Parking_Florac", expected2.Coordinates.ToLatLng());
             actual.WithDeepEqual(expected)
                 .Assert();
         }

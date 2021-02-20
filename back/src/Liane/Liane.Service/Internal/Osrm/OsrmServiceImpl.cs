@@ -4,12 +4,14 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Osrm
 {
     public sealed class OsrmServiceImpl : IOsrmService
     {
+        private readonly MemoryCache routeCache = new MemoryCache(new MemoryCacheOptions());
         private readonly HttpClient client;
         private readonly ILogger<OsrmServiceImpl> logger;
         
@@ -31,6 +33,10 @@ namespace Liane.Service.Internal.Osrm
         /// <param name="continueStraight"></param>
         /// <returns></returns>
         
+        public Task<Response.Routing> Route(LatLng start, LatLng end) {
+            var key = ImmutableList.Create(start, end);
+            return routeCache.GetOrCreateAsync(key, (k) => Route(key, overview:"full"));
+        }
         public async Task<Response.Routing> Route(ImmutableList<LatLng> coordinates,
             string alternatives = "false",
             string steps = "false",

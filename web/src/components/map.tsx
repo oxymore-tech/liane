@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
 import { icon, LatLngExpression, marker} from "leaflet";
@@ -25,6 +25,8 @@ const customIconGray = icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41]
 });
+
+const MemoPolyline = memo(Polyline);
 
 /*export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
   console.log("TRIPS HERE: ", trips);
@@ -58,7 +60,7 @@ function  Map({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
-  const [routes, setRoutes] = useState<LatLngExpression[][]>([]);
+  const [routes, setRoutes] = useState<LatLng[][]>([]);
 
   useEffect(() => {
     setMyStart(start);
@@ -87,10 +89,10 @@ function  Map({className, center, start}: MapProps) {
   }, [myStart]);
   
   useEffect(() => {
-    if (trips != []) {
-      displayService.ListRoutesEdgesFrom(trips).then(
-        result => {setRoutes(getRoutes2(result))});
-    }
+    if (trips.length > 0) {
+      displayService.ListRoutesEdgesFrom(trips)
+        .then(result => setRoutes(result));
+      }
   }, [trips]);
 
   return <MapContainer className={className} center={center}
@@ -114,7 +116,13 @@ function  Map({className, center, start}: MapProps) {
     }
     {
       myStart &&
-      <div> { routes } </div>
+      <div> 
+        {
+          routes.map((route, index) => (
+            <MemoPolyline key={index} positions={route}/>
+          ))
+        } 
+      </div>
     }
     {
       myStart &&

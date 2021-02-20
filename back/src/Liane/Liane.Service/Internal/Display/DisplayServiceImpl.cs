@@ -103,7 +103,7 @@ namespace Liane.Service.Internal.Display
                     var vertex2 = trip.Coordinates[i + 1];
                     var key = vertex1.Id + "_" + vertex2.Id;
                     if (!routesEdges.ContainsKey(key)){
-                        var routeResponse = await osrmService.Route(ImmutableList.Create(vertex1.Position, vertex2.Position));
+                        var routeResponse = await osrmService.Route(vertex1.Position, vertex2.Position);
                         var geojson = routeResponse.Routes[0].Geometry;
                         var duration = routeResponse.Routes[0].Duration;
                         var distance = routeResponse.Routes[0].Distance;
