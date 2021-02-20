@@ -27,6 +27,8 @@ const customIconGray = icon({
 });
 
 export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
+  console.log("TRIPS HERE: ", trips);
+  console.log("ROUTESEDGES HERE: ", routesEdges);
   let routes = [];
   trips.forEach(trip => {
     let route = [];
@@ -38,11 +40,22 @@ export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpressi
         }
       }
     );
-    route.flat;
-    routes.push(<Polyline positions={route}/>);
+    routes.push(<Polyline positions={route.flat()}/>);
   });
+  console.log("ROUTES : ", routes);
   return routes
 }
+
+//********************************************************** bon je teste une seconde fonction ********************************************************************** */ 
+export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
+  let routes : LatLngExpression[][][] = []; //let routes = [];
+  for (const key in routesEdges) {
+    routes.push(routesEdges[key]);
+  }
+  console.log("ROUTES FLAT GET2: ", routes.flat());
+  return routes.flat(); //<Polyline positions={routes.flat()}/>;
+}
+
 
 function sleep(ms: number) {
   return new Promise( resolve => setTimeout(resolve, ms) );
@@ -64,7 +77,7 @@ function  Map({className, center, start}: MapProps) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setTrips(result)});
     }
-  }, [trips]);
+  }, [myStart]);
   //console.log("TRIPS : ", trips);
 
   useEffect(() => {
@@ -73,15 +86,15 @@ function  Map({className, center, start}: MapProps) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setTrips(result)}); // console.log("RESULT : ", result);**/
       if (trips != []) {
-        console.log("TRIPS HERE: ", trips);
+        //console.log("TRIPS HERE: ", trips);
         displayService.ListRoutesEdgesFrom(trips).then(
-            result => {setRoutes(getRoutes(trips, result))});//console.log("result listRoutes : ", result);
+            result => {setRoutes(getRoutes2(result))});//console.log("result listRoutes : ", result);
         }
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
       //}
       
-  }, [myStart]);
+  }, [myStart, trips]);
   
   return <MapContainer className={className} center={center}
                        zoom={12}
@@ -122,7 +135,11 @@ function  Map({className, center, start}: MapProps) {
         }
     {/*<Polyline positions={[[44.5180226, 3.4991057], [44.38624954223633, 3.6189568042755127], [44.31901305, 3.57802065202088]]} 
               color={"#00ff00"} 
-      weight={5}/>*/}
+      weight={5}/>*/
+      <Polyline positions={routes} 
+              color={"#00ff00"} 
+      weight={5}/>
+      }
   </MapContainer>;
 }
 
