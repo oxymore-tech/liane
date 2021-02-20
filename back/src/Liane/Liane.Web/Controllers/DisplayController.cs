@@ -1,7 +1,9 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Display;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
@@ -33,6 +35,12 @@ namespace Liane.Web.Controllers
         public async Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom([FromQuery] string id, [FromQuery] double lat, [FromQuery] double lng)
         {
             return await displayService.ListTripsFrom(new RallyingPoint(id, new LatLng(lat, lng)));
+        }
+
+        [HttpPost("listedges")]
+        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips)
+        {
+            return await displayService.ListRoutesEdgesFrom((trips));
         }
     }
 }

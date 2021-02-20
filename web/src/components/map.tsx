@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { icon, LatLngExpression} from "leaflet";
+import { icon, LatLngExpression, marker} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
+import { Console } from "console";
 
 interface MapProps {
   className?: string;
@@ -25,31 +26,75 @@ const customIconGray = icon({
   iconAnchor: [12, 41]
 });
 
-export function getRoutes(trips: Trip[]) {
+const MemoPolyline = memo(Polyline);
+
+/*export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
+  console.log("TRIPS HERE: ", trips);
+  console.log("ROUTESEDGES HERE: ", routesEdges);
   let routes = [];
   trips.forEach(trip => {
     let route = [];
-    trip.coordinates.forEach(point => {
-        route.push([point.position.lat, point.position.lng]);
+    trip.coordinates.forEach(
+      (point, index)  => {
+        if (index != (trip.coordinates.length - 1)) {
+          let key = trip.coordinates[index].id + "_" + trip.coordinates[index + 1].id;
+          route.push(routesEdges[key]);
+        }
       }
     );
-    routes.push(<Polyline positions={route}/>);
+    routes.push(<Polyline positions={route.flat()}/>);
   });
+  console.log("ROUTES : ", routes);
   return routes
+}*/
+ 
+export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
+  let routes = [];
+  for (const key in routesEdges) {
+    routes.push(<Polyline positions={routesEdges[key]}/>);
+  }
+  return routes;
 }
 
-
-function Map({className, center, start}: MapProps) {
-  const [routes, setRoutes] = useState<LatLngExpression[][]>([]);
+function  Map({className, center, start}: MapProps) {
+  const [myStart, setMyStart] = useState(start);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
+  const [routes, setRoutes] = useState<LatLng[][]>([]);
+
   useEffect(() => {
-    if (start != null) {
-      displayService.ListTripsFrom(start.id, start.position.lat, start.position.lng).then(
-        result => setRoutes(getRoutes(result)));
-      displayService.ListDestinationsFrom(start.id, start.position.lat, start.position.lng).then(
-        result => {console.log(result); setDestinations(result)});
-      }
+    setMyStart(start);
   }, [start]);
+
+  /*useEffect(() => {
+    if (myStart != null) {
+      displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => {setTrips(result)});
+    }
+  }, [myStart]);*/
+  //console.log("TRIPS : ", trips);
+
+  useEffect(() => {
+    if (myStart != null) {
+      displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => {setTrips(result)});
+      /*if (trips != []) {
+        displayService.ListRoutesEdgesFrom(trips).then(
+            result => {setRoutes(getRoutes2(result))});
+        }*/
+      displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => {setDestinations(result)});
+      }
+      
+  }, [myStart]);
+  
+  useEffect(() => {
+    if (trips.length > 0) {
+      displayService.ListRoutesEdgesFrom(trips)
+        .then(result => setRoutes(result));
+      }
+  }, [trips]);
+
   return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}
@@ -62,32 +107,37 @@ function Map({className, center, start}: MapProps) {
 
     />
     {
-      start && 
-      <Marker position={start.position} icon={customIcon}>
+      myStart && 
+      <Marker position={myStart.position} icon={customIcon}>
         <Popup>
-          <h3>{start.id}</h3>
+          <h3>{myStart.id}</h3>
         </Popup>
       </Marker>
     }
     {
-      start &&
-      <div> { routes } </div>
+      myStart &&
+      <div> 
+        {
+          routes.map((route, index) => (
+            <MemoPolyline key={index} positions={route}/>
+          ))
+        } 
+      </div>
     }
     {
-      start &&
+      myStart &&
       <div>
         {destinations.map((point, index) => (
-          <Marker key={index} position={point.position} icon={customIconGray}>
-          <Popup>
-            <h3>{point.id}</h3>
-          </Popup>
+          <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
+            click: () => {
+              setMyStart(point);
+                            
+            },
+          }}>
           </Marker>
         ))}
       </div>
         }
-    <Polyline positions={[[44.5180226, 3.4991057], [44.38624954223633, 3.6189568042755127], [44.31901305, 3.57802065202088]]} 
-              color={"#00ff00"} 
-              weight={5}/>
   </MapContainer>;
 }
 

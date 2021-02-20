@@ -1,0 +1,5 @@
+D:\N7_3A\Projet_Long_Liane\liane\obj\Debug\net5.0\liane.csprojAssemblyReference.cache
+D:\N7_3A\Projet_Long_Liane\liane\obj\Debug\net5.0\liane.GeneratedMSBuildEditorConfig.editorconfig
+D:\N7_3A\Projet_Long_Liane\liane\obj\Debug\net5.0\liane.AssemblyInfoInputs.cache
+D:\N7_3A\Projet_Long_Liane\liane\obj\Debug\net5.0\liane.AssemblyInfo.cs
+D:\N7_3A\Projet_Long_Liane\liane\obj\Debug\net5.0\liane.csproj.CoreCompileInputs.cache

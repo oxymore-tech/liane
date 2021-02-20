@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import React from "react";
 import { useEffect, useState } from "react";
 import { RallyingPoint } from "../api";
 import { displayService } from "../api/display-service";

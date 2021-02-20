@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using IOsrmService = Liane.Service.Internal.Osrm.IOsrmService ;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
+using System;
 
 namespace Liane.Service.Internal.Display
 {
@@ -16,12 +18,14 @@ namespace Liane.Service.Internal.Display
         private readonly ILogger<DisplayServiceImpl> logger;
         private readonly IRedis redis;
         private readonly ITripService tripService;
+        private readonly IOsrmService osrmService;
 
-        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService)
+        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService, IOsrmService osrmService)
         {
             this.logger = logger;
             this.tripService = tripService;
             this.redis = redis;
+            this.osrmService = osrmService;
         }
 
         public Task<ImmutableList<Api.Trip.Trip>> DisplayTrips(DisplayQuery displayQuery)
@@ -67,31 +71,54 @@ namespace Liane.Service.Internal.Display
             {
                 foreach (var position in trip.Coordinates)
                 {
-                    var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-                    var nearestPoint = results
-                    .Where(r => r.Member == start.Id)
-                    .Select(r =>
-                    {
-                        var geoPosition = r.Position!.Value;
-                        return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
-                    });
-                    if (nearestPoint.LongCount() > 0) {
-                        var pointDepart = new List<RallyingPoint>();
-                        pointDepart.Add(start);
-                        var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
-                        var coordinatesFromStart = pointDepart.Concat(coordinatesAfterPosition).ToImmutableList();
-                        var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
-                        tripsFromStart.Add(aTripFromStart);
-                        break;
+                    if (position != trip.Coordinates[trip.Coordinates.Count - 1]) {
+                        var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                        var nearestPoint = results
+                        .Where(r => r.Member == start.Id)
+                        .Select(r =>
+                        {
+                            var geoPosition = r.Position!.Value;
+                            return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
+                        });
+                        if (nearestPoint.LongCount() > 0) {
+                            var startPoint = new List<RallyingPoint>();
+                            startPoint.Add(start);
+                            var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
+                            var coordinatesFromStart = startPoint.Concat(coordinatesAfterPosition).ToImmutableList();
+                            var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
+                            tripsFromStart.Add(aTripFromStart);
+                            break;
+                        }
                     }
                 }
             }
             return tripsFromStart.ToImmutableHashSet();
         }
-
+        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips) {
+            var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
+            foreach (var trip in trips)
+            {
+                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1) {
+                    var vertex1 = trip.Coordinates[i];
+                    var vertex2 = trip.Coordinates[i + 1];
+                    var key = vertex1.Id + "_" + vertex2.Id;
+                    if (!routesEdges.ContainsKey(key)){
+                        var routeResponse = await osrmService.Route(vertex1.Position, vertex2.Position);
+                        var geojson = routeResponse.Routes[0].Geometry;
+                        var duration = routeResponse.Routes[0].Duration;
+                        var distance = routeResponse.Routes[0].Distance;
+                        Console.WriteLine(routeResponse);
+                        routesEdges.Add(key, geojson.Coordinates.ToLatLng());
+                    }
+                }
+            }
+            return routesEdges;
+        }
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
         }
+
+        
     }
 }

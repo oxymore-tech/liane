@@ -1,10 +1,15 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
+using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
 using Moq;
@@ -17,16 +22,19 @@ namespace Liane.Test
     public sealed class DisplayServiceTest
     {
         private IDisplayService? displayService;
+        private OsrmServiceImpl? osrmService;
 
         [SetUp]
         public void SetUp()
         {
+            var osrmServiceDisplay = new OsrmServiceImpl(new Mock<Microsoft.Extensions.Logging.ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
 
             var redisSettings = new RedisSettings("localhost");
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object);
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay);
+            osrmService = osrmServiceDisplay;
         }
 
         [Test]
@@ -93,6 +101,38 @@ namespace Liane.Test
             await SetUpRedisAsync();
             var actual = await displayService!.ListTripsFrom(LabeledPositions.LesBondons_Parking);
             var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task ListTripsFromMende()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            var expected = ImmutableHashSet.Create(Trips.Mende_Florac);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task ListRoutesFromMende()
+        {
+            await SetUpRedisAsync();
+            var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            var stringTrips = Print.ImmutableHashSetToString(trips);
+            var actual = await displayService!.ListRoutesEdgesFrom(trips);
+            var stringDict = Print.DictToString(actual);
+            Console.WriteLine($"\n \n acutal : {stringDict}");
+            var expected = new Dictionary<string, ImmutableList<LatLng>>();
+            var preExpected1 = await osrmService!.Route(Positions.Mende, Positions.LesBondons_Parking);
+            var expected1 = preExpected1.Routes[0].Geometry;
+            var preExpected2 = await osrmService!.Route(Positions.LesBondons_Parking, Positions.Florac);
+            var expected2 = preExpected2.Routes[0].Geometry;
+            expected.Add("Mende_LesBondons_Parking", expected1.Coordinates.ToLatLng());
+            expected.Add("LesBondons_Parking_Florac", expected2.Coordinates.ToLatLng());
             actual.WithDeepEqual(expected)
                 .Assert();
         }

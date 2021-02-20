@@ -1,4 +1,5 @@
-import { RallyingPoint, Trip } from ".";
+import { LatLngExpression } from "leaflet";
+import { LatLng, RallyingPoint, Trip } from ".";
 import { BaseUrl } from "./url";
 
 class DisplayService {
@@ -9,9 +10,6 @@ class DisplayService {
         url.searchParams.append("lng", lng.toString());
     
         const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
           method: "GET"
         });
         return await response.json();
@@ -24,9 +22,6 @@ class DisplayService {
         url.searchParams.append("lng", lng.toString());
     
         const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
           method: "GET"
         });
         return await response.json();
@@ -39,12 +34,20 @@ class DisplayService {
         url.searchParams.append("lng", lng.toString());
         
         const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
           method: "GET"
         });
         return await response.json();
+      }
+
+      async ListRoutesEdgesFrom(trips: Trip[]): Promise<LatLng[][]> {
+        const url = new URL("/api/display/listedges", BaseUrl);
+        const response = await fetch(url.toString(), {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST", body: JSON.stringify(trips)
+        });
+        return Object.values(await response.json());
       }
 }
 
