@@ -123,11 +123,9 @@ namespace Liane.Test
             await SetUpRedisAsync();
             var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
             var stringTrips = Print.ImmutableHashSetToString(trips);
-            Console.WriteLine($"\n \n \n trips : {stringTrips} \n \n \n");
             var actual = await displayService!.ListRoutesEdgesFrom(trips);
             var stringDict = Print.DictToString(actual);
             Console.WriteLine($"\n \n acutal : {stringDict}");
-            
             var expected = new Dictionary<string, ImmutableList<LatLng>>();
             var preExpected1 = await osrmService!.Route(ImmutableList.Create(Positions.Mende, Positions.LesBondons_Parking));
             var preExpected2 = await osrmService!.Route(ImmutableList.Create(Positions.LesBondons_Parking, Positions.Florac));

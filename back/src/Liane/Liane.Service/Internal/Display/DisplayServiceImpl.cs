@@ -92,22 +92,23 @@ namespace Liane.Service.Internal.Display
                     }
                 }
             }
-            //Console.WriteLine("");
             return tripsFromStart.ToImmutableHashSet();
         }
         public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips) {
-            //Console.WriteLine("ListRoutesEdgesFrom nombre de trajets :", trips.Count);
             var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
             foreach (var trip in trips)
             {
-                Console.WriteLine($"trip.Coordinates.LongCount() : {trip.Coordinates.LongCount()}");
                 for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1) {
                     var vertex1 = trip.Coordinates[i];
                     var vertex2 = trip.Coordinates[i + 1];
                     var key = vertex1.Id + "_" + vertex2.Id;
                     if (!routesEdges.ContainsKey(key)){
-                        var route = await osrmService.Route(ImmutableList.Create(vertex1.Position, vertex2.Position));
-                        routesEdges.Add(key, route.Waypoints.Select(waypoint => waypoint.Location).ToImmutableList());
+                        var routeResponse = await osrmService.Route(ImmutableList.Create(vertex1.Position, vertex2.Position));
+                        var geojson = routeResponse.Routes[0].Geometry;
+                        var duration = routeResponse.Routes[0].Duration;
+                        var distance = routeResponse.Routes[0].Distance;
+                        Console.WriteLine(routeResponse);
+                        routesEdges.Add(key, geojson.Coordinates.ToLatLng());
                     }
                 }
             }
