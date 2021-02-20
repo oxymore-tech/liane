@@ -76,16 +76,23 @@ function  Map({className, center, start}: MapProps) {
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setTrips(result)});
-      if (trips != []) {
+      /*if (trips != []) {
         displayService.ListRoutesEdgesFrom(trips).then(
             result => {setRoutes(getRoutes2(result))});
-        }
+        }*/
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
       }
       
-  }, [myStart, trips]);
+  }, [myStart]);
   
+  useEffect(() => {
+    if (trips != []) {
+      displayService.ListRoutesEdgesFrom(trips).then(
+        result => {setRoutes(getRoutes2(result))});
+    }
+  }, [trips]);
+
   return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}
