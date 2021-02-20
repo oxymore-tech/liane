@@ -22,18 +22,19 @@ namespace Liane.Test
     public sealed class DisplayServiceTest
     {
         private IDisplayService? displayService;
-        private readonly OsrmServiceImpl? osrmService;
+        private OsrmServiceImpl? osrmService;
 
         [SetUp]
         public void SetUp()
         {
-            var osrmService = new OsrmServiceImpl(new Mock<Microsoft.Extensions.Logging.ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
+            var osrmServiceDisplay = new OsrmServiceImpl(new Mock<Microsoft.Extensions.Logging.ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
 
             var redisSettings = new RedisSettings("localhost");
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmService);
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay);
+            osrmService = osrmServiceDisplay;
         }
 
         [Test]
