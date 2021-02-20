@@ -92,15 +92,16 @@ namespace Liane.Service.Internal.Display
                     }
                 }
             }
+            //Console.WriteLine("");
             return tripsFromStart.ToImmutableHashSet();
         }
-        
         public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips) {
-            Console.WriteLine("nombre de trajets :", trips.Count);
+            //Console.WriteLine("ListRoutesEdgesFrom nombre de trajets :", trips.Count);
             var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
             foreach (var trip in trips)
             {
-                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 2) {
+                Console.WriteLine($"trip.Coordinates.LongCount() : {trip.Coordinates.LongCount()}");
+                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1) {
                     var vertex1 = trip.Coordinates[i];
                     var vertex2 = trip.Coordinates[i + 1];
                     var key = vertex1.Id + "_" + vertex2.Id;

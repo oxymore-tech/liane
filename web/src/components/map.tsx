@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
 import { icon, LatLngExpression, marker} from "leaflet";
@@ -44,6 +44,10 @@ export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpressi
   return routes
 }
 
+function sleep(ms: number) {
+  return new Promise( resolve => setTimeout(resolve, ms) );
+}
+
 
 function  Map({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
@@ -56,20 +60,29 @@ function  Map({className, center, start}: MapProps) {
   }, [start]);
 
   useEffect(() => {
-    console.log("MYSTART : ", myStart)
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
-        result => {console.log("RESULT : ", result); setTrips(result)});
-      if (trips != null) {
+        result => {setTrips(result)});
+    }
+  }, [trips]);
+  //console.log("TRIPS : ", trips);
+
+  useEffect(() => {
+    //console.log("MYSTART : ", myStart)
+   /** if (myStart != null) {
+      displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => {setTrips(result)}); // console.log("RESULT : ", result);**/
+      if (trips != []) {
+        console.log("TRIPS HERE: ", trips);
         displayService.ListRoutesEdgesFrom(trips).then(
-            result => {setRoutes(getRoutes(trips, result))});
+            result => {setRoutes(getRoutes(trips, result))});//console.log("result listRoutes : ", result);
         }
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
-      }
+      //}
       
   }, [myStart]);
-  console.log("TRIPS : ", trips);
+  
   return <MapContainer className={className} center={center}
                        zoom={12}
                        scrollWheelZoom={true}

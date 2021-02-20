@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
 using Liane.Api.Display;
@@ -120,9 +121,12 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
-            Console.WriteLine(trips.Count);
+            var stringTrips = Print.ImmutableHashSetToString(trips);
+            Console.WriteLine($"\n \n \n trips : {stringTrips} \n \n \n");
             var actual = await displayService!.ListRoutesEdgesFrom(trips);
-            Console.WriteLine(actual["LesBondons_Parking_Florac"].Count);
+            var stringDict = Print.DictToString(actual);
+            Console.WriteLine($"\n \n acutal : {stringDict}");
+            
             var expected = new Dictionary<string, ImmutableList<LatLng>>();
             var preExpected1 = await osrmService!.Route(ImmutableList.Create(Positions.Mende, Positions.LesBondons_Parking));
             var preExpected2 = await osrmService!.Route(ImmutableList.Create(Positions.LesBondons_Parking, Positions.Florac));
