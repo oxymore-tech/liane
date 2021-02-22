@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
+using StackExchange.Redis;
 
 namespace Liane.Api.Display
 {
@@ -13,5 +14,7 @@ namespace Liane.Api.Display
         Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
         Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips);
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
+        //Dictionary<string, string> databaseToDictionnary(IDatabase database, RedisKey redisKey);
+        Dictionary<string, IDatabase> FilterByDay(Dictionary<string, string> dict, string jour);
     }
 }

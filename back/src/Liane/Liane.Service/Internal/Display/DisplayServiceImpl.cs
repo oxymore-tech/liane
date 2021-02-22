@@ -128,9 +128,26 @@ namespace Liane.Service.Internal.Display
             }
             return steps.ToImmutableHashSet();
         }
+
+        /**
+        public Dictionary<string, string> databaseToDictionnary(IServer server, RedisKey redisKey) {
+            var dict = new Dictionary<string, string>();
+            foreach (var key in server.Keys()) {
+                dict.Add(key, server.);
+            }
+            return dict;
+        }
+        **/
+
+        public Dictionary<string, IDatabase> FilterByDay(Dictionary<string, IDatabase> dict, string jour) {
+            var dictWithProperDays = dict.Where(key => key.Key.Split("|").Contains(jour)).ToDictionary(i => i.Key, i => i.Value);
+            return dictWithProperDays;
+        }
+
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
         }
+
     }
 }
