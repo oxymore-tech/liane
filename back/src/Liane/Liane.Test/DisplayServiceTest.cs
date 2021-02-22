@@ -137,6 +137,19 @@ namespace Liane.Test
                 .Assert();
         }
 
+        [Test]
+        [Category("Integration")]
+        public async Task ListEtapesFromMende()
+        {
+            await SetUpRedisAsync();
+            var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            var actual = displayService!.ListStepsFrom(trips);
+            var expected = ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac);
+            actual.WithDeepEqual(expected)
+                .IgnoreProperty<RallyingPoint>(l => l.Distance)
+                .Assert();
+        }
+
         private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");

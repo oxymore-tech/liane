@@ -114,11 +114,23 @@ namespace Liane.Service.Internal.Display
             }
             return routesEdges;
         }
+        public ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Api.Trip.Trip> trips)
+        {
+            var steps = new List<RallyingPoint>();
+            foreach (var trip in trips)
+            {
+                foreach (var position in trip.Coordinates)
+                {
+                    if (position != trip.Coordinates[0]) {
+                        steps.Add(position);
+                    }
+                }
+            }
+            return steps.ToImmutableHashSet();
+        }
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
         }
-
-        
     }
 }
