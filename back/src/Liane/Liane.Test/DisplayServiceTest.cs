@@ -141,6 +141,7 @@ namespace Liane.Test
         [Category("Integration")]
         public async Task ListEtapesFromMende()
         {
+            /*commentaire test*/
             await SetUpRedisAsync();
             var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
             var actual = displayService!.ListStepsFrom(trips);
