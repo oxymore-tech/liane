@@ -18,10 +18,16 @@ namespace Liane.Web.Controllers
             this.locationService = locationService;
         }
 
-        [HttpPost("")]
+        [HttpPost("log")]
         public async Task LogLocation([FromBody] ImmutableList<UserLocation> userLocations)
         {
             await locationService.LogLocation(userLocations);
+        }
+
+        [HttpPost("")]
+        public async Task SaveTrip([FromBody] ImmutableList<UserLocation> userLocations)
+        {
+            await locationService.SaveTrip(userLocations);
         }
     }
 }
