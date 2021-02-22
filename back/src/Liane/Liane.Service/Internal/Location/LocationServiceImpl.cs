@@ -51,13 +51,13 @@ namespace Liane.Service.Internal.Location
                     {
                         await database.HashDeleteAsync(redisKey, t1);
                     }
-                    HashEntry[] newEntry = { new HashEntry(timestamp, nearestPoints[0].Id) };
-                    await database.HashSetAsync(redisKey, newEntry);
                     if(!t1.Equals(nearestPoints[0].Id)) {
                         var redisKey2 = new RedisKey(t1 + "|" + nearestPoints[0].Id + "|" + dtDateTime.DayOfWeek + "|" + dtDateTime.Hour);
                         await database.HashIncrementAsync(redisKey2, currentContext.CurrentUser(), 1);
                     }
                 }
+                HashEntry[] newEntry = { new HashEntry(timestamp, nearestPoints[0].Id) };
+                await database.HashSetAsync(redisKey, newEntry);
             }
         }
     }
