@@ -133,7 +133,7 @@ namespace Liane.Service.Internal.Display
                 var points = new HashSet<RallyingPoint>();
                 for (int i = 0; i < route.Coordinates.Count() - 1; i += 10)
                 {
-                    var results = await database.GeoRadiusAsync(redisKey, route.Coordinates[i].Lng, route.Coordinates[i].Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                    var results = await database.GeoRadiusAsync(redisKey, route.Coordinates[i].Lng, route.Coordinates[i].Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     if(results.Length > 0) {
                         var nearestPoint = results[0];
                         points.Add(new RallyingPoint(nearestPoint.Member, new LatLng(nearestPoint.Position!.Value.Latitude, nearestPoint.Position!.Value.Longitude)));

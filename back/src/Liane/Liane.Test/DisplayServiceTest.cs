@@ -143,10 +143,8 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac);
-            var expected = ImmutableList.Create(Trips.Mende_Florac);
-            Console.WriteLine(actual[0].Coordinates.ToString());
-            actual.WithDeepEqual(expected)
-                .Assert();
+            var expected = ImmutableList.Create(Trips.Mende_Florac_1, Trips.Mende_Florac_2);
+            actual.WithDeepEqual(expected).Assert();
         }
         private static async Task SetUpRedisAsync()
         {
