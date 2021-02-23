@@ -192,5 +192,23 @@ namespace Liane.Service.Internal.Display
             }
             return trips.ToImmutableList();
         }
+
+        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour) {
+            var segmentsTrip = await DecomposeTrip(start, end);
+            var listeTrajets = new List<Api.Trip>();
+            var database = await redis.Get();
+            segmentsTrip.ForEach(ListPoints => {
+                var listeUtilisateurs = new List<string>();
+                for(int i = 0; i < ListPoints.Coordinates.Length-1; i++) {
+                    var redisKey = new RedisKey(ListPoints.Coordinates[i] + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
+                    var users = database.Hashkeys(redisKey);
+                    listeUtilisateurs = (i == 0) ? users : listeUtilisateurs.Intersect(users.Select(s => int.Parse(s))); 
+                }
+                listeUtilisateurs.ForEach(user => {
+                    var trip = new Api.Trip.Trip(ListPoints.Coordinates, user, hour);
+                    listeTrajets.add(trip);
+                });
+            });
+        }
     }
 }
