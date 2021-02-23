@@ -139,6 +139,15 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
+        public async Task DecomposeRouteBetweenMendeAndFlorac()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac);
+            var expected = ImmutableList.Create(Trips.Mende_Florac);
+            Console.WriteLine(actual[0].Coordinates.ToString());
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
         public async Task EdgeKeys() // 
         {
             ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost");
@@ -281,7 +290,6 @@ namespace Liane.Test
                 .IgnoreProperty<RallyingPoint>(l => l.Distance)
                 .Assert();
         }
-
         private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
