@@ -129,19 +129,14 @@ namespace Liane.Service.Internal.Display
             return steps.ToImmutableHashSet();
         }
 
-        /**
-        public Dictionary<string, string> databaseToDictionnary(IServer server, RedisKey redisKey) {
-            var dict = new Dictionary<string, string>();
-            foreach (var key in server.Keys()) {
-                dict.Add(key, server.);
-            }
-            return dict;
+        public ImmutableList<RedisKey> EdgeKeys(IServer server) {
+            var keys = server.Keys(-1, "*|*|*|*");
+            return keys.ToImmutableList();
         }
-        **/
 
-        public Dictionary<string, IDatabase> FilterByDay(Dictionary<string, IDatabase> dict, string jour) {
-            var dictWithProperDays = dict.Where(key => key.Key.Split("|").Contains(jour)).ToDictionary(i => i.Key, i => i.Value);
-            return dictWithProperDays;
+        public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour) {
+            var keysProperDay = edgeKeys.Where(key => key.ToString().Split("|").Contains(jour));
+            return keysProperDay.ToImmutableList();
         }
 
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
