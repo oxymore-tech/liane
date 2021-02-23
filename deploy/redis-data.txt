@@ -26,3 +26,23 @@ GEOADD RallyingPoints 3.499105274677277 44.51802378019751 Mende
 GEOADD RallyingPoints 3.043660819530487 44.33196510821739 Severac_dAveyron_Rond_Point
 GEOADD RallyingPoints 3.926348984241486 44.440593118222026 Villefort_Parking_Gare
 GEOADD RallyingPoints 2.569950520992279 44.36054915873126 Rodez_Mac_Drive
+
+HSET Blajoux_Parking|Montbrun_En_Bas|Monday|8 CONDUCTEUR_1 1
+HSET Blajoux_Parking|Montbrun_En_Bas|Tuesday|8 CONDUCTEUR_1 1
+HSET Blajoux_Parking|Montbrun_En_Bas|Wednesday|8 CONDUCTEUR_1 1
+HSET Montbrun_En_Bas|La_Malene_Parking|Wednesday|9 CONDUCTEUR_1 1
+HSET La_Malene_Parking|Severac_dAveyron_Rond_Point|Wednesday|10 CONDUCTEUR_1 1
+HSET LesBondons_Parking|Prades|Monday|8 CONDUCTEUR_2 1
+HSET LesBondons_Parking|Prades|Tuesday|8 CONDUCTEUR_2 1
+HSET LesBondons_Parking|Prades|Thursday|8 CONDUCTEUR_2 1
+HSET Prades|La_Malene_Parking|Wednesday|9 CONDUCTEUR_2 3
+HSET La_Malene_Parking|Severac_dAveyron_Rond_Point|Wednesday|10 CONDUCTEUR_2 1
+HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8 CONDUCTEUR_3 1
+HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Tuesday|8 CONDUCTEUR_3 1
+HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Friday|8 CONDUCTEUR_3 1
+HSET SaintEnimie_Parking|Mende|Monday|10 CONDUCTEUR_3 1
+HSET SaintEnimie_Parking|Mende|Tuesday|10 CONDUCTEUR_3 1
+HSET Rodez_Mac_Drive|Lanuejols_Parking_Eglise|Saturday|8 CONDUCTEUR_3 1
+HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8 CONDUCTEUR_4 1
+HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Tuesday|8 CONDUCTEUR_4 1
+HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Friday|8 CONDUCTEUR_4 1
