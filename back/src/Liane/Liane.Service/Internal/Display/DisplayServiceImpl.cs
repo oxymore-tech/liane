@@ -119,6 +119,10 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableHashSet();
         }
 
+        public async Task<Api.Trip.Trip> DecomposeTrip(RallyingPoint start, RallyingPoint end)
+        {
+            var routeResponse = await osrmService.Route(start.Position, end.Position);
+        }
         
     }
 }
