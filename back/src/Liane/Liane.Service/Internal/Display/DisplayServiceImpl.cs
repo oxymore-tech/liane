@@ -139,6 +139,8 @@ namespace Liane.Service.Internal.Display
             return keysProperDay.ToImmutableList();
         }
 
+        
+
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();

@@ -139,6 +139,31 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
+        public async Task EdgeKeys()
+        {
+            await SetUpRedisAsync();
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
+            IServer server = redis.GetServer("localhost", 8081);
+            var actual = displayService!.EdgeKeys(server);
+            var expected = ImmutableList.Create("FRANCOIS CHUT");
+            actual.WithDeepEqual(expected);
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task FilterByDay()
+        {
+            await SetUpRedisAsync();
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
+            IServer server = redis.GetServer("localhost", 8081);
+            var edgeKeys = displayService!.EdgeKeys(server);
+            var actual = displayService!.FilterByDay(edgeKeys, "samedi");
+            var expected = ImmutableList.Create("KARIMOU");
+            actual.WithDeepEqual(expected);
+        }
+
+        [Test]
+        [Category("Integration")]
         public async Task ListEtapesFromMende()
         {
             await SetUpRedisAsync();
