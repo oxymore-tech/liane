@@ -119,9 +119,30 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableHashSet();
         }
 
-        public async Task<Api.Trip.Trip> DecomposeTrip(RallyingPoint start, RallyingPoint end)
+        public async Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end)
         {
-            var routeResponse = await osrmService.Route(start.Position, end.Position);
+            var coordinates = ImmutableList.Create(start.Position, end.Position);
+            var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
+            var routes = routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
+                .ToImmutableList();
+            var trips = new List<Api.Trip.Trip>();
+            var database = await redis.Get();
+            var redisKey = new RedisKey("RallyingPoints");
+            foreach (var route in routes)
+            {   
+                var points = new HashSet<RallyingPoint>();
+                for (int i = 0; i < route.Coordinates.Count() - 1; i += 10)
+                {
+                    var results = await database.GeoRadiusAsync(redisKey, route.Coordinates[i].Lng, route.Coordinates[i].Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                    if(results.Length > 0) {
+                        var nearestPoint = results[0];
+                        points.Add(new RallyingPoint(nearestPoint.Member, new LatLng(nearestPoint.Position!.Value.Latitude, nearestPoint.Position!.Value.Longitude)));
+                    }
+                }
+                var trip = new Api.Trip.Trip(points.ToImmutableList());
+                trips.Add(trip);
+            }
+            return trips.ToImmutableList();
         }
         
     }
