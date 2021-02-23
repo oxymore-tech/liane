@@ -26,6 +26,13 @@ const customIconGray = icon({
   iconAnchor: [12, 41]
 });
 
+const customIconRed = icon({
+  iconUrl: "/images/leaflet/marker-icon-red.png",
+  shadowUrl: "/images/leaflet/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
 const MemoPolyline = memo(Polyline);
 
 /*export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
@@ -61,7 +68,7 @@ function  Map({className, center, start}: MapProps) {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<LatLng[][]>([]);
-
+  const [steps, setSteps] = useState<RallyingPoint[]>([]);
   useEffect(() => {
     setMyStart(start);
   }, [start]);
@@ -92,6 +99,8 @@ function  Map({className, center, start}: MapProps) {
     if (trips.length > 0) {
       displayService.ListRoutesEdgesFrom(trips)
         .then(result => setRoutes(result));
+      displayService.ListStepsFrom(trips)
+        .then(result => setSteps(result));
       }
   }, [trips]);
 
@@ -137,7 +146,21 @@ function  Map({className, center, start}: MapProps) {
           </Marker>
         ))}
       </div>
-        }
+    }
+    {
+      myStart &&
+      <div>
+        {steps.map((point, index) => (
+          <Marker key={index} position={point.position} icon={customIconRed} eventHandlers={{
+            click: () => {
+              setMyStart(point);
+                            
+            },
+          }}>
+          </Marker>
+        ))}
+      </div>
+    }
   </MapContainer>;
 }
 

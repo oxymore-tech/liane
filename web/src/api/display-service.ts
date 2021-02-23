@@ -49,6 +49,17 @@ class DisplayService {
         });
         return Object.values(await response.json());
       }
+
+      async ListStepsFrom(trips: Trip[]): Promise<RallyingPoint[]> {
+        const url = new URL("/api/display/liststeps", BaseUrl);
+        const response = await fetch(url.toString(), {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST", body: JSON.stringify(trips)
+        });
+        return await response.json();
+      }
 }
 
 export const displayService = new DisplayService();
