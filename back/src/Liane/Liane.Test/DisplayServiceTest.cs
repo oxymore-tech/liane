@@ -299,6 +299,7 @@ namespace Liane.Test
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
             actual.WithDeepEqual(expected)
                 .Assert();
+            actual.WithDeepEqual(expected).Assert();
         }
         private static async Task SetUpRedisAsync()
         {
