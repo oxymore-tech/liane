@@ -14,8 +14,11 @@ namespace Liane.Api.Display
         Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
         Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips);
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
-
         ImmutableList<RedisKey> EdgeKeys(IServer server);
         ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour);
+        ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour);
+        ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour);
+        ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint startPoint);
+        ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint endPoint);
     }
 }

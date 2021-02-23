@@ -134,12 +134,34 @@ namespace Liane.Service.Internal.Display
             return keys.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour) {
-            var keysProperDay = edgeKeys.Where(key => key.ToString().Split("|").Contains(jour));
+        public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string day) {
+            var keysProperDay = edgeKeys.Where(key => key.ToString().Split("|").Contains(day));
             return keysProperDay.ToImmutableList();
         }
 
-        
+        public ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour) {
+            var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
+                                                        return Int16.Parse(listPipe[listPipe.Length - 1]) >= hour;});
+            return keysProperDay.ToImmutableList();
+        }
+
+        public ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour) {
+            var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
+                                                        return Int16.Parse(listPipe[listPipe.Length - 1]) <= hour;});
+            return keysProperDay.ToImmutableList();
+        }
+
+        public ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint startPoint) {
+            var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
+                                                        return listPipe[0] == startPoint.Id;});
+            return keysProperDay.ToImmutableList();
+        }
+
+        public ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint endPoint) {
+            var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
+                                                        return listPipe[1] == endPoint.Id;});
+            return keysProperDay.ToImmutableList();
+        }
 
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
