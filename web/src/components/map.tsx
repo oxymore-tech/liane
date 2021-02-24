@@ -106,7 +106,6 @@ function  Map({className, center, start}: MapProps) {
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<LatLng[][]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
-  const [value, setValue] = useState(0);
   useEffect(() => {
     setMyStart(start);
   }, [start]);
