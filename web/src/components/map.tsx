@@ -1,11 +1,9 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { icon, LatLngExpression, marker} from "leaflet";
+import { icon, LatLngExpression} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
-import { Console } from "console";
-import { relative } from "path";
 import Select from "react-select";
 
 interface MapProps {
