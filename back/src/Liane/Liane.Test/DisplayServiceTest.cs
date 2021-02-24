@@ -144,8 +144,7 @@ namespace Liane.Test
             await SetUpRedisAsync();
             var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac);
             var expected = ImmutableList.Create(Trips.Mende_Florac_1, Trips.Mende_Florac_2);
-            actual.WithDeepEqual(expected)
-                .Assert();
+            actual.WithDeepEqual(expected).Assert();
         }
         public async Task EdgeKeys() // 
         {
