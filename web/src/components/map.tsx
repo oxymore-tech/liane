@@ -5,6 +5,8 @@ import { icon, LatLngExpression, marker} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 import { Console } from "console";
+import Slider from 'react-rangeslider';
+import { relative } from "path";
 
 interface MapProps {
   className?: string;
@@ -69,6 +71,7 @@ function  Map({className, center, start}: MapProps) {
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<LatLng[][]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
+  const [value, setValue] = useState(0);
   useEffect(() => {
     setMyStart(start);
   }, [start]);
@@ -104,64 +107,103 @@ function  Map({className, center, start}: MapProps) {
       }
   }, [trips]);
 
-  return <MapContainer className={className} center={center}
-                       zoom={12}
-                       scrollWheelZoom={true}
-                       dragging={true}
-                       touchZoom={false}
-                       style={{zIndex: 2}}>
-    <TileLayer
-      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      zIndex={2}
+  /**
+   * <button style = {{zIndex: 1, position : "absolute"}}>
+          TU VAS FONCTIONNER SINON!
+        </button>
+   */
+ var valuetext = "COUCOU";
+  return <Slider
+  value={valuetext}
+  orientation="vertical"
+/>
 
-    />
-    {
-      myStart && 
-      <Marker position={myStart.position} icon={customIcon}>
-        <Popup>
-          <h3>{myStart.id}</h3>
-        </Popup>
-      </Marker>
-    }
-    {
-      myStart &&
+/**
+  return  <div> 
       <div> 
-        {
-          routes.map((route, index) => (
-            <MemoPolyline key={index} positions={route}/>
-          ))
-        } 
-      </div>
-    }
-    {
-      myStart &&
-      <div>
-        {destinations.map((point, index) => (
-          <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
-            click: () => {
-              setMyStart(point);
-                            
-            },
-          }}>
-          </Marker>
-        ))}
-      </div>
-    }
-    {
-      myStart &&
-      <div>
-        {steps.map((point, index) => (
-          <Marker key={index} position={point.position} icon={customIconRed} eventHandlers={{
-            click: () => {
-              setMyStart(point);
-                            
-            },
-          }}>
-          </Marker>
-        ))}
-      </div>
-    }
-  </MapContainer>;
+        <h1>
+        <div>
+          <Slider style = {{zIndex: 1, position : "absolute"}}
+            min={0}
+            max={24}
+            step={1}
+            value={5}
+            valueLabelDisplay="auto"
+            aria-labelledby="range-slider"
+          />
+        </div>
+        </h1>
+      <MapContainer className={className} center={center}
+                        zoom={12}
+                        scrollWheelZoom={true}
+                        dragging={true}
+                        touchZoom={false}
+                        style={{zIndex: 2, position : "relative"}}>
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        zIndex={2}
+
+      />
+      {
+        myStart && 
+        <Marker position={myStart.position} icon={customIcon}>
+          <Popup>
+            <h3>{myStart.id}</h3>
+          </Popup>
+        </Marker>
+      }
+      {
+        myStart &&
+        <div> 
+          {
+            routes.map((route, index) => (
+              <MemoPolyline key={index} positions={route}/>
+            ))
+          } 
+        </div>
+      }
+      {
+        myStart &&
+        <div>
+          {destinations.map((point, index) => (
+            <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
+              click: () => {
+                setMyStart(point);
+                              
+              },
+            }}>
+            </Marker>
+          ))}
+        </div>
+      }
+      {
+        myStart &&
+        <div>
+          {steps.map((point, index) => (
+            <Marker key={index} position={point.position} icon={customIconRed} eventHandlers={{
+              click: () => {
+                setMyStart(point);
+                              
+              },
+            }}>
+            </Marker>
+          ))}
+        </div>
+      }
+    </MapContainer>;
+    </div>
+    </div> **/
 }
 
 export default Map;
+
+/** <div>
+      <Slider
+        min={0}
+        max={24}
+        step={1}
+        value={5}
+        valueLabelDisplay="auto"
+        aria-labelledby="range-slider"
+      />
+    </div> */
