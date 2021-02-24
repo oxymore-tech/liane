@@ -21,5 +21,6 @@ namespace Liane.Api.Display
         ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour);
         ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint startPoint);
         ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint endPoint);
+        Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
     }
 }

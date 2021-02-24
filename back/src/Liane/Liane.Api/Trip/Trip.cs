@@ -3,5 +3,5 @@ using Liane.Api.Display;
 
 namespace Liane.Api.Trip
 {
-    public sealed record Trip(ImmutableList<RallyingPoint> Coordinates);
+    public sealed record Trip(ImmutableList<RallyingPoint> Coordinates, string? user=null, int? time=null);
 }

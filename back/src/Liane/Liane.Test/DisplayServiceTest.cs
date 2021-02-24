@@ -143,8 +143,7 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac);
-            var expected = ImmutableList.Create(Trips.Mende_Florac);
-            Console.WriteLine(actual[0].Coordinates.ToString());
+            var expected = ImmutableList.Create(Trips.Mende_Florac_1, Trips.Mende_Florac_2);
             actual.WithDeepEqual(expected)
                 .Assert();
         }
@@ -288,6 +287,17 @@ namespace Liane.Test
             var expected = ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac);
             actual.WithDeepEqual(expected)
                 .IgnoreProperty<RallyingPoint>(l => l.Distance)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task SearchTripFromFloracToLesBondons()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.SearchTrip(LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, "Monday", 8);
+            var expected = ImmutableList.Create(Trips.Florac_LesBondons);
+            actual.WithDeepEqual(expected)
                 .Assert();
         }
         private static async Task SetUpRedisAsync()

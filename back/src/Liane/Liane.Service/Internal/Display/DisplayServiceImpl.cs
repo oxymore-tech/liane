@@ -177,11 +177,11 @@ namespace Liane.Service.Internal.Display
             var database = await redis.Get();
             var redisKey = new RedisKey("RallyingPoints");
             foreach (var route in routes)
-            {   
+            {
                 var points = new HashSet<RallyingPoint>();
                 for (int i = 0; i < route.Coordinates.Count() - 1; i += 10)
                 {
-                    var results = await database.GeoRadiusAsync(redisKey, route.Coordinates[i].Lng, route.Coordinates[i].Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+                    var results = await database.GeoRadiusAsync(redisKey, route.Coordinates[i].Lng, route.Coordinates[i].Lat, 1000, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     if(results.Length > 0) {
                         var nearestPoint = results[0];
                         points.Add(new RallyingPoint(nearestPoint.Member, new LatLng(nearestPoint.Position!.Value.Latitude, nearestPoint.Position!.Value.Longitude)));
@@ -191,6 +191,29 @@ namespace Liane.Service.Internal.Display
                 trips.Add(trip);
             }
             return trips.ToImmutableList();
+        }
+
+        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour) {
+            var segmentsTrip = await DecomposeTrip(start, end);
+            var listeTrajets = new List<Api.Trip.Trip>();
+            var database = await redis.Get();
+            segmentsTrip.ForEach(ListPoints => {
+                RedisValue[] listeUtilisateurs = {};
+                for(int i = 0; i < ListPoints.Coordinates.Count-1; i++) {
+                    var redisKey = new RedisKey(ListPoints.Coordinates[i].Id + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
+                    var users = database.HashKeys(redisKey);
+                    if (i==0) {
+                        listeUtilisateurs = users;
+                    } else {
+                        listeUtilisateurs = listeUtilisateurs.Where(utilisateur => users.Contains(utilisateur)).ToArray();
+                    }
+                }
+                Array.ForEach(listeUtilisateurs, user => {
+                    var trip = new Api.Trip.Trip(ListPoints.Coordinates, user.ToString(), hour);
+                    listeTrajets.Add(trip);
+                });
+            });
+            return listeTrajets.ToImmutableList();
         }
     }
 }

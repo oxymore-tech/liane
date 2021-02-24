@@ -46,3 +46,6 @@ HSET Rodez_Mac_Drive|Lanuejols_Parking_Eglise|Saturday|8 CONDUCTEUR_3 1
 HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8 CONDUCTEUR_4 1
 HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Tuesday|8 CONDUCTEUR_4 1
 HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Friday|8 CONDUCTEUR_4 1
+HSET Florac|Cocures|Monday|8 CONDUCTEUR_5 1
+HSET Cocures|LeCrouzet|Monday|8 CONDUCTEUR_5 1
+HSET LeCrouzet|LesBondons_Parking|Monday|8 CONDUCTEUR_5 1
