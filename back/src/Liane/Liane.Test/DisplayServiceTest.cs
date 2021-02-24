@@ -147,7 +147,7 @@ namespace Liane.Test
             actual.WithDeepEqual(expected)
                 .Assert();
         }
-        public async Task EdgeKeys() // 
+        public async Task EdgeKeys()
         {
             ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost");
             var endPoints = redis.GetEndPoints();
@@ -254,7 +254,7 @@ namespace Liane.Test
             var endPoints = redis.GetEndPoints();
             IServer server = redis.GetServer(endPoints[0]);
             var edgeKeys = displayService!.EdgeKeys(server);
-            var actual = displayService!.FilterByStartPoint(edgeKeys, LabeledPositions.Rouffiac_Boulangerie);
+            var actual = displayService!.FilterByStartPoint(edgeKeys, LabeledPositions.Rouffiac_Boulangerie.Id);
             var expected = ImmutableHashSet.Create(new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8"),
                                                    new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Tuesday|8"),
                                                    new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Friday|8"));
@@ -270,7 +270,7 @@ namespace Liane.Test
             var endPoints = redis.GetEndPoints();
             IServer server = redis.GetServer(endPoints[0]);
             var edgeKeys = displayService!.EdgeKeys(server);
-            var actual = displayService!.FilterByEndPoint(edgeKeys, LabeledPositions.La_Malene_Parking);
+            var actual = displayService!.FilterByEndPoint(edgeKeys, LabeledPositions.La_Malene_Parking.Id);
             var expected = ImmutableHashSet.Create(new RedisKey("Montbrun_En_Bas|La_Malene_Parking|Wednesday|9"),
                                                    new RedisKey("Prades|La_Malene_Parking|Wednesday|9"));
             actual.WithDeepEqual(expected)
@@ -297,6 +297,22 @@ namespace Liane.Test
             await SetUpRedisAsync();
             var actual = await displayService!.SearchTrip(LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, "Monday", 8);
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task CreateStatBlajouxMontbrun()
+        {
+            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = redis.GetEndPoints();
+            IServer server = redis.GetServer(endPoints[0]);
+            var route = new Dictionary<string, ImmutableList<LatLng>>();
+            route.Add("Blajoux_Parking|Montbrun_En_Bas", ImmutableList.Create(new LatLng(58, 75)));
+            var actual = await displayService!.CreateStat(route, "Monday", 8, 12, server);
+            var expected = new Dictionary<string, int>();
+            expected.Add("Blajoux_Parking|Montbrun_En_Bas", 1);
             actual.WithDeepEqual(expected)
                 .Assert();
         }

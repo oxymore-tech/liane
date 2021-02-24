@@ -101,7 +101,7 @@ namespace Liane.Service.Internal.Display
                 for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1) {
                     var vertex1 = trip.Coordinates[i];
                     var vertex2 = trip.Coordinates[i + 1];
-                    var key = vertex1.Id + "_" + vertex2.Id;
+                    var key = vertex1.Id + "|" + vertex2.Id;
                     if (!routesEdges.ContainsKey(key)){
                         var routeResponse = await osrmService.Route(vertex1.Position, vertex2.Position);
                         var geojson = routeResponse.Routes[0].Geometry;
@@ -151,21 +151,16 @@ namespace Liane.Service.Internal.Display
             return keysProperDay.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint startPoint) {
+        public ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint) {
             var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
-                                                        return listPipe[0] == startPoint.Id;});
+                                                        return listPipe[0] == startPoint;});
             return keysProperDay.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, RallyingPoint endPoint) {
+        public ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint) {
             var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
-                                                        return listPipe[1] == endPoint.Id;});
+                                                        return listPipe[1] == endPoint;});
             return keysProperDay.ToImmutableList();
-        }
-
-        private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
-            return trips.Select(t => t.Coordinates.Last())
-                .ToImmutableHashSet();
         }
         public async Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end)
         {
@@ -192,7 +187,6 @@ namespace Liane.Service.Internal.Display
             }
             return trips.ToImmutableList();
         }
-
         public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour) {
             var segmentsTrip = await DecomposeTrip(start, end);
             var listeTrajets = new List<Api.Trip.Trip>();
@@ -214,6 +208,30 @@ namespace Liane.Service.Internal.Display
                 });
             });
             return listeTrajets.ToImmutableList();
+        }
+        public async Task<Dictionary<string, int>> CreateStat(Dictionary<string, ImmutableList<LatLng>> routesEdges, string day, int hour1, int hour2, IServer server) {
+            var stats = new Dictionary<string, int>();
+            var database = await redis.Get();
+            var edgeKeys = EdgeKeys(server);
+            foreach (var route in routesEdges)
+            {
+                var edge = route.Key.Split("|");
+                var startKeys = FilterByStartPoint(edgeKeys, edge[0]);
+                var endKeys = FilterByEndPoint(edgeKeys, edge[1]);
+                var routeKeys = startKeys.Concat(endKeys).ToImmutableHashSet().ToImmutableList();
+                var toCount = FilterByEndHour(FilterByStartHour(FilterByDay(routeKeys, day), hour1), hour2);
+                var stat = 0;
+                foreach (var key in toCount)
+                {
+                    stat += database.HashKeys(key).Count();
+                }
+                stats.Add(route.Key, stat);
+            }
+            return stats;
+        }
+        private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
+            return trips.Select(t => t.Coordinates.Last())
+                .ToImmutableHashSet();
         }
     }
 }
