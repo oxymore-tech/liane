@@ -112,11 +112,6 @@ function  Map({className, center, start}: MapProps) {
           TU VAS FONCTIONNER SINON!
         </button>
    */
- var valuetext = "COUCOU";
-  return <Slider
-  value={valuetext}
-  orientation="vertical"
-/>
 
 /**
   return  <div> 
