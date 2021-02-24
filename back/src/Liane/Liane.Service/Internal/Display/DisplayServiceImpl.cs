@@ -195,7 +195,6 @@ namespace Liane.Service.Internal.Display
 
         public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour) {
             var segmentsTrip = await DecomposeTrip(start, end);
-            Console.WriteLine(segmentsTrip[0].Coordinates.ToString());
             var listeTrajets = new List<Api.Trip.Trip>();
             var database = await redis.Get();
             segmentsTrip.ForEach(ListPoints => {
