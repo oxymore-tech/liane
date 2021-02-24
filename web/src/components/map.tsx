@@ -5,7 +5,7 @@ import { icon, LatLngExpression} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
-
+//test
 interface MapProps {
   className?: string;
   center: LatLng;
