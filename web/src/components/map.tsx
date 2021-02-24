@@ -71,26 +71,6 @@ const hours = [
   { label: "22h", value: 23 },
   { label: "23h", value: 24 },
 ]
-
-/*export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
-  console.log("TRIPS HERE: ", trips);
-  console.log("ROUTESEDGES HERE: ", routesEdges);
-  let routes = [];
-  trips.forEach(trip => {
-    let route = [];
-    trip.coordinates.forEach(
-      (point, index)  => {
-        if (index != (trip.coordinates.length - 1)) {
-          let key = trip.coordinates[index].id + "_" + trip.coordinates[index + 1].id;
-          route.push(routesEdges[key]);
-        }
-      }
-    );
-    routes.push(<Polyline positions={route.flat()}/>);
-  });
-  console.log("ROUTES : ", routes);
-  return routes
-}*/
  
 export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
   let routes = [];
@@ -110,22 +90,10 @@ function  Map({className, center, start}: MapProps) {
     setMyStart(start);
   }, [start]);
 
-  /*useEffect(() => {
-    if (myStart != null) {
-      displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
-        result => {setTrips(result)});
-    }
-  }, [myStart]);*/
-  //console.log("TRIPS : ", trips);
-
   useEffect(() => {
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setTrips(result)});
-      /*if (trips != []) {
-        displayService.ListRoutesEdgesFrom(trips).then(
-            result => {setRoutes(getRoutes2(result))});
-        }*/
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setDestinations(result)});
       }
