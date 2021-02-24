@@ -191,14 +191,3 @@ function  Map({className, center, start}: MapProps) {
 }
 
 export default Map;
-
-/** <div>
-      <Slider
-        min={0}
-        max={24}
-        step={1}
-        value={5}
-        valueLabelDisplay="auto"
-        aria-labelledby="range-slider"
-      />
-    </div> */
