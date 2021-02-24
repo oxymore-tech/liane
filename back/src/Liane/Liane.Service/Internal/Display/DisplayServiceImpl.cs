@@ -195,22 +195,22 @@ namespace Liane.Service.Internal.Display
 
         public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour) {
             var segmentsTrip = await DecomposeTrip(start, end);
+            Console.WriteLine(segmentsTrip[0].Coordinates.ToString());
             var listeTrajets = new List<Api.Trip.Trip>();
             var database = await redis.Get();
             segmentsTrip.ForEach(ListPoints => {
-                var listeUtilisateurs = new List<string>();
+                RedisValue[] listeUtilisateurs = {};
                 for(int i = 0; i < ListPoints.Coordinates.Count-1; i++) {
-                    var redisKey = new RedisKey(ListPoints.Coordinates[i] + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
+                    var redisKey = new RedisKey(ListPoints.Coordinates[i].Id + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
                     var users = database.HashKeys(redisKey);
-                    var usersString = users.Select(value => value.ToString()).AsEnumerable();
                     if (i==0) {
-                        listeUtilisateurs = (List<string>)usersString;
+                        listeUtilisateurs = users;
                     } else {
-                        listeUtilisateurs = (List<string>)listeUtilisateurs.Intersect(usersString);
+                        listeUtilisateurs = listeUtilisateurs.Where(utilisateur => users.Contains(utilisateur)).ToArray();
                     }
                 }
-                listeUtilisateurs.ForEach(user => {
-                    var trip = new Api.Trip.Trip(ListPoints.Coordinates, user, hour);
+                Array.ForEach(listeUtilisateurs, user => {
+                    var trip = new Api.Trip.Trip(ListPoints.Coordinates, user.ToString(), hour);
                     listeTrajets.Add(trip);
                 });
             });
