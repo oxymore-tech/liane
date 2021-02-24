@@ -5,7 +5,6 @@ import { icon, LatLngExpression, marker} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 import { Console } from "console";
-import Slider from 'react-rangeslider';
 import { relative } from "path";
 import Select from "react-select";
 
