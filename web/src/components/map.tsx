@@ -7,6 +7,7 @@ import { displayService } from "../api/display-service";
 import { Console } from "console";
 import Slider from 'react-rangeslider';
 import { relative } from "path";
+import Select from "react-select";
 
 interface MapProps {
   className?: string;
@@ -36,6 +37,43 @@ const customIconRed = icon({
 });
 
 const MemoPolyline = memo(Polyline);
+
+const days = [
+  { label: "Lundi", value: 1 },
+  { label: "Mardi", value: 2 },
+  { label: "Mercredi", value: 3 },
+  { label: "Jeudi", value: 4 },
+  { label: "Vendredi", value: 5 },
+  { label: "Samedi", value: 6 },
+  { label: "Dimanche", value: 7 },
+]
+
+const hours = [
+  { label: "0h", value: 1 },
+  { label: "1h", value: 2 },
+  { label: "2h", value: 3 },
+  { label: "3h", value: 4 },
+  { label: "4h", value: 5 },
+  { label: "5h", value: 6 },
+  { label: "6h", value: 7 },
+  { label: "7h", value: 8 },
+  { label: "8h", value: 9 },
+  { label: "9h", value: 10 },
+  { label: "10h", value: 11 },
+  { label: "11h", value: 12 },
+  { label: "12h", value: 13 },
+  { label: "13h", value: 14 },
+  { label: "14h", value: 15 },
+  { label: "15h", value: 16 },
+  { label: "16h", value: 17 },
+  { label: "17h", value: 18 },
+  { label: "18h", value: 19 },
+  { label: "19h", value: 20 },
+  { label: "20h", value: 21 },
+  { label: "21h", value: 22 },
+  { label: "22h", value: 23 },
+  { label: "23h", value: 24 },
+]
 
 /*export function getRoutes(trips: Trip[], routesEdges: Map<string, LatLngExpression[][]>){
   console.log("TRIPS HERE: ", trips);
@@ -107,33 +145,42 @@ function  Map({className, center, start}: MapProps) {
       }
   }, [trips]);
 
-  /**
-   * <button style = {{zIndex: 1, position : "absolute"}}>
-          TU VAS FONCTIONNER SINON!
-        </button>
-   */
-
-/**
   return  <div> 
-      <div> 
-        <h1>
-        <div>
-          <Slider style = {{zIndex: 1, position : "absolute"}}
-            min={0}
-            max={24}
-            step={1}
-            value={5}
-            valueLabelDisplay="auto"
-            aria-labelledby="range-slider"
-          />
+      <div className="container">
+      <div className="row" style={{top: 10, right: 10, width: 250, zIndex: 3, position : "absolute"}}>
+        <div className="col-md-4"></div>
+        <div className="col-md-4">
+          <Select options={ days } placeholder="Sélectionnez un jour"/>
         </div>
-        </h1>
+        <div className="col-md-4"></div>
+      </div>
+    </div>
+    <div className="container">
+      <div className="row" style={{top: 60, right: 10, width: 250, zIndex: 2, position : "absolute"}}>
+        Départ entre :
+        <div className="col-md-4"></div>
+        <div className="col-md-4">
+          <Select options={ hours } placeholder="Sélectionnez une heure"/>
+        </div>
+        <div className="col-md-4"></div>
+      </div>
+    </div>
+    <div className="container">
+      <div className="row" style={{top: 130, right: 10, width: 250, zIndex: 1, position : "absolute"}}>
+        et :
+        <div className="col-md-4"></div>
+        <div className="col-md-4">
+          <Select options={ hours } placeholder="Sélectionnez une heure"/>
+        </div>
+        <div className="col-md-4"></div>
+      </div>
+    </div>
       <MapContainer className={className} center={center}
                         zoom={12}
                         scrollWheelZoom={true}
                         dragging={true}
                         touchZoom={false}
-                        style={{zIndex: 2, position : "relative"}}>
+                        style={{zIndex: 0, position : "relative"}}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         zIndex={2}
@@ -187,7 +234,6 @@ function  Map({className, center, start}: MapProps) {
       }
     </MapContainer>;
     </div>
-    </div> **/
 }
 
 export default Map;
