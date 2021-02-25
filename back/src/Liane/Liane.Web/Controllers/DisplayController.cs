@@ -5,6 +5,7 @@ using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
 
 namespace Liane.Web.Controllers
 {
@@ -41,6 +42,16 @@ namespace Liane.Web.Controllers
         public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips)
         {
             return await displayService.ListRoutesEdgesFrom(trips);
+        }
+
+        [HttpPost("stats")]
+        public async Task<Dictionary<string, int>> CreateStat([FromBody]  IServer server,
+                                                              [FromBody] Dictionary<string, ImmutableList<LatLng>> routesEdges, 
+                                                              [FromBody] string day,
+                                                              [FromBody] int hour1 = 0, 
+                                                              [FromBody] int hour2 = 24)
+        {
+            return await displayService.CreateStat(server, routesEdges, day, hour1, hour2);
         }
 
         [HttpPost("liststeps")]

@@ -60,6 +60,20 @@ class DisplayService {
         });
         return await response.json();
       }
+
+      async CreateStat(routesEdges : Map<string, LatLngExpression[][]>, 
+                       day : string, 
+                       hour1 : number = 0,  
+                       hour2 : number = 24): Promise<number[]> {
+        const url = new URL("/api/display/stats", BaseUrl);
+        const response = await fetch(url.toString(), {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST", body: JSON.stringify({routes : routesEdges, day : day, hour1 : hour1, hour2 : hour2})
+        });
+        return await response.json();
+      }
 }
 
 export const displayService = new DisplayService();

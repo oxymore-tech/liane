@@ -303,16 +303,16 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task CreateStatBlajouxMontbrun()
+        public async Task CreateStatBlajouxMontbrun2()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
             var endPoints = redis.GetEndPoints();
             IServer server = redis.GetServer(endPoints[0]);
             var route = new Dictionary<string, ImmutableList<LatLng>>();
             route.Add("Blajoux_Parking|Montbrun_En_Bas", ImmutableList.Create(new LatLng(58, 75)));
-            var actual = await displayService!.CreateStat(route, "Monday", 8, 12, server);
+            var actual = await displayService!.CreateStat(server, route, "Wednesday");
             var expected = new Dictionary<string, int>();
-            expected.Add("Blajoux_Parking|Montbrun_En_Bas", 1);
+            expected.Add("Blajoux_Parking|Montbrun_En_Bas", 3);
             actual.WithDeepEqual(expected)
                 .Assert();
         }

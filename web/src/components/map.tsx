@@ -86,6 +86,9 @@ function  Map({className, center, start}: MapProps) {
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<LatLng[][]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
+  const [stats, setStats] = useState<number[]>([]);
+  
+
   useEffect(() => {
     setMyStart(start);
   }, [start]);
@@ -103,7 +106,7 @@ function  Map({className, center, start}: MapProps) {
   useEffect(() => {
     if (trips.length > 0) {
       displayService.ListRoutesEdgesFrom(trips)
-        .then(result => setRoutes(result));
+        .then(result => setRoutes(result))displayService.CreateStat(routes, "Monday", )
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }

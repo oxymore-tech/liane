@@ -139,13 +139,13 @@ namespace Liane.Service.Internal.Display
             return keysProperDay.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour) {
+        public ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour = 0) {
             var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
                                                         return Int16.Parse(listPipe[listPipe.Length - 1]) >= hour;});
             return keysProperDay.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour) {
+        public ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour = 24) {
             var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
                                                         return Int16.Parse(listPipe[listPipe.Length - 1]) <= hour;});
             return keysProperDay.ToImmutableList();
@@ -209,7 +209,11 @@ namespace Liane.Service.Internal.Display
             });
             return listeTrajets.ToImmutableList();
         }
-        public async Task<Dictionary<string, int>> CreateStat(Dictionary<string, ImmutableList<LatLng>> routesEdges, string day, int hour1, int hour2, IServer server) {
+        public async Task<Dictionary<string, int>> CreateStat(IServer server,
+                                                              Dictionary<string, ImmutableList<LatLng>> routesEdges, 
+                                                              string day,
+                                                              int hour1 = 0, 
+                                                              int hour2 = 24) {
             var stats = new Dictionary<string, int>();
             var database = await redis.Get();
             var edgeKeys = EdgeKeys(server);

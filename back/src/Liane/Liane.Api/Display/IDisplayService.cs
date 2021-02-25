@@ -17,11 +17,15 @@ namespace Liane.Api.Display
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
         ImmutableList<RedisKey> EdgeKeys(IServer server);
         ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour);
-        ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour);
-        ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour);
+        ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour = 0);
+        ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour = 24);
         ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint);
         ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint);
         Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
-        Task<Dictionary<string, int>> CreateStat(Dictionary<string, ImmutableList<LatLng>> routesEdges, string day, int hour1, int hour2, IServer server);
+        Task<Dictionary<string, int>> CreateStat(IServer server,
+                                                 Dictionary<string, ImmutableList<LatLng>> routesEdges, 
+                                                 string day,
+                                                 int hour1 = 0, 
+                                                 int hour2 = 24);
     }
 }
