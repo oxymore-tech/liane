@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { icon, LatLngExpression} from "leaflet";
+import { featureGroup, icon, LatLngExpression} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
@@ -72,7 +72,7 @@ const hours = [
   { label: "22h", value: 22 },
   { label: "23h", value: 23 },
 ]
- 
+
 export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
   let routes = [];
   for (const key in routesEdges) {
@@ -88,6 +88,7 @@ function  Mapi({className, center, start}: MapProps) {
   const [routes, setRoutes] = useState<Map<string, LatLng[][]>>(new Map<string, LatLng[][]>());
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [stats, setStats] = useState<Map<string, number>>(new Map<string, number>());
+  //var beta = (stats.get(Array.from(routes.keys())[0]) == undefined ? 0 : stats.get(Array.from(routes.keys())[0])) * 2 + 5;
 
   useEffect(() => {
     setMyStart(start);
@@ -106,17 +107,17 @@ function  Mapi({className, center, start}: MapProps) {
   useEffect(() => {
     if (trips.length > 0) {
       displayService.ListRoutesEdgesFrom(trips)
-        .then(result => setRoutes(result));
+        .then(result => setRoutes(result)).then(_ => console.log("ROUTES : ", routes));
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }
   }, [trips]);
 
   useEffect(() => {
-    if (Array.from(routes.keys()).length > 0) {
-      displayService.CreateStat(Array.from(routes.keys()), "Wednesday")
-        .then(result => setStats(result));
-    }
+    //if (Array.from(routes.keys()).length > 0) {
+    displayService.CreateStat(Array.from(routes.keys()), "Wednesday")
+      .then(result => setStats(result)).then(_ => console.log("STATS : ", stats));
+    //}
   }, [routes]);
 
   return  <div> 
@@ -171,13 +172,20 @@ function  Mapi({className, center, start}: MapProps) {
       {
         myStart &&
         <div> 
-          {
+          {/**
             Array.from(routes.keys()).map((route, index) => {
-              console.log(stats.get(route));
-              return (
-              <MemoPolyline key={index} positions={routes.get(route)} weight={stats.get(route)}/>
+              var value = (stats.get(route) == undefined) ? 0 : stats.get(route)
+              var alpha = 5 * parseInt(value.toString());
+              var beta = 20;
+              //return (
+              <MemoPolyline key={index} positions={routes.get(route)} weight={20}/>
+            //)
+            })**/
+            Array.from(routes.keys()).map((route, index) =>
+              <MemoPolyline key={index} positions={routes.get(route)} weight={(stats.get(route) == undefined ? 0 : stats.get(route)) * 2 + 3}/> //weight={beta}
             )
-            }) }
+            
+          }
         </div>
       }
       {
