@@ -5,6 +5,7 @@ import { icon, LatLngExpression} from "leaflet";
 import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
+import { Stats } from "fs";
 
 interface MapProps {
   className?: string;
@@ -86,7 +87,7 @@ function  Mapi({className, center, start}: MapProps) {
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<Map<string, LatLng[][]>>(new Map<string, LatLng[][]>());
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
-  const [stats, setStats] = useState<number[]>([]);
+  const [stats, setStats] = useState<Map<string, number>>(new Map<string, number>());
 
   useEffect(() => {
     setMyStart(start);
@@ -106,11 +107,20 @@ function  Mapi({className, center, start}: MapProps) {
     if (trips.length > 0) {
       displayService.ListRoutesEdgesFrom(trips)
         .then(result => setRoutes(result));
-      displayService.CreateStat(Array.from(routes.keys()), "Monday");
+      console.log(stats);
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }
   }, [trips]);
+
+  useEffect(() => {
+    if (routes != null) {
+      console.log(routes);
+      displayService.CreateStat(Array.from(routes.keys()), "Wednesday")
+        .then(result => setStats(result));
+        console.log(stats);
+    }
+  }, [routes]);
 
   return  <div> 
       <div className="container">
@@ -165,8 +175,8 @@ function  Mapi({className, center, start}: MapProps) {
         myStart &&
         <div> 
           {
-            Array.from(routes.values()).map((route, index) => (
-              <MemoPolyline key={index} positions={route}/>
+            Array.from(routes.keys()).map((route, index) => (
+              <MemoPolyline key={index} positions={routes.get(route)} weight={5*stats.get(route)}/>
             ))
             } 
         </div>

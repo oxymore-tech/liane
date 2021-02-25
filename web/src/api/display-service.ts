@@ -65,7 +65,7 @@ class DisplayService {
       async CreateStat(routesEdges : string[], 
                        day : string, 
                        hour1 : number = 0,  
-                       hour2 : number = 24): Promise<number[]> {
+                       hour2 : number = 24): Promise<Map<string, number>>{
         const url = new URL("/api/display/stats", BaseUrl);
         url.searchParams.append("day", day);
         url.searchParams.append("hour1", hour1.toString());
@@ -76,7 +76,7 @@ class DisplayService {
           },
           method: "POST", body: JSON.stringify(routesEdges) // {routes : routesEdges, day : day, hour1 : hour1, hour2 : hour2}
         });
-        return await response.json();
+        return new Map(Object.entries(await response.json()));
       }
 }
 

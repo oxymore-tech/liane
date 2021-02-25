@@ -45,14 +45,6 @@ namespace Liane.Web.Controllers
             return await displayService.ListRoutesEdgesFrom(trips);
         }
 
-        
-
-        /**
-        ImmutableList<string> routesEdges, 
-        [FromBody] string day,
-        [FromBody] int hour1 = 0, 
-        [FromBody] int hour2 = 24
-        **/
         /** [FromBody] Tuple<ImmutableList<string>, string, int, int> data **/
         [HttpPost("stats")]
         public async Task<Dictionary<string, int>> CreateStat([FromBody] ImmutableList<string> routesEdges, 
