@@ -22,8 +22,7 @@ namespace Liane.Api.Display
         ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint);
         ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint);
         Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
-        Task<Dictionary<string, int>> CreateStat(IServer server,
-                                                 Dictionary<string, ImmutableList<LatLng>> routesEdges, 
+        Task<Dictionary<string, int>> CreateStat(ImmutableList<string> routesEdges, 
                                                  string day,
                                                  int hour1 = 0, 
                                                  int hour2 = 24);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Display;
@@ -44,14 +45,22 @@ namespace Liane.Web.Controllers
             return await displayService.ListRoutesEdgesFrom(trips);
         }
 
+        
+
+        /**
+        ImmutableList<string> routesEdges, 
+        [FromBody] string day,
+        [FromBody] int hour1 = 0, 
+        [FromBody] int hour2 = 24
+        **/
+        /** [FromBody] Tuple<ImmutableList<string>, string, int, int> data **/
         [HttpPost("stats")]
-        public async Task<Dictionary<string, int>> CreateStat([FromBody]  IServer server,
-                                                              [FromBody] Dictionary<string, ImmutableList<LatLng>> routesEdges, 
-                                                              [FromBody] string day,
-                                                              [FromBody] int hour1 = 0, 
-                                                              [FromBody] int hour2 = 24)
+        public async Task<Dictionary<string, int>> CreateStat([FromBody] ImmutableList<string> routesEdges, 
+                                                              [FromQuery] string day,
+                                                              [FromQuery] int hour1 = 0, 
+                                                              [FromQuery] int hour2 = 24)  
         {
-            return await displayService.CreateStat(server, routesEdges, day, hour1, hour2);
+            return await displayService.CreateStat(routesEdges, day, hour1, hour2);
         }
 
         [HttpPost("liststeps")]

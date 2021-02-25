@@ -39,7 +39,7 @@ class DisplayService {
         return await response.json();
       }
 
-      async ListRoutesEdgesFrom(trips: Trip[]): Promise<LatLng[][]> {
+      async ListRoutesEdgesFrom(trips: Trip[]): Promise<Map<string, LatLng[][]>> {
         const url = new URL("/api/display/listedges", BaseUrl);
         const response = await fetch(url.toString(), {
           headers: {
@@ -47,7 +47,8 @@ class DisplayService {
           },
           method: "POST", body: JSON.stringify(trips)
         });
-        return Object.values(await response.json());
+        var data = await response.json();
+        return new Map(Object.entries(data));
       }
 
       async ListStepsFrom(trips: Trip[]): Promise<RallyingPoint[]> {
@@ -61,16 +62,19 @@ class DisplayService {
         return await response.json();
       }
 
-      async CreateStat(routesEdges : Map<string, LatLngExpression[][]>, 
+      async CreateStat(routesEdges : string[], 
                        day : string, 
                        hour1 : number = 0,  
                        hour2 : number = 24): Promise<number[]> {
         const url = new URL("/api/display/stats", BaseUrl);
+        url.searchParams.append("day", day);
+        url.searchParams.append("hour1", hour1.toString());
+        url.searchParams.append("hour2", hour2.toString());
         const response = await fetch(url.toString(), {
           headers: {
             "Content-Type": "application/json"
           },
-          method: "POST", body: JSON.stringify({routes : routesEdges, day : day, hour1 : hour1, hour2 : hour2})
+          method: "POST", body: JSON.stringify(routesEdges) // {routes : routesEdges, day : day, hour1 : hour1, hour2 : hour2}
         });
         return await response.json();
       }

@@ -3,7 +3,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { RallyingPoint } from "../api";
 import { displayService } from "../api/display-service";
-const Map = dynamic(() => import("../components/map"), {ssr: false});
+const Mapi = dynamic(() => import("../components/map"), {ssr: false});
 
 export default function Home() {
   const [start, setStart] = useState<RallyingPoint>();
@@ -17,6 +17,6 @@ export default function Home() {
   }, []);
 
   return <div>
-    <Map className="w-full h-screen" center={center} start={start}></Map>
+    <Mapi className="w-full h-screen" center={center} start={start}></Mapi>
   </div>;
 }

@@ -209,17 +209,19 @@ namespace Liane.Service.Internal.Display
             });
             return listeTrajets.ToImmutableList();
         }
-        public async Task<Dictionary<string, int>> CreateStat(IServer server,
-                                                              Dictionary<string, ImmutableList<LatLng>> routesEdges, 
+        public async Task<Dictionary<string, int>> CreateStat(ImmutableList<string> routesEdges, 
                                                               string day,
                                                               int hour1 = 0, 
                                                               int hour2 = 24) {
+            var localRedis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = localRedis.GetEndPoints();
+            IServer server = localRedis.GetServer(endPoints[0]);
             var stats = new Dictionary<string, int>();
             var database = await redis.Get();
             var edgeKeys = EdgeKeys(server);
             foreach (var route in routesEdges)
             {
-                var edge = route.Key.Split("|");
+                var edge = route.Split("|");
                 var startKeys = FilterByStartPoint(edgeKeys, edge[0]);
                 var endKeys = FilterByEndPoint(edgeKeys, edge[1]);
                 var routeKeys = startKeys.Concat(endKeys).ToImmutableHashSet().ToImmutableList();
@@ -229,7 +231,7 @@ namespace Liane.Service.Internal.Display
                 {
                     stat += database.HashKeys(key).Count();
                 }
-                stats.Add(route.Key, stat);
+                stats.Add(route, stat);
             }
             return stats;
         }

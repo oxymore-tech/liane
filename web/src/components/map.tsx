@@ -80,14 +80,13 @@ export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
   return routes;
 }
 
-function  Map({className, center, start}: MapProps) {
+function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
-  const [routes, setRoutes] = useState<LatLng[][]>([]);
+  const [routes, setRoutes] = useState<Map<string, LatLng[][]>>(new Map<string, LatLng[][]>());
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [stats, setStats] = useState<number[]>([]);
-  
 
   useEffect(() => {
     setMyStart(start);
@@ -106,7 +105,8 @@ function  Map({className, center, start}: MapProps) {
   useEffect(() => {
     if (trips.length > 0) {
       displayService.ListRoutesEdgesFrom(trips)
-        .then(result => setRoutes(result))displayService.CreateStat(routes, "Monday", )
+        .then(result => setRoutes(result));
+      displayService.CreateStat(Array.from(routes.keys()), "Monday");
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }
@@ -165,10 +165,10 @@ function  Map({className, center, start}: MapProps) {
         myStart &&
         <div> 
           {
-            routes.map((route, index) => (
+            Array.from(routes.values()).map((route, index) => (
               <MemoPolyline key={index} positions={route}/>
             ))
-          } 
+            } 
         </div>
       }
       {
@@ -203,4 +203,4 @@ function  Map({className, center, start}: MapProps) {
     </div>
 }
 
-export default Map;
+export default Mapi;
