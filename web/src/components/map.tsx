@@ -107,18 +107,15 @@ function  Mapi({className, center, start}: MapProps) {
     if (trips.length > 0) {
       displayService.ListRoutesEdgesFrom(trips)
         .then(result => setRoutes(result));
-      console.log(stats);
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }
   }, [trips]);
 
   useEffect(() => {
-    if (routes != null) {
-      console.log(routes);
+    if (Array.from(routes.keys()).length > 0) {
       displayService.CreateStat(Array.from(routes.keys()), "Wednesday")
         .then(result => setStats(result));
-        console.log(stats);
     }
   }, [routes]);
 
@@ -175,10 +172,12 @@ function  Mapi({className, center, start}: MapProps) {
         myStart &&
         <div> 
           {
-            Array.from(routes.keys()).map((route, index) => (
-              <MemoPolyline key={index} positions={routes.get(route)} weight={5*stats.get(route)}/>
-            ))
-            } 
+            Array.from(routes.keys()).map((route, index) => {
+              console.log(stats.get(route));
+              return (
+              <MemoPolyline key={index} positions={routes.get(route)} weight={stats.get(route)}/>
+            )
+            }) }
         </div>
       }
       {
