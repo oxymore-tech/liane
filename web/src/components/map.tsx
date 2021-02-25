@@ -36,16 +36,9 @@ const customIconRed = icon({
 
 const MemoPolyline = memo(Polyline);
  
-export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
-  let routes = [];
-  for (const key in routesEdges) {
-    routes.push(<Polyline positions={routesEdges[key]}/>);
-  }
-  return routes;
-}
-
 function  Map({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
+  const [myArrival, setMyArrival] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripStarts, setTripStarts] = useState([]);
   const [tripEnds, setTripEnds] = useState([]);
@@ -53,6 +46,7 @@ function  Map({className, center, start}: MapProps) {
   const [tripEnd, setTripEnd] = useState();
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<LatLng[][]>([]);
+  const [searchedTrips, setSearchedTrips] = useState<any[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
@@ -77,26 +71,43 @@ function  Map({className, center, start}: MapProps) {
   }
 
   function updateStartingTrip(e:any) {
-    let index = destinations.findIndex(destination => destination.id = e.value);
-    console.log('RALLYING POINT : ', destinations[index]);
+    let index = destinations.findIndex(destination => destination.id == e.value);
     setMyStart(destinations[index]);
     setTripStart(e);
   }
 
-  useEffect(() => {
-    displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+  function updateArrivalTrip(e:any) {
+    let index = destinations.findIndex(destination => destination.id == e.value);
+    setMyArrival(destinations[index]);
+    setTripEnd(e);
+  }
+
+  function getTrips() {
+    displayService.SearchTrips(myStart, myArrival, tripDay.value, startHour.value, endHour.value).then(
       result => {
-        setDestinations(result)
-        let tripsList = [];
-        result.forEach(city => {
-          tripsList.push({
-            label : city.id.replaceAll('_', ' '),
-            value : city.id
+        console.log('RESULT : ', result);
+        setSearchedTrips(result);
+      }
+    );
+  }
+
+  useEffect(() => {
+    if(myStart != null) {
+      displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+        result => {
+          result.push(myStart);
+          setDestinations(result);
+          let tripsList = [];
+          result.forEach(city => {
+            tripsList.push({
+              label : city.id.replaceAll('_', ' '),
+              value : city.id
+            });
           });
-        });
-        setTripStarts(tripsList);
-        setTripEnds(tripsList);
-    });
+          setTripStarts(tripsList);
+          setTripEnds(tripsList);
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -106,51 +117,69 @@ function  Map({className, center, start}: MapProps) {
   useEffect(() => {   
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
-        result => {setTrips(result)});
-    }   
+        result => {
+          setTrips(result)
+        });
+    }  
   }, [myStart]);
   
   useEffect(() => {
-    if (trips.length > 0) {
-      displayService.ListRoutesEdgesFrom(trips)
-        .then(result => setRoutes(result));
-      displayService.ListStepsFrom(trips)
-        .then(result => setSteps(result));
-      }
+    displayService.ListRoutesEdgesFrom(trips)
+      .then(result => {
+        setRoutes(result);
+      });
+    displayService.ListStepsFrom(trips)
+      .then(result => {
+        setSteps(result);
+      });
   }, [trips]);
 
   return  <div> 
+    <div className="container" style={{bottom: 10, left: 10, width: 550, zIndex: 3, position : "absolute"}}>
+      <ul className="list-disc">
+        <div> 
+          {
+            searchedTrips.map((search) => (
+              <li><strong>UTILISATEUR : {search.user}</strong> - {search.time}h - {search.phone}</li>
+            ))
+          } 
+        </div>
+      </ul>
+    </div>
     <div className="container" style={{top: 10, right: 10, width: 250, zIndex: 3, position : "absolute"}}>
-      <div className="row">
-        <div className="col-md-4">
-          <label>Lieu de départ</label>
-          <Select options={ tripStarts } value={tripStart} onChange={updateStartingTrip} placeholder="Sélectionnez un lieu"/>
+      <form className="form">
+        <div className="row">
+          <div className="col-md-4">
+            <label>Lieu de départ</label>
+            <Select options={ tripStarts } value={tripStart} onChange={updateStartingTrip} placeholder="Sélectionnez un lieu"/>
+          </div>
         </div>
-      </div>
-      <div className="row">
-        <div className="col-md-4">
-          <label>Lieu d'arrivée</label>
-          <Select options={ tripEnds } value={tripEnd} onChange={setTripEnd} placeholder="Sélectionnez un lieu"/>
+        <div className="row">
+          <div className="col-md-4">
+            <label>Lieu d'arrivée</label>
+            <Select options={ tripEnds } value={tripEnd} onChange={updateArrivalTrip} placeholder="Sélectionnez un lieu"/>
+          </div>
         </div>
-      </div>
-      <div className="row">
-        <div className="col-md-4">
-          <label>Jour</label>
-          <Select options={ days } value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour"/>
+        <div className="row">
+          <div className="col-md-4">
+            <label>Jour</label>
+            <Select options={ days } value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour"/>
+          </div>
         </div>
-      </div>
-      <div className="row">
-        <div className="col-md-4">
-          <label>Départ entre :</label>
-          <Select options={ startHours } value={startHour} onChange={updateEndHours} placeholder="Sélectionnez une heure"/>
+        <div className="row">
+          <div className="col-md-4">
+            <label>Départ entre :</label>
+            <Select options={ startHours } value={startHour} onChange={updateEndHours} placeholder="Sélectionnez une heure"/>
+          </div>
         </div>
-      </div>
-      <div className="row">
-        <div className="col-md-4">
-          <label>et :</label>
-          <Select options={ endHours } value={endHour} onChange={setEndHour} placeholder="Sélectionnez une heure"/>
+        <div className="row">
+          <div className="col-md-4">
+            <label>et :</label>
+            <Select options={ endHours } value={endHour} onChange={setEndHour} placeholder="Sélectionnez une heure"/>
+          </div>
         </div>
-      </div>
+        <button type="button" className="bg-blue-400 p-2 m-2" onClick={getTrips}>Rechercher</button>
+      </form>
     </div>
       <MapContainer className={className} center={center}
                         zoom={12}
@@ -161,16 +190,7 @@ function  Map({className, center, start}: MapProps) {
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         zIndex={2}
-
       />
-      {
-        myStart && 
-        <Marker position={myStart.position} icon={customIcon}>
-          <Popup>
-            <h3>{myStart.id}</h3>
-          </Popup>
-        </Marker>
-      }
       {
         myStart &&
         <div> 
@@ -184,16 +204,27 @@ function  Map({className, center, start}: MapProps) {
       {
         myStart &&
         <div>
-          {destinations.map((point, index) => (
-            <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
+          {destinations.map((point, index) => {
+            const icon = function (myStart:any) {
+              if (myStart.id == point.id) {
+                return customIcon;
+              } else if (myArrival.id == point.id) {
+                return customIconRed;
+              } else {
+                return customIconGray;
+              } 
+            };
+            return (
+            <Marker key={index} position={point.position} icon={icon(myStart)} eventHandlers={{
               click: () => {
-                let pointData = tripStarts.find(point0 => point0.value == point.id);
+                let pointData = tripStarts.find(point0 => point0.value === point.id);
                 setMyStart(point);         
                 setTripStart(pointData);
               },
             }}>
             </Marker>
-          ))}
+          )
+        })}
         </div>
       }
       {
@@ -211,7 +242,7 @@ function  Map({className, center, start}: MapProps) {
           ))}
         </div>
       }
-    </MapContainer>;
+    </MapContainer>
     </div>
 }
 
