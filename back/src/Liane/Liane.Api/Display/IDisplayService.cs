@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -25,11 +24,5 @@ namespace Liane.Api.Display
         Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day,
                                                                                    int hour1 = 0, 
                                                                                    int hour2 = 24);
-                                        /**
-        Task<Dictionary<string, int>> CreateStat(ImmutableList<string> routesEdges, 
-                                                 string day,
-                                                 int hour1 = 0, 
-                                                 int hour2 = 24);
-        **/
     }
 }

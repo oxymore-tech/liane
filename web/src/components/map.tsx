@@ -5,7 +5,6 @@ import { featureGroup, icon, LatLngExpression} from "leaflet";
 import { RallyingPoint, LatLng, Trip, RouteStat} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
-import { Stats } from "fs";
 
 interface MapProps {
   className?: string;
@@ -73,15 +72,26 @@ const hours = [
   { label: "23h", value: 23 },
 ]
 
-var counter = 0;
-
-export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
-  let routes = [];
-  for (const key in routesEdges) {
-    routes.push(<Polyline positions={routesEdges[key]}/>);
+const MultiPolyline = ({routes}) => {
+  return (routes.map((route, index) =>
+  {
+  counter += 1;
+  var w = route.stat;
+  console.log("poids : ", w);
+  console.log("indice : ", index);
+  var color = "#" + "00" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((1 - route.stat/5) * 255)).toString(16);
+  console.log(color);
+  if (w > 1) {
+  
+    return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
   }
-  return routes;
+  if (w == 1) {
+  return <MemoPolyline key={counter} positions={route.coordinates} weight={2} color={color}/>
+  }
+  }))
 }
+
+var counter = 0;
 
 function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
@@ -112,15 +122,6 @@ function  Mapi({className, center, start}: MapProps) {
         .then(result => setSteps(result));
       }
   }, [trips]);
-
-  /**
-  useEffect(() => {
-    //if (Array.from(routes.keys()).length > 0) {
-    displayService.CreateStat(Array.from(routes.keys()), "Wednesday")
-      .then(result => setStats(result)).then(_ => console.log("STATS : ", stats));
-    //}
-  }, [routes]);
-  **/
 
   return  <div> 
       <div className="container">
@@ -174,7 +175,7 @@ function  Mapi({className, center, start}: MapProps) {
       {
         myStart &&
         <div> 
-          {
+          {/*
             routes.map((route, index) =>
               {
                 counter += 1;
@@ -189,7 +190,7 @@ function  Mapi({className, center, start}: MapProps) {
               }
               })
             
-          }
+            */<MultiPolyline routes={routes}/>}
         </div>
       }
       {

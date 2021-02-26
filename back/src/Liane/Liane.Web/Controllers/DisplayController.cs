@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Microsoft.AspNetCore.Mvc;
-using StackExchange.Redis;
 
 namespace Liane.Web.Controllers
 {
@@ -47,16 +45,6 @@ namespace Liane.Web.Controllers
         {
             return await displayService.ListRoutesEdgesFrom(trips, day, hour1, hour2);
         }
-
-        /** [FromBody] Tuple<ImmutableList<string>, string, int, int> data 
-        [HttpPost("stats")]
-        public async Task<Dictionary<string, int>> CreateStat([FromBody] ImmutableList<string> routesEdges, 
-                                                              [FromQuery] string day,
-                                                              [FromQuery] int hour1 = 0, 
-                                                              [FromQuery] int hour2 = 24)  
-        {
-            return await displayService.CreateStat(routesEdges, day, hour1, hour2);
-        }**/
 
         [HttpPost("liststeps")]
         public ImmutableHashSet<RallyingPoint> ListStepsFrom([FromBody]  ImmutableHashSet<Trip> trips)

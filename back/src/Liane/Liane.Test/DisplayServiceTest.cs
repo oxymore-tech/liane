@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
 using Liane.Api.Display;
@@ -291,39 +290,19 @@ namespace Liane.Test
             var trips = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
             var stringTrips = Print.ImmutableHashSetToString(trips);
             var actual = await displayService!.ListRoutesEdgesFrom(trips, "Wednesday");
-            //var stringDict = Print.DictToString(actual);
-            //Console.WriteLine($"\n \n actual : {Print.ImmutableListToString(actual["Blajoux_Parking|Montbrun_En_Bas"].Item1)}");
-            var expected = new Dictionary<string, Tuple<ImmutableList<LatLng>, int>>();
+            var expected = new Dictionary<string, RouteStat>();
             var preExpected1 = await osrmService!.Route(Positions.Blajoux_Parking, Positions.Montbrun_En_Bas);
-            var expected1 = new Tuple<ImmutableList<LatLng>, int>(preExpected1.Routes[0].Geometry.Coordinates.ToLatLng(), 3);
-            //Console.WriteLine($"\n  expected 1 : {Print.ImmutableListToString(expected1.Item1)}");
+            var expected1 = new RouteStat(preExpected1.Routes[0].Geometry.Coordinates.ToLatLng(), 3);
             var preExpected2 = await osrmService!.Route(Positions.Montbrun_En_Bas, Positions.Mende);
-            var expected2 = new Tuple<ImmutableList<LatLng>, int>(preExpected2.Routes[0].Geometry.Coordinates.ToLatLng(), 1);
+            var expected2 = new RouteStat(preExpected2.Routes[0].Geometry.Coordinates.ToLatLng(), 1);
             var preExpected3 = await osrmService!.Route(Positions.Montbrun_En_Bas, Positions.Florac);
-            var expected3 = new Tuple<ImmutableList<LatLng>, int>(preExpected3.Routes[0].Geometry.Coordinates.ToLatLng(), 1);
+            var expected3 = new RouteStat(preExpected3.Routes[0].Geometry.Coordinates.ToLatLng(), 1);
             expected.Add("Blajoux_Parking|Montbrun_En_Bas", expected1);
             expected.Add("Montbrun_En_Bas|Mende", expected2);
             expected.Add("Montbrun_En_Bas|Florac", expected3);
             actual.WithDeepEqual(expected)
                 .Assert();
         }
-
-        /**
-        [Test]
-        [Category("Integration")]
-        public async Task CreateStatBlajouxMontbrun2()
-        {
-            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var endPoints = redis.GetEndPoints();
-            IServer server = redis.GetServer(endPoints[0]);
-            var route = ImmutableList.Create("Blajoux_Parking|Montbrun_En_Bas");
-            var actual = await displayService!.CreateStat(route, "Wednesday");
-            var expected = new Dictionary<string, int>();
-            expected.Add("Blajoux_Parking|Montbrun_En_Bas", 3);
-            actual.WithDeepEqual(expected)
-                .Assert();
-        }
-        **/
 
         private static async Task SetUpRedisAsync()
         {
