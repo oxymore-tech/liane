@@ -6,6 +6,8 @@ import { RallyingPoint, LatLng, Trip} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
 import { days, hours } from "../../assets/time.data";
+import { Button } from "./base/Button";
+import { Available_trips } from "./available_trips";
 
 interface MapProps {
   className?: string;
@@ -143,17 +145,7 @@ function  Map({className, center, start}: MapProps) {
   }, [trips]);
 
   return  <div> 
-    <div className="container" style={{bottom: 10, left: 10, width: 550, zIndex: 3, position : "absolute"}}>
-      <ul className="list-disc">
-        <div> 
-          {
-            searchedTrips.map((search) => (
-              <li><strong>UTILISATEUR : {search.user}</strong> - {search.time}h - </li>
-            ))
-          } 
-        </div>
-      </ul>
-    </div>
+    <Available_trips searchedTrips={searchedTrips}></Available_trips>
     <div className="container" style={{top: 10, right: 10, width: 250, zIndex: 3, position : "absolute"}}>
       <form className="form">
         <div className="row">
@@ -186,7 +178,9 @@ function  Map({className, center, start}: MapProps) {
             <Select options={ endHours } value={endHour} onChange={setEndHour} placeholder="Sélectionnez une heure"/>
           </div>
         </div>
-        <button type="button" className="bg-blue-400 p-2 m-2" onClick={getTrips}>Rechercher</button>
+        <div className="p-2">
+          <Button label="Rechercher" onClick={getTrips}></Button>
+        </div>
       </form>
     </div>
       <MapContainer className={className} center={center}
