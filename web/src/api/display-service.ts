@@ -15,7 +15,7 @@ class DisplayService {
         return await response.json();
       }
 
-      async SearchTrips(departure : RallyingPoint, arrival : RallyingPoint, day : number, hour1 : number, hour2 : number): Promise<RallyingPoint[]> {
+      async SearchTrips(departure : RallyingPoint, arrival : RallyingPoint, day : number, hour1 : number, hour2 : number): Promise<Trip[]> {
         const url = new URL("/api/display/searchtrip", BaseUrl);
         const response = await fetch(url.toString(), {
           headers: {
