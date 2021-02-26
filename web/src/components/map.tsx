@@ -73,6 +73,8 @@ const hours = [
   { label: "23h", value: 23 },
 ]
 
+var counter = 0;
+
 export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
   let routes = [];
   for (const key in routesEdges) {
@@ -87,15 +89,13 @@ function  Mapi({className, center, start}: MapProps) {
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
-  //const [stats, setStats] = useState<Map<string, number>>(new Map<string, number>());
-  //var beta = (stats.get(Array.from(routes.keys())[0]) == undefined ? 0 : stats.get(Array.from(routes.keys())[0])) * 2 + 5;
 
   useEffect(() => {
     setMyStart(start);
   }, [start]);
 
   useEffect(() => {
-    if (myStart != null) {
+    if (myStart) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setTrips(result)});
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
@@ -174,20 +174,20 @@ function  Mapi({className, center, start}: MapProps) {
       {
         myStart &&
         <div> 
-          {/**
-            Array.from(routes.keys()).map((route, index) => {
-              var value = (stats.get(route) == undefined) ? 0 : stats.get(route)
-              var alpha = 5 * parseInt(value.toString());
-              var beta = 20;
-              //return (
-              <MemoPolyline key={index} positions={routes.get(route)} weight={20}/>
-            //)
-            })
-             weight={(stats.get(route) == undefined ? 0 : stats.get(route)) * 2 + 3}
-            **/
+          {
             routes.map((route, index) =>
-              <MemoPolyline key={index} positions={route.coordinates} weight={route.stat * 5}/> //weight={beta}
-            )
+              {
+                counter += 1;
+              var w = route.stat;
+              console.log("poids : ", w);
+              console.log("indice : ", index);
+              if (w > 1) {
+                return <MemoPolyline key={counter} positions={route.coordinates} weight={5}/>
+              }
+              if (w == 1) {
+              return <MemoPolyline key={counter} positions={route.coordinates} weight={2}/>
+              }
+              })
             
           }
         </div>
