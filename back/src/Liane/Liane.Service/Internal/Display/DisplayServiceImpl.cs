@@ -10,6 +10,9 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
 using System;
+using Expo.Server.Client;
+using Expo.Server.Models;
+using Newtonsoft.Json.Linq;
 
 namespace Liane.Service.Internal.Display
 {
@@ -214,6 +217,28 @@ namespace Liane.Service.Internal.Display
                 });
             });
             return listeTrajets.ToImmutableList();
+        }
+
+        public async Task NotifyDriver(string user, string name, string number) {
+            var database = await redis.Get();
+            var redisKey = "notification_" + user;
+            var token = await database.StringGetAsync(redisKey);
+            var expoSDKClient = new PushApiClient();
+            var pushTicketReq = new PushTicketRequest() {
+                PushTo = new List<string>() { token },
+                PushBadgeCount = 1,
+                PushBody = name + " veut covoiturez avec vous !",
+                PushData = JObject.Parse("{\n" + "name: " + name + ",\n" + "number: " + number + "\n}")
+            };
+            var result = expoSDKClient.PushSendAsync(pushTicketReq).GetAwaiter().GetResult();
+
+            if (result?.PushTicketErrors?.Count() > 0) 
+            {
+                foreach (var error in result.PushTicketErrors) 
+                {
+                    Console.WriteLine($"Error: {error.ErrorCode} - {error.ErrorMessage}");
+                }
+            }
         }
     }
 }

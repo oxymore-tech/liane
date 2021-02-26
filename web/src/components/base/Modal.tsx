@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { displayService } from "../../api/display-service";
 import { TextInput } from "./TextInput";
 
 interface ModalProps {
@@ -13,10 +14,12 @@ interface ModalProps {
 export function Modal({title, message, type, user, onConfirm, onCancel}: ModalProps) {
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
+
   function sendNotification() {
-    
+    displayService.NotifyDriver(user, name, number);
     onConfirm();
   }
+  
   return <div className="fixed z-10 inset-0 overflow-y-auto">
     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div className="fixed inset-0 transition-opacity" aria-hidden="true">

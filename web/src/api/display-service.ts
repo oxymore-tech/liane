@@ -77,6 +77,20 @@ class DisplayService {
         });
         return await response.json();
       }
+
+      async NotifyDriver(user: string , name: string , number: string ): Promise<void> {
+        const url = new URL("/api/display/notify", BaseUrl);
+        url.searchParams.append("user", user.toString());
+        url.searchParams.append("name", name.toString());
+        url.searchParams.append("number", number.toString());
+        const response = await fetch(url.toString(), {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST"
+        });
+        return await response.json();
+      }
 }
 
 export const displayService = new DisplayService();

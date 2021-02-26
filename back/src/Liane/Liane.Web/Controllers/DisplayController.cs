@@ -61,5 +61,10 @@ namespace Liane.Web.Controllers
         {
             return displayService.ListStepsFrom(trips);
         }
+
+        [HttpPost("notify")]
+        public async Task NotifyDriver([FromQuery] string user, [FromQuery] string name, [FromQuery]string number) {
+            await NotifyDriver(user, name, number);
+        }
     }
 }

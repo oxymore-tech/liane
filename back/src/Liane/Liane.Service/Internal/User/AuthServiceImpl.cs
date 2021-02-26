@@ -59,7 +59,7 @@ namespace Liane.Service.Internal.User
             }
         }
 
-        public async Task<string> Login(string number, string code)
+        public async Task<string> Login(string number, string code, string token)
         {
             var phoneNumber = ParseNumber(number);
             var database = await redis.Get();
@@ -74,7 +74,8 @@ namespace Liane.Service.Internal.User
             {
                 throw new UnauthorizedAccessException("Invalid code");
             }
-
+            var redisKey2 = "notification_" + number;
+            await database.StringSetAsync(redisKey2, token);
             return GenerateToken(phoneNumber.ToString());
         }
 

@@ -44,8 +44,8 @@ export async  function sendLocation(location : LocationObject) {
  * @param phoneNumber phone number of the user
  * @param code code received by the user
  */
-export async function userLogin(phoneNumber : string, code : string) {
-    return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
+export async function userLogin(phoneNumber : string, code : string, pushToken : string) {
+    return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code+"&token="+pushToken, {
         method: 'POST'
     })
     .then(result => result.text())

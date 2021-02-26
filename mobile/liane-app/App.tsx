@@ -196,6 +196,9 @@ export default function App() {
     
   const authContextValue = useMemo(
     () => ({
+        getPushToken: () => {
+            return expoPushToken;
+        },
         signIn: async (data : any) => {
               if (
                   data.token !== undefined
