@@ -46,7 +46,7 @@ function  Map({className, center, start}: MapProps) {
   const [tripEnd, setTripEnd] = useState();
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<LatLng[][]>([]);
-  const [searchedTrips, setSearchedTrips] = useState<any[]>([]);
+  const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
@@ -87,6 +87,10 @@ function  Map({className, center, start}: MapProps) {
       result => {
         console.log('RESULT : ', result);
         setSearchedTrips(result);
+        displayService.ListRoutesEdgesFrom(result)
+        .then(result => {
+          setRoutes(result);
+        });
       }
     );
   }
@@ -114,6 +118,10 @@ function  Map({className, center, start}: MapProps) {
     setMyStart(start);
   }, [start]);
 
+  useEffect(() => {
+      setTripEnds(tripStarts.filter(point => point != tripStart));
+  }, [tripStart]);
+
   useEffect(() => {   
     if (myStart != null) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
@@ -140,7 +148,7 @@ function  Map({className, center, start}: MapProps) {
         <div> 
           {
             searchedTrips.map((search) => (
-              <li><strong>UTILISATEUR : {search.user}</strong> - {search.time}h - {search.phone}</li>
+              <li><strong>UTILISATEUR : {search.user}</strong> - {search.time}h - </li>
             ))
           } 
         </div>
@@ -227,7 +235,7 @@ function  Map({className, center, start}: MapProps) {
         })}
         </div>
       }
-      {
+      { /*
         myStart &&
         <div>
           {steps.map((point, index) => (
@@ -241,6 +249,7 @@ function  Map({className, center, start}: MapProps) {
             </Marker>
           ))}
         </div>
+        */
       }
     </MapContainer>
     </div>
