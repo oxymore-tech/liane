@@ -118,27 +118,6 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task ListRoutesFromMende()
-        {
-            await SetUpRedisAsync();
-            var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
-            var stringTrips = Print.ImmutableHashSetToString(trips);
-            var actual = await displayService!.ListRoutesEdgesFrom(trips);
-            var stringDict = Print.DictToString(actual);
-            Console.WriteLine($"\n \n acutal : {stringDict}");
-            var expected = new Dictionary<string, ImmutableList<LatLng>>();
-            var preExpected1 = await osrmService!.Route(Positions.Mende, Positions.LesBondons_Parking);
-            var expected1 = preExpected1.Routes[0].Geometry;
-            var preExpected2 = await osrmService!.Route(Positions.LesBondons_Parking, Positions.Florac);
-            var expected2 = preExpected2.Routes[0].Geometry;
-            expected.Add("Mende_LesBondons_Parking", expected1.Coordinates.ToLatLng());
-            expected.Add("LesBondons_Parking_Florac", expected2.Coordinates.ToLatLng());
-            actual.WithDeepEqual(expected)
-                .Assert();
-        }
-
-        [Test]
-        [Category("Integration")]
         public async Task DecomposeRouteBetweenMendeAndFlorac()
         {
             await SetUpRedisAsync();
@@ -303,6 +282,35 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
+        public async Task ListRoutesFromBlajoux()
+        {   
+            await SetUpRedisAsync();
+            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = redis.GetEndPoints();
+            IServer server = redis.GetServer(endPoints[0]);
+            var trips = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
+            var stringTrips = Print.ImmutableHashSetToString(trips);
+            var actual = await displayService!.ListRoutesEdgesFrom(trips, "Wednesday");
+            //var stringDict = Print.DictToString(actual);
+            //Console.WriteLine($"\n \n actual : {Print.ImmutableListToString(actual["Blajoux_Parking|Montbrun_En_Bas"].Item1)}");
+            var expected = new Dictionary<string, Tuple<ImmutableList<LatLng>, int>>();
+            var preExpected1 = await osrmService!.Route(Positions.Blajoux_Parking, Positions.Montbrun_En_Bas);
+            var expected1 = new Tuple<ImmutableList<LatLng>, int>(preExpected1.Routes[0].Geometry.Coordinates.ToLatLng(), 3);
+            //Console.WriteLine($"\n  expected 1 : {Print.ImmutableListToString(expected1.Item1)}");
+            var preExpected2 = await osrmService!.Route(Positions.Montbrun_En_Bas, Positions.Mende);
+            var expected2 = new Tuple<ImmutableList<LatLng>, int>(preExpected2.Routes[0].Geometry.Coordinates.ToLatLng(), 1);
+            var preExpected3 = await osrmService!.Route(Positions.Montbrun_En_Bas, Positions.Florac);
+            var expected3 = new Tuple<ImmutableList<LatLng>, int>(preExpected3.Routes[0].Geometry.Coordinates.ToLatLng(), 1);
+            expected.Add("Blajoux_Parking|Montbrun_En_Bas", expected1);
+            expected.Add("Montbrun_En_Bas|Mende", expected2);
+            expected.Add("Montbrun_En_Bas|Florac", expected3);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        /**
+        [Test]
+        [Category("Integration")]
         public async Task CreateStatBlajouxMontbrun2()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
@@ -315,6 +323,8 @@ namespace Liane.Test
             actual.WithDeepEqual(expected)
                 .Assert();
         }
+        **/
+
         private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");

@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
 import { featureGroup, icon, LatLngExpression} from "leaflet";
-import { RallyingPoint, LatLng, Trip} from "../api";
+import { RallyingPoint, LatLng, Trip, RouteStat} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
 import { Stats } from "fs";
@@ -85,9 +85,9 @@ function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
-  const [routes, setRoutes] = useState<Map<string, LatLng[][]>>(new Map<string, LatLng[][]>());
+  const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
-  const [stats, setStats] = useState<Map<string, number>>(new Map<string, number>());
+  //const [stats, setStats] = useState<Map<string, number>>(new Map<string, number>());
   //var beta = (stats.get(Array.from(routes.keys())[0]) == undefined ? 0 : stats.get(Array.from(routes.keys())[0])) * 2 + 5;
 
   useEffect(() => {
@@ -106,19 +106,21 @@ function  Mapi({className, center, start}: MapProps) {
   
   useEffect(() => {
     if (trips.length > 0) {
-      displayService.ListRoutesEdgesFrom(trips)
-        .then(result => setRoutes(result)).then(_ => console.log("ROUTES : ", routes));
+      displayService.ListRoutesEdgesFrom(trips, "Wednesday")
+        .then(result => {console.log("ROUTES : ", result); setRoutes(result);});
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }
   }, [trips]);
 
+  /**
   useEffect(() => {
     //if (Array.from(routes.keys()).length > 0) {
     displayService.CreateStat(Array.from(routes.keys()), "Wednesday")
       .then(result => setStats(result)).then(_ => console.log("STATS : ", stats));
     //}
   }, [routes]);
+  **/
 
   return  <div> 
       <div className="container">
@@ -180,9 +182,11 @@ function  Mapi({className, center, start}: MapProps) {
               //return (
               <MemoPolyline key={index} positions={routes.get(route)} weight={20}/>
             //)
-            })**/
-            Array.from(routes.keys()).map((route, index) =>
-              <MemoPolyline key={index} positions={routes.get(route)} weight={(stats.get(route) == undefined ? 0 : stats.get(route)) * 2 + 3}/> //weight={beta}
+            })
+             weight={(stats.get(route) == undefined ? 0 : stats.get(route)) * 2 + 3}
+            **/
+            routes.map((route, index) =>
+              <MemoPolyline key={index} positions={route.coordinates} weight={route.stat * 5}/> //weight={beta}
             )
             
           }
@@ -194,8 +198,7 @@ function  Mapi({className, center, start}: MapProps) {
           {destinations.map((point, index) => (
             <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
               click: () => {
-                setMyStart(point);
-                              
+                setMyStart(point);              
               },
             }}>
             </Marker>

@@ -1,5 +1,5 @@
 import { LatLngExpression } from "leaflet";
-import { LatLng, RallyingPoint, Trip } from ".";
+import { LatLng, RallyingPoint, RouteStat, Trip } from ".";
 import { BaseUrl } from "./url";
 
 class DisplayService {
@@ -39,18 +39,6 @@ class DisplayService {
         return await response.json();
       }
 
-      async ListRoutesEdgesFrom(trips: Trip[]): Promise<Map<string, LatLng[][]>> {
-        const url = new URL("/api/display/listedges", BaseUrl);
-        const response = await fetch(url.toString(), {
-          headers: {
-            "Content-Type": "application/json"
-          },
-          method: "POST", body: JSON.stringify(trips)
-        });
-        var data = await response.json();
-        return new Map(Object.entries(data));
-      }
-
       async ListStepsFrom(trips: Trip[]): Promise<RallyingPoint[]> {
         const url = new URL("/api/display/liststeps", BaseUrl);
         const response = await fetch(url.toString(), {
@@ -62,6 +50,26 @@ class DisplayService {
         return await response.json();
       }
 
+      async ListRoutesEdgesFrom(trips: Trip[], 
+                                day : string, 
+                                hour1 : number = 0,  
+                                hour2 : number = 24): Promise<RouteStat[]> {
+        const url = new URL("/api/display/listedges", BaseUrl);
+        url.searchParams.append("day", day);
+        url.searchParams.append("hour1", hour1.toString());
+        url.searchParams.append("hour2", hour2.toString());
+        const response = await fetch(url.toString(), {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST", body: JSON.stringify(trips)
+        });
+        var data : RouteStat[] = Object.values(await response.json());
+        console.log("DATA : ", data);
+        return data;
+      }
+
+      /**
       async CreateStat(routesEdges : string[], 
                        day : string, 
                        hour1 : number = 0,  
@@ -77,7 +85,7 @@ class DisplayService {
           method: "POST", body: JSON.stringify(routesEdges) // {routes : routesEdges, day : day, hour1 : hour1, hour2 : hour2}
         });
         return new Map(Object.entries(await response.json()));
-      }
+      }**/
 }
 
 export const displayService = new DisplayService();

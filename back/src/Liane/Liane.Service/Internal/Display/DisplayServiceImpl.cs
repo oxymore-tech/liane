@@ -94,26 +94,7 @@ namespace Liane.Service.Internal.Display
             }
             return tripsFromStart.ToImmutableHashSet();
         }
-        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips) {
-            var routesEdges = new Dictionary<string, ImmutableList<LatLng>>();
-            foreach (var trip in trips)
-            {
-                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1) {
-                    var vertex1 = trip.Coordinates[i];
-                    var vertex2 = trip.Coordinates[i + 1];
-                    var key = vertex1.Id + "|" + vertex2.Id;
-                    if (!routesEdges.ContainsKey(key)){
-                        var routeResponse = await osrmService.Route(vertex1.Position, vertex2.Position);
-                        var geojson = routeResponse.Routes[0].Geometry;
-                        var duration = routeResponse.Routes[0].Duration;
-                        var distance = routeResponse.Routes[0].Distance;
-                        Console.WriteLine(routeResponse);
-                        routesEdges.Add(key, geojson.Coordinates.ToLatLng());
-                    }
-                }
-            }
-            return routesEdges;
-        }
+
         public ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Api.Trip.Trip> trips)
         {
             var steps = new List<RallyingPoint>();
@@ -209,6 +190,54 @@ namespace Liane.Service.Internal.Display
             });
             return listeTrajets.ToImmutableList();
         }
+
+        public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips, 
+                                                                                         string day,
+                                                                                         int hour1 = 0, 
+                                                                                         int hour2 = 24) {
+            var routesEdges = new Dictionary<string, RouteStat>();
+            foreach (var trip in trips)
+            {
+                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1) {
+                    var vertex1 = trip.Coordinates[i];
+                    var vertex2 = trip.Coordinates[i + 1];
+                    var key = vertex1.Id + "|" + vertex2.Id;
+                    if (!routesEdges.ContainsKey(key)){
+                        var routeResponse = await osrmService.Route(vertex1.Position, vertex2.Position);
+                        var geojson = routeResponse.Routes[0].Geometry;
+                        var duration = routeResponse.Routes[0].Duration;
+                        var distance = routeResponse.Routes[0].Distance;
+                        //Console.WriteLine(routeResponse);
+                        routesEdges.Add(key, new RouteStat(geojson.Coordinates.ToLatLng(), 0));
+                    }
+                }
+            }
+            Console.WriteLine($"first value : ");
+            //Console.WriteLine($"Number of keys {routesEdges.Count}");
+            //Console.WriteLine($"Keys : {routesEdges}");
+            var localRedis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = localRedis.GetEndPoints();
+            IServer server = localRedis.GetServer(endPoints[0]);
+            var database = await redis.Get();
+            var edgeKeys = EdgeKeys(server);
+            foreach (var route in routesEdges.Keys)
+            {
+                var edge = route.Split("|");
+                var startKeys = FilterByStartPoint(edgeKeys, edge[0]);
+                var endKeys = FilterByEndPoint(edgeKeys, edge[1]);
+                var routeKeys = startKeys.Concat(endKeys).ToImmutableHashSet().ToImmutableList();
+                var toCount = FilterByEndHour(FilterByStartHour(FilterByDay(routeKeys, day), hour1), hour2);
+                //Console.WriteLine($"toCount 0 {toCount[0]}");
+                var stat = 0;
+                foreach (var key in toCount)
+                {
+                    stat += database.HashKeys(key).Count();
+                }
+                routesEdges[route] = new RouteStat(routesEdges[route].Coordinates, stat);
+            }
+            return routesEdges;
+        }
+        /**
         public async Task<Dictionary<string, int>> CreateStat(ImmutableList<string> routesEdges, 
                                                               string day,
                                                               int hour1 = 0, 
@@ -235,6 +264,8 @@ namespace Liane.Service.Internal.Display
             }
             return stats;
         }
+        **/
+
         private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips) {
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
