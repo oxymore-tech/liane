@@ -74,21 +74,20 @@ const hours = [
 
 const MultiPolyline = ({routes}) => {
   return (routes.map((route : RouteStat, index : number) =>
-  {
-  counter += 1;
-  var w = route.stat;
-  console.log("poids : ", w);
-  console.log("indice : ", index);
-  var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
-  console.log(color);
-  if (w > 1) {
-  
-    return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
-  }
-  if (w == 1) {
-  return <MemoPolyline key={counter} positions={route.coordinates} weight={2} color={color}/>
-  }
-  }))
+    {
+    counter += 1;
+    var w = route.stat;
+    var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
+    console.log(color);
+    if (w > 1) {
+    
+      return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
+    }
+    if (w == 1) {
+      return <MemoPolyline key={counter} positions={route.coordinates} weight={2} color={color}/>
+    }
+  })
+  )
 }
 
 var counter = 0;
