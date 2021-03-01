@@ -10,3 +10,5 @@ export interface Route {
     readonly distance: number;
     readonly delta?: number;
   }
+
+export interface RouteStat{coordinates: LatLng[], stat: number};

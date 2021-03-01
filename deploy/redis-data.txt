@@ -8,7 +8,7 @@ GEOADD RallyingPoints 3.523583114147186 44.3730706812584 Quezac_Parking
 GEOADD RallyingPoints 3.533528745174408 44.3722038066219 Ispagnac_Parking
 GEOADD RallyingPoints 3.414840996265411 44.36512686514503 GorgesDuTarnCausses
 GEOADD RallyingPoints 3.412078320980072 44.36545637889574 SaintEnimie_Parking
-GEOADD RallyingPoints 3.5922932624817 44.324371438588 Florac
+GEOADD RallyingPoints 3.578021228313446 44.31901268309318 Florac
 GEOADD RallyingPoints 3.381930291652679 44.338294306952264 SaintChelyDuTarn_En_Haut
 GEOADD RallyingPoints 3.414583504199982 44.40842497198885 Champerboux_Eglise
 GEOADD RallyingPoints 3.352039754390717 44.3533150645425 LavalDuTarn_Eglise
@@ -30,6 +30,8 @@ GEOADD RallyingPoints 2.569950520992279 44.36054915873126 Rodez_Mac_Drive
 HSET Blajoux_Parking|Montbrun_En_Bas|Monday|8 CONDUCTEUR_1 1
 HSET Blajoux_Parking|Montbrun_En_Bas|Tuesday|8 CONDUCTEUR_1 1
 HSET Blajoux_Parking|Montbrun_En_Bas|Wednesday|8 CONDUCTEUR_1 1
+HSET Blajoux_Parking|Montbrun_En_Bas|Wednesday|10 CONDUCTEUR_1 1
+HSET Blajoux_Parking|Montbrun_En_Bas|Wednesday|15 CONDUCTEUR_1 1
 HSET Montbrun_En_Bas|La_Malene_Parking|Wednesday|9 CONDUCTEUR_1 1
 HSET La_Malene_Parking|Severac_dAveyron_Rond_Point|Wednesday|10 CONDUCTEUR_1 1
 HSET LesBondons_Parking|Prades|Monday|8 CONDUCTEUR_2 1

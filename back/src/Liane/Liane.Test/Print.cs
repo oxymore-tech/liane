@@ -14,7 +14,7 @@ namespace Liane.Test
                 
                 listString += element!.ToString() + ", ";
             }
-            return listString.Remove(listString.Length - 2, 2) + "]";
+            return listString.Remove(listString.Length - 2, 2) + "]\n";
         }
 
         public static string DictToString<T>(Dictionary<string, ImmutableList<T>> dict){

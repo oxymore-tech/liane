@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { icon, LatLngExpression} from "leaflet";
-import { RallyingPoint, LatLng, Trip} from "../api";
+import {icon} from "leaflet";
+import { RallyingPoint, LatLng, Trip, RouteStat} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
 
@@ -71,27 +71,40 @@ const hours = [
   { label: "22h", value: 22 },
   { label: "23h", value: 23 },
 ]
- 
-export function getRoutes2(routesEdges: Map<string, LatLngExpression[][]>){
-  let routes = [];
-  for (const key in routesEdges) {
-    routes.push(<Polyline positions={routesEdges[key]}/>);
-  }
-  return routes;
+
+const MultiPolyline = ({routes}) => {
+  return (routes.map((route : RouteStat, index : number) =>
+    {
+    counter += 1;
+    var w = route.stat;
+    var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
+    console.log(color);
+    if (w > 1) {
+    
+      return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
+    }
+    if (w == 1) {
+      return <MemoPolyline key={counter} positions={route.coordinates} weight={2} color={color}/>
+    }
+  })
+  )
 }
 
-function  Map({className, center, start}: MapProps) {
+var counter = 0;
+
+function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<RallyingPoint[]>([]);
-  const [routes, setRoutes] = useState<LatLng[][]>([]);
+  const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
+
   useEffect(() => {
     setMyStart(start);
   }, [start]);
 
   useEffect(() => {
-    if (myStart != null) {
+    if (myStart) {
       displayService.ListTripsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {setTrips(result)});
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
@@ -102,8 +115,8 @@ function  Map({className, center, start}: MapProps) {
   
   useEffect(() => {
     if (trips.length > 0) {
-      displayService.ListRoutesEdgesFrom(trips)
-        .then(result => setRoutes(result));
+      displayService.ListRoutesEdgesFrom(trips, "Wednesday")
+        .then(result => {console.log("ROUTES : ", result); setRoutes(result);});
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
       }
@@ -161,11 +174,22 @@ function  Map({className, center, start}: MapProps) {
       {
         myStart &&
         <div> 
-          {
-            routes.map((route, index) => (
-              <MemoPolyline key={index} positions={route}/>
-            ))
-          } 
+          {/*
+            routes.map((route, index) =>
+              {
+                counter += 1;
+              var w = route.stat;
+              console.log("poids : ", w);
+              console.log("indice : ", index);
+              if (w > 1) {
+                return <MemoPolyline key={counter} positions={route.coordinates} weight={5}/>
+              }
+              if (w == 1) {
+              return <MemoPolyline key={counter} positions={route.coordinates} weight={2}/>
+              }
+              })
+            
+            */<MultiPolyline routes={routes}/>}
         </div>
       }
       {
@@ -174,8 +198,7 @@ function  Map({className, center, start}: MapProps) {
           {destinations.map((point, index) => (
             <Marker key={index} position={point.position} icon={customIconGray} eventHandlers={{
               click: () => {
-                setMyStart(point);
-                              
+                setMyStart(point);              
               },
             }}>
             </Marker>
@@ -200,4 +223,4 @@ function  Map({className, center, start}: MapProps) {
     </div>
 }
 
-export default Map;
+export default Mapi;

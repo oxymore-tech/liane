@@ -38,9 +38,12 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("listedges")]
-        public async Task<Dictionary<string, ImmutableList<LatLng>>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips)
+        public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips, 
+                                                                                         [FromQuery] string day,
+                                                                                         [FromQuery] int hour1 = 0, 
+                                                                                         [FromQuery] int hour2 = 24)
         {
-            return await displayService.ListRoutesEdgesFrom(trips);
+            return await displayService.ListRoutesEdgesFrom(trips, day, hour1, hour2);
         }
 
         [HttpPost("liststeps")]
