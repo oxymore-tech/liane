@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import { featureGroup, icon, LatLngExpression} from "leaflet";
+import {icon} from "leaflet";
 import { RallyingPoint, LatLng, Trip, RouteStat} from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
@@ -73,13 +73,13 @@ const hours = [
 ]
 
 const MultiPolyline = ({routes}) => {
-  return (routes.map((route, index) =>
+  return (routes.map((route : RouteStat, index : number) =>
   {
   counter += 1;
   var w = route.stat;
   console.log("poids : ", w);
   console.log("indice : ", index);
-  var color = "#" + "00" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((1 - route.stat/5) * 255)).toString(16);
+  var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
   console.log(color);
   if (w > 1) {
   
