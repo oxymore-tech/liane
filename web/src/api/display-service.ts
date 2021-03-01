@@ -68,11 +68,11 @@ class DisplayService {
       }
 
       async ListRoutesEdgesFrom(trips: Trip[], 
-                                day : string, 
+                                day : number, 
                                 hour1 : number = 0,  
                                 hour2 : number = 24): Promise<RouteStat[]> {
         const url = new URL("/api/display/listedges", BaseUrl);
-        url.searchParams.append("day", day);
+        url.searchParams.append("day", day.toString());
         url.searchParams.append("hour1", hour1.toString());
         url.searchParams.append("hour2", hour2.toString());
         const response = await fetch(url.toString(), {

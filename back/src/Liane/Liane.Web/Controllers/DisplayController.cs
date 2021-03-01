@@ -40,7 +40,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("searchtrip")]
-        public async Task<ImmutableList<Api.Trip.Trip>> ListTripsFrom([FromBody] JObject data)
+        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip([FromBody] JObject data)
         {
             string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday"};
             RallyingPoint departure = data["departure"].ToObject<RallyingPoint>();
@@ -52,11 +52,12 @@ namespace Liane.Web.Controllers
 
         [HttpPost("listedges")]
         public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips, 
-                                                                                         [FromQuery] string day,
+                                                                                         [FromQuery] int day,
                                                                                          [FromQuery] int hour1 = 0, 
                                                                                          [FromQuery] int hour2 = 24)
         {
-            return await displayService.ListRoutesEdgesFrom(trips, day, hour1, hour2);
+            string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday"};
+            return await displayService.ListRoutesEdgesFrom(trips, days[day], hour1, hour2);
         }
 
         [HttpPost("liststeps")]

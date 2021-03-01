@@ -38,11 +38,14 @@ const customIconRed = icon({
 
 const MemoPolyline = memo(Polyline);
 
+var counter = 0;
+
 const MultiPolyline = ({routes}) => {
   return (routes.map((route : RouteStat, index : number) =>
     {
     counter += 1;
     var w = route.stat;
+    console.log("Coucou on est rentré");
     var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
     console.log(color);
     if (w > 1) {
@@ -55,8 +58,6 @@ const MultiPolyline = ({routes}) => {
   })
   )
 }
-
-var counter = 0;
 
 function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
@@ -109,10 +110,10 @@ function  Mapi({className, center, start}: MapProps) {
       result => {
         console.log('RESULT : ', result);
         setSearchedTrips(result);
-        displayService.ListRoutesEdgesFrom(result)
+        /*displayService.ListRoutesEdgesFrom(result, "Wednesday", startHour.value, endHour.value)
         .then(result => {
           setRoutes(result);
-        });
+        });*/
       }
     );
   }
@@ -154,13 +155,11 @@ function  Mapi({className, center, start}: MapProps) {
   }, [myStart]);
   
   useEffect(() => {
-    if (trips.length > 0) {
-      displayService.ListRoutesEdgesFrom(trips, "Wednesday")
+      displayService.ListRoutesEdgesFrom(searchedTrips, tripDay.value, startHour.value, endHour.value)
         .then(result => {console.log("ROUTES : ", result); setRoutes(result);});
       displayService.ListStepsFrom(trips)
         .then(result => setSteps(result));
-      }
-  }, [trips]);
+  }, [searchedTrips]);
 
   return  <div> 
     <Available_trips searchedTrips={searchedTrips}></Available_trips>
