@@ -177,7 +177,24 @@ namespace Liane.Test
             var expected = ImmutableHashSet.Create(new RedisKey("Blajoux_Parking|Montbrun_En_Bas|Monday|8"),
                                                    new RedisKey("LesBondons_Parking|Prades|Monday|8"),
                                                    new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8"),
-                                                   new RedisKey("SaintEnimie_Parking|Mende|Monday|10"));
+                                                   new RedisKey("SaintEnimie_Parking|Mende|Monday|10"),
+                                                   new RedisKey("Florac|Cocures|Monday|8"),
+                                                   new RedisKey("Cocures|LeCrouzet|Monday|8"),
+                                                   new RedisKey("LeCrouzet|LesBondons_Parking|Monday|8"));
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+        
+        [Test]
+        [Category("Integration")]
+        public async Task FilterByAllDays()
+        {
+            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = redis.GetEndPoints();
+            IServer server = redis.GetServer(endPoints[0]);
+            var edgeKeys = displayService!.EdgeKeys(server);
+            var actual = displayService!.FilterByDay(edgeKeys);
+            var expected = edgeKeys;
             actual.WithDeepEqual(expected)
                 .Assert();
         }
@@ -300,6 +317,23 @@ namespace Liane.Test
             expected.Add("Blajoux_Parking|Montbrun_En_Bas", expected1);
             expected.Add("Montbrun_En_Bas|Mende", expected2);
             expected.Add("Montbrun_En_Bas|Florac", expected3);
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task ListKeysFromUser()
+        { 
+            await SetUpRedisAsync();
+            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = redis.GetEndPoints();
+            IServer server = redis.GetServer(endPoints[0]);
+            var edgeKeys = displayService!.EdgeKeys(server);
+            var actual = await displayService.FilterByUser(edgeKeys, "CONDUCTEUR_5");
+            var expected = ImmutableHashSet.Create("Florac|Cocures|Monday|8",
+                                                "Cocures|LeCrouzet|Monday|8",
+                                                "LeCrouzet|LesBondons_Parking|Monday|8");
             actual.WithDeepEqual(expected)
                 .Assert();
         }

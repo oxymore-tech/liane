@@ -118,8 +118,19 @@ namespace Liane.Service.Internal.Display
             return keys.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string day) {
-            var keysProperDay = edgeKeys.Where(key => key.ToString().Split("|").Contains(day));
+        /**
+        public async ImmutableList<RedisValue> EdgeValues(ImmutableList<RedisKey> keys) {
+            var database = await redis.Get();
+            var listValues = new List<RedisValue[]>();
+            foreach(var key in keys){
+                listValues.Add(database.HashKeys(key));
+            }
+
+            return listValues.Fla;
+        }**/
+
+        public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string day = "day") {
+            var keysProperDay = edgeKeys.Where(key => key.ToString().Contains(day));
             return keysProperDay.ToImmutableList();
         }
 
@@ -146,6 +157,13 @@ namespace Liane.Service.Internal.Display
                                                         return listPipe[1] == endPoint;});
             return keysProperDay.ToImmutableList();
         }
+
+        public async Task<ImmutableList<RedisKey>> FilterByUser(ImmutableList<RedisKey> edgeKeys, string user) {
+            var database = await redis.Get();
+            var keysProperUser = edgeKeys.Where(key => database.HashKeys(key).Contains(user));
+            return keysProperUser.ToImmutableList();
+        }
+
         public async Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end)
         {
             var coordinates = ImmutableList.Create(start.Position, end.Position);
