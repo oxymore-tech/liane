@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, Button, SafeAreaView, FlatList } from 'react-native';
 import { AuthContext } from '../utils/authContext';
 import { Header, Icon, ListItem, Avatar } from 'react-native-elements';
@@ -7,8 +7,10 @@ import { Header, Icon, ListItem, Avatar } from 'react-native-elements';
 import tailwind from 'tailwind-rn';
 
 const NotificationsScreen = ({ route, navigation } : any) => {
-
-    const list = [
+    const { getAskNotifications, updateAskNotifications } = useContext(AuthContext);
+    const [list, setList] = useState<any>(getAskNotifications());
+    /*
+    [
         {
           name: 'Martin souhaite covoiturer avec vous !',
           avatar_url: 'https://s3.amazonaws.com/uifaces/faces/twitter/ladylexy/128.jpg',
@@ -22,17 +24,24 @@ const NotificationsScreen = ({ route, navigation } : any) => {
           tripId : 444
         }
       ]
+    */
     const keyExtractor = (item: any, index: { toString: () => any; }) => index.toString()
     const acceptTrip = (tripId : number) => navigation.navigate('AcceptTrip', {tripId});
-
+    const deleteTrip = (name : string) => {
+        var newList = list.filter(element => element.name != name);
+        updateAskNotifications(newList);
+        setList(newList);
+    }
     const renderItem = ({ item } : any) => (
     <ListItem bottomDivider onPress={() => acceptTrip(item.tripId)}>
-        <Avatar source={{uri: item.avatar_url}} />
+        { 
+                // <Avatar source={{uri: item.avatar_url}} /> 
+        }
         <ListItem.Content>
         <ListItem.Title>{item.name}</ListItem.Title>
         <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>
         </ListItem.Content>
-        <ListItem.Chevron name='times' type='font-awesome' color='#f50' onPress={() => console.log('Supprimer notif')}/>
+        <ListItem.Chevron name='times' type='font-awesome' color='#f50' onPress={() => deleteTrip(item.name)}/>
     </ListItem>
     )
       

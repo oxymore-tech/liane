@@ -24,6 +24,7 @@ const SignUpCodeScreen = ({ navigation, route } : any) => {
      * in the future to welcome the map with the traffic etc...
     **/
     function actionsOnPress(){
+      console.log('Push tok : ', getPushToken());
       userLogin(phoneNumber, code, getPushToken()).then(token => {
         if(token) {
             console.log('SIGN_IN :', signIn);

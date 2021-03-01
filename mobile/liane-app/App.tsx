@@ -190,12 +190,19 @@ async function registerForPushNotificationsAsync() {
 
 export default function App() {
     const [expoPushToken, setExpoPushToken] = useState('');
-    const [notification, setNotification] = useState(false);
+    const [askNotifications, setAskNotifications] = useState<any[]>([]);
     const notificationListener = useRef();
     const responseListener = useRef();
     
   const authContextValue = useMemo(
     () => ({
+        getAskNotifications: () => {
+            return askNotifications;
+        },
+        updateAskNotifications: (newAskNotifications:any ) => {
+            setAskNotifications(newAskNotifications);
+            return;
+        },
         getPushToken: () => {
             return expoPushToken;
         },
@@ -223,7 +230,7 @@ export default function App() {
                   dispatch({ type: 'TO_SIGNUP_PAGE' });
               }
         }
-    }), []
+    }), [expoPushToken, askNotifications]
   );
 
   const [state, dispatch] = useReducer(
@@ -293,13 +300,21 @@ export default function App() {
     });
 
     // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
+    notificationListener.current = Notifications.addNotificationReceivedListener(data => {
     });
 
     // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log(response);
+      var notification = response.notification.request.content.data;
+      if(notification.type == 'covoiturage_notification') {
+        var newList = askNotifications.concat({
+            name : notification.name + ' souhaite covoiturer avec vous',
+            subtitle : 'Son numéro est le ' + notification.number,
+            tripId : 1
+        });
+        setAskNotifications(newList);
+      }
     });
 
     registerLocationTask().then(() => console.log("Task registred !"))
