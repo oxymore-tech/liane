@@ -1,5 +1,6 @@
+import { Constants, Notifications } from 'expo';
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, ImageBackground, StyleSheet, Alert, Button } from 'react-native';
+import { View, Text, TextInput, ImageBackground, StyleSheet, Alert, Button, Platform } from 'react-native';
 import {userLogin} from '../components/apiRequest';
 import { AuthContext } from '../utils/authContext';
 
@@ -11,10 +12,10 @@ const image = require("../Images/Mountains_2_smartphone.jpeg");
 const colorButton : string = '#00716F';
 
 const SignUpCodeScreen = ({ navigation, route } : any) => {
-    const [phoneNumber, _] = React.useState(route.params.phoneNumber);
+    const [phoneNumber, ] = React.useState(route.params.phoneNumber);
     const [code, setCode] = React.useState('Entrez votre code');
-    const { signIn } = useContext(AuthContext);
-  
+    const { getPushToken, signIn } = useContext(AuthContext);
+
     /** almost the same function than the one in "LoginPage".
      * However here we call the function to "userLogin" to generate a token of
      * auithentification. 
@@ -23,7 +24,7 @@ const SignUpCodeScreen = ({ navigation, route } : any) => {
      * in the future to welcome the map with the traffic etc...
     **/
     function actionsOnPress(){
-      userLogin(phoneNumber, code).then(token => {
+      userLogin(phoneNumber, code, getPushToken()).then(token => {
         if(token) {
             console.log('SIGN_IN :', signIn);
             signIn({ token : token });

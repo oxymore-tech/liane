@@ -11,7 +11,7 @@ const colorButton : string = '#00716F';
 
 const SignUpScreen = ({ navigation } : any) => {
     const [phoneNumber, setPhoneNumber] = React.useState('Entrez votre 06');
-  
+
     /** A set of actins triggered when the user press the button
         First we call the function that will send a SMS to the user.
         Then we print a "pop-up"  to inform the user.

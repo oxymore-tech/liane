@@ -22,9 +22,9 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("login")]
-        public Task<string> Login([FromQuery] string number, [FromQuery] string code)
+        public Task<string> Login([FromQuery] string number, [FromQuery] string code, [FromQuery] string token)
         {
-            return authService.Login(number, code);
+            return authService.Login(number, code, token);
         }
     }
 }

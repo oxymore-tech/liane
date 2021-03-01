@@ -2,7 +2,11 @@ export interface LatLng { lat: number, lng: number }
 
 export interface RallyingPoint { id: string, position: LatLng }
 
-export interface Trip {coordinates: RallyingPoint[]}
+export interface Trip {
+  coordinates: RallyingPoint[],
+  user? : string,
+  time? : number
+}
 
 export interface Route {
     readonly coordinates: LatLng[];

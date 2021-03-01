@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 
-const endpoint = "https://liane.gjini.co/api";
+const endpoint = "http://192.168.1.66:8081/api";
 
 /**
  * Send user position (location) to server
@@ -44,8 +44,9 @@ export async  function sendLocation(location : LocationObject) {
  * @param phoneNumber phone number of the user
  * @param code code received by the user
  */
-export async function userLogin(phoneNumber : string, code : string) {
-    return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code, {
+export async function userLogin(phoneNumber : string, code : string, pushToken : string) {
+    console.log('LE TOKEN KON ENVOI : ', pushToken);
+    return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code+"&token="+pushToken, {
         method: 'POST'
     })
     .then(result => result.text())
