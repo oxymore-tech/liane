@@ -118,17 +118,6 @@ namespace Liane.Service.Internal.Display
             return keys.ToImmutableList();
         }
 
-        /**
-        public async ImmutableList<RedisValue> EdgeValues(ImmutableList<RedisKey> keys) {
-            var database = await redis.Get();
-            var listValues = new List<RedisValue[]>();
-            foreach(var key in keys){
-                listValues.Add(database.HashKeys(key));
-            }
-
-            return listValues.Fla;
-        }**/
-
         public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string day = "day") {
             var keysProperDay = edgeKeys.Where(key => key.ToString().Contains(day));
             return keysProperDay.ToImmutableList();
@@ -146,13 +135,13 @@ namespace Liane.Service.Internal.Display
             return keysProperDay.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint) {
+        public ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint = "null") {
             var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
                                                         return listPipe[0] == startPoint;});
             return keysProperDay.ToImmutableList();
         }
 
-        public ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint) {
+        public ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint = "null") {
             var keysProperDay = edgeKeys.Where(key => { var listPipe = key.ToString().Split("|");
                                                         return listPipe[1] == endPoint;});
             return keysProperDay.ToImmutableList();
@@ -189,8 +178,53 @@ namespace Liane.Service.Internal.Display
             }
             return trips.ToImmutableList();
         }
-        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour) {
-            var segmentsTrip = await DecomposeTrip(start, end);
+        public async Task<ImmutableList<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null) {
+            if (start != null && end != null) {
+                return await DecomposeTrip(start, end);
+            }
+            else {
+                var database = await redis.Get();
+                var redisKey = new RedisKey("RallyingPoints");
+                var results = database.GeoRadius(redisKey, 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
+                var rallyingPoints = results.Select(r => r).ToList();
+                var defaultTrips = new List<Api.Trip.Trip>();
+                if (start != null) {
+                    Console.WriteLine("Start non null");
+                    foreach (var data in rallyingPoints) {
+                        var rallyingPoint = new RallyingPoint(data.Member, new LatLng(data.Position!.Value.Latitude, data.Position!.Value.Longitude));
+                        Console.WriteLine(rallyingPoint.Id);
+                        Console.WriteLine(start.Id);
+                        if (rallyingPoint.Id != start.Id) {
+                            Console.WriteLine("On est passé");
+                            defaultTrips.Concat(await DecomposeTrip(start, rallyingPoint));
+                        }
+                    }
+                }
+                if (end != null) {
+                    foreach (var data in rallyingPoints) {
+                        var rallyingPoint = new RallyingPoint(data.Member, new LatLng(data.Position!.Value.Latitude, data.Position!.Value.Longitude));
+                        if (rallyingPoint.Id != end.Id) {
+                            defaultTrips.Concat(await DecomposeTrip(rallyingPoint, end));
+                        }
+                    }
+                }
+                else {
+                    foreach (var dataStart in rallyingPoints) {
+                        var rallyingPointStart = new RallyingPoint(dataStart.Member, new LatLng(dataStart.Position!.Value.Latitude, dataStart.Position!.Value.Longitude));
+                        foreach (var dataEnd in rallyingPoints)
+                        {
+                            var rallyingPointEnd = new RallyingPoint(dataEnd.Member, new LatLng(dataEnd.Position!.Value.Latitude, dataEnd.Position!.Value.Longitude));
+                            defaultTrips.Concat(await DecomposeTrip(rallyingPointStart, rallyingPointEnd));
+                        }
+                    }
+                }
+            return defaultTrips.ToImmutableList();
+            }
+        }
+        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(string day, int hour, RallyingPoint? start = null, RallyingPoint? end = null) {
+            var segmentsTrip = await DefaultTrips(start, end);
+            Console.WriteLine(segmentsTrip.Count);
+            //var segmentsTrip = await DecomposeTrip(start, end);
             var listeTrajets = new List<Api.Trip.Trip>();
             var database = await redis.Get();
             segmentsTrip.ForEach(ListPoints => {
@@ -213,7 +247,7 @@ namespace Liane.Service.Internal.Display
         }
 
         public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips, 
-                                                                                         string day,
+                                                                                         string day = "day",
                                                                                          int hour1 = 0, 
                                                                                          int hour2 = 24) {
             var localRedis = await ConnectionMultiplexer.ConnectAsync("localhost");

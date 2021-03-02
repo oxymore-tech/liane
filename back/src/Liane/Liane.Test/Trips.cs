@@ -9,6 +9,7 @@ namespace Liane.Test
         public static readonly Trip Blajoux_Florac = new Trip(ImmutableList.Create(LabeledPositions.Blajoux_Parking, LabeledPositions.Montbrun_En_Bas, LabeledPositions.Florac));
         public static readonly Trip Blajoux_Mende = new Trip(ImmutableList.Create(LabeledPositions.Blajoux_Parking, LabeledPositions.Montbrun_En_Bas, LabeledPositions.Mende));
         public static readonly Trip Florac_LesBondons = new Trip(ImmutableList.Create(LabeledPositions.Florac, LabeledPositions.Cocures, LabeledPositions.LeCrouzet, LabeledPositions.LesBondons_Parking), "CONDUCTEUR_5", 8);
+        public static readonly Trip Blajoux_Montbrun_En_Bas = new Trip(ImmutableList.Create(LabeledPositions.Blajoux_Parking, LabeledPositions.Montbrun_En_Bas), "CONDUCTEUR_1", 15);
         public static readonly Trip Mende_Florac_1 = new Trip(ImmutableList.Create(
                 LabeledPositions.Mende, 
                 LabeledPositions.Balsiege_Parking_Eglise,

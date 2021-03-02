@@ -47,7 +47,7 @@ namespace Liane.Web.Controllers
             RallyingPoint arrival = data["arrival"].ToObject<RallyingPoint>();
             int day = data["day"].ToObject<int>();
             int hour1 = data["hour1"].ToObject<int>();
-            return await displayService.SearchTrip(departure, arrival, days[day], hour1);
+            return await displayService.SearchTrip(days[day], hour1, departure, arrival);
         }
 
         [HttpPost("listedges")]

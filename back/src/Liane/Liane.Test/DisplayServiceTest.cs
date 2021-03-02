@@ -289,8 +289,20 @@ namespace Liane.Test
         public async Task SearchTripFromFloracToLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrip(LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, "Monday", 8);
+            var actual = await displayService!.SearchTrip("Monday", 8, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking);
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
+            actual.WithDeepEqual(expected)
+                .Assert();
+            actual.WithDeepEqual(expected).Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task SearchTripFromNull()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.SearchTrip("Wednesday", 15, LabeledPositions.Blajoux_Parking);
+            var expected = ImmutableList.Create(Trips.Blajoux_Montbrun_En_Bas);
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();

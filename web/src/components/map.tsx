@@ -41,7 +41,7 @@ const MemoPolyline = memo(Polyline);
 var counter = 0;
 
 const MultiPolyline = ({routes}) => {
-  return (routes.map((route : RouteStat, index : number) =>
+  return (routes.map((route : RouteStat) =>
     {
     counter += 1;
     var w = route.stat;
@@ -110,10 +110,6 @@ function  Mapi({className, center, start}: MapProps) {
       result => {
         console.log('RESULT : ', result);
         setSearchedTrips(result);
-        /*displayService.ListRoutesEdgesFrom(result, "Wednesday", startHour.value, endHour.value)
-        .then(result => {
-          setRoutes(result);
-        });*/
       }
     );
   }
@@ -157,7 +153,7 @@ function  Mapi({className, center, start}: MapProps) {
   useEffect(() => {
       displayService.ListRoutesEdgesFrom(searchedTrips, tripDay.value, startHour.value, endHour.value)
         .then(result => {console.log("ROUTES : ", result); setRoutes(result);});
-      displayService.ListStepsFrom(trips)
+      displayService.ListStepsFrom(searchedTrips)
         .then(result => setSteps(result));
   }, [searchedTrips]);
 
@@ -213,22 +209,7 @@ function  Mapi({className, center, start}: MapProps) {
       {
         myStart &&
         <div> 
-          {/*
-            routes.map((route, index) =>
-              {
-                counter += 1;
-              var w = route.stat;
-              console.log("poids : ", w);
-              console.log("indice : ", index);
-              if (w > 1) {
-                return <MemoPolyline key={counter} positions={route.coordinates} weight={5}/>
-              }
-              if (w == 1) {
-              return <MemoPolyline key={counter} positions={route.coordinates} weight={2}/>
-              }
-              })
-            
-            */<MultiPolyline routes={routes}/>}
+          {<MultiPolyline routes={routes}/>}
         </div>
       }
       {
