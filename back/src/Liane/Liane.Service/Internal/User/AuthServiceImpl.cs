@@ -62,7 +62,6 @@ namespace Liane.Service.Internal.User
             var database = await redis.Get();
             var redisKey = AuthSmsTokenRedisKey(phoneNumber);
             var value = await database.StringGetAsync(redisKey);
-            /*
             if (value.IsNullOrEmpty)
             {
                 throw new UnauthorizedAccessException("Code expired");
@@ -72,7 +71,6 @@ namespace Liane.Service.Internal.User
             {
                 throw new UnauthorizedAccessException("Invalid code");
             }
-            */
             var redisKey2 = "notification_" + number;
             await database.StringSetAsync(redisKey2, token);
             return GenerateToken(phoneNumber.ToString());
