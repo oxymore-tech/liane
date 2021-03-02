@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 
-const endpoint = "http://192.168.1.66:8081/api";
+const endpoint = "https://liane.gjini.co/api"; // "http://192.168.1.66:8081/api";
 
 /**
  * Send user position (location) to server

@@ -24,5 +24,6 @@ namespace Liane.Api.Display
         Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day,
                                                                                    int hour1 = 0, 
                                                                                    int hour2 = 24);
+        Task NotifyDriver(string user, string name, string number);
     }
 }

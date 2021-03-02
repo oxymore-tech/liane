@@ -241,7 +241,7 @@ namespace Liane.Service.Internal.Display
                 PushTo = new List<string>() { token },
                 PushBadgeCount = 1,
                 PushBody = name + " veut covoiturez avec vous !",
-                PushData = JObject.Parse("{\n" + "name: " + name + ",\n" + "number: " + number + "\n}")
+                PushData = JObject.Parse("{'type': 'covoiturage_notification', 'name':'" + name + "','number': '" + number + "'}")
             };
             var result = expoSDKClient.PushSendAsync(pushTicketReq).GetAwaiter().GetResult();
 

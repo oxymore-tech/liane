@@ -67,8 +67,8 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("notify")]
-        public async Task NotifyDriver([FromQuery] string user, [FromQuery] string name, [FromQuery]string number) {
-            await NotifyDriver(user, name, number);
+        public async Task NotifyDriver([FromQuery] string user, [FromQuery] string name, [FromQuery] string number) {
+            await displayService.NotifyDriver(user, name, number);
         }
     }
 }

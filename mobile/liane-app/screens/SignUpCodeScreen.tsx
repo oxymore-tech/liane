@@ -27,12 +27,12 @@ const SignUpCodeScreen = ({ navigation, route } : any) => {
       console.log('Push tok : ', getPushToken());
       userLogin(phoneNumber, code, getPushToken()).then(token => {
         if(token) {
-            console.log('SIGN_IN :', signIn);
-            signIn({ token : token });
-            console.log("CODE : ", code);
-            console.log("TOKEN : ", token);
+            // console.log('SIGN_IN :', signIn);
+            // signIn({ token : token });
+            // console.log("CODE : ", code);
+            // console.log("TOKEN : ", token);
             Alert.alert("Bravo, vous avez réussi à saisir le code");
-            navigation.navigate('Home', {phoneNumber});
+            navigation.navigate('Permission', {token});
         }
       });
     }

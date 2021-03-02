@@ -26,6 +26,8 @@ import SettingsScreen from './screens/SettingsScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import AcceptTripScreen from './screens/AcceptTripScreen';
 import Constants from 'expo-constants';
+// Modal permissions
+import PermissionScreen from './components/PermissionScreen';
 
 
 // Initialize Notifications
@@ -45,7 +47,7 @@ const createHomeStack = () => {
   const { signOut } = useContext(AuthContext);
   return (
       <Stack.Navigator>
-          <Stack.Screen name="Home Screen" component={createDrawer} options={{ headerShown : false }}/>
+          <Stack.Screen name="Home" component={createDrawer} options={{ headerShown : false }}/>
           <Stack.Screen name="AcceptTrip" component={AcceptTripScreen} options={{ headerShown : false }}/>
       </Stack.Navigator>
   );
@@ -57,6 +59,7 @@ const createLoginStack = () => {
       <Stack.Navigator>
         <Stack.Screen name="SignIn" component={SignUpScreen}  options={{ headerShown : false }}/>
         <Stack.Screen name="SignInSms" component={SignUpCodeScreen} options={{ headerShown : false }} />
+        <Stack.Screen name="Permission" component={PermissionScreen}  options={{ headerShown : false }}/>
       </Stack.Navigator>
   );
 };
@@ -66,7 +69,7 @@ const createDrawer = () => {
   return (
       <Drawer.Navigator>
           <Drawer.Screen
-              name="Home Screen"
+              name="Accueil"
               component={HomeScreen}
               initialParams={{
                   SignOutButton: () => (
@@ -77,13 +80,16 @@ const createDrawer = () => {
                   )
               }}
           />
+        { 
+        /*  
           <Drawer.Screen name="Profil" component={ProfileScreen} />
           <Drawer.Screen name="Recherche trajets" component={FilterAndSearch} />
           <Drawer.Screen name="Carte" component={MapScreen} />
           <Drawer.Screen name="Carte et résultats" component={MapAndResultsScreen} />
           <Drawer.Screen name="Notifications" component={NotificationsScreen} />
           <Drawer.Screen name="Réglages" component={SettingsScreen} />
-
+        */ 
+        }
       </Drawer.Navigator>
   );
 };
@@ -126,6 +132,10 @@ const chooseScreen = (state : any) => {
           );
           break;
       case 'LOAD_HOME':
+          // lancement service de localisation
+          registerLocationTask().then(() => console.log("Task registred !"))
+          .catch(err => console.error(err));
+
           arr.push(
               <Stack.Screen
                   name="Home"
@@ -296,7 +306,7 @@ export default function App() {
 
     registerForPushNotificationsAsync().then(token => {
         console.log('TOKEN :', token);
-        setExpoPushToken(token)
+        setExpoPushToken(token);
     });
 
     // This listener is fired whenever a notification is received while the app is foregrounded
@@ -316,9 +326,10 @@ export default function App() {
         setAskNotifications(newList);
       }
     });
-
+/*
     registerLocationTask().then(() => console.log("Task registred !"))
       .catch(err => console.error(err));
+*/
 
     // Fetch the token from storage then navigate to our appropriate place
     const bootstrapAsync = async () => {
@@ -349,7 +360,7 @@ export default function App() {
 
   }, []);
 
-  return ( 
+  return (     
     <AuthContext.Provider value={authContextValue}>
         <NavigationContainer>
             <Stack.Navigator>{chooseScreen(state)}</Stack.Navigator>
