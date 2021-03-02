@@ -2,19 +2,23 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Liane.Api.Trip;
-
 namespace Liane.Test
 {
-        // I will handle null elements later.
-       public static class Print {
+    // I will handle null elements later.
+    public static class Print {
 
         public static string ImmutableListToString<T>(ImmutableList<T> list){
-            var listString = "[";
-            foreach(var element in list) {
-                
-                listString += element!.ToString() + ", ";
+            if (list.Count == 0) {
+                return "[]";
             }
-            return listString.Remove(listString.Length - 2, 2) + "]\n";
+            else {
+                var listString = "[";
+                foreach(var element in list) {
+                    
+                    listString += element!.ToString() + ", ";
+                }
+                return listString.Remove(listString.Length - 2, 2) + "]\n";
+            }
         }
 
         public static string DictToString<T>(Dictionary<string, ImmutableList<T>> dict){

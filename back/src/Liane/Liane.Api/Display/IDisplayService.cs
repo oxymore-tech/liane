@@ -21,7 +21,9 @@ namespace Liane.Api.Display
         ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint);
         ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint);
         Task<ImmutableList<RedisKey>> FilterByUser(ImmutableList<RedisKey> edgeKeys, string user);
-        Task<ImmutableList<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null);
+        Task<ImmutableHashSet<Api.Trip.Trip>> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, HashSet<string> listStartPoints);
+        Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key);
+        Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null);
         Task<ImmutableList<Api.Trip.Trip>> SearchTrip(string day, int hour, RallyingPoint? start = null, RallyingPoint? end = null);
         Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day,
                                                                                    int hour1 = 0, 

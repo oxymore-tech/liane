@@ -178,56 +178,91 @@ namespace Liane.Service.Internal.Display
             }
             return trips.ToImmutableList();
         }
-        public async Task<ImmutableList<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null) {
-            if (start != null && end != null) {
-                return await DecomposeTrip(start, end);
+        public static string ImmutableListToString<T>(ImmutableList<T> list){
+            if (list.Count == 0) {
+                return "[]";
             }
             else {
-                var database = await redis.Get();
-                var redisKey = new RedisKey("RallyingPoints");
-                var results = database.GeoRadius(redisKey, 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
-                var rallyingPoints = results.Select(r => r).ToList();
-                var defaultTrips = new List<Api.Trip.Trip>();
-                if (start != null) {
-                    Console.WriteLine("Start non null");
-                    foreach (var data in rallyingPoints) {
-                        var rallyingPoint = new RallyingPoint(data.Member, new LatLng(data.Position!.Value.Latitude, data.Position!.Value.Longitude));
-                        Console.WriteLine(rallyingPoint.Id);
-                        Console.WriteLine(start.Id);
-                        if (rallyingPoint.Id != start.Id) {
-                            Console.WriteLine("On est passé");
-                            defaultTrips.Concat(await DecomposeTrip(start, rallyingPoint));
-                        }
-                    }
+                var listString = "[";
+                foreach(var element in list) {
+                    
+                    listString += element!.ToString() + ", ";
                 }
-                if (end != null) {
-                    foreach (var data in rallyingPoints) {
-                        var rallyingPoint = new RallyingPoint(data.Member, new LatLng(data.Position!.Value.Latitude, data.Position!.Value.Longitude));
-                        if (rallyingPoint.Id != end.Id) {
-                            defaultTrips.Concat(await DecomposeTrip(rallyingPoint, end));
-                        }
-                    }
-                }
-                else {
-                    foreach (var dataStart in rallyingPoints) {
-                        var rallyingPointStart = new RallyingPoint(dataStart.Member, new LatLng(dataStart.Position!.Value.Latitude, dataStart.Position!.Value.Longitude));
-                        foreach (var dataEnd in rallyingPoints)
-                        {
-                            var rallyingPointEnd = new RallyingPoint(dataEnd.Member, new LatLng(dataEnd.Position!.Value.Latitude, dataEnd.Position!.Value.Longitude));
-                            defaultTrips.Concat(await DecomposeTrip(rallyingPointStart, rallyingPointEnd));
-                        }
-                    }
-                }
-            return defaultTrips.ToImmutableList();
+                return listString.Remove(listString.Length - 2, 2) + "]\n";
             }
         }
+
+        public async Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key) {
+            var database = await redis.Get();
+            var redisKey = new RedisKey("RallyingPoints");
+            var results = await database.GeoRadiusAsync(redisKey, 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
+            var points = key.ToString().Split("|");
+            var start = points[0];
+            var end = points[1];
+            var rallyingPoints = results.Where(r => r.ToString().Equals(start)).ToList();
+            rallyingPoints = rallyingPoints.Concat(results.Where(r => r.ToString().Equals(end)).ToList()).ToList();
+            var startRP = new RallyingPoint(rallyingPoints[0].Member, new LatLng(rallyingPoints[0].Position!.Value.Latitude, rallyingPoints[0].Position!.Value.Longitude));
+            var endRP = new RallyingPoint(rallyingPoints[1].Member, new LatLng(rallyingPoints[1].Position!.Value.Latitude, rallyingPoints[1].Position!.Value.Longitude));
+            return new Api.Trip.Trip(ImmutableList.Create(startRP, endRP));
+        }
+
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, HashSet<string> listStartPoints){
+            listStartPoints.Add(start);
+            var startPointKeys = FilterByStartPoint(edgeKeys, start).ToList();
+            var listTrips = new HashSet<Api.Trip.Trip>();
+            foreach (var key in startPointKeys) {
+                //Console.WriteLine($"key : {key}");
+                var endPoint = key.ToString().Split("|")[1];
+                if (!listStartPoints.Contains(endPoint)){
+                    listTrips.Add(await FromKeyToTrip(key));
+                    listTrips = listTrips.Concat(await GetTrips(edgeKeys, endPoint,  listStartPoints)).ToHashSet();
+                    //Console.WriteLine($"listTrips after call recursive fct : {ImmutableListToString(listTrips.ToImmutableList())}");
+                }
+            }
+            return listTrips.ToImmutableHashSet();
+        }
+        
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null) {
+            var localRedis = await ConnectionMultiplexer.ConnectAsync("localhost");
+            var endPoints = localRedis.GetEndPoints();
+            IServer server = localRedis.GetServer(endPoints[0]);
+            var database = await redis.Get();
+            var edgeKeys = EdgeKeys(server);
+            if (start != null && end != null) {
+                return (await DecomposeTrip(start, end)).ToImmutableHashSet();
+            }
+            else {
+                if (start != null) {
+                    return await GetTrips(edgeKeys, start.Id, new HashSet<string>());
+                }
+                else {
+                    if (end != null) {
+                        var inverseTrips = await GetTrips(edgeKeys, end!.Id, new HashSet<string>());
+                        var correctTrips = new HashSet<Api.Trip.Trip>();
+                        foreach(var inverseTrip in inverseTrips) {
+                            correctTrips.Add(new Api.Trip.Trip(ImmutableList.Create(inverseTrip.Coordinates[1], inverseTrip.Coordinates[0])));
+                        }
+                        return correctTrips.ToImmutableHashSet();
+                    }
+                    else {
+                        var trips = new HashSet<Api.Trip.Trip>();
+                        foreach (var key in edgeKeys){
+                            trips = trips.Concat(await GetTrips(edgeKeys, key.ToString().Split("|")[0], new HashSet<string>())).ToHashSet();
+                        }
+                        return trips.ToImmutableHashSet();
+                    }
+                }
+                    
+            }
+        }
+
         public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(string day, int hour, RallyingPoint? start = null, RallyingPoint? end = null) {
             var segmentsTrip = await DefaultTrips(start, end);
-            Console.WriteLine(segmentsTrip.Count);
+            Console.WriteLine($"segmentsTrips.Count : {segmentsTrip.Count}");
             //var segmentsTrip = await DecomposeTrip(start, end);
             var listeTrajets = new List<Api.Trip.Trip>();
             var database = await redis.Get();
-            segmentsTrip.ForEach(ListPoints => {
+            segmentsTrip.ToImmutableList().ForEach(ListPoints => {
                 RedisValue[] listeUtilisateurs = {};
                 for(int i = 0; i < ListPoints.Coordinates.Count-1; i++) {
                     var redisKey = new RedisKey(ListPoints.Coordinates[i].Id + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
@@ -310,6 +345,54 @@ namespace Liane.Service.Internal.Display
             return trips.Select(t => t.Coordinates.Last())
                 .ToImmutableHashSet();
         }
+
+        /**
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null) {
+            if (start != null && end != null) {
+                var result = await DecomposeTrip(start, end);
+                return result.ToImmutableHashSet();
+            }
+            else {
+                var database = await redis.Get();
+                var redisKey = new RedisKey("RallyingPoints");
+                var results = database.GeoRadius(redisKey, 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
+                var rallyingPoints = results.Select(r => r).ToList();
+                var defaultTrips = new List<Api.Trip.Trip>();
+                if (start != null) {
+                    //Console.WriteLine("Start non null");
+                    foreach (var data in rallyingPoints) {
+                        var rallyingPoint = new RallyingPoint(data.Member, new LatLng(data.Position!.Value.Latitude, data.Position!.Value.Longitude));
+                        //Console.WriteLine(rallyingPoint.Id);
+                        //Console.WriteLine(start.Id);
+                        if (!rallyingPoint.Id.Equals(start.Id)) {
+                            var trip = await DecomposeTrip(start, rallyingPoint);
+                            defaultTrips = defaultTrips.Concat(trip).ToList();
+                            Console.WriteLine($"Trajet :{ImmutableListToString(trip.ToImmutableList())}");
+                        }
+                    }
+                }
+                if (end != null) {
+                    foreach (var data in rallyingPoints) {
+                        var rallyingPoint = new RallyingPoint(data.Member, new LatLng(data.Position!.Value.Latitude, data.Position!.Value.Longitude));
+                        if (!rallyingPoint.Id.Equals(end.Id)) {
+                            defaultTrips = defaultTrips.Concat(await DecomposeTrip(rallyingPoint, end)).ToList();
+                        }
+                    }
+                }
+                else {
+                    foreach (var dataStart in rallyingPoints) {
+                        var rallyingPointStart = new RallyingPoint(dataStart.Member, new LatLng(dataStart.Position!.Value.Latitude, dataStart.Position!.Value.Longitude));
+                        foreach (var dataEnd in rallyingPoints)
+                        {
+                            var rallyingPointEnd = new RallyingPoint(dataEnd.Member, new LatLng(dataEnd.Position!.Value.Latitude, dataEnd.Position!.Value.Longitude));
+                            defaultTrips = defaultTrips.Concat(await DecomposeTrip(rallyingPointStart, rallyingPointEnd)).ToList();
+                        }
+                    }
+                }
+            return defaultTrips.ToImmutableHashSet();
+            }
+        }**/
+
 
     }
 }
