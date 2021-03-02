@@ -99,6 +99,16 @@ class DisplayService {
         });
         return await response.json();
       }
+
+      async ListTripsUser(user : string, day : string = null) : Promise<RallyingPoint[]> {
+        const url = new URL("/api/display/usertrips", BaseUrl);
+        url.searchParams.append("user", user);
+        url.searchParams.append("day", day);    
+        const response = await fetch(url.toString(), {
+          method: "GET"
+        });
+        return await response.json();
+      }
 }
 
 export const displayService = new DisplayService();

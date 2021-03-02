@@ -259,5 +259,24 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableHashSet();
         }
 
+        public async Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day)
+        {
+            var database = await redis.Get();
+            var redisKey = new RedisKey("positions|" + user);
+            var results = await database.HashGetAllAsync(redisKey);
+            var userTrips = new List<RallyingPoint>();
+            foreach(var element in results) {
+                var timestamp = element.Name;
+                System.DateTime dtDateTime = new DateTime(1970,1,1,0,0,0,0,System.DateTimeKind.Utc);
+                dtDateTime = dtDateTime.AddSeconds(Convert.ToDouble(timestamp)).ToLocalTime();
+                if(day == "-1" || Convert.ToInt32(dtDateTime.DayOfWeek).ToString().Equals(day)) {
+                    var result = await database.GeoPositionAsync("RallyingPoints", element.Value);
+                    var rp = new RallyingPoint(element.Value, new LatLng(result.Value.Latitude, result.Value.Longitude));
+                    userTrips.Add(rp);
+                }
+            }
+            return userTrips.ToImmutableList();
+        }
     }
 }
+

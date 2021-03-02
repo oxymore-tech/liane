@@ -11,6 +11,7 @@ namespace Liane.Api.Display
         Task<ImmutableList<Trip.Trip>> DisplayTrips(DisplayQuery displayQuery);
         Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng latLng);
         Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
+        Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day);
         Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
         Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end);
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);

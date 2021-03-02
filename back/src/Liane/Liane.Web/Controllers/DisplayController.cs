@@ -50,6 +50,12 @@ namespace Liane.Web.Controllers
             return await displayService.SearchTrip(departure, arrival, days[day], hour1);
         }
 
+        [HttpGet("usertrips")]
+        public async Task<ImmutableList<RallyingPoint>> ListUserTrips([FromQuery] string user, [FromQuery] string day)
+        {
+            return await displayService.ListUserTrips(user, day);
+        }
+
         [HttpPost("listedges")]
         public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips, 
                                                                                          [FromQuery] int day,
