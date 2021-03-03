@@ -46,7 +46,7 @@ const MultiPolyline = ({routes}) => {
     counter += 1;
     var w = route.stat;
     console.log("Coucou on est rentré");
-    var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
+    var color = "#" + (Math.floor((1 - route.stat/10) * 255)).toString(16) + (Math.floor((route.stat/10) * 255)).toString(16) + "00";
     console.log(color);
     if (w > 1) {
     
@@ -61,6 +61,7 @@ const MultiPolyline = ({routes}) => {
 
 function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
+  const [realStart, setRealStart] = useState(null);
   const [myArrival, setMyArrival] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripStarts, setTripStarts] = useState([]);
@@ -71,20 +72,26 @@ function  Mapi({className, center, start}: MapProps) {
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
+  const [tripDay, setTripDay] = useState(days[0]);
+  const [startHours, ] = useState(hours);
+  const [endHours, setEndHours] = useState(hours);
+  const [startHour, setStartHour] = useState(hours[0]);
+  const [endHour, setEndHour] = useState(hours[23]);
+  /**
   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
     return date.getDay() == jour.value;
   }));
-  const [startHours, ] = useState(hours);
-  const [endHours, setEndHours] = useState(hours);
+
   const [startHour, setStartHour] = useState(hours.find(heure => {
     let date = new Date();
     return date.getHours() == heure.value;
   }));
+  
   const [endHour, setEndHour] = useState(hours.find(heure => {
     let date = new Date();
     return date.getHours()+1 == heure.value;
-  }));
+  }));**/
 
   function updateEndHours(e:any) {
     const newEndHours = e.value != 23 ? hours.filter(hour => hour.value > e.value) : hours;
@@ -96,6 +103,7 @@ function  Mapi({className, center, start}: MapProps) {
   function updateStartingTrip(e:any) {
     let index = destinations.findIndex(destination => destination.id == e.value);
     setMyStart(destinations[index]);
+    setRealStart(destinations[index]);
     setTripStart(e);
   }
 
@@ -106,7 +114,7 @@ function  Mapi({className, center, start}: MapProps) {
   }
 
   function getTrips() {
-    displayService.SearchTrips(myStart, myArrival, tripDay.value, startHour.value, endHour.value).then(
+    displayService.SearchTrips(realStart, myArrival, tripDay.value, startHour.value, endHour.value).then(
       result => {
         console.log('RESULT : ', result);
         setSearchedTrips(result);

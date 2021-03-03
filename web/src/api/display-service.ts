@@ -29,7 +29,9 @@ class DisplayService {
             hour2,
           })
         });
-        return Object.values(await response.json());
+        var data = await response.json();
+        console.log("AFFICHE MOI LA REPONSE POUR LES TRIPS DANS ST: ", data);
+        return Object.values(data);
     }
 
     async ListDestinationsFrom(id: string,  lat: number, lng: number): Promise<RallyingPoint[]> {
@@ -82,7 +84,7 @@ class DisplayService {
           method: "POST", body: JSON.stringify(trips)
         });
         var data : RouteStat[] = Object.values(await response.json());
-        console.log("DATA : ", data);
+        console.log("DATA LRE ds.ts: ", data);
         return data;
       }
 

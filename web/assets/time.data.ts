@@ -1,4 +1,5 @@
 const days = [
+    { label: "Semaine", value: 7},
     { label: "Lundi", value: 1 },
     { label: "Mardi", value: 2 },
     { label: "Mercredi", value: 3 },
