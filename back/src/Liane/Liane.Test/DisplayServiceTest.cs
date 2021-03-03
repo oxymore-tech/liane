@@ -322,7 +322,7 @@ namespace Liane.Test
         public async Task SearchTripFromNull()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16);
+            var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16, null, LabeledPositions.Montbrun_En_Bas);
             var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas_2);
             /**
             foreach(var trip in actual){
