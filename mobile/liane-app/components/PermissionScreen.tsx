@@ -30,8 +30,10 @@ const PermissionScreen = ({ route, navigation } : any) => {
             <View style={tailwind('pt-8 items-center')}>
                 <View style={tailwind('bg-blue-200 px-3 py-1')}>
                     <Text style={tailwind('text-blue-800 text-xl font-semibold')}>
-                    Cette application de l'association Oxymore collecte des données de localisation  
-                    pour permettre l'enregistrement des positions d'un conducteur même quand l'application est fermée ou pas en cours d'utilisation.
+                    Afin de partager vos trajets locaux avec les autres utilisateurs, Liane enregistre votre position GPS, même quand l'application est fermée.
+                    Seuls les trajets en voiture effectués entre les points de ralliement sont enregistrés.
+                    Ces trajets sont partagés de manière anonyme avec les autres utilisateurs.
+                    Un audit peut être mené par une société tierce sur le code de l'application.
                     </Text>
                 </View>
             </View>
