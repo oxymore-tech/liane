@@ -49,8 +49,11 @@ export async function userLogin(phoneNumber : string, code : string, pushToken :
     return fetch(endpoint + "/auth/login?number="+phoneNumber+"&code="+code+"&token="+pushToken, {
         method: 'POST'
     })
-    .then(result => result.text())
-    .then((token) => {
+    .then(async (result) => {
+        if (result.status != 200) {
+          return false;
+        } 
+        var token = await result.text();
         console.log('TOKEN ? : ', JSON.stringify(token));
         AsyncStorage.setItem("tokenJWT", token);
         return token;

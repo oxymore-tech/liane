@@ -24,14 +24,14 @@ const PermissionScreen = ({ route, navigation } : any) => {
     return (
         <View style={tailwind('container')}>
             <Header
-                leftComponent={<Icon name='arrow-left' type='font-awesome-5' solid={true} color="white" onPress={() => navigation.navigate('Notifications')}/>}
                 centerComponent={{ text: 'LIANE APP', style: { color: '#fff' } }}
-                rightComponent={<Icon name='bell' type='font-awesome-5' solid={true} color="white"/>}/>
+            />
 
             <View style={tailwind('pt-8 items-center')}>
-                <View style={tailwind('bg-blue-200 px-3 py-1 rounded-full')}>
+                <View style={tailwind('bg-blue-200 px-3 py-1')}>
                     <Text style={tailwind('text-blue-800 text-xl font-semibold')}>
-                        Acceptez l'utilisation de vos données de localisation, BLABLABLA
+                    Cette application de l'association Oxymore collecte des données de localisation  
+                    pour permettre l'enregistrement des positions d'un conducteur même quand l'application est fermée ou pas en cours d'utilisation.
                     </Text>
                 </View>
             </View>

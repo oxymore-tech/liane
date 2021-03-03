@@ -18,9 +18,13 @@ const HomeScreen = ({ route, navigation } : any) => {
                         </Text>
                     </View>
                 </View>
-                <View>
-                    
-
+                <View style={tailwind('container')}>
+                    <Image
+                    style={tailwind('self-center')}
+                        source={require('../assets/logo_mini.png')}
+                    />
+                </View>
+                <View>               
                     <Button title="Menu" onPress={() => navigation.openDrawer()} />
                     <SignOutButton />
                 </View>
