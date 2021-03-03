@@ -279,7 +279,7 @@ namespace Liane.Test
             var endPoints = redis.GetEndPoints();
             IServer server = redis.GetServer(endPoints[0]);
             var edgeKeys = displayService!.EdgeKeys(server);
-            var preActual = await displayService!.GetTrips(edgeKeys, "Blajoux_Parking", new HashSet<string>());
+            var preActual = await displayService!.GetTrips(edgeKeys, "Blajoux_Parking", 8, new HashSet<string>());
             var actual = new HashSet<ImmutableList<Liane.Api.Display.RallyingPoint>>();
             foreach(var trip in preActual){
                 Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}");
@@ -310,7 +310,7 @@ namespace Liane.Test
         public async Task SearchTripFromFloracToLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrip("Monday", 8, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking);
+            var actual = await displayService!.DefaultSearchTrip("Monday", 8, 9, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking);
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -322,56 +322,14 @@ namespace Liane.Test
         public async Task SearchTripFromNull()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrip("Wednesday", 15, LabeledPositions.Blajoux_Parking);
-            var expected = ImmutableList.Create(Trips.Blajoux_Montbrun_En_Bas);
-            //Console.WriteLine($"actual : {actual}");
+            var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16);
+            var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas, Trips.Blajoux_Montbrun_En_Bas_2);
+            foreach(var trip in actual){
+                Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.user}, time : {trip.time}");
+            }
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();
-        }
-
-        [Test]
-        [Category("Integration")]
-        public async Task PrintRedisValues()
-        {   /**
-            await SetUpRedisAsync();
-            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var endPoints = redis.GetEndPoints();
-            IServer server = redis.GetServer(endPoints[0]);**/
-            //Console.WriteLine($"\n \n \nlist RPs : {Print.ImmutableListToString(data.ToImmutableList())}"); //Print.ImmutableListToString(data)
-            //Console.WriteLine($"rp Id : {rp.Id}"); //Print.ImmutableListToString(data)
-            //var redisSettings = new RedisSettings("localhost");
-            //var redis = new RedisClient(new TestLogger<RedisClient>(), redisSettings);
-
-            await SetUpRedisAsync();
-            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var database = redis.GetDatabase();
-            var redisKey = new RedisKey("RallyingPoints");
-            var data = database.GeoRadius(redisKey, 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
-            var start = new RallyingPoint(data[5].ToString(), new LatLng(data[5].Position!.Value.Latitude, data[5].Position!.Value.Longitude));
-            /**
-            var rp = new RallyingPoint(data[6].ToString(), new LatLng(data[6].Position!.Value.Latitude, data[6].Position!.Value.Longitude));
-            var defaultTrips = new List<Api.Trip.Trip>();
-            if (!(rp.Id.Equals(start))) {
-                //Console.WriteLine("DANS LE IF");
-                var voyage = await displayService!.DecomposeTrip(start, rp);
-                defaultTrips = defaultTrips.Concat(voyage).ToList();
-            }**/
-            var defaultTrips = new List<Api.Trip.Trip>();
-            var i = 0;
-            foreach (var rp in data) {
-                if (i < 10) {
-                    //Console.WriteLine("OK IF 1");
-                    i += 1;
-                    var rallyingPoint = new RallyingPoint(rp.ToString(), new LatLng(rp.Position!.Value.Latitude, rp.Position.Value.Longitude));
-                    //Console.WriteLine($"RP : {rallyingPoint.Id}\n");
-                    if (!rallyingPoint.Id.Equals(start.Id)) {
-                        //Console.WriteLine("OK IF 2");
-                        defaultTrips = defaultTrips.Concat(await displayService!.DecomposeTrip(start, rallyingPoint)).ToList();
-                    }
-                }
-            }
-            Console.WriteLine($"\n \n \nlist TRIPS : {Print.ImmutableListToString(defaultTrips.ToImmutableList())}"); //Print.ImmutableListToString(defaultTrips.ToImmutableList())
         }
 
         [Test]

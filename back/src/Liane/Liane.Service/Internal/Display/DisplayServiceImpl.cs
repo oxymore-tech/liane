@@ -206,23 +206,23 @@ namespace Liane.Service.Internal.Display
             return new Api.Trip.Trip(ImmutableList.Create(startRP, endRP));
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, HashSet<string> listStartPoints){
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, int hour, HashSet<string> listStartPoints){
             listStartPoints.Add(start);
             var startPointKeys = FilterByStartPoint(edgeKeys, start).ToList();
             var listTrips = new HashSet<Api.Trip.Trip>();
             foreach (var key in startPointKeys) {
                 //Console.WriteLine($"key : {key}");
                 var endPoint = key.ToString().Split("|")[1];
-                if (!listStartPoints.Contains(endPoint)){
+                if (!listStartPoints.Contains(endPoint) && (Int32.Parse(key.ToString().Split("|")[3]) >= hour)){
                     listTrips.Add(await FromKeyToTrip(key));
-                    listTrips = listTrips.Concat(await GetTrips(edgeKeys, endPoint,  listStartPoints)).ToHashSet();
+                    listTrips = listTrips.Concat(await GetTrips(edgeKeys, endPoint, hour, listStartPoints)).ToHashSet();
                     //Console.WriteLine($"listTrips after call recursive fct : {ImmutableListToString(listTrips.ToImmutableList())}");
                 }
             }
             return listTrips.ToImmutableHashSet();
         }
         
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start = null, RallyingPoint? end = null) {
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int hour, RallyingPoint? start = null, RallyingPoint? end = null) {
             var localRedis = await ConnectionMultiplexer.ConnectAsync("localhost");
             var endPoints = localRedis.GetEndPoints();
             IServer server = localRedis.GetServer(endPoints[0]);
@@ -233,11 +233,11 @@ namespace Liane.Service.Internal.Display
             }
             else {
                 if (start != null) {
-                    return await GetTrips(edgeKeys, start.Id, new HashSet<string>());
+                    return await GetTrips(edgeKeys, start.Id, hour, new HashSet<string>());
                 }
                 else {
                     if (end != null) {
-                        var inverseTrips = await GetTrips(edgeKeys, end!.Id, new HashSet<string>());
+                        var inverseTrips = await GetTrips(edgeKeys, end!.Id, hour, new HashSet<string>());
                         var correctTrips = new HashSet<Api.Trip.Trip>();
                         foreach(var inverseTrip in inverseTrips) {
                             correctTrips.Add(new Api.Trip.Trip(ImmutableList.Create(inverseTrip.Coordinates[1], inverseTrip.Coordinates[0])));
@@ -247,7 +247,7 @@ namespace Liane.Service.Internal.Display
                     else {
                         var trips = new HashSet<Api.Trip.Trip>();
                         foreach (var key in edgeKeys){
-                            trips = trips.Concat(await GetTrips(edgeKeys, key.ToString().Split("|")[0], new HashSet<string>())).ToHashSet();
+                            trips = trips.Concat(await GetTrips(edgeKeys, key.ToString().Split("|")[0], hour, new HashSet<string>())).ToHashSet();
                         }
                         return trips.ToImmutableHashSet();
                     }
@@ -256,29 +256,46 @@ namespace Liane.Service.Internal.Display
             }
         }
 
-        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip(string day, int hour, RallyingPoint? start = null, RallyingPoint? end = null) {
-            var segmentsTrip = await DefaultTrips(start, end);
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null) {
+            if (day.Equals("day")){
+                string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday"};
+                var listTrips =  new HashSet<Api.Trip.Trip>();
+                for(int i = 0; i < 7; i++) {
+                    listTrips = listTrips.Concat(await SearchTrip(days[i], startHour, endHour, start, end)).ToHashSet();
+                }
+                return listTrips.ToImmutableHashSet();
+            }
+            else {
+                return await SearchTrip(day, startHour, endHour, start, end);
+            }
+        }
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null) {
+            var segmentsTrip = (await DefaultTrips(startHour, start, end)).ToImmutableList();
             Console.WriteLine($"segmentsTrips.Count : {segmentsTrip.Count}");
-            //var segmentsTrip = await DecomposeTrip(start, end);
             var listeTrajets = new List<Api.Trip.Trip>();
             var database = await redis.Get();
-            segmentsTrip.ToImmutableList().ForEach(ListPoints => {
+            segmentsTrip.ForEach(ListPoints => {
                 RedisValue[] listeUtilisateurs = {};
+                Console.WriteLine($"nb RP : {ListPoints.Coordinates.Count}");
                 for(int i = 0; i < ListPoints.Coordinates.Count-1; i++) {
-                    var redisKey = new RedisKey(ListPoints.Coordinates[i].Id + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
-                    var users = database.HashKeys(redisKey);
-                    if (i==0) {
-                        listeUtilisateurs = users;
-                    } else {
-                        listeUtilisateurs = listeUtilisateurs.Where(utilisateur => users.Contains(utilisateur)).ToArray();
+                    for(int hour = startHour; hour < endHour; hour++) {
+                        var redisKey = new RedisKey(ListPoints.Coordinates[i].Id + "|" + ListPoints.Coordinates[i+1].Id + "|" + day + "|" + hour.ToString());
+                        var users = database.HashKeys(redisKey);
+                        if (i == 0) {
+                            listeUtilisateurs = users;
+                        } else {
+                            listeUtilisateurs = listeUtilisateurs.Where(utilisateur => users.Contains(utilisateur)).ToArray();
+                        }
+                        Array.ForEach(listeUtilisateurs, user => {
+                            var trip = new Api.Trip.Trip(ListPoints.Coordinates, user.ToString(), hour);
+                            listeTrajets.Add(trip);
+                        });
                     }
                 }
-                Array.ForEach(listeUtilisateurs, user => {
-                    var trip = new Api.Trip.Trip(ListPoints.Coordinates, user.ToString(), hour);
-                    listeTrajets.Add(trip);
-                });
+                
             });
-            return listeTrajets.ToImmutableList();
+            Console.WriteLine($"SAUCE MAYO : {listeTrajets.ToHashSet().ToImmutableHashSet().Count}");
+            return listeTrajets.ToImmutableHashSet();
         }
 
         public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips, 
