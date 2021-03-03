@@ -295,8 +295,8 @@ namespace Liane.Service.Internal.Display
                 
             });
             Console.WriteLine(listeTrajets[0].Equals(listeTrajets[1]));
-            Console.WriteLine(listeTrajets[0].user == listeTrajets[1].user);
-            Console.WriteLine(listeTrajets[0].time == listeTrajets[1].time);
+            Console.WriteLine(listeTrajets[0].User == listeTrajets[1].User);
+            Console.WriteLine(listeTrajets[0].Time == listeTrajets[1].Time);
             Console.WriteLine($"SAUCE MAYO : {listeTrajets.ToHashSet().ToImmutableHashSet().Count}");
             return listeTrajets.ToImmutableHashSet();
         }

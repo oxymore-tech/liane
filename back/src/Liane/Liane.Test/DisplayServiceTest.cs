@@ -325,7 +325,7 @@ namespace Liane.Test
             var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16);
             var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas);
             foreach(var trip in actual){
-                Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.user}, time : {trip.time}");
+                Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
             }
             actual.WithDeepEqual(expected)
                 .Assert();
