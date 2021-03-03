@@ -203,23 +203,36 @@ namespace Liane.Service.Internal.Display
             rallyingPoints = rallyingPoints.Concat(results.Where(r => r.ToString().Equals(end)).ToList()).ToList();
             var startRP = new RallyingPoint(rallyingPoints[0].Member, new LatLng(rallyingPoints[0].Position!.Value.Latitude, rallyingPoints[0].Position!.Value.Longitude));
             var endRP = new RallyingPoint(rallyingPoints[1].Member, new LatLng(rallyingPoints[1].Position!.Value.Latitude, rallyingPoints[1].Position!.Value.Longitude));
-            return new Api.Trip.Trip(ImmutableList.Create(startRP, endRP));
+            var point = new HashSet<RallyingPoint>();
+            point.Add(startRP);
+            point.Add(endRP);
+            return new Api.Trip.Trip(point.ToImmutableList());//ImmutableList.Create(startRP, endRP)
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, int hour, HashSet<string> listStartPoints){
+        public async Task<(ImmutableHashSet<Api.Trip.Trip>, ImmutableList<RedisKey>)> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, int hour, HashSet<string> listStartPoints){
             listStartPoints.Add(start);
             var startPointKeys = FilterByStartPoint(edgeKeys, start).ToList();
             var listTrips = new HashSet<Api.Trip.Trip>();
+            //Console.WriteLine($"startPointKeys : {ImmutableListToString(startPointKeys.ToImmutableList())}");
+            var newKeys = edgeKeys;
             foreach (var key in startPointKeys) {
                 //Console.WriteLine($"key : {key}");
                 var endPoint = key.ToString().Split("|")[1];
                 if (!listStartPoints.Contains(endPoint) && (Int32.Parse(key.ToString().Split("|")[3]) >= hour)){
-                    listTrips.Add(await FromKeyToTrip(key));
-                    listTrips = listTrips.Concat(await GetTrips(edgeKeys, endPoint, hour, listStartPoints)).ToHashSet();
+                    newKeys = newKeys.Remove(key);
+                    var newTrip = await FromKeyToTrip(key);
+                    var a = Int32.Parse(key.ToString().Split("|")[3]);
+                    Console.WriteLine($"Int32... : {a}");
+                    Console.WriteLine($"HOUR : {hour}");
+                    listTrips.Add(newTrip);
+                    var otherTrips = await GetTrips(newKeys, endPoint, hour, listStartPoints);
+                    newKeys = otherTrips.Item2;
+                    listTrips = (listTrips.Concat(otherTrips.Item1)).ToHashSet();
                     //Console.WriteLine($"listTrips after call recursive fct : {ImmutableListToString(listTrips.ToImmutableList())}");
                 }
             }
-            return listTrips.ToImmutableHashSet();
+            //Console.WriteLine($"COUNT COUNT: {listTrips.Count}");
+            return (listTrips.ToImmutableHashSet(), newKeys);
         }
         
         public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int hour, RallyingPoint? start = null, RallyingPoint? end = null) {
@@ -233,11 +246,11 @@ namespace Liane.Service.Internal.Display
             }
             else {
                 if (start != null) {
-                    return (await GetTrips(edgeKeys, start.Id, hour, new HashSet<string>())).ToImmutableHashSet();
+                    return (await GetTrips(edgeKeys, start.Id, hour, new HashSet<string>())).Item1.ToImmutableHashSet();
                 }
                 else {
                     if (end != null) {
-                        var inverseTrips = await GetTrips(edgeKeys, end!.Id, hour, new HashSet<string>());
+                        var inverseTrips = (await GetTrips(edgeKeys, end!.Id, hour, new HashSet<string>())).Item1;
                         var correctTrips = new HashSet<Api.Trip.Trip>();
                         foreach(var inverseTrip in inverseTrips) {
                             correctTrips.Add(new Api.Trip.Trip(ImmutableList.Create(inverseTrip.Coordinates[1], inverseTrip.Coordinates[0])));
@@ -246,8 +259,15 @@ namespace Liane.Service.Internal.Display
                     }
                     else {
                         var trips = new HashSet<Api.Trip.Trip>();
+                        //Console.WriteLine($"lNB KEYS: {edgeKeys.Count}");
+                        var currentEdgeKeys = edgeKeys;
                         foreach (var key in edgeKeys){
-                            trips = trips.Concat(await GetTrips(edgeKeys, key.ToString().Split("|")[0], hour, new HashSet<string>())).ToHashSet();
+                            //Console.WriteLine($"FRANCOIS FRANCOIS: {key}");
+                            var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], hour, new HashSet<string>());
+                            trips = trips.Concat(tripsAndKeys.Item1).ToHashSet();
+                            currentEdgeKeys = tripsAndKeys.Item2;
+                            //Console.WriteLine($"count currentEdgeKeys : {currentEdgeKeys.Count}");
+                            //Console.WriteLine($"count trips : {trips.Count}");
                         }
                         return trips.ToImmutableHashSet();
                     }
@@ -272,7 +292,10 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null) {
             var segmentsTrip = (await DefaultTrips(startHour, start, end)).ToImmutableList();
             Console.WriteLine($"segmentsTrips.Count : {segmentsTrip.Count}");
-            var listeTrajets = new List<Api.Trip.Trip>();
+            foreach(var trip in segmentsTrip){
+                Console.WriteLine($"TRIP : {ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
+            }
+            var listeTrajets = new HashSet<Api.Trip.Trip>();
             var database = await redis.Get();
             segmentsTrip.ForEach(ListPoints => {
                 RedisValue[] listeUtilisateurs = {};
@@ -294,10 +317,11 @@ namespace Liane.Service.Internal.Display
                 }
                 
             });
+            /**
             Console.WriteLine(listeTrajets[0].Equals(listeTrajets[1]));
             Console.WriteLine(listeTrajets[0].User == listeTrajets[1].User);
-            Console.WriteLine(listeTrajets[0].Time == listeTrajets[1].Time);
-            Console.WriteLine($"SAUCE MAYO : {listeTrajets.ToHashSet().ToImmutableHashSet().Count}");
+            Console.WriteLine(listeTrajets[0].Time == listeTrajets[1].Time);**/
+            Console.WriteLine($"NB ELEMENTS listetrajets : {listeTrajets.ToHashSet().ToImmutableHashSet().Count}");
             return listeTrajets.ToImmutableHashSet();
         }
 

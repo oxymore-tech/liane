@@ -279,7 +279,7 @@ namespace Liane.Test
             var endPoints = redis.GetEndPoints();
             IServer server = redis.GetServer(endPoints[0]);
             var edgeKeys = displayService!.EdgeKeys(server);
-            var preActual = await displayService!.GetTrips(edgeKeys, "Blajoux_Parking", 8, new HashSet<string>());
+            var preActual = (await displayService!.GetTrips(edgeKeys, "Blajoux_Parking", 8, new HashSet<string>())).Item1;
             var actual = new HashSet<ImmutableList<Liane.Api.Display.RallyingPoint>>();
             foreach(var trip in preActual){
                 Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}");
@@ -323,10 +323,11 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16);
-            var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas);
+            var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas_2);
+            /**
             foreach(var trip in actual){
                 Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
-            }
+            }**/
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();
