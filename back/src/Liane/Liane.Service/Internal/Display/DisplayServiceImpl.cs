@@ -13,6 +13,7 @@ using System;
 using Expo.Server.Client;
 using Expo.Server.Models;
 using Newtonsoft.Json.Linq;
+using Liane.Api.Notification;
 
 namespace Liane.Service.Internal.Display
 {
@@ -22,13 +23,15 @@ namespace Liane.Service.Internal.Display
         private readonly IRedis redis;
         private readonly ITripService tripService;
         private readonly IOsrmService osrmService;
+        private readonly INotificationService notificationService;
 
-        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService, IOsrmService osrmService)
+        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService, IOsrmService osrmService, INotificationService notificationService)
         {
             this.logger = logger;
             this.tripService = tripService;
             this.redis = redis;
             this.osrmService = osrmService;
+            this.notificationService = notificationService;
         }
 
         public Task<ImmutableList<Api.Trip.Trip>> DisplayTrips(DisplayQuery displayQuery)
@@ -233,6 +236,7 @@ namespace Liane.Service.Internal.Display
         }
 
         public async Task NotifyDriver(string user, string name, string number) {
+            await notificationService.addNotification(user, new Api.Notification.Notification(Convert.ToInt32(DateTime.Now), name + " veut covoiturez avec vous !"));
             var database = await redis.Get();
             var redisKey = "notification_" + user;
             var token = await database.StringGetAsync(redisKey);

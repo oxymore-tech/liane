@@ -8,6 +8,7 @@ using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
+using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
@@ -22,6 +23,7 @@ namespace Liane.Test
     {
         private IDisplayService? displayService;
         private OsrmServiceImpl? osrmService;
+        private NotificationServiceImpl? notificationService;
 
         [SetUp]
         public void SetUp()
@@ -30,10 +32,11 @@ namespace Liane.Test
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
-
             var redisSettings = new RedisSettings("localhost");
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay);
+            var notificationServiceDisplay = new NotificationServiceImpl(new RedisClient(new TestLogger<RedisClient>(), redisSettings));
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay, notificationServiceDisplay);
             osrmService = osrmServiceDisplay;
+            notificationService = notificationServiceDisplay;
         }
 
         [Test]

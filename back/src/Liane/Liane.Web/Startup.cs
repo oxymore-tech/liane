@@ -8,6 +8,7 @@ using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Display;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
+using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -59,6 +60,7 @@ namespace Liane.Web
             services.AddService<DisplayServiceImpl>();
             services.AddService<LocationServiceImpl>();
             services.AddService<TripServiceImpl>();
+            services.AddService<NotificationServiceImpl>();
         }
 
         public static void StartCurrentModule(string[] args)
