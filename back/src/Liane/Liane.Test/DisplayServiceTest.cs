@@ -323,7 +323,7 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16);
-            var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas, Trips.Blajoux_Montbrun_En_Bas_2);
+            var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas);
             foreach(var trip in actual){
                 Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.user}, time : {trip.time}");
             }

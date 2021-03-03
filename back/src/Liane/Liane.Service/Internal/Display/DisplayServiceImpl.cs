@@ -233,7 +233,7 @@ namespace Liane.Service.Internal.Display
             }
             else {
                 if (start != null) {
-                    return await GetTrips(edgeKeys, start.Id, hour, new HashSet<string>());
+                    return (await GetTrips(edgeKeys, start.Id, hour, new HashSet<string>())).ToImmutableHashSet();
                 }
                 else {
                     if (end != null) {
@@ -266,7 +266,7 @@ namespace Liane.Service.Internal.Display
                 return listTrips.ToImmutableHashSet();
             }
             else {
-                return await SearchTrip(day, startHour, endHour, start, end);
+                return (await SearchTrip(day, startHour, endHour, start, end)).ToImmutableHashSet();
             }
         }
         public async Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null) {
@@ -294,6 +294,9 @@ namespace Liane.Service.Internal.Display
                 }
                 
             });
+            Console.WriteLine(listeTrajets[0].Equals(listeTrajets[1]));
+            Console.WriteLine(listeTrajets[0].user == listeTrajets[1].user);
+            Console.WriteLine(listeTrajets[0].time == listeTrajets[1].time);
             Console.WriteLine($"SAUCE MAYO : {listeTrajets.ToHashSet().ToImmutableHashSet().Count}");
             return listeTrajets.ToImmutableHashSet();
         }
