@@ -30,8 +30,8 @@
     android:theme="@style/AppTheme"
   >
 <<<<<<< HEAD
-    <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="YOUR-APP-URL-HERE"/>
-    <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="YOUR-APP-SDK-VERSION-HERE"/>
+    <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://exp.host/@binomius/liane-app" />
+    <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="40.0.0" />
     <activity
       android:name=".MainActivity"
 =======
