@@ -5,8 +5,8 @@ namespace Liane.Api.Notification
 {
     public interface INotificationService
     {
-        Task<ImmutableList<Notification>> getNotifications(string user);
+        Task<ImmutableList<Notification>> getNotifications();
         Task addNotification(string user, Api.Notification.Notification notification);
-        Task deleteNotification(string user, int date);
+        Task deleteNotification(int date);
     }
 }

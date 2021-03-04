@@ -8,6 +8,7 @@ namespace Liane.Web.Controllers
 {
     [Route("api/notifications")]
     [ApiController]
+    [RequiresAuth]
     public sealed class NotificationController : ControllerBase
     {
         private readonly INotificationService notificationService;
@@ -18,14 +19,14 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("get")]
-        public async Task<ImmutableList<Notification>> getNotifications([FromQuery] string user)
+        public async Task<ImmutableList<Notification>> getNotifications()
         {
-            return await notificationService.getNotifications(user);
+            return await notificationService.getNotifications();
         }
 
         [HttpPost("delete")]
-        public async Task deleteNotification([FromQuery] string user, [FromQuery] int date) {
-            await notificationService.deleteNotification(user, date);
+        public async Task deleteNotification([FromQuery] int date) {
+            await notificationService.deleteNotification(date);
         }
     }
 }

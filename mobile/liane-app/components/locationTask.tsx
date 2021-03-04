@@ -60,13 +60,16 @@ export function initializeLocationTask() {
  */
 export async function registerLocationTask() {
   try {
-    await Location.startLocationUpdatesAsync(TASK_LOCATION, {
-      // distanceInterval: 50,
-      // timeInterval : 30000 
-      pausesUpdatesAutomatically: true,
-      activityType: Location.ActivityType.AutomotiveNavigation
-    });
-    console.log("Task registered")
+    const { status } = await Location.requestPermissionsAsync();
+    if (status === 'granted') {
+      await Location.startLocationUpdatesAsync(TASK_LOCATION, {
+        // distanceInterval: 50,
+        // timeInterval : 30000 
+        pausesUpdatesAutomatically: true,
+        activityType: Location.ActivityType.AutomotiveNavigation
+      });
+      console.log("Task registered")
+    }
   } catch (err) {
     console.log("Task Register failed:", err)
   }

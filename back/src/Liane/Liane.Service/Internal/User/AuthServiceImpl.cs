@@ -73,7 +73,8 @@ namespace Liane.Service.Internal.User
             }
             var redisKey2 = "notification_" + number;
             await database.StringSetAsync(redisKey2, token);
-            return GenerateToken(phoneNumber.ToString());
+            Console.WriteLine("PN TO S :" + number); // phoneNumber.ToString()
+            return GenerateToken(number);
         }
 
         public ClaimsPrincipal IsTokenValid(string token)

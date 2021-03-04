@@ -236,7 +236,7 @@ namespace Liane.Service.Internal.Display
         }
 
         public async Task NotifyDriver(string user, string name, string number) {
-            await notificationService.addNotification(user, new Api.Notification.Notification(Convert.ToInt32(DateTime.Now), name + " veut covoiturez avec vous !"));
+            await notificationService.addNotification(user, new Api.Notification.Notification((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, name + " veut covoiturez avec vous ! Son numéro est le "+ number));
             var database = await redis.Get();
             var redisKey = "notification_" + user;
             var token = await database.StringGetAsync(redisKey);

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocationObject } from 'expo-location';
 
-const endpoint = "https://liane.gjini.co/api"; // "http://192.168.1.66:8081/api";
+const endpoint = "https://liane.gjini.co/api"; // http://192.168.1.66:8081/api
 
 /**
  * Send user position (location) to server
@@ -81,4 +81,50 @@ export async function userSendSms(phoneNumber : string) {
       console.error(error);
       return false;
     });
+}
+
+/**
+ * Get user notifications
+ * @param void
+ */
+export async function getNotifications() {
+  let token0 = await AsyncStorage.getItem("tokenJWT");
+  let token = (token0 == null) ? "" : token0;
+  return fetch(endpoint + "/notifications/get", {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization' :  'Bearer' + token
+  }
+  })
+  .then((response) => response.json())
+  .catch((error) => {
+    console.log("ERREUR en récupérant les notifications");
+    console.error(error);
+    return false;
+  });
+}
+
+/**
+ * Delete a notification from the user
+ */
+export async function deleteNotification(notificationTimestamp : number) {
+  console.log('NOTIF TIMESTAMP : ', notificationTimestamp);
+  let token0 = await AsyncStorage.getItem("tokenJWT");
+  let token = (token0 == null) ? "" : token0;
+  return fetch(endpoint + "/notifications/delete?date="+notificationTimestamp, {
+      method: 'POST',
+      headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization' :  'Bearer' + token
+      }
+  }).then(() => {
+    return true;
+  })
+  .catch((error) => {
+    console.error(error);
+    return false;
+  });
 }

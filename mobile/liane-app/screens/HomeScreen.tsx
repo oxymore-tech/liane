@@ -6,7 +6,7 @@ import { AuthContext } from '../utils/authContext';
 import tailwind from 'tailwind-rn';
 
 const HomeScreen = ({ route, navigation } : any) => {
-    const { SignOutButton } = route.params;
+    const { signOut } = useContext(AuthContext);
 
     return (
         <View>
@@ -26,7 +26,10 @@ const HomeScreen = ({ route, navigation } : any) => {
                 </View>
                 <View>               
                     <Button title="Menu" onPress={() => navigation.openDrawer()} />
-                    <SignOutButton />
+                    <Button
+                          title="Deconnexion"
+                          onPress={signOut}
+                    />
                 </View>
             </SafeAreaView>
         </View>

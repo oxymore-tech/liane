@@ -30,7 +30,7 @@ const PermissionScreen = ({ route, navigation } : any) => {
             <View style={tailwind('pt-8 items-center')}>
                 <View style={tailwind('bg-blue-200 px-3 py-1')}>
                     <Text style={tailwind('text-blue-800 text-xl font-semibold')}>
-                    Afin de partager vos trajets locaux avec les autres utilisateurs, Liane enregistre votre position GPS, même quand l'application est fermée.
+                    Liane collecte votre position GPS afin de partager vos trajets locaux avec les autres utilisateurs, même lorsque l'application est fermée ou en arrière plan.
                     Seuls les trajets en voiture effectués entre les points de ralliement sont enregistrés.
                     Ces trajets sont partagés de manière anonyme avec les autres utilisateurs.
                     Un audit peut être mené par une société tierce sur le code de l'application.

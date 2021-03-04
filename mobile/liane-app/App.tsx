@@ -71,14 +71,6 @@ const createDrawer = () => {
           <Drawer.Screen
               name="Accueil"
               component={HomeScreen}
-              initialParams={{
-                  SignOutButton: () => (
-                      <Button
-                          title="Deconnexion"
-                          onPress={signOut}
-                      />
-                  )
-              }}
           />
         { 
         /*  
@@ -86,7 +78,9 @@ const createDrawer = () => {
           <Drawer.Screen name="Recherche trajets" component={FilterAndSearch} />
           <Drawer.Screen name="Carte" component={MapScreen} />
           <Drawer.Screen name="Carte et résultats" component={MapAndResultsScreen} />
+        */
           <Drawer.Screen name="Notifications" component={NotificationsScreen} />
+        /*
           <Drawer.Screen name="Réglages" component={SettingsScreen} />
         */ 
         }
@@ -200,19 +194,11 @@ async function registerForPushNotificationsAsync() {
 
 export default function App() {
     const [expoPushToken, setExpoPushToken] = useState('');
-    const [askNotifications, setAskNotifications] = useState<any[]>([]);
     const notificationListener = useRef();
     const responseListener = useRef();
     
   const authContextValue = useMemo(
     () => ({
-        getAskNotifications: () => {
-            return askNotifications;
-        },
-        updateAskNotifications: (newAskNotifications:any ) => {
-            setAskNotifications(newAskNotifications);
-            return;
-        },
         getPushToken: () => {
             return expoPushToken;
         },
@@ -240,7 +226,7 @@ export default function App() {
                   dispatch({ type: 'TO_SIGNUP_PAGE' });
               }
         }
-    }), [expoPushToken, askNotifications]
+    }), [expoPushToken]
   );
 
   const [state, dispatch] = useReducer(
@@ -317,6 +303,7 @@ export default function App() {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log(response);
       var notification = response.notification.request.content.data;
+      /*
       if(notification.type == 'covoiturage_notification') {
         var newList = askNotifications.concat({
             name : notification.name + ' souhaite covoiturer avec vous',
@@ -325,6 +312,7 @@ export default function App() {
         });
         setAskNotifications(newList);
       }
+      */
     });
 /*
     registerLocationTask().then(() => console.log("Task registred !"))
