@@ -17,7 +17,7 @@ export function Available_trips({ searchedTrips }: TripsProps) {
     function hideModal() {
         setShow(false);
     }
-    
+
     return <div>
         <div className="container" style={{ bottom: 10, left: 10, zIndex: 3, position: "absolute" }}>
             <ul className="list-disc">

@@ -12,7 +12,7 @@ namespace Liane.Api.Display
         Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng latLng);
         Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
         Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
-        Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end);
+        Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end, int hour);
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
         ImmutableList<RedisKey> EdgeKeys(IServer server);
         ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour = "day");
@@ -24,6 +24,7 @@ namespace Liane.Api.Display
         Task<(ImmutableHashSet<Api.Trip.Trip>, ImmutableList<RedisKey>)> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, int hour, HashSet<string> listStartPoints);
         Task<(ImmutableHashSet<Api.Trip.Trip>, ImmutableList<RedisKey>)> GetTripsEnd(ImmutableList<RedisKey> edgeKeys, string end, int hour, HashSet<string> listEndPoints);
         Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key);
+        ImmutableHashSet<Api.Trip.Trip> Intersect(HashSet<Api.Trip.Trip> startTrips, HashSet<Api.Trip.Trip> endTrips);
         Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null);
         Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip(string day = "day", int startHour = 0, int endHour = 23, RallyingPoint? start = null, RallyingPoint? end = null);
         Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null);

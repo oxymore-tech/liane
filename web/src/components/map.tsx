@@ -46,9 +46,9 @@ const MultiPolyline = ({routes}) => {
     {
     counter += 1;
     var w = route.stat;
-    console.log("Coucou on est rentré");
+    //console.log("Coucou on est rentré");
     var color = "#" + (Math.floor((1 - route.stat/7) * 255)).toString(16) + (Math.floor((route.stat/7) * 255)).toString(16) + "00";
-    console.log(color);
+    //console.log(color);
     if (w >= 6) {
       return <MemoPolyline key={counter} positions={route.coordinates} weight={10} color={color}/>
     }
@@ -81,6 +81,7 @@ function  Mapi({className, center, start}: MapProps) {
   const [endHours, setEndHours] = useState(hours);
   const [startHour, setStartHour] = useState(hours[0]);
   const [endHour, setEndHour] = useState(hours[23]);
+
   /**
   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
@@ -251,7 +252,7 @@ function  Mapi({className, center, start}: MapProps) {
         })}
         </div>
       }
-      { /*
+      { 
         myStart &&
         <div>
           {steps.map((point, index) => (
@@ -265,7 +266,7 @@ function  Mapi({className, center, start}: MapProps) {
             </Marker>
           ))}
         </div>
-        */
+        
       }
     </MapContainer>
     </div>

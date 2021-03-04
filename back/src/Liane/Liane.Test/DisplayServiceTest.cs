@@ -120,7 +120,7 @@ namespace Liane.Test
         public async Task DecomposeRouteBetweenMendeAndFlorac()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac);
+            var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac, 8);
             var expected = ImmutableList.Create(Trips.Mende_Florac_1, Trips.Mende_Florac_2);
             actual.WithDeepEqual(expected).Assert();
         }
@@ -322,11 +322,12 @@ namespace Liane.Test
         public async Task SearchTripFromNull()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.DefaultSearchTrip(end : LabeledPositions.La_Malene_Parking);
-            var expected = ImmutableHashSet.Create(Trips.Prades_La_Malene, Trips.La_Malene_Severac, Trips.La_Malene_Severac_2);
+            var actual = await displayService!.DefaultSearchTrip(day : "Monday", start : LabeledPositions.Florac, end : LabeledPositions.LeCrouzet);
+            var expected = ImmutableHashSet.Create(Trips.Florac_Cocures, Trips.Cocures_Le_Crouzet);
+            /**
             foreach(var trip in actual){
                 Console.WriteLine($"TRIP actual : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
-            }
+            }**/
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();
