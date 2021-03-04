@@ -322,12 +322,11 @@ namespace Liane.Test
         public async Task SearchTripFromNull()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.DefaultSearchTrip("Wednesday", 15, 16, null, LabeledPositions.Montbrun_En_Bas);
-            var expected = ImmutableHashSet.Create(Trips.Blajoux_Montbrun_En_Bas_2);
-            /**
+            var actual = await displayService!.DefaultSearchTrip(end : LabeledPositions.La_Malene_Parking);
+            var expected = ImmutableHashSet.Create(Trips.Prades_La_Malene, Trips.La_Malene_Severac, Trips.La_Malene_Severac_2);
             foreach(var trip in actual){
-                Console.WriteLine($"TRIP : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
-            }**/
+                Console.WriteLine($"TRIP actual : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
+            }
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();

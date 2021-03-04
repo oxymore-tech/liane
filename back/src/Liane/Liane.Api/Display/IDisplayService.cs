@@ -24,11 +24,11 @@ namespace Liane.Api.Display
         Task<(ImmutableHashSet<Api.Trip.Trip>, ImmutableList<RedisKey>)> GetTrips(ImmutableList<RedisKey> edgeKeys, string start, int hour, HashSet<string> listStartPoints);
         Task<(ImmutableHashSet<Api.Trip.Trip>, ImmutableList<RedisKey>)> GetTripsEnd(ImmutableList<RedisKey> edgeKeys, string end, int hour, HashSet<string> listEndPoints);
         Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key);
-        Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int hour, RallyingPoint? start = null, RallyingPoint? end = null);
-        Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null);
+        Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null);
+        Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip(string day = "day", int startHour = 0, int endHour = 23, RallyingPoint? start = null, RallyingPoint? end = null);
         Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null);
         Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day = "day",
                                                                                    int hour1 = 0, 
-                                                                                   int hour2 = 24);
+                                                                                   int hour2 = 23);
     }
 }

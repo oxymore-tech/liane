@@ -8,6 +8,7 @@ import Select from "react-select";
 import { days, hours } from "../../assets/time.data";
 import { Button } from "./base/Button";
 import { Available_trips } from "./available_trips";
+import { Console } from "console";
 
 interface MapProps {
   className?: string;
@@ -46,10 +47,12 @@ const MultiPolyline = ({routes}) => {
     counter += 1;
     var w = route.stat;
     console.log("Coucou on est rentré");
-    var color = "#" + (Math.floor((1 - route.stat/10) * 255)).toString(16) + (Math.floor((route.stat/10) * 255)).toString(16) + "00";
+    var color = "#" + (Math.floor((1 - route.stat/7) * 255)).toString(16) + (Math.floor((route.stat/7) * 255)).toString(16) + "00";
     console.log(color);
-    if (w > 1) {
-    
+    if (w >= 6) {
+      return <MemoPolyline key={counter} positions={route.coordinates} weight={10} color={color}/>
+    }
+    if (w > 1 && w < 6) {
       return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
     }
     if (w == 1) {
@@ -62,6 +65,7 @@ const MultiPolyline = ({routes}) => {
 function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [realStart, setRealStart] = useState(null);
+  const [realArrival, setRealArrival] = useState(null);
   const [myArrival, setMyArrival] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripStarts, setTripStarts] = useState([]);
@@ -110,11 +114,12 @@ function  Mapi({className, center, start}: MapProps) {
   function updateArrivalTrip(e:any) {
     let index = destinations.findIndex(destination => destination.id == e.value);
     setMyArrival(destinations[index]);
+    setRealArrival(destinations[index]);
     setTripEnd(e);
   }
 
   function getTrips() {
-    displayService.SearchTrips(realStart, myArrival, tripDay.value, startHour.value, endHour.value).then(
+    displayService.SearchTrips(realStart, realArrival, tripDay.value, startHour.value, endHour.value).then(
       result => {
         console.log('RESULT : ', result);
         setSearchedTrips(result);
