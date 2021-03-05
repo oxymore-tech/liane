@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Arrow } from "@/components/base/Arrow";
+import { Arrow } from "./Arrow";
 
 export type SortOptions<T> = { [P in keyof T]?: number };
 

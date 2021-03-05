@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TextInput, ImageBackground, StyleSheet, Alert, Button } from 'react-native';
+import { View, Text, TextInput, ImageBackground, Image, StyleSheet, Alert, Button } from 'react-native';
+import tailwind from 'tailwind-rn';
 import { userSendSms} from '../components/apiRequest';
 
 
@@ -28,14 +29,13 @@ const SignUpScreen = ({ navigation } : any) => {
             <View style={{backgroundColor:"#FFF",height:"100%"}}>
                 <ImageBackground source = {image} style = {styles.image} // image in the background
                 >
-                <Text // we print "Liane"
-                style={{
-                    fontSize:50,
-                    fontFamily:"normal",
-                    alignSelf:"center",
-                    marginTop: 100
-                }}
-                >Liane</Text>
+                     
+                <View style={tailwind('container')}>
+                    <Image
+                    style={tailwind('self-center')}
+                        source={require('../assets/logo_mini.png')}
+                    />
+                </View>
   
                 <Text
                 style={{

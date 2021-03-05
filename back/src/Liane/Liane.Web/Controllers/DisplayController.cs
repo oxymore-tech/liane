@@ -45,9 +45,15 @@ namespace Liane.Web.Controllers
             string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday"};
             RallyingPoint departure = data["departure"].ToObject<RallyingPoint>();
             RallyingPoint arrival = data["arrival"].ToObject<RallyingPoint>();
-            int day = data["day"].ToObject<int>();
-            int hour1 = data["hour1"].ToObject<int>();
+            var day = data["day"].ToObject<int>();
+            var hour1 = data["hour1"].ToObject<int>();
             return await displayService.SearchTrip(departure, arrival, days[day], hour1);
+        }
+
+        [HttpGet("usertrips")]
+        public async Task<ImmutableList<RallyingPoint>> ListUserTrips([FromQuery] string user, [FromQuery] string day)
+        {
+            return await displayService.ListUserTrips(user, day);
         }
 
         [HttpPost("listedges")]
@@ -66,9 +72,5 @@ namespace Liane.Web.Controllers
             return displayService.ListStepsFrom(trips);
         }
 
-        [HttpPost("notify")]
-        public async Task NotifyDriver([FromQuery] string user, [FromQuery] string name, [FromQuery]string number) {
-            await NotifyDriver(user, name, number);
-        }
     }
 }

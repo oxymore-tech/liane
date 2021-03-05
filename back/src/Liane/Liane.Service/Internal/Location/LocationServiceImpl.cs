@@ -41,7 +41,7 @@ namespace Liane.Service.Internal.Location
             if (nearestPoints.Count > 0)
             {
                 var database = await redis.Get();
-                var redisKey = new RedisKey(currentContext.CurrentUser());
+                var redisKey = new RedisKey("positions|"+ currentContext.CurrentUser());
                 var results = await database.HashGetAllAsync(redisKey);
                 if (results.Length >= 2)
                 {

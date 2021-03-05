@@ -40,16 +40,13 @@ namespace Liane.Service.Internal.User
             if (twilioSettings.Account != null && twilioSettings.Token != null)
             {
                 TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-
                 var phoneNumber = ParseNumber(number);
-
                 var generator = new Random();
                 var code = generator.Next(0, 1000000).ToString("D6");
                 var redisKey = AuthSmsTokenRedisKey(phoneNumber);
                 var database = await redis.Get();
                 await database.StringSetAsync(redisKey, code);
                 await database.KeyExpireAsync(redisKey, TimeSpan.FromSeconds(30));
-
                 var message = await MessageResource.CreateAsync(
                     body: $"Voici votre code liane : {code}",
                     from: new PhoneNumber(twilioSettings.From),
@@ -76,7 +73,8 @@ namespace Liane.Service.Internal.User
             }
             var redisKey2 = "notification_" + number;
             await database.StringSetAsync(redisKey2, token);
-            return GenerateToken(phoneNumber.ToString());
+            Console.WriteLine("PN TO S :" + number); // phoneNumber.ToString()
+            return GenerateToken(number);
         }
 
         public ClaimsPrincipal IsTokenValid(string token)

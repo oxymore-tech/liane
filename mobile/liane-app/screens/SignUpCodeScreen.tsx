@@ -1,6 +1,7 @@
 import { Constants, Notifications } from 'expo';
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, ImageBackground, StyleSheet, Alert, Button, Platform } from 'react-native';
+import { View, Text, TextInput, ImageBackground, Image, StyleSheet, Alert, Button, Platform } from 'react-native';
+import tailwind from 'tailwind-rn';
 import {userLogin} from '../components/apiRequest';
 import { AuthContext } from '../utils/authContext';
 
@@ -13,7 +14,7 @@ const colorButton : string = '#00716F';
 
 const SignUpCodeScreen = ({ navigation, route } : any) => {
     const [phoneNumber, ] = React.useState(route.params.phoneNumber);
-    const [code, setCode] = React.useState('Entrez votre code');
+    const [code, setCode] = React.useState('');
     const { getPushToken, signIn } = useContext(AuthContext);
 
     /** almost the same function than the one in "LoginPage".
@@ -24,14 +25,18 @@ const SignUpCodeScreen = ({ navigation, route } : any) => {
      * in the future to welcome the map with the traffic etc...
     **/
     function actionsOnPress(){
+      console.log('Push tok : ', getPushToken());
       userLogin(phoneNumber, code, getPushToken()).then(token => {
         if(token) {
-            console.log('SIGN_IN :', signIn);
-            signIn({ token : token });
-            console.log("CODE : ", code);
-            console.log("TOKEN : ", token);
+            // console.log('SIGN_IN :', signIn);
+            // signIn({ token : token });
+            // console.log("CODE : ", code);
+            // console.log("TOKEN : ", token);
             Alert.alert("Bravo, vous avez réussi à saisir le code");
-            navigation.navigate('Home', {phoneNumber});
+            navigation.navigate('Permission', {token});
+        } else {
+          Alert.alert("Le code saisi est invalide. Veuillez réessayer.");
+          setCode('');
         }
       });
     }
@@ -40,14 +45,13 @@ const SignUpCodeScreen = ({ navigation, route } : any) => {
             <View style={{backgroundColor:"#FFF",height:"100%"}} // image in the background 
             > 
               <ImageBackground source = {image} style = {styles.image}>
-              <Text // we print "Liane"
-               style={{
-                   fontSize:50,
-                   fontFamily:"normal",
-                   alignSelf:"center",
-                   marginTop: 100
-               }}
-              >Liane</Text>
+
+              <View style={tailwind('container')}>
+                    <Image
+                    style={tailwind('self-center')}
+                        source={require('../assets/logo_mini.png')}
+                    />
+              </View>
     
               <Text
               style={{
@@ -75,8 +79,9 @@ const SignUpCodeScreen = ({ navigation, route } : any) => {
               }}>
                   <TextInput 
                       style={styles.textInput}
-                      placeholder = "Tapez ICI"
+                      placeholder = "Entrez votre code"
                       placeholderTextColor = 'black'
+                      value={code}
                       onChangeText = {setCode}
                       keyboardType = {"numeric"}
                   />

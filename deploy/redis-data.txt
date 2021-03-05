@@ -28,7 +28,7 @@ GEOADD RallyingPoints 3.926348984241486 44.440593118222026 Villefort_Parking_Gar
 GEOADD RallyingPoints 2.569950520992279 44.36054915873126 Rodez_Mac_Drive
 
 HSET Blajoux_Parking|Montbrun_En_Bas|Monday|8 CONDUCTEUR_1 1
-HSET Blajoux_Parking|Montbrun_En_Bas|Monday|8 +330623172983 1
+HSET Blajoux_Parking|Montbrun_En_Bas|Monday|8 0623172983 1
 HSET Blajoux_Parking|Montbrun_En_Bas|Tuesday|8 CONDUCTEUR_1 1
 HSET Blajoux_Parking|Montbrun_En_Bas|Wednesday|8 CONDUCTEUR_1 1
 HSET Blajoux_Parking|Montbrun_En_Bas|Wednesday|10 CONDUCTEUR_1 1
@@ -52,3 +52,8 @@ HSET Rouffiac_Boulangerie|SaintEnimie_Parking|Friday|8 CONDUCTEUR_4 1
 HSET Florac|Cocures|Monday|8 CONDUCTEUR_5 1
 HSET Cocures|LeCrouzet|Monday|8 CONDUCTEUR_5 1
 HSET LeCrouzet|LesBondons_Parking|Monday|8 CONDUCTEUR_5 1
+
+HSET positions|0623172983 1614696978 Blajoux_Parking
+HSET positions|0623172983 1614696988 Florac
+HSET positions|0623172983 1614696918 SaintChelyDuTarn_En_Haut
+HSET positions|0623172983 1614696908 Champerboux_Eglise
