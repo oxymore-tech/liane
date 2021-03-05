@@ -19,11 +19,11 @@ export function Available_trips({ searchedTrips }: TripsProps) {
     }
 
     return <div>
-        <div className="container" style={{ bottom: 10, left: 10, zIndex: 3, position: "absolute" }}>
+        <div className="container" style={{background: "white", bottom: 10, left: 0, width: 500, zIndex: 3, position: "absolute" }}>
             <ul className="list-disc">
                 {
                     searchedTrips.map((search) => (
-                        <li><strong>UTILISATEUR : {search.user}</strong> - {search.time}h - <Button label="Demandez à covoiturer" onClick={() => printModal(search.user)}></Button></li>
+                        <li style={{margin: 10}}>{search.coordinates[0].id} - {search.coordinates[1].id}- {search.time}h - <Button label="Demandez à covoiturer" onClick={() => printModal(search.user)}></Button></li>
                     ))
                 }
             </ul>
