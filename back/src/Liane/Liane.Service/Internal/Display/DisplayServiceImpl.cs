@@ -117,58 +117,6 @@ namespace Liane.Service.Internal.Display
             return steps.ToImmutableHashSet();
         }
 
-        public ImmutableList<RedisKey> EdgeKeys(IServer server)
-        {
-            var keys = server.Keys(-1, "*|*|*|*");
-            return keys.ToImmutableList();
-        }
-
-        public ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string day)
-        {
-            var keysProperDay = edgeKeys.Where(key => key.ToString().Split("|").Contains(day));
-            return keysProperDay.ToImmutableList();
-        }
-
-        public ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour = 0)
-        {
-            var keysProperDay = edgeKeys.Where(key =>
-            {
-                var listPipe = key.ToString().Split("|");
-                return Int16.Parse(listPipe[listPipe.Length - 1]) >= hour;
-            });
-            return keysProperDay.ToImmutableList();
-        }
-
-        public ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour = 24)
-        {
-            var keysProperDay = edgeKeys.Where(key =>
-            {
-                var listPipe = key.ToString().Split("|");
-                return Int16.Parse(listPipe[listPipe.Length - 1]) <= hour;
-            });
-            return keysProperDay.ToImmutableList();
-        }
-
-        public ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint)
-        {
-            var keysProperDay = edgeKeys.Where(key =>
-            {
-                var listPipe = key.ToString().Split("|");
-                return listPipe[0] == startPoint;
-            });
-            return keysProperDay.ToImmutableList();
-        }
-
-        public ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint)
-        {
-            var keysProperDay = edgeKeys.Where(key =>
-            {
-                var listPipe = key.ToString().Split("|");
-                return listPipe[1] == endPoint;
-            });
-            return keysProperDay.ToImmutableList();
-        }
-
         public async Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end)
         {
             var coordinates = ImmutableList.Create(start.Position, end.Position);
@@ -235,34 +183,31 @@ namespace Liane.Service.Internal.Display
             int hour1 = 0,
             int hour2 = 24)
         {
-            var localRedis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var endPoints = localRedis.GetEndPoints();
-            IServer server = localRedis.GetServer(endPoints[0]);
             var database = await redis.Get();
-            var edgeKeys = EdgeKeys(server);
+            var edgeKeys = await redis.ListEdgeKeys();
             var routesEdges = new Dictionary<string, RouteStat>();
-            foreach (var trip in trips)
+            foreach (var (rallyingPoints, _, _) in trips)
             {
-                for (int i = 0; i < trip.Coordinates.LongCount() - 1; i += 1)
+                for (var i = 0; i < rallyingPoints.Count - 1; i++)
                 {
-                    var vertex1 = trip.Coordinates[i];
-                    var vertex2 = trip.Coordinates[i + 1];
-                    var key = vertex1.Id + "|" + vertex2.Id;
+                    var (segmentStartId, segmentStartPosition, _) = rallyingPoints[i];
+                    var (segmentEndId, segmentEndPosition, _) = rallyingPoints[i + 1];
+                    var key = segmentStartId + "|" + segmentEndId;
                     if (!routesEdges.ContainsKey(key))
                     {
-                        var routeResponse = await osrmService.Route(vertex1.Position, vertex2.Position);
+                        var routeResponse = await osrmService.Route(segmentStartPosition, segmentEndPosition);
                         var geojson = routeResponse.Routes[0].Geometry;
-                        var duration = routeResponse.Routes[0].Duration;
-                        var distance = routeResponse.Routes[0].Distance;
                         var edge = key.Split("|");
-                        var startKeys = FilterByStartPoint(edgeKeys, edge[0]);
-                        var endKeys = FilterByEndPoint(edgeKeys, edge[1]);
+                        var startKeys = edgeKeys.FilterByStartPoint(edge[0]);
+                        var endKeys = edgeKeys.FilterByEndPoint(edge[1]);
                         var routeKeys = startKeys.Concat(endKeys).ToImmutableHashSet().ToImmutableList();
-                        var toCount = FilterByEndHour(FilterByStartHour(FilterByDay(routeKeys, day), hour1), hour2);
+                        var toCount = routeKeys.FilterByDay(day)
+                            .FilterByStartHour(hour1)
+                            .FilterByEndHour(hour2);
                         var stat = 0;
                         foreach (var redisKey in toCount)
                         {
-                            stat += database.HashKeys(redisKey).Count();
+                            stat += database.HashKeys(redisKey).Length;
                         }
 
                         routesEdges.Add(key, new RouteStat(geojson.Coordinates.ToLatLng(), stat));
@@ -271,12 +216,6 @@ namespace Liane.Service.Internal.Display
             }
 
             return routesEdges;
-        }
-
-        private IImmutableSet<RallyingPoint> ListDestinationsFrom(ImmutableList<Api.Trip.Trip> trips)
-        {
-            return trips.Select(t => t.Coordinates.Last())
-                .ToImmutableHashSet();
         }
 
         public async Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day)
@@ -288,13 +227,16 @@ namespace Liane.Service.Internal.Display
             foreach (var element in results)
             {
                 var timestamp = element.Name;
-                DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                 dtDateTime = dtDateTime.AddSeconds(Convert.ToDouble(timestamp)).ToLocalTime();
                 if (day == "-1" || Convert.ToInt32(dtDateTime.DayOfWeek).ToString().Equals(day))
                 {
                     var result = await database.GeoPositionAsync("RallyingPoints", element.Value);
-                    var rp = new RallyingPoint(element.Value, new LatLng(result.Value.Latitude, result.Value.Longitude));
-                    userTrips.Add(rp);
+                    if (result != null)
+                    {
+                        var rp = new RallyingPoint(element.Value, new LatLng(result.Value.Latitude, result.Value.Longitude));
+                        userTrips.Add(rp);
+                    }
                 }
             }
 

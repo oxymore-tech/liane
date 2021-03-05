@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Service.Internal.Display;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ namespace Liane.Service.Internal.Util
     {
         private readonly ILogger<RedisClient> logger;
         private readonly RedisSettings redisSettings;
-        private ConnectionMultiplexer? redis;
+        private ConnectionMultiplexer? internalRedis;
 
         public RedisClient(ILogger<RedisClient> logger, RedisSettings redisSettings)
         {
@@ -20,14 +21,28 @@ namespace Liane.Service.Internal.Util
 
         public async Task<IDatabase> Get()
         {
-            if (redis == null)
+            var redis = await GetRedis();
+            return redis.GetDatabase();
+        }
+
+        public async Task<ImmutableList<RedisKey>> ListKeys(string keyPattern)
+        {
+            var redis = await GetRedis();
+            var endPoints = redis.GetEndPoints();
+            IServer server = redis.GetServer(endPoints[0]);
+            var keys = server.Keys(-1, keyPattern);
+            return keys.ToImmutableList();
+        }
+
+        private async Task<ConnectionMultiplexer> GetRedis()
+        {
+            if (internalRedis == null)
             {
-                redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
+                internalRedis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {EndPoints = {{redisSettings.Host, 6379}}, Password = redisSettings.Password});
                 logger.LogInformation("Successfully connected to redis");
-                return redis.GetDatabase();
             }
 
-            return redis.GetDatabase();
+            return internalRedis;
         }
     }
 }

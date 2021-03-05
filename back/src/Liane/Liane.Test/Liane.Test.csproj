@@ -22,4 +22,8 @@
         <ProjectReference Include="..\Liane.Service\Liane.Service.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="Resources\redis-data.txt" />
+    </ItemGroup>
+
 </Project>

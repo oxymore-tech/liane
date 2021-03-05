@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
-using StackExchange.Redis;
 
 namespace Liane.Api.Display
 {
@@ -15,12 +14,6 @@ namespace Liane.Api.Display
         Task<ImmutableHashSet<Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
         Task<ImmutableList<Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end);
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
-        ImmutableList<RedisKey> EdgeKeys(IServer server);
-        ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour);
-        ImmutableList<RedisKey> FilterByStartHour(ImmutableList<RedisKey> edgeKeys, int hour = 0);
-        ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour = 24);
-        ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint);
-        ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint);
         Task<ImmutableList<Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
 
         Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day,
