@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
 {
-    [Route("api/notifications")]
+    [Route("api/notification")]
     [ApiController]
     [RequiresAuth]
     public sealed class NotificationController : ControllerBase
@@ -18,15 +18,22 @@ namespace Liane.Web.Controllers
             this.notificationService = notificationService;
         }
 
-        [HttpGet("get")]
+        [HttpPost("notify")]
+        public async Task NotifyDriver([FromQuery] string user, [FromQuery] string name, [FromQuery] string number)
+        {
+            await notificationService.NotifyDriver(user, name, number);
+        }
+
+        [HttpGet("")]
         public async Task<ImmutableList<Notification>> getNotifications()
         {
             return await notificationService.getNotifications();
         }
 
         [HttpPost("delete")]
-        public async Task deleteNotification([FromQuery] int date) {
-            await notificationService.deleteNotification(date);
+        public async Task deleteNotification([FromQuery] int date)
+        {
+            await notificationService.DeleteNotification(date);
         }
     }
 }

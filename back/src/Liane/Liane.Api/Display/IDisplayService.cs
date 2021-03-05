@@ -12,8 +12,8 @@ namespace Liane.Api.Display
         Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng latLng);
         Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
         Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day);
-        Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
-        Task<ImmutableList<Api.Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end);
+        Task<ImmutableHashSet<Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
+        Task<ImmutableList<Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end);
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
         ImmutableList<RedisKey> EdgeKeys(IServer server);
         ImmutableList<RedisKey> FilterByDay(ImmutableList<RedisKey> edgeKeys, string jour);
@@ -21,10 +21,10 @@ namespace Liane.Api.Display
         ImmutableList<RedisKey> FilterByEndHour(ImmutableList<RedisKey> edgeKeys, int hour = 24);
         ImmutableList<RedisKey> FilterByStartPoint(ImmutableList<RedisKey> edgeKeys, string startPoint);
         ImmutableList<RedisKey> FilterByEndPoint(ImmutableList<RedisKey> edgeKeys, string endPoint);
-        Task<ImmutableList<Api.Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
+        Task<ImmutableList<Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
+
         Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day,
-                                                                                   int hour1 = 0, 
-                                                                                   int hour2 = 24);
-        Task NotifyDriver(string user, string name, string number);
+            int hour1 = 0,
+            int hour2 = 24);
     }
 }

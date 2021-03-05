@@ -6,6 +6,10 @@ using Liane.Api.Util.Http;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Expo.Server.Client;
+using Expo.Server.Models;
+using Newtonsoft.Json.Linq;
 
 namespace Liane.Service.Internal.Notification
 {
@@ -20,7 +24,30 @@ namespace Liane.Service.Internal.Notification
             this.currentContext = currentContext;
         }
 
-        public async Task addNotification(string user, Api.Notification.Notification notification)
+        public async Task NotifyDriver(string user, string name, string number) {
+            await AddNotification(user, new Api.Notification.Notification((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, name + " veut covoiturez avec vous ! Son numéro est le "+ number));
+            var database = await redis.Get();
+            var redisKey = "notification_" + user;
+            var token = await database.StringGetAsync(redisKey);
+            var expoSDKClient = new PushApiClient();
+            var pushTicketReq = new PushTicketRequest() {
+                PushTo = new List<string>() { token },
+                PushBadgeCount = 1,
+                PushBody = name + " veut covoiturez avec vous !",
+                PushData = JObject.Parse("{'type': 'covoiturage_notification', 'name':'" + name + "','number': '" + number + "'}")
+            };
+            var result = expoSDKClient.PushSendAsync(pushTicketReq).GetAwaiter().GetResult();
+
+            if (result.PushTicketErrors.Count > 0)
+            {
+                foreach (var error in result.PushTicketErrors)
+                {
+                    Console.WriteLine($"Error: {error.ErrorCode} - {error.ErrorMessage}");
+                }
+            }
+        }
+
+        private async Task AddNotification(string user, Api.Notification.Notification notification)
         {
             var database = await redis.Get();
             var redisKey = new RedisKey("notifications_" + user);
@@ -28,7 +55,7 @@ namespace Liane.Service.Internal.Notification
             await database.HashSetAsync(redisKey, newEntry);
         }
 
-        public async Task deleteNotification(int date)
+        public async Task DeleteNotification(int date)
         {
             var user = currentContext.CurrentUser();
             var database = await redis.Get();
@@ -49,7 +76,7 @@ namespace Liane.Service.Internal.Notification
                 Api.Notification.Notification n = new Api.Notification.Notification(Convert.ToInt32(r.Name), r.Value);
                 notifs.Add(n);
             }
-            return notifs.ToImmutableList();          
+            return notifs.ToImmutableList();
         }
     }
 }

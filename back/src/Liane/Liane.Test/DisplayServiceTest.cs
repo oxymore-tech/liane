@@ -8,10 +8,10 @@ using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
-using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using StackExchange.Redis;
@@ -23,20 +23,17 @@ namespace Liane.Test
     {
         private IDisplayService? displayService;
         private OsrmServiceImpl? osrmService;
-        private NotificationServiceImpl? notificationService;
 
         [SetUp]
         public void SetUp()
         {
-            var osrmServiceDisplay = new OsrmServiceImpl(new Mock<Microsoft.Extensions.Logging.ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
+            var osrmServiceDisplay = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
             var redisSettings = new RedisSettings("localhost");
-            var notificationServiceDisplay = new NotificationServiceImpl(new RedisClient(new TestLogger<RedisClient>(), redisSettings));
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay, notificationServiceDisplay);
+            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay);
             osrmService = osrmServiceDisplay;
-            notificationService = notificationServiceDisplay;
         }
 
         [Test]

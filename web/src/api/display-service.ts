@@ -8,7 +8,7 @@ class DisplayService {
         const url = new URL("/api/display/snap", BaseUrl);
         url.searchParams.append("lat", lat.toString());
         url.searchParams.append("lng", lng.toString());
-    
+
         const response = await fetch(url.toString(), {
           method: "GET"
         });
@@ -37,7 +37,7 @@ class DisplayService {
         url.searchParams.append("id", id.toString());
         url.searchParams.append("lat", lat.toString());
         url.searchParams.append("lng", lng.toString());
-    
+
         const response = await fetch(url.toString(), {
           method: "GET"
         });
@@ -49,7 +49,7 @@ class DisplayService {
         url.searchParams.append("id", id.toString());
         url.searchParams.append("lat", lat.toString());
         url.searchParams.append("lng", lng.toString());
-        
+
         const response = await fetch(url.toString(), {
           method: "GET"
         });
@@ -67,9 +67,9 @@ class DisplayService {
         return await response.json();
       }
 
-      async ListRoutesEdgesFrom(trips: Trip[], 
-                                day : number, 
-                                hour1 : number = 0,  
+      async ListRoutesEdgesFrom(trips: Trip[],
+                                day : number,
+                                hour1 : number = 0,
                                 hour2 : number = 24): Promise<RouteStat[]> {
         const url = new URL("/api/display/listedges", BaseUrl);
         url.searchParams.append("day", day.toString());
@@ -87,7 +87,7 @@ class DisplayService {
       }
 
       async NotifyDriver(user: string , name: string , number: string ): Promise<void> {
-        const url = new URL("/api/display/notify", BaseUrl);
+        const url = new URL("/api/notification/notify", BaseUrl);
         url.searchParams.append("user", user.toString());
         url.searchParams.append("name", name.toString());
         url.searchParams.append("number", number.toString());
@@ -103,7 +103,7 @@ class DisplayService {
       async ListTripsUser(user : string, day : string = null) : Promise<RallyingPoint[]> {
         const url = new URL("/api/display/usertrips", BaseUrl);
         url.searchParams.append("user", user);
-        url.searchParams.append("day", day);    
+        url.searchParams.append("day", day);
         const response = await fetch(url.toString(), {
           method: "GET"
         });
