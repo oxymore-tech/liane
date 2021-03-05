@@ -46,9 +46,7 @@ const MultiPolyline = ({routes}) => {
     {
     counter += 1;
     var w = route.stat;
-    //console.log("Coucou on est rentré");
     var color = "#" + (Math.floor((1 - route.stat/7) * 255)).toString(16) + (Math.floor((route.stat/7) * 255)).toString(16) + "00";
-    //console.log(color);
     if (w >= 6) {
       return <MemoPolyline key={counter} positions={route.coordinates} weight={10} color={color}/>
     }
@@ -81,7 +79,7 @@ function  Mapi({className, center, start}: MapProps) {
   const [endHours, setEndHours] = useState(hours);
   const [startHour, setStartHour] = useState(hours[0]);
   const [endHour, setEndHour] = useState(hours[23]);
-
+  const [availableTrips, setAvailableTrips] = useState(false);
   /**
   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
@@ -171,8 +169,16 @@ function  Mapi({className, center, start}: MapProps) {
         .then(result => setSteps(result));
   }, [searchedTrips]);
 
+  useEffect(() => {
+    if (realStart && realArrival){
+      setAvailableTrips(true);
+    }
+  }, [searchedTrips]);
+
   return  <div> 
+    { availableTrips &&
     <Available_trips searchedTrips={searchedTrips}></Available_trips>
+    }
     <div className="container" style={{top: 10, right: 10, width: 250, zIndex: 3, position : "absolute"}}>
       <form className="form">
         <div className="row">
