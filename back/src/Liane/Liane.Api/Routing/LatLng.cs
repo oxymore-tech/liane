@@ -6,33 +6,33 @@ using Newtonsoft.Json;
 namespace Liane.Api.Routing
 {
     [JsonConverter(typeof(LatLngJsonConverter))]
-    public sealed class LatLng
+    public sealed record LatLng(double Lat, double Lng)
     {
-        public LatLng(double lat, double lng)
+        /*public LatLng(double lat, double lng)
         {
             Lat = lat;
             Lng = lng;
         }
 
         public double Lat { get; }
-        public double Lng { get; }
+        public double Lng { get; }*/
 
         public string ToLngLatString()
         {
             return $"{Lng.ToString(CultureInfo.InvariantCulture)},{Lat.ToString(CultureInfo.InvariantCulture)}";
         }
 
-        public override string ToString()
+        /*public override string ToString()
         {
             return StringUtils.ToString(this);
-        }
+        }*/
 
         public LngLat ToLngLat()
         {
             return new LngLat(Lng, Lat);
         }
 
-        private bool Equals(LatLng other)
+        /*private bool Equals(LatLng other)
         {
             return Lat.Equals(other.Lat) && Lng.Equals(other.Lng);
         }
@@ -45,6 +45,6 @@ namespace Liane.Api.Routing
         public override int GetHashCode()
         {
             return HashCode.Combine(Lat, Lng);
-        }
+        }*/
     }
 }

@@ -40,14 +40,33 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("searchtrip")]
-        public async Task<ImmutableList<Api.Trip.Trip>> SearchTrip([FromBody] JObject data)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip([FromBody] JObject data) // :)
         {
-            string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday"};
+            string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday", "day"};
             RallyingPoint departure = data["departure"].ToObject<RallyingPoint>();
             RallyingPoint arrival = data["arrival"].ToObject<RallyingPoint>();
-            var day = data["day"].ToObject<int>();
-            var hour1 = data["hour1"].ToObject<int>();
-            return await displayService.SearchTrip(departure, arrival, days[day], hour1);
+            int day = 7;
+            if (!(data["day"].ToString().Equals("day"))) {
+                day = data["day"].ToObject<int>();
+            }
+            int hour1 = data["hour1"].ToObject<int>();
+            int hour2 = data["hour2"].ToObject<int>();
+            if (data["departure"] == null) {
+                if ( data["arrival"] == null) {
+                    return await displayService.DefaultSearchTrip(days[day], hour1, hour2);
+                }
+                else {
+                    return await displayService.DefaultSearchTrip(days[day], hour1, hour2, null, arrival);
+                }
+            }
+            else {
+                if ( data["arrival"] == null) {
+                    return await displayService.DefaultSearchTrip(days[day], hour1, hour2, departure);
+                }
+                else {
+                    return await displayService.DefaultSearchTrip(days[day], hour1, hour2, departure, arrival);
+                }
+            }
         }
 
         [HttpGet("usertrips")]
@@ -57,12 +76,12 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("listedges")]
-        public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips, 
-                                                                                         [FromQuery] int day,
-                                                                                         [FromQuery] int hour1 = 0, 
+        public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom([FromBody]  ImmutableHashSet<Trip> trips,
+                                                                                         [FromQuery] int day = 0,
+                                                                                         [FromQuery] int hour1 = 0,
                                                                                          [FromQuery] int hour2 = 24)
         {
-            string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday"};
+            string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday", "day"};
             return await displayService.ListRoutesEdgesFrom(trips, days[day], hour1, hour2);
         }
 

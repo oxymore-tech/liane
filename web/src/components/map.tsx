@@ -8,6 +8,7 @@ import Select from "react-select";
 import { days, hours } from "../../assets/time.data";
 import { Button } from "./base/Button";
 import { Available_trips } from "./available_trips";
+import { Console } from "console";
 
 interface MapProps {
   className?: string;
@@ -41,15 +42,17 @@ const MemoPolyline = memo(Polyline);
 var counter = 0;
 
 const MultiPolyline = ({routes}) => {
-  return (routes.map((route : RouteStat, index : number) =>
+  return (routes.map((route : RouteStat) =>
     {
     counter += 1;
     var w = route.stat;
-    console.log("Coucou on est rentré");
-    var color = "#" + (Math.floor((1 - route.stat/5) * 255)).toString(16) + (Math.floor((route.stat/5) * 255)).toString(16) + "00";
-    console.log(color);
-    if (w > 1) {
-    
+    //console.log("Coucou on est rentré");
+    var color = "#" + (Math.floor((1 - route.stat/7) * 255)).toString(16) + (Math.floor((route.stat/7) * 255)).toString(16) + "00";
+    //console.log(color);
+    if (w >= 6) {
+      return <MemoPolyline key={counter} positions={route.coordinates} weight={10} color={color}/>
+    }
+    if (w > 1 && w < 6) {
       return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
     }
     if (w == 1) {
@@ -61,6 +64,8 @@ const MultiPolyline = ({routes}) => {
 
 function  Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
+  const [realStart, setRealStart] = useState(null);
+  const [realArrival, setRealArrival] = useState(null);
   const [myArrival, setMyArrival] = useState(start);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripStarts, setTripStarts] = useState([]);
@@ -71,20 +76,27 @@ function  Mapi({className, center, start}: MapProps) {
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
+  const [tripDay, setTripDay] = useState(days[0]);
+  const [startHours, ] = useState(hours);
+  const [endHours, setEndHours] = useState(hours);
+  const [startHour, setStartHour] = useState(hours[0]);
+  const [endHour, setEndHour] = useState(hours[23]);
+
+  /**
   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
     return date.getDay() == jour.value;
   }));
-  const [startHours, ] = useState(hours);
-  const [endHours, setEndHours] = useState(hours);
+
   const [startHour, setStartHour] = useState(hours.find(heure => {
     let date = new Date();
     return date.getHours() == heure.value;
   }));
+  
   const [endHour, setEndHour] = useState(hours.find(heure => {
     let date = new Date();
     return date.getHours()+1 == heure.value;
-  }));
+  }));**/
 
   function updateEndHours(e:any) {
     const newEndHours = e.value != 23 ? hours.filter(hour => hour.value > e.value) : hours;
@@ -96,24 +108,22 @@ function  Mapi({className, center, start}: MapProps) {
   function updateStartingTrip(e:any) {
     let index = destinations.findIndex(destination => destination.id == e.value);
     setMyStart(destinations[index]);
+    setRealStart(destinations[index]);
     setTripStart(e);
   }
 
   function updateArrivalTrip(e:any) {
     let index = destinations.findIndex(destination => destination.id == e.value);
     setMyArrival(destinations[index]);
+    setRealArrival(destinations[index]);
     setTripEnd(e);
   }
 
   function getTrips() {
-    displayService.SearchTrips(myStart, myArrival, tripDay.value, startHour.value, endHour.value).then(
+    displayService.SearchTrips(realStart, realArrival, tripDay.value, startHour.value, endHour.value).then(
       result => {
         console.log('RESULT : ', result);
         setSearchedTrips(result);
-        /*displayService.ListRoutesEdgesFrom(result, "Wednesday", startHour.value, endHour.value)
-        .then(result => {
-          setRoutes(result);
-        });*/
       }
     );
   }
@@ -157,7 +167,7 @@ function  Mapi({className, center, start}: MapProps) {
   useEffect(() => {
       displayService.ListRoutesEdgesFrom(searchedTrips, tripDay.value, startHour.value, endHour.value)
         .then(result => {console.log("ROUTES : ", result); setRoutes(result);});
-      displayService.ListStepsFrom(trips)
+      displayService.ListStepsFrom(searchedTrips)
         .then(result => setSteps(result));
   }, [searchedTrips]);
 
@@ -213,22 +223,7 @@ function  Mapi({className, center, start}: MapProps) {
       {
         myStart &&
         <div> 
-          {/*
-            routes.map((route, index) =>
-              {
-                counter += 1;
-              var w = route.stat;
-              console.log("poids : ", w);
-              console.log("indice : ", index);
-              if (w > 1) {
-                return <MemoPolyline key={counter} positions={route.coordinates} weight={5}/>
-              }
-              if (w == 1) {
-              return <MemoPolyline key={counter} positions={route.coordinates} weight={2}/>
-              }
-              })
-            
-            */<MultiPolyline routes={routes}/>}
+          {<MultiPolyline routes={routes}/>}
         </div>
       }
       {
@@ -257,7 +252,7 @@ function  Mapi({className, center, start}: MapProps) {
         })}
         </div>
       }
-      { /*
+      { 
         myStart &&
         <div>
           {steps.map((point, index) => (
@@ -271,7 +266,7 @@ function  Mapi({className, center, start}: MapProps) {
             </Marker>
           ))}
         </div>
-        */
+        
       }
     </MapContainer>
     </div>

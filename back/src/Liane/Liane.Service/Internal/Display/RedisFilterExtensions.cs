@@ -1,14 +1,18 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using StackExchange.Redis;
 
 namespace Liane.Service.Internal.Display
 {
     public static class RedisFilterExtensions
     {
-        public static IEnumerable<RedisKey> FilterByDay(this IEnumerable<RedisKey> edgeKeys, string day)
+        public static IEnumerable<RedisKey> FilterByDay(this IEnumerable<RedisKey> edgeKeys, string? day = null)
         {
-            return edgeKeys.Where(key => key.ToString().Split("|").Contains(day));
+            return day == null
+                ? edgeKeys
+                : edgeKeys.Where(key => key.ToString().Contains(day));
         }
 
         public static IEnumerable<RedisKey> FilterByStartHour(this IEnumerable<RedisKey> edgeKeys, int hour = 0)
@@ -46,5 +50,6 @@ namespace Liane.Service.Internal.Display
                 return listPipe[1] == endPoint;
             });
         }
+
     }
 }

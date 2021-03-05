@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using DeepEqual.Syntax;
 using Liane.Api.Display;
@@ -117,16 +116,6 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task DecomposeRouteBetweenMendeAndFlorac()
-        {
-            await SetUpRedisAsync();
-            var actual = await displayService!.DecomposeTrip(LabeledPositions.Mende, LabeledPositions.Florac);
-            var expected = ImmutableList.Create(Trips.Mende_Florac_1, Trips.Mende_Florac_2);
-            actual.WithDeepEqual(expected).Assert();
-        }
-        
-        [Test]
-        [Category("Integration")]
         public async Task ListEtapesFromMende()
         {
             await SetUpRedisAsync();
@@ -143,8 +132,24 @@ namespace Liane.Test
         public async Task SearchTripFromFloracToLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrip(LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, "Monday", 8);
+            var actual = await displayService!.DefaultSearchTrip("Monday", 8, 9, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking);
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
+            actual.WithDeepEqual(expected)
+                .Assert();
+            actual.WithDeepEqual(expected).Assert();
+        }
+
+        [Test]
+        [Category("Integration")]
+        public async Task SearchTripFromNull()
+        {
+            await SetUpRedisAsync();
+            var actual = await displayService!.DefaultSearchTrip(day: "Monday", start: LabeledPositions.Florac, end: LabeledPositions.LeCrouzet);
+            var expected = ImmutableHashSet.Create(Trips.Florac_Cocures, Trips.Cocures_Le_Crouzet);
+            /**
+            foreach(var trip in actual){
+                Console.WriteLine($"TRIP actual : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
+            }**/
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();

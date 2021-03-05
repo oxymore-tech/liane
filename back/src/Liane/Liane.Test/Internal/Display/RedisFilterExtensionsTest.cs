@@ -144,5 +144,16 @@ namespace Liane.Test.Internal.Display
             actual.WithDeepEqual(expected)
                 .Assert();
         }
+        
+        [Test]
+        [Category("Integration")]
+        public async Task FilterByAllDays()
+        {
+            var edgeKeys = await redis!.ListEdgeKeys();
+            var actual = edgeKeys.FilterByDay();
+            var expected = edgeKeys;
+            actual.WithDeepEqual(expected)
+                .Assert();
+        }
     }
 }

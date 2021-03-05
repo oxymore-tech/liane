@@ -12,12 +12,13 @@ namespace Liane.Api.Display
         Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
         Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day);
         Task<ImmutableHashSet<Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
-        Task<ImmutableList<Trip.Trip>> DecomposeTrip(RallyingPoint start, RallyingPoint end);
-        ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
-        Task<ImmutableList<Trip.Trip>> SearchTrip(RallyingPoint start, RallyingPoint end, string day, int hour);
 
-        Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day,
+        ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
+
+        Task<ImmutableHashSet<Trip.Trip>> DefaultSearchTrip(string day = "day", int startHour = 0, int endHour = 23, RallyingPoint? start = null, RallyingPoint? end = null);
+
+        Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day = "day",
             int hour1 = 0,
-            int hour2 = 24);
+            int hour2 = 23);
     }
 }
