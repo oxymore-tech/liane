@@ -1,14 +1,13 @@
 import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer, Polyline } from "react-leaflet";
-import {icon} from "leaflet";
-import { RallyingPoint, LatLng, Trip, RouteStat} from "../api";
+import { MapContainer, Marker, Polyline, TileLayer } from "react-leaflet";
+import { icon } from "leaflet";
+import { LatLng, RallyingPoint, RouteStat, Trip } from "../api";
 import { displayService } from "../api/display-service";
 import Select from "react-select";
 import { days, hours } from "../../assets/time.data";
 import { Button } from "./base/Button";
 import { Available_trips } from "./available_trips";
-import { Console } from "console";
 
 interface MapProps {
   className?: string;
@@ -42,25 +41,24 @@ const MemoPolyline = memo(Polyline);
 var counter = 0;
 
 const MultiPolyline = ({routes}) => {
-  return (routes.map((route : RouteStat) =>
-    {
-    counter += 1;
-    var w = route.stat;
-    var color = "#" + (Math.floor((1 - route.stat/7) * 255)).toString(16) + (Math.floor((route.stat/7) * 255)).toString(16) + "00";
-    if (w >= 6) {
-      return <MemoPolyline key={counter} positions={route.coordinates} weight={10} color={color}/>
-    }
-    if (w > 1 && w < 6) {
-      return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
-    }
-    if (w == 1) {
-      return <MemoPolyline key={counter} positions={route.coordinates} weight={2} color={color}/>
-    }
-  })
+  return (routes.map((route: RouteStat) => {
+      counter += 1;
+      var w = route.stat;
+      var color = "#" + (Math.floor((1 - route.stat / 7) * 255)).toString(16) + (Math.floor((route.stat / 7) * 255)).toString(16) + "00";
+      if (w >= 6) {
+        return <MemoPolyline key={counter} positions={route.coordinates} weight={10} color={color}/>
+      }
+      if (w > 1 && w < 6) {
+        return <MemoPolyline key={counter} positions={route.coordinates} weight={5} color={color}/>
+      }
+      if (w == 1) {
+        return <MemoPolyline key={counter} positions={route.coordinates} weight={2} color={color}/>
+      }
+    })
   )
 }
 
-function  Mapi({className, center, start}: MapProps) {
+function Mapi({className, center, start}: MapProps) {
   const [myStart, setMyStart] = useState(start);
   const [realStart, setRealStart] = useState(null);
   const [realArrival, setRealArrival] = useState(null);
@@ -75,42 +73,43 @@ function  Mapi({className, center, start}: MapProps) {
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [tripDay, setTripDay] = useState(days[0]);
-  const [startHours, ] = useState(hours);
+  const [startHours,] = useState(hours);
   const [endHours, setEndHours] = useState(hours);
   const [startHour, setStartHour] = useState(hours[0]);
   const [endHour, setEndHour] = useState(hours[23]);
   const [availableTrips, setAvailableTrips] = useState(false);
+
   /**
-  const [tripDay, setTripDay] = useState(days.find(jour => {
+   const [tripDay, setTripDay] = useState(days.find(jour => {
     let date = new Date();
     return date.getDay() == jour.value;
   }));
 
-  const [startHour, setStartHour] = useState(hours.find(heure => {
+   const [startHour, setStartHour] = useState(hours.find(heure => {
     let date = new Date();
     return date.getHours() == heure.value;
   }));
-  
-  const [endHour, setEndHour] = useState(hours.find(heure => {
+
+   const [endHour, setEndHour] = useState(hours.find(heure => {
     let date = new Date();
     return date.getHours()+1 == heure.value;
   }));**/
 
-  function updateEndHours(e:any) {
+  function updateEndHours(e: any) {
     const newEndHours = e.value != 23 ? hours.filter(hour => hour.value > e.value) : hours;
     setEndHour(newEndHours[0]);
     setStartHour(e);
     setEndHours(newEndHours);
   }
 
-  function updateStartingTrip(e:any) {
+  function updateStartingTrip(e: any) {
     let index = destinations.findIndex(destination => destination.id == e.value);
     setMyStart(destinations[index]);
     setRealStart(destinations[index]);
     setTripStart(e);
   }
 
-  function updateArrivalTrip(e:any) {
+  function updateArrivalTrip(e: any) {
     let index = destinations.findIndex(destination => destination.id == e.value);
     setMyArrival(destinations[index]);
     setRealArrival(destinations[index]);
@@ -127,7 +126,7 @@ function  Mapi({className, center, start}: MapProps) {
   }
 
   useEffect(() => {
-    if(myStart != null) {
+    if (myStart != null) {
       displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
         result => {
           result.push(myStart);
@@ -135,22 +134,18 @@ function  Mapi({className, center, start}: MapProps) {
           let tripsList = [];
           result.forEach(city => {
             tripsList.push({
-              label : city.id.replaceAll('_', ' '),
-              value : city.id
+              label: city.id.replaceAll('_', ' '),
+              value: city.id
             });
           });
           setTripStarts(tripsList);
           setTripEnds(tripsList);
-      });
+        });
     }
-  }, []);
+  }, [myStart]);
 
   useEffect(() => {
-    setMyStart(start);
-  }, [start]);
-
-  useEffect(() => {
-      setTripEnds(tripStarts.filter(point => point != tripStart));
+    setTripEnds(tripStarts.filter(point => point != tripStart));
   }, [tripStart]);
 
   useEffect(() => {
@@ -159,56 +154,61 @@ function  Mapi({className, center, start}: MapProps) {
         result => {
           setTrips(result)
         });
-    }  
+    }
   }, [myStart]);
-  
-  useEffect(() => {
-      displayService.ListRoutesEdgesFrom(searchedTrips, tripDay.value, startHour.value, endHour.value)
-        .then(result => {console.log("ROUTES : ", result); setRoutes(result);});
-      displayService.ListStepsFrom(searchedTrips)
-        .then(result => setSteps(result));
-  }, [searchedTrips]);
 
   useEffect(() => {
-    if (realStart && realArrival){
+    displayService.ListRoutesEdgesFrom(searchedTrips, tripDay.value, startHour.value, endHour.value)
+      .then(result => {
+        console.log("ROUTES : ", result);
+        setRoutes(result);
+      });
+    displayService.ListStepsFrom(searchedTrips)
+      .then(result => setSteps(result));
+  }, [searchedTrips, tripDay, startHour, endHour]);
+
+  useEffect(() => {
+    if (realStart && realArrival) {
       setAvailableTrips(true);
     }
-  }, [searchedTrips]);
+  }, [realStart, realArrival, searchedTrips]);
 
-  return  <div> 
-    { availableTrips &&
+  return <div>
+    {availableTrips &&
     <Available_trips searchedTrips={searchedTrips}></Available_trips>
     }
-    <div className="container" style={{top: 10, right: 10, width: 250, zIndex: 3, position : "absolute"}}>
+    <div className="container" style={{top: 10, right: 10, width: 250, zIndex: 3, position: "absolute"}}>
       <form className="form">
         <div className="row">
           <div className="col-md-4">
             <label>Lieu de départ</label>
-            <Select options={ tripStarts } value={tripStart} onChange={updateStartingTrip} placeholder="Sélectionnez un lieu"/>
+            <Select options={tripStarts} value={tripStart} onChange={updateStartingTrip}
+                    placeholder="Sélectionnez un lieu"/>
           </div>
         </div>
         <div className="row">
           <div className="col-md-4">
             <label>Lieu d'arrivée</label>
-            <Select options={ tripEnds } value={tripEnd} onChange={updateArrivalTrip} placeholder="Sélectionnez un lieu"/>
+            <Select options={tripEnds} value={tripEnd} onChange={updateArrivalTrip} placeholder="Sélectionnez un lieu"/>
           </div>
         </div>
         <div className="row">
           <div className="col-md-4">
             <label>Jour</label>
-            <Select options={ days } value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour"/>
+            <Select options={days} value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour"/>
           </div>
         </div>
         <div className="row">
           <div className="col-md-4">
             <label>Départ entre :</label>
-            <Select options={ startHours } value={startHour} onChange={updateEndHours} placeholder="Sélectionnez une heure"/>
+            <Select options={startHours} value={startHour} onChange={updateEndHours}
+                    placeholder="Sélectionnez une heure"/>
           </div>
         </div>
         <div className="row">
           <div className="col-md-4">
             <label>et :</label>
-            <Select options={ endHours } value={endHour} onChange={setEndHour} placeholder="Sélectionnez une heure"/>
+            <Select options={endHours} value={endHour} onChange={setEndHour} placeholder="Sélectionnez une heure"/>
           </div>
         </div>
         <div className="p-2">
@@ -216,19 +216,19 @@ function  Mapi({className, center, start}: MapProps) {
         </div>
       </form>
     </div>
-      <MapContainer className={className} center={center}
-                        zoom={12}
-                        scrollWheelZoom={true}
-                        dragging={true}
-                        touchZoom={false}
-                        style={{zIndex: 0, position : "relative"}}>
+    <MapContainer className={className} center={center}
+                  zoom={12}
+                  scrollWheelZoom={true}
+                  dragging={true}
+                  touchZoom={false}
+                  style={{zIndex: 0, position: "relative"}}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         zIndex={2}
       />
       {
         myStart &&
-        <div> 
+        <div>
           {<MultiPolyline routes={routes}/>}
         </div>
       }
@@ -236,29 +236,29 @@ function  Mapi({className, center, start}: MapProps) {
         myStart &&
         <div>
           {destinations.map((point, index) => {
-            const icon = function (myStart:any) {
+            const icon = function (myStart: any) {
               if (myStart.id == point.id) {
                 return customIcon;
               } else if (myArrival.id == point.id) {
                 return customIconRed;
               } else {
                 return customIconGray;
-              } 
+              }
             };
             return (
-            <Marker key={index} position={point.position} icon={icon(myStart)} eventHandlers={{
-              click: () => {
-                let pointData = tripStarts.find(point0 => point0.value === point.id);
-                setMyStart(point);         
-                setTripStart(pointData);
-              },
-            }}>
-            </Marker>
-          )
-        })}
+              <Marker key={index} position={point.position} icon={icon(myStart)} eventHandlers={{
+                click: () => {
+                  let pointData = tripStarts.find(point0 => point0.value === point.id);
+                  setMyStart(point);
+                  setTripStart(pointData);
+                },
+              }}>
+              </Marker>
+            )
+          })}
         </div>
       }
-      { 
+      {
         myStart &&
         <div>
           {steps.map((point, index) => (
@@ -266,16 +266,16 @@ function  Mapi({className, center, start}: MapProps) {
               click: () => {
                 let pointData = tripStarts.find(point0 => point0.value == point.id);
                 setTripStart(pointData);
-                setMyStart(point);                 
+                setMyStart(point);
               },
             }}>
             </Marker>
           ))}
         </div>
-        
+
       }
     </MapContainer>
-    </div>
+  </div>
 }
 
 export default Mapi;
