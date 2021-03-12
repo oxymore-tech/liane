@@ -146,10 +146,6 @@ namespace Liane.Test
             await SetUpRedisAsync();
             var actual = await displayService!.DefaultSearchTrip(day: "Monday", start: LabeledPositions.Florac, end: LabeledPositions.LeCrouzet);
             var expected = ImmutableHashSet.Create(Trips.Florac_Cocures, Trips.Cocures_Le_Crouzet);
-            /**
-            foreach(var trip in actual){
-                Console.WriteLine($"TRIP actual : {Print.ImmutableListToString(trip.Coordinates)}, user : {trip.User}, time : {trip.Time}");
-            }**/
             actual.WithDeepEqual(expected)
                 .Assert();
             actual.WithDeepEqual(expected).Assert();
@@ -160,11 +156,7 @@ namespace Liane.Test
         public async Task ListRoutesFromBlajoux()
         {
             await SetUpRedisAsync();
-            var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var endPoints = redis.GetEndPoints();
-            IServer server = redis.GetServer(endPoints[0]);
             var trips = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
-            var stringTrips = Print.ImmutableHashSetToString(trips);
             var actual = await displayService!.ListRoutesEdgesFrom(trips, "Wednesday");
             var expected = new Dictionary<string, RouteStat>();
             var preExpected1 = await osrmService!.Route(Positions.Blajoux_Parking, Positions.Montbrun_En_Bas);
@@ -186,9 +178,9 @@ namespace Liane.Test
             var redisKey = new RedisKey("RallyingPoints");
             var database = redis.GetDatabase();
             await database.KeyDeleteAsync(redisKey);
-            foreach (var labeledPosition in LabeledPositions.RallyingPoints)
+            foreach (var (id, (lat, lng), _) in LabeledPositions.RallyingPoints)
             {
-                await database.GeoAddAsync(redisKey, labeledPosition.Position.Lng, labeledPosition.Position.Lat, new RedisValue(labeledPosition.Id));
+                await database.GeoAddAsync(redisKey, lng, lat, new RedisValue(id));
             }
         }
     }
