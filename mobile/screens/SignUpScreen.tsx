@@ -21,7 +21,7 @@ const SignUpScreen = ({navigation}: any) => {
   function actionsOnPress() {
     userSendSms(phoneNumber);
     console.log("PHONE NUMBER : ", phoneNumber);
-    Alert.alert("Nous vous avons envoyé un code par SMS pour vous authentifier. Vous avez une minute pour nous le saisir.");
+    Alert.alert("Nous vous avons envoyé un code par SMS pour vous authentifier.");
     navigation.navigate('SignInSms', {phoneNumber: phoneNumber});
   }
 

@@ -46,13 +46,13 @@ namespace Liane.Service.Internal.User
                 var redisKey = AuthSmsTokenRedisKey(phoneNumber);
                 var database = await redis.Get();
                 await database.StringSetAsync(redisKey, code);
-                await database.KeyExpireAsync(redisKey, TimeSpan.FromSeconds(30));
+                await database.KeyExpireAsync(redisKey, TimeSpan.FromMinutes(5));
                 var message = await MessageResource.CreateAsync(
                     body: $"Voici votre code liane : {code}",
                     from: new PhoneNumber(twilioSettings.From),
                     to: phoneNumber
                 );
-                logger.LogInformation("SMS sent {message}", message);
+                logger.LogInformation("SMS sent {@message}", message);
             }
         }
 
@@ -73,7 +73,6 @@ namespace Liane.Service.Internal.User
             }
             var redisKey2 = "notification_" + number;
             await database.StringSetAsync(redisKey2, token);
-            Console.WriteLine("PN TO S :" + number); // phoneNumber.ToString()
             return GenerateToken(number);
         }
 
