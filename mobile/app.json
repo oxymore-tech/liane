@@ -1,5 +1,6 @@
 {
   "expo": {
+    "entryPoint": "./src/App.tsx",
     "name": "liane",
     "slug": "liane",
     "version": "1.0.0",
@@ -8,6 +9,8 @@
     ],
     "ios": {
       "infoPlist": {
+        "NSLocationUsageDescription": "This app collects your GPS location to anonymously register your car travels.",
+        "NSLocationAlwaysUsageDescription": "This app collects your GPS location to anonymously register your car travels.",
         "UIBackgroundModes": [
           "location",
           "fetch"

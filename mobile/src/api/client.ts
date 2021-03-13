@@ -9,7 +9,7 @@ const endpoint = "https://liane.gjini.co/api"; // http://192.168.1.66:8081/api
  * @result boolean : true is success else false
  */
 export async function sendLocation(location: LocationObject) {
-  let token0 = await AsyncStorage.getItem("tokenJWT");
+  let token0 = await AsyncStorage.getItem("token");
   let token = (token0 == null) ? "" : token0;
   let accur = location.coords.accuracy;
   let accurInteger = (accur == null) ? 0 : Number.parseInt(Math.round(accur).toString());
@@ -41,33 +41,19 @@ export async function sendLocation(location: LocationObject) {
 
 /**
  * Log-in a user
- * @param phoneNumber phone number of the user
+ * @param number phone number of the user
  * @param code code received by the user
- * @param pushToken
+ * @param token
  */
-export async function userLogin(phoneNumber: string, code: string, pushToken: string) {
-  console.log('LE TOKEN KON ENVOI : ', pushToken);
+export async function userLogin(number: string, code: string, token: string) {
   const url = new URL("/auth/login", endpoint);
-  url.searchParams.append("number", phoneNumber);
+  url.searchParams.append("number", number);
   url.searchParams.append("code", code);
-  url.searchParams.append("token", pushToken);
-  return fetch(url.toString(), {
+  url.searchParams.append("token", token);
+  const response = await fetch(url.toString(), {
     method: 'POST'
-  })
-    .then(async (result) => {
-      if (result.status != 200) {
-        return false;
-      }
-      const token = await result.text();
-      console.log('TOKEN ? : ', JSON.stringify(token));
-      await AsyncStorage.setItem("tokenJWT", token);
-      return token;
-    })
-    .catch((error) => {
-      console.log("ERREUR dans userLogin");
-      console.error(error);
-      return false;
-    });
+  });
+  return await response.text();
 }
 
 /**
@@ -92,7 +78,7 @@ export async function userSendSms(phoneNumber: string) {
  * Get user notifications
  */
 export async function getNotifications() {
-  const token0 = await AsyncStorage.getItem("tokenJWT");
+  const token0 = await AsyncStorage.getItem("token");
   const token = (token0 == null) ? "" : token0;
   return fetch(`${endpoint}/notification`, {
     method: 'GET',
@@ -115,7 +101,7 @@ export async function getNotifications() {
  */
 export async function deleteNotification(notificationTimestamp: number) {
   console.log('NOTIF TIMESTAMP : ', notificationTimestamp);
-  const token0 = await AsyncStorage.getItem("tokenJWT");
+  const token0 = await AsyncStorage.getItem("token");
   const token = (token0 == null) ? "" : token0;
   return fetch(endpoint + "/notification/delete?date=" + notificationTimestamp, {
     method: 'POST',
