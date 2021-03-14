@@ -99,6 +99,7 @@ class DisplayService {
           },
           method: "POST"
         });
+        LatLngExpression
         return await response.json();
       }
 

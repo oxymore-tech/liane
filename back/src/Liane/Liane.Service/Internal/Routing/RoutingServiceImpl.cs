@@ -70,7 +70,7 @@ namespace Liane.Service.Internal.Routing
             var detourPoint = query.Point;
             var duration = query.Duration;
             var distance = query.Distance;
-            Geojson geojson = new Geojson("LineString", query.Coordinates.ToLngLat());
+            Geojson geojson = new("LineString", query.Coordinates.ToLngLatTuple());
             if (duration <= 0 || distance <= 0)
             {
                 // Calculate the fastest route to compare
@@ -95,7 +95,7 @@ namespace Liane.Service.Internal.Routing
                 return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -1);
             }
 
-            // Else find the steps where the route cross the detourPoint 
+            // Else find the steps where the route cross the detourPoint
             var l = routeResponse.Routes[0].Legs[0].Steps.Count; // at least > 2
             var startIntersections = routeResponse.Routes[0].Legs[0].Steps[l - 2].Intersections;
             var endIntersections = routeResponse.Routes[0].Legs[1].Steps[1].Intersections;
@@ -138,8 +138,6 @@ namespace Liane.Service.Internal.Routing
 
                     startIntersections = routeResponse.Routes[0].Legs[0].Steps[stepsId].Intersections;
                 }
-
-                Console.WriteLine($"Search: stepsId = {stepsId}, start = {startIntersections[0].Location}");
             } while (search);
 
             // Looking for an entry after the detourPoint
@@ -172,12 +170,10 @@ namespace Liane.Service.Internal.Routing
                 }
 
                 endIntersections = routeResponse.Routes[0].Legs[1].Steps[stepsId].Intersections;
-                Console.WriteLine($"Search: stepsId = {stepsId}, end = {endIntersections[0].Location}");
                 //}
             } while (search);
 
             // Then generate the final route which is not crossing detourPoint
-            Console.Write($"start: {startIntersections[0].Location}, end: {endIntersections[0].Location}\n");
             var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()));
 
             if (alternatives.Count > 1)

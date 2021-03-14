@@ -9,7 +9,7 @@ namespace Liane.Api.Util.Exception
 {
     public static class HttpExceptionMapping
     {
-        public static System.Exception Map(HttpStatusCode code, string responseContent)
+        public static System.Exception Map(HttpStatusCode? code, string responseContent)
         {
             // ReSharper disable once SwitchStatementMissingSomeCases
             switch (code)

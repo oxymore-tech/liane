@@ -1,8 +1,10 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -11,32 +13,22 @@ namespace Liane.Service.Internal.Osrm
 {
     public sealed class OsrmServiceImpl : IOsrmService
     {
-        private readonly MemoryCache routeCache = new MemoryCache(new MemoryCacheOptions());
+        private readonly MemoryCache routeCache = new(new MemoryCacheOptions());
         private readonly HttpClient client;
         private readonly ILogger<OsrmServiceImpl> logger;
-        
+
         public OsrmServiceImpl(ILogger<OsrmServiceImpl> logger, OsrmSettings settings)
         {
             client = new HttpClient {BaseAddress = settings.Url};
             this.logger = logger;
         }
 
-        /// <summary>
-        /// /route/v1/driving/{coordinates}?alternatives={true|false|number}&amp;steps={true|false}&amp;geometries={polyline|polyline6|geojson}&amp;overview={full|simplified|false}&amp;annotations={true|false}
-        /// </summary>
-        /// <param name="coordinates"></param>
-        /// <param name="alternatives"></param>
-        /// <param name="steps"></param>
-        /// <param name="geometries"></param>
-        /// <param name="overview"></param>
-        /// <param name="annotations"></param>
-        /// <param name="continueStraight"></param>
-        /// <returns></returns>
-        
-        public Task<Response.Routing> Route(LatLng start, LatLng end) {
+        public Task<Response.Routing> Route(LatLng start, LatLng end)
+        {
             var key = ImmutableList.Create(start, end);
-            return routeCache.GetOrCreateAsync(key, (k) => Route(key, overview:"full"));
+            return routeCache.GetOrCreateAsync(key, _ => Route(key, overview: "full"));
         }
+
         public async Task<Response.Routing> Route(ImmutableList<LatLng> coordinates,
             string alternatives = "false",
             string steps = "false",
@@ -47,9 +39,7 @@ namespace Liane.Service.Internal.Osrm
         {
             string uri = $"/route/v1/driving/{Format(coordinates)}";
 
-            logger.LogInformation("Call returns ", uri);
-
-            var result = await client.GetAsyncAs<Response.Routing>(uri, new
+            var result = await client.GetFromJsonAsync<Response.Routing>(uri.WithParams(new
             {
                 alternatives,
                 steps,
@@ -57,8 +47,13 @@ namespace Liane.Service.Internal.Osrm
                 overview,
                 annotations,
                 continue_straight = continueStraight
-            });
-            logger.LogInformation("Call returns ", result);
+            }));
+
+            if (result == null)
+            {
+                throw new ResourceNotFoundException("Osrm response");
+            }
+
             return result;
         }
 
@@ -66,17 +61,5 @@ namespace Liane.Service.Internal.Osrm
         {
             return string.Join(";", coordinates.Select(c => c.ToLngLatString()));
         }
-
-        // NEAREST
-        // /nearest/v1/{profile}/{coordinates}.json?number={number}
-
-        // MATCH
-        // /match/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}
-
-        // TABLE
-        // /table/v1/{profile}/{coordinates}?{sources}=[{elem}...];&{destinations}=[{elem}...]&annotations={duration|distance|duration,distance}
-
-        // TRIP
-        // /trip/v1/{profile}/{coordinates}?roundtrip={true|false}&source{any|first}&destination{any|last}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}
     }
 }

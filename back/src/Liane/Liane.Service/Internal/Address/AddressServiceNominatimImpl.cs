@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Liane.Api.Address;
 using Liane.Api.Routing;
@@ -23,13 +24,19 @@ namespace Liane.Service.Internal.Address
 
         public async Task<Api.Address.Address> GetDisplayName(LatLng coordinate)
         {
-            var response = await client.GetAsyncAs<Response>("/reverse", new
+            var (lat, lon) = coordinate;
+            var response = await client.GetFromJsonAsync<Response>("/reverse".WithParams(new
             {
-                lat = coordinate.Lat,
-                lon = coordinate.Lng,
+                lat,
+                lon,
                 format = "json",
                 addressdetails = 1
-            });
+            }));
+
+            if (response == null)
+            {
+                throw new ResourceNotFoundException("Nominatim");
+            }
 
             return MapAddress(response);
         }
@@ -47,14 +54,17 @@ namespace Liane.Service.Internal.Address
 
         public async Task<ImmutableList<Api.Address.Address>> Search(string displayName)
         {
-            var responses = await client.GetAsyncAs<ImmutableList<Response>>("/search/fr", new
+            var responses = await client.GetFromJsonAsync<ImmutableList<Response>>("/search/fr".WithParams(new
             {
                 q = displayName,
                 format = "json",
                 addressdetails = 1
-            });
+            }));
 
-            logger.LogInformation("Call returns ", responses);
+            if (responses == null)
+            {
+                throw new ResourceNotFoundException("Nominatim");
+            }
 
             return responses.Select(MapAddress)
                 .ToImmutableList();
@@ -62,7 +72,7 @@ namespace Liane.Service.Internal.Address
 
         private static Api.Address.Address MapAddress(Response r)
         {
-            return new Api.Address.Address(r.DisplayName, new LatLng(r.Lat, r.Lon),r.Icon, r.Address);
+            return new(r.DisplayName, new LatLng(r.Lat, r.Lon), r.Icon, r.Address);
         }
     }
 }

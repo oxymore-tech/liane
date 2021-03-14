@@ -10,7 +10,7 @@ namespace Liane.Service.Internal.Osrm
     // for every cross-way until the next turn instruction.
     public class Intersection
     {
-        public Intersection(LngLat location, ImmutableList<int> bearings, ImmutableList<string> classes, ImmutableList<string> entry, int @in, int @out, ImmutableList<Lane> lanes)
+        public Intersection(LngLatTuple location, ImmutableList<int> bearings, ImmutableList<string> classes, ImmutableList<string> entry, int @in, int @out, ImmutableList<Lane> lanes)
         {
             Location = location;
             Bearings = bearings;
@@ -22,7 +22,7 @@ namespace Liane.Service.Internal.Osrm
         }
 
         // A [longitude, latitude] pair describing the location of the turn.
-        public LngLat Location { get; }
+        public LngLatTuple Location { get; }
 
         // A list of bearing values (e.g. [0,90,180,270]) that are available at the intersection. The bearings describe all available roads at the intersection.
         // Values are between 0-359 (0=true north)

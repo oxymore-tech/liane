@@ -8,7 +8,7 @@ namespace Liane.Service.Internal.Osrm
     public sealed class Waypoint
     {
         // Name of the street the coordinate snapped to
-        public Waypoint(string name, LatLng location, float distance, string hint, ImmutableList<int>? nodes)
+        public Waypoint(string name, LngLatTuple location, float distance, string hint, ImmutableList<int>? nodes)
         {
             Name = name;
             Location = location;
@@ -21,7 +21,7 @@ namespace Liane.Service.Internal.Osrm
 
         // Array that contains the [longitude, latitude]
         // pair of the snapped coordinate
-        public LatLng Location { get; }
+        public LngLatTuple Location { get; }
 
         // The distance, in metres, from the input coordinate
         // to the snapped coordinate

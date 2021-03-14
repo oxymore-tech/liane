@@ -40,7 +40,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("searchtrip")]
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip([FromBody] JObject data) // :)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip([FromBody] JObject data)
         {
             string[] days = {"Sunday","Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday", "day"};
             RallyingPoint departure = data["departure"].ToObject<RallyingPoint>();

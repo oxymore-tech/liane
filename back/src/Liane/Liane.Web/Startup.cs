@@ -174,7 +174,7 @@ namespace Liane.Web
         {
             ConfigureLianeServices(context, services);
             services.AddService<FileStreamResultExecutor>();
-            services.AddControllers().AddNewtonsoftJson();
+            services.AddControllers();
             services.AddCors(options =>
                 {
                     options.AddPolicy("AllowLocal",
@@ -219,9 +219,13 @@ namespace Liane.Web
 
             var env = context.HostingEnvironment;
             if (env.IsDevelopment())
+            {
                 app.UseDeveloperExceptionPage();
+            }
             else
+            {
                 app.UseHsts();
+            }
 
             app.UseRouting();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
