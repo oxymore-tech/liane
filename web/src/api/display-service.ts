@@ -1,5 +1,4 @@
-import { LatLngExpression } from "leaflet";
-import { LatLng, RallyingPoint, RouteStat, Trip } from ".";
+import { RallyingPoint, RouteStat, Trip } from ".";
 import { BaseUrl } from "./url";
 
 class DisplayService {
@@ -99,7 +98,6 @@ class DisplayService {
           },
           method: "POST"
         });
-        LatLngExpression
         return await response.json();
       }
 
