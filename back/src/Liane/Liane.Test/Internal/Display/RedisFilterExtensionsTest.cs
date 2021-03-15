@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
+using Castle.Core.Internal;
 using DeepEqual.Syntax;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
@@ -30,9 +32,10 @@ namespace Liane.Test.Internal.Display
 
             var database = await redis.Get();
             foreach (var command in AssertExtensions.ReadTestResource("redis-data.txt")
-                .Split("\n"))
+                .Split("\n").Select(s => s.Trim()).Where(s => !s.IsNullOrEmpty()))
             {
-                await database.ExecuteAsync(command);
+                var args = command.Trim().Split(" ");
+                await database.ExecuteAsync(args[0], args.Skip(1).ToArray<object>());
             }
         }
 
@@ -144,7 +147,7 @@ namespace Liane.Test.Internal.Display
             actual.WithDeepEqual(expected)
                 .Assert();
         }
-        
+
         [Test]
         [Category("Integration")]
         public async Task FilterByAllDays()
