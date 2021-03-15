@@ -6,7 +6,7 @@ namespace Liane.Service.Internal.Osrm
     // TODO: comment explaining Maneuver object
     public sealed class Maneuver
     {
-        public Maneuver(LatLng location, string type, int bearingBefore, int bearingAfter, string? modifier, int? exit)
+        public Maneuver(LngLatTuple location, string type, int bearingBefore, int bearingAfter, string? modifier, int? exit)
         {
             Location = location;
             Type = type;
@@ -17,7 +17,7 @@ namespace Liane.Service.Internal.Osrm
         }
 
         // A [longitude, latitude] pair describing the location of the turn.
-        public LatLng Location { get; }
+        public LngLatTuple Location { get; }
 
         // A string indicating the type of maneuver. new identifiers might be introduced without API change Types unknown to the client should be handled like the turn type,
         // the existence of correct modifier values is guaranteed.

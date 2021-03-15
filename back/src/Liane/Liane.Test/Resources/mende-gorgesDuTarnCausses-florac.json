@@ -1,31 +1,32 @@
 {
+  "Code": "Ok",
   "Waypoints": [
     {
-      "Name": "Rue de la Liberté",
-      "Location": {
-        "lat": 3.499084,
-        "lng": 44.518149
-      },
+      "Name": "Rue de la Libert\u00E9",
+      "Location": [
+        3.499084,
+        44.518149
+      ],
       "Distance": 13.990154,
       "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATGQ1AAVLpwJhZDUAiEqnAgEAPwWLWyP5",
       "Nodes": null
     },
     {
       "Name": "",
-      "Location": {
-        "lat": 3.414958,
-        "lng": 44.366033
-      },
+      "Location": [
+        3.414958,
+        44.366033
+      ],
       "Distance": 101.104355,
       "Hint": "DR0AgMccAIAKAAAABgAAALUAAABfAAAA_epDQbwbwEAh50lDspXTQgoAAAAGAAAAtQAAAF8AAABxAwAArhs0ANH4pAI5GzQAR_WkAg4A_wWLWyP5",
       "Nodes": null
     },
     {
       "Name": "",
-      "Location": {
-        "lat": 3.582862,
-        "lng": 44.32323
-      },
+      "Location": [
+        3.582862,
+        44.32323
+      ],
       "Distance": 607.20026,
       "Hint": "6LgAgEZTBoAAAAAACQAAAMcEAADoAgAAAAAAALFcJUEafapEjrZPRAAAAAAJAAAAxwQAAOgCAABxAwAAjqs2AJ5RpAKlmDYAJUGkAm0AbxOLWyP5",
       "Nodes": null
@@ -55,8 +56,5 @@
         }
       ]
     }
-  ],
-  "Code": 0,
-  "Message": null,
-  "DataVersion": null
+  ]
 }

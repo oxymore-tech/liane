@@ -10,7 +10,7 @@ namespace Liane.Service.Internal.Osrm
     // for every cross-way until the next turn instruction.
     public class Intersection
     {
-        public Intersection(LngLatTuple location, ImmutableList<int> bearings, ImmutableList<string> classes, ImmutableList<string> entry, int @in, int @out, ImmutableList<Lane> lanes)
+        public Intersection(LngLatTuple location, ImmutableList<int> bearings, ImmutableList<string> classes, ImmutableList<bool> entry, int @in, int @out, ImmutableList<Lane> lanes)
         {
             Location = location;
             Bearings = bearings;
@@ -34,7 +34,7 @@ namespace Liane.Service.Internal.Osrm
 
         // A list of entry flags, corresponding in a 1:1 relationship to the bearings. A value of true indicates that the respective road could be entered on a valid route. false indicates that the turn
         // onto the respective road would violate a restriction.
-        public ImmutableList<string> Entry { get; }
+        public ImmutableList<bool> Entry { get; }
 
         // index into bearings/entry array. Used to calculate the bearing just before the turn. Namely, the clockwise angle from true north to the direction of travel immediately before the maneuver/passing the intersection.
         // Bearings are given relative to the intersection. To get the bearing in the direction of driving, the bearing has to be rotated by a value of 180.
