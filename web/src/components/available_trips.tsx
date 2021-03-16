@@ -28,6 +28,6 @@ export function Available_trips({ searchedTrips }: TripsProps) {
                 }
             </ul>
         </div>
-        {show && <Modal onConfirm={hideModal} onCancel={hideModal} user={currentUser}></Modal>}
+        {show && <Modal onConfirm={hideModal} onCancel={hideModal} user={currentUser}></Modal>/*il faut enlever user*/}
     </div>
 }
