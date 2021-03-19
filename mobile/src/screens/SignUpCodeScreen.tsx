@@ -22,9 +22,9 @@ const SignUpCodeScreen = ({navigation, route}: any) => {
    * in the future to welcome the map with the traffic etc...
    **/
   const actionsOnPress = async () => {
-    if (expoPushToken) {
+    if (true) {
       try {
-        const token = await userLogin(phoneNumber, code, expoPushToken);
+        const token = await userLogin(phoneNumber, code, "expoPushToken");
         setAuthUser({token});
       } catch (e) {
         Alert.alert("Le code saisi est invalide. Veuillez réessayer.");

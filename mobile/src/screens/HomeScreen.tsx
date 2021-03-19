@@ -39,9 +39,11 @@ const HomeScreen = ({navigation}: any) => {
 
   useEffect(() => {
     (async () => {
-      const b = await Location.hasServicesEnabledAsync();
-      setHasPermission(b);
-      if (!b) {
+      const p = await Location.getPermissionsAsync();
+      setHasPermission(p.granted);
+      if (p.granted) {
+        await registerLocationTask();
+      }else {
         askPermission();
       }
       setLoading(false);
