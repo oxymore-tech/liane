@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Header, Icon } from 'react-native-elements';
+import { Icon } from 'react-native-elements';
 import tailwind from 'tailwind-rn';
 import { AppText } from "@components/base/AppText";
 import { AppButton } from "@components/base/AppButton";
@@ -12,9 +12,6 @@ interface PermissionDisclaimerProps {
 export function PermissionDisclaimer({onAccept}: PermissionDisclaimerProps) {
   return (
     <View style={tailwind('container')}>
-      <Header
-        centerComponent={{text: 'LIANE', style: {color: '#fff', fontFamily: "Inter"}}}
-      />
 
       <View style={tailwind('pt-8 items-center')}>
         <View style={tailwind('bg-blue-200 px-3 py-1')}>

@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { Alert, FlatList, RefreshControl, Text, View } from 'react-native';
-import { Header, Icon, ListItem } from 'react-native-elements';
-import { deleteNotification, getNotifications } from '@api/client';
-import * as SMS from 'expo-sms';
+import React, { useState } from "react";
+import {
+  Alert, FlatList, RefreshControl, Text, View
+} from "react-native";
+import { Header, Icon, ListItem } from "react-native-elements";
+import { deleteNotification, getNotifications } from "@api/client";
+import * as SMS from "expo-sms";
 
-// Style
-import tailwind from 'tailwind-rn';
+import tailwind from "tailwind-rn";
 
-const wait = (timeout) => {
-  return new Promise(resolve => setTimeout(resolve, timeout));
-}
+const wait = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout));
 
-const NotificationsScreen = ({route, navigation}: any) => {
+const NotificationsScreen = ({ navigation }: any) => {
   const [list, setList] = useState<any>();
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -22,10 +21,10 @@ const NotificationsScreen = ({route, navigation}: any) => {
   }, []);
 
   function updateNotifications() {
-    getNotifications().then(result => {
+    getNotifications().then((result) => {
       const notificationsList: any[] = [];
-      console.log('Resultat :', result);
-      result.forEach(notification => {
+      console.log("Resultat :", result);
+      result.forEach((notification) => {
         notificationsList.push({
           name: notification.message,
           subtitle: notification.date
@@ -36,7 +35,7 @@ const NotificationsScreen = ({route, navigation}: any) => {
   }
 
   React.useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+    const unsubscribe = navigation.addListener("focus", () => {
       updateNotifications();
     });
 
@@ -59,18 +58,18 @@ const NotificationsScreen = ({route, navigation}: any) => {
       }
     ]
   */
-  const keyExtractor = (item: any, index: { toString: () => any; }) => index.toString()
+  const keyExtractor = (item: any, index: { toString: () => any; }) => index.toString();
   const acceptTrip = async function (message: string) {
     const isAvailable = await SMS.isAvailableAsync();
-    const phoneNumber = message.split(' ').pop();
-    const user = message.split(' ')[0];
+    const phoneNumber = message.split(" ").pop();
+    const user = message.split(" ")[0];
     if (isAvailable && phoneNumber) {
-      const {result} = await SMS.sendSMSAsync(
+      const { result } = await SMS.sendSMSAsync(
         phoneNumber,
-        'Bonjour ' + user + ', je suis disposé à covoiturer avec vous.'
+        `Bonjour ${user}, je suis disposé à covoiturer avec vous.`
       );
     } else {
-      Alert.alert('Vous pouvez contacter ' + user + ' au ' + phoneNumber);
+      Alert.alert(`Vous pouvez contacter ${user} au ${phoneNumber}`);
     }
   };
 
@@ -78,18 +77,19 @@ const NotificationsScreen = ({route, navigation}: any) => {
     deleteNotification(subtitle).then(() => {
       updateNotifications();
     });
-  }
+  };
 
-  const renderMenu = () =>
-    <View style={tailwind('pt-8 items-center')}>
-      <View style={tailwind('bg-blue-200 px-3 py-1 rounded-full')}>
-        <Text style={tailwind('text-blue-800 text-xl font-semibold')}>
+  const renderMenu = () => (
+    <View style={tailwind("pt-8 items-center")}>
+      <View style={tailwind("bg-blue-200 px-3 py-1 rounded-full")}>
+        <Text style={tailwind("text-blue-800 text-xl font-semibold")}>
           Notifications
         </Text>
       </View>
-    </View>;
+    </View>
+  );
 
-  const renderItem = ({item}: any) => (
+  const renderItem = ({ item }: any) => (
     <ListItem bottomDivider onPress={() => acceptTrip(item.name)}>
       {
         // <Avatar source={{uri: item.avatar_url}} />
@@ -98,27 +98,27 @@ const NotificationsScreen = ({route, navigation}: any) => {
         <ListItem.Title>{item.name}</ListItem.Title>
         <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>
       </ListItem.Content>
-      <ListItem.Chevron name='times' type='font-awesome' color='#f50' onPress={() => deleteTrip(item.subtitle)}/>
+      <ListItem.Chevron name="times" type="font-awesome" color="#f50" onPress={() => deleteTrip(item.subtitle)} />
     </ListItem>
-  )
+  );
 
   return (
-    <View style={tailwind('container')}>
+    <View style={tailwind("container")}>
       <Header
-        leftComponent={{icon: 'menu', color: '#fff', onPress: () => navigation.openDrawer()}}
-        centerComponent={{text: 'LIANE APP', style: {color: '#fff'}}}
-        rightComponent={<Icon name='bell' type='font-awesome-5' solid={true} color="white"/>}/>
-
+        leftComponent={{ icon: "menu", color: "#fff", onPress: () => navigation.openDrawer() }}
+        centerComponent={{ text: "LIANE APP", style: { color: "#fff" } }}
+        rightComponent={<Icon name="bell" type="font-awesome-5" solid color="white" />}
+      />
 
       <FlatList
-        refreshControl={
+        refreshControl={(
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
-        }
+        )}
         ListHeaderComponent={renderMenu}
-        style={tailwind('pt-8')}
+        style={tailwind("pt-8")}
         keyExtractor={keyExtractor}
         data={list}
         renderItem={renderItem}

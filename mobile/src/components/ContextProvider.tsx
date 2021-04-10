@@ -1,53 +1,70 @@
-import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { AuthUser } from "@api/index";
+import { Inter_400Regular, useFonts } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { me } from "@api/client";
+import { Permissions } from "react-native-unimodules";
+import { registerLocationTask } from "@api/location-task";
 
 interface AppContextProps {
+  appLoaded:boolean;
   expoPushToken?: string;
+  locationPermissionGranted: boolean;
+  setLocationPermissionGranted: (locationPermissionGranted: boolean) => void;
   authUser?: AuthUser;
   setAuthUser: (authUser?: AuthUser) => void;
 }
 
 export const AppContext = createContext<AppContextProps>({
-  setAuthUser: () => {
-  }
+  appLoaded: false,
+  locationPermissionGranted: false,
+  setLocationPermissionGranted: () => { },
+  setAuthUser: () => { }
 });
 
-async function registerForPushNotificationsAsync() {
+async function registerForPushNotificationsAsync():Promise<string|undefined> {
   if (Constants.isDevice) {
-    const {status: existingStatus} = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const {status} = await Notifications.requestPermissionsAsync();
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    if (finalStatus !== 'granted') {
-      alert('Failed to get push token for push notification!');
-      return;
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return undefined;
     }
     const expoPushToken = await Notifications.getExpoPushTokenAsync();
     return expoPushToken.data;
-  } else {
-    alert('Must use physical device for Push Notifications');
   }
+  alert("Must use physical device for Push Notifications");
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
+      lightColor: "#FF231F7C"
     });
   }
+  return undefined;
+}
+
+async function init() : Promise<{ authUser?:AuthUser, permissionGranted:boolean }> {
+  const permission = await Permissions.getAsync(Permissions.LOCATION);
+  const authUser = await me().catch(() => undefined);
+  return { authUser, permissionGranted: permission.status === "granted" };
 }
 
 export function ContextProvider(props: { children: ReactNode }) {
-
+  const [fontLoaded] = useFonts({ Inter: Inter_400Regular });
   const [expoPushToken, setExpoPushToken] = useState<string>();
+  const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
@@ -59,24 +76,36 @@ export function ContextProvider(props: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (locationPermissionGranted) {
+      registerLocationTask().then();
+    }
+  }, [locationPermissionGranted]);
+
+  useEffect(() => {
+    init()
+      .then((r) => {
+        setLocationPermissionGranted(r.permissionGranted);
+        return setAuthUser(r.authUser);
+      })
+      .then(() => setAppLoaded(true));
+  });
+
+  useEffect(() => {
     registerForPushNotificationsAsync()
-      .then(token => {
+      .then((token) => {
         setExpoPushToken(token);
       });
-  }, []);
+  });
 
-  // useEffect(() => {
-  //   authService.me()
-  //     .then((authU) => setAuthUser(authU))
-  //     .catch(() => console.log("Token expired"));
-  // }, []);
-
-  const {children} = props;
+  const { children } = props;
 
   return (
     <AppContext.Provider
       value={{
+        appLoaded: appLoaded && fontLoaded,
         expoPushToken,
+        locationPermissionGranted,
+        setLocationPermissionGranted,
         authUser,
         setAuthUser
       }}

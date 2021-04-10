@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
@@ -24,8 +25,9 @@ namespace Liane.Service.Internal.User
         private readonly TwilioSettings twilioSettings;
         private readonly AuthSettings authSettings;
         private readonly SymmetricSecurityKey signinKey;
+        private readonly ICurrentContext currentContext;
 
-        public AuthServiceImpl(ILogger<AuthServiceImpl> logger, IRedis redis, TwilioSettings twilioSettings, AuthSettings authSettings)
+        public AuthServiceImpl(ILogger<AuthServiceImpl> logger, IRedis redis, TwilioSettings twilioSettings, AuthSettings authSettings, ICurrentContext currentContext)
         {
             this.logger = logger;
             this.redis = redis;
@@ -33,6 +35,7 @@ namespace Liane.Service.Internal.User
             this.authSettings = authSettings;
             var keyByteArray = Encoding.ASCII.GetBytes(authSettings.SecretKey);
             signinKey = new SymmetricSecurityKey(keyByteArray);
+            this.currentContext = currentContext;
         }
 
         public async Task SendSms(string number)
@@ -45,10 +48,9 @@ namespace Liane.Service.Internal.User
                 var code = generator.Next(0, 1000000).ToString("D6");
                 var redisKey = AuthSmsTokenRedisKey(phoneNumber);
                 var database = await redis.Get();
-                await database.StringSetAsync(redisKey, code);
-                await database.KeyExpireAsync(redisKey, TimeSpan.FromMinutes(5));
+                await database.StringSetAsync(redisKey, code, TimeSpan.FromMinutes(5));
                 var message = await MessageResource.CreateAsync(
-                    body: $"Voici votre code liane : {code}",
+                    body: $"Voici votre code liane: {code}",
                     from: new PhoneNumber(twilioSettings.From),
                     to: phoneNumber
                 );
@@ -71,6 +73,7 @@ namespace Liane.Service.Internal.User
             {
                 throw new UnauthorizedAccessException("Invalid code");
             }
+
             var redisKey2 = "notification_" + number;
             await database.StringSetAsync(redisKey2, token);
             return GenerateToken(number);
@@ -92,6 +95,12 @@ namespace Liane.Service.Internal.User
             {
                 throw new ForbiddenException("Invalid token");
             }
+        }
+
+        public Task<AuthUser> Me()
+        {
+            var token = GenerateToken(currentContext.CurrentUser());
+            return Task.FromResult(new AuthUser(token));
         }
 
         private static RedisKey AuthSmsTokenRedisKey(PhoneNumber phoneNumber)

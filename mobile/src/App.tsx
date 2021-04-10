@@ -1,44 +1,50 @@
-import React, { useContext, useEffect, useRef } from 'react';
-import { Inter_400Regular, useFonts } from '@expo-google-fonts/inter';
-import * as Notifications from 'expo-notifications';
-import { NavigationContainer } from '@react-navigation/native';
-
-import AppLoading from "expo-app-loading";
+import React, { useEffect, useRef } from "react";
+import * as Notifications from "expo-notifications";
+import { NavigationContainer } from "@react-navigation/native";
 import { registerRootComponent } from "expo";
+import { ContextProvider } from "@components/ContextProvider";
+import { Navigation } from "@components/Navigation";
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
 
-import { AppContext, ContextProvider } from "@components/ContextProvider";
-import { RequiresAuth } from "@components/RequiresAuth";
-import { listenLocationTask } from "@api/location-task";
+if (process.env.DD_CLIENT_TOKEN && process.env.DD_APPLICATION_ID) {
+  const config = new DdSdkReactNativeConfiguration(
+    process.env.DD_CLIENT_TOKEN,
+    "prod",
+    process.env.DD_APPLICATION_ID,
+    true,
+    true,
+    true
+  );
+  config.nativeCrashReportEnabled = true;
 
+  DdSdkReactNative.initialize(config);
+}
+
+export type Subscription = {
+  remove: () => void;
+};
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
+    shouldSetBadge: false
+  })
 });
 
-listenLocationTask();
-
 function App() {
-  const [loaded, error] = useFonts({
-    Inter: Inter_400Regular,
-  });
 
-  const notificationListener = useRef();
-  const responseListener = useRef();
-
-  const {authUser} = useContext(AppContext);
+  const notificationListener = useRef<Subscription>();
+  const responseListener = useRef<Subscription>();
 
   useEffect(() => {
 
     // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current = Notifications.addNotificationReceivedListener(data => {
+    notificationListener.current = Notifications.addNotificationReceivedListener(() => {
     });
 
     // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
       const notification = response.notification.request.content.data;
       /*
       if(notification.type == 'covoiturage_notification') {
@@ -53,20 +59,20 @@ function App() {
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener);
-      Notifications.removeNotificationSubscription(responseListener);
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
     };
 
-  }, []);
-
-  if (!loaded) {
-    return <AppLoading/>;
-  }
+  });
 
   return (
     <ContextProvider>
       <NavigationContainer>
-        <RequiresAuth/>
+        <Navigation />
       </NavigationContainer>
     </ContextProvider>
   );
