@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Service.Internal.Display;
@@ -24,6 +25,8 @@ namespace Liane.Service.Internal.Util
             var redis = await GetRedis();
             return redis.GetDatabase();
         }
+
+        public Task<ImmutableList<RedisKey>> ListEdgeKeys(DayOfWeek? day = null) => ListKeys(RedisKeys.Trip(day: day));
 
         public async Task<ImmutableList<RedisKey>> ListKeys(string keyPattern)
         {

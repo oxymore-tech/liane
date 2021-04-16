@@ -1,24 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, NavigationContainerRef } from "@react-navigation/native";
 import { registerRootComponent } from "expo";
 import { ContextProvider } from "@components/ContextProvider";
 import { Navigation } from "@components/Navigation";
-import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
-
-if (process.env.DD_CLIENT_TOKEN && process.env.DD_APPLICATION_ID) {
-  const config = new DdSdkReactNativeConfiguration(
-    process.env.DD_CLIENT_TOKEN,
-    "prod",
-    process.env.DD_APPLICATION_ID,
-    true,
-    true,
-    true
-  );
-  config.nativeCrashReportEnabled = true;
-
-  DdSdkReactNative.initialize(config);
-}
+import { DdRumReactNavigationTracking, DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
 
 export type Subscription = {
   remove: () => void;
@@ -34,6 +20,7 @@ Notifications.setNotificationHandler({
 
 function App() {
 
+  const navigationRef = useRef<NavigationContainerRef>(null);
   const notificationListener = useRef<Subscription>();
   const responseListener = useRef<Subscription>();
 
@@ -71,7 +58,12 @@ function App() {
 
   return (
     <ContextProvider>
-      <NavigationContainer>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+        }}
+      >
         <Navigation />
       </NavigationContainer>
     </ContextProvider>

@@ -21,12 +21,12 @@ export function me(): Promise<AuthUser> {
   return get("/auth/me");
 }
 
-export async function userLogin(number: string, code: string, token: string): Promise<AuthUser> {
-  return postAs("/auth/login", { params: { number, code, token } });
+export async function login(phone: string, code: string, token: string): Promise<AuthUser> {
+  return postAs("/auth/login", { params: { phone, code, token } });
 }
 
-export async function userSendSms(phoneNumber: string) {
-  return post("/auth/sms", { params: { number: phoneNumber } });
+export async function sendSms(phone: string) {
+  return post("/auth/sms", { params: { number: phone } });
 }
 
 export async function getNotifications() {

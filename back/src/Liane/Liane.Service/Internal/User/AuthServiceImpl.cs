@@ -38,12 +38,12 @@ namespace Liane.Service.Internal.User
             this.currentContext = currentContext;
         }
 
-        public async Task SendSms(string number)
+        public async Task SendSms(string phone)
         {
             if (twilioSettings.Account != null && twilioSettings.Token != null)
             {
                 TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-                var phoneNumber = ParseNumber(number);
+                var phoneNumber = ParseNumber(phone);
                 var generator = new Random();
                 var code = generator.Next(0, 1000000).ToString("D6");
                 var redisKey = AuthSmsTokenRedisKey(phoneNumber);
@@ -58,9 +58,9 @@ namespace Liane.Service.Internal.User
             }
         }
 
-        public async Task<string> Login(string number, string code, string token)
+        public async Task<AuthUser> Login(string phone, string code, string token)
         {
-            var phoneNumber = ParseNumber(number);
+            var phoneNumber = ParseNumber(phone);
             var database = await redis.Get();
             var redisKey = AuthSmsTokenRedisKey(phoneNumber);
             var value = await database.StringGetAsync(redisKey);
@@ -74,9 +74,9 @@ namespace Liane.Service.Internal.User
                 throw new UnauthorizedAccessException("Invalid code");
             }
 
-            var redisKey2 = "notification_" + number;
+            var redisKey2 = "notification_token:" + phone;
             await database.StringSetAsync(redisKey2, token);
-            return GenerateToken(number);
+            return new AuthUser(phone, GenerateToken(phone));
         }
 
         public ClaimsPrincipal IsTokenValid(string token)
@@ -99,8 +99,9 @@ namespace Liane.Service.Internal.User
 
         public Task<AuthUser> Me()
         {
-            var token = GenerateToken(currentContext.CurrentUser());
-            return Task.FromResult(new AuthUser(token));
+            var phoneNumber = currentContext.CurrentUser();
+            var token = GenerateToken(phoneNumber);
+            return Task.FromResult(new AuthUser(phoneNumber, token));
         }
 
         private static RedisKey AuthSmsTokenRedisKey(PhoneNumber phoneNumber)

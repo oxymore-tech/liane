@@ -1,26 +1,34 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Display;
-using Liane.Api.Trip;
-using IRedis = Liane.Api.Util.IRedis;
-using StackExchange.Redis;
 using Liane.Api.Routing;
-using System.Collections.Generic;
+using Liane.Api.Trip;
+using Liane.Api.Util;
+using Liane.Service.Internal.Util;
+using ITripService = Liane.Api.Trip.ITripService;
 
 namespace Liane.Service.Internal.Trip
 {
     public sealed class TripServiceImpl : ITripService
     {
         private static readonly ImmutableList<string> Mende_Florac = ImmutableList.Create("Mende", "LesBondons_Parking", "Florac");
+
         //private static readonly ImmutableList<string> Blajoux_Florac = ImmutableList.Create("Blajoux_Parking", "Florac");
         //private static readonly ImmutableList<string> Blajoux_Mende = ImmutableList.Create("Blajoux_Parking", "Mende");
         private static readonly ImmutableList<string> Ispagnac_Parking_Balsiege_Parking_Eglise = ImmutableList.Create("Ispagnac_Parking", "Balsiege_Parking_Eglise");
         private static readonly ImmutableList<string> Rodez_Mac_Drive_Florac_Mende = ImmutableList.Create("Rodez_Mac_Drive", "Florac", "Mende");
-        private static readonly ImmutableList<string> Villefort_Parking_Gare_Severac_dAveyron_Rond_Point_Rodez_Mac_Drive = ImmutableList.Create("Villefort_Parking_Gare", "Severac_dAveyron_Rond_Point", "Rodez_Mac_Drive");
-        private static readonly ImmutableList<string> SaintChelyDuTarn_En_Haut_LesBondons_Parking_Villefort_Parking_Gare = ImmutableList.Create("SaintChelyDuTarn_En_Haut", "LesBondons_Parking", "Villefort_Parking_Gare");
+
+        private static readonly ImmutableList<string> Villefort_Parking_Gare_Severac_dAveyron_Rond_Point_Rodez_Mac_Drive =
+            ImmutableList.Create("Villefort_Parking_Gare", "Severac_dAveyron_Rond_Point", "Rodez_Mac_Drive");
+
+        private static readonly ImmutableList<string> SaintChelyDuTarn_En_Haut_LesBondons_Parking_Villefort_Parking_Gare =
+            ImmutableList.Create("SaintChelyDuTarn_En_Haut", "LesBondons_Parking", "Villefort_Parking_Gare");
+
         private static readonly ImmutableList<string> Blajoux_Montbrun_En_Bas = ImmutableList.Create("Blajoux_Parking", "Montbrun_En_Bas");
         private static readonly ImmutableList<string> Blajoux_Montbrun_En_Bas_Mende = ImmutableList.Create("Blajoux_Parking", "Montbrun_En_Bas", "Mende");
         private static readonly ImmutableList<string> Blajoux_Florac = ImmutableList.Create("Blajoux_Parking", "Montbrun_En_Bas", "Florac");
+
         private static readonly ImmutableList<ImmutableList<string>> AllTrips = ImmutableList.Create(
             Mende_Florac,
             Blajoux_Florac,
@@ -43,8 +51,7 @@ namespace Liane.Service.Internal.Trip
         public async Task<RallyingPoint?> GetRallyingPoint(string id)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("RallyingPoints");
-            var result = await database.GeoPositionAsync(redisKey, id);
+            var result = await database.GeoPositionAsync(RedisKeys.RallyingPoint(), id);
             return new RallyingPoint(id, new LatLng(result.Value.Latitude, result.Value.Longitude));
         }
 
@@ -57,12 +64,15 @@ namespace Liane.Service.Internal.Trip
                 foreach (var id in trip)
                 {
                     var point = await GetRallyingPoint(id);
-                    if (point != null) {
+                    if (point != null)
+                    {
                         rallyingPoints.Add(point);
                     }
                 }
+
                 trips.Add(new Api.Trip.Trip(rallyingPoints.ToImmutableList()));
             }
+
             return trips.ToImmutableHashSet();
         }
     }

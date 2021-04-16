@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -7,18 +8,14 @@ namespace Liane.Api.Display
 {
     public interface IDisplayService
     {
-        Task<ImmutableList<Trip.Trip>> DisplayTrips(DisplayQuery displayQuery);
         Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng latLng);
         Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
-        Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day);
-        Task<ImmutableHashSet<Trip.Trip>> ListTripsFrom(RallyingPoint labeledPosition);
 
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
 
-        Task<ImmutableHashSet<Trip.Trip>> DefaultSearchTrip(string day = "day", int startHour = 0, int endHour = 23, RallyingPoint? start = null, RallyingPoint? end = null);
+        Task<ImmutableHashSet<Trip.Trip>> SearchTrips(SearchQuery query) => SearchTrips(query.Day, query.Start, query.End, query.From, query.To, query.Mine);
+        Task<ImmutableHashSet<Trip.Trip>> SearchTrips(DayOfWeek? day, RallyingPoint? start, RallyingPoint? end, int from = 0, int to = 23, bool mine = false);
 
-        Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, string day = "day",
-            int hour1 = 0,
-            int hour2 = 23);
+        Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, DayOfWeek? day, int from = 0, int to = 23);
     }
 }

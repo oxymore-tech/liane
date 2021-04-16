@@ -19,16 +19,16 @@ namespace Liane.Web.Controllers
 
         [HttpPost("sms")]
         [DisableAuth]
-        public Task SendSms([FromQuery] string number)
+        public Task SendSms([FromQuery] string phone)
         {
-            return authService.SendSms(number);
+            return authService.SendSms(phone);
         }
 
         [HttpPost("login")]
         [DisableAuth]
-        public Task<string> Login([FromQuery] string number, [FromQuery] string code, [FromQuery] string token)
+        public Task<AuthUser> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string token)
         {
-            return authService.Login(number, code, token);
+            return authService.Login(phone, code, token);
         }
 
         [HttpPost("me")]

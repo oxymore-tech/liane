@@ -1,7 +1,7 @@
 import React, { useCallback, useContext } from "react";
 import { Alert, Image, ImageBackground, View } from "react-native";
 import tailwind from "tailwind-rn";
-import { userLogin } from "@api/client";
+import { login } from "@api/client";
 import { AppContext } from "@components/ContextProvider";
 import { AppTextInput } from "@components/base/AppTextInput";
 import { AppButton } from "@components/base/AppButton";
@@ -17,7 +17,7 @@ const SignUpCodeScreen = ({ route }: any) => {
   const actionsOnPress = useCallback(async () => {
     if (expoPushToken) {
       try {
-        const authUser = await userLogin(phoneNumber, code, expoPushToken);
+        const authUser = await login(phoneNumber, code, expoPushToken);
         setAuthUser(authUser);
       } catch (e) {
         Alert.alert("Le code saisi est invalide. Veuillez réessayer.");

@@ -7,6 +7,7 @@ using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
@@ -29,16 +30,10 @@ namespace Liane.Service.Internal.Display
             this.osrmService = osrmService;
         }
 
-        public Task<ImmutableList<Api.Trip.Trip>> DisplayTrips(DisplayQuery displayQuery)
-        {
-            return Task.FromResult(ImmutableList<Api.Trip.Trip>.Empty);
-        }
-
         public async Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng position)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("RallyingPoints");
-            var results = await database.GeoRadiusAsync(redisKey, position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results.Select(r =>
                 {
                     var geoPosition = r.Position!.Value;
@@ -50,8 +45,7 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("RallyingPoints");
-            var results = await database.GeoRadiusAsync(redisKey, start.Id, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
+            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), start.Id, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
                 options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results
                 .Where(r => r.Member != start.Id)
@@ -66,7 +60,6 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint start)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("RallyingPoints");
             var tripsFromStart = new List<Api.Trip.Trip>();
             foreach (var trip in await tripService.List())
             {
@@ -74,7 +67,7 @@ namespace Liane.Service.Internal.Display
                 {
                     if (position != trip.Coordinates[^1])
                     {
-                        var results = await database.GeoRadiusAsync(redisKey, position.Position.Lng, position.Position.Lat, 1000,
+                        var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), position.Position.Lng, position.Position.Lat, 1000,
                             options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                         var nearestPoint = results
                             .Where(r => r.Member == start.Id)
@@ -125,13 +118,12 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
             var trips = new List<Api.Trip.Trip>();
             var database = await redis.Get();
-            var redisKey = new RedisKey("RallyingPoints");
             foreach (var route in routes)
             {
                 var points = new HashSet<RallyingPoint>();
                 for (var i = 0; i < route.Coordinates.Count - 1; i += 10)
                 {
-                    var results = await database.GeoRadiusAsync(redisKey, route.Coordinates[i].Lng, route.Coordinates[i].Lat, 1000,
+                    var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), route.Coordinates[i].Lng, route.Coordinates[i].Lat, 1000,
                         options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     if (results.Length > 0)
                     {
@@ -168,8 +160,7 @@ namespace Liane.Service.Internal.Display
         public async Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("RallyingPoints");
-            var results = await database.GeoRadiusAsync(redisKey, 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
+            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
             var points = key.ToString().Split("|");
             var start = points[0];
             var end = points[1];
@@ -194,7 +185,7 @@ namespace Liane.Service.Internal.Display
             {
                 var endPoint = key.ToString().Split("|")[1];
                 var newStartHour = int.Parse(key.ToString().Split("|")[3]);
-                if (!listStartPoints.Contains(endPoint) && (newStartHour >= hour))
+                if (!listStartPoints.Contains(endPoint) && newStartHour >= hour)
                 {
                     newKeys = newKeys.Remove(key);
                     var newTrip = await FromKeyToTrip(key);
@@ -262,14 +253,13 @@ namespace Liane.Service.Internal.Display
             return trips.ToImmutableHashSet();
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int from, int to, RallyingPoint? start = null, RallyingPoint? end = null)
         {
-            var edgeKeys = await redis.ListEdgeKeys();
+            var edgeKeys = await redis.ListEdgeKeys(null);
             if (start != null && end != null)
             {
-                //(await DecomposeTrip(start, end, startHour)).ToImmutableHashSet();
-                var startTrips = (await GetTrips(edgeKeys, start.Id, startHour, new HashSet<string>())).Item1;
-                var endTrips = (await GetTripsEnd(edgeKeys, end.Id, endHour, new HashSet<string>())).Item1;
+                var startTrips = (await GetTrips(edgeKeys, start.Id, from, new HashSet<string>())).Item1;
+                var endTrips = (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
                 startTrips = Intersect(startTrips.ToHashSet(), endTrips.ToHashSet());
                 foreach (var trip in startTrips)
                 {
@@ -282,13 +272,13 @@ namespace Liane.Service.Internal.Display
             {
                 if (start != null)
                 {
-                    return (await GetTrips(edgeKeys, start.Id, startHour, new HashSet<string>())).Item1.ToImmutableHashSet();
+                    return (await GetTrips(edgeKeys, start.Id, from, new HashSet<string>())).Item1;
                 }
                 else
                 {
                     if (end != null)
                     {
-                        return (await GetTripsEnd(edgeKeys, end.Id, endHour, new HashSet<string>())).Item1.ToImmutableHashSet();
+                        return (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
                     }
                     else
                     {
@@ -296,7 +286,7 @@ namespace Liane.Service.Internal.Display
                         var currentEdgeKeys = edgeKeys;
                         foreach (var key in edgeKeys)
                         {
-                            var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], startHour, new HashSet<string>());
+                            var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], from, new HashSet<string>());
                             trips = trips.Concat(tripsAndKeys.Item1).ToHashSet();
                             currentEdgeKeys = tripsAndKeys.Item2;
                         }
@@ -307,70 +297,36 @@ namespace Liane.Service.Internal.Display
             }
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultSearchTrip(string day = "day", int startHour = 0, int endHour = 23, RallyingPoint? start = null, RallyingPoint? end = null)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrips(DayOfWeek? day, RallyingPoint? start, RallyingPoint? end, int from = 0, int to = 23, bool mine = false)
         {
-            if (day.Equals("day"))
-            {
-                string[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-                var listTrips = new HashSet<Api.Trip.Trip>();
-                for (int i = 0; i < 7; i++)
-                {
-                    listTrips = listTrips.Concat(await SearchTrip(days[i], startHour, endHour, start, end)).ToHashSet();
-                }
-
-                return listTrips.ToImmutableHashSet();
-            }
-            else
-            {
-                return (await SearchTrip(day, startHour, endHour, start, end)).ToImmutableHashSet();
-            }
-        }
-
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrip(string day, int startHour, int endHour, RallyingPoint? start = null, RallyingPoint? end = null)
-        {
-            var segmentsTrip = (await DefaultTrips(startHour, endHour, start, end)).ToImmutableList();
-            foreach (var trip in segmentsTrip)
-            {
-                //Console.WriteLine($"Ici les segments : {ImmutableListToString(trip.Coordinates)}, {trip.Time}");
-            }
+            var segmentsTrip = (await DefaultTrips(from, to, start, end)).ToImmutableList();
 
             var listeTrajets = new HashSet<Api.Trip.Trip>();
             var database = await redis.Get();
-            segmentsTrip.ForEach(ListPoints =>
+            segmentsTrip.ForEach(trip =>
             {
-                RedisValue[] listeUtilisateurs = { };
-                for (int i = 0; i < ListPoints.Coordinates.Count - 1; i++)
+                RedisValue[] listeUtilisateurs = Array.Empty<RedisValue>();
+                var (rallyingPoints, _, time) = trip;
+                for (var i = 0; i < rallyingPoints.Count - 1; i++)
                 {
-                    //for(int hour = startHour; hour < endHour; hour++) {
-                    //Console.WriteLine($"LISTPOINT.TIME: {ListPoints.Time}");
-                    var redisKey = new RedisKey(ListPoints.Coordinates[i].Id + "|" + ListPoints.Coordinates[i + 1].Id + "|" + day + "|" + ListPoints.Time);
+                    var redisKey = RedisKeys.Trip(rallyingPoints[i].Id, rallyingPoints[i + 1].Id, day, (int) time!);
                     var users = database.HashKeys(redisKey);
-                    if (i == 0)
-                    {
-                        listeUtilisateurs = users;
-                    }
-                    else
-                    {
-                        listeUtilisateurs = listeUtilisateurs.Where(utilisateur => users.Contains(utilisateur)).ToArray();
-                    }
+                    listeUtilisateurs = i == 0
+                        ? users
+                        : listeUtilisateurs.Where(utilisateur => users.Contains(utilisateur)).ToArray();
 
-                    Array.ForEach(listeUtilisateurs, user =>
-                    {
-                        var trip = new Api.Trip.Trip(ListPoints.Coordinates, user.ToString(), ListPoints.Time);
-                        listeTrajets.Add(trip);
-                    });
-                    //}
+                    Array.ForEach(listeUtilisateurs, user => { listeTrajets.Add(new Api.Trip.Trip(rallyingPoints, user.ToString(), time)); });
                 }
             });
             return listeTrajets.ToImmutableHashSet();
         }
 
         public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips,
-            string day = "day",
+            DayOfWeek? day,
             int hour1 = 0,
             int hour2 = 23)
         {
-            var edgeKeys = await redis.ListEdgeKeys();
+            var edgeKeys = await redis.ListEdgeKeys(day);
             var database = await redis.Get();
             var routesEdges = new Dictionary<string, RouteStat>();
             foreach (var (rallyingPoints, _, _) in trips)
@@ -384,11 +340,10 @@ namespace Liane.Service.Internal.Display
                     {
                         var routeResponse = await osrmService.Route(segmentStartPosition, segmentEndPosition);
                         var geojson = routeResponse.Routes[0].Geometry;
-                        var edge = key.Split("|");
-                        var startKeys = edgeKeys.FilterByStartPoint(edge[0]);
-                        var endKeys = edgeKeys.FilterByEndPoint(edge[1]);
+                        var startKeys = edgeKeys.FilterByStartPoint(segmentStartId);
+                        var endKeys = edgeKeys.FilterByEndPoint(segmentEndId);
                         var routeKeys = startKeys.Concat(endKeys).ToImmutableHashSet().ToImmutableList();
-                        var toCount = routeKeys.FilterByDay(day)
+                        var toCount = routeKeys
                             .FilterByStartHour(hour1)
                             .FilterByEndHour(hour2);
                         var stat = 0;
@@ -408,17 +363,16 @@ namespace Liane.Service.Internal.Display
         public async Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day)
         {
             var database = await redis.Get();
-            var redisKey = new RedisKey("positions|" + user);
-            var results = await database.HashGetAllAsync(redisKey);
+            var results = await database.HashGetAllAsync(RedisKeys.Position(user));
             var userTrips = new List<RallyingPoint>();
             foreach (var element in results)
             {
                 var timestamp = element.Name;
-                var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                var dtDateTime = new DateTime((long) timestamp);
                 dtDateTime = dtDateTime.AddSeconds(Convert.ToDouble(timestamp)).ToLocalTime();
                 if (day == "-1" || Convert.ToInt32(dtDateTime.DayOfWeek).ToString().Equals(day))
                 {
-                    var result = await database.GeoPositionAsync("RallyingPoints", element.Value);
+                    var result = await database.GeoPositionAsync(RedisKeys.RallyingPoint(), element.Value);
                     if (result != null)
                     {
                         var rp = new RallyingPoint(element.Value, new LatLng(result.Value.Latitude, result.Value.Longitude));

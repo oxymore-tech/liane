@@ -9,10 +9,20 @@ export interface Trip {
 }
 
 export interface Route {
-    readonly coordinates: LatLng[];
-    readonly duration: number;
-    readonly distance: number;
-    readonly delta?: number;
-  }
+  readonly coordinates: LatLng[];
+  readonly duration: number;
+  readonly distance: number;
+  readonly delta?: number;
+}
 
-export interface RouteStat{coordinates: LatLng[], stat: number};
+export interface RouteStat{coordinates: LatLng[], stat: number}
+
+export enum DayOfWeek {
+  Sunday,
+  Monday,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday
+}

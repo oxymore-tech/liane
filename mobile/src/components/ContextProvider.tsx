@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@api/client";
 import { Permissions } from "react-native-unimodules";
 import { registerLocationTask } from "@api/location-task";
+import { DdSdk, DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
 
 interface AppContextProps {
   appLoaded:boolean;
@@ -54,6 +55,19 @@ async function registerForPushNotificationsAsync():Promise<string|undefined> {
 }
 
 async function init() : Promise<{ authUser?:AuthUser, permissionGranted:boolean }> {
+  if (process.env.DD_CLIENT_TOKEN && process.env.DD_APPLICATION_ID) {
+    const config = new DdSdkReactNativeConfiguration(
+      process.env.DD_CLIENT_TOKEN,
+      "prod",
+      process.env.DD_APPLICATION_ID,
+      true,
+      true,
+      true
+    );
+    config.nativeCrashReportEnabled = true;
+
+    DdSdkReactNative.initialize(config);
+  }
   const permission = await Permissions.getAsync(Permissions.LOCATION);
   const authUser = await me().catch(() => undefined);
   return { authUser, permissionGranted: permission.status === "granted" };
@@ -68,6 +82,9 @@ export function ContextProvider(props: { children: ReactNode }) {
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
+      await DdSdk.setUser({
+        id: a.phone
+      });
       await AsyncStorage.setItem("token", a?.token);
     } else {
       await AsyncStorage.removeItem("token");

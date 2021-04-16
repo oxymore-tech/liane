@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Notification;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Notification.Expo;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
@@ -29,7 +30,7 @@ namespace Liane.Service.Internal.Notification
             await AddNotification(user,
                 new Api.Notification.Notification((int) DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, name + " veut covoiturez avec vous ! Son numéro est le " + number));
             var database = await redis.Get();
-            var redisKey = GetNotificationRedisKey(user);
+            var redisKey = RedisKeys.NotificationToken(user);
             var token = await database.StringGetAsync(redisKey);
             var pushTicketReq = new PushTicketRequest(
                 ImmutableList.Create((string) token),
@@ -58,7 +59,7 @@ namespace Liane.Service.Internal.Notification
         private async Task AddNotification(string user, Api.Notification.Notification notification)
         {
             var database = await redis.Get();
-            var redisKey = GetNotificationRedisKey(user);
+            var redisKey = RedisKeys.Notification(user);
             var (date, message) = notification;
             var newEntry = new[] {new HashEntry(date, message)};
             await database.HashSetAsync(redisKey, newEntry);
@@ -68,7 +69,7 @@ namespace Liane.Service.Internal.Notification
         {
             var user = currentContext.CurrentUser();
             var database = await redis.Get();
-            var redisKey = GetNotificationRedisKey(user);
+            var redisKey = RedisKeys.Notification(user);
             await database.HashDeleteAsync(redisKey, date);
         }
 
@@ -76,7 +77,7 @@ namespace Liane.Service.Internal.Notification
         {
             var user = currentContext.CurrentUser();
             var database = await redis.Get();
-            var redisKey = GetNotificationRedisKey(user);
+            var redisKey = RedisKeys.Notification(user);
             var result = await database.HashGetAllAsync(redisKey);
 
             return result.Select(r => new Api.Notification.Notification(Convert.ToInt32(r.Name), r.Value))
@@ -85,7 +86,7 @@ namespace Liane.Service.Internal.Notification
 
         private static RedisKey GetNotificationRedisKey(string user)
         {
-            return new("notifications_" + user);
+            return new("notification:" + user);
         }
     }
 }

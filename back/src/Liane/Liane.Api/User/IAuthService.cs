@@ -5,8 +5,8 @@ namespace Liane.Api.User
 {
     public interface IAuthService
     {
-        Task SendSms(string number);
-        Task<string> Login(string number, string code, string token);
+        Task SendSms(string phone);
+        Task<AuthUser> Login(string phone, string code, string token);
         ClaimsPrincipal IsTokenValid(string token);
         Task<AuthUser> Me();
     }

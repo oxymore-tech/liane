@@ -67,8 +67,7 @@ namespace Liane.Test.Internal.Display
         [Category("Integration")]
         public async Task FilterBySaturday()
         {
-            var edgeKeys = await redis!.ListEdgeKeys();
-            var actual = edgeKeys.FilterByDay("Saturday");
+            var actual = await redis!.ListEdgeKeys(DayOfWeek.Saturday);
             var expected = ImmutableList.Create(new RedisKey("Rodez_Mac_Drive|Lanuejols_Parking_Eglise|Saturday|8"));
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -78,8 +77,7 @@ namespace Liane.Test.Internal.Display
         [Category("Integration")]
         public async Task FilterByMonday()
         {
-            var edgeKeys = await redis!.ListEdgeKeys();
-            var actual = edgeKeys.FilterByDay("Monday");
+            var actual = await redis!.ListEdgeKeys(DayOfWeek.Monday);
             var expected = ImmutableHashSet.Create(new RedisKey("Blajoux_Parking|Montbrun_En_Bas|Monday|8"),
                 new RedisKey("LesBondons_Parking|Prades|Monday|8"),
                 new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8"),
@@ -148,15 +146,5 @@ namespace Liane.Test.Internal.Display
                 .Assert();
         }
 
-        [Test]
-        [Category("Integration")]
-        public async Task FilterByAllDays()
-        {
-            var edgeKeys = await redis!.ListEdgeKeys();
-            var actual = edgeKeys.FilterByDay();
-            var expected = edgeKeys;
-            actual.WithDeepEqual(expected)
-                .Assert();
-        }
     }
 }

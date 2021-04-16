@@ -1,8 +1,7 @@
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@api/exception";
 import { FilterQuery, SortOptions } from "@api/filter";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BaseUrl = "https://liane.gjini.co/api";
+const BaseUrl = process.env.NODE_ENV === "production" ? "https://liane.gjini.co" : "http://localhost:8081";
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -12,9 +11,9 @@ export interface ListOptions<T> {
   readonly sort?: SortOptions<T>;
 }
 
-export async function getStoredToken() {
+export function getStoredToken() {
   try {
-    return await AsyncStorage.getItem("token");
+    return localStorage?.getItem("token");
   } catch (e) {
     return null;
   }
@@ -93,7 +92,7 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
     return null;
   }
   if (bodyAsJson) {
-  return JSON.stringify(body);
+    return JSON.stringify(body);
   }
   return body;
 }
@@ -122,7 +121,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
 
 function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
-  const token = await getStoredToken();
+  const token = getStoredToken();
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }

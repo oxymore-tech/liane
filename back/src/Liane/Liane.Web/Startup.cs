@@ -59,7 +59,7 @@ namespace Liane.Web
 
             services.AddService<DisplayServiceImpl>();
             services.AddService<LocationServiceImpl>();
-            services.AddService<TripServiceImpl>();
+            services.AddService<Service.Internal.Trip.TripServiceImpl>();
             services.AddService<NotificationServiceImpl>();
         }
 

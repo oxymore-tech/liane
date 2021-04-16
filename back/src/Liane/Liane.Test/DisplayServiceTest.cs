@@ -31,22 +31,8 @@ namespace Liane.Test
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
             var redisSettings = new RedisSettings("localhost");
-            displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay);
+            this.displayService = new DisplayServiceImpl(new TestLogger<DisplayServiceImpl>(), new RedisClient(new TestLogger<RedisClient>(), redisSettings), tripService.Object, osrmServiceDisplay);
             osrmService = osrmServiceDisplay;
-        }
-
-        [Test]
-        public async Task DisplayTripsShouldBeNotNull()
-        {
-            var trips = await displayService!.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
-            Assert.IsNotNull(trips);
-        }
-
-        [Test]
-        public async Task DisplayTripsCouldBeEmpty()
-        {
-            var trips = await displayService!.DisplayTrips(new DisplayQuery(new LatLng(0.0, 0.0)));
-            CollectionAssert.IsEmpty(trips);
         }
 
         [Test]
@@ -83,10 +69,10 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task ListTripsFromBlajouxParking()
+        public async Task SearchTripBlajouxParking()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
+            var actual = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Blajoux_Parking));
             var expected = ImmutableHashSet.Create(Trips.Blajoux_Mende, Trips.Blajoux_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -94,10 +80,10 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task ListTripsFromLesBondons()
+        public async Task SearchTripLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.ListTripsFrom(LabeledPositions.LesBondons_Parking);
+            var actual = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.LesBondons_Parking));
             var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -105,10 +91,10 @@ namespace Liane.Test
 
         [Test]
         [Category("Integration")]
-        public async Task ListTripsFromMende()
+        public async Task SearchTripMende()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            var actual = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Mende));
             var expected = ImmutableHashSet.Create(Trips.Mende_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -119,7 +105,7 @@ namespace Liane.Test
         public async Task ListEtapesFromMende()
         {
             await SetUpRedisAsync();
-            var trips = await displayService!.ListTripsFrom(LabeledPositions.Mende);
+            var trips = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Mende));
             var actual = displayService!.ListStepsFrom(trips);
             var expected = ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac);
             actual.WithDeepEqual(expected)
@@ -132,7 +118,7 @@ namespace Liane.Test
         public async Task SearchTripFromFloracToLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.DefaultSearchTrip("Monday", 8, 9, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking);
+            var actual = await displayService!.SearchTrips(DayOfWeek.Monday, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, 8, 9);
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -144,7 +130,7 @@ namespace Liane.Test
         public async Task SearchTripFromNull()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.DefaultSearchTrip(day: "Monday", start: LabeledPositions.Florac, end: LabeledPositions.LeCrouzet);
+            var actual = await displayService!.SearchTrips(DayOfWeek.Monday, LabeledPositions.Florac, LabeledPositions.LeCrouzet);
             var expected = ImmutableHashSet.Create(Trips.Florac_Cocures, Trips.Cocures_Le_Crouzet);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -156,8 +142,8 @@ namespace Liane.Test
         public async Task ListRoutesFromBlajoux()
         {
             await SetUpRedisAsync();
-            var trips = await displayService!.ListTripsFrom(LabeledPositions.Blajoux_Parking);
-            var actual = await displayService!.ListRoutesEdgesFrom(trips, "Wednesday");
+            var trips = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Blajoux_Parking));
+            var actual = await displayService!.ListRoutesEdgesFrom(trips, DayOfWeek.Wednesday);
             var expected = new Dictionary<string, RouteStat>();
             var preExpected1 = await osrmService!.Route(Positions.Blajoux_Parking, Positions.Montbrun_En_Bas);
             var expected1 = new RouteStat(preExpected1.Routes[0].Geometry.Coordinates.ToLatLng(), 3);
@@ -175,12 +161,11 @@ namespace Liane.Test
         private static async Task SetUpRedisAsync()
         {
             var redis = await ConnectionMultiplexer.ConnectAsync("localhost");
-            var redisKey = new RedisKey("RallyingPoints");
             var database = redis.GetDatabase();
-            await database.KeyDeleteAsync(redisKey);
+            await database.KeyDeleteAsync(RedisKeys.RallyingPoint());
             foreach (var (id, (lat, lng), _) in LabeledPositions.RallyingPoints)
             {
-                await database.GeoAddAsync(redisKey, lng, lat, new RedisValue(id));
+                await database.GeoAddAsync(RedisKeys.RallyingPoint(), lng, lat, new RedisValue(id));
             }
         }
     }
