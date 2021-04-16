@@ -31,10 +31,10 @@ export function Select<T>({ label, options, value, keyField = "value", onChange,
     <div className="flex flex-col">
       <Label label={label} mandatory={required} />
       <div className="relative">
-        <select className={inputClass} onChange={(v) => onChange(v.target.value)} required={required}>
+        <select className={inputClass} onChange={(v) => onChange(v.target.value)} required={required} value={value}>
           <option value=""> </option>
           {options.map((o) => (
-            <option key={o[keyField]} value={o[keyField]} selected={o[keyField] === value}>
+            <option key={o[keyField]} value={o[keyField]}>
               {renderOption(o, render)}
             </option>
           ))}
