@@ -42,13 +42,13 @@ namespace Liane.Service.Internal.Display
                 .ToImmutableList();
         }
 
-        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint start)
+        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(string from)
         {
             var database = await redis.Get();
-            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), start.Id, 500, unit: GeoUnit.Kilometers, order: Order.Ascending,
+            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), from, 500, GeoUnit.Kilometers, order: Order.Ascending,
                 options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results
-                .Where(r => r.Member != start.Id)
+                .Where(r => r.Member != from)
                 .Select(r =>
                 {
                     var geoPosition = r.Position!.Value;
@@ -145,16 +145,14 @@ namespace Liane.Service.Internal.Display
             {
                 return "[]";
             }
-            else
-            {
-                var listString = "[";
-                foreach (var element in list)
-                {
-                    listString += element!.ToString() + ", ";
-                }
 
-                return listString.Remove(listString.Length - 2, 2) + "]\n";
+            var listString = "[";
+            foreach (var element in list)
+            {
+                listString += element! + ", ";
             }
+
+            return listString.Remove(listString.Length - 2, 2) + "]\n";
         }
 
         public async Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key)
@@ -253,9 +251,9 @@ namespace Liane.Service.Internal.Display
             return trips.ToImmutableHashSet();
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(int from, int to, RallyingPoint? start = null, RallyingPoint? end = null)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start, RallyingPoint? end, int from, int to)
         {
-            var edgeKeys = await redis.ListEdgeKeys(null);
+            var edgeKeys = await redis.ListEdgeKeys();
             if (start != null && end != null)
             {
                 var startTrips = (await GetTrips(edgeKeys, start.Id, from, new HashSet<string>())).Item1;
@@ -268,38 +266,36 @@ namespace Liane.Service.Internal.Display
 
                 return startTrips.ToImmutableHashSet();
             }
+
+            if (start != null)
+            {
+                return (await GetTrips(edgeKeys, start.Id, @from, new HashSet<string>())).Item1;
+            }
             else
             {
-                if (start != null)
+                if (end != null)
                 {
-                    return (await GetTrips(edgeKeys, start.Id, from, new HashSet<string>())).Item1;
+                    return (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
                 }
                 else
                 {
-                    if (end != null)
+                    var trips = new HashSet<Api.Trip.Trip>();
+                    var currentEdgeKeys = edgeKeys;
+                    foreach (var key in edgeKeys)
                     {
-                        return (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
+                        var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], @from, new HashSet<string>());
+                        trips = trips.Concat(tripsAndKeys.Item1).ToHashSet();
+                        currentEdgeKeys = tripsAndKeys.Item2;
                     }
-                    else
-                    {
-                        var trips = new HashSet<Api.Trip.Trip>();
-                        var currentEdgeKeys = edgeKeys;
-                        foreach (var key in edgeKeys)
-                        {
-                            var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], from, new HashSet<string>());
-                            trips = trips.Concat(tripsAndKeys.Item1).ToHashSet();
-                            currentEdgeKeys = tripsAndKeys.Item2;
-                        }
 
-                        return trips.ToImmutableHashSet();
-                    }
+                    return trips.ToImmutableHashSet();
                 }
             }
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Trip>> SearchTrips(DayOfWeek? day, RallyingPoint? start, RallyingPoint? end, int from = 0, int to = 23, bool mine = false)
+        public async Task<ImmutableHashSet<Api.Trip.Trip>> Search(SearchQuery searchQuery)
         {
-            var segmentsTrip = (await DefaultTrips(from, to, start, end)).ToImmutableList();
+            var segmentsTrip = (await DefaultTrips(searchQuery.From, searchQuery.To, searchQuery.StartHour, searchQuery.EndHour)).ToImmutableList();
 
             var listeTrajets = new HashSet<Api.Trip.Trip>();
             var database = await redis.Get();
@@ -309,7 +305,7 @@ namespace Liane.Service.Internal.Display
                 var (rallyingPoints, _, time) = trip;
                 for (var i = 0; i < rallyingPoints.Count - 1; i++)
                 {
-                    var redisKey = RedisKeys.Trip(rallyingPoints[i].Id, rallyingPoints[i + 1].Id, day, (int) time!);
+                    var redisKey = RedisKeys.Trip(rallyingPoints[i].Id, rallyingPoints[i + 1].Id, searchQuery.Day, (int) time!);
                     var users = database.HashKeys(redisKey);
                     listeUtilisateurs = i == 0
                         ? users
@@ -321,10 +317,7 @@ namespace Liane.Service.Internal.Display
             return listeTrajets.ToImmutableHashSet();
         }
 
-        public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Api.Trip.Trip> trips,
-            DayOfWeek? day,
-            int hour1 = 0,
-            int hour2 = 23)
+        public async Task<Dictionary<string, RouteStat>> GetRoutes(ImmutableHashSet<Api.Trip.Trip> trips, DayOfWeek? day, int? startHour, int? endHour)
         {
             var edgeKeys = await redis.ListEdgeKeys(day);
             var database = await redis.Get();
@@ -344,8 +337,8 @@ namespace Liane.Service.Internal.Display
                         var endKeys = edgeKeys.FilterByEndPoint(segmentEndId);
                         var routeKeys = startKeys.Concat(endKeys).ToImmutableHashSet().ToImmutableList();
                         var toCount = routeKeys
-                            .FilterByStartHour(hour1)
-                            .FilterByEndHour(hour2);
+                            .FilterByStartHour(startHour ?? 0)
+                            .FilterByEndHour(endHour ?? 23);
                         var stat = 0;
                         foreach (var redisKey in toCount)
                         {

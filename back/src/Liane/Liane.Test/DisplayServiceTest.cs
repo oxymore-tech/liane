@@ -60,7 +60,7 @@ namespace Liane.Test
         public async Task ListDestinationsFromAStart()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.ListDestinationsFrom(LabeledPositions.Blajoux_Parking);
+            var actual = await displayService!.ListDestinationsFrom(LabeledPositions.Blajoux_Parking.Id);
             var expected = LabeledPositions.RallyingPoints.Remove(LabeledPositions.Blajoux_Parking);
             actual.WithDeepEqual(expected)
                 .IgnoreProperty<RallyingPoint>(l => l.Distance)
@@ -72,7 +72,7 @@ namespace Liane.Test
         public async Task SearchTripBlajouxParking()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Blajoux_Parking));
+            var actual = await displayService!.Search(new SearchQuery(From: LabeledPositions.Blajoux_Parking));
             var expected = ImmutableHashSet.Create(Trips.Blajoux_Mende, Trips.Blajoux_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -83,7 +83,7 @@ namespace Liane.Test
         public async Task SearchTripLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.LesBondons_Parking));
+            var actual = await displayService!.Search(new SearchQuery(From: LabeledPositions.LesBondons_Parking));
             var expected = ImmutableHashSet.Create(new Trip(ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac)));
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -94,7 +94,7 @@ namespace Liane.Test
         public async Task SearchTripMende()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Mende));
+            var actual = await displayService!.Search(new SearchQuery(From: LabeledPositions.Mende));
             var expected = ImmutableHashSet.Create(Trips.Mende_Florac);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -105,7 +105,7 @@ namespace Liane.Test
         public async Task ListEtapesFromMende()
         {
             await SetUpRedisAsync();
-            var trips = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Mende));
+            var trips = await displayService!.Search(new SearchQuery(From: LabeledPositions.Mende));
             var actual = displayService!.ListStepsFrom(trips);
             var expected = ImmutableList.Create(LabeledPositions.LesBondons_Parking, LabeledPositions.Florac);
             actual.WithDeepEqual(expected)
@@ -118,7 +118,7 @@ namespace Liane.Test
         public async Task SearchTripFromFloracToLesBondons()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrips(DayOfWeek.Monday, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, 8, 9);
+            var actual = await displayService!.Search(new SearchQuery(DayOfWeek.Monday, LabeledPositions.Florac, LabeledPositions.LesBondons_Parking, 8, 9));
             var expected = ImmutableList.Create(Trips.Florac_LesBondons);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -130,7 +130,7 @@ namespace Liane.Test
         public async Task SearchTripFromNull()
         {
             await SetUpRedisAsync();
-            var actual = await displayService!.SearchTrips(DayOfWeek.Monday, LabeledPositions.Florac, LabeledPositions.LeCrouzet);
+            var actual = await displayService!.Search(new SearchQuery(DayOfWeek.Monday, LabeledPositions.Florac, LabeledPositions.LeCrouzet));
             var expected = ImmutableHashSet.Create(Trips.Florac_Cocures, Trips.Cocures_Le_Crouzet);
             actual.WithDeepEqual(expected)
                 .Assert();
@@ -142,8 +142,8 @@ namespace Liane.Test
         public async Task ListRoutesFromBlajoux()
         {
             await SetUpRedisAsync();
-            var trips = await displayService!.SearchTrips(new SearchQuery(Start: LabeledPositions.Blajoux_Parking));
-            var actual = await displayService!.ListRoutesEdgesFrom(trips, DayOfWeek.Wednesday);
+            var trips = await displayService!.Search(new SearchQuery(From: LabeledPositions.Blajoux_Parking));
+            var actual = await displayService!.GetRoutes(trips, DayOfWeek.Wednesday);
             var expected = new Dictionary<string, RouteStat>();
             var preExpected1 = await osrmService!.Route(Positions.Blajoux_Parking, Positions.Montbrun_En_Bas);
             var expected1 = new RouteStat(preExpected1.Routes[0].Geometry.Coordinates.ToLatLng(), 3);

@@ -4,43 +4,36 @@ import { DayOfWeek, RallyingPoint, RouteStat, Trip } from ".";
 class DisplayService {
 
   async SnapPosition(lat: number, lng: number): Promise<RallyingPoint[]> {
-    return get("/api/display/snap", { params: { lat, lng } });
+    return get("/api/snap", { params: { lat, lng } });
   }
 
-  async SearchTrips(day? : DayOfWeek, start? : RallyingPoint, end? : RallyingPoint, from? : number, to? : number): Promise<Trip[]> {
+  async Search(day?: DayOfWeek, from?: RallyingPoint, to?: RallyingPoint, startHour?: number, endHour?: number): Promise<Trip[]> {
     const body = {
-      start,
-      end,
+      startHour,
+      endHour,
       day,
       from,
       to
     };
-    const data = await post("/api/display/trip", { body });
+    const data = await post("/api/trip", { body });
     return Object.values(data);
   }
 
-  async ListDestinationsFrom(id: string, lat: number, lng: number): Promise<RallyingPoint[]> {
-    return get("/api/display/destination", { params: { id, lat, lng } });
-  }
-
-  ListTripsFrom(id: string, lat: number, lng: number): Promise<Trip[]> {
-    return get("/api/display/trip", { params: { id, lat, lng } });
+  async ListDestinationsFrom(from: string): Promise<RallyingPoint[]> {
+    return get("/api/rallyingPoint", { params: { from } });
   }
 
   ListStepsFrom(trips: Trip[]): Promise<RallyingPoint[]> {
-    return postAs("/api/display/step", { body: trips });
+    return postAs("/api/step", { body: trips });
   }
 
-  async ListRoutesEdgesFrom(trips: Trip[], day: DayOfWeek, from?: number, to?: number): Promise<RouteStat[]> {
-    return postAs("/api/display/edge", { params: { day, from, to }, body: trips });
+  async GetRoutes(trips: Trip[], day: DayOfWeek, startHour?: number, endHour?: number): Promise<RouteStat[]> {
+    const routes = await postAs<{ [key:string]: RouteStat }>("/api/route", { params: { day, startHour, endHour }, body: trips });
+    return Object.values(routes);
   }
 
   async NotifyDriver(user: string, name: string, number: string): Promise<void> {
     await post("/api/notification", { params: { user, name, number } });
-  }
-
-  async ListTripsUser(user : string, day : string = null) : Promise<RallyingPoint[]> {
-    return get("/api/display/usertrips", { params: { user, day } });
   }
 
 }

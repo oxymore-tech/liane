@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
 {
-    [Route("api/display")]
+    [Route("api")]
     [ApiController]
     public sealed class DisplayController : ControllerBase
     {
@@ -26,25 +26,22 @@ namespace Liane.Web.Controllers
             return await displayService.SnapPosition(new LatLng(lat, lng));
         }
 
-        [HttpGet("destination")]
-        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom([FromQuery] string id, [FromQuery] double lat, [FromQuery] double lng)
+        [HttpGet("rallyingPoint")]
+        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom([FromQuery] string from)
         {
-            return await displayService.ListDestinationsFrom(new RallyingPoint(id, new LatLng(lat, lng)));
+            return await displayService.ListDestinationsFrom(from);
         }
 
         [HttpPost("trip")]
-        public async Task<ImmutableHashSet<Trip>> SearchTrips([FromBody] SearchQuery query)
+        public async Task<ImmutableHashSet<Trip>> Search([FromBody] SearchQuery query)
         {
-            return await displayService.SearchTrips(query);
+            return await displayService.Search(query);
         }
 
-        [HttpPost("edge")]
-        public async Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom([FromBody] ImmutableHashSet<Trip> trips,
-            [FromQuery] DayOfWeek day = 0,
-            [FromQuery] int from = 0,
-            [FromQuery] int to = 24)
+        [HttpPost("route")]
+        public async Task<Dictionary<string, RouteStat>> GetRoutes([FromBody] ImmutableHashSet<Trip> trips, [FromQuery] DayOfWeek? day, [FromQuery] int? startHour, [FromQuery] int? endHour)
         {
-            return await displayService.ListRoutesEdgesFrom(trips, day, from, to);
+            return await displayService.GetRoutes(trips, day, startHour, endHour);
         }
 
         [HttpPost("step")]

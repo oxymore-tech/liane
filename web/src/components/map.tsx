@@ -2,10 +2,12 @@ import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Polyline, TileLayer } from "react-leaflet";
 import { icon } from "leaflet";
-import Select from "react-select";
 import { displayService } from "@api/display-service";
-import { LatLng, RallyingPoint, RouteStat, Trip } from "../api";
-import { days, hours } from "../../assets/time.data";
+import { Days, Hours } from "@api/time";
+import { Select } from "@components/base/Select";
+import {
+  DayOfWeek, LatLng, RallyingPoint, RouteStat, Trip
+} from "../api";
 import { Button } from "./base/Button";
 import { AvailableTrips } from "./available_trips";
 
@@ -38,21 +40,24 @@ const customIconRed = icon({
 
 const MemoPolyline = memo(Polyline);
 
-const MultiPolyline = ({ routes }) => (routes
-  .map((route, i) => {
-    const w = route.stat;
-    const color = `#${(Math.floor((1 - route.stat / 7) * 255)).toString(16)}${(Math.floor((route.stat / 7) * 255)).toString(16)}00`;
-    if (w >= 6) {
-      return <MemoPolyline key={i} positions={route.coordinates} weight={10} color={color} />;
-    }
-    if (w > 1 && w < 6) {
-      return <MemoPolyline key={i} positions={route.coordinates} weight={5} color={color} />;
-    }
-    if (w === 1) {
-      return <MemoPolyline key={i} positions={route.coordinates} weight={2} color={color} />;
-    }
-    return <MemoPolyline key={i} positions={route.coordinates} color={color} />;
-  })
+const MultiPolyline = ({ routes }: { routes:RouteStat[] }) => (
+  <>
+    {routes
+      .map((route, i) => {
+        const w = route.stat;
+        const color = `#${(Math.floor((1 - route.stat / 7) * 255)).toString(16)}${(Math.floor((route.stat / 7) * 255)).toString(16)}00`;
+        if (w >= 6) {
+          return <MemoPolyline key={i} positions={route.coordinates} weight={10} color={color} />;
+        }
+        if (w > 1 && w < 6) {
+          return <MemoPolyline key={i} positions={route.coordinates} weight={5} color={color} />;
+        }
+        if (w === 1) {
+          return <MemoPolyline key={i} positions={route.coordinates} weight={2} color={color} />;
+        }
+        return <MemoPolyline key={i} positions={route.coordinates} color={color} />;
+      })}
+  </>
 );
 
 function Mapi({ className, center, start }: MapProps) {
@@ -68,11 +73,10 @@ function Mapi({ className, center, start }: MapProps) {
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
-  const [tripDay, setTripDay] = useState(days[0]);
-  const [startHours] = useState(hours);
-  const [endHours, setEndHours] = useState(hours);
-  const [startHour, setStartHour] = useState(hours[0]);
-  const [endHour, setEndHour] = useState(hours[23]);
+  const [tripDay, setTripDay] = useState<DayOfWeek>();
+  const [endHours, setEndHours] = useState(Hours);
+  const [startHour, setStartHour] = useState(0);
+  const [endHour, setEndHour] = useState(23);
   const [availableTrips, setAvailableTrips] = useState(false);
 
   /**
@@ -92,8 +96,8 @@ function Mapi({ className, center, start }: MapProps) {
   }));* */
 
   function updateEndHours(e: any) {
-    const newEndHours = e.value !== 23 ? hours.filter((hour) => hour.value > e.value) : hours;
-    setEndHour(newEndHours[0]);
+    const newEndHours = e.value !== 23 ? Hours.filter((hour) => hour.value > e.value) : Hours;
+    setEndHour(newEndHours[0].value);
     setStartHour(e);
     setEndHours(newEndHours);
   }
@@ -113,7 +117,7 @@ function Mapi({ className, center, start }: MapProps) {
   }
 
   function getTrips() {
-    displayService.SearchTrips(tripDay.value, realStart, realArrival, startHour.value, endHour.value).then(
+    displayService.Search(tripDay, realStart, realArrival, startHour, endHour).then(
       (result) => {
         setSearchedTrips(result);
       }
@@ -122,7 +126,7 @@ function Mapi({ className, center, start }: MapProps) {
 
   useEffect(() => {
     if (myStart != null) {
-      displayService.ListDestinationsFrom(myStart.id, myStart.position.lat, myStart.position.lng).then(
+      displayService.ListDestinationsFrom(myStart.id).then(
         (result) => {
           result.push(myStart);
           setDestinations(result);
@@ -145,7 +149,7 @@ function Mapi({ className, center, start }: MapProps) {
   }, [tripStart]);
 
   useEffect(() => {
-    displayService.ListRoutesEdgesFrom(searchedTrips, tripDay.value, startHour.value, endHour.value)
+    displayService.GetRoutes(searchedTrips, tripDay, startHour, endHour)
       .then((result) => {
         setRoutes(result);
       });
@@ -172,7 +176,6 @@ function Mapi({ className, center, start }: MapProps) {
                 options={tripStarts}
                 value={tripStart}
                 onChange={updateStartingTrip}
-                placeholder="Sélectionnez un lieu"
               />
             </div>
           </div>
@@ -190,14 +193,14 @@ function Mapi({ className, center, start }: MapProps) {
           <div className="row">
             <div className="col-md-4">
               <label>Jour</label>
-              <Select options={days} value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour" />
+              <Select options={Days} value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour" />
             </div>
           </div>
           <div className="row">
             <div className="col-md-4">
               <label>Départ entre :</label>
               <Select
-                options={startHours}
+                options={Hours}
                 value={startHour}
                 onChange={updateEndHours}
                 placeholder="Sélectionnez une heure"
@@ -230,11 +233,7 @@ function Mapi({ className, center, start }: MapProps) {
         />
         {
           myStart
-          && (
-            <div>
-              <MultiPolyline routes={routes} />
-            </div>
-          )
+          && <MultiPolyline routes={routes} />
         }
         {
           myStart

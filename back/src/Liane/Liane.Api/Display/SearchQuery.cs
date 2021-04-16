@@ -2,5 +2,5 @@ using System;
 
 namespace Liane.Api.Display
 {
-    public sealed record SearchQuery(DayOfWeek? Day = null, RallyingPoint? Start = null, RallyingPoint? End = null, int From = 0, int To = 23, bool Mine = false);
+    public sealed record SearchQuery(DayOfWeek? Day = null, RallyingPoint? From = null, RallyingPoint? To = null, int StartHour = 0, int EndHour = 23, bool Mine = false);
 }

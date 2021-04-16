@@ -8,14 +8,13 @@ namespace Liane.Api.Display
 {
     public interface IDisplayService
     {
-        Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng latLng);
-        Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(RallyingPoint labeledPosition);
+        Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng position);
+        Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(string from);
 
         ImmutableHashSet<RallyingPoint> ListStepsFrom(ImmutableHashSet<Trip.Trip> trips);
 
-        Task<ImmutableHashSet<Trip.Trip>> SearchTrips(SearchQuery query) => SearchTrips(query.Day, query.Start, query.End, query.From, query.To, query.Mine);
-        Task<ImmutableHashSet<Trip.Trip>> SearchTrips(DayOfWeek? day, RallyingPoint? start, RallyingPoint? end, int from = 0, int to = 23, bool mine = false);
+        Task<ImmutableHashSet<Trip.Trip>> Search(SearchQuery query);
 
-        Task<Dictionary<string, RouteStat>> ListRoutesEdgesFrom(ImmutableHashSet<Trip.Trip> trips, DayOfWeek? day, int from = 0, int to = 23);
+        Task<Dictionary<string, RouteStat>> GetRoutes(ImmutableHashSet<Trip.Trip> trips, DayOfWeek? day, int? startHour = null, int? endHour = null);
     }
 }

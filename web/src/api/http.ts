@@ -55,23 +55,25 @@ function formatUrl<T>(uri: string, { listOptions, params }: QueryAsOptions<T>) {
   }
   if (params) {
     for (const [k, v] of Object.entries(params)) {
-      url.searchParams.append(k, v.toString());
+      if (v) {
+        url.searchParams.append(k, v.toString());
+      }
     }
   }
   return url.toString();
 }
 
 export async function get<T>(uri: string, options: QueryAsOptions<T> = {}): Promise<T> {
-  return fetchAndCheckAs<T>("GET", formatUrl(uri, options));
+  return fetchAndCheckAs<T>("GET", formatUrl(uri, options), options);
 }
 
 export async function getAsString(uri: string, options: QueryAsOptions<any> = {}): Promise<string> {
-  const response = await fetchAndCheck("GET", formatUrl(uri, options));
+  const response = await fetchAndCheck("GET", formatUrl(uri, options), options);
   return response.text();
 }
 
 export async function postAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
-  return fetchAndCheckAs<T>("POST", formatUrl(uri, options), options.body);
+  return fetchAndCheckAs<T>("POST", formatUrl(uri, options), options);
 }
 
 export async function remove(uri: string, options: QueryPostOptions<any> = {}) {
@@ -79,7 +81,7 @@ export async function remove(uri: string, options: QueryPostOptions<any> = {}) {
 }
 
 export function post(uri: string, options: QueryPostOptions<any> = {}) {
-  return fetchAndCheck("POST", formatUrl(uri, options), options.body);
+  return fetchAndCheck("POST", formatUrl(uri, options), options);
 }
 
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
@@ -98,10 +100,11 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
 }
 
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
+  const { body, bodyAsJson } = options;
   const response = await fetch(formatUrl(uri, options), {
-    headers: headers(options.body, options.bodyAsJson),
+    headers: headers(body, bodyAsJson),
     method,
-    body: formatBody(options.body, options.bodyAsJson)
+    body: formatBody(body, bodyAsJson)
   });
   if (response.status !== 200 && response.status !== 201) {
     switch (response.status) {
@@ -125,10 +128,8 @@ function headers(body?: any, bodyAsJson: boolean = true) {
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }
-  if (body) {
-    if (bodyAsJson) {
-      h.append("Content-Type", "application/json");
-    }
+  if (bodyAsJson) {
+    h.append("Content-Type", "application/json");
   }
   return h;
 }
