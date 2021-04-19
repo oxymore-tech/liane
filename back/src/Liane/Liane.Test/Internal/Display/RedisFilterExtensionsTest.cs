@@ -43,7 +43,6 @@ namespace Liane.Test.Internal.Display
         public async Task EdgeKeys()
         {
             var actual = await redis!.ListEdgeKeys();
-            Console.WriteLine($"\n \n ACTUAL : {Print.ImmutableListToString(actual)}");
             var expected = ImmutableHashSet.Create(new RedisKey("Blajoux_Parking|Montbrun_En_Bas|Monday|8"),
                 new RedisKey("Blajoux_Parking|Montbrun_En_Bas|Tuesday|8"),
                 new RedisKey("Blajoux_Parking|Montbrun_En_Bas|Wednesday|8"),
@@ -145,6 +144,5 @@ namespace Liane.Test.Internal.Display
             actual.WithDeepEqual(expected)
                 .Assert();
         }
-
     }
 }

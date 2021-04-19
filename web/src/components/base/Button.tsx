@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import Link from "next/link";
 import { Loading } from "./Loading";
 
-type Colors = "yellow" | "blue" | "red" | "green";
+type Colors = "orange" | "yellow" | "blue" | "red" | "green";
 
 interface ButtonProps {
   outline?: boolean;
@@ -15,18 +15,21 @@ interface ButtonProps {
   href?: string;
   label?: string;
   children?: ReactNode;
-  onClick?: (e: any) => Promise<void> | void;
+  onClick?: (e: any) => void;
 }
 
-function getColorsClassName(color: Colors, outline: boolean,disabled: boolean) {
+function getColorsClassName(color: Colors, outline: boolean, disabled: boolean) {
   if (disabled) {
-    return outline 
-      ? "text-gray-400 border-gray-400" 
+    return outline
+      ? "text-gray-400 border-gray-400"
       : "text-gray-500 bg-gray-300";
   }
   if (outline) {
     switch (color) {
       default:
+      case "orange":
+        return "text-orange-light border-orange-light hover:text-white hover:bg-orange";
+
       case "blue":
         return "text-blue-500 border-blue-500 hover:text-white hover:bg-blue-500";
 
@@ -38,10 +41,12 @@ function getColorsClassName(color: Colors, outline: boolean,disabled: boolean) {
 
       case "red":
         return "text-red-500 border-red-500 hover:text-white hover:bg-red-500";
-    } 
+    }
   }
   switch (color) {
     default:
+    case "orange":
+      return "bg-orange text-white hover:text-orange hover:bg-orange-light";
     case "blue":
       return "text-white bg-blue-500 hover:bg-blue-600";
 
@@ -57,48 +62,63 @@ function getColorsClassName(color: Colors, outline: boolean,disabled: boolean) {
 }
 
 export function Button({
-                         outline = false,
-                         disabled,
-                         loading,
-                         className,
-                         title,
-                         color = "blue",
-                         href,
-                         label,
-                         type = "button",
-                         onClick,
-                         children
-                       }: ButtonProps) {
+  outline = false,
+  disabled,
+  loading,
+  className,
+  title,
+  color = "blue",
+  href,
+  label,
+  type = "button",
+  onClick,
+  children
+}: ButtonProps) {
 
   const d = disabled || loading || false;
 
   const colors = getColorsClassName(color, outline, disabled);
-  const cl = `outline-none whitespace-nowrap inline-flex items-center justify-center text-sm font-extrabold px-4 py-2 border border-transparent rounded-sm shadow-sm font-medium  ${d && "cursor-not-allowed"} ${colors} ${className}`;
+  const cl = `outline-none rounded-lg inline-flex items-center justify-center text-sm font-bold px-4 py-2 shadow-sm rounded-3xl ${d && "cursor-not-allowed"} ${colors} ${className}`;
 
   const child = <Loading loading={loading}>{children || label}</Loading>;
 
   if (href) {
     if (d) {
-      return <a
-        title={title}
-        className={cl}>{child}</a>;
-    } else {
-      return <Link href={href}>
+      return (
         <a
           title={title}
-          className={cl}>{child}</a>
-      </Link>;
+          className={cl}
+        >
+          {child}
+        </a>
+      );
     }
-  } else {
-    return <button
+    return (
+      <Link href={href}>
+        <a
+          title={title}
+          className={cl}
+        >
+          {child}
+        </a>
+      </Link>
+    );
+
+  }
+  return (
+    <button
       title={title}
       disabled={d}
       className={cl}
       type={type}
       onClick={(e) => {
         if (!d && onClick) {
-          return onClick(e);
+          onClick(e);
         }
-      }}>{child}</button>;
-  }
+      }}
+    >
+      {child}
+    </button>
+  );
+
 }

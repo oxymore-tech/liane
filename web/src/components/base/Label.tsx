@@ -2,14 +2,18 @@ import React from "react";
 
 interface LabelProps {
   label?: string;
-  mandatory?: boolean;
+  className?: string;
+  required?: boolean;
 }
 
-export function Label({label, mandatory}: LabelProps) {
+export function Label({ label, className, required }: LabelProps) {
   if (!label) {
     return <></>;
   }
-  return <label className="text-lg text-black font-bold" title={mandatory && "Champ obligatoire"}>
-    {label}{mandatory && <span className="ml-1 text-gray-400 text-xs">(obligatoire)</span>}
-  </label>;
+  return (
+    <label className={`text-lg text-gray-700 font-semibold ${className}`} title={required && "Champ obligatoire"}>
+      {label}
+      {required && <span className="ml-1 text-gray-400 text-xs">(obligatoire)</span>}
+    </label>
+  );
 }

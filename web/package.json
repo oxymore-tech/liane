@@ -8,19 +8,17 @@
     "start": "next start"
   },
   "dependencies": {
+    "@headlessui/react": "^1.0.0",
+    "@mdi/font": "^5.9.55",
     "date-fns": "^2.21.1",
     "leaflet": "^1.7.1",
     "next": "^10.0.6",
-    "postcss": "^8.2.5",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-leaflet": "^3.1.0",
-    "react-moment": "^1.1.1",
-    "react-select": "^4.1.0",
-    "tailwindcss": "^2.0.3"
+    "react-moment": "^1.1.1"
   },
   "devDependencies": {
-    "@tailwindcss/jit": "^0.1.18",
     "@types/leaflet": "^1.5.21",
     "@types/node": "^14.14.25",
     "@types/react": "^17.0.1",
@@ -31,6 +29,8 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.22.0",
+    "postcss": "^8.2.10",
+    "tailwindcss": "^2.1.1",
     "typescript": "^4.1.3"
   }
 }

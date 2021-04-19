@@ -59,7 +59,7 @@ namespace Liane.Web
 
             services.AddService<DisplayServiceImpl>();
             services.AddService<LocationServiceImpl>();
-            services.AddService<Service.Internal.Trip.TripServiceImpl>();
+            services.AddService<TripServiceImpl>();
             services.AddService<NotificationServiceImpl>();
         }
 
@@ -85,12 +85,12 @@ namespace Liane.Web
             var loggingConfiguration = new LoggingConfiguration();
 
             AspNetLayoutRendererBase.Register("trace_id",
-                (logEventInfo, httpContext, lc) => MappedDiagnosticsLogicalContext.GetObject("TraceId"));
+                (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("TraceId"));
             AspNetLayoutRendererBase.Register("span_id",
-                (logEventInfo, httpContext, lc) => MappedDiagnosticsLogicalContext.GetObject("SpanId"));
-            //AspNetLayoutRendererBase.Register("user_id", (logEventInfo, httpContext, lc) => httpContext.GetUser()?.Id);
+                (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("SpanId"));
+            AspNetLayoutRendererBase.Register("user_id", (_, httpContext, _) => httpContext.User.Identity?.Name);
             AspNetLayoutRendererBase.Register("request_path",
-                (logEventInfo, httpContext, lc) => MappedDiagnosticsLogicalContext.GetObject("RequestPath"));
+                (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("RequestPath"));
 
             Layout jsonLayout = new JsonLayout
             {
@@ -165,7 +165,7 @@ namespace Liane.Web
                 .ConfigureServices(ConfigureServices)
                 .Configure(Configure)
                 .UseUrls("http://*:8081")
-                .UseKestrel((context, options) => { options.AllowSynchronousIO = true; })
+                .UseKestrel((_, options) => { options.AllowSynchronousIO = true; })
                 .Build()
                 .Run();
         }

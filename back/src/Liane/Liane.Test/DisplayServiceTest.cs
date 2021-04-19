@@ -10,7 +10,6 @@ using Liane.Service.Internal.Display;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using StackExchange.Redis;
@@ -26,7 +25,7 @@ namespace Liane.Test
         [SetUp]
         public void SetUp()
         {
-            var osrmServiceDisplay = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
+            var osrmServiceDisplay = new OsrmServiceImpl(new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             var tripService = new Mock<ITripService>();
             tripService.Setup(s => s.List())
                 .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);

@@ -76,11 +76,10 @@ namespace Liane.Service.Internal.Display
                                 var geoPosition = r.Position!.Value;
                                 return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
                             });
-                        if (nearestPoint.LongCount() > 0)
+                        if (nearestPoint.Any())
                         {
-                            var startPoint = new List<RallyingPoint>();
-                            startPoint.Add(start);
-                            var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count() - trip.Coordinates.IndexOf(position) - 1);
+                            var startPoint = new List<RallyingPoint> {start};
+                            var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count - trip.Coordinates.IndexOf(position) - 1);
                             var coordinatesFromStart = startPoint.Concat(coordinatesAfterPosition).ToImmutableList();
                             var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
                             tripsFromStart.Add(aTripFromStart);
@@ -139,22 +138,6 @@ namespace Liane.Service.Internal.Display
             return trips.ToImmutableList();
         }
 
-        public static string ImmutableListToString<T>(ImmutableList<T> list)
-        {
-            if (list.Count == 0)
-            {
-                return "[]";
-            }
-
-            var listString = "[";
-            foreach (var element in list)
-            {
-                listString += element! + ", ";
-            }
-
-            return listString.Remove(listString.Length - 2, 2) + "]\n";
-        }
-
         public async Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key)
         {
             var database = await redis.Get();
@@ -168,7 +151,7 @@ namespace Liane.Service.Internal.Display
             var endRP = new RallyingPoint(rallyingPoints[1].Member, new LatLng(rallyingPoints[1].Position!.Value.Latitude, rallyingPoints[1].Position!.Value.Longitude));
             var point = new HashSet<RallyingPoint>();
             var time = Int32.Parse(key.ToString().Split("|")[3]);
-            //Console.WriteLine($"time : {time}\n");
+            //logger.LogInformation($"time : {time}\n");
             point.Add(startRP);
             point.Add(endRP);
             return new Api.Trip.Trip(point.ToImmutableList(), Time: time);
@@ -205,17 +188,14 @@ namespace Liane.Service.Internal.Display
             var newKeys = edgeKeys;
             foreach (var key in endPointKeys)
             {
-                Console.WriteLine(key.ToString());
                 var startPoint = key.ToString().Split("|")[0];
                 var newEndHour = int.Parse(key.ToString().Split("|")[3]);
                 if (!listEndPoints.Contains(startPoint) && (newEndHour <= hour))
                 {
-                    //Console.WriteLine($"ancienne heure : {hour}");
-                    //Console.WriteLine($"nouvelle heure : {newEndHour}");
                     newKeys = newKeys.Remove(key);
                     var newTrip = await FromKeyToTrip(key);
                     listTrips.Add(newTrip);
-                    Console.WriteLine($"Heure du trajet : {newTrip.Time}");
+                    logger.LogInformation("Heure du trajet : {Time}", newTrip.Time);
                     var otherTrips = await GetTripsEnd(newKeys, startPoint, newEndHour, listEndPoints);
                     newKeys = otherTrips.Item2;
                     listTrips = (listTrips.Concat(otherTrips.Item1)).ToHashSet();
@@ -225,32 +205,6 @@ namespace Liane.Service.Internal.Display
             return (listTrips.ToImmutableHashSet(), newKeys);
         }
 
-        public ImmutableHashSet<Api.Trip.Trip> Intersect(HashSet<Api.Trip.Trip> startTrips, HashSet<Api.Trip.Trip> endTrips)
-        {
-            var trips = startTrips;
-            var elementNotFound = true;
-            foreach (var startTrip in startTrips)
-            {
-                foreach (var endTrip in endTrips)
-                {
-                    if (startTrip == endTrip)
-                    {
-                        //Console.WriteLine("TEST EGALITE OK.");
-                        elementNotFound = false;
-                    }
-                }
-
-                if (elementNotFound)
-                {
-                    trips.Remove(startTrip);
-                }
-
-                elementNotFound = true;
-            }
-
-            return trips.ToImmutableHashSet();
-        }
-
         public async Task<ImmutableHashSet<Api.Trip.Trip>> DefaultTrips(RallyingPoint? start, RallyingPoint? end, int from, int to)
         {
             var edgeKeys = await redis.ListEdgeKeys();
@@ -258,39 +212,33 @@ namespace Liane.Service.Internal.Display
             {
                 var startTrips = (await GetTrips(edgeKeys, start.Id, from, new HashSet<string>())).Item1;
                 var endTrips = (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
-                startTrips = Intersect(startTrips.ToHashSet(), endTrips.ToHashSet());
-                foreach (var trip in startTrips)
-                {
-                    Console.WriteLine($"TRIP : {ImmutableListToString(trip.Coordinates)}, {trip.Time}\n");
-                }
-
-                return startTrips.ToImmutableHashSet();
+                return startTrips.Intersect(endTrips);
             }
 
             if (start != null)
             {
-                return (await GetTrips(edgeKeys, start.Id, @from, new HashSet<string>())).Item1;
+                return (await GetTrips(edgeKeys, start.Id, from, new HashSet<string>())).Item1;
             }
-            else
-            {
-                if (end != null)
-                {
-                    return (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
-                }
-                else
-                {
-                    var trips = new HashSet<Api.Trip.Trip>();
-                    var currentEdgeKeys = edgeKeys;
-                    foreach (var key in edgeKeys)
-                    {
-                        var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], @from, new HashSet<string>());
-                        trips = trips.Concat(tripsAndKeys.Item1).ToHashSet();
-                        currentEdgeKeys = tripsAndKeys.Item2;
-                    }
 
-                    return trips.ToImmutableHashSet();
-                }
+            if (end != null)
+            {
+                return (await GetTripsEnd(edgeKeys, end.Id, to, new HashSet<string>())).Item1;
             }
+
+            var trips = ImmutableHashSet.CreateBuilder<Api.Trip.Trip>();
+            var currentEdgeKeys = edgeKeys;
+            foreach (var key in edgeKeys)
+            {
+                var tripsAndKeys = await GetTrips(currentEdgeKeys, key.ToString().Split("|")[0], from, new HashSet<string>());
+                foreach (var trip in tripsAndKeys.Item1)
+                {
+                    trips.Add(trip);
+                }
+
+                currentEdgeKeys = tripsAndKeys.Item2;
+            }
+
+            return trips.ToImmutableHashSet();
         }
 
         public async Task<ImmutableHashSet<Api.Trip.Trip>> Search(SearchQuery searchQuery)

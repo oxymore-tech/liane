@@ -117,7 +117,7 @@ namespace Liane.Service.Internal.Routing
                 var nbOfExits = 0;
                 foreach (var anEntry in startIntersections[0].Entry)
                 {
-                    if (anEntry.Equals("true"))
+                    if (anEntry)
                     {
                         nbOfExits += 1;
                     }
@@ -149,7 +149,7 @@ namespace Liane.Service.Internal.Routing
                 var nbOfEntries = 0;
                 foreach (var anEntry in endIntersections[0].Entry)
                 {
-                    if (anEntry.Equals("true"))
+                    if (anEntry)
                     {
                         nbOfEntries += 1;
                     }

@@ -167,56 +167,56 @@ function Mapi({ className, center, start }: MapProps) {
     <div>
       {availableTrips
       && <AvailableTrips searchedTrips={searchedTrips} />}
-      <div className="container" style={{ top: 10, right: 10, width: 250, zIndex: 3, position: "absolute" }}>
-        <form className="form">
-          <div className="row">
-            <div className="col-md-4">
-              <label>Lieu de départ</label>
-              <Select
-                options={tripStarts}
-                value={tripStart}
-                onChange={updateStartingTrip}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-4">
-              <label>Lieu d&apos;arrivée</label>
-              <Select
-                options={tripEnds}
-                value={tripEnd}
-                onChange={updateArrivalTrip}
-                placeholder="Sélectionnez un lieu"
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-4">
-              <label>Jour</label>
-              <Select options={Days} value={tripDay} onChange={setTripDay} placeholder="Sélectionnez un jour" />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-4">
-              <label>Départ entre :</label>
-              <Select
-                options={Hours}
-                value={startHour}
-                onChange={updateEndHours}
-                placeholder="Sélectionnez une heure"
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-4">
-              <label>et :</label>
-              <Select options={endHours} value={endHour} onChange={setEndHour} placeholder="Sélectionnez une heure" />
-            </div>
-          </div>
-          <div className="p-2">
-            <Button label="Rechercher" onClick={getTrips} />
-          </div>
-        </form>
+      <div className="absolute inset-y-0 right-0 z-10">
+        <div className="bg-white shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-4 m-10">
+          <Select
+            className="col-span-2"
+            label="Départ"
+            options={tripStarts}
+            value={tripStart}
+            placeholder="Sélectionnez un lieu"
+            onChange={updateStartingTrip}
+          />
+          <Select
+            className="col-span-2"
+            label="Arrivée"
+            options={tripEnds}
+            value={tripEnd}
+            onChange={updateArrivalTrip}
+            placeholder="Sélectionnez un lieu"
+          />
+          <Select
+            className="col-span-2"
+            label="Jour"
+            placeholder="Sélectionnez un jour"
+            options={Days}
+            value={tripDay}
+            onChange={setTripDay}
+          />
+          <Select
+            label="Entre"
+            className="w-40"
+            inline
+            options={Hours}
+            value={startHour}
+            onChange={updateEndHours}
+            placeholder="Sélectionnez une heure"
+          />
+          <Select
+            label=" et "
+            inline
+            options={endHours}
+            value={endHour}
+            onChange={setEndHour}
+            placeholder="Sélectionnez une heure"
+          />
+          <Button
+            color="orange"
+            className="col-span-2"
+            label="Rechercher"
+            onClick={getTrips}
+          />
+        </div>
       </div>
       <MapContainer
         className={className}

@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Osrm;
 using Liane.Test.Util;
-using Microsoft.Extensions.Logging;
-using Moq;
 using NUnit.Framework;
 
 namespace Liane.Test
@@ -18,7 +16,7 @@ namespace Liane.Test
 
         public OsrmServiceTest()
         {
-            tested = new OsrmServiceImpl(new Mock<ILogger<OsrmServiceImpl>>().Object, new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
+            tested = new OsrmServiceImpl(new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
             coordinates = ImmutableList.Create(Positions.Mende, Positions.Florac);
         }
 

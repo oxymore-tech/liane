@@ -7,7 +7,6 @@ using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Osrm
 {
@@ -15,12 +14,10 @@ namespace Liane.Service.Internal.Osrm
     {
         private readonly MemoryCache routeCache = new(new MemoryCacheOptions());
         private readonly HttpClient client;
-        private readonly ILogger<OsrmServiceImpl> logger;
 
-        public OsrmServiceImpl(ILogger<OsrmServiceImpl> logger, OsrmSettings settings)
+        public OsrmServiceImpl(OsrmSettings settings)
         {
             client = new HttpClient {BaseAddress = settings.Url};
-            this.logger = logger;
         }
 
         public Task<Response.Routing> Route(LatLng start, LatLng end)

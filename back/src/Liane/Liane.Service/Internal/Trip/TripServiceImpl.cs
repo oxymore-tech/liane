@@ -6,7 +6,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Util;
-using ITripService = Liane.Api.Trip.ITripService;
 
 namespace Liane.Service.Internal.Trip
 {
@@ -48,11 +47,13 @@ namespace Liane.Service.Internal.Trip
             this.redis = redis;
         }
 
-        public async Task<RallyingPoint?> GetRallyingPoint(string id)
+        private async Task<RallyingPoint?> GetRallyingPoint(string id)
         {
             var database = await redis.Get();
             var result = await database.GeoPositionAsync(RedisKeys.RallyingPoint(), id);
-            return new RallyingPoint(id, new LatLng(result.Value.Latitude, result.Value.Longitude));
+            return !result.HasValue
+                ? null
+                : new RallyingPoint(id, new LatLng(result.Value.Latitude, result.Value.Longitude));
         }
 
         public async Task<ImmutableHashSet<Api.Trip.Trip>> List()

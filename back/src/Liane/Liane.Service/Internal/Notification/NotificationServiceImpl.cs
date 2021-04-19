@@ -83,10 +83,5 @@ namespace Liane.Service.Internal.Notification
             return result.Select(r => new Api.Notification.Notification(Convert.ToInt32(r.Name), r.Value))
                 .ToImmutableList();
         }
-
-        private static RedisKey GetNotificationRedisKey(string user)
-        {
-            return new("notification:" + user);
-        }
     }
 }

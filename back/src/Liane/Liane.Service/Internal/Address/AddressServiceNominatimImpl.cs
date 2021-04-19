@@ -7,19 +7,16 @@ using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Address
 {
     public sealed class AddressServiceNominatimImpl : IAddressService
     {
         private readonly HttpClient client;
-        private readonly ILogger<AddressServiceNominatimImpl> logger;
 
-        public AddressServiceNominatimImpl(ILogger<AddressServiceNominatimImpl> logger, NominatimSettings settings)
+        public AddressServiceNominatimImpl(NominatimSettings settings)
         {
             client = new HttpClient {BaseAddress = settings.Url};
-            this.logger = logger;
         }
 
         public async Task<Api.Address.Address> GetDisplayName(LatLng coordinate)
@@ -54,12 +51,13 @@ namespace Liane.Service.Internal.Address
 
         public async Task<ImmutableList<Api.Address.Address>> Search(string displayName)
         {
-            var responses = await client.GetFromJsonAsync<ImmutableList<Response>>("/search/fr".WithParams(new
+            var uri = "/search/fr".WithParams(new
             {
                 q = displayName,
                 format = "json",
                 addressdetails = 1
-            }));
+            });
+            var responses = await client.GetFromJsonAsync<ImmutableList<Response>>(uri);
 
             if (responses == null)
             {
