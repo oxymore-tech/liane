@@ -45,7 +45,7 @@ export function Select<T, K>({ className = "", inline, icon, required, placehold
 
   const effectivePlaceholder = <span className="text-gray-400">{placeholder || "vide"}</span>;
 
-  const selectedOption = options.find((o) => getValue(o, keyExtract) === value);
+  const selectedOption = keyExtract ? options.find((o) => getValue(o, keyExtract) === value) : value;
 
   return (
     <div className={`flex ${inline ? "items-center" : "flex-col"} my-3 ${className}`}>

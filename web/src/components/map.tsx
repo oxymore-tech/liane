@@ -177,7 +177,7 @@ function Mapi({ className, center, start }: MapProps) {
             label={(
               <span className="flex items-center">
                 Départ
-                <img alt="" src="/images/leaflet/marker-icon.png" className="mx-2 h-5" />
+                <img alt="" src="/images/leaflet/marker-icon.png" className="mx-2 h-6" />
               </span>
             )}
             options={tripStarts}
@@ -190,7 +190,7 @@ function Mapi({ className, center, start }: MapProps) {
             label={(
               <span className="flex items-center">
                 Arrivée
-                <img alt="" src="/images/leaflet/marker-icon-red.png" className="mx-2 h-5" />
+                <img alt="" src="/images/leaflet/marker-icon-red.png" className="mx-2 h-6" />
               </span>
             )}
             options={tripEnds}
@@ -227,7 +227,7 @@ function Mapi({ className, center, start }: MapProps) {
           />
           <Button
             color="orange"
-            className="col-span-2"
+            className="mt-4 col-span-2"
             label="Rechercher"
             onClick={getTrips}
           />
