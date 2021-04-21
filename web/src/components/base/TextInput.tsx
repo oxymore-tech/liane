@@ -9,7 +9,7 @@ interface TextInputProps {
   title?: string;
   iconLeft?: string;
   placeholder?: string;
-  mandatory?: boolean;
+  required?: boolean;
   type: "textarea" | "text" | "password" | "date";
   value?: string;
   onChange?: (value: string) => any;
@@ -26,7 +26,7 @@ export function TextInput({
   value,
   onChange,
   indication,
-  mandatory,
+  required,
   iconLeft,
   autoComplete
 }: TextInputProps) {
@@ -49,7 +49,7 @@ export function TextInput({
 
   return (
     <div className={`flex flex-col my-3 ${className}`}>
-      <Label label={label} mandatory={mandatory} />
+      <Label label={label} required={required} />
       <div className="relative">
         {type === "textarea"
           ? (
