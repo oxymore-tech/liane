@@ -5,7 +5,7 @@ type Colors = "yellow" | "blue" | "red" | "green";
 
 interface SwitchProps {
   label?: string;
-  mandatory?: boolean;
+  required?: boolean;
   color?: Colors;
   value?: boolean;
   onChange?: (value: boolean) => any;
@@ -28,20 +28,23 @@ function getColor(color: Colors) {
   }
 }
 
-export function Switch({label, mandatory, color = "green", value, onChange}: SwitchProps) {
+export function Switch({ label, required, color = "green", value, onChange }: SwitchProps) {
   const cl = getColor(color);
-  return <>
-    <div
-      className={`outline-none shadow-inner my-2 mr-2 w-12 h-8 flex items-center bg-gray-300 rounded-full cursor-pointer p-1 duration-300 ease-in-out ${value && cl}`}
-      onClick={() => {
-        if (onChange) {
-          onChange(!value);
-        }
-      }
-      }>
+  return (
+    <>
       <div
-        className={`bg-white w-6 h-6 rounded-full shadow transform duration-300 ease-in-out ${value && 'translate-x-4'}`}/>
-    </div>
-    {label && <Label label={label} mandatory={mandatory}/>}
-  </>;
+        className={`outline-none shadow-inner my-2 mr-2 w-12 h-8 flex items-center bg-gray-300 rounded-full cursor-pointer p-1 duration-300 ease-in-out ${value && cl}`}
+        onClick={() => {
+          if (onChange) {
+            onChange(!value);
+          }
+        }}
+      >
+        <div
+          className={`bg-white w-6 h-6 rounded-full shadow transform duration-300 ease-in-out ${value && "translate-x-4"}`}
+        />
+      </div>
+      {label && <Label label={label} required={required} />}
+    </>
+  );
 }
