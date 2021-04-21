@@ -1,6 +1,6 @@
 export interface LatLng { lat: number, lng: number }
 
-export interface RallyingPoint { id: string, position: LatLng }
+export interface RallyingPoint { id: string, position: LatLng, label:string }
 
 export interface Trip {
   coordinates: RallyingPoint[],

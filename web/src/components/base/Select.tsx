@@ -59,7 +59,7 @@ export function Select<T, K>({ className = "", inline, icon, required, placehold
               <Listbox.Button
                 className={`cursor-pointer relative w-full py-2 pl-3 pr-10 text-left bg-white rounded-lg shadow-md focus:outline-none ${focusClass} sm:text-sm ${indicationRingColor}`}
               >
-                <span className="block truncate">
+                <span className="block truncate text-gray-700">
                   {icon}
                   {selectedOption
                     ? renderOption(selectedOption, render)
@@ -97,9 +97,7 @@ export function Select<T, K>({ className = "", inline, icon, required, placehold
                       {({ selected, active }) => (
                         <>
                           <span
-                            className={`${
-                              selected ? "font-bold" : "font-normal"
-                            } block truncate`}
+                            className={`${selected ? "font-bold" : "font-normal"} text-gray-700 block truncate`}
                           >
                             {renderOption(option, render)}
                           </span>

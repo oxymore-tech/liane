@@ -1,4 +1,5 @@
 export const Days = [
+  { label: "N'importe quel jour" },
   { value: 0, label: "Dimanche" },
   { value: 1, label: "Lundi" },
   { value: 2, label: "Mardi" },

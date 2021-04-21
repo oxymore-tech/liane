@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api;
 using Liane.Api.Display;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,18 +18,6 @@ namespace Liane.Web.Controllers
         public DisplayController(IDisplayService displayService)
         {
             this.displayService = displayService;
-        }
-
-        [HttpGet("snap")]
-        public async Task<ImmutableList<RallyingPoint>> SnapPosition([FromQuery] double lat, [FromQuery] double lng)
-        {
-            return await displayService.SnapPosition(new LatLng(lat, lng));
-        }
-
-        [HttpGet("rallyingPoint")]
-        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom([FromQuery] string from)
-        {
-            return await displayService.ListDestinationsFrom(from);
         }
 
         [HttpPost("trip")]

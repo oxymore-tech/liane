@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api;
 using Liane.Api.Display;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -21,45 +22,20 @@ namespace Liane.Service.Internal.Display
         private readonly IRedis redis;
         private readonly ITripService tripService;
         private readonly IOsrmService osrmService;
+        private readonly IRallyingPointService rallyingPointService;
 
-        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService, IOsrmService osrmService)
+
+        public DisplayServiceImpl(ILogger<DisplayServiceImpl> logger, IRedis redis, ITripService tripService, IRallyingPointService rallyingPointService, IOsrmService osrmService)
         {
             this.logger = logger;
             this.tripService = tripService;
+            this.rallyingPointService = rallyingPointService;
             this.redis = redis;
             this.osrmService = osrmService;
         }
 
-        public async Task<ImmutableList<RallyingPoint>> SnapPosition(LatLng position)
-        {
-            var database = await redis.Get();
-            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), position.Lng, position.Lat, 500, options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-            return results.Select(r =>
-                {
-                    var geoPosition = r.Position!.Value;
-                    return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
-                })
-                .ToImmutableList();
-        }
-
-        public async Task<ImmutableList<RallyingPoint>> ListDestinationsFrom(string from)
-        {
-            var database = await redis.Get();
-            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), from, 500, GeoUnit.Kilometers, order: Order.Ascending,
-                options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-            return results
-                .Where(r => r.Member != from)
-                .Select(r =>
-                {
-                    var geoPosition = r.Position!.Value;
-                    return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
-                })
-                .ToImmutableList();
-        }
-
         public async Task<ImmutableHashSet<Api.Trip.Trip>> ListTripsFrom(RallyingPoint start)
         {
-            var database = await redis.Get();
             var tripsFromStart = new List<Api.Trip.Trip>();
             foreach (var trip in await tripService.List())
             {
@@ -67,24 +43,12 @@ namespace Liane.Service.Internal.Display
                 {
                     if (position != trip.Coordinates[^1])
                     {
-                        var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), position.Position.Lng, position.Position.Lat, 1000,
-                            options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
-                        var nearestPoint = results
-                            .Where(r => r.Member == start.Id)
-                            .Select(r =>
-                            {
-                                var geoPosition = r.Position!.Value;
-                                return new RallyingPoint(r.Member, new LatLng(geoPosition.Latitude, geoPosition.Longitude), r.Distance);
-                            });
-                        if (nearestPoint.Any())
-                        {
-                            var startPoint = new List<RallyingPoint> {start};
-                            var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count - trip.Coordinates.IndexOf(position) - 1);
-                            var coordinatesFromStart = startPoint.Concat(coordinatesAfterPosition).ToImmutableList();
-                            var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
-                            tripsFromStart.Add(aTripFromStart);
-                            break;
-                        }
+                        var startPoint = new List<RallyingPoint> {start};
+                        var coordinatesAfterPosition = trip.Coordinates.GetRange(trip.Coordinates.IndexOf(position) + 1, trip.Coordinates.Count - trip.Coordinates.IndexOf(position) - 1);
+                        var coordinatesFromStart = startPoint.Concat(coordinatesAfterPosition).ToImmutableList();
+                        var aTripFromStart = new Api.Trip.Trip(coordinatesFromStart);
+                        tripsFromStart.Add(aTripFromStart);
+                        break;
                     }
                 }
             }
@@ -126,8 +90,11 @@ namespace Liane.Service.Internal.Display
                         options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     if (results.Length > 0)
                     {
-                        var nearestPoint = results[0];
-                        points.Add(new RallyingPoint(nearestPoint.Member, new LatLng(nearestPoint.Position!.Value.Latitude, nearestPoint.Position!.Value.Longitude)));
+                        var nearestPoint = await rallyingPointService.TrySnap(route.Coordinates[i].ToLatLng());
+                        if (nearestPoint != null)
+                        {
+                            points.Add(nearestPoint);
+                        }
                     }
                 }
 
@@ -140,20 +107,13 @@ namespace Liane.Service.Internal.Display
 
         public async Task<Api.Trip.Trip> FromKeyToTrip(RedisKey key)
         {
-            var database = await redis.Get();
-            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), 3.483382165431976, 44.33718916852679, 500, GeoUnit.Kilometers);
             var points = key.ToString().Split("|");
-            var start = points[0];
-            var end = points[1];
-            var rallyingPoints = results.Where(r => r.ToString().Equals(start)).ToList();
-            rallyingPoints = rallyingPoints.Concat(results.Where(r => r.ToString().Equals(end)).ToList()).ToList();
-            var startRP = new RallyingPoint(rallyingPoints[0].Member, new LatLng(rallyingPoints[0].Position!.Value.Latitude, rallyingPoints[0].Position!.Value.Longitude));
-            var endRP = new RallyingPoint(rallyingPoints[1].Member, new LatLng(rallyingPoints[1].Position!.Value.Latitude, rallyingPoints[1].Position!.Value.Longitude));
+            var from = await rallyingPointService.Get(points[0]);
+            var to = await rallyingPointService.Get(points[1]);
             var point = new HashSet<RallyingPoint>();
-            var time = Int32.Parse(key.ToString().Split("|")[3]);
-            //logger.LogInformation($"time : {time}\n");
-            point.Add(startRP);
-            point.Add(endRP);
+            var time = int.Parse(key.ToString().Split("|")[3]);
+            point.Add(from);
+            point.Add(to);
             return new Api.Trip.Trip(point.ToImmutableList(), Time: time);
         }
 
@@ -274,8 +234,8 @@ namespace Liane.Service.Internal.Display
             {
                 for (var i = 0; i < rallyingPoints.Count - 1; i++)
                 {
-                    var (segmentStartId, segmentStartPosition, _) = rallyingPoints[i];
-                    var (segmentEndId, segmentEndPosition, _) = rallyingPoints[i + 1];
+                    var (segmentStartId, segmentStartPosition, _, _) = rallyingPoints[i];
+                    var (segmentEndId, segmentEndPosition, _, _) = rallyingPoints[i + 1];
                     var key = segmentStartId + "|" + segmentEndId;
                     if (!routesEdges.ContainsKey(key))
                     {
@@ -313,12 +273,8 @@ namespace Liane.Service.Internal.Display
                 dtDateTime = dtDateTime.AddSeconds(Convert.ToDouble(timestamp)).ToLocalTime();
                 if (day == "-1" || Convert.ToInt32(dtDateTime.DayOfWeek).ToString().Equals(day))
                 {
-                    var result = await database.GeoPositionAsync(RedisKeys.RallyingPoint(), element.Value);
-                    if (result != null)
-                    {
-                        var rp = new RallyingPoint(element.Value, new LatLng(result.Value.Latitude, result.Value.Longitude));
-                        userTrips.Add(rp);
-                    }
+                    var rallyingPoint = await rallyingPointService.Get(element.Value);
+                    userTrips.Add(rallyingPoint);
                 }
             }
 

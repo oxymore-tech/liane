@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Display;
+using Liane.Api;
 using Liane.Api.Location;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
@@ -17,14 +17,14 @@ namespace Liane.Service.Internal.Location
         private readonly ILogger<LocationServiceImpl> logger;
         private readonly ICurrentContext currentContext;
         private readonly IRedis redis;
-        private readonly IDisplayService displayService;
+        private readonly IRallyingPointService rallyingPointService;
 
-        public LocationServiceImpl(ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IDisplayService displayService)
+        public LocationServiceImpl(ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService)
         {
             this.logger = logger;
             this.currentContext = currentContext;
             this.redis = redis;
-            this.displayService = displayService;
+            this.rallyingPointService = rallyingPointService;
         }
 
         public Task LogLocation(ImmutableList<UserLocation> userLocations)
@@ -37,31 +37,28 @@ namespace Liane.Service.Internal.Location
         {
             var timestamp = userLocations[0].Timestamp;
             var dtDateTime = new DateTime(timestamp);
-            var nearestPoints = await displayService.SnapPosition(new LatLng(userLocations[0].Coords.Latitude, userLocations[0].Coords.Longitude));
-            if (nearestPoints.Count > 0)
+            var nearestPoint = await rallyingPointService.Snap(new LatLng(userLocations[0].Coords.Latitude, userLocations[0].Coords.Longitude));
+            var database = await redis.Get();
+            var redisKey = RedisKeys.Position(currentContext.CurrentUser());
+            var results = await database.HashGetAllAsync(redisKey);
+            if (results.Length >= 2)
             {
-                var database = await redis.Get();
-                var redisKey = RedisKeys.Position(currentContext.CurrentUser());
-                var results = await database.HashGetAllAsync(redisKey);
-                if (results.Length >= 2)
+                var t0 = results[^2].Value;
+                var t1 = results[^1].Value;
+                if (t0.Equals(nearestPoint.Id) && !t1.Equals(nearestPoint.Id))
                 {
-                    var t0 = results[^2].Value;
-                    var t1 = results[^1].Value;
-                    if (t0.Equals(nearestPoints[0].Id) && !t1.Equals(nearestPoints[0].Id))
-                    {
-                        await database.HashDeleteAsync(redisKey, t1);
-                    }
-
-                    if (!t1.Equals(nearestPoints[0].Id))
-                    {
-                        var redisKey2 = RedisKeys.Trip(t1, nearestPoints[0].Id, dtDateTime.DayOfWeek, dtDateTime.Hour);
-                        await database.HashIncrementAsync(redisKey2, currentContext.CurrentUser());
-                    }
+                    await database.HashDeleteAsync(redisKey, t1);
                 }
 
-                HashEntry[] newEntry = {new(timestamp, nearestPoints[0].Id)};
-                await database.HashSetAsync(redisKey, newEntry);
+                if (!t1.Equals(nearestPoint.Id))
+                {
+                    var redisKey2 = RedisKeys.Trip(t1, nearestPoint.Id, dtDateTime.DayOfWeek, dtDateTime.Hour);
+                    await database.HashIncrementAsync(redisKey2, currentContext.CurrentUser());
+                }
             }
+
+            HashEntry[] newEntry = {new(timestamp, nearestPoint.Id)};
+            await database.HashSetAsync(redisKey, newEntry);
         }
     }
 }

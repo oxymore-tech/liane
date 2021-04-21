@@ -1,11 +1,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Display;
-using Liane.Api.Routing;
+using Liane.Api;
 using Liane.Api.Trip;
-using Liane.Api.Util;
-using Liane.Service.Internal.Util;
 
 namespace Liane.Service.Internal.Trip
 {
@@ -40,20 +37,11 @@ namespace Liane.Service.Internal.Trip
             Blajoux_Montbrun_En_Bas_Mende
         );
 
-        private readonly IRedis redis;
+        private readonly IRallyingPointService rallyingPointService;
 
-        public TripServiceImpl(IRedis redis)
+        public TripServiceImpl(IRallyingPointService rallyingPointService)
         {
-            this.redis = redis;
-        }
-
-        private async Task<RallyingPoint?> GetRallyingPoint(string id)
-        {
-            var database = await redis.Get();
-            var result = await database.GeoPositionAsync(RedisKeys.RallyingPoint(), id);
-            return !result.HasValue
-                ? null
-                : new RallyingPoint(id, new LatLng(result.Value.Latitude, result.Value.Longitude));
+            this.rallyingPointService = rallyingPointService;
         }
 
         public async Task<ImmutableHashSet<Api.Trip.Trip>> List()
@@ -64,11 +52,8 @@ namespace Liane.Service.Internal.Trip
                 var rallyingPoints = new List<RallyingPoint>();
                 foreach (var id in trip)
                 {
-                    var point = await GetRallyingPoint(id);
-                    if (point != null)
-                    {
-                        rallyingPoints.Add(point);
-                    }
+                    var point = await rallyingPointService.Get(id);
+                    rallyingPoints.Add(point);
                 }
 
                 trips.Add(new Api.Trip.Trip(rallyingPoints.ToImmutableList()));
