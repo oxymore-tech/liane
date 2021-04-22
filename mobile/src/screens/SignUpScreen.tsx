@@ -23,9 +23,9 @@ type SignUpProps = {
 
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
-  const authFailure = route.params.authFailure && "Le code est invalide veuillez rééssayer";
+  const authFailure = route.params?.authFailure && "Le code est invalide veuillez rééssayer";
 
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
   const [internalError, setInternalError] = useState<string>();
 
   const actionsOnPress = useCallback(async () => {
@@ -57,12 +57,14 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             Veuillez entrer votre numéro de téléphone
           </AppText>
           <AppTextInput
-            style={tailwind("rounded-full p-4 m-20 bg-gray-100 text-gray-600 text-sm")}
+            style={tailwind("rounded-full p-4 m-20 bg-gray-100 text-gray-600 text-2xl text-center")}
             placeholder=""
             autoFocus
             returnKeyLabel="next"
             onChangeText={setPhoneNumber}
-            keyboardType="numeric"
+            keyboardType="phone-pad"
+            autoCompleteType="tel"
+            textContentType="telephoneNumber"
           />
           <AppText
             style={tailwind("text-center text-lg text-red-600")}

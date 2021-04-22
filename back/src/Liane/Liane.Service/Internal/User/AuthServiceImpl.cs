@@ -84,7 +84,8 @@ namespace Liane.Service.Internal.User
             }
 
             await database.StringSetAsync(RedisKeys.NotificationToken(phoneNumber), token);
-            return new AuthUser(phone, GenerateToken(phone));
+            var number = phoneNumber.ToString();
+            return new AuthUser(number, GenerateToken(number));
         }
 
         public ClaimsPrincipal IsTokenValid(string token)
