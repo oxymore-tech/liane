@@ -41,6 +41,7 @@ module.exports = {
       "classes": "always"
     }],
     "react/jsx-props-no-spreading": "off",
-    "eol-last": "off"
+    "eol-last": "off",
+    "max-classes-per-file": ["warn", 5]
   }
 };

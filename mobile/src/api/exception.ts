@@ -1,15 +1,12 @@
 export class ResourceNotFoundError extends Error {
 
-  constructor(message: string) {
-    super(message);
-  }
-
 }
 
 export class ValidationError extends Error {
-  readonly errors: { string: string[] };
 
-  constructor(errors: { string: string[] }) {
+  readonly errors: { [key:string]: string[] };
+
+  constructor(errors: { [key:string]: string[] } = {}) {
     super("validation errors");
     this.errors = errors;
   }

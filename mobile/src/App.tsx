@@ -4,11 +4,14 @@ import { NavigationContainer, NavigationContainerRef } from "@react-navigation/n
 import { registerRootComponent } from "expo";
 import { ContextProvider } from "@components/ContextProvider";
 import { Navigation } from "@components/Navigation";
-import { DdRumReactNavigationTracking, DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
+import { DdRumReactNavigationTracking } from "dd-sdk-reactnative";
+import { listenLocationTask } from "./api/location-task";
 
 export type Subscription = {
   remove: () => void;
 };
+
+listenLocationTask();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -61,7 +64,9 @@ function App() {
       <NavigationContainer
         ref={navigationRef}
         onReady={() => {
-          DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+          if (process.env.DD_CLIENT_TOKEN && process.env.DD_APPLICATION_ID) {
+            DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+          }
         }}
       >
         <Navigation />

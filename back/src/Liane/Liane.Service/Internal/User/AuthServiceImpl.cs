@@ -5,15 +5,15 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Liane.Api.User;
+using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using StackExchange.Redis;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
-using IRedis = Liane.Api.Util.IRedis;
 
 namespace Liane.Service.Internal.User
 {
@@ -40,17 +40,25 @@ namespace Liane.Service.Internal.User
 
         public async Task SendSms(string phone)
         {
+            var phoneNumber = ParseNumber(phone);
+            var database = await redis.Get();
+            var authSmsAttemptKey = RedisKeys.AuthSmsAttempt(phoneNumber);
+            var attempts = await database.StringIncrementAsync(authSmsAttemptKey);
+            await database.KeyExpireAsync(authSmsAttemptKey, TimeSpan.FromSeconds(5));
+            if (attempts > 1)
+            {
+                throw new UnauthorizedAccessException("Too many requests");
+            }
+
             if (twilioSettings.Account != null && twilioSettings.Token != null)
             {
                 TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-                var phoneNumber = ParseNumber(phone);
                 var generator = new Random();
                 var code = generator.Next(0, 1000000).ToString("D6");
-                var redisKey = AuthSmsTokenRedisKey(phoneNumber);
-                var database = await redis.Get();
-                await database.StringSetAsync(redisKey, code, TimeSpan.FromMinutes(5));
+                var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
+                await database.StringSetAsync(redisKey, code, TimeSpan.FromMinutes(2));
                 var message = await MessageResource.CreateAsync(
-                    body: $"Voici votre code liane: {code}",
+                    body: $"{code} est votre code liane",
                     from: new PhoneNumber(twilioSettings.From),
                     to: phoneNumber
                 );
@@ -62,20 +70,20 @@ namespace Liane.Service.Internal.User
         {
             var phoneNumber = ParseNumber(phone);
             var database = await redis.Get();
-            var redisKey = AuthSmsTokenRedisKey(phoneNumber);
+            var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
             var value = await database.StringGetAsync(redisKey);
             if (value.IsNullOrEmpty)
-            {
-                throw new UnauthorizedAccessException("Code expired");
-            }
-
-            if (value != code)
             {
                 throw new UnauthorizedAccessException("Invalid code");
             }
 
-            var redisKey2 = "notification_token:" + phone;
-            await database.StringSetAsync(redisKey2, token);
+            if (value != code)
+            {
+                await database.KeyDeleteAsync(RedisKeys.AuthSmsToken(phoneNumber));
+                throw new UnauthorizedAccessException("Invalid code");
+            }
+
+            await database.StringSetAsync(RedisKeys.NotificationToken(phoneNumber), token);
             return new AuthUser(phone, GenerateToken(phone));
         }
 
@@ -104,17 +112,12 @@ namespace Liane.Service.Internal.User
             return Task.FromResult(new AuthUser(phoneNumber, token));
         }
 
-        private static RedisKey AuthSmsTokenRedisKey(PhoneNumber phoneNumber)
-        {
-            return $"auth_sms_token_${phoneNumber}";
-        }
-
         private static PhoneNumber ParseNumber(string number)
         {
             var trim = number.Trim();
             if (trim.StartsWith("0"))
             {
-                trim = $"+33{trim.Substring(1)}";
+                trim = $"+33{trim[1..]}";
             }
 
             return new PhoneNumber(trim);

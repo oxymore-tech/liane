@@ -93,21 +93,22 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
     return null;
   }
   if (bodyAsJson) {
-  return JSON.stringify(body);
+    return JSON.stringify(body);
   }
   return body;
 }
 
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
   const response = await fetch(formatUrl(uri, options), {
-    headers: headers(options.body, options.bodyAsJson),
+    headers: await headers(options.body, options.bodyAsJson),
     method,
     body: formatBody(options.body, options.bodyAsJson)
   });
   if (response.status !== 200 && response.status !== 201) {
     switch (response.status) {
       case 400:
-        throw new ValidationError(await response.json());
+        const json = await response.json();
+        throw new ValidationError(json?.errors || {});
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
@@ -120,7 +121,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   return response;
 }
 
-function headers(body?: any, bodyAsJson: boolean = true) {
+async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
   const token = await getStoredToken();
   if (token) {

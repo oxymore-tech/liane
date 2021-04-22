@@ -7,9 +7,7 @@ import AcceptTripScreen from "@screens/AcceptTripScreen";
 import HomeScreen from "@screens/HomeScreen";
 import NotificationsScreen from "@screens/NotificationsScreen";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { usePermissions } from "expo-permissions";
-import { Permissions } from "react-native-unimodules";
-import LocationWizard from "@screens/wizard/LocationWizard";
+import LocationWizard from "@screens/LocationWizard";
 import AppLoading from "expo-app-loading";
 
 const Stack = createStackNavigator();
@@ -24,6 +22,12 @@ const createDrawer = () => (
     <Drawer.Screen name="Notifications" component={NotificationsScreen} />
   </Drawer.Navigator>
 );
+
+export type NavigationParamList = {
+  LocationWizard: { step?: number };
+  SignUp: { phoneNumber?: string, authFailure?: boolean };
+  SignUpCode: { phoneNumber: string };
+};
 
 export function Navigation() {
 
@@ -58,7 +62,7 @@ export function Navigation() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="SignUpSms" component={SignUpCodeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SignUpCode" component={SignUpCodeScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

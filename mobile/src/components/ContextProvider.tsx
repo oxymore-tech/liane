@@ -1,13 +1,13 @@
 import React, { createContext, ReactNode, useEffect, useState } from "react";
-import { AuthUser } from "@api/index";
+import { AuthUser } from "@/api";
 import { Inter_400Regular, useFonts } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@api/client";
-import { Permissions } from "react-native-unimodules";
-import { registerLocationTask } from "@api/location-task";
+import * as Location from "expo-location";
+import { listenLocationTask, registerLocationTask } from "@api/location-task";
 import { DdSdk, DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
 
 interface AppContextProps {
@@ -65,10 +65,10 @@ async function init() : Promise<{ authUser?:AuthUser, permissionGranted:boolean 
       true
     );
     config.nativeCrashReportEnabled = true;
-
-    DdSdkReactNative.initialize(config);
+    await DdSdkReactNative.initialize(config);
   }
-  const permission = await Permissions.getAsync(Permissions.LOCATION);
+
+  const permission = await Location.getBackgroundPermissionsAsync();
   const authUser = await me().catch(() => undefined);
   return { authUser, permissionGranted: permission.status === "granted" };
 }

@@ -5,20 +5,37 @@ import { sendSms } from "@api/client";
 import { AppButton } from "@components/base/AppButton";
 import { AppTextInput } from "@components/base/AppTextInput";
 import { AppText } from "@components/base/AppText";
+import { RouteProp } from "@react-navigation/native";
+import { NavigationParamList } from "@components/Navigation";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 const image = require("@assets/images/Mountains_smartphone.jpeg");
+const logo = require("@assets/logo_white.png");
 
-const SignUpScreen = ({ navigation }: any) => {
+type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
+
+type SignUpNavigationProp = StackNavigationProp<NavigationParamList, "SignUp">;
+
+type SignUpProps = {
+  route: SignUpRouteProp;
+  navigation: SignUpNavigationProp;
+};
+
+const SignUpScreen = ({ route, navigation }: SignUpProps) => {
+
+  const authFailure = route.params.authFailure && "Le code est invalide veuillez rééssayer";
+
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [internalError, setInternalError] = useState<string>();
 
-  /** A set of actins triggered when the user press the button
-   First we call the function that will send a SMS to the user.
-   Then we print a "pop-up"  to inform the user.
-   Finally we move to the second view, the page where it is asked to the user to write the code sent by SMS
-   * */
   const actionsOnPress = useCallback(async () => {
-    await sendSms(phoneNumber);
-    navigation.navigate("SignUpSms", { phoneNumber });
+    try {
+      setInternalError(undefined);
+      await sendSms(phoneNumber);
+      navigation.navigate("SignUpCode", { phoneNumber });
+    } catch (e) {
+      setInternalError("Impossible d'effectuer la demande");
+    }
   }, [phoneNumber]);
 
   return (
@@ -28,7 +45,7 @@ const SignUpScreen = ({ navigation }: any) => {
         <View style={tailwind("h-20 items-center mx-20 mt-32 mb-20")}>
           <Image
             style={tailwind("flex-1 w-64")}
-            source={require("@assets/logo_white.png")}
+            source={logo}
             resizeMode="contain"
           />
         </View>
@@ -47,6 +64,11 @@ const SignUpScreen = ({ navigation }: any) => {
             onChangeText={setPhoneNumber}
             keyboardType="numeric"
           />
+          <AppText
+            style={tailwind("text-center text-lg text-red-600")}
+          >
+            {internalError || authFailure || " "}
+          </AppText>
 
         </View>
 

@@ -48,7 +48,6 @@ export function listenLocationTask() {
  * current position of the smartphone.
  */
 export async function registerLocationTask() {
-  listenLocationTask();
   try {
     await Location.startLocationUpdatesAsync(TASK_LOCATION_NAME, {
       // distanceInterval: 50,

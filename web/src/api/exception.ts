@@ -4,9 +4,9 @@ export class ResourceNotFoundError extends Error {
 
 export class ValidationError extends Error {
 
-  readonly errors: { string: string[] };
+  readonly errors: { [key:string]: string[] };
 
-  constructor(errors: { string: string[] }) {
+  constructor(errors: { [key:string]: string[] } = {}) {
     super("validation errors");
     this.errors = errors;
   }

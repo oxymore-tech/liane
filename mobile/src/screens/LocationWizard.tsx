@@ -1,36 +1,27 @@
-import React, { useCallback, useContext, useState } from "react";
-import {
-  Alert, Image, ImageBackground, Linking, Platform, View
-} from "react-native";
+import React, { useCallback, useContext } from "react";
+import { Alert, Image, ImageBackground, View } from "react-native";
 import { AppButton } from "@components/base/AppButton";
 import { AppText } from "@components/base/AppText";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { tailwind } from "@api/tailwind";
-import * as IntentLauncher from "expo-intent-launcher";
-import * as Constants from "expo-constants";
-import { Permissions } from "react-native-unimodules";
+import * as Location from "expo-location";
 import { AppContext } from "@components/ContextProvider";
+import { NavigationParamList } from "@components/Navigation";
 
 const image = require("@assets/images/Mountains_smartphone.jpeg");
 const logo = require("@assets/logo_white.png");
 
-type Steps = 0 | 1 | 2;
+type LocationWizardRouteProp = RouteProp<NavigationParamList, "LocationWizard">;
 
-type RootStackParamList = {
-  LocationWizard: { step?: Steps };
-};
-
-type LocationWizardRouteProp = RouteProp<RootStackParamList, "LocationWizard">;
-
-type LocationWizardNavigationProp = StackNavigationProp<RootStackParamList, "LocationWizard">;
+type LocationWizardNavigationProp = StackNavigationProp<NavigationParamList, "LocationWizard">;
 
 type LocationWizardProps = {
   route: LocationWizardRouteProp;
   navigation: LocationWizardNavigationProp;
 };
 
-function getWizardText(step: Steps) {
+function getWizardText(step: number) {
   switch (step) {
     case 0:
       return (
@@ -92,13 +83,10 @@ function getWizardText(step: Steps) {
             c&apos;est un acte citoyen
           </AppText>
           <AppText style={tailwind("text-center text-lg text-gray-600 mt-5")}>
-            en autorisant liane à lire ma position GPS
+            j&apos;autorise liane à lire ma position GPS
+            pour permettre le partage de mes trajets
           </AppText>
-          <View style={tailwind("flex items-center bg-gray-100 p-4 opacity-80 mt-5")}>
-            <AppText style={tailwind("text-lg font-bold text-gray-600")}>
-              je mets à disposition mes trajets localement
-              {" "}
-            </AppText>
+          <View style={tailwind("flex items-center bg-gray-100 p-2 opacity-80 mt-5")}>
             <AppText style={tailwind("text-lg font-bold text-gray-800 uppercase")}>c&apos;est le seul usage</AppText>
           </View>
         </View>
@@ -106,7 +94,7 @@ function getWizardText(step: Steps) {
   }
 }
 
-function getButtonText(step: Steps) {
+function getButtonText(step: number) {
   switch (step) {
     case 0:
       return "J'y vais";
@@ -118,62 +106,49 @@ function getButtonText(step: Steps) {
   }
 }
 
-const pkg = Constants.default.manifest.releaseChannel
-  ? Constants.default.manifest.android.package
-  : "host.exp.exponent";
-
 const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
   const { setLocationPermissionGranted } = useContext(AppContext);
-  const [open, setOpen] = useState(false);
   const { step = 0 } = route.params;
 
-  const askPermissionDialog = () => {
-    Alert.alert(
-      "Information",
-      "Liane collecte la position GPS de votre téléphone pour permettre l'enregistrement anonyme "
-      + "de vos trajets même lorsque l'application est fermée ou n'est pas en cours d'utilisation.",
-      [
-        {
-          text: "Annuler",
-          style: "cancel"
-        },
-        {
-          text: "Ok",
-          onPress: async () => {
-            const { status } = await Permissions.askAsync(Permissions.LOCATION);
-            setLocationPermissionGranted(status === "granted");
+  const askPermissionDialog = async () => {
+    const foreground = await Location.requestForegroundPermissionsAsync();
+    if (foreground) {
+      Alert.alert(
+        "Information",
+        "Liane collecte la position GPS de votre téléphone pour permettre l'enregistrement anonyme "
+        + "de vos trajets même lorsque l'application est fermée ou n'est pas en cours d'utilisation.",
+        [
+          {
+            text: "Annuler",
+            style: "cancel"
+          },
+          {
+            text: "Ok",
+            onPress: async () => {
+              const permission = await Location.requestBackgroundPermissionsAsync();
+              setLocationPermissionGranted(permission.status === "granted");
+            }
           }
-        }
-      ],
-      { cancelable: true }
-    );
-  };
-
-  const openSettings = async () => {
-    const permission = await Permissions.getAsync(Permissions.LOCATION);
-    if (permission) {
-      if (permission.status === "granted") {
-        navigation.navigate("");
-      } else if (!permission.canAskAgain) {
-        if (Platform.OS === "ios") {
-          await Linking.openURL("app-settings:");
-        } else {
-          await IntentLauncher.startActivityAsync(IntentLauncher.ACTION_APPLICATION_DETAILS_SETTINGS, { data: `package:${pkg}` });
-        }
-        setOpen(true);
-      } else {
-        askPermissionDialog();
-      }
-    } else {
-      askPermissionDialog();
+        ],
+        { cancelable: true }
+      );
     }
   };
 
-  const next = useCallback(async () => {
-    if (step === 2) {
-      await openSettings();
+  const allowBackgroundLocation = useCallback(async () => {
+    const permission = await Location.getBackgroundPermissionsAsync();
+    if (permission && permission.status === "granted") {
+      setLocationPermissionGranted(true);
     } else {
+      await askPermissionDialog();
+    }
+  }, [setLocationPermissionGranted]);
+
+  const next = useCallback(async () => {
+    if (step < 2) {
       navigation.push("LocationWizard", { step: step + 1 });
+    } else {
+      await allowBackgroundLocation();
     }
   }, [step]);
 

@@ -6,10 +6,23 @@ import { AppContext } from "@components/ContextProvider";
 import { AppTextInput } from "@components/base/AppTextInput";
 import { AppButton } from "@components/base/AppButton";
 import { AppText } from "@components/base/AppText";
+import { RouteProp } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { NavigationParamList } from "@/components/Navigation";
 
 const image = require("@assets/images/Mountains_smartphone.jpeg");
+const logo = require("@assets/logo_white.png");
 
-const SignUpCodeScreen = ({ route }: any) => {
+type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
+
+type SignUpCodeNavigationProp = StackNavigationProp<NavigationParamList, "SignUpCode">;
+
+type SignUpCodeProps = {
+  route: SignUpCodeRouteProp;
+  navigation: SignUpCodeNavigationProp;
+};
+
+const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   const [phoneNumber] = React.useState(route.params.phoneNumber);
   const [code, setCode] = React.useState("");
   const { expoPushToken, setAuthUser } = useContext(AppContext);
@@ -20,8 +33,8 @@ const SignUpCodeScreen = ({ route }: any) => {
         const authUser = await login(phoneNumber, code, expoPushToken);
         setAuthUser(authUser);
       } catch (e) {
-        Alert.alert("Le code saisi est invalide. Veuillez réessayer.");
         setCode("");
+        navigation.navigate("SignUp", { phoneNumber, authFailure: true });
       }
     }
   }, [phoneNumber, code, expoPushToken]);
@@ -36,7 +49,7 @@ const SignUpCodeScreen = ({ route }: any) => {
         <View style={tailwind("h-20 items-center mx-20 mt-32 mb-20")}>
           <Image
             style={tailwind("flex-1 w-64")}
-            source={require("@assets/logo_white.png")}
+            source={logo}
             resizeMode="contain"
           />
         </View>

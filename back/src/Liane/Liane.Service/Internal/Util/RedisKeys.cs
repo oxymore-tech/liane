@@ -1,6 +1,7 @@
 using System;
 using Liane.Api.Util;
 using StackExchange.Redis;
+using Twilio.Types;
 
 namespace Liane.Service.Internal.Util
 {
@@ -16,9 +17,9 @@ namespace Liane.Service.Internal.Util
             return $"notification:{phone}";
         }
 
-        public static RedisKey NotificationToken(string phone)
+        public static RedisKey NotificationToken(PhoneNumber phoneNumber)
         {
-            return $"notification_token:{phone}";
+            return $"notification_token:{phoneNumber}";
         }
 
         public static RedisKey Position(string phone)
@@ -31,6 +32,16 @@ namespace Liane.Service.Internal.Util
             var dayClause = day.GetOrDefault(d => Convert.ToString(d)) ?? "*";
             var timeClause = time.GetOrDefault(Convert.ToString) ?? "*";
             return $"trip:{from ?? "*"}|{to ?? "*"}|{dayClause}|{timeClause}";
+        }
+
+        public static RedisKey AuthSmsAttempt(PhoneNumber phoneNumber)
+        {
+            return $"auth_sms_attempt:{phoneNumber}";
+        }
+
+        public static RedisKey AuthSmsToken(PhoneNumber phoneNumber)
+        {
+            return $"auth_sms_token:{phoneNumber}";
         }
     }
 }
