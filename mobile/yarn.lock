@@ -3718,10 +3718,10 @@ dayjs@^1.8.15:
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.4.tgz#8e544a9b8683f61783f570980a8a80eaf54ab1e2"
   integrity sha512-RI/Hh4kqRc1UKLOAf/T5zdMMX5DQIlDxwUe3wSyMMnEbGunnpENCdbUgM+dW7kXidZqCttBrmw7BhN4TMddkCw==
 
-dd-sdk-reactnative@^1.0.0-alpha4:
-  version "1.0.0-alpha4"
-  resolved "https://registry.yarnpkg.com/dd-sdk-reactnative/-/dd-sdk-reactnative-1.0.0-alpha4.tgz#c7f4ec8276ad92f67026a0dcdecb61443f9ac0ca"
-  integrity sha512-57f6J62enLjKFtI9EwliVNHR+AaeBipFtMhxbHYh737StU0ATrYYZsMAcMRTLDN8/2yA/knH1CTJDeTWeCFGZg==
+dd-sdk-reactnative@^1.0.0-alpha5:
+  version "1.0.0-alpha5"
+  resolved "https://registry.yarnpkg.com/dd-sdk-reactnative/-/dd-sdk-reactnative-1.0.0-alpha5.tgz#4c2f252d55a33bf8b4c46798e8784a62cd21c9da"
+  integrity sha512-R9f3RsIlyeiO653TPBZgjVkZULSPcO9ZWWsxkDSrPuagSfAPEfolum8iGjaem7pCsoP6cTB8mPz3QyCGfGCQnA==
 
 debug@2.6.9, debug@^2.2.0, debug@^2.3.3, debug@^2.6.9:
   version "2.6.9"

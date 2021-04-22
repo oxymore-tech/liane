@@ -7,8 +7,8 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@api/client";
 import * as Location from "expo-location";
-import { listenLocationTask, registerLocationTask } from "@api/location-task";
-import { DdSdk, DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
+import { registerLocationTask } from "@api/location-task";
+import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
 
 interface AppContextProps {
   appLoaded:boolean;
@@ -82,7 +82,7 @@ export function ContextProvider(props: { children: ReactNode }) {
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
-      await DdSdk.setUser({
+      await DdSdkReactNative.setUser({
         id: a.phone
       });
       await AsyncStorage.setItem("token", a?.token);
