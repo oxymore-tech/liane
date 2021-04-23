@@ -3,7 +3,7 @@ import {
   Alert, FlatList, RefreshControl, Text, View
 } from "react-native";
 import { Header, Icon, ListItem } from "react-native-elements";
-import { deleteNotification, getNotifications } from "@api/client";
+import { deleteNotification, getNotifications } from "@/api/client";
 import * as SMS from "expo-sms";
 
 import tailwind from "tailwind-rn";
@@ -21,26 +21,23 @@ const NotificationsScreen = ({ navigation }: any) => {
   }, []);
 
   function updateNotifications() {
-    getNotifications().then((result) => {
-      const notificationsList: any[] = [];
-      console.log("Resultat :", result);
-      result.forEach((notification) => {
-        notificationsList.push({
-          name: notification.message,
-          subtitle: notification.date
+    getNotifications()
+      .then((result) => {
+        const notificationsList: any[] = [];
+        console.log("Resultat :", result);
+        result.forEach((notification) => {
+          notificationsList.push({
+            name: notification.message,
+            subtitle: notification.date
+          });
         });
+        setList(notificationsList);
       });
-      setList(notificationsList);
-    });
   }
 
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      updateNotifications();
-    });
-
-    return unsubscribe;
-  }, [navigation]);
+  React.useEffect(() => navigation.addListener("focus", () => {
+    updateNotifications();
+  }), [navigation]);
 
   /*
   [

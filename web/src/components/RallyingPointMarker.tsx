@@ -1,9 +1,9 @@
 import React, { useCallback, useRef } from "react";
 import { Marker, Popup, Tooltip, useMap } from "react-leaflet";
-import { RallyingPoint } from "@api/index";
+import { RallyingPoint } from "@/api/index";
 import { icon } from "leaflet";
-import { PopupMenuItem } from "@components/PopupMenuItem";
-import { Label } from "@components/base/Label";
+import { PopupMenuItem } from "@/components/PopupMenuItem";
+import { Label } from "@/components/base/Label";
 
 export const IconBlue = icon({
   iconUrl: "/images/leaflet/marker-icon.png",

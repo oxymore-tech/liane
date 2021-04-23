@@ -1,7 +1,7 @@
 import React, { Fragment, ReactNode } from "react";
-import { Arrow } from "@components/base/Arrow";
 import { Listbox, Transition } from "@headlessui/react";
 import { getIndicationRingColor, IndicationMessage } from "./Indication";
+import { Arrow } from "./Arrow";
 import { Label } from "./Label";
 
 interface SelectProps<T, K> {

@@ -1,4 +1,4 @@
-import { post, postAs } from "@api/http";
+import { post, postAs } from "@/api/http";
 import { DayOfWeek, RallyingPoint, RouteStat, Trip } from ".";
 
 class DisplayService {

@@ -1,14 +1,14 @@
 import React, { createContext, ReactNode, useEffect, useState } from "react";
-import { AuthUser } from "@/api";
 import { Inter_400Regular, useFonts } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { me } from "@api/client";
+import { me } from "@/api/client";
 import * as Location from "expo-location";
-import { registerLocationTask } from "@api/location-task";
+import { registerLocationTask } from "@/api/location-task";
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "dd-sdk-reactnative";
+import { AuthUser } from "@/api";
 
 interface AppContextProps {
   appLoaded:boolean;

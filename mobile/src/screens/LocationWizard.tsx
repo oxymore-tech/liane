@@ -1,16 +1,16 @@
 import React, { useCallback, useContext } from "react";
 import { Alert, Image, ImageBackground, View } from "react-native";
-import { AppButton } from "@components/base/AppButton";
-import { AppText } from "@components/base/AppText";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { tailwind } from "@api/tailwind";
 import * as Location from "expo-location";
-import { AppContext } from "@components/ContextProvider";
-import { NavigationParamList } from "@components/Navigation";
+import { AppButton } from "@/components/base/AppButton";
+import { AppText } from "@/components/base/AppText";
+import { AppContext } from "@/components/ContextProvider";
+import { NavigationParamList } from "@/components/Navigation";
+import { tailwind } from "@/api/tailwind";
 
-const image = require("@assets/images/Mountains_smartphone.jpeg");
-const logo = require("@assets/logo_white.png");
+const image = require("@/assets/images/Mountains_smartphone.jpeg");
+const logo = require("@/assets/logo_white.png");
 
 type LocationWizardRouteProp = RouteProp<NavigationParamList, "LocationWizard">;
 

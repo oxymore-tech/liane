@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { Button, Header, Icon } from "react-native-elements";
-import tailwind from "tailwind-rn";
+import { tailwind } from "../api/tailwind";
 
 const AcceptTripScreen = ({ navigation } : any) => (
   <View style={tailwind("container")}>

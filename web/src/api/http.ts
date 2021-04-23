@@ -1,5 +1,5 @@
-import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@api/exception";
-import { FilterQuery, SortOptions } from "@api/filter";
+import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
+import { FilterQuery, SortOptions } from "@/api/filter";
 
 const BaseUrl = process.env.NODE_ENV === "production" ? "https://liane.gjini.co" : "http://localhost:8081";
 

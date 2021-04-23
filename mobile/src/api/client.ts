@@ -1,6 +1,6 @@
 import { LocationObject } from "expo-location";
-import { get, post, postAs } from "@api/http";
-import { AuthUser } from "@/api";
+import { get, post, postAs } from "@/api/http";
+import { AuthUser, Notification } from "@/api";
 
 export async function sendLocation(location: LocationObject) {
   const { accuracy } = location.coords;
@@ -29,7 +29,7 @@ export async function sendSms(phone: string) {
   return post("/auth/sms", { params: { phone } });
 }
 
-export async function getNotifications() {
+export async function getNotifications() : Promise<Notification[]> {
   return get("/notification");
 }
 

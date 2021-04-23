@@ -3,7 +3,7 @@ import {
   Button, Image, SafeAreaView, Text, View
 } from "react-native";
 import tailwind from "tailwind-rn";
-import { AppContext } from "@components/ContextProvider";
+import { AppContext } from "@/components/ContextProvider";
 
 const HomeScreen = ({ navigation }: any) => {
 
@@ -22,7 +22,7 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={tailwind("container")}>
           <Image
             style={tailwind("self-center")}
-            source={require("@assets/logo_mini.png")}
+            source={require("@/assets/logo_mini.png")}
           />
         </View>
         <View>

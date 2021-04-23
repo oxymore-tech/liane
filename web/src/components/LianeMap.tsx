@@ -1,17 +1,17 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Polyline, TileLayer } from "react-leaflet";
-import { displayService } from "@api/display-service";
-import { rallyingPointService } from "@api/rallying-point-service";
-import { Days, Hours } from "@api/time";
-import { Select } from "@components/base/Select";
 import { addHours } from "date-fns";
-import { RallyingPointMarker } from "@components/RallyingPointMarker";
 import {
   DayOfWeek, LatLng, RallyingPoint, RouteStat, Trip
-} from "@api";
-import { Button } from "./base/Button";
-import { AvailableTrips } from "./available_trips";
+} from "@/api";
+import { displayService } from "@/api/display-service";
+import { rallyingPointService } from "@/api/rallying-point-service";
+import { Days, Hours } from "@/api/time";
+import { Button } from "@/components/base/Button";
+import { Select } from "@/components/base/Select";
+import { AvailableTrips } from "@/components/available_trips";
+import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 
 interface MapProps {
   className?: string;

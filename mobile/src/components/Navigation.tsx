@@ -1,14 +1,14 @@
 import React, { useContext } from "react";
-import SignUpScreen from "@screens/SignUpScreen";
-import SignUpCodeScreen from "@screens/SignUpCodeScreen";
 import { createStackNavigator } from "@react-navigation/stack";
-import { AppContext } from "@components/ContextProvider";
-import AcceptTripScreen from "@screens/AcceptTripScreen";
-import HomeScreen from "@screens/HomeScreen";
-import NotificationsScreen from "@screens/NotificationsScreen";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import LocationWizard from "@screens/LocationWizard";
 import AppLoading from "expo-app-loading";
+import SignUpScreen from "@/screens/SignUpScreen";
+import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
+import { AppContext } from "@/components/ContextProvider";
+import AcceptTripScreen from "@/screens/AcceptTripScreen";
+import HomeScreen from "@/screens/HomeScreen";
+import NotificationsScreen from "@/screens/NotificationsScreen";
+import LocationWizard from "@/screens/LocationWizard";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();

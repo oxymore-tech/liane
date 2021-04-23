@@ -1,16 +1,16 @@
 import React, { useCallback, useState } from "react";
 import { Image, ImageBackground, KeyboardAvoidingView, View } from "react-native";
 import tailwind from "tailwind-rn";
-import { sendSms } from "@api/client";
-import { AppButton } from "@components/base/AppButton";
-import { AppTextInput } from "@components/base/AppTextInput";
-import { AppText } from "@components/base/AppText";
 import { RouteProp } from "@react-navigation/native";
-import { NavigationParamList } from "@components/Navigation";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { sendSms } from "@/api/client";
+import { AppButton } from "@/components/base/AppButton";
+import { AppTextInput } from "@/components/base/AppTextInput";
+import { AppText } from "@/components/base/AppText";
+import { NavigationParamList } from "@/components/Navigation";
 
-const image = require("@assets/images/Mountains_smartphone.jpeg");
-const logo = require("@assets/logo_white.png");
+const image = require("@/assets/images/Mountains_smartphone.jpeg");
+const logo = require("@/assets/logo_white.png");
 
 type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
 

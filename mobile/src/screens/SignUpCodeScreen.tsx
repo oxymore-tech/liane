@@ -1,17 +1,17 @@
 import React, { useCallback, useContext } from "react";
-import { Alert, Image, ImageBackground, View } from "react-native";
+import { Image, ImageBackground, View } from "react-native";
 import tailwind from "tailwind-rn";
-import { login } from "@api/client";
-import { AppContext } from "@components/ContextProvider";
-import { AppTextInput } from "@components/base/AppTextInput";
-import { AppButton } from "@components/base/AppButton";
-import { AppText } from "@components/base/AppText";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { login } from "@/api/client";
+import { AppContext } from "@/components/ContextProvider";
+import { AppTextInput } from "@/components/base/AppTextInput";
+import { AppButton } from "@/components/base/AppButton";
+import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
 
-const image = require("@assets/images/Mountains_smartphone.jpeg");
-const logo = require("@assets/logo_white.png");
+const image = require("@/assets/images/Mountains_smartphone.jpeg");
+const logo = require("@/assets/logo_white.png");
 
 type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
 

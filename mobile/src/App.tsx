@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import { NavigationContainer, NavigationContainerRef } from "@react-navigation/native";
 import { registerRootComponent } from "expo";
-import { ContextProvider } from "@components/ContextProvider";
-import { Navigation } from "@components/Navigation";
 import { DdRumReactNavigationTracking } from "dd-sdk-reactnative";
-import { listenLocationTask } from "./api/location-task";
+import { ContextProvider } from "@/components/ContextProvider";
+import { Navigation } from "@/components/Navigation";
+import { listenLocationTask } from "@/api/location-task";
 
 export type Subscription = {
   remove: () => void;
