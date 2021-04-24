@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import { NavigationContainer, NavigationContainerRef } from "@react-navigation/native";
-import { registerRootComponent } from "expo";
 import { DdRumReactNavigationTracking } from "dd-sdk-reactnative";
 import { ContextProvider } from "@/components/ContextProvider";
 import { Navigation } from "@/components/Navigation";
@@ -75,4 +74,4 @@ function App() {
   );
 }
 
-export default registerRootComponent(App);
+export default App;

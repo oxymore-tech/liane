@@ -1,6 +1,5 @@
 {
   "expo": {
-    "entryPoint": "./src/App.tsx",
     "name": "liane",
     "slug": "liane",
     "version": "1.0.0",
