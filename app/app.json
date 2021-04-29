@@ -26,7 +26,8 @@
           "fetch"
         ]
       },
-      "bundleIdentifier": "tech.oxymore.liane"
+      "bundleIdentifier": "tech.oxymore.liane",
+      "buildNumber": 9
     },
     "android": {
       "permissions": [
