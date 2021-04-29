@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { NavigationContainer, NavigationContainerRef } from "@react-navigation/native";
-import { DdRumReactNavigationTracking } from "dd-sdk-reactnative";
+import { NavigationContainer } from "@react-navigation/native";
 import { ContextProvider } from "@/components/ContextProvider";
 import { Navigation } from "@/components/Navigation";
 import { listenLocationTask } from "@/api/location-task";
@@ -22,7 +21,6 @@ Notifications.setNotificationHandler({
 
 function App() {
 
-  const navigationRef = useRef<NavigationContainerRef>(null);
   const notificationListener = useRef<Subscription>();
   const responseListener = useRef<Subscription>();
 
@@ -60,14 +58,7 @@ function App() {
 
   return (
     <ContextProvider>
-      <NavigationContainer
-        ref={navigationRef}
-        onReady={() => {
-          if (process.env.DD_CLIENT_TOKEN && process.env.DD_APPLICATION_ID) {
-            DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
-          }
-        }}
-      >
+      <NavigationContainer>
         <Navigation />
       </NavigationContainer>
     </ContextProvider>
