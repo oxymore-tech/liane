@@ -1,25 +1,21 @@
 import * as Location from "expo-location";
 import { LocationObject } from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import { sendLocation } from "./client";
-import { deleteLocations, storeLocation } from "./location-storage";
+import { TaskManagerTaskBody } from "expo-task-manager";
+import { logLocation } from "@/api/client";
+import { storeLocation } from "@/api/location-storage";
 
 const TASK_LOCATION_NAME = "TASK_LOCATION";
 
-async function sendLocations(locations: LocationObject[], stored = false) {
-
-  for (const location of locations) {
-    try {
-      await sendLocation(location);
-      await deleteLocations([location.timestamp.toString()]);
-    } catch (e) {
-      console.log("Erreur : ", e);
-      if (!stored) {
-        await storeLocation(location);
-      }
-    }
-  }
-
+export async function sendLocations(newLocations: LocationObject[] = []) {
+  const locations = await storeLocation(newLocations);
+  await logLocation(locations.map((l) => ({
+    timestamp: l.timestamp,
+    latitude: l.coords.latitude,
+    longitude: l.coords.longitude,
+    accuracy: l.coords.accuracy,
+    speed: l.coords.speed
+  })));
 }
 
 /**
@@ -29,16 +25,15 @@ async function sendLocations(locations: LocationObject[], stored = false) {
  * Here we simply send the new locations data to the server.
  */
 export function listenLocationTask() {
-  TaskManager.defineTask(TASK_LOCATION_NAME, async (result: any) => {
+  TaskManager.defineTask(TASK_LOCATION_NAME, async (result: TaskManagerTaskBody) => {
     try {
       console.log("Nouvelle localisation : ", result);
-      const { locations } = result.data;
+      const { locations } = result.data as { locations:LocationObject[] };
       if (locations.length > 0) {
         await sendLocations(locations);
       }
     } catch (err) {
       console.log("Erreur : ", err);
-
     }
   });
 }

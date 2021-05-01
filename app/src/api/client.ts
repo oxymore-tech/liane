@@ -1,20 +1,8 @@
-import { LocationObject } from "expo-location";
 import { get, post, postAs } from "@/api/http";
-import { AuthUser, Notification } from "@/api";
+import { AuthUser, Notification, UserLocation } from "@/api";
 
-export async function sendLocation(location: LocationObject) {
-  const { accuracy } = location.coords;
-  const accuracyInteger = accuracy ? Number.parseInt(Math.round(accuracy).toString(), 10) : 0;
-  const body = [{
-    coords: {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      accuracy: accuracyInteger,
-      speed: location.coords.speed
-    },
-    timestamp: location.timestamp
-  }];
-  await post("/location", { body });
+export async function logLocation(locations: UserLocation[]) {
+  await post("/location", { body: locations });
 }
 
 export function me(): Promise<AuthUser> {

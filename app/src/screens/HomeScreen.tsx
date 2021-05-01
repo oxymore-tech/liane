@@ -4,6 +4,8 @@ import {
 } from "react-native";
 import tailwind from "tailwind-rn";
 import { AppContext } from "@/components/ContextProvider";
+import { AppButton } from "@/components/base/AppButton";
+import { sendLocations } from "@/api/location-task";
 
 const HomeScreen = ({ navigation }: any) => {
 
@@ -24,6 +26,9 @@ const HomeScreen = ({ navigation }: any) => {
             style={tailwind("self-center")}
             source={require("@/assets/logo_mini.png")}
           />
+        </View>
+        <View style={tailwind("m-4")}>
+          <AppButton title="send" onPress={() => sendLocations()} />
         </View>
         <View>
           <Button title="Menu" onPress={() => navigation.openDrawer()} />

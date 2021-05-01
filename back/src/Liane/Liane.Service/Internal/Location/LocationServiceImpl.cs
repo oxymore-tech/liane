@@ -27,17 +27,12 @@ namespace Liane.Service.Internal.Location
             this.rallyingPointService = rallyingPointService;
         }
 
-        public Task LogLocation(ImmutableList<UserLocation> userLocations)
+        public async Task LogLocation(ImmutableList<UserLocation> userLocations)
         {
             logger.LogInformation("Receive logs from user {CurrentUser}:\n{userLocations}", currentContext.CurrentUser(), userLocations);
-            return Task.CompletedTask;
-        }
-
-        public async Task SaveTrip(ImmutableList<UserLocation> userLocations)
-        {
             var timestamp = userLocations[0].Timestamp;
             var dtDateTime = new DateTime(timestamp);
-            var nearestPoint = await rallyingPointService.Snap(new LatLng(userLocations[0].Coords.Latitude, userLocations[0].Coords.Longitude));
+            var nearestPoint = await rallyingPointService.Snap(new LatLng(userLocations[0].Latitude, userLocations[0].Longitude));
             var database = await redis.Get();
             var redisKey = RedisKeys.Position(currentContext.CurrentUser());
             var results = await database.HashGetAllAsync(redisKey);

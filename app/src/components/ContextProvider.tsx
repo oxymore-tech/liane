@@ -8,6 +8,7 @@ import { me } from "@/api/client";
 import * as Location from "expo-location";
 import { registerLocationTask } from "@/api/location-task";
 import { AuthUser } from "@/api";
+import { getStoredToken } from "@/api/storage";
 
 interface AppContextProps {
   appLoaded:boolean;
@@ -55,7 +56,9 @@ async function registerForPushNotificationsAsync():Promise<string|undefined> {
 
 async function init() : Promise<{ authUser?:AuthUser, permissionGranted:boolean }> {
   const permission = await Location.getBackgroundPermissionsAsync();
-  const authUser = await me().catch(() => undefined);
+  const storedToken = await getStoredToken();
+  console.log("token", storedToken);
+  const authUser = storedToken ? await me().catch(() => undefined) : undefined;
   return { authUser, permissionGranted: permission.status === "granted" };
 }
 
@@ -68,9 +71,9 @@ export function ContextProvider(props: { children: ReactNode }) {
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
-      await AsyncStorage.setItem("token", a?.token);
-    } else {
-      await AsyncStorage.removeItem("token");
+      const token = a?.token;
+      console.log("storeToken", token);
+      await AsyncStorage.setItem("token", token);
     }
     setInternalAuthUser(a);
   };

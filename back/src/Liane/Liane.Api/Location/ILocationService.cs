@@ -6,6 +6,5 @@ namespace Liane.Api.Location
     public interface ILocationService
     {
         Task LogLocation(ImmutableList<UserLocation> userLocations);
-        Task SaveTrip(ImmutableList<UserLocation> userLocations);        
     }
 }
