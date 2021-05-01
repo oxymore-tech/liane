@@ -27,7 +27,7 @@
         ]
       },
       "bundleIdentifier": "tech.oxymore.liane",
-      "buildNumber": 9
+      "buildNumber": "10"
     },
     "android": {
       "permissions": [
@@ -37,7 +37,7 @@
         "FOREGROUND_SERVICE"
       ],
       "package": "tech.oxymore.liane",
-      "versionCode": 9,
+      "versionCode": 10,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
