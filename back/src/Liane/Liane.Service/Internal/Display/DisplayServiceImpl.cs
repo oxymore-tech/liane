@@ -77,7 +77,7 @@ namespace Liane.Service.Internal.Display
         {
             var coordinates = ImmutableList.Create(start.Position, end.Position);
             var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
-            var routes = routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
+            var routes = routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates.ToLatLng(), r.Duration, r.Distance))
                 .ToImmutableList();
             var trips = new List<Api.Trip.Trip>();
             var database = await redis.Get();
@@ -90,7 +90,7 @@ namespace Liane.Service.Internal.Display
                         options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
                     if (results.Length > 0)
                     {
-                        var nearestPoint = await rallyingPointService.TrySnap(route.Coordinates[i].ToLatLng());
+                        var nearestPoint = await rallyingPointService.TrySnap(route.Coordinates[i]);
                         if (nearestPoint != null)
                         {
                             points.Add(nearestPoint);
@@ -225,7 +225,7 @@ namespace Liane.Service.Internal.Display
             return listeTrajets.ToImmutableHashSet();
         }
 
-        public async Task<Dictionary<string, RouteStat>> GetRoutes(ImmutableHashSet<Api.Trip.Trip> trips, DayOfWeek? day, int? startHour, int? endHour)
+        public async Task<Dictionary<string, RouteStat>> GetStat(ImmutableHashSet<Api.Trip.Trip> trips, DayOfWeek? day, int? startHour, int? endHour)
         {
             var edgeKeys = await redis.ListEdgeKeys(day);
             var database = await redis.Get();

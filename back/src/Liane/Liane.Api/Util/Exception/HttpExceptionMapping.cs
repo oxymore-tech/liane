@@ -31,15 +31,23 @@ namespace Liane.Api.Util.Exception
         {
             switch (exception)
             {
-                case ValidationException e:
+                case ArgumentException e:
+                {
+                    var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
+                    errors.AddModelError(e.ParamName!, e.Message);
 
+                    var validationErrorResponse = new Dictionary<string, object> {["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred."};
+                    return new BadRequestObjectResult(validationErrorResponse);
+                }
+
+                case ValidationException e:
+                {
                     var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
                     foreach (var (field, message) in e.Errors) errors.AddModelError(field, message);
 
-                    var validationErrorResponse = new Dictionary<string, object>();
-                    validationErrorResponse["errors"] = new SerializableError(errors);
-                    validationErrorResponse["title"] = "One or more validation errors occurred.";
+                    var validationErrorResponse = new Dictionary<string, object> {["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred."};
                     return new BadRequestObjectResult(validationErrorResponse);
+                }
 
                 case ResourceNotFoundException e:
                     return new NotFoundObjectResult(e.Message);

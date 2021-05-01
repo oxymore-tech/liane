@@ -2,8 +2,10 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Location;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Osrm;
+using Microsoft.AspNetCore.Mvc;
 using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing
@@ -17,6 +19,25 @@ namespace Liane.Service.Internal.Routing
             this.osrmService = osrmService;
         }
 
+        public async Task<ActionResult<Route>> Route(UserLocation[] locations)
+        {
+            if (locations.Length == 0)
+            {
+                throw new ArgumentException("Must not be empty", nameof(locations));
+            }
+
+            var coordinates = locations.OrderBy(l => l.Timestamp)
+                .Select(u => new LatLng(u.Latitude, u.Longitude))
+                .ToImmutableList();
+
+            var routeResponse = await osrmService.Route(coordinates, overview: "full");
+
+            var geojson = routeResponse.Routes[0].Geometry;
+            var duration = routeResponse.Routes[0].Duration;
+            var distance = routeResponse.Routes[0].Distance;
+            return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
+        }
+
         public async Task<Route> BasicRouteMethod(RoutingQuery query)
         {
             var coordinates = ImmutableList.Create(query.Start, query.End);
@@ -25,14 +46,14 @@ namespace Liane.Service.Internal.Routing
             var geojson = routeResponse.Routes[0].Geometry;
             var duration = routeResponse.Routes[0].Duration;
             var distance = routeResponse.Routes[0].Distance;
-            return new Route(geojson.Coordinates, duration, distance);
+            return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
         }
 
         public async Task<ImmutableList<Route>> GetAlternatives(RoutingQuery query)
         {
             var coordinates = ImmutableList.Create(query.Start, query.End);
             var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
-            return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
+            return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates.ToLatLng(), r.Duration, r.Distance))
                 .ToImmutableList();
         }
 
@@ -182,7 +203,7 @@ namespace Liane.Service.Internal.Routing
                 var alternativePath = alternatives[1];
                 // TODO: Get the coordinates before and after the deviation
                 // final coordinates = ( path between start and startInstersections, alternative path, path between endIntersections and end)
-                return new DeltaRoute(alternativePath.Coordinates.ToLatLng(), newDuration, newDistance, Math.Abs(alternatives[0].Duration - alternativePath.Duration));
+                return new DeltaRoute(alternativePath.Coordinates, newDuration, newDistance, Math.Abs(alternatives[0].Duration - alternativePath.Duration));
             }
 
             // No solution

@@ -27,9 +27,9 @@ export const IconRed = icon({
 });
 
 export interface RallyingPointMarkerProps {
-  value:RallyingPoint;
-  from?:RallyingPoint;
-  to?:RallyingPoint;
+  value: RallyingPoint;
+  from?: RallyingPoint;
+  to?: RallyingPoint;
   onSelect: (fromVsTo:boolean) => void;
 }
 

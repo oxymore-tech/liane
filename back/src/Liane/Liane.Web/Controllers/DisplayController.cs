@@ -26,10 +26,10 @@ namespace Liane.Web.Controllers
             return await displayService.Search(query);
         }
 
-        [HttpPost("route")]
-        public async Task<Dictionary<string, RouteStat>> GetRoutes([FromBody] ImmutableHashSet<Trip> trips, [FromQuery] DayOfWeek? day, [FromQuery] int? startHour, [FromQuery] int? endHour)
+        [HttpPost("stat")]
+        public async Task<Dictionary<string, RouteStat>> GetStat([FromBody] ImmutableHashSet<Trip> trips, [FromQuery] DayOfWeek? day, [FromQuery] int? startHour, [FromQuery] int? endHour)
         {
-            return await displayService.GetRoutes(trips, day, startHour, endHour);
+            return await displayService.GetStat(trips, day, startHour, endHour);
         }
 
         [HttpPost("step")]

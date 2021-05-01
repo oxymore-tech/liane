@@ -114,7 +114,7 @@ namespace Liane.Test
         {
             await SetUpRedisAsync();
             var trips = await displayService!.Search(new SearchQuery(From: LabeledPositions.Blajoux_Parking));
-            var actual = await displayService!.GetRoutes(trips, DayOfWeek.Wednesday);
+            var actual = await displayService!.GetStat(trips, DayOfWeek.Wednesday);
             var expected = new Dictionary<string, RouteStat>();
             var preExpected1 = await osrmService!.Route(Positions.Blajoux_Parking, Positions.Montbrun_En_Bas);
             var expected1 = new RouteStat(preExpected1.Routes[0].Geometry.Coordinates.ToLatLng(), 3);

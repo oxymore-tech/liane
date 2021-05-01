@@ -1,9 +1,11 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Polyline, TileLayer } from "react-leaflet";
+import {
+  CircleMarker, MapContainer, Polyline, TileLayer, Tooltip
+} from "react-leaflet";
 import { addHours } from "date-fns";
 import {
-  DayOfWeek, LatLng, RallyingPoint, RouteStat, Trip
+  DayOfWeek, LatLng, RallyingPoint, Route, RouteStat, Trip, UserLocation
 } from "@/api";
 import { displayService } from "@/api/display-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
@@ -12,6 +14,9 @@ import { Button } from "@/components/base/Button";
 import { Select } from "@/components/base/Select";
 import { AvailableTrips } from "@/components/available_trips";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
+import { routingService } from "@/api/routing-service";
+
+const Augustin = require("@/api/augustin.json");
 
 interface MapProps {
   className?: string;
@@ -56,6 +61,8 @@ function LianeMap({ className, center }: MapProps) {
   const [startHour, setStartHour] = useState(nextHour.getHours());
   const [endHour, setEndHour] = useState(nextHour.getHours() + 1);
 
+  const [route, setRoute] = useState<Route>();
+
   useEffect(() => {
     rallyingPointService.list(center.lat, center.lng)
       .then((r) => {
@@ -66,6 +73,11 @@ function LianeMap({ className, center }: MapProps) {
         setRallyingPoints(r);
       });
   }, [center]);
+
+  useEffect(() => {
+    routingService.route(Augustin)
+      .then((r) => setRoute(r));
+  }, []);
 
   const updateStartHour = useCallback((hour: number) => {
     setStartHour(hour);
@@ -119,7 +131,7 @@ function LianeMap({ className, center }: MapProps) {
   }, [center]);
 
   useEffect(() => {
-    displayService.getRoutes(searchedTrips, day, startHour, endHour)
+    displayService.getStat(searchedTrips, day, startHour, endHour)
       .then((result) => {
         setRoutes(result);
       });
@@ -212,13 +224,16 @@ function LianeMap({ className, center }: MapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}
         />
-        <MultiPolyline routes={routes} />
-        <div>
-          {rallyingPoints.map((point, index) => <RallyingPointMarker key={index} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
-        </div>
-        <div>
-          {steps.map((point, index) => <RallyingPointMarker key={index} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
-        </div>
+        {route && <MemoPolyline positions={route.coordinates} weight={2} />}
+        {rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
+        {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
+        {Augustin.map((a:UserLocation, index) => (
+          <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={20}>
+            <Tooltip>
+              {new Intl.DateTimeFormat("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }).format(new Date(a.timestamp))}
+            </Tooltip>
+          </CircleMarker>
+        ))}
       </MapContainer>
     </div>
   );

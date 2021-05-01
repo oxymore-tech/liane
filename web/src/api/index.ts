@@ -26,3 +26,11 @@ export enum DayOfWeek {
   Friday,
   Saturday
 }
+
+export interface UserLocation {
+  timestamp: number;
+  latitude: number;
+  longitude: number;
+  accuracy: number | null;
+  speed: number | null;
+}

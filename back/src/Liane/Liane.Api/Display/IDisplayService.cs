@@ -11,6 +11,6 @@ namespace Liane.Api.Display
 
         Task<ImmutableHashSet<Trip.Trip>> Search(SearchQuery query);
 
-        Task<Dictionary<string, RouteStat>> GetRoutes(ImmutableHashSet<Trip.Trip> trips, DayOfWeek? day, int? startHour = null, int? endHour = null);
+        Task<Dictionary<string, RouteStat>> GetStat(ImmutableHashSet<Trip.Trip> trips, DayOfWeek? day, int? startHour = null, int? endHour = null);
     }
 }
