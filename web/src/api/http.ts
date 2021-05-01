@@ -1,5 +1,6 @@
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
+import { getStoredToken } from "@/api/storage";
 
 const BaseUrl = process.env.NODE_ENV === "production" ? "https://liane.gjini.co" : "http://localhost:8081";
 
@@ -9,14 +10,6 @@ export interface ListOptions<T> {
   readonly limit?: number;
   readonly search?: string;
   readonly sort?: SortOptions<T>;
-}
-
-export function getStoredToken() {
-  try {
-    return localStorage?.getItem("token");
-  } catch (e) {
-    return null;
-  }
 }
 
 type MethodType = "GET" | "POST" | "PUT" | "DELETE";
@@ -64,24 +57,24 @@ function formatUrl<T>(uri: string, { listOptions, params }: QueryAsOptions<T>) {
 }
 
 export async function get<T>(uri: string, options: QueryAsOptions<T> = {}): Promise<T> {
-  return fetchAndCheckAs<T>("GET", formatUrl(uri, options), options);
+  return fetchAndCheckAs<T>("GET", uri, options);
 }
 
 export async function getAsString(uri: string, options: QueryAsOptions<any> = {}): Promise<string> {
-  const response = await fetchAndCheck("GET", formatUrl(uri, options), options);
+  const response = await fetchAndCheck("GET", uri, options);
   return response.text();
 }
 
 export async function postAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
-  return fetchAndCheckAs<T>("POST", formatUrl(uri, options), options);
+  return fetchAndCheckAs<T>("POST", uri, options);
 }
 
 export async function remove(uri: string, options: QueryPostOptions<any> = {}) {
-  return fetchAndCheck("DELETE", formatUrl(uri, options));
+  return fetchAndCheck("DELETE", uri, options);
 }
 
 export function post(uri: string, options: QueryPostOptions<any> = {}) {
-  return fetchAndCheck("POST", formatUrl(uri, options), options);
+  return fetchAndCheck("POST", uri, options);
 }
 
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
@@ -102,14 +95,15 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
   const { body, bodyAsJson } = options;
   const response = await fetch(formatUrl(uri, options), {
-    headers: headers(body, bodyAsJson),
+    headers: await headers(body, bodyAsJson),
     method,
     body: formatBody(body, bodyAsJson)
   });
   if (response.status !== 200 && response.status !== 201) {
     switch (response.status) {
       case 400:
-        throw new ValidationError(await response.json());
+        const json = await response.json();
+        throw new ValidationError(json?.errors || {});
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
@@ -122,13 +116,13 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   return response;
 }
 
-function headers(body?: any, bodyAsJson: boolean = true) {
+async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
-  const token = getStoredToken();
+  const token = await getStoredToken();
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }
-  if (bodyAsJson) {
+  if (body && bodyAsJson) {
     h.append("Content-Type", "application/json");
   }
   return h;

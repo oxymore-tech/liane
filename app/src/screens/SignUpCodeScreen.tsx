@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import { Image, ImageBackground, View } from "react-native";
 import tailwind from "tailwind-rn";
 import { RouteProp } from "@react-navigation/native";
@@ -23,8 +23,8 @@ type SignUpCodeProps = {
 };
 
 const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
-  const [phoneNumber] = React.useState(route.params.phoneNumber);
-  const [code, setCode] = React.useState("");
+  const [phoneNumber] = useState(route.params.phoneNumber);
+  const [code, setCode] = useState("");
   const { expoPushToken, setAuthUser } = useContext(AppContext);
 
   const actionsOnPress = useCallback(async () => {

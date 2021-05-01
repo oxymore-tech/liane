@@ -72,7 +72,6 @@ namespace Liane.Service.Internal.User
             var database = await redis.Get();
             var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
             var value = await database.StringGetAsync(redisKey);
-            logger.LogInformation("value : {phoneNumber}, {code}, {value}", phoneNumber, code, value);
             if (value.IsNullOrEmpty)
             {
                 throw new UnauthorizedAccessException("Invalid code");

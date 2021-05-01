@@ -88,14 +88,14 @@ export function ContextProvider(props: { children: ReactNode }) {
         return setAuthUser(r.authUser);
       })
       .then(() => setAppLoaded(true));
-  });
+  }, []);
 
   useEffect(() => {
     registerForPushNotificationsAsync()
       .then((token) => {
         setExpoPushToken(token);
       });
-  });
+  }, []);
 
   const { children } = props;
 
