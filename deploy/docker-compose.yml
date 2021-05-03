@@ -53,6 +53,8 @@ services:
       LIANE_Twilio__From: ${TWILIO_FROM}
       LIANE_Auth__Validity: ${AUTH_VALIDITY}
       LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
+      LIANE_Auth__TestAccount: ${AUTH_TEST_ACCOUNT}
+      LIANE_Auth__TestCode: ${AUTH_TEST_CODE}
     networks:
       - gateway
       - internal

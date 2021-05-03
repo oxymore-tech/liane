@@ -40,34 +40,42 @@ namespace Liane.Service.Internal.User
 
         public async Task SendSms(string phone)
         {
-            var phoneNumber = ParseNumber(phone);
-            var database = await redis.Get();
-            var authSmsAttemptKey = RedisKeys.AuthSmsAttempt(phoneNumber);
-            var attempts = await database.StringIncrementAsync(authSmsAttemptKey);
-            await database.KeyExpireAsync(authSmsAttemptKey, TimeSpan.FromSeconds(5));
-            if (attempts > 1)
+            if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
             {
-                throw new UnauthorizedAccessException("Too many requests");
-            }
+                var phoneNumber = ParseNumber(phone);
+                var database = await redis.Get();
+                var authSmsAttemptKey = RedisKeys.AuthSmsAttempt(phoneNumber);
+                var attempts = await database.StringIncrementAsync(authSmsAttemptKey);
+                await database.KeyExpireAsync(authSmsAttemptKey, TimeSpan.FromSeconds(5));
+                if (attempts > 1)
+                {
+                    throw new UnauthorizedAccessException("Too many requests");
+                }
 
-            if (twilioSettings.Account != null && twilioSettings.Token != null)
-            {
-                TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-                var generator = new Random();
-                var code = generator.Next(0, 1000000).ToString("D6");
-                var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
-                await database.StringSetAsync(redisKey, code, TimeSpan.FromMinutes(2));
-                var message = await MessageResource.CreateAsync(
-                    body: $"{code} est votre code liane",
-                    from: new PhoneNumber(twilioSettings.From),
-                    to: phoneNumber
-                );
-                logger.LogInformation("SMS sent {@message}", message);
+                if (twilioSettings.Account != null && twilioSettings.Token != null)
+                {
+                    TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
+                    var generator = new Random();
+                    var code = generator.Next(0, 1000000).ToString("D6");
+                    var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
+                    await database.StringSetAsync(redisKey, code, TimeSpan.FromMinutes(2));
+                    var message = await MessageResource.CreateAsync(
+                        body: $"{code} est votre code liane",
+                        from: new PhoneNumber(twilioSettings.From),
+                        to: phoneNumber
+                    );
+                    logger.LogInformation("SMS sent {@message}", message);
+                }
             }
         }
 
         public async Task<AuthUser> Login(string phone, string code, string token)
         {
+            if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
+            {
+                return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount));
+            }
+
             var phoneNumber = ParseNumber(phone);
             var database = await redis.Get();
             var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
