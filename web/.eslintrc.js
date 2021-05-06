@@ -42,6 +42,7 @@ module.exports = {
     }],
     "react/jsx-props-no-spreading": "off",
     "eol-last": "off",
-    "max-classes-per-file": ["warn", 5]
+    "max-classes-per-file": ["warn", 5],
+    "@typescript-eslint/no-non-null-assertion": "off"
   }
 };

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Trip } from "../api";
+import { Trip } from "@/api";
 import { Button } from "./base/Button";
 import { Modal } from "./base/Modal";
 
