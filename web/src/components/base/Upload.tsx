@@ -33,11 +33,13 @@ async function getSrc(file: string | File): Promise<string> {
 
 export function Upload({ loading = false, className, label, accept, multiple, value, onChange, onDelete, indication, required }: UploadProps) {
 
-  const [src, setSrc] = useState<string>(null);
+  const [src, setSrc] = useState<string>();
 
   useEffect(() => {
-    getSrc(value)
-      .then((s) => setSrc(s));
+    if (value) {
+      getSrc(value)
+        .then((s) => setSrc(s));
+    }
   });
 
   return (
@@ -56,7 +58,7 @@ export function Upload({ loading = false, className, label, accept, multiple, va
                 color="red"
                 className="opacity-50 hover:opacity-100 absolute top-6 left-28"
                 title="Supprimer la photo"
-                onClick={() => onDelete(value)}
+                onClick={() => onDelete && onDelete(value)}
               >
                 <i
                   className="mdi mdi-trash-can"
@@ -80,7 +82,7 @@ export function Upload({ loading = false, className, label, accept, multiple, va
                 accept={accept}
                 multiple={multiple}
                 onChange={(e) => {
-                  if (onChange) {
+                  if (onChange && e.target.files) {
                     onChange(e.target.files[0]);
                   }
                 }}

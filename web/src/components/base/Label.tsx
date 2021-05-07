@@ -12,7 +12,7 @@ export function Label({ label, children, className, required }: LabelProps) {
     return <></>;
   }
   return (
-    <div className={`text-base text-gray-500 font-semibold ${className}`} title={required && "Champ obligatoire"}>
+    <div className={`text-base text-gray-500 font-semibold ${className}`} title={required ? "Champ obligatoire" : undefined}>
       {children || label}
       {required && <span className="ml-1 text-gray-400 text-xs">(obligatoire)</span>}
     </div>

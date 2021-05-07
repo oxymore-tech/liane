@@ -19,14 +19,14 @@ interface SelectProps<T, K> {
   indication?: IndicationMessage;
 }
 
-function renderOption<T>(o: T, render: string | ((o: T) => ReactNode)): ReactNode {
+function renderOption(o: any, render: string | ((o: any) => ReactNode)): ReactNode {
   if (typeof render === "string") {
     return o[render];
   }
   return render(o);
 }
 
-function getValue<T>(o: T, keyExtract?: string | ((o: T) => any)): any {
+function getValue(o: any, keyExtract?: string | ((o: any) => any)): any {
   if (!keyExtract) {
     return o;
   }
@@ -52,7 +52,7 @@ export function Select<T, K>({ className = "", inline, icon, required, placehold
       <Label className="mr-3" required={required}>
         {label}
       </Label>
-      <Listbox value={value} onChange={onChange}>
+      <Listbox value={value} onChange={(v) => onChange && v && onChange(v)}>
         {({ open }) => (
           <>
             <div className="relative mt-1">

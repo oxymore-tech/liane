@@ -36,7 +36,7 @@ export function AvailableTrips({ searchedTrips }: TripsProps) {
               {search.time}
               h -
               {" "}
-              <Button label="Demandez à covoiturer" onClick={() => printModal(search.user)} />
+              <Button label="Demandez à covoiturer" onClick={() => search.user && printModal(search.user)} />
             </li>
           ))}
         </ul>

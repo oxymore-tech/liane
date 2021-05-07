@@ -77,7 +77,7 @@ export function Button({
 
   const d = disabled || loading || false;
 
-  const colors = getColorsClassName(color, outline, disabled);
+  const colors = getColorsClassName(color, outline, d);
   const cl = `outline-none rounded-lg inline-flex items-center justify-center text-sm font-bold px-4 py-2 shadow-sm rounded-3xl ${d && "cursor-not-allowed"} ${colors} ${className}`;
 
   const child = <Loading loading={loading}>{children || label}</Loading>;

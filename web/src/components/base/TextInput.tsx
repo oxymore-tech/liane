@@ -33,7 +33,7 @@ export function TextInput({
 
   const indicationRingColor = getIndicationRingColor(indication);
 
-  const v = type === "date" ? format(parseJSON(value), "YYYY-MM-DD") : value;
+  const v = type === "date" ? value && format(parseJSON(value), "YYYY-MM-DD") : value;
 
   const onChangeEvent = (e) => {
     if (onChange) {

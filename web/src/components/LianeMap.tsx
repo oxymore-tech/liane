@@ -105,9 +105,9 @@ function LianeMap({ className, center }: MapProps) {
   useEffect(() => {
     if (from === to) {
       if (lastFromVsTo) {
-        setTo(null);
+        setTo(undefined);
       } else {
-        setFrom(null);
+        setFrom(undefined);
       }
     }
   }, [lastFromVsTo, from, to]);
@@ -227,7 +227,7 @@ function LianeMap({ className, center }: MapProps) {
         {route && <MemoPolyline positions={route.coordinates} weight={2} />}
         {rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
         {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
-        {Augustin.map((a:UserLocation, index) => (
+        {Augustin.map((a:UserLocation, index:number) => (
           <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={20}>
             <Tooltip>
               {new Intl.DateTimeFormat("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }).format(new Date(a.timestamp))}
