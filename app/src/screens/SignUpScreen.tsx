@@ -75,9 +75,9 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             />
             <AppButton
               buttonStyle={tailwind("rounded-r-3xl bg-orange-light w-12 h-12")}
-              iconStyle={tailwind("text-xl text-white font-bold")}
+              iconStyle={tailwind("text-3xl text-white font-bold")}
               onPress={signUp}
-              icon="checkmark"
+              icon="log-in-outline"
             />
           </View>
           <AppText
