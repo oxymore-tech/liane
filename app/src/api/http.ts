@@ -2,7 +2,7 @@ import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-const BaseUrl = "https://liane.gjini.co/api";
+const BaseUrl = __DEV__ ? "http://192.168.8.174:8081/api" : "https://liane.gjini.co/api";
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -110,7 +110,9 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
       case 403:
         throw new UnauthorizedError();
       default:
-        throw new Error(await response.text());
+        const message = await response.text();
+        console.log(`Unexpected error on ${method} ${uri}`, response.status, message);
+        throw new Error(message);
     }
   }
   return response;

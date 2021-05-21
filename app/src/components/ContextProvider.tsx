@@ -39,18 +39,19 @@ async function registerForPushNotificationsAsync():Promise<string|undefined> {
       return undefined;
     }
     const expoPushToken = await Notifications.getExpoPushTokenAsync();
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C"
+      });
+    }
+
     return expoPushToken.data;
   }
   alert("Must use physical device for Push Notifications");
-
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C"
-    });
-  }
   return undefined;
 }
 

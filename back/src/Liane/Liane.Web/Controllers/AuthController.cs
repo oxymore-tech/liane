@@ -31,7 +31,7 @@ namespace Liane.Web.Controllers
             return authService.Login(phone, code, token);
         }
 
-        [HttpPost("me")]
+        [HttpGet("me")]
         public Task<AuthUser> Me()
         {
             return authService.Me();

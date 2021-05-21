@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useState } from "react";
 import { Image, ImageBackground, View } from "react-native";
-import tailwind from "tailwind-rn";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { tailwind } from "@/api/tailwind";
 import { login } from "@/api/client";
 import { AppContext } from "@/components/ContextProvider";
 import { AppTextInput } from "@/components/base/AppTextInput";
