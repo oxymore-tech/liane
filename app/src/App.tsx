@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import i18n from "i18n-js";
 import en from "@/assets/translations/en.json";
-import { NavigationContainer } from "@react-navigation/native";
 import { ContextProvider } from "@/components/ContextProvider";
 import { Navigation } from "@/components/Navigation";
 import { listenLocationTask } from "@/api/location-task";
+import { NavigationContainer } from "@react-navigation/native";
 
 i18n.translations = {
   en

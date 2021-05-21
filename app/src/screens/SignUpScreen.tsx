@@ -8,14 +8,14 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
-import { translate } from "@/api/i18n";
+import { scopedTranslate } from "@/api/i18n";
 
 const image = require("@/assets/images/bg-mountains.jpg");
 const logo = require("@/assets/logo_white.png");
 
-const t = translate("SignUp");
+const t = scopedTranslate("SignUp");
 
-  type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
+type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
 
 type SignUpNavigationProp = StackNavigationProp<NavigationParamList, "SignUp">;
 
@@ -72,12 +72,14 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
               autoCompleteType="tel"
               textContentType="telephoneNumber"
               onSubmitEditing={signUp}
+              maxLength={10}
             />
             <AppButton
               buttonStyle={tailwind("rounded-r-3xl bg-orange-light w-12 h-12")}
               iconStyle={tailwind("text-3xl text-white font-bold")}
+              disabled={phoneNumber.length < 10}
               onPress={signUp}
-              icon="log-in-outline"
+              icon="arrow-forward-circle-outline"
             />
           </View>
           <AppText

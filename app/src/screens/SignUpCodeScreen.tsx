@@ -27,7 +27,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   const [code, setCode] = useState("");
   const { expoPushToken, setAuthUser } = useContext(AppContext);
 
-  const actionsOnPress = useCallback(async () => {
+  const signIn = useCallback(async () => {
     if (expoPushToken) {
       try {
         const authUser = await login(phoneNumber, code, expoPushToken);
@@ -60,25 +60,27 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
           >
             Un code vous a été envoyé pas sms
           </AppText>
-          <AppTextInput
-            style={tailwind("rounded-full p-4 m-20 bg-gray-100 text-gray-600")}
-            placeholder="Entrez votre code"
-            returnKeyLabel="next"
-            value={code}
-            onChangeText={setCode}
-            keyboardType="numeric"
-            autoFocus
-          />
+          <View
+            style={tailwind("rounded-full m-20 bg-gray-100 text-gray-600 text-2xl flex flex-row h-12")}
+          >
+            <AppTextInput
+              style={tailwind("text-gray-600 text-2xl text-center flex-1")}
+              autoFocus
+              returnKeyLabel="next"
+              onChangeText={setCode}
+              keyboardType="numeric"
+              onSubmitEditing={signIn}
+              maxLength={6}
+            />
+            <AppButton
+              buttonStyle={tailwind("rounded-r-3xl bg-orange-light w-12 h-12")}
+              iconStyle={tailwind("text-3xl text-white font-bold")}
+              disabled={code.length < 6}
+              onPress={signIn}
+              icon="checkmark-circle-outline"
+            />
+          </View>
 
-        </View>
-
-        <View
-          style={tailwind("mx-20")}
-        >
-          <AppButton
-            onPress={actionsOnPress}
-            title="Soumettre"
-          />
         </View>
 
       </ImageBackground>

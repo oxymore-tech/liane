@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import AppLoading from "expo-app-loading";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
@@ -8,17 +9,41 @@ import AcceptTripScreen from "@/screens/AcceptTripScreen";
 import HomeScreen from "@/screens/HomeScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import LocationWizard from "@/screens/LocationWizard";
+import { Ionicons } from "@expo/vector-icons";
+import { tailwind } from "@/api/tailwind";
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
 const createDrawer = () => (
-  <Stack.Navigator>
-    <Stack.Screen
-      name="Accueil"
+  <Tab.Navigator
+    tabBarOptions={{
+      style: tailwind("h-20")
+    }}
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ focused }) => {
+        const icons = {
+          Home: {
+            true: "map",
+            false: "map-outline"
+          },
+          Notifications: {
+            true: "chatbox-ellipses",
+            false: "chatbox-ellipses-outline"
+          }
+        };
+
+        return <Ionicons name={icons[route.name][focused]} style={tailwind(`text-4xl mt-4 ${focused ? "text-orange" : ""}`)} />;
+      },
+      tabBarLabel: ""
+    })}
+  >
+    <Tab.Screen
+      name="Home"
       component={HomeScreen}
     />
-    <Stack.Screen name="Notifications" component={NotificationsScreen} />
-  </Stack.Navigator>
+    <Tab.Screen name="Notifications" component={NotificationsScreen} />
+  </Tab.Navigator>
 );
 
 export type NavigationParamList = {
@@ -49,12 +74,7 @@ export function Navigation() {
   }
 
   if (authUser) {
-    return (
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={createDrawer} options={{ headerShown: false }} />
-        <Stack.Screen name="AcceptTrip" component={AcceptTripScreen} options={{ headerShown: false }} />
-      </Stack.Navigator>
-    );
+    return createDrawer();
   }
 
   return (
