@@ -15,6 +15,7 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
@@ -26,7 +27,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 using NLog;
 using NLog.Config;
 using NLog.Layouts;
@@ -34,6 +34,8 @@ using NLog.Targets;
 using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
+using NSwag;
+using NSwag.Generation.Processors.Security;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web
@@ -167,7 +169,7 @@ namespace Liane.Web
                 .ConfigureServices(ConfigureServices)
                 .Configure(Configure)
                 .UseUrls("http://*:8081")
-                .UseKestrel((_, options) => { options.AllowSynchronousIO = true; })
+                .UseKestrel()
                 .Build()
                 .Run();
         }
@@ -186,7 +188,7 @@ namespace Liane.Web
                             .AllowCredentials());
 
                     options.AddPolicy("AllowProd",
-                        p => p.WithOrigins("https://*.liane.fr")
+                        p => p.WithOrigins("https://liane.gjini.co")
                             .SetIsOriginAllowedToAllowWildcardSubdomains()
                             .AllowAnyMethod()
                             .AllowAnyHeader()
@@ -196,27 +198,25 @@ namespace Liane.Web
 
             services.AddMvcCore(options => { options.Filters.Add<ExceptionFilter>(); });
             services.AddService<HttpContextAccessor>();
-
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerDocument(settings =>
             {
-                c.SwaggerDoc("Liane", new OpenApiInfo
+                settings.Title = "Liane API";
+                settings.Version = Assembly.GetExecutingAssembly()
+                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                    ?.InformationalVersion;
+                settings.AddSecurity("Bearer", new OpenApiSecurityScheme
                 {
-                    Title = "Liane API", Version = Assembly.GetExecutingAssembly()
-                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                        ?.InformationalVersion
-                });
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
-                    In = ParameterLocation.Header,
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey
+                    In = OpenApiSecurityApiKeyLocation.Header,
+                    Type = OpenApiSecuritySchemeType.ApiKey
                 });
             });
         }
 
         private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
         {
+            app.UseOpenApi();
+            app.UseSwaggerUi3();
             app.UseCors("AllowLocal");
 
             var env = context.HostingEnvironment;
@@ -231,8 +231,6 @@ namespace Liane.Web
 
             app.UseRouting();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-            app.UseSwagger();
-            app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/liane/swagger.json", "Synergee Liane API"); });
 
             StartServicesHook(app.ApplicationServices)
                 .GetAwaiter()
