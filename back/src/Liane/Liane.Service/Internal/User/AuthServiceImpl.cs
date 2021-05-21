@@ -108,8 +108,9 @@ namespace Liane.Service.Internal.User
             {
                 return JwtTokenHandler.ValidateToken(token, tokenValidationParameters, out _);
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogWarning(e, "Invalid token");
                 throw new ForbiddenException("Invalid token");
             }
         }

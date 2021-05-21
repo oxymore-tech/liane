@@ -1,9 +1,17 @@
 import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
+import i18n from "i18n-js";
+import en from "@/assets/translations/en.json";
 import { NavigationContainer } from "@react-navigation/native";
 import { ContextProvider } from "@/components/ContextProvider";
 import { Navigation } from "@/components/Navigation";
 import { listenLocationTask } from "@/api/location-task";
+
+i18n.translations = {
+  en
+};
+i18n.locale = "en";
+i18n.missingBehaviour = "guess";
 
 export type Subscription = {
   remove: () => void;
