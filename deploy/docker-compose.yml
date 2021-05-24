@@ -47,6 +47,8 @@ services:
       - osrm
       - nominatim
     environment:
+      LIANE_Mongo__Username: ${MONGO_USERNAME}
+      LIANE_Mongo__Password: ${MONGO_PASSWORD}
       LIANE_Redis__Password: ${REDIS_PASSWORD}
       LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
       LIANE_Twilio__Token: ${TWILIO_TOKEN}
