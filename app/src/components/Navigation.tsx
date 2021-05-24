@@ -5,12 +5,11 @@ import AppLoading from "expo-app-loading";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
-import AcceptTripScreen from "@/screens/AcceptTripScreen";
 import HomeScreen from "@/screens/HomeScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import LocationWizard from "@/screens/LocationWizard";
 import { Ionicons } from "@expo/vector-icons";
-import { tailwind } from "@/api/tailwind";
+import { tw } from "@/api/tailwind";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -18,7 +17,7 @@ const Tab = createBottomTabNavigator();
 const createDrawer = () => (
   <Tab.Navigator
     tabBarOptions={{
-      style: tailwind("h-20")
+      style: tw("h-20")
     }}
     screenOptions={({ route }) => ({
       tabBarIcon: ({ focused }) => {
@@ -33,7 +32,7 @@ const createDrawer = () => (
           }
         };
 
-        return <Ionicons name={icons[route.name][focused]} style={tailwind(`text-4xl mt-4 ${focused ? "text-orange" : ""}`)} />;
+        return <Ionicons name={icons[route.name][focused]} style={tw(`text-4xl mt-4 ${focused ? "text-orange" : ""}`)} />;
       },
       tabBarLabel: ""
     })}
@@ -47,6 +46,7 @@ const createDrawer = () => (
 );
 
 export type NavigationParamList = {
+  Home: {};
   LocationWizard: { step?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
   SignUpCode: { phoneNumber: string };

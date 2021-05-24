@@ -20,14 +20,14 @@ namespace Liane.Service.Internal.Util
                 throw new ForbiddenException();
             }
 
-            var claimsPrincipal = httpContextAccessor.HttpContext.User;
+            var user = httpContextAccessor.HttpContext.User.Identity?.Name;
 
-            if (claimsPrincipal == null)
+            if (user == null)
             {
                 throw new ForbiddenException();
             }
 
-            return claimsPrincipal.Identity!.Name!;
+            return user;
         }
     }
 }

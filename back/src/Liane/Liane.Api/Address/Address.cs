@@ -1,6 +1,10 @@
-using Liane.Api.Routing;
-
 namespace Liane.Api.Address
 {
-    public sealed record Address(string DisplayName, LatLng Coordinate, string? Icon, AddressDetails AddressDetails);
+    public sealed record Address(
+        string Street,
+        string ZipCode,
+        string City,
+        string Country,
+        string CountryCode
+    );
 }

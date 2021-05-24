@@ -24,7 +24,7 @@ namespace Liane.Service.Internal.Util
 
         public static RedisKey Position(string phone)
         {
-            return $"position:${phone}";
+            return $"position:{phone}";
         }
 
         public static RedisKey Trip(string? from = null, string? to = null, DayOfWeek? day = null, int? time = null)

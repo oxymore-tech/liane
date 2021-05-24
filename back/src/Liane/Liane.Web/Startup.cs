@@ -15,7 +15,6 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
-using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
@@ -35,7 +34,6 @@ using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using NSwag;
-using NSwag.Generation.Processors.Security;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web
@@ -52,6 +50,8 @@ namespace Liane.Web
             services.AddSettings<OsrmSettings>(context);
             services.AddSettings<NominatimSettings>(context);
 
+            services.AddSettings<MongoSettings>(context);
+
             services.AddSettings<RedisSettings>(context);
             services.AddService<RedisClient>();
 
@@ -65,6 +65,7 @@ namespace Liane.Web
             services.AddService<TripServiceImpl>();
             services.AddService<RallyingPointServiceImpl>();
             services.AddService<NotificationServiceImpl>();
+            services.AddService<RealTripServiceImpl>();
         }
 
         public static void StartCurrentModule(string[] args)

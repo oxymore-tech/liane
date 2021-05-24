@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useState } from "react";
 import { Image, ImageBackground, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { tailwind } from "@/api/tailwind";
+import { tw } from "@/api/tailwind";
 import { login } from "@/api/client";
 import { AppContext } from "@/components/ContextProvider";
 import { AppTextInput } from "@/components/base/AppTextInput";
@@ -40,15 +40,15 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   }, [phoneNumber, code, expoPushToken]);
 
   return (
-    <View style={tailwind("flex h-full")}>
+    <View style={tw("flex h-full")}>
       <ImageBackground
         source={image}
-        style={tailwind("flex-1")}
+        style={tw("flex-1")}
       >
 
-        <View style={tailwind("h-20 items-center mx-20 mt-32 mb-20")}>
+        <View style={tw("h-20 items-center mx-20 mt-32 mb-20")}>
           <Image
-            style={tailwind("flex-1 w-64")}
+            style={tw("flex-1 w-64")}
             source={logo}
             resizeMode="contain"
           />
@@ -56,15 +56,15 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
 
         <View>
           <AppText
-            style={tailwind("text-center text-lg text-gray-600")}
+            style={tw("text-center text-lg text-gray-600")}
           >
             Un code vous a été envoyé pas sms
           </AppText>
           <View
-            style={tailwind("rounded-full m-20 bg-gray-100 text-gray-600 text-2xl flex flex-row h-12")}
+            style={tw("rounded-full m-20 bg-gray-100 text-gray-600 text-2xl flex flex-row h-12")}
           >
             <AppTextInput
-              style={tailwind("text-gray-600 text-2xl text-center flex-1")}
+              style={tw("text-gray-600 text-2xl text-center flex-1")}
               autoFocus
               returnKeyLabel="next"
               onChangeText={setCode}
@@ -73,8 +73,8 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
               maxLength={6}
             />
             <AppButton
-              buttonStyle={tailwind("rounded-r-3xl bg-orange-light w-12 h-12")}
-              iconStyle={tailwind("text-3xl text-white font-bold")}
+              buttonStyle={tw("rounded-r-3xl bg-orange-light w-12 h-12")}
+              iconStyle={tw("text-3xl text-white font-bold")}
               disabled={code.length < 6}
               onPress={signIn}
               icon="checkmark-circle-outline"

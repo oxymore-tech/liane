@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
 {
-    [Route("api")]
+    [Route("api/address")]
     [ApiController]
     public class AddressController : ControllerBase
     {
@@ -17,20 +17,20 @@ namespace Liane.Web.Controllers
             this.addressService = addressService;
         }
 
-        [HttpGet("address/displayName")]
-        public async Task<ActionResult<Address>> GetDisplayName([FromQuery] double lat, [FromQuery] double lng)
+        [HttpGet("displayName")]
+        public async Task<ActionResult<AddressResponse>> GetDisplayName([FromQuery] double lat, [FromQuery] double lng)
         {
             return await addressService.GetDisplayName(new LatLng(lat, lng));
         }
 
-        [HttpGet("address/coordinate")]
-        public async Task<ActionResult<Address>> GetCoordinate([FromQuery] string displayName)
+        [HttpGet("coordinate")]
+        public async Task<ActionResult<AddressResponse>> GetCoordinate([FromQuery] string displayName)
         {
             return await addressService.GetCoordinate(displayName);
         }
 
-        [HttpGet("address/search")]
-        public async Task<ActionResult<ImmutableList<Address>>> Search([FromQuery] string displayName)
+        [HttpGet("search")]
+        public async Task<ActionResult<ImmutableList<AddressResponse>>> Search([FromQuery] string displayName)
         {
             return await addressService.Search(displayName);
         }

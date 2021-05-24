@@ -269,7 +269,7 @@ namespace Liane.Service.Internal.Display
             foreach (var element in results)
             {
                 var timestamp = element.Name;
-                var dtDateTime = new DateTime((long) timestamp);
+                var dtDateTime = DateTimeOffset.FromUnixTimeMilliseconds((long) timestamp).DateTime;
                 dtDateTime = dtDateTime.AddSeconds(Convert.ToDouble(timestamp)).ToLocalTime();
                 if (day == "-1" || Convert.ToInt32(dtDateTime.DayOfWeek).ToString().Equals(day))
                 {

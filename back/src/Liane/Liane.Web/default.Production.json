@@ -10,6 +10,9 @@
   "Redis": {
     "Host": "redis"
   },
+  "Mongo": {
+    "Host": "mongo"
+  },
   "Nominatim": {
     "Url": "http://nominatim:8080"
   },

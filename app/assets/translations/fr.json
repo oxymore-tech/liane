@@ -4,11 +4,11 @@
     "Impossible d'effectuer la demande": "Signup failed"
   },
   "Home": {
-    "Mes trajets": "My trips",
+    "Mes trajets": "Mes trajets",
     "trajets partagés": {
-      "one": "One trip shared",
-      "other": "{{ count }} trips shared",
-      "zero": "No shared trip"
+      "one": "Vous avez partagé un trajet",
+      "other": "Vous avez partagé {{ count }} trajets",
+      "zero": "Pas de trajet partagé"
     }
   }
 }

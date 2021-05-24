@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Osrm.Response;
 using Liane.Test.Util;
 using Moq;
 using NUnit.Framework;
@@ -61,7 +60,7 @@ namespace Liane.Test
                         It.IsAny<string>(),
                         It.IsAny<string>(),
                         It.IsAny<string>()))
-                .ReturnsAsync(() => AssertJson.ReadJson<Routing>(file));
+                .ReturnsAsync(() => AssertJson.ReadJson<Service.Internal.Osrm.Response.Routing>(file));
         }
 
         [Test]
@@ -109,8 +108,5 @@ namespace Liane.Test
             Assert.AreEqual(1, passengers.Count);
             Assert.AreEqual("Passager leCrouzet à l'heure, déposé en cours de route", passengers[0].PassengerId);
         }
-
-
-        
     }
 }

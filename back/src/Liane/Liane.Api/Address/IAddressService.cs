@@ -6,10 +6,10 @@ namespace Liane.Api.Address
 {
     public interface IAddressService
     {
-        Task<Address> GetDisplayName(LatLng coordinate);
+        Task<AddressResponse> GetDisplayName(LatLng coordinate);
 
-        Task<Address> GetCoordinate(string displayName);
+        Task<AddressResponse> GetCoordinate(string displayName);
 
-        Task<ImmutableList<Address>> Search(string displayName);
+        Task<ImmutableList<AddressResponse>> Search(string displayName);
     }
 }

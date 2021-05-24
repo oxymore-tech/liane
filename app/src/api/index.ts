@@ -15,3 +15,28 @@ export interface UserLocation {
   accuracy: number | null;
   speed: number | null;
 }
+
+export interface LatLng {
+  lat: number,
+  lng: number
+}
+
+export interface Address {
+  street: string,
+  city: string,
+  zipCode: string,
+  country: string,
+  countryCode: string
+}
+
+export interface Location {
+  coordinate: LatLng;
+  address: Address;
+}
+
+export interface RealTrip {
+  from: Location;
+  to: Location;
+  startTime: Date;
+  endTime: Date;
+}

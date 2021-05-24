@@ -1,25 +1,25 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { Button, Header, Icon } from "react-native-elements";
-import { tailwind } from "@/api/tailwind";
+import { tw } from "@/api/tailwind";
 
 const AcceptTripScreen = ({ navigation } : any) => (
-  <View style={tailwind("container")}>
+  <View style={tw("container")}>
     <Header
       leftComponent={<Icon name="arrow-left" type="font-awesome-5" solid color="white" onPress={() => navigation.navigate("Notifications")} />}
       centerComponent={{ text: "LIANE APP", style: { color: "#fff" } }}
       rightComponent={<Icon name="bell" type="font-awesome-5" solid color="white" />}
     />
 
-    <View style={tailwind("pt-8 items-center")}>
-      <View style={tailwind("bg-blue-200 px-3 py-1 rounded-full")}>
-        <Text style={tailwind("text-blue-800 text-xl font-semibold")}>
+    <View style={tw("pt-8 items-center")}>
+      <View style={tw("bg-blue-200 px-3 py-1 rounded-full")}>
+        <Text style={tw("text-blue-800 text-xl font-semibold")}>
           Accepter le covoiturage
         </Text>
       </View>
     </View>
     <View>
-      <View style={tailwind("w-1/2 p-8")}>
+      <View style={tw("w-1/2 p-8")}>
         <Button
           icon={(
             <Icon
@@ -33,7 +33,7 @@ const AcceptTripScreen = ({ navigation } : any) => (
           title="Accepter"
         />
       </View>
-      <View style={tailwind("absolute right-0 w-1/2 p-8")}>
+      <View style={tw("absolute right-0 w-1/2 p-8")}>
         <Button
           icon={(
             <Icon

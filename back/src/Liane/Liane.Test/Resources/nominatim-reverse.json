@@ -1,0 +1,32 @@
+{
+  "place_id": 1096714,
+  "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
+  "osm_type": "way",
+  "osm_id": 171439625,
+  "lat": "44.33755639792152",
+  "lon": "3.4845902635215347",
+  "place_rank": 26,
+  "category": "highway",
+  "type": "residential",
+  "importance": 0.09999999999999998,
+  "addresstype": "road",
+  "name": null,
+  "display_name": "Blajoux, Quézac, Gorges du Tarn Causses, Florac, Lozère, Occitanie, 48320, France",
+  "address": {
+    "hamlet": "Blajoux",
+    "city_district": "Quézac",
+    "city": "Gorges du Tarn Causses",
+    "municipality": "Florac",
+    "county": "Lozère",
+    "state": "Occitanie",
+    "postcode": "48320",
+    "country": "France",
+    "country_code": "fr"
+  },
+  "boundingbox": [
+    "44.3370238",
+    "44.3388629",
+    "3.4831178",
+    "3.4848868"
+  ]
+}

@@ -1,4 +1,4 @@
-namespace Liane.Service.Internal.Display
+namespace Liane.Service.Internal.Util
 {
     public record RedisSettings(string Host, string Password = "");
 }

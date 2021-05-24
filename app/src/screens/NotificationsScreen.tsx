@@ -6,7 +6,7 @@ import { Header, Icon, ListItem } from "react-native-elements";
 import { deleteNotification, getNotifications } from "@/api/client";
 import * as SMS from "expo-sms";
 
-import tailwind from "tailwind-rn";
+import { tw } from "@/api/tailwind";
 
 const wait = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout));
 
@@ -77,9 +77,9 @@ const NotificationsScreen = ({ navigation }: any) => {
   };
 
   const renderMenu = () => (
-    <View style={tailwind("pt-8 items-center")}>
-      <View style={tailwind("bg-blue-200 px-3 py-1 rounded-full")}>
-        <Text style={tailwind("text-blue-800 text-xl font-semibold")}>
+    <View style={tw("pt-8 items-center")}>
+      <View style={tw("bg-blue-200 px-3 py-1 rounded-full")}>
+        <Text style={tw("text-blue-800 text-xl font-semibold")}>
           Notifications
         </Text>
       </View>
@@ -100,7 +100,7 @@ const NotificationsScreen = ({ navigation }: any) => {
   );
 
   return (
-    <View style={tailwind("container")}>
+    <View style={tw("container")}>
       <Header
         leftComponent={{ icon: "menu", color: "#fff", onPress: () => navigation.openDrawer() }}
         centerComponent={{ text: "LIANE APP", style: { color: "#fff" } }}
@@ -115,7 +115,7 @@ const NotificationsScreen = ({ navigation }: any) => {
           />
         )}
         ListHeaderComponent={renderMenu}
-        style={tailwind("pt-8")}
+        style={tw("pt-8")}
         keyExtractor={keyExtractor}
         data={list}
         renderItem={renderItem}

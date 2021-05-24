@@ -11,6 +11,11 @@
     "Host": "localhost",
     "Password": ""
   },
+  "Mongo": {
+    "Host": "localhost",
+    "Username": "mongoadmin",
+    "Password": "secret"
+  },
   "Nominatim": {
     "Url": "http://liane.gjini.co:7070"
   },

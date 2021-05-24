@@ -7,7 +7,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
 import { NavigationParamList } from "@/components/Navigation";
-import { tailwind } from "@/api/tailwind";
+import { tw } from "@/api/tailwind";
 
 const image = require("@/assets/images/bg-mountains.jpg");
 const logo = require("@/assets/logo_white.png");
@@ -26,13 +26,13 @@ function getWizardText(step: number) {
     case 0:
       return (
         <AppText
-          style={tailwind("text-center text-lg text-gray-500 mt-20")}
+          style={tw("text-center text-lg text-gray-500 mt-20")}
         >
           <AppText>
             Covoiturer à la campagne&nbsp;
           </AppText>
           <AppText
-            style={tailwind("font-bold text-gray-800")}
+            style={tw("font-bold text-gray-800")}
           >
             en toute liberté
           </AppText>
@@ -40,34 +40,34 @@ function getWizardText(step: number) {
       );
     case 1:
       return (
-        <View style={tailwind("flex items-center")}>
+        <View style={tw("flex items-center")}>
           <AppText
-            style={tailwind("text-center text-lg text-white font-bold mt-5")}
+            style={tw("text-center text-lg text-white font-bold mt-5")}
           >
             je propose mes trajets du quotidien entre des points pré-établits
           </AppText>
-          <View style={tailwind("flex items-start bg-gray-100 p-4 opacity-80 mt-5")}>
-            <View style={tailwind("flex flex-row items-center")}>
-              <AppText style={tailwind("bg-gray-900 text-white font-bold text-center rounded-full py-1 px-3 m-1 mr-2")}>
+          <View style={tw("flex items-start bg-gray-100 p-4 opacity-80 mt-5")}>
+            <View style={tw("flex flex-row items-center")}>
+              <AppText style={tw("bg-gray-900 text-white font-bold text-center rounded-full py-1 px-3 m-1 mr-2")}>
                 1
               </AppText>
-              <AppText style={tailwind("text-lg font-bold text-gray-600 uppercase")}>
+              <AppText style={tw("text-lg font-bold text-gray-600 uppercase")}>
                 je reste anonyme
               </AppText>
             </View>
-            <View style={tailwind("flex flex-row items-center")}>
-              <AppText style={tailwind("bg-gray-900 text-white font-bold text-center rounded-full py-1 px-3 m-1 mr-2")}>
+            <View style={tw("flex flex-row items-center")}>
+              <AppText style={tw("bg-gray-900 text-white font-bold text-center rounded-full py-1 px-3 m-1 mr-2")}>
                 2
               </AppText>
-              <AppText style={tailwind("text-lg font-bold text-gray-600 uppercase")}>
+              <AppText style={tw("text-lg font-bold text-gray-600 uppercase")}>
                 je reçois des demandes
               </AppText>
             </View>
-            <View style={tailwind("flex flex-row items-center")}>
-              <AppText style={tailwind("bg-gray-900 text-white font-bold text-center rounded-full py-1 px-3 m-1 mr-2")}>
+            <View style={tw("flex flex-row items-center")}>
+              <AppText style={tw("bg-gray-900 text-white font-bold text-center rounded-full py-1 px-3 m-1 mr-2")}>
                 3
               </AppText>
-              <AppText style={tailwind("text-lg font-bold text-gray-600 uppercase")}>
+              <AppText style={tw("text-lg font-bold text-gray-600 uppercase")}>
                 j&apos;accepte ou pas, sans me justifier
               </AppText>
             </View>
@@ -78,16 +78,16 @@ function getWizardText(step: number) {
     default:
     case 2:
       return (
-        <View style={tailwind("flex items-center")}>
-          <AppText style={tailwind("text-center text-lg text-white mt-5")}>
+        <View style={tw("flex items-center")}>
+          <AppText style={tw("text-center text-lg text-white mt-5")}>
             c&apos;est un acte citoyen
           </AppText>
-          <AppText style={tailwind("text-center text-lg text-gray-600 mt-5")}>
+          <AppText style={tw("text-center text-lg text-gray-600 mt-5")}>
             j&apos;autorise liane à lire ma position GPS
             pour permettre le partage de mes trajets
           </AppText>
-          <View style={tailwind("flex items-center bg-gray-100 p-2 opacity-80 mt-5")}>
-            <AppText style={tailwind("text-lg font-bold text-gray-800 uppercase")}>c&apos;est le seul usage</AppText>
+          <View style={tw("flex items-center bg-gray-100 p-2 opacity-80 mt-5")}>
+            <AppText style={tw("text-lg font-bold text-gray-800 uppercase")}>c&apos;est le seul usage</AppText>
           </View>
         </View>
       );
@@ -153,10 +153,10 @@ const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
   }, [step]);
 
   return (
-    <ImageBackground source={image} style={tailwind("h-full min-h-full")} resizeMode="cover">
-      <View style={tailwind("h-20 items-center mx-20 mt-32")}>
+    <ImageBackground source={image} style={tw("h-full min-h-full")} resizeMode="cover">
+      <View style={tw("h-20 items-center mx-20 mt-32")}>
         <Image
-          style={tailwind("flex-1 w-64")}
+          style={tw("flex-1 w-64")}
           source={logo}
           resizeMode="contain"
         />
@@ -164,8 +164,8 @@ const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
       <View>
         {getWizardText(step)}
         <AppButton
-          buttonStyle={tailwind("rounded-3xl p-4 m-20 bg-orange-light")}
-          titleStyle={tailwind(`text-xl text-white font-bold ${step === 2 ? "text-orange" : ""}`)}
+          buttonStyle={tw("rounded-3xl p-4 m-20 bg-orange-light")}
+          titleStyle={tw(`text-xl text-white font-bold ${step === 2 ? "text-orange" : ""}`)}
           onPress={next}
           title={getButtonText(step)}
         />
