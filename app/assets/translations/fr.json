@@ -7,7 +7,7 @@
     "Mes trajets": "Mes trajets",
     "trajets partagés": {
       "one": "Vous avez partagé un trajet",
-      "other": "Vous avez partagé {{ count }} trajets",
+      "other": "Vous avez partagé {{ formatted_number }} trajets",
       "zero": "Pas de trajet partagé"
     }
   }

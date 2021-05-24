@@ -45,17 +45,18 @@ namespace Liane.Service.Internal.Location
                 var fromCoordinate = from.ToLatLng();
                 var toCoordinate = to.ToLatLng();
                 var distance = fromCoordinate.CalculateDistance(toCoordinate);
-                if (distance >= 5_000)
+                if (distance >= 1_000)
                 {
                     var fromAddress = await addressService.GetDisplayName(fromCoordinate);
                     var toAddress = await addressService.GetDisplayName(toCoordinate);
 
-                    trips.Add(new RealTrip(
+                    var realTrip = new RealTrip(
                         new Api.Trip.Location(fromCoordinate, fromAddress.Address),
                         new Api.Trip.Location(toCoordinate, toAddress.Address),
                         DateTimeOffset.FromUnixTimeMilliseconds(from.Timestamp).DateTime,
                         DateTimeOffset.FromUnixTimeMilliseconds(to.Timestamp).DateTime
-                    ));
+                    );
+                    trips.Add(realTrip);
                 }
             }
 
@@ -66,23 +67,25 @@ namespace Liane.Service.Internal.Location
         {
             List<UserLocation> currentTrip = new();
 
-            foreach (var userLocation in userLocations.OrderBy(u => u.Timestamp))
+            foreach (var current in userLocations.OrderBy(u => u.Timestamp))
             {
                 if (currentTrip.Count == 0)
                 {
-                    currentTrip.Add(userLocation);
+                    currentTrip.Add(current);
                 }
                 else
                 {
-                    var previous = currentTrip[^1];
-                    if (IsPartOfSameTrip(previous, userLocation))
+                    var previous = currentTrip[0];
+                    var deltaTime = current.Timestamp - previous.Timestamp;
+                    var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng());
+                    if (deltaTime > 3_600_000 || distance > 5_000)
                     {
-                        currentTrip.Add(userLocation);
+                        yield return currentTrip.ToImmutableList();
+                        currentTrip = new List<UserLocation> {current};
                     }
                     else
                     {
-                        yield return currentTrip.ToImmutableList();
-                        currentTrip = new List<UserLocation> {userLocation};
+                        currentTrip.Add(current);
                     }
                 }
             }
@@ -92,8 +95,7 @@ namespace Liane.Service.Internal.Location
         {
             var deltaTime = current.Timestamp - previous.Timestamp;
             var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng());
-            return deltaTime < TimeSpan.FromMinutes(5).Ticks
-                   && distance < 5_000;
+            return distance < 5_000;
         }
 
         // public async Task LogLocation(ImmutableList<UserLocation> userLocations)

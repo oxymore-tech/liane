@@ -1,4 +1,4 @@
-using Liane.Api.Trip;
+using System;
 using MongoDB.Bson;
 
 namespace Liane.Service.Internal.Trip
@@ -6,6 +6,9 @@ namespace Liane.Service.Internal.Trip
     public sealed record UserTrip(
         ObjectId? _id,
         string UserId,
-        RealTrip Trip
+        Api.Trip.Location From,
+        Api.Trip.Location To,
+        DateTime StartTime,
+        DateTime EndTime
     );
 }

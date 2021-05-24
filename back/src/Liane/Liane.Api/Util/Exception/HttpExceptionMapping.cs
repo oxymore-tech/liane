@@ -31,15 +31,6 @@ namespace Liane.Api.Util.Exception
         {
             switch (exception)
             {
-                case ArgumentException e:
-                {
-                    var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
-                    errors.AddModelError(e.ParamName ?? "empty", e.Message);
-
-                    var validationErrorResponse = new Dictionary<string, object> {["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred."};
-                    return new BadRequestObjectResult(validationErrorResponse);
-                }
-
                 case ValidationException e:
                 {
                     var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());

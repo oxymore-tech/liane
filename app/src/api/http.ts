@@ -102,8 +102,12 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   if (response.status !== 200 && response.status !== 201) {
     switch (response.status) {
       case 400:
-        const json = await response.json();
-        throw new ValidationError(json?.errors || {});
+        if (response.headers.get("content-type") === "application/json") {
+          const json = await response.json();
+          throw new ValidationError(json?.errors || {});
+        }
+        const json = await response.text();
+        throw new ValidationError({ empty: [json] });
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:

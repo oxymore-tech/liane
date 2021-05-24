@@ -15,6 +15,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { AppText } from "@/components/base/AppText";
 import { format, parseJSON } from "date-fns";
 import { Ionicons } from "@expo/vector-icons";
+import i18n from "i18n-js";
 
 const t = scopedTranslate("Home");
 
@@ -53,16 +54,16 @@ const HomeScreen = ({ navigation } : HomeProps) => {
         <ListItem.Content>
           <ListItem.Title>
             <View style={tw("flex flex-col")}>
-              <AppText style={tw("text-gray-800 font-bold")}>{format(date, "cccc d MMM yyyy", { locale })}</AppText>
+              <AppText style={tw("text-gray-800 font-bold")}>{format(date, "ccc d MMM yyyy", { locale })}</AppText>
               <View style={tw("flex flex-row items-center")}>
                 <View style={tw("flex")}>
-                  <AppText style={tw("text-xl text-gray-800 font-bold")}>{item.from.address.city}</AppText>
+                  <AppText style={tw("text-gray-800 font-bold")}>{item.from.address.city}</AppText>
                   <AppText style={tw("text-gray-400 text-xs")}>{item.from.address.street}</AppText>
                   <AppText style={tw("text-gray-400 font-bold")}>{format(date, "HH:mm", { locale })}</AppText>
                 </View>
                 <Ionicons style={tw("text-lg text-gray-400 mx-2")} name="arrow-forward" />
                 <View style={tw("flex")}>
-                  <AppText style={tw("text-xl text-gray-800 font-bold")}>{item.to.address.city}</AppText>
+                  <AppText style={tw("text-gray-800 font-bold")}>{item.to.address.city}</AppText>
                   <AppText style={tw("text-gray-400 text-xs")}>{item.to.address.street}</AppText>
                   <AppText style={tw("text-gray-400 font-bold")}>{format(parseJSON(item.endTime), "HH:mm", { locale })}</AppText>
                 </View>
@@ -76,25 +77,36 @@ const HomeScreen = ({ navigation } : HomeProps) => {
   return (
     <SafeAreaView>
       <Header
-        leftComponent={<AppButton title="Send" onPress={() => sendLocations()} />}
-        centerComponent={{ text: t("Mes trajets"), style: tw("text-2xl text-white") }}
+        leftComponent={(
+          <AppButton
+            iconStyle={tw("text-2xl text-white")}
+            icon="menu"
+            onPress={() => sendLocations()}
+          />
+        )}
+        centerComponent={<AppText style={tw("text-3xl text-white")}>{t("Mes trajets")}</AppText>}
         rightComponent={(
           <AppButton
             iconStyle={tw("text-2xl text-white")}
-            icon="log-out"
+            icon="exit"
             onPress={() => setAuthUser(undefined)}
           />
         )}
       />
       <FlatList
-        ListHeaderComponent={(<AppText style={tw("text-white font-bold bg-orange-light text-lg p-4")}>{t("trajets partagés", { count: trips.length })}</AppText>)}
+        ListHeaderComponent={(
+          <View style={tw("text-white rounded-xl font-bold bg-orange-light text-lg m-4 px-4 py-2 flex flex-row items-center")}>
+            <AppText style={tw("text-white font-bold text-lg")}>
+              {t("trajets partagés", { count: trips.length, formatted_number: i18n.toNumber(trips.length) })}
+            </AppText>
+          </View>
+        )}
         refreshControl={(
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
         )}
-        style={tw("")}
         keyExtractor={keyExtractor}
         data={trips}
         renderItem={renderItem}

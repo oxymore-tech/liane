@@ -6,9 +6,9 @@
   "Home": {
     "Mes trajets": "My trips",
     "trajets partagés": {
-      "one": "One trip shared",
-      "other": "{{ count }} trips shared",
-      "zero": "No shared trip"
+      "one": "Vous avez partagé un trajet",
+      "other": "Vous avez partagé 3 trajets",
+      "zero": "Pas de trajet partagé"
     }
   }
 }
