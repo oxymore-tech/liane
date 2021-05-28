@@ -9,6 +9,17 @@ services:
     networks:
       - internal
 
+  mongo:
+    image: "mongo:4.4.4"
+    volumes:
+      - "/data/liane/mongo:/data/db"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    networks:
+      - internal
+    restart: unless-stopped
+
   osrm:
     image: "osrm/osrm-backend"
     command: osrm-routed --algorithm mld /data/all.osrm
