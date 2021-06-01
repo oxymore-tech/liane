@@ -6,8 +6,8 @@
 # Overall architecture :neckbeard:
 
 - [back](back/README.md) : Un serveur qui interroge la base de données, effectue des calculs et échange des informations avec les deux applications
-- [app](app/README.md) : Une application web avec laquelle interagissent les passagers pour chercher des trajets et demander à covoiturer
-- [web](web/README.md) : Une application mobile avec laquelle interagissent les conducteurs et qui permet de collecter leurs déplacements
+- [app](app/README.md) : Une application mobile avec laquelle interagissent les conducteurs et qui permet de collecter leurs déplacements
+- [web](web/README.md) : Une application web avec laquelle interagissent les passagers pour chercher des trajets et demander à covoiturer
 
 # Key Concepts
 
