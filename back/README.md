@@ -18,6 +18,10 @@ redis_start
 
 ## Launch the project
 
+Le script start.sh nécessite dotnet pour s'exécuter. 
+Pour installer dotnet : https://dotnet.microsoft.com. 
+
 ```bash
 ./start.sh
 ```
+
