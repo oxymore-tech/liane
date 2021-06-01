@@ -9,12 +9,36 @@ The project is built on dotnet core 5 in C#.
 
 De plus, à la racine du dossier back se trouvent deux scripts : initdb.sh qui permet de faire un ajout massif de données dans la base de données Redis et start.sh qui permet de lancer le serveur.
 
-## Init database
+
+## Bases de données 
+
+Ce projet utilise deux systèmes de gestion de bases de données : Mongo et Redis. 
+Ils peuvent facilement être lancés grâce à Docker avec les commandes suivantes : 
 
 ```bash
+mongo_start
 redis_start
+```
+
+Des commandes existent également pour redémarrer Mongo et Redis en remettant à zéro la base de données : 
+```bash
+mongo_purge
+redis_purge
+```
+
+Les commandes suivantes permettent de quitter Mongo et Redis : 
+```bash
+mongo_stop
+redis_stop
+```
+
+## Initialiser la base de données 
+Lorsque Mongo est Redis sont lancés, il faut lancer le script initdb.sh pour initialiser la base de données :  
+```bash
 ./initdb.sh
 ```
+
+
 
 ## Launch the project
 
