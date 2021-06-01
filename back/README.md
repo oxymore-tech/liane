@@ -18,10 +18,18 @@ redis_start
 
 ## Launch the project
 
-Le script start.sh nécessite dotnet pour s'exécuter. 
+Dotnet est indispensable pour pouvoir lancer la partie back du projet. 
+
 Pour installer dotnet : https://dotnet.microsoft.com. 
 
+Dotnet peut aussi être installé avec brew en utilisant la commande 
+```bash
+brew install homebrew/cask/dotnet
+```
+
+Une fois dotnet installé, il suffit d'exécuter le script start.sh avec la commande suivante :
 ```bash
 ./start.sh
 ```
 
+Vous pouvez alors vous rendre sur http://localhost:8081/swagger qui affiche une documentation des endpoints lancés par le programme. 
