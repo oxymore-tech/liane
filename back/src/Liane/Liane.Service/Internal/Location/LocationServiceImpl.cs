@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api;
 using Liane.Api.Address;
@@ -35,6 +36,7 @@ namespace Liane.Service.Internal.Location
 
         public async Task LogLocation(ImmutableList<UserLocation> userLocations)
         {
+            logger.LogInformation("Log locations : {userLocations}", JsonSerializer.Serialize(userLocations));
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
 
             foreach (var trip in SplitTrips(userLocations)
