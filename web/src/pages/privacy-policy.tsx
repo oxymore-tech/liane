@@ -4,20 +4,20 @@ export default function Page() {
       <strong>Privacy Policy</strong>
       {" "}
       <p>
-        Augustin Gjini built the Liane app as
+        Oxymore.tech built the Liane app as
         an Open Source app. This SERVICE is provided by
-        Augustin Gjini at no cost and is intended for use as
+        Oxymore.tech at no cost and is intended for use as
         is.
       </p>
       {" "}
       <p>
-        This page is used to inform visitors regarding my
+        This page is used to inform visitors regarding our
         policies with the collection, use, and disclosure of Personal
-        Information if anyone decided to use my Service.
+        Information if anyone decided to use our Service.
       </p>
       {" "}
       <p>
-        If you choose to use my Service, then you agree to
+        If you choose to use our Service, then you agree to
         the collection and use of information in relation to this
         policy. The Personal Information that I collect is
         used for providing and improving the Service. I will not use or share your information with
@@ -37,21 +37,29 @@ export default function Page() {
         may require you to provide us with certain personally
         identifiable information, including but not limited to gps location, phone number, firstname, lastname, email. The
         information that
-        I request will be retained on your device and is not collected by me in any way.
+        I request will be retained on your device and is not collected by us in any way.
       </p>
       {" "}
       <p><strong>Log Data</strong></p>
       {" "}
       <p>
         I want to inform you that whenever you
-        use my Service, in a case of an error in the app
+        use our Service, in a case of an error in the app
         I collect data and information (through third party
         products) on your phone called Log Data. This Log Data may
         include information such as your device Internet Protocol
         (“IP”) address, device name, operating system version, the
-        configuration of the app when utilizing my Service,
+        configuration of the app when utilizing our Service,
         the time and date of your use of the Service, and other
         statistics.
+      </p>
+      {" "}
+      <p><strong>SMS</strong></p>
+      {" "}
+      <p>
+        I want to inform you that by proceeding to the authentication process and entering your phone number,
+        Liane will sent you an SMS message which contains an unique authentication code that allow you to proceed
+        to the authentication of your phone number.
       </p>
       {" "}
       <p><strong>Cookies</strong></p>
@@ -60,7 +68,7 @@ export default function Page() {
         Cookies are files with a small amount of data that are
         commonly used as anonymous unique identifiers. These are sent
         to your browser from the websites that you visit and are
-        stored on your device's internal memory.
+        stored on your device&amp;s internal memory.
       </p>
       {" "}
       <p>
@@ -124,10 +132,10 @@ export default function Page() {
         I do not knowingly collect personally
         identifiable information from children under 13 years of age. In the case
         I discover that a child under 13 has provided
-        me with personal information, I immediately
+        us with personal information, I immediately
         delete this from our servers. If you are a parent or guardian
         and you are aware that your child has provided us with
-        personal information, please contact me so that
+        personal information, please contact us so that
         I will be able to do necessary actions.
       </p>
       {" "}
@@ -146,8 +154,8 @@ export default function Page() {
       <p><strong>Contact Us</strong></p>
       {" "}
       <p>
-        If you have any questions or suggestions about my
-        Privacy Policy, do not hesitate to contact me at augustin.gjini@pm.me.
+        If you have any questions or suggestions about our
+        Privacy Policy, do not hesitate to contact us at augustin.gjini@pm.me.
       </p>
     </div>
   );
