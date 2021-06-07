@@ -57,9 +57,9 @@ export default function Page() {
       <p><strong>SMS</strong></p>
       {" "}
       <p>
-        I want to inform you that by proceeding to the authentication process and entering your phone number,
-        Liane will sent you an SMS message which contains an unique authentication code that allow you to proceed
-        to the authentication of your phone number.
+        I want to inform you that by proceeding the authentication process and entering your phone number,
+        Liane will send you an SMS message which contains an unique code that allow you to proceed to the secure
+        authentication of your phone number.
       </p>
       {" "}
       <p><strong>Cookies</strong></p>
