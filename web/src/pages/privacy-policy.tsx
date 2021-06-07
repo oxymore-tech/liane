@@ -19,8 +19,8 @@ export default function Page() {
       <p>
         If you choose to use our Service, then you agree to
         the collection and use of information in relation to this
-        policy. The Personal Information that I collect is
-        used for providing and improving the Service. I will not use or share your information with
+        policy. The Personal Information that We collect is
+        used for providing and improving the Service. We will not use or share your information with
         anyone except as described in this Privacy Policy.
       </p>
       {" "}
@@ -37,15 +37,15 @@ export default function Page() {
         may require you to provide us with certain personally
         identifiable information, including but not limited to gps location, phone number, firstname, lastname, email. The
         information that
-        I request will be retained on your device and is not collected by us in any way.
+        We request will be retained on your device and is not collected by us in any way.
       </p>
       {" "}
       <p><strong>Log Data</strong></p>
       {" "}
       <p>
-        I want to inform you that whenever you
+        We want to inform you that whenever you
         use our Service, in a case of an error in the app
-        I collect data and information (through third party
+        We collect data and information (through third party
         products) on your phone called Log Data. This Log Data may
         include information such as your device Internet Protocol
         (“IP”) address, device name, operating system version, the
@@ -57,7 +57,7 @@ export default function Page() {
       <p><strong>SMS</strong></p>
       {" "}
       <p>
-        I want to inform you that by proceeding the authentication process and entering your phone number,
+        We want to inform you that by proceeding the authentication process and entering your phone number,
         Liane will send you an SMS message which contains an unique code that allow you to proceed to the secure
         authentication of your phone number.
       </p>
@@ -84,7 +84,7 @@ export default function Page() {
       <p><strong>Service Providers</strong></p>
       {" "}
       <p>
-        I may employ third-party companies and
+        We may employ third-party companies and
         individuals due to the following reasons:
       </p>
       <ul>
@@ -94,7 +94,7 @@ export default function Page() {
         <li>To assist us in analyzing how our Service is used.</li>
       </ul>
       <p>
-        I want to inform users of this Service
+        We want to inform users of this Service
         that these third parties have access to your Personal
         Information. The reason is to perform the tasks assigned to
         them on our behalf. However, they are obligated not to
@@ -104,11 +104,11 @@ export default function Page() {
       <p><strong>Security</strong></p>
       {" "}
       <p>
-        I value your trust in providing us your
+        We value your trust in providing us your
         Personal Information, thus we are striving to use commercially
         acceptable means of protecting it. But remember that no method
         of transmission over the internet, or method of electronic
-        storage is 100% secure and reliable, and I cannot
+        storage is 100% secure and reliable, and We cannot
         guarantee its absolute security.
       </p>
       {" "}
@@ -118,8 +118,8 @@ export default function Page() {
         This Service may contain links to other sites. If you click on
         a third-party link, you will be directed to that site. Note
         that these external sites are not operated by me.
-        Therefore, I strongly advise you to review the
-        Privacy Policy of these websites. I have
+        Therefore, We strongly advise you to review the
+        Privacy Policy of these websites. We have
         no control over and assume no responsibility for the content,
         privacy policies, or practices of any third-party sites or
         services.
@@ -129,22 +129,22 @@ export default function Page() {
       {" "}
       <p>
         These Services do not address anyone under the age of 13.
-        I do not knowingly collect personally
+        We do not knowingly collect personally
         identifiable information from children under 13 years of age. In the case
-        I discover that a child under 13 has provided
-        us with personal information, I immediately
+        We discover that a child under 13 has provided
+        us with personal information, We immediately
         delete this from our servers. If you are a parent or guardian
         and you are aware that your child has provided us with
         personal information, please contact us so that
-        I will be able to do necessary actions.
+        We will be able to do necessary actions.
       </p>
       {" "}
       <p><strong>Changes to This Privacy Policy</strong></p>
       {" "}
       <p>
-        I may update our Privacy Policy from
+        We may update our Privacy Policy from
         time to time. Thus, you are advised to review this page
-        periodically for any changes. I will
+        periodically for any changes. We will
         notify you of any changes by posting the new Privacy Policy on
         this page.
       </p>
