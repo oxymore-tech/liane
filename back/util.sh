@@ -39,3 +39,5 @@ function redis_purge {
     rm -Rf ${SCRIPTPATH}/data/redis
     redis_start
 }
+
+"$@"
