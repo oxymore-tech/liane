@@ -1,6 +1,7 @@
 ## Overall architecture
 
-The project is built on react/typescript and expo.io
+The project is built on [React](https://fr.reactjs.org/), 
+[Typescript](https://www.typescriptlang.org/) and [Expo.io](https://expo.io/).
 
 Source organization (`src` folder) :
 
@@ -11,21 +12,22 @@ Source organization (`src` folder) :
 
 ## Getting Started
 
-La partie application de Liane utilise expo.io. 
-Il est donc indispensable de l'installer pour pouvoir lancer l'application en mode "développement". 
+In order to use the application in development mode, you need to install expo.io.
+Check [here](https://docs.expo.io/get-started/installation/) for detailled instructions.
+You also need to have installed [nvm](https://github.com/nvm-sh/nvm) (version 15) 
+and [yarn](https://classic.yarnpkg.com/en/) on your computer.
 
-Un tuto est disponible à l'adresse suivante : 
-
-https://docs.expo.io/get-started/installation/
-
-
-Après avoir suivi le tuto et installé explo cli (sur ordinateur) et expo GO (sur téléphone ou tablette), utiliser les commandes suivantes : 
+After installing Expo GLI on you computer and Expo GO on your smartphone 
+(or tablet) you can use the following commands to build and run the application.
 
 ```bash
 nvm use
 yarn
 yarn web
 ```
-Cela permettra de lancer Liane dans expo CLI sur machine. 
 
-Ensuite, pour lancer liane sur téléphone ou tablette, il suffit de scanner le QR code qui s'affiche dans le terminal et/ou dans un navigateur sur le port 19002 : http://localhost:19002. 
+The application should've launched properly.
+
+To access the deployed application, you can scan the QR code displayed 
+the development tools (or in the terminal) accessible at the address http://localhost:19002/.
+You can also access the application at the address http://localhost:19006/ on your computer.

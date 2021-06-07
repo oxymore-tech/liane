@@ -1,8 +1,6 @@
 
 # What is Liane :seedling:
 
-
-
 # Overall architecture :neckbeard:
 
 - [back](back/README.md) : Un serveur qui interroge la base de données, effectue des calculs et échange des informations avec les deux applications

@@ -1,6 +1,6 @@
 ## Overall architecture
 
-The project is built on react and [Next.js](https://nextjs.org/)
+The project is built on [React](https://fr.reactjs.org/) and [Next.js](https://nextjs.org/)
 
 `web/src` :
 
@@ -12,11 +12,12 @@ The project is built on react and [Next.js](https://nextjs.org/)
 
 ## Launch the project
 
-Avant de lancer le projet, la version 14 de nvm doit être installée. 
+You also need to have installed [nvm](https://github.com/nvm-sh/nvm) (version 14)
+and [yarn](https://classic.yarnpkg.com/en/) on your computer. 
 
-Le tutoriel suivant explique la démarche à suivre sous macOS : https://jamesauble.medium.com/install-nvm-on-mac-with-brew-adb921fb92cc. 
+* Using MacOS, you can install nvm using [this tutorial](https://jamesauble.medium.com/install-nvm-on-mac-with-brew-adb921fb92cc) and yarn using the command `brew install yarn` ;
 
-Il faut ensuite exécuter les commandes suivantes après avoir installé yarn si nécessaire ( avec la commande `brew install yarn`par exemple). 
+After installing both nvm and yarn you can use the following commands to build and run the application.
 
 ```bash
 nvm use
