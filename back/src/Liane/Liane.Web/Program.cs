@@ -4,7 +4,7 @@ namespace Liane.Web
     {
         public static void Main(string[] args)
         {
-            ModuleExtensions.StartCurrentModule(args);
+            Startup.StartCurrentModule(args);
         }
     }
 }

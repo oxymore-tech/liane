@@ -19,8 +19,11 @@ class DisplayService {
     return postAs("/api/step", { body: trips });
   }
 
-  async getStat(trips: Trip[], day: DayOfWeek, startHour?: number, endHour?: number): Promise<RouteStat[]> {
-    const routes = await postAs<{ [key:string]: RouteStat }>("/api/stat", { params: { day, startHour, endHour }, body: trips });
+  async getStat(trips: Trip[], day?: DayOfWeek, startHour?: number, endHour?: number): Promise<RouteStat[]> {
+    const routes = await postAs<{ [key: string]: RouteStat }>("/api/stat", {
+      params: { day, startHour, endHour },
+      body: trips
+    });
     return Object.values(routes);
   }
 

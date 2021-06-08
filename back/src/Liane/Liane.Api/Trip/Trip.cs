@@ -5,7 +5,11 @@ using Liane.Api.Display;
 
 namespace Liane.Api.Trip
 {
-    public sealed record Trip(ImmutableList<RallyingPoint> Coordinates, string? User = null, int? Time = null)
+    public sealed record Trip(
+        ImmutableList<RallyingPoint> Coordinates,
+        string? User = null,
+        int? Time = null
+    )
     {
         public bool Equals(Trip? other)
         {

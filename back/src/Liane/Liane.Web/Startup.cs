@@ -38,7 +38,7 @@ using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web
 {
-    public static class ModuleExtensions
+    public static class Startup
     {
         private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
         {
@@ -155,7 +155,7 @@ namespace Liane.Web
                     var env = hostingContext.HostingEnvironment;
 
                     var compositeFileProvider = new CompositeFileProvider(
-                        new EmbeddedFileProvider(Assembly.GetAssembly(typeof(ModuleExtensions))),
+                        new EmbeddedFileProvider(Assembly.GetAssembly(typeof(Startup))),
                         new PhysicalFileProvider(Directory.GetCurrentDirectory())
                     );
 

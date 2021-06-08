@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api;
+using Liane.Api.Address;
 using Liane.Api.Display;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +34,7 @@ namespace Liane.Web.Controllers
 
         [HttpPost("stat")]
         [DisableAuth]
-        public async Task<Dictionary<string, RouteStat>> GetStat([FromBody] ImmutableHashSet<Trip> trips, [FromQuery] DayOfWeek? day, [FromQuery] int? startHour, [FromQuery] int? endHour)
+        public async Task<ImmutableDictionary<string, RouteStat>> GetStat([FromBody] ImmutableHashSet<Trip> trips, [FromQuery] DayOfWeek? day, [FromQuery] int? startHour, [FromQuery] int? endHour)
         {
             return await displayService.GetStat(trips, day, startHour, endHour);
         }

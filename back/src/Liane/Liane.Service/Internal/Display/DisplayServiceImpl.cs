@@ -225,10 +225,10 @@ namespace Liane.Service.Internal.Display
             return listeTrajets.ToImmutableHashSet();
         }
 
-        public async Task<Dictionary<string, RouteStat>> GetStat(ImmutableHashSet<Api.Trip.Trip> trips, DayOfWeek? day, int? startHour, int? endHour)
+        public async Task<ImmutableDictionary<string, RouteStat>> GetStat(ImmutableHashSet<Api.Trip.Trip> trips, DayOfWeek? day, int? startHour, int? endHour)
         {
-            var edgeKeys = await redis.ListEdgeKeys(day);
             var database = await redis.Get();
+            var edgeKeys = await redis.ListEdgeKeys(day);
             var routesEdges = new Dictionary<string, RouteStat>();
             foreach (var (rallyingPoints, _, _) in trips)
             {
@@ -258,7 +258,7 @@ namespace Liane.Service.Internal.Display
                 }
             }
 
-            return routesEdges;
+            return routesEdges.ToImmutableDictionary();
         }
 
         public async Task<ImmutableList<RallyingPoint>> ListUserTrips(string user, string day)
