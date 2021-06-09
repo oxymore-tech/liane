@@ -17,8 +17,11 @@ Then, you can use the following commands to manage the database.
 
 #### Lancer et initialiser les bases de données
 
-In order to lauch and init the databases Mongo and Redis, you can use the command
-`./liane.sh init_db`. 
+In order to lauch and init the databases Mongo and Redis, you can use the command :
+
+```bash
+./liane.sh init_db
+```
 
 
 #### Gestion des bases de données
