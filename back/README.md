@@ -7,7 +7,7 @@ The project is built on dotnet core 5 in C#.
 - `Liane.Web` : contient le fichier Startup.cs où il faut ajouter les services développés et un sous-dossier Controllers où sont définis tous les endpoints de l'API.
 - `Liane.Test` : contient les classes de test des différents services ainsi que des classes contenant des données brutes permettant d'exécuter les tests.
 
-## Bases de données
+## Badabases 
 
 This project uses two databases systems : Mongo and Redis. 
 
@@ -15,36 +15,18 @@ In order to launch the databases, it is necessary to install docker.
 Then, you can use the following commands to manage the database.
 
 
-#### Lancer et initialiser les bases de données
+#### Lauch and stop databases
 
 In order to lauch and init the databases Mongo and Redis, you can use the command :
 
 ```bash
-./liane.sh init_db
+./liane init
 ```
 
-
-#### Gestion des bases de données
-
-The following commands start the databases :
+If you want to stop the databases, use the following commands : 
 
 ```bash
-./liane.sh mongo_start
-./liane.sh redis_start
-```
-
-The following commands restart the databases and reset the data :
-
-```bash
-./liane.sh mongo_purge
-./liane.sh redis_purge
-```
-
-The following commands stop the databases :
-
-```bash
-./liane.sh mongo_stop
-./liane.sh redis_stop
+./liane stop
 ```
 
 
@@ -56,7 +38,11 @@ get informations about dotnet go [here](https://dotnet.microsoft.com).
 * On MacOS, you can install it using brew : `brew install homebrew/cask/dotnet` ;
 * On Unbuntu (whether it is WSL or not), you can get detailled instructions [here](https://docs.microsoft.com/fr-fr/dotnet/core/install/linux-ubuntu).
 
-Once dotnet is installed, you can launch the project using `./start.sh`
+Once dotnet is installed, you can launch the project using : 
+
+```bash
+./liane start
+```
 
 You can then go on http://localhost:8081/swagger which displays
 the documentation of each endpoint.
