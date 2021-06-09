@@ -7,7 +7,7 @@ The project is built on dotnet core 5 in C#.
 - `Liane.Web` : contient le fichier Startup.cs où il faut ajouter les services développés et un sous-dossier Controllers où sont définis tous les endpoints de l'API.
 - `Liane.Test` : contient les classes de test des différents services ainsi que des classes contenant des données brutes permettant d'exécuter les tests.
 
-## Batabases 
+## Batabases
 
 This project uses two databases systems : Mongo and Redis. 
 
@@ -28,7 +28,6 @@ If you want to stop the databases, use the following commands :
 ```bash
 ./liane stop
 ```
-
 
 ## Launch the project
 
