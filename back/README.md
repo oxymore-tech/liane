@@ -9,39 +9,41 @@ The project is built on dotnet core 5 in C#.
 
 ## Bases de données
 
-In order to launch the databases, it is necessary to install docker. 
-Then, you can call the utilitary file using `./util.sh` and use the 
-following command to manage the database.
-
-#### Lancer les bases de données
-
 This project uses two databases systems : Mongo and Redis. 
+
+In order to launch the databases, it is necessary to install docker. 
+Then, you can use the following commands to manage the database.
+
+
+#### Lancer et initialiser les bases de données
+
+In order to lauch and init the databases Mongo and Redis, you can use the command
+`./liane.sh init_db`. 
+
+
+#### Gestion des bases de données
 
 The following commands start the databases :
 
 ```bash
-./util.sh mongo_start
-./util.sh redis_start
+./liane.sh mongo_start
+./liane.sh redis_start
 ```
 
 The following commands restart the databases and reset the data :
 
 ```bash
-./util.sh mongo_purge
-./util.sh redis_purge
+./liane.sh mongo_purge
+./liane.sh redis_purge
 ```
 
 The following commands stop the databases :
 
 ```bash
-./util.sh mongo_stop
-./util.sh redis_stop
+./liane.sh mongo_stop
+./liane.sh redis_stop
 ```
 
-#### Initialiser la base de données
-
-Once Mongo and Redis are lauched, you can use the command
-`./initdb.sh` to inject data into the databases.  
 
 ## Launch the project
 
