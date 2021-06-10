@@ -10,9 +10,6 @@ import { registerLocationTask } from "@/api/location-task";
 import { AuthUser, LocPermLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
 
-// type LocationPermissionLevel = "never" | "active" | "always";
-// Implies type inference problem
-
 /**
  * Application context format.
  */
@@ -41,20 +38,20 @@ export const AppContext = createContext<AppContextProps>({
  */
 async function registerForPushNotificationsAsync():Promise<string|undefined> {
   if (Constants.isDevice) {
-    
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    
+
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    
+
     if (finalStatus !== "granted") {
       alert("Failed to get push token for push notification!");
       return undefined;
     }
-    
+
     const expoPushToken = await Notifications.getExpoPushTokenAsync();
 
     if (Platform.OS === "android") {
@@ -82,7 +79,7 @@ async function init() : Promise<{ authUser?:AuthUser, permission:LocPermLevel }>
   const storedToken = await getStoredToken();
   console.log("token", storedToken);
   const authUser = storedToken ? await me().catch(() => undefined) : undefined;
-  
+
   // Select the right permission level
   // with the assumption that : background => foreground
   let permissionLevel;
@@ -93,13 +90,13 @@ async function init() : Promise<{ authUser?:AuthUser, permission:LocPermLevel }>
   } else {
     permissionLevel = LocPermLevel.NEVER;
   }
-  
+
   return { authUser, permission: permissionLevel };
 }
 
 /**
  * Define the context of the application.
- * @param props 
+ * @param props
  * @constructor
  */
 export function ContextProvider(props: { children: ReactNode }) {
@@ -117,14 +114,14 @@ export function ContextProvider(props: { children: ReactNode }) {
     }
     setInternalAuthUser(a);
   };
-  
+
   // Launch the locations recuperation
   useEffect(() => {
     if (locationPermission === LocPermLevel.ACTIVE || locationPermission === LocPermLevel.ALWAYS) {
       registerLocationTask().then();
     }
   }, [locationPermission]);
-  
+
   // Modify the permission
   useEffect(() => {
     init()
@@ -134,7 +131,7 @@ export function ContextProvider(props: { children: ReactNode }) {
       })
       .then(() => setAppLoaded(true));
   }, []);
-  
+
   // Ask for push notification permission
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -150,8 +147,8 @@ export function ContextProvider(props: { children: ReactNode }) {
       value={{
         appLoaded: appLoaded && fontLoaded,
         expoPushToken,
-        locationPermission: locationPermission,
-        setLocationPermission: setLocationPermission,
+        locationPermission,
+        setLocationPermission,
         authUser,
         setAuthUser
       }}
