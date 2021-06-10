@@ -54,13 +54,13 @@ export type NavigationParamList = {
 
 export function Navigation() {
 
-  const { appLoaded, locationPermissionGranted, authUser } = useContext(AppContext);
+  const { appLoaded, locationPermission, authUser } = useContext(AppContext);
 
   if (!appLoaded) {
     return <AppLoading />;
   }
 
-  if (!locationPermissionGranted) {
+  if (!locationPermission) {
     return (
       <Stack.Navigator>
         <Stack.Screen
