@@ -102,7 +102,11 @@ function getButtonText(step: number) {
       return "C'est ma liberté";
     default:
     case 2:
-      return "J'autorise";
+      return "Quand l'application est active";
+    case 3:
+      return "Toujours";
+    case 4:
+      return "Jamais";
   }
 }
 
@@ -164,11 +168,28 @@ const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
       <View>
         {getWizardText(step)}
         <AppButton
-          buttonStyle={tw("rounded-3xl p-4 m-20 bg-orange-light")}
-          titleStyle={tw(`text-xl text-white font-bold ${step === 2 ? "text-orange" : ""}`)}
-          onPress={next}
+          buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+          titleStyle={tw("text-xl text-white font-bold ")}
+          onPress={next} // Popup for foreground permission
           title={getButtonText(step)}
         />
+        {step === 2
+          && (
+          <>
+            <AppButton
+              buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+              titleStyle={tw("text-xl text-white font-bold ")}
+              onPress={next} // Popup for background permission
+              title={getButtonText(step + 1)}
+            />
+            <AppButton
+              buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+              titleStyle={tw("text-xl text-white font-bold ")}
+              onPress={next} // Popup saying you cannot use Liane ?
+              title={getButtonText(step + 2)}
+            />
+          </>
+          )}
       </View>
     </ImageBackground>
   );

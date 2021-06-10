@@ -40,6 +40,7 @@ namespace Liane.Service.Internal.User
 
         public async Task SendSms(string phone)
         {
+            logger.LogDebug("start send sms ");
             if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
             {
                 var phoneNumber = ParseNumber(phone);
