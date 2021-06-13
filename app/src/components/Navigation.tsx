@@ -66,7 +66,7 @@ export function Navigation() {
       <Stack.Navigator>
         <Stack.Screen
           name="LocationWizard"
-          component={LocationWizard}
+          component={LocationWizard2}
           options={{ headerShown: false }}
           initialParams={{ step: 0 }}
         />
