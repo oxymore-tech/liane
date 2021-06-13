@@ -8,7 +8,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
 import { NavigationParamList } from "@/components/Navigation";
 import { tw } from "@/api/tailwind";
-import { LocPermLevel } from "@/api";
+import { LocationPermissionLevel } from "@/api";
 
 const image = require("@/assets/images/bg-mountains.jpg");
 const logo = require("@/assets/logo_white.png");
@@ -22,19 +22,19 @@ type LocationWizardProps = {
   navigation: LocationWizardNavigationProp;
 };
 
+/**
+ * Get the text of the current step.
+ * @param step number of the step
+ */
 function getWizardText(step: number) {
   switch (step) {
     case 0:
       return (
-        <AppText
-          style={tw("text-center text-lg text-gray-500 mt-20")}
-        >
+        <AppText style={tw("text-center text-lg text-gray-500 mt-20")}>
           <AppText>
             Covoiturer à la campagne&nbsp;
           </AppText>
-          <AppText
-            style={tw("font-bold text-gray-800")}
-          >
+          <AppText style={tw("font-bold text-gray-800")}>
             en toute liberté
           </AppText>
         </AppText>
@@ -95,6 +95,10 @@ function getWizardText(step: number) {
   }
 }
 
+/**
+ * Get the text of the button of the current step.
+ * @param step number of the step
+ */
 function getButtonText(step: number) {
   switch (step) {
     case 0:
@@ -112,7 +116,7 @@ function getButtonText(step: number) {
 }
 
 const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
-  const { setLocationPermission } = useContext(AppContext);
+  const { setLocationPermissionLevel } = useContext(AppContext);
   const { step = 0 } = route.params;
 
   // Advance one step
@@ -147,22 +151,22 @@ const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
     const permission = await Location.requestForegroundPermissionsAsync();
 
     if (permission.status === "granted") {
-      setLocationPermission(LocPermLevel.ACTIVE);
+      setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
       await next();
     }
 
-  }, [setLocationPermission, next]);
+  }, [setLocationPermissionLevel, next]);
 
   // Request to give background permissions
   const requestBackgroundLocPerm = useCallback(async () => {
     const permission = await Location.requestBackgroundPermissionsAsync();
 
     if (permission.status === "granted") {
-      setLocationPermission(LocPermLevel.ALWAYS);
+      setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
       await next();
     }
 
-  }, [setLocationPermission, next]);
+  }, [setLocationPermissionLevel, next]);
 
   return (
     <ImageBackground source={image} style={tw("h-full min-h-full")} resizeMode="cover">
@@ -202,7 +206,7 @@ const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
             <AppButton
               buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
               titleStyle={tw("text-xl text-white font-bold ")}
-              onPress={next} // Popup saying you cannot use Liane ?
+              onPress={requestNoLocPerm} // Popup saying you cannot use Liane ?
               title="Jamais"
             />
           </>

@@ -7,7 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@/api/client";
 import * as Location from "expo-location";
 import { registerLocationTask } from "@/api/location-task";
-import { AuthUser, LocPermLevel } from "@/api";
+import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
 
 /**
@@ -16,8 +16,8 @@ import { getStoredToken } from "@/api/storage";
 interface AppContextProps {
   appLoaded: boolean; // Whether the app. has loaded
   expoPushToken?: string; // Notification token
-  locationPermission: LocPermLevel; // Tracking permission level
-  setLocationPermission: (locationPermissionGranted: LocPermLevel) => void; // Modifier for the previous
+  locationPermissionLevel: LocationPermissionLevel; // Tracking permission level
+  setLocationPermissionLevel: (locationPermissionGranted: LocationPermissionLevel) => void; // Modifier for the previous
   authUser?: AuthUser; // Authenticated user
   setAuthUser: (authUser?: AuthUser) => void; // Modifier for the previous
 }
@@ -27,8 +27,8 @@ interface AppContextProps {
  */
 export const AppContext = createContext<AppContextProps>({
   appLoaded: false,
-  locationPermission: LocPermLevel.NEVER,
-  setLocationPermission: () => { },
+  locationPermissionLevel: LocationPermissionLevel.NEVER,
+  setLocationPermissionLevel: () => { },
   setAuthUser: () => { }
 });
 
@@ -73,22 +73,26 @@ async function registerForPushNotificationsAsync():Promise<string|undefined> {
  * Initialise the context by getting whether the app. is
  * authorised to track the device and at which level.
  */
-async function init() : Promise<{ authUser?:AuthUser, permission:LocPermLevel }> {
+async function init() : Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
   const permissionBackground = await Location.getBackgroundPermissionsAsync();
   const permissionForeground = await Location.getForegroundPermissionsAsync();
   const storedToken = await getStoredToken();
-  console.log("token", storedToken);
   const authUser = storedToken ? await me().catch(() => undefined) : undefined;
+
+  console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
+  console.log(`Authenticated user is ${authUser}`);
 
   // Select the right permission level
   // with the assumption that : background => foreground
   let permissionLevel;
   if (permissionBackground.status === "granted") {
-    permissionLevel = LocPermLevel.ALWAYS;
+    permissionLevel = LocationPermissionLevel.ALWAYS;
   } else if (permissionForeground.status === "granted") {
-    permissionLevel = LocPermLevel.ACTIVE;
+    permissionLevel = LocationPermissionLevel.ACTIVE;
+  } else if (permissionForeground.status === "denied" || permissionBackground.status === "denied") {
+    permissionLevel = LocationPermissionLevel.NEVER;
   } else {
-    permissionLevel = LocPermLevel.NEVER;
+    permissionLevel = LocationPermissionLevel.NEVER;
   }
 
   return { authUser, permission: permissionLevel };
@@ -96,15 +100,13 @@ async function init() : Promise<{ authUser?:AuthUser, permission:LocPermLevel }>
 
 /**
  * Define the context of the application.
- * @param props
- * @constructor
  */
 export function ContextProvider(props: { children: ReactNode }) {
   const [fontLoaded] = useFonts({ Inter: Inter_400Regular });
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
-  const [locationPermission, setLocationPermission] = useState(LocPermLevel.NEVER);
+  const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
@@ -117,7 +119,7 @@ export function ContextProvider(props: { children: ReactNode }) {
 
   // Launch the locations recuperation
   useEffect(() => {
-    if (locationPermission === LocPermLevel.ACTIVE || locationPermission === LocPermLevel.ALWAYS) {
+    if (locationPermission === LocationPermissionLevel.ACTIVE || locationPermission === LocationPermissionLevel.ALWAYS) {
       registerLocationTask().then();
     }
   }, [locationPermission]);
@@ -147,8 +149,8 @@ export function ContextProvider(props: { children: ReactNode }) {
       value={{
         appLoaded: appLoaded && fontLoaded,
         expoPushToken,
-        locationPermission,
-        setLocationPermission,
+        locationPermissionLevel: locationPermission,
+        setLocationPermissionLevel: setLocationPermission,
         authUser,
         setAuthUser
       }}

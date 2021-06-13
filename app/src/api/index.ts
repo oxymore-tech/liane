@@ -48,8 +48,9 @@ export interface RealTrip {
 // type LocationPermissionLevel = "never" | "active" | "always";
 // Implies type inference problem
 // Is it the right place for that as it might be used among the whole app. ?
-export enum LocPermLevel {
+export enum LocationPermissionLevel {
   NEVER,
   ACTIVE,
-  ALWAYS
+  ALWAYS,
+  NOT_NOW
 }
