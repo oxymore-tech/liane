@@ -60,7 +60,10 @@ function getWizardText(step: number) {
   return view;
 }
 
-function alertTemplate(message: string) {
+/**
+ * Alter template.
+ */
+function alert(message: string, callback: Function) {
   Alert.alert(
     "Information",
     message,
@@ -70,7 +73,8 @@ function alertTemplate(message: string) {
         style: "cancel"
       },
       {
-        text: "Continuer"
+        text: "Continuer",
+        onPress: async () => callback()
       }
     ],
     { cancelable: true }
@@ -94,43 +98,46 @@ const LocationWizard2 = () => {
 
   // Ask for foreground tracking permission
   const requestForegroundLocPerm = async () => {
-    alertTemplate("Liane a besoin de suivre votre position pour fonctionner."); // Important alert in order to get validated by Google
-    const permission = await Location.requestForegroundPermissionsAsync();
-    console.log(`New foreground permission status : ${permission.status}, ${permission.canAskAgain}`);
+    alert("Liane a besoin de suivre votre position pour fonctionner.", async () => {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      console.log(`New foreground permission status : ${permission.status}, ${permission.canAskAgain}`);
 
-    if (permission) {
-      if (permission.status === "granted") {
-        setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
-      } else if (permission.canAskAgain) {
-        setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
+      if (permission) {
+        if (permission.status === "granted") {
+          setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+        } else if (permission.canAskAgain) {
+          setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
+        }
       }
-    }
+    }); // Important alert in order to get validated by Google
   };
 
   // Ask for background tracking permission
   const requestBackgroundLocPerm = async () => {
-    alertTemplate("Liane a besoin de suivre votre position pour fonctionner.");
-    const permissionForeground = await Location.requestForegroundPermissionsAsync(); // Forced to ask for foreground perms first
+    alert("Liane a besoin de suivre votre position pour fonctionner.", async () => {
+      const permissionForeground = await Location.requestForegroundPermissionsAsync(); // Forced to ask for foreground perms first
 
-    console.log(`New foreground permission status : ${permissionForeground.status}, ${permissionForeground.canAskAgain}`);
-    if (permissionForeground) {
-      if (permissionForeground.status === "granted") {
-        setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+      console.log(`New foreground permission status : ${permissionForeground.status}, ${permissionForeground.canAskAgain}`);
+      if (permissionForeground) {
+        if (permissionForeground.status === "granted") {
+          const permissionBackground = await Location.requestBackgroundPermissionsAsync();
+          console.log(`New background permission status : ${permissionBackground.status}, ${permissionBackground.canAskAgain}`);
 
-        const permissionBackground = await Location.requestBackgroundPermissionsAsync();
-        console.log(`New background permission status : ${permissionBackground.status}, ${permissionBackground.canAskAgain}`);
-
-        if (permissionBackground) {
-          if (permissionBackground.status === "granted") {
-            setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
-          } else if (permissionBackground.canAskAgain) {
-            setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
+          if (permissionBackground) {
+            if (permissionBackground.status === "granted") {
+              setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
+            } else if (permissionBackground.canAskAgain) {
+              setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+              setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
+            } else {
+              setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+            }
           }
+        } else if (!permissionForeground.canAskAgain) {
+          setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
         }
-      } else if (!permissionForeground.canAskAgain) {
-        setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
       }
-    }
+    });
   };
 
   // Ask for no tracking (for now)
