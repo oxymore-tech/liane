@@ -139,6 +139,9 @@ export function ContextProvider(props: { children: ReactNode }) {
     registerForPushNotificationsAsync()
       .then((token) => {
         setExpoPushToken(token);
+      }, (result) => {
+        console.log("Impossible de récupérer de jeton d'authentification des notifications, l'application ne peut donc pas fonctionner :");
+        console.log(result);
       });
   }, []);
 
