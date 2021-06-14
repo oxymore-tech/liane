@@ -7,7 +7,7 @@ The project is built on dotnet core 5 in C#.
 - `Liane.Web` : contient le fichier Startup.cs où il faut ajouter les services développés et un sous-dossier Controllers où sont définis tous les endpoints de l'API.
 - `Liane.Test` : contient les classes de test des différents services ainsi que des classes contenant des données brutes permettant d'exécuter les tests.
 
-## Batabases
+## Databases
 
 This project uses two databases systems : Mongo and Redis. 
 
@@ -15,9 +15,9 @@ In order to launch the databases, it is necessary to install docker.
 Then, you can use the following commands to manage the database.
 
 
-#### Lauch and stop databases
+#### Launch and stop databases
 
-In order to lauch and init the databases Mongo and Redis, you can use the command :
+In order to launch and init the databases Mongo and Redis, you can use the command :
 
 ```bash
 ./liane init
@@ -32,7 +32,7 @@ If you want to stop the databases, use the following commands :
 ## Launch the project
 
 Dotnet is mandatory in order to launch the backend part of the project. To 
-get informations about dotnet go [here](https://dotnet.microsoft.com).
+get information about dotnet go [here](https://dotnet.microsoft.com).
 
 * On MacOS, you can install it using brew : `brew install homebrew/cask/dotnet` ;
 * On Unbuntu (whether it is WSL or not), you can get detailled instructions [here](https://docs.microsoft.com/fr-fr/dotnet/core/install/linux-ubuntu).

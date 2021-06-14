@@ -58,7 +58,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
           <AppText
             style={tw("text-center text-lg text-gray-600")}
           >
-            Un code vous a été envoyé pas sms
+            Un code vous a été envoyé par sms
           </AppText>
           <View
             style={tw("rounded-full m-20 bg-gray-100 text-gray-600 text-2xl flex flex-row h-12")}
