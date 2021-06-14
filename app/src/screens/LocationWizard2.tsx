@@ -1,8 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Image, View } from "react-native";
-import { RouteProp } from "@react-navigation/native";
-import { NavigationParamList } from "@/components/Navigation";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { Alert, Image, View } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import * as Location from "expo-location";
 import { LocationPermissionLevel } from "@/api";
@@ -10,17 +7,7 @@ import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 
-type LocationWizardRouteProp = RouteProp<NavigationParamList, "LocationWizard">;
-type LocationWizardNavigationProp = StackNavigationProp<NavigationParamList, "LocationWizard">;
-type LocationWizardProps = {
-  route: LocationWizardRouteProp;
-  navigation: LocationWizardNavigationProp;
-};
-
 const logo = require("@/assets/logo_mini.png");
-
-// TODO : alert before requesting any permission
-// TODO : request foreground before requesting background permissions
 
 /**
  * Get the text of the current step.
@@ -65,7 +52,7 @@ function getWizardText(step: number) {
     default:
       view = (
         <AppText>
-          Lorem ipsum. +
+          Lorem ipsum.
         </AppText>
       );
   }
@@ -73,10 +60,27 @@ function getWizardText(step: number) {
   return view;
 }
 
+function alertTemplate(message: string) {
+  Alert.alert(
+    "Information",
+    message,
+    [
+      {
+        text: "Annuler",
+        style: "cancel"
+      },
+      {
+        text: "Continuer"
+      }
+    ],
+    { cancelable: true }
+  );
+}
+
 /**
  * React component.
  */
-const LocationWizard2 = ({ navigation }: LocationWizardProps) => {
+const LocationWizard2 = () => {
   const [step, setStep] = useState(0);
   const [optionalText, setOptionalText] = useState("");
   const { setLocationPermissionLevel } = useContext(AppContext);
@@ -90,6 +94,7 @@ const LocationWizard2 = ({ navigation }: LocationWizardProps) => {
 
   // Ask for foreground tracking permission
   const requestForegroundLocPerm = async () => {
+    alertTemplate("Liane a besoin de suivre votre position pour fonctionner."); // Important alert in order to get validated by Google
     const permission = await Location.requestForegroundPermissionsAsync();
     console.log(`New foreground permission status : ${permission.status}, ${permission.canAskAgain}`);
 
@@ -104,13 +109,25 @@ const LocationWizard2 = ({ navigation }: LocationWizardProps) => {
 
   // Ask for background tracking permission
   const requestBackgroundLocPerm = async () => {
-    const permission = await Location.requestBackgroundPermissionsAsync();
-    console.log(`New background permission status : ${permission.status}, ${permission.canAskAgain}`);
+    alertTemplate("Liane a besoin de suivre votre position pour fonctionner.");
+    const permissionForeground = await Location.requestForegroundPermissionsAsync(); // Forced to ask for foreground perms first
 
-    if (permission) {
-      if (permission.status === "granted") {
-        setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
-      } else if (!permission.canAskAgain) {
+    console.log(`New foreground permission status : ${permissionForeground.status}, ${permissionForeground.canAskAgain}`);
+    if (permissionForeground) {
+      if (permissionForeground.status === "granted") {
+        setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+
+        const permissionBackground = await Location.requestBackgroundPermissionsAsync();
+        console.log(`New background permission status : ${permissionBackground.status}, ${permissionBackground.canAskAgain}`);
+
+        if (permissionBackground) {
+          if (permissionBackground.status === "granted") {
+            setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
+          } else if (permissionBackground.canAskAgain) {
+            setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
+          }
+        }
+      } else if (!permissionForeground.canAskAgain) {
         setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
       }
     }
