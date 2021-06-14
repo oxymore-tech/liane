@@ -106,7 +106,7 @@ export function ContextProvider(props: { children: ReactNode }) {
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
-  const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
+  const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
@@ -119,16 +119,16 @@ export function ContextProvider(props: { children: ReactNode }) {
 
   // Launch the locations recuperation
   useEffect(() => {
-    if (locationPermission === LocationPermissionLevel.ACTIVE || locationPermission === LocationPermissionLevel.ALWAYS) {
+    if (locationPermissionLevel === LocationPermissionLevel.ACTIVE || locationPermissionLevel === LocationPermissionLevel.ALWAYS) {
       registerLocationTask().then();
     }
-  }, [locationPermission]);
+  }, [locationPermissionLevel]);
 
   // Modify the permission
   useEffect(() => {
     init()
       .then((r) => {
-        setLocationPermission(r.permission);
+        setLocationPermissionLevel(r.permission);
         return setAuthUser(r.authUser);
       })
       .then(() => setAppLoaded(true));
@@ -149,8 +149,8 @@ export function ContextProvider(props: { children: ReactNode }) {
       value={{
         appLoaded: appLoaded && fontLoaded,
         expoPushToken,
-        locationPermissionLevel: locationPermission,
-        setLocationPermissionLevel: setLocationPermission,
+        locationPermissionLevel,
+        setLocationPermissionLevel,
         authUser,
         setAuthUser
       }}
