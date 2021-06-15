@@ -11,7 +11,10 @@ export async function storeLocation(newLocations: LocationObject[]) {
   return locations;
 }
 
-async function getStoredLocations() :Promise<LocationObject[]> {
+/**
+ * Get previously stored locations.
+ */
+async function getStoredLocations(): Promise<LocationObject[]> {
   const locations = await AsyncStorage.getItem("Location");
   if (locations) {
     return JSON.parse(locations);

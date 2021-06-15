@@ -51,6 +51,6 @@ export async function registerLocationTask() {
       activityType: Location.ActivityType.AutomotiveNavigation
     });
   } catch (err) {
-    console.log("Task Register failed:", err);
+    console.log("Task Register failed : ", err);
   }
 }
