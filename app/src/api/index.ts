@@ -45,12 +45,10 @@ export interface RealTrip {
 // NEVER : no tracking
 // ACTIVE : only when the app. is active
 // ALWAYS : always (even on background)
-// type LocationPermissionLevel = "never" | "active" | "always";
-// Implies type inference problem
-// Is it the right place for that as it might be used among the whole app. ?
+// NOT_NOW : temp. state (will ask again later)
 export enum LocationPermissionLevel {
-  NEVER,
-  ACTIVE,
-  ALWAYS,
-  NOT_NOW
+  NEVER = "never",
+  ACTIVE = "active",
+  ALWAYS = "always",
+  NOT_NOW = "not_now"
 }
