@@ -8,6 +8,7 @@ import { Navigation } from "@/components/Navigation";
 import { listenLocationTask } from "@/api/location-task";
 import { NavigationContainer } from "@react-navigation/native";
 import { localeAsString } from "@/api/i18n";
+import { MenuProvider } from "react-native-popup-menu";
 
 i18n.translations = {
   en,
@@ -68,11 +69,13 @@ function App() {
   });
 
   return (
-    <ContextProvider>
-      <NavigationContainer>
-        <Navigation />
-      </NavigationContainer>
-    </ContextProvider>
+    <MenuProvider>
+      <ContextProvider>
+        <NavigationContainer>
+          <Navigation />
+        </NavigationContainer>
+      </ContextProvider>
+    </MenuProvider>
   );
 }
 

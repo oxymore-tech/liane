@@ -3,33 +3,23 @@ import {
   FlatList, ListRenderItemInfo, RefreshControl, SafeAreaView, View
 } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
-import { AppButton } from "@/components/base/AppButton";
-import { sendLocations } from "@/api/location-task";
 import { locale, scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
-import { Header, ListItem } from "react-native-elements";
+import { ListItem } from "react-native-elements";
 import { RealTrip } from "@/api";
 import { listTrips } from "@/api/client";
-import { NavigationParamList } from "@/components/Navigation";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { AppText } from "@/components/base/AppText";
 import { format, parseJSON } from "date-fns";
 import { Ionicons } from "@expo/vector-icons";
 import i18n from "i18n-js";
+import HeaderMenu from "@/components/HeaderMenu";
 
 const t = scopedTranslate("Home");
 
-type HomeNavigationProp = StackNavigationProp<NavigationParamList, "Home">;
-
-type HomeProps = {
-  navigation: HomeNavigationProp;
-};
-
-const HomeScreen = ({ navigation } : HomeProps) => {
+const HomeScreen = () => {
 
   const [trips, setTrips] = useState<RealTrip[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const { setAuthUser } = useContext(AppContext);
 
   useEffect(() => {
     setRefreshing(true);
@@ -76,23 +66,7 @@ const HomeScreen = ({ navigation } : HomeProps) => {
   };
   return (
     <SafeAreaView>
-      <Header
-        leftComponent={(
-          <AppButton
-            iconStyle={tw("text-2xl text-white")}
-            icon="menu"
-            onPress={() => sendLocations()}
-          />
-        )}
-        centerComponent={<AppText style={tw("text-3xl text-white")}>{t("Mes trajets")}</AppText>}
-        rightComponent={(
-          <AppButton
-            iconStyle={tw("text-2xl text-white")}
-            icon="exit"
-            onPress={() => setAuthUser(undefined)}
-          />
-        )}
-      />
+      <HeaderMenu name="Menu" />
       <FlatList
         ListHeaderComponent={(
           <View style={tw("text-white rounded-xl font-bold bg-orange-light text-lg m-4 px-4 py-2 flex flex-row items-center")}>
