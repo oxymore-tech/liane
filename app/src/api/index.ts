@@ -40,3 +40,17 @@ export interface RealTrip {
   startTime: Date;
   endTime: Date;
 }
+
+// Define the permission level regarding the recuperation of the location
+// NEVER : no tracking
+// ACTIVE : only when the app. is active
+// ALWAYS : always (even on background)
+// type LocationPermissionLevel = "never" | "active" | "always";
+// Implies type inference problem
+// Is it the right place for that as it might be used among the whole app. ?
+export enum LocationPermissionLevel {
+  NEVER,
+  ACTIVE,
+  ALWAYS,
+  NOT_NOW
+}

@@ -7,9 +7,10 @@ import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
 import HomeScreen from "@/screens/HomeScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
-import LocationWizard from "@/screens/LocationWizard";
 import { Ionicons } from "@expo/vector-icons";
 import { tw } from "@/api/tailwind";
+import { LocationPermissionLevel } from "@/api";
+import LocationWizard2 from "@/screens/LocationWizard2";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,18 +55,18 @@ export type NavigationParamList = {
 
 export function Navigation() {
 
-  const { appLoaded, locationPermissionGranted, authUser } = useContext(AppContext);
+  const { appLoaded, locationPermissionLevel, authUser } = useContext(AppContext);
 
   if (!appLoaded) {
     return <AppLoading />;
   }
 
-  if (!locationPermissionGranted) {
+  if (locationPermissionLevel === LocationPermissionLevel.NEVER) {
     return (
       <Stack.Navigator>
         <Stack.Screen
           name="LocationWizard"
-          component={LocationWizard}
+          component={LocationWizard2}
           options={{ headerShown: false }}
           initialParams={{ step: 0 }}
         />

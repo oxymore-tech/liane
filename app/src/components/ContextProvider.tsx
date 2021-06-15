@@ -7,37 +7,51 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@/api/client";
 import * as Location from "expo-location";
 import { registerLocationTask } from "@/api/location-task";
-import { AuthUser } from "@/api";
+import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
 
+/**
+ * Application context format.
+ */
 interface AppContextProps {
-  appLoaded:boolean;
-  expoPushToken?: string;
-  locationPermissionGranted: boolean;
-  setLocationPermissionGranted: (locationPermissionGranted: boolean) => void;
-  authUser?: AuthUser;
-  setAuthUser: (authUser?: AuthUser) => void;
+  appLoaded: boolean; // Whether the app. has loaded
+  expoPushToken?: string; // Notification token
+  locationPermissionLevel: LocationPermissionLevel; // Tracking permission level
+  setLocationPermissionLevel: (locationPermissionGranted: LocationPermissionLevel) => void; // Modifier for the previous
+  authUser?: AuthUser; // Authenticated user
+  setAuthUser: (authUser?: AuthUser) => void; // Modifier for the previous
 }
 
+/**
+ * Create default context.
+ */
 export const AppContext = createContext<AppContextProps>({
   appLoaded: false,
-  locationPermissionGranted: false,
-  setLocationPermissionGranted: () => { },
+  locationPermissionLevel: LocationPermissionLevel.NEVER,
+  setLocationPermissionLevel: () => { },
   setAuthUser: () => { }
 });
 
+/**
+ * Ask for the permission to send push notifications and define their
+ * parameters.
+ */
 async function registerForPushNotificationsAsync():Promise<string|undefined> {
   if (Constants.isDevice) {
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
+
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
+
     if (finalStatus !== "granted") {
       alert("Failed to get push token for push notification!");
       return undefined;
     }
+
     const expoPushToken = await Notifications.getExpoPushTokenAsync();
 
     if (Platform.OS === "android") {
@@ -55,20 +69,44 @@ async function registerForPushNotificationsAsync():Promise<string|undefined> {
   return undefined;
 }
 
-async function init() : Promise<{ authUser?:AuthUser, permissionGranted:boolean }> {
-  const permission = await Location.getBackgroundPermissionsAsync();
+/**
+ * Initialise the context by getting whether the app. is
+ * authorised to track the device and at which level.
+ */
+async function init() : Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
+  const permissionBackground = await Location.getBackgroundPermissionsAsync();
+  const permissionForeground = await Location.getForegroundPermissionsAsync();
   const storedToken = await getStoredToken();
-  console.log("token", storedToken);
   const authUser = storedToken ? await me().catch(() => undefined) : undefined;
-  return { authUser, permissionGranted: permission.status === "granted" };
+
+  console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
+  console.log(`Authenticated user is ${authUser}`);
+
+  // Select the right permission level
+  // with the assumption that : background => foreground
+  let permissionLevel;
+  if (permissionBackground.status === "granted") {
+    permissionLevel = LocationPermissionLevel.ALWAYS;
+  } else if (permissionForeground.status === "granted") {
+    permissionLevel = LocationPermissionLevel.ACTIVE;
+  } else if (permissionForeground.status === "denied" || permissionBackground.status === "denied") {
+    permissionLevel = LocationPermissionLevel.NEVER;
+  } else {
+    permissionLevel = LocationPermissionLevel.NEVER;
+  }
+
+  return { authUser, permission: permissionLevel };
 }
 
+/**
+ * Define the context of the application.
+ */
 export function ContextProvider(props: { children: ReactNode }) {
   const [fontLoaded] = useFonts({ Inter: Inter_400Regular });
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
 
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
@@ -79,25 +117,31 @@ export function ContextProvider(props: { children: ReactNode }) {
     setInternalAuthUser(a);
   };
 
+  // Launch the locations recuperation
   useEffect(() => {
-    if (locationPermissionGranted) {
+    if (locationPermissionLevel === LocationPermissionLevel.ACTIVE || locationPermissionLevel === LocationPermissionLevel.ALWAYS) {
       registerLocationTask().then();
     }
-  }, [locationPermissionGranted]);
+  }, [locationPermissionLevel]);
 
+  // Modify the permission
   useEffect(() => {
     init()
       .then((r) => {
-        setLocationPermissionGranted(r.permissionGranted);
+        setLocationPermissionLevel(r.permission);
         return setAuthUser(r.authUser);
       })
       .then(() => setAppLoaded(true));
   }, []);
 
+  // Ask for push notification permission
   useEffect(() => {
     registerForPushNotificationsAsync()
       .then((token) => {
         setExpoPushToken(token);
+      }, (result) => {
+        console.log("Impossible de récupérer de jeton d'authentification des notifications, l'application ne peut donc pas fonctionner :");
+        console.log(result);
       });
   }, []);
 
@@ -108,8 +152,8 @@ export function ContextProvider(props: { children: ReactNode }) {
       value={{
         appLoaded: appLoaded && fontLoaded,
         expoPushToken,
-        locationPermissionGranted,
-        setLocationPermissionGranted,
+        locationPermissionLevel,
+        setLocationPermissionLevel,
         authUser,
         setAuthUser
       }}

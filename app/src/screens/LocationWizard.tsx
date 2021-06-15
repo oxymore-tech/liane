@@ -8,6 +8,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
 import { NavigationParamList } from "@/components/Navigation";
 import { tw } from "@/api/tailwind";
+import { LocationPermissionLevel } from "@/api";
 
 const image = require("@/assets/images/bg-mountains.jpg");
 const logo = require("@/assets/logo_white.png");
@@ -21,19 +22,19 @@ type LocationWizardProps = {
   navigation: LocationWizardNavigationProp;
 };
 
+/**
+ * Get the text of the current step.
+ * @param step number of the step
+ */
 function getWizardText(step: number) {
   switch (step) {
     case 0:
       return (
-        <AppText
-          style={tw("text-center text-lg text-gray-500 mt-20")}
-        >
+        <AppText style={tw("text-center text-lg text-gray-500 mt-20")}>
           <AppText>
             Covoiturer à la campagne&nbsp;
           </AppText>
-          <AppText
-            style={tw("font-bold text-gray-800")}
-          >
+          <AppText style={tw("font-bold text-gray-800")}>
             en toute liberté
           </AppText>
         </AppText>
@@ -94,6 +95,10 @@ function getWizardText(step: number) {
   }
 }
 
+/**
+ * Get the text of the button of the current step.
+ * @param step number of the step
+ */
 function getButtonText(step: number) {
   switch (step) {
     case 0:
@@ -102,55 +107,66 @@ function getButtonText(step: number) {
       return "C'est ma liberté";
     default:
     case 2:
-      return "J'autorise";
+      return "Quand l'application est active";
+    case 3:
+      return "Toujours";
+    case 4:
+      return "Jamais";
   }
 }
 
 const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
-  const { setLocationPermissionGranted } = useContext(AppContext);
+  const { setLocationPermissionLevel } = useContext(AppContext);
   const { step = 0 } = route.params;
 
-  const askPermissionDialog = async () => {
-    const foreground = await Location.requestForegroundPermissionsAsync();
-    if (foreground) {
-      Alert.alert(
-        "Information",
-        "Liane collecte la position GPS de votre téléphone pour permettre l'enregistrement anonyme "
-        + "de vos trajets même lorsque l'application est fermée ou n'est pas en cours d'utilisation.",
-        [
-          {
-            text: "Annuler",
-            style: "cancel"
-          },
-          {
-            text: "Ok",
-            onPress: async () => {
-              const permission = await Location.requestBackgroundPermissionsAsync();
-              setLocationPermissionGranted(permission.status === "granted");
-            }
-          }
-        ],
-        { cancelable: true }
-      );
-    }
-  };
-
-  const allowBackgroundLocation = useCallback(async () => {
-    const permission = await Location.getBackgroundPermissionsAsync();
-    if (permission && permission.status === "granted") {
-      setLocationPermissionGranted(true);
-    } else {
-      await askPermissionDialog();
-    }
-  }, [setLocationPermissionGranted]);
-
+  // Advance one step
   const next = useCallback(async () => {
-    if (step < 2) {
-      navigation.push("LocationWizard", { step: step + 1 });
-    } else {
-      await allowBackgroundLocation();
-    }
+    navigation.push("LocationWizard", { step: step + 1 });
   }, [step]);
+
+  // Request to give no permissions
+  const requestNoLocPerm = useCallback(async () => {
+    Alert.alert(
+      "Localisation",
+      "Liane a besoin de tracer votre localisation GPS afin de fonctionner correctement. Sans ça, l'application "
+        + "n'est pas utilisable. Vous pourrez toujours l'activer plus tard.",
+      [
+        {
+          text: "Annuler",
+          style: "cancel"
+        },
+        {
+          text: "Continuer",
+          onPress: () => next
+        }
+      ],
+      {
+        cancelable: true
+      }
+    );
+  }, [next]);
+
+  // Request to give foreground permissions
+  const requestForegroundLocPerm = useCallback(async () => {
+    const permission = await Location.requestForegroundPermissionsAsync();
+
+    if (permission.status === "granted") {
+      setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+      await next();
+    }
+
+  }, [setLocationPermissionLevel, next]);
+
+  // Request to give background permissions
+  const requestBackgroundLocPerm = useCallback(async () => {
+    const permission = await Location.requestBackgroundPermissionsAsync();
+
+    if (permission.status === "granted") {
+      setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
+      await next();
+    }
+
+  }, [setLocationPermissionLevel, next]);
 
   return (
     <ImageBackground source={image} style={tw("h-full min-h-full")} resizeMode="cover">
@@ -163,12 +179,38 @@ const LocationWizard = ({ route, navigation }: LocationWizardProps) => {
       </View>
       <View>
         {getWizardText(step)}
+        {step < 2
+        && (
         <AppButton
-          buttonStyle={tw("rounded-3xl p-4 m-20 bg-orange-light")}
-          titleStyle={tw(`text-xl text-white font-bold ${step === 2 ? "text-orange" : ""}`)}
-          onPress={next}
+          buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+          titleStyle={tw("text-xl text-white font-bold ")}
+          onPress={next} // Popup for foreground permission
           title={getButtonText(step)}
         />
+        )}
+        {step >= 2
+          && (
+          <>
+            <AppButton
+              buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+              titleStyle={tw("text-xl text-white font-bold ")}
+              onPress={requestBackgroundLocPerm} // Popup for background permission
+              title="Tout le temps"
+            />
+            <AppButton
+              buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+              titleStyle={tw("text-xl text-white font-bold ")}
+              onPress={requestForegroundLocPerm} // Popup for background permission
+              title="Quand l'application est active"
+            />
+            <AppButton
+              buttonStyle={tw("bg-orange-light text-white font-bold py-2 px-1 mr-4 ml-4 my-3 rounded")}
+              titleStyle={tw("text-xl text-white font-bold ")}
+              onPress={requestNoLocPerm} // Popup saying you cannot use Liane ?
+              title="Jamais"
+            />
+          </>
+          )}
       </View>
     </ImageBackground>
   );
