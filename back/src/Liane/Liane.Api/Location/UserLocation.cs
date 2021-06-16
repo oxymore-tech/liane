@@ -9,7 +9,7 @@ namespace Liane.Api.Location
         double Longitude,
         double? Accuracy,
         float? Speed,
-        String PermissionLevel,
+        string PermissionLevel,
         bool IsApple,
         bool Foreground
     )
