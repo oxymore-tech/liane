@@ -65,11 +65,13 @@ const HomeScreen = () => {
     );
   };
   return (
-    <View >
-      <HeaderMenu name="Mes trajets " />
+    <View>
+      <View style={{ zIndex: 1 }}>
+        <HeaderMenu name="Mes trajets" />
+      </View>
       <FlatList
         ListHeaderComponent={(
-          <View style={tw("text-white rounded-xl font-bold bg-orange-light text-lg m-4 px-4 py-2 flex flex-row items-center")}>
+          <View style={tw("rounded-xl bg-orange-light m-4  py-2 items-center")}>
             <AppText style={tw("text-white font-bold text-lg")}>
               {t("trajets partagés", { count: trips.length, formatted_number: i18n.toNumber(trips.length) })}
             </AppText>
