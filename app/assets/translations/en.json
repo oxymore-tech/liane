@@ -10,5 +10,9 @@
       "other": "Vous avez partagé 3 trajets",
       "zero": "Pas de trajet partagé"
     }
+  },
+  "LocationTaskNotification": {
+    "Titre": "Localisation",
+    "Description": "Routing service."
   }
 }
