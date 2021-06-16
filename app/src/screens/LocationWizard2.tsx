@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import {Alert, Image, ScrollView, View} from "react-native";
+import { Alert, Image, ScrollView, View } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import * as Location from "expo-location";
 import { LocationPermissionLevel } from "@/api";
@@ -85,9 +85,11 @@ function alert(message: string, callback: Function) {
  * React component.
  */
 const LocationWizard2 = () => {
-  const [step, setStep] = useState(0);
+  const { setLocationPermissionLevel, authUser } = useContext(AppContext);
+  console.log(authUser);
+  const [step, setStep] = useState(authUser ? 1 : 0);
+  console.log(step);
   const [optionalText, setOptionalText] = useState("");
-  const { setLocationPermissionLevel } = useContext(AppContext);
 
   // Go to next step
   const next = () => {
