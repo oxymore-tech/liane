@@ -89,10 +89,12 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   // Check whether the detected locations belongs to a new trip
   const newLocationFetchTime: number = Date.now();
 
-  if (newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
-    lastLocationFetchTime = newLocationFetchTime;
-    await sendTrip();
+  if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
+    lastLocationFetchTime = newLocationFetchTime; // Needs to be updated before performing a long task
+    // await sendTrip();
     console.log("New trip sent.");
+  } else {
+    lastLocationFetchTime = newLocationFetchTime;
   }
 
   console.log(`New location received at : ${lastLocationFetchTime}`);
