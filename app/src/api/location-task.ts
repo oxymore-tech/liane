@@ -2,7 +2,7 @@ import * as Location from "expo-location";
 import { LocationAccuracy, LocationObject } from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { logLocation } from "@/api/client";
-import { LocationWithInformation, LocationPermissionLevel } from "@/api/index";
+import { LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
 import { AppState } from "react-native";
 
@@ -25,13 +25,13 @@ const LOCATION_TASK_OPTIONS = {
 };
 
 const isApple: boolean = Device.brand === "Apple";
-const locationsAccumulator: Array<LocationWithInformation> = [];
+const locationsAccumulator: Array<UserLocation> = [];
 let lastLocationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
 
 /**
  * Add a location to the list.
  */
-async function addLocation(location: LocationWithInformation) {
+async function addLocation(location: UserLocation) {
   locationsAccumulator.push(location);
 
   if (locationsAccumulator.length >= LOCATION_BATCH_SIZE) {
@@ -86,13 +86,11 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   const { locations } = data as { locations: LocationObject[] };
   locations.forEach((l) => {
     addLocation({
-      location: {
-        timestamp: l.timestamp,
-        latitude: l.coords.latitude,
-        longitude: l.coords.longitude,
-        accuracy: l.coords.accuracy,
-        speed: l.coords.speed
-      },
+      timestamp: l.timestamp,
+      latitude: l.coords.latitude,
+      longitude: l.coords.longitude,
+      accuracy: l.coords.accuracy,
+      speed: l.coords.speed,
       permissionLevel: lastLocationPermissionLevel,
       isApple,
       foreground: AppState.currentState === "active"
