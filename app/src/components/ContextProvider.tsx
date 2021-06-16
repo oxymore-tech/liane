@@ -120,7 +120,7 @@ export function ContextProvider(props: { children: ReactNode }) {
   // Launch the locations recuperation
   useEffect(() => {
     if (locationPermissionLevel === LocationPermissionLevel.ACTIVE || locationPermissionLevel === LocationPermissionLevel.ALWAYS) {
-      startLocationTask().then();
+      startLocationTask(locationPermissionLevel).then();
     }
   }, [locationPermissionLevel]);
 

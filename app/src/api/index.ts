@@ -41,6 +41,13 @@ export interface RealTrip {
   endTime: Date;
 }
 
+export interface LocationWithInformation {
+  location: UserLocation;
+  permissionLevel: LocationPermissionLevel;
+  isApple: boolean;
+  foreground: boolean;
+}
+
 // Define the permission level regarding the recuperation of the location
 // NEVER : no tracking
 // ACTIVE : only when the app. is active

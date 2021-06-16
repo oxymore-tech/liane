@@ -1,77 +1,50 @@
 import * as Location from "expo-location";
-import { LocationObject } from "expo-location";
+import { LocationAccuracy, LocationObject } from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import { TaskManagerTaskBody } from "expo-task-manager";
 import { logLocation } from "@/api/client";
-import { storeLocation } from "@/api/location-storage";
-import { LocationPermissionLevel, UserLocation } from "@/api/index";
+import { LocationWithInformation, LocationPermissionLevel } from "@/api/index";
 import * as Device from "expo-device";
+import { AppState } from "react-native";
 
-const LOCATION_TASK_NAME = "location-task";
-const LOCATION_TASK_CHECK = "LOCATION_TASK_CHECK";
-const LOCATION_TASK_FOLLOW = "LOCATION_TASK_FOLLOW";
-
-/**
- * Décrivons rapidemment l'algorithme que nous allons tenter de mettre en place :
- * Cela fonctionne avec deux tâches afin d'obtenir un niveau de précision élevé tout en évitant de consommer beaucoup de
- * batterie et de données :
- *  -> Une première tâche vérifie toutes les 5 minutes si la personne s'est déplacée en sauvegardant la dernière donnée (en supprimant les précédentes ?)
- *  -> Si la personne s'est déplacée : 500m ? 1km ? alors une autre tâche est lancée pour suivre la totalité du trajet
- *  -> Cette seconde tâche s'arrête si la personne ne bouge plus pendant 5 minutes
- * On pourrait envoyer les données une fois que le trajet est détecté comme terminé par l'application
- *
- * Données à ajouter :
- * - niveau de permission
- * - modèle du téléphone
- */
-
-const isApple = Device.brand === "Apple";
-
-type LocationInformation = {
-  location: UserLocation;
-  permissionLevel: LocationPermissionLevel;
-  isApple: boolean;
+const LOCATION_BATCH_SIZE = 25;
+const LOCATION_TASK_NAME: string = "LOCATION_TASK";
+const LOCATION_TASK_OPTIONS = {
+  accuracy: LocationAccuracy.High,
+  distanceInterval: 250,
+  // Notification options, the reliable way to get background task run properly
+  foregroundService: {
+    notificationTitle: "Localisation",
+    notificationBody: "Service de suivi de trajet.",
+    notificationColor: "#FF5B22"
+  },
+  // Android options
+  timeInterval: 2.5 * 60 * 1000,
+  // iOS options
+  pausesUpdatesAutomatically: true,
+  activityType: Location.ActivityType.AutomotiveNavigation
 };
 
-const previousLocation = undefined;
+const isApple: boolean = Device.brand === "Apple";
+const locationsAccumulator: Array<LocationWithInformation> = [];
+let lastLocationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
 
-TaskManager.defineTask(LOCATION_TASK_CHECK, async ({ data, error }) => {
+/**
+ * Add a location to the list.
+ */
+async function addLocation(location: LocationWithInformation) {
+  locationsAccumulator.push(location);
 
-});
-
-TaskManager.defineTask(LOCATION_TASK_FOLLOW, async (data: TaskManagerTaskBody) => {
-
-});
-
-export async function sendLocations(newLocations: LocationObject[] = []) {
-  const locations = await storeLocation(newLocations);
-  await logLocation(locations.map((l) => ({
-    timestamp: l.timestamp,
-    latitude: l.coords.latitude,
-    longitude: l.coords.longitude,
-    accuracy: l.coords.accuracy,
-    speed: l.coords.speed
-  })));
+  if (locationsAccumulator.length >= LOCATION_BATCH_SIZE) {
+    await sendLocations();
+  }
 }
 
 /**
- * We define a task function with the help of the "defineTask" function.
- * This "task" function will be invoked when the task "TASK_LOCATION_NAME"
- * is executed.
- * Here we simply send the new locations data to the server.
+ * Send the registered locations to the server.
  */
-export function listenLocationTask() {
-  TaskManager.defineTask(LOCATION_TASK_NAME, async (result: TaskManagerTaskBody) => {
-    try {
-      console.log("Nouvelle localisation : ", result);
-      const { locations } = result.data as { locations:LocationObject[] };
-      if (locations.length > 0) {
-        await sendLocations(locations);
-      }
-    } catch (err) {
-      console.log("Erreur : ", err);
-    }
-  });
+export async function sendLocations() {
+  await logLocation(locationsAccumulator);
+  locationsAccumulator.length = 0;
 }
 
 /**
@@ -79,18 +52,19 @@ export function listenLocationTask() {
  */
 export async function startLocationTask(permissionLevel: LocationPermissionLevel) {
   try {
-    if (permissionLevel === LocationPermissionLevel.ALWAYS) {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        distanceInterval: 50,
-        // Android options
-        timeInterval: 60000,
-        // iOS options
-        pausesUpdatesAutomatically: true,
-        activityType: Location.ActivityType.AutomotiveNavigation
+    // Stop a task that may have started previously
+    const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (hasStarted) {
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      console.log("Previous location task stopped.");
+    }
 
-      });
-    } else if (permissionLevel === LocationPermissionLevel.ACTIVE) {
+    lastLocationPermissionLevel = permissionLevel;
 
+    // Start the task regarding the permission level
+    if (permissionLevel === LocationPermissionLevel.ALWAYS || permissionLevel === LocationPermissionLevel.ACTIVE) {
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS);
+      console.log("Location task started.");
     } else {
       console.log("Could not start tracking task as permission levels were not met.");
     }
@@ -98,3 +72,30 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
     console.log(`Could not start tracking task : ${e}`);
   }
 }
+
+/**
+ * Register the task callback.
+ */
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
+  if (error) {
+    console.log(`An error occured during the task ${LOCATION_TASK_NAME} : ${error}`);
+    return;
+  }
+
+  // Iterate over every location received and choose the pertinent ones
+  const { locations } = data as { locations: LocationObject[] };
+  locations.forEach((l) => {
+    addLocation({
+      location: {
+        timestamp: l.timestamp,
+        latitude: l.coords.latitude,
+        longitude: l.coords.longitude,
+        accuracy: l.coords.accuracy,
+        speed: l.coords.speed
+      },
+      permissionLevel: lastLocationPermissionLevel,
+      isApple,
+      foreground: AppState.currentState === "active"
+    });
+  });
+});

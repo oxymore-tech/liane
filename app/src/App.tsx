@@ -5,7 +5,6 @@ import en from "@/assets/translations/en.json";
 import fr from "@/assets/translations/fr.json";
 import { ContextProvider } from "@/components/ContextProvider";
 import { Navigation } from "@/components/Navigation";
-import { listenLocationTask } from "@/api/location-task";
 import { NavigationContainer } from "@react-navigation/native";
 import { localeAsString } from "@/api/i18n";
 
@@ -19,8 +18,6 @@ i18n.missingBehaviour = "guess";
 export type Subscription = {
   remove: () => void;
 };
-
-listenLocationTask();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
