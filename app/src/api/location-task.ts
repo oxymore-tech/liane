@@ -1,14 +1,19 @@
 import * as Location from "expo-location";
-import { LocationAccuracy, LocationObject } from "expo-location";
+import { LocationAccuracy, LocationObject, LocationTaskOptions } from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { logLocation } from "@/api/client";
 import { LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
 import { AppState } from "react-native";
 
-const LOCATION_BATCH_SIZE = 25;
+// Time which we consider is the minimum to separate two trips
+const TRIP_SEPARATING_TIME: number = 1000 * 60 * 7.5;
+
+// Task name
 const LOCATION_TASK_NAME: string = "LOCATION_TASK";
-const LOCATION_TASK_OPTIONS = {
+
+// Task options
+const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
   distanceInterval: 250,
   // Notification options, the reliable way to get background task run properly
@@ -24,27 +29,24 @@ const LOCATION_TASK_OPTIONS = {
   activityType: Location.ActivityType.AutomotiveNavigation
 };
 
+// Is the device an apple device
 const isApple: boolean = Device.brand === "Apple";
-const locationsAccumulator: Array<UserLocation> = [];
-let lastLocationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
+
+// List of locations creating a trip
+const trip: Array<UserLocation> = [];
+
+// Last known permission level
+let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
+
+// Last time we received locations
+let lastLocationFetchTime: number = 0;
 
 /**
- * Add a location to the list.
+ * Send the registered locations to the server and clean
  */
-async function addLocation(location: UserLocation) {
-  locationsAccumulator.push(location);
-
-  if (locationsAccumulator.length >= LOCATION_BATCH_SIZE) {
-    await sendLocations();
-  }
-}
-
-/**
- * Send the registered locations to the server.
- */
-export async function sendLocations() {
-  await logLocation(locationsAccumulator);
-  locationsAccumulator.length = 0;
+export async function sendTrip() {
+  await logLocation(trip);
+  trip.length = 0;
 }
 
 /**
@@ -53,16 +55,17 @@ export async function sendLocations() {
 export async function startLocationTask(permissionLevel: LocationPermissionLevel) {
   try {
     // Stop a task that may have started previously
-    const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    const hasStarted: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
     if (hasStarted) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       console.log("Previous location task stopped.");
     }
 
-    lastLocationPermissionLevel = permissionLevel;
+    locationPermissionLevel = permissionLevel;
 
     // Start the task regarding the permission level
     if (permissionLevel === LocationPermissionLevel.ALWAYS || permissionLevel === LocationPermissionLevel.ACTIVE) {
+      console.log("Location task started.");
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS);
       console.log("Location task started.");
     } else {
@@ -77,21 +80,34 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
  * Register the task callback.
  */
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
+  // Handle errors
   if (error) {
     console.log(`An error occured during the task ${LOCATION_TASK_NAME} : ${error}`);
     return;
   }
 
+  // Check whether the detected locations belongs to a new trip
+  const newLocationFetchTime: number = Date.now();
+
+  if (newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
+    lastLocationFetchTime = newLocationFetchTime;
+    await sendTrip();
+    console.log("New trip sent.");
+  }
+
+  console.log(`New location received at : ${lastLocationFetchTime}`);
+
   // Iterate over every location received and choose the pertinent ones
   const { locations } = data as { locations: LocationObject[] };
+
   locations.forEach((l) => {
-    addLocation({
+    trip.push({
       timestamp: l.timestamp,
       latitude: l.coords.latitude,
       longitude: l.coords.longitude,
       accuracy: l.coords.accuracy,
       speed: l.coords.speed,
-      permissionLevel: lastLocationPermissionLevel,
+      permissionLevel: locationPermissionLevel,
       isApple,
       foreground: AppState.currentState === "active"
     });

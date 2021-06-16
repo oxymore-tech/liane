@@ -4,7 +4,7 @@ import {
 } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import { AppButton } from "@/components/base/AppButton";
-import { sendLocations } from "@/api/location-task";
+import { sendTrip } from "@/api/location-task";
 import { locale, scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
 import { Header, ListItem } from "react-native-elements";
@@ -81,7 +81,7 @@ const HomeScreen = ({ navigation } : HomeProps) => {
           <AppButton
             iconStyle={tw("text-2xl text-white")}
             icon="menu"
-            onPress={() => sendLocations()}
+            onPress={() => sendTrip()}
           />
         )}
         centerComponent={<AppText style={tw("text-3xl text-white")}>{t("Mes trajets")}</AppText>}
