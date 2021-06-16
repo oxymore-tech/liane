@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
-  FlatList, ListRenderItemInfo, RefreshControl, SafeAreaView, View
+  FlatList, ListRenderItemInfo, RefreshControl, StyleSheet, View
 } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import { locale, scopedTranslate } from "@/api/i18n";
@@ -65,8 +65,8 @@ const HomeScreen = () => {
     );
   };
   return (
-    <SafeAreaView>
-      <HeaderMenu name="Menu" />
+    <View >
+      <HeaderMenu name="Mes trajets " />
       <FlatList
         ListHeaderComponent={(
           <View style={tw("text-white rounded-xl font-bold bg-orange-light text-lg m-4 px-4 py-2 flex flex-row items-center")}>
@@ -85,7 +85,7 @@ const HomeScreen = () => {
         data={trips}
         renderItem={renderItem}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

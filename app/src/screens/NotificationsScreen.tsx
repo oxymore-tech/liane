@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import {
-  Alert, FlatList, RefreshControl, Text, View
+    Alert, FlatList, RefreshControl, SafeAreaView, Text, View
 } from "react-native";
 import { Header, Icon, ListItem } from "react-native-elements";
 import { deleteNotification, getNotifications } from "@/api/client";
 import * as SMS from "expo-sms";
 
 import { tw } from "@/api/tailwind";
+import HeaderMenu from "@/components/HeaderMenu";
 
 const wait = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout));
 
@@ -100,13 +101,8 @@ const NotificationsScreen = ({ navigation }: any) => {
   );
 
   return (
-    <View style={tw("container")}>
-      <Header
-        leftComponent={{ icon: "menu", color: "#fff", onPress: () => navigation.openDrawer() }}
-        centerComponent={{ text: "LIANE APP", style: { color: "#fff" } }}
-        rightComponent={<Icon name="bell" type="font-awesome-5" solid color="white" />}
-      />
-
+    <View>
+      <HeaderMenu name = "App liane"/>
       <FlatList
         refreshControl={(
           <RefreshControl
