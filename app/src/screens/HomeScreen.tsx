@@ -4,7 +4,7 @@ import {
 } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import { AppButton } from "@/components/base/AppButton";
-import { sendTrip } from "@/api/location-task";
+import { sendTrip } from "@/api/location";
 import { locale, scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
 import { Header, ListItem } from "react-native-elements";

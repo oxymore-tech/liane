@@ -5,12 +5,18 @@ import { logLocation } from "@/api/client";
 import { LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
 import { AppState } from "react-native";
-import { scopedTranslate } from "@/api/i18n";
+// import { scopedTranslate } from "@/api/i18n";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const t = scopedTranslate("LocationTaskNotification");
+// Translation variable
+// const t = scopedTranslate("LocationTaskNotification");
+
+// Storage keys
+const TRIP_KEY = "@Trip";
+const FETCH_TIME_KEY = "@Fetch_Time";
 
 // Time which we consider is the minimum to separate two trips
-const TRIP_SEPARATING_TIME: number = 1000 * 60 * 7.5;
+const TRIP_SEPARATING_TIME: number = 1000 * 60 * 5;
 
 // Task name
 const LOCATION_TASK_NAME: string = "LOCATION_TASK";
@@ -19,10 +25,10 @@ const LOCATION_TASK_NAME: string = "LOCATION_TASK";
 const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
   distanceInterval: 100,
-  // Notification options, the reliable way to get background task run properly
+  // Notification options, the (only) reliable way to get background task run properly
   foregroundService: {
-    notificationTitle: t("Titre"),
-    notificationBody: t("Description"),
+    notificationTitle: "Localisation",
+    notificationBody: "Service de suivi de trajet.",
     notificationColor: "#FF5B22"
   },
   // Android options
@@ -35,21 +41,76 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
 // Is the device an apple device
 const isApple: boolean = Device.brand === "Apple";
 
-// List of locations creating a trip
-const trip: Array<UserLocation> = [];
-
 // Last known permission level
 let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
 
-// Last time we received locations
-let lastLocationFetchTime: number = 0;
+/**
+ * Get the current trip.
+ */
+async function getTrip(): Promise<UserLocation[]> {
+  let trip: UserLocation[] = [];
+
+  try {
+    const result = await AsyncStorage.getItem(TRIP_KEY);
+
+    if (result) {
+      trip = JSON.parse(result);
+    }
+  } catch (e) {
+    console.log(`An error occured while fetching data : ${e}`);
+  }
+
+  return trip;
+}
+
+/**
+ * Set the current trip.
+ */
+async function setTrip(locations: UserLocation[]) {
+  try {
+    await AsyncStorage.setItem(TRIP_KEY, JSON.stringify(locations));
+  } catch (e) {
+    console.log(`An error occured while setting data : ${e}`);
+  }
+}
+
+/**
+ * Get the last time we received a location.
+ */
+async function getLastLocationFetchTime(): Promise<number> {
+  let lastLocationFetchTime: number = 0;
+
+  try {
+    const result = await AsyncStorage.getItem(FETCH_TIME_KEY);
+
+    if (result) {
+      lastLocationFetchTime = parseInt(result, 10);
+    }
+  } catch (e) {
+    console.log(`An error occured while fetching data : ${e}`);
+  }
+
+  return lastLocationFetchTime;
+}
+
+/**
+ * Set the last time we received a location.
+ */
+async function setLastLocationFetchTime(lastLocationFetchTime: number) {
+  try {
+    await AsyncStorage.setItem(FETCH_TIME_KEY, String(lastLocationFetchTime));
+  } catch (e) {
+    console.log(`An error occured while setting data : ${e}`);
+  }
+}
 
 /**
  * Send the registered locations to the server and clean
  */
 export async function sendTrip() {
-  await logLocation(trip);
-  trip.length = 0;
+  const locations: UserLocation[] = await getTrip(); // Get the trip
+  await logLocation(locations); // Send the trip
+  await setTrip([]); // Reset the trip
 }
 
 /**
@@ -91,18 +152,20 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 
   // Check whether the detected locations belongs to a new trip
   const newLocationFetchTime: number = Date.now();
+  const lastLocationFetchTime: number = await getLastLocationFetchTime();
 
   if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
-    lastLocationFetchTime = newLocationFetchTime; // Needs to be updated before performing a long task
-    // await sendTrip();
+    await setLastLocationFetchTime(newLocationFetchTime); // Needs to be updated before performing a long task
+    try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
     console.log("New trip sent.");
   } else {
-    lastLocationFetchTime = newLocationFetchTime;
+    await setLastLocationFetchTime(newLocationFetchTime);
   }
 
   console.log(`New location received at : ${lastLocationFetchTime}`);
 
   // Iterate over every location received and choose the pertinent ones
+  const trip: UserLocation[] = await getTrip();
   const { locations } = data as { locations: LocationObject[] };
 
   locations.forEach((l) => {
@@ -117,4 +180,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       foreground: AppState.currentState === "active"
     });
   });
+
+  await setTrip(trip);
 });
