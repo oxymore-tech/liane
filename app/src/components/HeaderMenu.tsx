@@ -30,44 +30,43 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
 
       {open
         ? (
-          <View style={tw("pt-6 pb-4 flex-row items-center bg-blue-300")}>
-            <AppButton
-              buttonStyle={tw("bg-blue-300 ")}
-              iconStyle={tw("text-3xl font-bold text-white")}
-              icon="close-outline"
-              onPress={chooseAction}
-            />
-            <AppText style={tw("text-3xl text-white text-center ")}>{name}</AppText>
-          </View>
+          <>
+            <View style={tw("pt-6 pb-4 flex-row items-center bg-blue-300")}>
+              <AppText style={tw("absolute text-3xl text-center text-white w-full ")}>{name}</AppText>
+              <AppButton
+                buttonStyle={tw("bg-blue-300 ")}
+                iconStyle={tw("text-3xl font-bold text-white")}
+                icon="close-outline"
+                onPress={chooseAction}
+              />
+            </View>
+            <View style={tw("bg-blue-300 p-4")}>
+              <AppButton
+                buttonStyle={tw("bg-blue-500 ml-10 mr-10")}
+                title="Paramètres de géolocalisation"
+                onPress={() => { setLocationPermissionLevel(LocationPermissionLevel.NEVER); }}
+              />
+              <AppButton
+                buttonStyle={tw("bg-blue-500 mt-1 ml-10 mr-10")}
+                title="Déconnexion"
+                onPress={() => { setAuthUser(); }}
+              />
+            </View>
+          </>
+
         )
         : (
           <View style={tw("pt-6 pb-4 flex-row items-center bg-blue-500")}>
+            <AppText style={tw(" absolute text-3xl text-white text-center w-full ")}>{name}</AppText>
             <AppButton
               buttonStyle={tw("bg-blue-500 ")}
               iconStyle={tw("text-3xl text-white")}
               icon="menu"
               onPress={chooseAction}
             />
-            <AppText style={tw("text-3xl text-white text-center ")}>{name}</AppText>
+
           </View>
         )}
-
-      {open
-        ? (
-          <View style={tw("bg-blue-300 p-4")}>
-            <AppButton
-              buttonStyle={tw("bg-blue-500 ml-10 mr-10")}
-              title="Paramètres de géolocalisation"
-              onPress={() => { setLocationPermissionLevel(LocationPermissionLevel.NEVER); }}
-            />
-            <AppButton
-              buttonStyle={tw("bg-blue-500 mt-1 ml-10 mr-10")}
-              title="Déconnexion"
-              onPress={() => { setAuthUser(); }}
-            />
-          </View>
-        )
-        : null}
 
     </View>
 
