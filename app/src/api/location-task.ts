@@ -5,6 +5,9 @@ import { logLocation } from "@/api/client";
 import { LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
 import { AppState } from "react-native";
+import { scopedTranslate } from "@/api/i18n";
+
+const t = scopedTranslate("LocationTaskNotification");
 
 // Time which we consider is the minimum to separate two trips
 const TRIP_SEPARATING_TIME: number = 1000 * 60 * 7.5;
@@ -15,15 +18,15 @@ const LOCATION_TASK_NAME: string = "LOCATION_TASK";
 // Task options
 const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 250,
+  distanceInterval: 100,
   // Notification options, the reliable way to get background task run properly
   foregroundService: {
-    notificationTitle: "Localisation",
-    notificationBody: "Service de suivi de trajet.",
+    notificationTitle: t("Titre"),
+    notificationBody: t("Description"),
     notificationColor: "#FF5B22"
   },
   // Android options
-  timeInterval: 2.5 * 60 * 1000,
+  timeInterval: 1.5 * 60 * 1000,
   // iOS options
   pausesUpdatesAutomatically: true,
   activityType: Location.ActivityType.AutomotiveNavigation
