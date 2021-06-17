@@ -22,9 +22,12 @@ namespace Liane.Service.Internal.Location
         private readonly IRedis redis;
         private readonly IRallyingPointService rallyingPointService;
         private readonly IRealTripService realTripService;
+        private readonly IRawTripService rawTripService;
 
-        public LocationServiceImpl(ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService, IRealTripService realTripService,
-            IAddressService addressService)
+        public LocationServiceImpl(
+            ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService, IRealTripService realTripService,
+            IAddressService addressService, IRawTripService rawTripService
+            )
         {
             this.logger = logger;
             this.currentContext = currentContext;
@@ -32,11 +35,17 @@ namespace Liane.Service.Internal.Location
             this.rallyingPointService = rallyingPointService;
             this.realTripService = realTripService;
             this.addressService = addressService;
+            this.rawTripService = rawTripService;
         }
 
         public async Task LogLocation(ImmutableList<UserLocation> userLocations)
         {
-            logger.LogInformation("Log locations : {userLocations}", JsonSerializer.Serialize(userLocations));
+            logger.LogInformation("Log locations (creating raw and real trip) : {userLocations}", JsonSerializer.Serialize(userLocations));
+            
+            // Save the raw data as a trip
+            await rawTripService.Save(ImmutableList.Create(new RawTrip(userLocations)));
+            
+            // Try to create one or more trip from teh raw data
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
 
             foreach (var trip in SplitTrips(userLocations)
@@ -63,6 +72,8 @@ namespace Liane.Service.Internal.Location
             }
 
             await realTripService.Save(trips.ToImmutable());
+            
+            logger.LogInformation("Created {count} trips, expected 1", trips.Count);
         }
 
         private static IEnumerable<ImmutableList<UserLocation>> SplitTrips(ImmutableList<UserLocation> userLocations)
