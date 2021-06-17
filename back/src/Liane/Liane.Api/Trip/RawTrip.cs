@@ -4,6 +4,7 @@ using Liane.Api.Location;
 namespace Liane.Api.Trip
 {
     public sealed record RawTrip(
-        ImmutableList<UserLocation> Locations
+        ImmutableList<UserLocation> Locations,
+        string? User
     );
 }

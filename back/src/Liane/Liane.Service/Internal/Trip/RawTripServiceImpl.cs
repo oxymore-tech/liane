@@ -54,7 +54,7 @@ namespace Liane.Service.Internal.Trip
             var asyncCursor = await collection.FindAsync(new ExpressionFilterDefinition<UserRawTrip>(u => u.UserId == currentUser));
             
             return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations))
+                .Select(u => new RawTrip(u.Locations, null))
                 .ToImmutableList();
         }
 
@@ -65,7 +65,7 @@ namespace Liane.Service.Internal.Trip
             var asyncCursor = await collection.FindAsync(new ExpressionFilterDefinition<UserRawTrip>(u => u.UserId == userId));
             
             return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations))
+                .Select(u => new RawTrip(u.Locations, userId))
                 .ToImmutableList();
         }
 
@@ -76,7 +76,7 @@ namespace Liane.Service.Internal.Trip
             var asyncCursor = await collection.FindAsync(_ => true);
             
             return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations))
+                .Select(u => new RawTrip(u.Locations, u.UserId))
                 .ToImmutableList();
         }
 

@@ -43,7 +43,7 @@ namespace Liane.Service.Internal.Location
             logger.LogInformation("Log locations (creating raw and real trip) : {userLocations}", JsonSerializer.Serialize(userLocations));
             
             // Save the raw data as a trip
-            await rawTripService.Save(ImmutableList.Create(new RawTrip(userLocations)));
+            await rawTripService.Save(ImmutableList.Create(new RawTrip(userLocations, null)));
             
             // Try to create one or more trip from teh raw data
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
@@ -60,13 +60,13 @@ namespace Liane.Service.Internal.Location
                 {
                     var fromAddress = await addressService.GetDisplayName(fromCoordinate);
                     var toAddress = await addressService.GetDisplayName(toCoordinate);
-
                     var realTrip = new RealTrip(
                         new Api.Trip.Location(fromCoordinate, fromAddress.Address),
                         new Api.Trip.Location(toCoordinate, toAddress.Address),
                         DateTimeOffset.FromUnixTimeMilliseconds(from.Timestamp).DateTime,
                         DateTimeOffset.FromUnixTimeMilliseconds(to.Timestamp).DateTime
                     );
+                    
                     trips.Add(realTrip);
                 }
             }
@@ -91,6 +91,7 @@ namespace Liane.Service.Internal.Location
                     var previous = currentTrip[0];
                     var deltaTime = current.Timestamp - previous.Timestamp;
                     var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng());
+                    
                     if (deltaTime > 3_600_000 || distance > 5_000)
                     {
                         yield return currentTrip.ToImmutableList();
