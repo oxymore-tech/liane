@@ -1,8 +1,5 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
-import {
-  FlatList, ListRenderItemInfo, RefreshControl, StyleSheet, View
-} from "react-native";
-import { AppContext } from "@/components/ContextProvider";
+import React, { useCallback, useEffect, useState } from "react";
+import { FlatList, ListRenderItemInfo, RefreshControl, View } from "react-native";
 import { locale, scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
 import { ListItem } from "react-native-elements";

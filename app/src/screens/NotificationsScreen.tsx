@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import {
-    Alert, FlatList, RefreshControl, SafeAreaView, Text, View
+  Alert, FlatList, RefreshControl, Text, View
 } from "react-native";
-import { Header, Icon, ListItem } from "react-native-elements";
+import { ListItem } from "react-native-elements";
 import { deleteNotification, getNotifications } from "@/api/client";
 import * as SMS from "expo-sms";
 
@@ -102,7 +102,7 @@ const NotificationsScreen = ({ navigation }: any) => {
 
   return (
     <View>
-      <HeaderMenu name = "App liane"/>
+      <HeaderMenu name="Mes notifications" />
       <FlatList
         refreshControl={(
           <RefreshControl
