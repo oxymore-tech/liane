@@ -51,6 +51,7 @@ export type NavigationParamList = {
   LocationWizard: { step?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
   SignUpCode: { phoneNumber: string };
+  LocationTaskNotification: {};
 };
 
 export function Navigation() {

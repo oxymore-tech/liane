@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@/api/client";
 import * as Location from "expo-location";
-import { registerLocationTask } from "@/api/location-task";
+import { startLocationTask } from "@/api/location";
 import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
 
@@ -120,7 +120,7 @@ export function ContextProvider(props: { children: ReactNode }) {
   // Launch the locations recuperation
   useEffect(() => {
     if (locationPermissionLevel === LocationPermissionLevel.ACTIVE || locationPermissionLevel === LocationPermissionLevel.ALWAYS) {
-      registerLocationTask().then();
+      startLocationTask(locationPermissionLevel).then();
     }
   }, [locationPermissionLevel]);
 
