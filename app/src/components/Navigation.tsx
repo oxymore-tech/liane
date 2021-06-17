@@ -69,11 +69,26 @@ export function Navigation() {
           name="LocationWizard"
           component={LocationWizard2}
           options={{ headerShown: false }}
-          initialParams={{ step: 0 }}
+          // initialParams={{ step: 0 }}
         />
       </Stack.Navigator>
     );
   }
+
+  /*
+  if (locationPermissionLevel === LocationPermissionLevel.NEVER) {
+    console.log("asking again ");
+    return (
+      <Stack.Navigator>
+        <Stack.Screen
+          name="LocationWizardAskingAgain"
+          component={LocationWizard2}
+          options={{ headerShown: false }}
+          initialParams={{ step: 1 }}
+        />
+      </Stack.Navigator>
+    );
+  } */
 
   if (authUser) {
     return createDrawer();

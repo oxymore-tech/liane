@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Alert, Image, View } from "react-native";
+import { Alert, Image, ScrollView, View } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import * as Location from "expo-location";
 import { LocationPermissionLevel } from "@/api";
@@ -19,8 +19,8 @@ function getWizardText(step: number) {
   switch (step) {
     case 0:
       view = (
-        <View>
-          <AppText style={tw("text-center text-lg text-gray-500 m-2 mt-0")}>
+        <ScrollView>
+          <AppText style={tw("text-center text-lg text-gray-500 m-2 mt-0 ")}>
             Covoiturer à la campagne, en toute liberté.
             Liane relève vos trajets du quotidien entre des points pré-établis.
           </AppText>
@@ -31,7 +31,7 @@ function getWizardText(step: number) {
           <AppText style={tw("text-center text-lg text-gray-500 m-2")}>
             Pour cela Liane a besoin d&apos;accéder à vos données de géolocalisation. Vos données de géolocalisation ne sont utilisés dans aucun autre but.
           </AppText>
-        </View>
+        </ScrollView>
       );
       break;
     case 1:
@@ -85,9 +85,11 @@ function alert(message: string, callback: Function) {
  * React component.
  */
 const LocationWizard2 = () => {
-  const [step, setStep] = useState(0);
+  const { setLocationPermissionLevel, authUser } = useContext(AppContext);
+  console.log(authUser);
+  const [step, setStep] = useState(authUser ? 1 : 0);
+  console.log(step);
   const [optionalText, setOptionalText] = useState("");
-  const { setLocationPermissionLevel } = useContext(AppContext);
 
   // Go to next step
   const next = () => {
@@ -157,7 +159,7 @@ const LocationWizard2 = () => {
       { getWizardText(step) }
       { optionalText !== "" && (<AppText style={tw("text-center text-sm text-red-600 m-2")}>{ optionalText }</AppText>) }
       { step === 0
-        ? (<View><AppButton buttonStyle={tw("bg-blue-500 rounded-full mt-5 ml-10 mr-10")} onPress={next} title="Continuer" /></View>)
+        ? (<View><AppButton buttonStyle={tw("bg-blue-500 rounded-full m-2 ml-10 mr-10")} onPress={next} title="Continuer" /></View>)
         : (
           <View>
             <AppButton buttonStyle={tw("bg-blue-500 rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
