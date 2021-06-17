@@ -10,5 +10,9 @@
       "other": "Vous avez partagé {{ formatted_number }} trajets",
       "zero": "Pas de trajet partagé"
     }
+  },
+  "LocationTaskNotification": {
+    "Titre": "Localisation",
+    "Description": "Service de suivi de trajet."
   }
 }

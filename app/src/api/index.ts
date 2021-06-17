@@ -14,6 +14,9 @@ export interface UserLocation {
   longitude: number;
   accuracy: number | null;
   speed: number | null;
+  permissionLevel: LocationPermissionLevel;
+  isApple: boolean;
+  foreground: boolean;
 }
 
 export interface LatLng {

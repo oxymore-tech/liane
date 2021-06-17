@@ -1,3 +1,4 @@
+using System;
 using Liane.Api.Routing;
 
 namespace Liane.Api.Location
@@ -7,7 +8,10 @@ namespace Liane.Api.Location
         double Latitude,
         double Longitude,
         double? Accuracy,
-        float? Speed
+        float? Speed,
+        string PermissionLevel,
+        bool IsApple,
+        bool Foreground
     )
     {
         public LatLng ToLatLng() => new(Latitude, Longitude);
