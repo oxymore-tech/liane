@@ -26,7 +26,7 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
     notificationColor: "#FF5B22"
   },
   // Android options
-  timeInterval: 1.5 * 60 * 1000,
+  timeInterval: 60 * 1000,
   // iOS options
   pausesUpdatesAutomatically: true,
   activityType: Location.ActivityType.AutomotiveNavigation
