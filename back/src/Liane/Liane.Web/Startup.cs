@@ -66,6 +66,7 @@ namespace Liane.Web
             services.AddService<RallyingPointServiceImpl>();
             services.AddService<NotificationServiceImpl>();
             services.AddService<RealTripServiceImpl>();
+            services.AddService<RawTripServiceImpl>();
         }
 
         public static void StartCurrentModule(string[] args)

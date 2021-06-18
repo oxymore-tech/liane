@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api;
-using Liane.Api.Address;
 using Liane.Api.Display;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -19,11 +16,13 @@ namespace Liane.Web.Controllers
     {
         private readonly IDisplayService displayService;
         private readonly IRealTripService realTripService;
+        private readonly IRawTripService rawTripService;
 
-        public DisplayController(IDisplayService displayService, IRealTripService realTripService)
+        public DisplayController(IDisplayService displayService, IRealTripService realTripService, IRawTripService rawTripService)
         {
             this.displayService = displayService;
             this.realTripService = realTripService;
+            this.rawTripService = rawTripService;
         }
 
         [HttpGet("trip")]
@@ -44,6 +43,13 @@ namespace Liane.Web.Controllers
         public ImmutableHashSet<RallyingPoint> ListStepsFrom([FromBody] ImmutableHashSet<Trip> trips)
         {
             return displayService.ListStepsFrom(trips);
+        }
+
+        [HttpGet("raw")]
+        [DisableAuth]
+        public Task<ImmutableList<RawTrip>> ListAll()
+        {
+            return rawTripService.ListAll();
         }
     }
 }

@@ -177,7 +177,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       speed: l.coords.speed,
       permissionLevel: locationPermissionLevel,
       isApple,
-      foreground: AppState.currentState === "active"
+      isForeground: AppState.currentState === "active"
     });
   });
 
