@@ -32,6 +32,11 @@ namespace Liane.Service.Internal.Notification
             var database = await redis.Get();
             var redisKey = RedisKeys.NotificationToken(user);
             var token = await database.StringGetAsync(redisKey);
+            if (!token.HasValue)
+            {
+                throw new ArgumentNullException(nameof(token));
+            }
+
             var pushTicketReq = new PushTicketRequest(
                 ImmutableList.Create((string) token),
                 new
