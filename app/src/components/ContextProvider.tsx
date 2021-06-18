@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useEffect, useState } from "react";
-import { Inter_400Regular, useFonts } from "@expo-google-fonts/inter";
+import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -102,7 +102,7 @@ async function init() : Promise<{ authUser?:AuthUser, permission:LocationPermiss
  * Define the context of the application.
  */
 export function ContextProvider(props: { children: ReactNode }) {
-  const [fontLoaded] = useFonts({ Inter: Inter_400Regular });
+  const [fontLoaded] = useFonts({ Inter: Inter_400Regular, Inter_600SemiBold, Inter_700Bold });
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
