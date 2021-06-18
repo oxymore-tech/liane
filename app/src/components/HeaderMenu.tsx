@@ -47,7 +47,6 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
               />
             </View>
           </>
-
         )
         : (
           <View style={tw("pt-5 pb-5 flex-row items-center bg-blue-500")}>
@@ -58,13 +57,10 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
               icon="menu"
               onPress={chooseAction}
             />
-
           </View>
         )}
     </View>
-
   );
-
 };
 
 export default HeaderMenu;

@@ -28,14 +28,12 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   const { expoPushToken, setAuthUser } = useContext(AppContext);
 
   const signIn = useCallback(async () => {
-    if (expoPushToken) {
-      try {
-        const authUser = await login(phoneNumber, code, expoPushToken);
-        setAuthUser(authUser);
-      } catch (e) {
-        setCode("");
-        navigation.navigate("SignUp", { phoneNumber, authFailure: true });
-      }
+    try {
+      const authUser = await login(phoneNumber, code, expoPushToken);
+      setAuthUser(authUser);
+    } catch (e) {
+      setCode("");
+      navigation.navigate("SignUp", { phoneNumber, authFailure: true });
     }
   }, [phoneNumber, code, expoPushToken]);
 

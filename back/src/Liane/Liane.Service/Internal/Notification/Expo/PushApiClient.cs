@@ -28,7 +28,7 @@ namespace Liane.Service.Internal.Notification.Expo
             return ticketResponse;
         }
 
-        private static async Task<U> PostAsync<T, U>(T requestObj, string path) where T : class
+        private static async Task<TU> PostAsync<T, TU>(T requestObj, string path) where T : class
         {
             var serializedRequestObj = JsonConvert.SerializeObject(requestObj, new JsonSerializerSettings
             {
@@ -43,7 +43,7 @@ namespace Liane.Service.Internal.Notification.Expo
             }
 
             var rawResponseBody = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<U>(rawResponseBody);
+            return JsonConvert.DeserializeObject<TU>(rawResponseBody);
         }
     }
 }

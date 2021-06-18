@@ -70,7 +70,7 @@ namespace Liane.Service.Internal.User
             }
         }
 
-        public async Task<AuthUser> Login(string phone, string code, string token)
+        public async Task<AuthUser> Login(string phone, string code, string? token)
         {
             if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
             {
@@ -92,7 +92,11 @@ namespace Liane.Service.Internal.User
                 throw new UnauthorizedAccessException("Invalid code");
             }
 
-            await database.StringSetAsync(RedisKeys.NotificationToken(phoneNumber), token);
+            if (token != null)
+            {
+                await database.StringSetAsync(RedisKeys.NotificationToken(phoneNumber), token);
+            }
+
             var number = phoneNumber.ToString();
             return new AuthUser(number, GenerateToken(number));
         }

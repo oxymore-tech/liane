@@ -100,7 +100,7 @@ const LocationWizard2 = () => {
 
   // Ask for foreground tracking permission
   const requestForegroundLocPerm = async () => {
-    alert("Liane a besoin de suivre votre position pour fonctionner.", async () => {
+    alert("Liane collecte la position GPS de votre téléphone pour permettre l'enregistrement anonyme de vos trajets lorsque l'application est en cours d'utilisation.", async () => {
       const permission = await Location.requestForegroundPermissionsAsync();
       console.log(`New foreground permission status : ${permission.status}, ${permission.canAskAgain}`);
 
@@ -116,7 +116,7 @@ const LocationWizard2 = () => {
 
   // Ask for background tracking permission
   const requestBackgroundLocPerm = async () => {
-    alert("Liane a besoin de suivre votre position pour fonctionner.", async () => {
+    alert("Liane collecte la position GPS de votre téléphone pour permettre l'enregistrement anonyme de vos trajets même lorsque l'application est fermée ou n'est pas en cours d'utilisation.", async () => {
       const permissionForeground = await Location.requestForegroundPermissionsAsync(); // Forced to ask for foreground perms first
 
       console.log(`New foreground permission status : ${permissionForeground.status}, ${permissionForeground.canAskAgain}`);

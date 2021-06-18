@@ -26,7 +26,7 @@ namespace Liane.Web.Controllers
 
         [HttpPost("login")]
         [DisableAuth]
-        public Task<AuthUser> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string token)
+        public Task<AuthUser> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string? token)
         {
             return authService.Login(phone, code, token);
         }

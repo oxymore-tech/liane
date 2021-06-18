@@ -1,7 +1,7 @@
 import { get, post, postAs } from "@/api/http";
-import { AuthUser, LocationWithInformation, Notification, RealTrip } from "@/api";
+import { AuthUser, UserLocation, Notification, RealTrip } from "@/api";
 
-export async function logLocation(locations: LocationWithInformation[]) {
+export async function logLocation(locations: UserLocation[]) {
   await post("/location", { body: locations });
 }
 
@@ -13,7 +13,7 @@ export function me(): Promise<AuthUser> {
   return get("/auth/me");
 }
 
-export async function login(phone: string, code: string, token: string): Promise<AuthUser> {
+export async function login(phone: string, code: string, token?: string): Promise<AuthUser> {
   return postAs("/auth/login", { params: { phone, code, token } });
 }
 
