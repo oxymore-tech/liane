@@ -19,7 +19,7 @@ interface TableProps<T> {
   data: T[],
   sort?: SortOptions<T>;
   onSortChange?: (sort: SortOptions<T>) => void;
-  keyExtractor: (d:T) => any;
+  keyExtractor: (T) => any;
 }
 
 function toggleSort(field: string, fieldSort?: number) {
@@ -40,39 +40,39 @@ export function Table<T>({ className, data, columns, sort = {}, onSortChange, ke
       <thead>
         <tr>
           {
-          columns.map((c, i) => (
-            <th
-              className={`bg-gray-700 text-center text-white text-sm ${c.sortable && "cursor-pointer"} ${c.className}`}
-              onClick={() => c.sortable && c.field && onSortChange && onSortChange(toggleSort(c.field, sort[c.field]))}
-              key={i}
-            >
-              <div className="flex items-center justify-center">
-                {c.renderHeader ? c.renderHeader() : c.label || ""}
-                <Arrow
-                  className={`ml-2 ${c.field && sort[c.field] === -1 && "transform rotate-180"} ${(!c.field || !sort[c.field]) && "opacity-0"}`}
-                />
-              </div>
-            </th>
-          ))
-        }
+        columns.map((c, i) => (
+          <th
+            className={`bg-gray-700 text-center text-white text-sm ${c.sortable && "cursor-pointer"} ${c.className}`}
+            onClick={() => c.sortable && c.field && onSortChange && onSortChange(toggleSort(c.field, sort[c.field]))}
+            key={i}
+          >
+            <div className="flex items-center justify-center">
+              {c.renderHeader ? c.renderHeader() : c.label || ""}
+              <Arrow
+                className={`ml-2 ${c.field && sort[c.field] === -1 && "transform rotate-180"} ${(!c.field || !sort[c.field]) && "opacity-0"}`}
+              />
+            </div>
+          </th>
+        ))
+      }
         </tr>
       </thead>
       <tbody>
         {
-        data.map((d) => (
-          <tr key={keyExtractor(d)}>
-            {
-              columns.map((c, ci) => (
-                <td className="bg-white px-2 py-2 whitespace-no-wrap border-b border-gray-200" key={ci}>
-                  {
-                    c.render ? c.render(d) : (c.field ? d[c.field] : JSON.stringify(d))
-                  }
-                </td>
-              ))
-            }
-          </tr>
-        ))
-      }
+      data.map((d) => (
+        <tr key={keyExtractor(d)}>
+          {
+          columns.map((c, ci) => (
+            <td className="bg-white px-2 py-2 whitespace-no-wrap border-b border-gray-200" key={ci}>
+              {
+            c.render ? c.render(d) : (c.field ? d[c.field] : JSON.stringify(d))
+          }
+            </td>
+          ))
+        }
+        </tr>
+      ))
+    }
       </tbody>
     </table>
   );

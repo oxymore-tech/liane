@@ -1,3 +1,7 @@
+/* eslint-disable react/require-default-props */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable import/prefer-default-export */
 import React, { ReactNode } from "react";
 import { Arrow } from "./Arrow";
 
@@ -6,12 +10,13 @@ interface ParentMenuItemProps {
   text: string;
   open: boolean;
   children: ReactNode;
-  onOpenChange: (b:boolean) => void;
+  onOpenChange: (boolean) => void;
   transparent?: boolean;
 }
 
-export function ParentMenuItem({ transparent, className, text, children, open, onOpenChange }: ParentMenuItemProps) {
-
+export function ParentMenuItem({
+  transparent, className, text, children, open, onOpenChange
+}: ParentMenuItemProps) {
   const openPostMenu = () => {
     onOpenChange(true);
   };
