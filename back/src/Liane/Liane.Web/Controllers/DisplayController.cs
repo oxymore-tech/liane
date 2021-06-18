@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api;
-using Liane.Api.Address;
 using Liane.Api.Display;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -50,9 +47,9 @@ namespace Liane.Web.Controllers
 
         [HttpGet("raw")]
         [DisableAuth]
-        public async Task<ImmutableList<RawTrip>> ListRawTrip()
+        public Task<ImmutableList<RawTrip>> ListAll()
         {
-            return await rawTripService.ListAll();
+            return rawTripService.ListAll();
         }
     }
 }

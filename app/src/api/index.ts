@@ -16,7 +16,7 @@ export interface UserLocation {
   speed: number | null;
   permissionLevel: LocationPermissionLevel;
   isApple: boolean;
-  foreground: boolean;
+  isForeground: boolean;
 }
 
 export interface LatLng {
