@@ -8,10 +8,7 @@ function Admin() {
   const center = { lat: 44.33718916852679, lng: 3.483382165431976 };
   return (
     <div>
-      <div>
-        <LianeMapAdmin className="w-full h-screen" center={center} />
-      </div>
-      <FiltersAdmin />
+      <LianeMapAdmin className="w-full h-screen" center={center} />
     </div>
   );
 }

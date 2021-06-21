@@ -5,6 +5,7 @@ import { LatLng, RallyingPoint, RawTrip, UserLocation } from "@/api";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import { adminService } from "@/api/admin-service";
+import { FiltersAdmin } from "@/components/FiltersAdmin";
 
 interface MapProps {
   className?: string;
@@ -17,15 +18,16 @@ function LianeMapAdmin({ className, center }: MapProps) {
   const [rawTrips, setRawTrips] = useState<RawTrip[]>([]);
   const [displayRawTrips, setDisplayRawTrips] = useState<RawTrip[]>([]);
 
+  function updateDisplayRawTrips(options) {
+    console.log(options);
+    setDisplayRawTrips(rawTrips);
+  }
+
   useEffect(() => {
     adminService.getAllRawTrips()
       .then((r) => {
         setRawTrips(r);
       });
-  }, []);
-
-  useEffect(() => {
-    setDisplayRawTrips(rawTrips);
   }, []);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
 
   return (
     <div>
+      <FiltersAdmin callback={updateDisplayRawTrips} />
       <MapContainer
         className={className}
         center={center}
@@ -50,15 +53,13 @@ function LianeMapAdmin({ className, center }: MapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}
         />
-        { /* displayRallyingPoints ? */ rallyingPoints.map(
-          (point, index) => (
-            <RallyingPointMarker
-              key={`rl_${index}`}
-              value={point}
-              onSelect={() => {}}
-            />
-          )
-        )/* : null */}
+        {rallyingPoints.map((point, index) => (
+          <RallyingPointMarker
+            key={`rl_${index}`}
+            value={point}
+            onSelect={() => {}}
+          />
+        ))}
         {displayRawTrips.map((a:RawTrip) => (
           a.locations.map((l:UserLocation, j:number) => (
             <CircleMarker key={`l_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: "red" }} radius={10}>
