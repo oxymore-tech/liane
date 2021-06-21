@@ -70,7 +70,7 @@ const HomeScreen = () => {
         ListHeaderComponent={(
           <View style={tw("rounded-xl bg-orange-light m-4  py-2 items-center")}>
             <AppText style={tw("text-white font-bold text-lg")}>
-              {t("trajets partagés", { count: trips.length, formatted_number: i18n.toNumber(trips.length) })}
+              {t("trajets partagés", { count: trips.length, formatted_number: Math.floor(trips.length) })}
             </AppText>
           </View>
         )}
