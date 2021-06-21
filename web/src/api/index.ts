@@ -41,9 +41,14 @@ export interface UserLocation {
   timestamp: number;
   latitude: number;
   longitude: number;
-  accuracy: number | null;
-  speed: number | null;
-  permissionLevel: LocationPermissionLevel;
-  isApple: boolean;
-  foreground: boolean;
+  accuracy?: number;
+  speed?: number;
+  permissionLevel?: LocationPermissionLevel;
+  isApple?: boolean;
+  foreground?: boolean;
+}
+
+export interface RawTrip {
+  user: string;
+  locations: UserLocation;
 }

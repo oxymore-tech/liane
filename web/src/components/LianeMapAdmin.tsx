@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
-import { LatLng, RallyingPoint, UserLocation } from "@/api";
+import { LatLng, RallyingPoint, RawTrip, UserLocation } from "@/api";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
+import { adminService } from "@/api/admin-service";
 
 interface MapProps {
   className?: string;
@@ -14,6 +15,19 @@ const Augustin = require("@/api/augustin.json");
 function LianeMapAdmin({ className, center }: MapProps) {
 
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
+  const [rawTrips, setRawTrips] = useState<RawTrip[]>([]);
+  const [displayRawTrips, setDisplayRawTrips] = useState<RawTrip[]>([]);
+
+  useEffect(() => {
+    adminService.getAllRawTrips()
+      .then((r) => {
+        setRawTrips(r);
+      });
+  });
+
+  useEffect(() => {
+    setDisplayRawTrips(rawTrips);
+  });
 
   useEffect(() => {
     rallyingPointService.list(center.lat, center.lng)
@@ -46,7 +60,10 @@ function LianeMapAdmin({ className, center }: MapProps) {
             />
           )
         )/* : null */}
-        {Augustin.map((a:UserLocation, index:number) => (
+        {displayRawTrips.map((a:RawTrip, index:number) => (
+            {
+                a.location
+            }
           <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={10}>
             <Tooltip>
               <p>
