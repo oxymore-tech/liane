@@ -15,7 +15,10 @@ export interface Route {
   readonly delta?: number;
 }
 
-export interface RouteStat{coordinates: LatLng[], stat: number}
+export interface RouteStat{
+  coordinates: LatLng[];
+  stat: number;
+}
 
 export enum DayOfWeek {
   Sunday,
@@ -27,10 +30,20 @@ export enum DayOfWeek {
   Saturday
 }
 
+export enum LocationPermissionLevel {
+  NEVER = "never",
+  ACTIVE = "active",
+  ALWAYS = "always",
+  NOT_NOW = "not_now"
+}
+
 export interface UserLocation {
   timestamp: number;
   latitude: number;
   longitude: number;
   accuracy: number | null;
   speed: number | null;
+  permissionLevel: LocationPermissionLevel;
+  isApple: boolean;
+  foreground: boolean;
 }
