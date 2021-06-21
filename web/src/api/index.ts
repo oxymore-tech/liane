@@ -50,5 +50,5 @@ export interface UserLocation {
 
 export interface RawTrip {
   user: string;
-  locations: UserLocation;
+  locations: UserLocation[];
 }

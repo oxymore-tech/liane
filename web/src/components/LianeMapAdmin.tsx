@@ -10,7 +10,6 @@ interface MapProps {
   className?: string;
   center: LatLng;
 }
-const Augustin = require("@/api/augustin.json");
 
 function LianeMapAdmin({ className, center }: MapProps) {
 
@@ -23,11 +22,11 @@ function LianeMapAdmin({ className, center }: MapProps) {
       .then((r) => {
         setRawTrips(r);
       });
-  });
+  }, []);
 
   useEffect(() => {
     setDisplayRawTrips(rawTrips);
-  });
+  }, []);
 
   useEffect(() => {
     rallyingPointService.list(center.lat, center.lng)
@@ -60,21 +59,19 @@ function LianeMapAdmin({ className, center }: MapProps) {
             />
           )
         )/* : null */}
-        {displayRawTrips.map((a:RawTrip, index:number) => (
-            {
-                a.location
-            }
-          <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={10}>
-            <Tooltip>
-              <p>
-                {new Intl.DateTimeFormat(
-                  "fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }
-                ).format(new Date(a.timestamp))}
-              </p>
-              <p>{a.speed}</p>
-            </Tooltip>
-          </CircleMarker>
-        ))}
+        {displayRawTrips.map((a:RawTrip) => (
+          a.locations.map((l:UserLocation, j:number) => (
+            <CircleMarker key={`l_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: "red" }} radius={10}>
+              <Tooltip>
+                <p>
+                  {new Intl.DateTimeFormat(
+                    "fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }
+                  ).format(new Date(l.timestamp))}
+                </p>
+                <p>{l.speed}</p>
+              </Tooltip>
+            </CircleMarker>
+          ))))}
       </MapContainer>
     </div>
   );
