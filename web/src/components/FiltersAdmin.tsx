@@ -1,9 +1,13 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Switch } from "@/components/base/Switch";
 import { Select } from "@/components/base/Select";
 import { TextInput } from "@/components/base/TextInput";
 
-export function FiltersAdmin() {
+interface FilterProps {
+  callback: (o: any) => void
+}
+
+export function FiltersAdmin({ callback }: FilterProps) {
 
   const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
@@ -12,11 +16,17 @@ export function FiltersAdmin() {
   const [chooseForeground, setChooseForeground] = useState(true);
   const idUser = ["0603891703", "0603891704"];
 
+  function cb() {
+    callback({
+      displayRawTrips, displayRallyingPoints, chooseUser, chooseBackground, chooseForeground
+    });
+  }
+
   return (
     <div className="absolute inset-y-0 right-0 z-10">
       <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-8 gap-2 m-8">
 
-        <Switch label="Données brutes ?" value={displayRawTrips} onChange={setDisplayRawTrips} color="yellow" />
+        <Switch label="Données brutes ?" value={displayRawTrips} onChange={(v) => { setDisplayRawTrips(v); cb(); }} color="yellow" />
         <Switch label="Rallying points ?" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />
         <Switch label="Tous les utilisateurs ?" value={chooseUser} onChange={setChooseUser} color="yellow" />
 
