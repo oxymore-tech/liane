@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Location;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Util;
@@ -41,7 +43,7 @@ namespace Liane.Service.Internal.Trip
             {
                 logger.LogInformation("{Count} raw trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
                 await collection.InsertManyAsync(
-                    trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations))
+                    trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations.ToList()))
                 );
             }
         }
@@ -54,7 +56,7 @@ namespace Liane.Service.Internal.Trip
             var asyncCursor = await collection.FindAsync(new ExpressionFilterDefinition<UserRawTrip>(u => u.UserId == currentUser));
             
             return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations, null))
+                .Select(u => new RawTrip(u.Locations.ToImmutableList(), null))
                 .ToImmutableList();
         }
 
@@ -65,7 +67,7 @@ namespace Liane.Service.Internal.Trip
             var asyncCursor = await collection.FindAsync(new ExpressionFilterDefinition<UserRawTrip>(u => u.UserId == userId));
             
             return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations, userId))
+                .Select(u => new RawTrip(u.Locations.ToImmutableList(), userId))
                 .ToImmutableList();
         }
 
@@ -76,7 +78,7 @@ namespace Liane.Service.Internal.Trip
             var asyncCursor = await collection.FindAsync(_ => true);
             
             return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations, u.UserId))
+                .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
                 .ToImmutableList();
         }
 
