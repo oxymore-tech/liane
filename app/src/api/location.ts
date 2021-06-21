@@ -15,6 +15,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const TRIP_KEY = "@Trip";
 const FETCH_TIME_KEY = "@Fetch_Time";
 
+// Minimum size of a trip to send it
+const MIN_TRIP_SIZE = 5;
+
 // Time which we consider is the minimum to separate two trips
 const TRIP_SEPARATING_TIME: number = 1000 * 60 * 5;
 
@@ -109,7 +112,14 @@ async function setLastLocationFetchTime(lastLocationFetchTime: number) {
  */
 export async function sendTrip() {
   const locations: UserLocation[] = await getTrip(); // Get the trip
-  await logLocation(locations); // Send the trip
+
+  if (locations.length > MIN_TRIP_SIZE) {
+    await logLocation(locations); // Send the trip
+    console.log("Trip sent and flushed.");
+  } else {
+    console.log("Trip was to short in order to be sent. Trip flushed.");
+  }
+
   await setTrip([]); // Reset the trip
 }
 
@@ -157,7 +167,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
     await setLastLocationFetchTime(newLocationFetchTime); // Needs to be updated before performing a long task
     try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
-    console.log("New trip sent.");
   } else {
     await setLastLocationFetchTime(newLocationFetchTime);
   }
