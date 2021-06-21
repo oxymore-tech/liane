@@ -1,3 +1,5 @@
+/* eslint-disable react/require-default-props */
+/* eslint-disable import/prefer-default-export */
 import React, { ReactNode } from "react";
 import { Spinner } from "./Spinner";
 
@@ -7,9 +9,11 @@ interface LoadingProps {
   children?: ReactNode;
 }
 
-export function Loading({className, loading, children}: LoadingProps) {
-  return <div className={`relative ${className}`}>
-    <Spinner className="absolute top-1/2 -mt-2 left-1/2 -ml-2" loading={loading}/>
-    <div className={`${loading && "invisible"}`}>{children}</div>
-  </div>;
+export function Loading({ className, loading, children }: LoadingProps) {
+  return (
+    <div className={`relative ${className}`}>
+      <Spinner className="absolute top-1/2 -mt-2 left-1/2 -ml-2" loading={loading} />
+      <div className={`${loading && "invisible"}`}>{children}</div>
+    </div>
+  );
 }

@@ -21,8 +21,8 @@ interface ButtonProps {
 function getColorsClassName(color: Colors, outline: boolean, disabled: boolean) {
   if (disabled) {
     return outline
-      ? "text-gray-400 border-gray-400"
-      : "text-gray-500 bg-gray-300";
+        ? "text-gray-400 border-gray-400"
+        : "text-gray-500 bg-gray-300";
   }
   if (outline) {
     switch (color) {
@@ -62,18 +62,18 @@ function getColorsClassName(color: Colors, outline: boolean, disabled: boolean) 
 }
 
 export function Button({
-  outline = false,
-  disabled,
-  loading,
-  className,
-  title,
-  color = "blue",
-  href,
-  label,
-  type = "button",
-  onClick,
-  children
-}: ButtonProps) {
+                         outline = false,
+                         disabled,
+                         loading,
+                         className,
+                         title,
+                         color = "blue",
+                         href,
+                         label,
+                         type = "button",
+                         onClick,
+                         children
+                       }: ButtonProps) {
 
   const d = disabled || loading || false;
 
@@ -85,40 +85,40 @@ export function Button({
   if (href) {
     if (d) {
       return (
-        <a
-          title={title}
-          className={cl}
-        >
-          {child}
-        </a>
+          <a
+              title={title}
+              className={cl}
+          >
+            {child}
+          </a>
       );
     }
     return (
-      <Link href={href}>
-        <a
-          title={title}
-          className={cl}
-        >
-          {child}
-        </a>
-      </Link>
+        <Link href={href}>
+          <a
+              title={title}
+              className={cl}
+          >
+            {child}
+          </a>
+        </Link>
     );
 
   }
   return (
-    <button
-      title={title}
-      disabled={d}
-      className={cl}
-      type={type}
-      onClick={(e) => {
-        if (!d && onClick) {
-          onClick(e);
-        }
-      }}
-    >
-      {child}
-    </button>
+      <button
+          title={title}
+          disabled={d}
+          className={cl}
+          type={type}
+          onClick={(e) => {
+            if (!d && onClick) {
+              onClick(e);
+            }
+          }}
+      >
+        {child}
+      </button>
   );
 
 }

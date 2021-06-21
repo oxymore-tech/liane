@@ -10,7 +10,7 @@ interface UploadProps {
   accept?: string;
   multiple?: boolean;
   loading?: boolean;
-  required?: boolean;
+  mandatory?: boolean;
   value?: string | File;
   onDelete?: (value?: string | File) => any;
   onChange?: (value?: File) => any;
@@ -31,8 +31,9 @@ async function getSrc(file: string | File): Promise<string> {
   return file;
 }
 
-export function Upload({ loading = false, className, label, accept, multiple, value, onChange, onDelete, indication, required }: UploadProps) {
-
+export function Upload({
+  loading = false, className, label, accept, multiple, value, onChange, onDelete, indication, mandatory
+}: UploadProps) {
   const [src, setSrc] = useState<string>();
 
   useEffect(() => {
@@ -40,11 +41,11 @@ export function Upload({ loading = false, className, label, accept, multiple, va
       getSrc(value)
         .then((s) => setSrc(s));
     }
-  });
+  }, [value]);
 
   return (
     <div className={`flex flex-col my-3 ${className}`}>
-      <Label label={label} required={required} />
+      <Label label={label} required={mandatory} />
       <Loading
         className="my-2 w-64"
         loading={loading}
@@ -67,9 +68,7 @@ export function Upload({ loading = false, className, label, accept, multiple, va
             </div>
           )
           : (
-            <label
-              className="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg tracking-wide border border-blue cursor-pointer hover:bg-blue-400 hover:text-white"
-            >
+            <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg tracking-wide border border-blue cursor-pointer hover:bg-blue-400 hover:text-white">
               <svg className="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                 <path
                   d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z"
@@ -82,7 +81,7 @@ export function Upload({ loading = false, className, label, accept, multiple, va
                 accept={accept}
                 multiple={multiple}
                 onChange={(e) => {
-                  if (onChange && e.target.files) {
+                  if (onChange && e.target?.files) {
                     onChange(e.target.files[0]);
                   }
                 }}

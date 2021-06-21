@@ -46,7 +46,7 @@ export class ErrorMessage extends IndicationMessage {
 
 export function getIndicationRingColor(indication?: IndicationMessage) {
   if (!indication) {
-    return "";
+    return "ring-gray-300";
   }
   switch (indication.status) {
     default:
@@ -80,7 +80,27 @@ export function getIndicationColor(indication?: IndicationMessage) {
   }
 }
 
-export function Indication({ className, value, duration = 5000, notify = false }: IndicationProps) {
+export function getIndicationIcon(indication?: IndicationMessage) {
+  if (!indication) {
+    return "";
+  }
+  switch (indication.status) {
+    default:
+    case undefined:
+    case "info":
+      return "mdi-lightbulb-on-outline";
+    case "success":
+      return "mdi-check";
+    case "warning":
+      return "mdi-check";
+    case "error":
+      return "mdi-spider-thread";
+  }
+}
+
+export function Indication({
+  className, value, duration = 5000, notify = false
+}: IndicationProps) {
   const [messageInternal, setMessageInternal] = useState(value?.message);
 
   const indicationColor = getIndicationColor(value);
@@ -88,16 +108,24 @@ export function Indication({ className, value, duration = 5000, notify = false }
   useEffect(() => {
     setMessageInternal(value?.message);
     if (notify) {
-      setTimeout(() => setMessageInternal(undefined), duration);
+      const timer = setTimeout(() => setMessageInternal(undefined), duration);
+      return () => {
+        clearTimeout(timer);
+      };
     }
+    return () => {
+    };
   }, [notify, value]);
 
   return (
     <div
-      className={`text-xs ease-in-out duration-500 transition-all text-gray-600 flex items-center ${messageInternal && "opacity-100" || "opacity-0 invisible"} ${indicationColor} ${className}`}
+      className={
+        `text-xs ease-in-out duration-500 transition-all flex items-center 
+        ${messageInternal ? "opacity-100" : "opacity-0 invisible"} ${indicationColor} ${className}`
+      }
     >
-      {notify && <i className="mr-2 mdi text-2xl mdi-check-circle" />}
-      {messageInternal || value?.message || "&nbsp;"}
+      {notify && <i className={`mx-2 mdi text-xs ${getIndicationIcon(value)}`} />}
+      <p>{messageInternal || value?.message || "\u00A0"}</p>
     </div>
   );
 }

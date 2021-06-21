@@ -3,71 +3,93 @@ import { format, parseJSON } from "date-fns";
 import { getIndicationRingColor, Indication, IndicationMessage } from "./Indication";
 import { Label } from "./Label";
 
-interface TextInputProps {
+type InputType = "textarea" | "text" | "password" | "date" | "email" | "number" | "file" | "checkbox";
+
+type ValueOf<T extends InputType> = T extends "checkbox"
+  ? boolean
+  : T extends "date"
+    ? Date | string
+    : T extends "number"
+      ? number | string
+      : string;
+
+interface TextInputProps<T extends InputType> {
   className?: string;
   label?: string;
+  name?: string;
   title?: string;
   iconLeft?: string;
   placeholder?: string;
-  required?: boolean;
-  type: "textarea" | "text" | "password" | "date";
-  value?: string;
-  onChange?: (value: string) => any;
+  mandatory?: boolean;
+  multiple?: boolean;
+  disabled?: boolean;
+  type: T;
+  value?: ValueOf<T>;
+  onChange?: (value: ValueOf<T>) => any;
   indication?: IndicationMessage;
+  notifyIndication?: boolean;
   autoComplete?: "off" | "new-password";
 }
 
-export function TextInput({
+export function TextInput<T extends InputType>({
   placeholder,
   className,
+  name,
   label,
   title,
   type,
   value,
   onChange,
   indication,
-  required,
+  notifyIndication,
+  mandatory,
+  multiple,
+  disabled,
   iconLeft,
   autoComplete
-}: TextInputProps) {
-
+}: TextInputProps<T>) {
   const indicationRingColor = getIndicationRingColor(indication);
 
-  const v = type === "date" ? value && format(parseJSON(value), "YYYY-MM-DD") : value;
+  // @ts-ignore
+  const v = type === "date" ? format(parseJSON(value ?? new Date()), "yyyy-MM-dd") : value as string;
 
   const onChangeEvent = (e) => {
     if (onChange) {
-      if (type === "date") {
-        onChange(parseJSON(e.target.value).toISOString());
+      if (type === "checkbox") {
+        onChange(e.target.checked);
       } else {
         onChange(e.target.value);
       }
     }
   };
 
-  const inputClass = `outline-none rounded ring-1 ring-gray-300 focus:ring-blue-300 p-2 my-2 bg-white ${indicationRingColor}`;
+  const inputClass = `outline-none rounded ${indicationRingColor} ring-1 focus:ring-blue-300 p-2 mt-2 mb-1 bg-white text-sm ${type !== "checkbox" && "w-full"}`;
 
   return (
-    <div className={`flex flex-col my-3 ${className}`}>
-      <Label label={label} required={required} />
-      <div className="relative">
-        {type === "textarea"
-          ? (
-            <textarea
-              title={title}
-              placeholder={placeholder}
-              className={`w-full ${iconLeft && "pl-11"} ${inputClass}`}
-              value={v}
-              onChange={onChangeEvent}
-            />
-          )
+    <div className={`flex ${type !== "checkbox" && "flex-col"} ${className}`}>
+      <Label label={label} required={mandatory} error={!!indication} />
+      <div className={`relative ${type === "checkbox" && "ml-4"}`}>
+        {type === "textarea" ? (
+          <textarea
+            title={title}
+            name={name}
+            placeholder={placeholder}
+            className={`w-full ${iconLeft && "pl-11"} ${inputClass}`}
+            value={v}
+            onChange={onChangeEvent}
+            disabled={disabled}
+          />
+        )
           : (
             <input
               title={title}
+              name={name}
               placeholder={placeholder}
-              className={`w-full ${iconLeft && "pl-11"} ${inputClass}`}
+              className={`${iconLeft && "pl-11"} ${inputClass}`}
+              multiple={multiple}
               type={type}
               value={v}
+              disabled={disabled}
               autoComplete={autoComplete}
               onChange={onChangeEvent}
             />
@@ -80,7 +102,7 @@ export function TextInput({
         </div>
         )}
       </div>
-      <Indication value={indication} />
+      <Indication className="mt-1 mb-2" value={indication} notify={notifyIndication} />
     </div>
   );
 }

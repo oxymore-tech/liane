@@ -22,9 +22,12 @@ namespace Liane.Service.Internal.Location
         private readonly IRedis redis;
         private readonly IRallyingPointService rallyingPointService;
         private readonly IRealTripService realTripService;
+        private readonly IRawTripService rawTripService;
 
-        public LocationServiceImpl(ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService, IRealTripService realTripService,
-            IAddressService addressService)
+        public LocationServiceImpl(
+            ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService, IRealTripService realTripService,
+            IAddressService addressService, IRawTripService rawTripService
+            )
         {
             this.logger = logger;
             this.currentContext = currentContext;
@@ -32,11 +35,17 @@ namespace Liane.Service.Internal.Location
             this.rallyingPointService = rallyingPointService;
             this.realTripService = realTripService;
             this.addressService = addressService;
+            this.rawTripService = rawTripService;
         }
 
         public async Task LogLocation(ImmutableList<UserLocation> userLocations)
         {
-            logger.LogInformation("Log locations : {userLocations}", JsonSerializer.Serialize(userLocations));
+            logger.LogInformation("Log locations (creating raw and real trip) : {userLocations}", JsonSerializer.Serialize(userLocations));
+            
+            // Save the raw data as a trip
+            await rawTripService.Save(ImmutableList.Create(new RawTrip(userLocations, null)));
+            
+            // Try to create one or more trip from teh raw data
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
 
             foreach (var trip in SplitTrips(userLocations)
@@ -51,18 +60,20 @@ namespace Liane.Service.Internal.Location
                 {
                     var fromAddress = await addressService.GetDisplayName(fromCoordinate);
                     var toAddress = await addressService.GetDisplayName(toCoordinate);
-
                     var realTrip = new RealTrip(
                         new Api.Trip.Location(fromCoordinate, fromAddress.Address),
                         new Api.Trip.Location(toCoordinate, toAddress.Address),
                         DateTimeOffset.FromUnixTimeMilliseconds(from.Timestamp).DateTime,
                         DateTimeOffset.FromUnixTimeMilliseconds(to.Timestamp).DateTime
                     );
+                    
                     trips.Add(realTrip);
                 }
             }
 
             await realTripService.Save(trips.ToImmutable());
+            
+            logger.LogInformation("Created {count} trips, expected 1", trips.Count);
         }
 
         private static IEnumerable<ImmutableList<UserLocation>> SplitTrips(ImmutableList<UserLocation> userLocations)
@@ -80,6 +91,7 @@ namespace Liane.Service.Internal.Location
                     var previous = currentTrip[0];
                     var deltaTime = current.Timestamp - previous.Timestamp;
                     var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng());
+                    
                     if (deltaTime > 3_600_000 || distance > 5_000)
                     {
                         yield return currentTrip.ToImmutableList();

@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable import/prefer-default-export */
 import React, { ReactNode } from "react";
 import Link from "next/link";
 
@@ -24,7 +29,6 @@ export function MenuItem({
   onEnter,
   onLeave
 }: MenuItemProps) {
-
   const s = size || "text-base";
 
   const onEnterInternal = () => {
