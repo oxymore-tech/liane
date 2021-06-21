@@ -68,9 +68,15 @@ function LianeMapAdmin({ className, center }: MapProps) {
                     "fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }
                   ).format(new Date(l.timestamp))}
                 </p>
-                <p>{l.speed}</p>
+                <p>{`speed${l.speed}`}</p>
+                <p>{l.isApple ? "Apple" : "android"}</p>
+                <p>
+                  {l.permissionLevel }
+                </p>
+                <p>{l.foreground ? "Foreground" : "Background"}</p>
               </Tooltip>
             </CircleMarker>
+
           ))))}
       </MapContainer>
     </div>
