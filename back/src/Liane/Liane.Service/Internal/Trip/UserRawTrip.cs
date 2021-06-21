@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using Liane.Api.Location;
 using MongoDB.Bson;
 
@@ -7,6 +7,6 @@ namespace Liane.Service.Internal.Trip
     public sealed record UserRawTrip(
         ObjectId? _id,
         string UserId,
-        ImmutableList<UserLocation> Locations
+        List<UserLocation> Locations
     );
 }
