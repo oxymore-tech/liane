@@ -43,5 +43,10 @@ namespace Liane.Service.Internal.Util
         {
             return $"auth_sms_token:{phoneNumber}";
         }
+
+        public static RedisKey Administrators()
+        {
+            return "administrators";
+        }
     }
 }
