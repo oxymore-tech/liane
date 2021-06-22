@@ -74,7 +74,7 @@ export function TextInput<T extends InputType>({
             title={title}
             name={name}
             placeholder={placeholder}
-            className={`w-full ${iconLeft && "pl-11"} ${inputClass}`}
+            className={`w-full ${iconLeft && "pl-9"} ${inputClass}`}
             value={v}
             onChange={onChangeEvent}
             disabled={disabled}
@@ -85,7 +85,7 @@ export function TextInput<T extends InputType>({
               title={title}
               name={name}
               placeholder={placeholder}
-              className={`${iconLeft && "pl-11"} ${inputClass}`}
+              className={`${iconLeft && "pl-9"} ${inputClass}`}
               multiple={multiple}
               type={type}
               value={v}
@@ -96,7 +96,7 @@ export function TextInput<T extends InputType>({
           )}
         {iconLeft && (
         <div
-          className="overflow-hidden absolute text-2xl top-0 py-3 px-3 text-gray-400"
+          className="overflow-hidden absolute text-2xl top-0 py-2.5 px-2 text-gray-400"
         >
           <i className={`mdi mdi-${iconLeft}`} />
         </div>

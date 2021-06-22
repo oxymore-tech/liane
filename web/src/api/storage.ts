@@ -5,3 +5,7 @@ export async function getStoredToken() {
     return null;
   }
 }
+
+export async function setStoredToken(token: string) {
+  localStorage?.setItem("token", token);
+}
