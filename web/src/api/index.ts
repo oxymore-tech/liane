@@ -52,3 +52,8 @@ export interface RawTrip {
   user: string;
   locations: UserLocation[];
 }
+
+export interface AuthUser {
+  phone: string,
+  token: string
+}
