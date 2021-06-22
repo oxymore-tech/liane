@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Location;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Util;
