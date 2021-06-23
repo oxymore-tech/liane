@@ -2,43 +2,51 @@ import React, { useState } from "react";
 import { Switch } from "@/components/base/Switch";
 import { Select } from "@/components/base/Select";
 import { TextInput } from "@/components/base/TextInput";
+import { FilterOptions } from "@/api";
+import { Button } from "@/components/base/Button";
+
+const Test = require("@/api/tests.json");
 
 interface FilterProps {
-  callback: (o: any) => void
+  callback: (filterOptions: FilterOptions) => void
 }
 
 export function FiltersAdmin({ callback }: FilterProps) {
 
   const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
-  const [chooseUser, setChooseUser] = useState(false);
-  const [chooseBackground, setChooseBackground] = useState(true);
-  const [chooseForeground, setChooseForeground] = useState(true);
-  const idUser = ["0603891703", "0603891704"];
+  const [allUsers, setAllUsers] = useState(true);
+  const [displayBackground, setDisplayBackground] = useState(true);
+  const [displayForeground, setDisplayForeground] = useState(true);
+  const [chosenUser, setChosenUser] = useState<string>();
+  const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
+  const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
+  const idUsers = Test.map((rawTrips) => rawTrips.user);
 
   function cb() {
     callback({
-      displayRawTrips, displayRallyingPoints, chooseUser, chooseBackground, chooseForeground
+      displayRawTrips, displayRallyingPoints, allUsers, chosenUser, displayBackground, displayForeground, distanceBetweenPoints, timeBetweenPoints
     });
   }
 
   return (
-    <div className="absolute inset-y-0 right-0 z-10">
-      <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-8 gap-2 m-8">
+    <div className="absolute inset-y-0 right-0 z-10 overflow-scroll">
+      <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
 
-        <Switch label="Données brutes ?" value={displayRawTrips} onChange={(v) => { setDisplayRawTrips(v); cb(); }} color="yellow" />
-        <Switch label="Rallying points ?" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />
-        <Switch label="Tous les utilisateurs ?" value={chooseUser} onChange={setChooseUser} color="yellow" />
+        <Switch label="Données brutes ?" value={displayRawTrips} onChange={(v) => { setDisplayRawTrips(v); }} color="yellow" />
+        <Switch label="Rallying points ?" value={displayRallyingPoints} onChange={(v) => { setDisplayRallyingPoints(v); }} color="yellow" />
+        <Switch label="Tous les utilisateurs ?" value={allUsers} onChange={(v) => { setAllUsers(v); }} color="yellow" />
 
-        {!chooseUser
+        {!allUsers
           ? (
             <Select
               className="col-span-2"
               label="Choisir votre utilisateur"
-              options={idUser}
-              render={(o) => o}
-              value="user"
-              placeholder="Numéro de téléphone "
+              options={idUsers}
+              value={chosenUser}
+              render={(id) => id}
+              onChange={(id) => setChosenUser(id)}
+
             />
           )
           : null }
@@ -47,18 +55,24 @@ export function FiltersAdmin({ callback }: FilterProps) {
           className="col-span-2"
           type="number"
           label="Intervalle de temps minimum entre deux points"
-          value="timeInterval"
+          onChange={(t:number) => { setTimeBetweenPoints(t); }}
           placeholder="Aucun"
         />
         <TextInput
           className="col-span-2"
           type="number"
           label="Distance minimum entre deux points"
-          value="distanceInterval"
+          onChange={(d:number) => { setDistanceBetweenPoints(d); }}
           placeholder="Aucune"
         />
-        <Switch label="Données background" value={chooseBackground} onChange={setChooseBackground} color="yellow" />
-        <Switch label="Données foreground" value={chooseForeground} onChange={setChooseForeground} color="yellow" />
+        <Switch label="Données background" value={displayBackground} onChange={(v) => { setDisplayBackground(v); }} color="yellow" />
+        <Switch label="Données foreground" value={displayForeground} onChange={(v) => { setDisplayForeground(v); }} color="yellow" />
+        <Button
+          color="orange"
+          className="mt-4 col-span-2"
+          label="Valider"
+          onClick={() => { cb(); }}
+        />
       </div>
     </div>
   );

@@ -52,3 +52,15 @@ export interface RawTrip {
   user: string;
   locations: UserLocation[];
 }
+
+export interface FilterOptions {
+  displayRawTrips: boolean;
+  displayRallyingPoints: boolean;
+  allUsers : boolean ;
+  chosenUser?: string ;
+  displayBackground: boolean;
+  displayForeground: boolean;
+  distanceBetweenPoints?: number;
+  timeBetweenPoints?: number;
+
+}

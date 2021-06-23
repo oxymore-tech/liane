@@ -1,0 +1,98 @@
+[
+  {
+    "user": "0603891703",
+    "locations":[
+      {
+        "timestamp": 1619707748059,
+        "latitude": 44.3377486,
+        "longitude": 3.4844569,
+        "accuracy": 20,
+        "speed": 0,
+        "isApple": true,
+        "foreground": false
+      },
+      {
+        "timestamp": 1619707844320,
+        "latitude": 44.3377484,
+        "longitude": 3.4844577,
+        "accuracy": 20,
+        "speed": 0,
+        "isApple": true,
+        "foreground": false
+      },
+      {
+        "timestamp": 1619712377964,
+        "latitude": 44.3377483,
+        "longitude": 3.4844576,
+        "accuracy": 20,
+        "speed": 0.0021966824,
+        "isApple": true,
+        "foreground": false
+      }
+    ] 
+  },
+  {
+    "user": "0603891704",
+    "locations":[
+      {
+        "timestamp": 1619707748059,
+        "latitude": 44.3377486,
+        "longitude": 3.4844569,
+        "accuracy": 20,
+        "speed": 0,
+        "isApple": true,
+        "foreground": true
+      },
+      {
+        "timestamp": 1619707844320,
+        "latitude": 44.3377484,
+        "longitude": 3.4844577,
+        "accuracy": 20,
+        "speed": 0,
+        "isApple": true,
+        "foreground": true
+      },
+      {
+        "timestamp": 1619712377964,
+        "latitude": 44.3377483,
+        "longitude": 3.4844576,
+        "accuracy": 20,
+        "speed": 0.0021966824,
+        "isApple": true,
+        "foreground": true
+      }
+    ]
+  },
+  {
+    "user": "0603891705",
+    "locations":[
+      {
+        "timestamp": 1619707748059,
+        "latitude": 44.3377486,
+        "longitude": 3.4844569,
+        "accuracy": 20,
+        "speed": 0,
+        "isApple": true,
+        "foreground": true
+      },
+      {
+        "timestamp": 1619707844320,
+        "latitude": 44.3377484,
+        "longitude": 3.4844577,
+        "accuracy": 20,
+        "speed": 0,
+        "isApple": true,
+        "foreground": true
+      },
+      {
+        "timestamp": 1619712377964,
+        "latitude": 44.3377483,
+        "longitude": 3.4844576,
+        "accuracy": 20,
+        "speed": 0.0021966824,
+        "isApple": true,
+        "foreground": true
+      }
+    ]
+  }
+]
