@@ -6,7 +6,6 @@ import {
 } from "@/api";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
-import { adminService } from "@/api/admin-service";
 import { FiltersAdmin } from "@/components/FiltersAdmin";
 
 const Test = require("@/api/tests.json");
@@ -24,19 +23,20 @@ function LianeMapAdmin({ className, center }: MapProps) {
   const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
 
   // const [displayBackground, setDisplayBackground] = useState(true);
-  const [displayForeground, setDisplayForeground] = useState(true);
+  // const [displayForeground, setDisplayForeground] = useState(true);
 
   // Gets data from FilterAdmin and applies it to the map
   function updateDisplayRawTrips(filterOptions : FilterOptions) {
     setDisplayRallyingPoint(filterOptions.displayRallyingPoints);
-    let tempRawTrip : RawTrip[] = rawTrips;
+    let tempRawTrip: RawTrip[] = rawTrips;
+
+    console.log("raw trips", rawTrips);
 
     // Filtre utilisateurs
-    console.log("raw trips", rawTrips);
     // Un utilisateur est choisi donc on récupère ses trajets persos
     // On filtre selon l'utilisateur choisi
     if (!filterOptions.allUsers) {
-      tempRawTrip = tempRawTrip.filter((rawTrip) => (
+      tempRawTrip = tempRawTrip.filter((rawTrip: RawTrip) => (
         rawTrip.user === filterOptions.chosenUser
       ));
     }
@@ -44,24 +44,50 @@ function LianeMapAdmin({ className, center }: MapProps) {
     // pas de foreground => on veut la donnée pas à true
     // pas de background => on veut la donnée pas à false
     // ni l'un ni l'autre on veut ni true ni false
-
     if (filterOptions.displayForeground) {
-      tempRawTrip = tempRawTrip.map((rawTrip : RawTrip) => (
-        { user: rawTrip.user, locations: rawTrip.locations.filter((l) => (l.foreground)) }
+      tempRawTrip = tempRawTrip.map((rawTrip: RawTrip) => (
+        { user: rawTrip.user, locations: rawTrip.locations.filter((l: UserLocation) => (l.isForeground === undefined || l.isForeground)) }
       ));
     }
-    if (filterOptions.distanceBetweenPoints) {
-      tempRawTrip = tempRawTrip.map((rawTrip : RawTrip) => (
-        { user: rawTrip.user,
-          locations: rawTrip.locations.filter((l, index) => {
+
+    if (filterOptions.displayBackground) {
+      tempRawTrip = tempRawTrip.map((rawTrip: RawTrip) => (
+        { user: rawTrip.user, locations: rawTrip.locations.filter((l: UserLocation) => (l.isForeground === undefined || !l.isForeground)) }
+      ));
+    }
+
+    if (filterOptions.distanceBetweenPoints && filterOptions.distanceBetweenPoints > 0) {
+      tempRawTrip = tempRawTrip.map((rawTrip: RawTrip) => (
+        {
+          user: rawTrip.user,
+          locations: rawTrip.locations.filter((l: UserLocation, index: number) => {
             // filterOptions.distanceBetweenPoints already checked
-            if (index === 0 || Distance(rawTrip.locations[index + 1], l) <= filterOptions.distanceBetweenPoints) {
+            if (index === 0 || Distance(rawTrip.locations[index + 1], l) <= filterOptions.distanceBetweenPoints!) {
               return l;
             }
-
             return l;
+          })
+        }
+      ));
+    }
 
-          }) }
+    if (filterOptions.timeBetweenPoints && filterOptions.timeBetweenPoints > 0) {
+      let j = 0;
+      tempRawTrip = tempRawTrip.map((rawTrip: RawTrip) => (
+        {
+          user: rawTrip.user,
+          locations: rawTrip.locations.filter((l: UserLocation, i: number) => {
+            let valid = false;
+            const previous = rawTrip[j];
+
+            if (l.timestamp - filterOptions.timeBetweenPoints! >= previous.timestamp) {
+              valid = true;
+              j = i;
+            }
+
+            return valid;
+          })
+        }
       ));
     }
 
@@ -87,8 +113,8 @@ function LianeMapAdmin({ className, center }: MapProps) {
     const num1 = location1.longitude * (Math.PI / 180.0);
     const d2 = location2.latitude * (Math.PI / 180.0);
     const num2 = location2.longitude * (Math.PI / 180.0) - num1;
-    const d3 = Math.pow(Math.sin((d2 - d1) / 2.0), 2.0)
-        + Math.cos(d1) * Math.cos(d2) * Math.pow(Math.sin(num2 / 2.0), 2.0);
+    const d3 = Math.sin((d2 - d1) / 2.0) ** 2.0
+        + Math.cos(d1) * Math.cos(d2) * Math.sin(num2 / 2.0) ** 2.0;
     return 6376500.0 * (2.0 * Math.atan2(Math.sqrt(d3), Math.sqrt(1.0 - d3)));
   }
 
