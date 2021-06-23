@@ -29,6 +29,16 @@ If you want to stop the databases, use the following commands :
 ./liane stop
 ```
 
+## Twilio configuration
+
+To use Twilio (the service to send messages), you need to define three environment variables :
+
+```bash
+export LIANE_TWILIO__ACCOUNT=XXX
+export LIANE_TWILIO__FROM=+000
+export LIANE_TWILIO__TOKEN=xxx
+```
+
 ## Launch the project
 
 Dotnet is mandatory in order to launch the backend part of the project. To 
