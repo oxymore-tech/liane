@@ -45,7 +45,7 @@ export interface UserLocation {
   speed?: number;
   permissionLevel?: LocationPermissionLevel;
   isApple?: boolean;
-  foreground?: boolean;
+  isForeground?: boolean;
 }
 
 export interface RawTrip {
