@@ -36,7 +36,7 @@ namespace Liane.Service.Internal.Trip
             if (!trips.IsEmpty)
             {
                 logger.LogInformation("{Count} trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
-                await collection.DeleteManyAsync(u => u.UserId == currentUser);
+                // await collection.DeleteManyAsync(u => u.UserId == currentUser);
                 await collection.InsertManyAsync(
                     trips.Select(t => new UserTrip(ObjectId.GenerateNewId(), currentUser, t.From, t.To, t.StartTime, t.EndTime))
                 );
