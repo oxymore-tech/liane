@@ -96,7 +96,7 @@ export function TextInput<T extends InputType>({
           )}
         {iconLeft && (
         <div
-          className="overflow-hidden absolute text-2xl top-0 py-2.5 px-2 text-gray-400"
+          className="overflow-hidden absolute text-2xl top-0 py-2.5 px-1.5 text-gray-400"
         >
           <i className={`mdi mdi-${iconLeft}`} />
         </div>

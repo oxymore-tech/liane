@@ -1,10 +1,10 @@
 import React from "react";
 
-export interface ArraowProps {
+export interface ArrowProps {
   className?: string
 }
 
-export function Arrow({ className = "" }: ArraowProps) {
+export function Arrow({ className = "" }: ArrowProps) {
   return (
     <svg
       className={`h-5 w-5 ${className}`}
