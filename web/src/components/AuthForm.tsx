@@ -8,6 +8,7 @@ import { AppContext } from "@/components/ContextProvider";
  * Authentication form.
  */
 export function AuthForm() {
+  const [step, setStep] = useState(0);
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [text, setText] = useState("");
@@ -16,10 +17,13 @@ export function AuthForm() {
   async function sendSms() {
     try {
       if (phone) {
+        setText("...");
         await authService.sendSms(phone);
+        setText("");
+        setStep(1);
       }
     } catch (e) {
-      setText("Impossible d'effectuer la demande");
+      setText("Le serveur est injoignable pour le moment.");
     }
   }
 
@@ -30,16 +34,17 @@ export function AuthForm() {
         setAuthUser(user);
       }
     } catch (e) {
-      setText("Impossible de vous enregistrer");
+      setText("Impossible de vous enregistrer.");
     }
   }
 
   return (
-    <div className="flex h-screen font-sans">
+    <div className="flex items-center h-screen font-sans">
       { !(authUser)
         ? (
-          <div className="m-auto p-4 rounded-lg">
-            <div className="p-6">
+          <div className="m-auto p-4">
+            <img className="m-auto w-[3.23rem]" src="/images/logo.png" alt="Liane logo" />
+            <div className="p-6 grid">
               <TextInput
                 type="text"
                 iconLeft="cellphone"
@@ -47,13 +52,15 @@ export function AuthForm() {
                 onChange={setPhone}
               />
               <Button
-                className=""
+                className="ml-10 mr-10"
                 label="Recevoir le code"
                 color="orange"
                 onClick={sendSms}
               />
             </div>
-            <div className="p-6">
+            {step > 0
+            && (
+            <div className="p-6 grid">
               <TextInput
                 type="text"
                 iconLeft="key-variant"
@@ -61,22 +68,25 @@ export function AuthForm() {
                 onChange={setCode}
               />
               <Button
+                className="ml-10 mr-10"
                 label="Valider"
                 color="orange"
                 onClick={login}
               />
             </div>
-            { text && <div>{text}</div> }
+            )}
+            { text && <div className="text-center bold">{text}</div> }
           </div>
         )
         : (
-          <div className="m-auto p-4 rounded-lg">
+          <div className="m-auto p-4 rounded-lg grid">
             Vous êtes connecté avec :
             {" "}
             {authUser.phone}
-            {" "}
+            .
             <br />
             <Button
+              className="mt-5 ml-10 mr-10"
               label="Retour à l'accueil"
               color="orange"
               href="/"
