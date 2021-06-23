@@ -53,7 +53,15 @@ function LianeMapAdmin({ className, center }: MapProps) {
     if (filterOptions.distanceBetweenPoints) {
       tempRawTrip = tempRawTrip.map((rawTrip : RawTrip) => (
         { user: rawTrip.user,
-          locations: rawTrip.locations.filter((l, index) => ({ latitude: l.latitude, longitude: l.longitude }.CalculateDistance())) }
+          locations: rawTrip.locations.filter((l, index) => {
+            // filterOptions.distanceBetweenPoints already checked
+            if (index === 0 || Distance(rawTrip.locations[index + 1], l) <= filterOptions.distanceBetweenPoints) {
+              return l;
+            }
+
+            return l;
+
+          }) }
       ));
     }
 
