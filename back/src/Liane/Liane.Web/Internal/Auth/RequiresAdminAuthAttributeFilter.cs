@@ -4,7 +4,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.User;
 using Microsoft.AspNetCore.Mvc;
@@ -17,12 +16,10 @@ namespace Liane.Web.Internal.Auth
     {
         private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
         private readonly ILogger<RequiresAuthAttributeFilter> logger;
-        private readonly IAuthService authService;
 
-        public RequiresAdminAuthAttributeFilter(ILogger<RequiresAuthAttributeFilter> logger, IAuthService authService)
+        public RequiresAdminAuthAttributeFilter(ILogger<RequiresAuthAttributeFilter> logger)
         {
             this.logger = logger;
-            this.authService = authService;
         }
 
         public Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -37,12 +34,11 @@ namespace Liane.Web.Internal.Auth
                 }
                 
                 var token = JwtTokenHandler.ReadJwtToken(tokenString);
-                var claims = token.Claims;
                 var isAdmin = false;
                 
-                foreach (var claim in claims)
+                foreach (var claim in token.Claims)
                 {
-                    if (claim.Type.Equals(ClaimTypes.Role))
+                    if (claim.Type.Equals("role"))
                     {
                         isAdmin = claim.Value.Equals(AuthServiceImpl.AdminRole);
                     }
@@ -52,6 +48,8 @@ namespace Liane.Web.Internal.Auth
                 {
                     throw new UnauthorizedAccessException();
                 }
+
+                logger.LogInformation("Admin access allowed to : " + tokenString);
             }
             catch (System.Exception e)
             {

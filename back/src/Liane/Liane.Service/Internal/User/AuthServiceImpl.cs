@@ -87,6 +87,7 @@ namespace Liane.Service.Internal.User
             var database = await redis.Get();
             var redisKey = RedisKeys.AuthSmsToken(phoneNumber);
             var value = await database.StringGetAsync(redisKey);
+            
             if (value.IsNullOrEmpty)
             {
                 throw new UnauthorizedAccessException("Invalid code");
@@ -172,7 +173,14 @@ namespace Liane.Service.Internal.User
         private async Task<bool> IsAnAdmin(string phoneNumber)
         {
             var database = await redis.Get();
-            return database.SetContains(RedisKeys.Administrators(), phoneNumber);
+            var isAdmin = database.SetContains(RedisKeys.Administrator(), phoneNumber);
+
+            if (isAdmin)
+            {
+                logger.LogInformation("New admin authenticated : " + phoneNumber);
+            }
+
+            return isAdmin;
         }
     }
 }

@@ -31,12 +31,12 @@ namespace Liane.Web.Internal.Auth
             try
             {
                 var token = TryExtractToken(context);
-
+                
                 if (token == null)
                 {
                     throw new UnauthorizedAccessException();
                 }
-
+                
                 context.HttpContext.User = authService.IsTokenValid(token);
             }
             catch (System.Exception e)
@@ -84,6 +84,7 @@ namespace Liane.Web.Internal.Auth
         private static string ParseBearer(string authorizationHeader)
         {
             var match = Regex.Match(authorizationHeader, @"Bearer[\s]*(.*)", RegexOptions.IgnoreCase);
+
             if (match.Success)
             {
                 return match.Groups[1].Value;
