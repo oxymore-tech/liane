@@ -37,7 +37,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
       await sendSms(phoneNumber);
       navigation.navigate("SignUpCode", { phoneNumber });
     } catch (e) {
-      console.log("sign up error ",e)
+      console.log("sign up error ", e);
       setInternalError(t("Impossible d'effectuer la demande"));
     }
   }, [phoneNumber]);

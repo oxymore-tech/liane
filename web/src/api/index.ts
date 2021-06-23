@@ -53,6 +53,11 @@ export interface RawTrip {
   locations: UserLocation[];
 }
 
+export interface AuthUser {
+  phone: string;
+  token: string;
+}
+
 export interface FilterOptions {
   displayRawTrips: boolean;
   displayRallyingPoints: boolean;

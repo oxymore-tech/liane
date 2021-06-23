@@ -46,7 +46,7 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("raw")]
-        [DisableAuth]
+        [RequiresAdminAuth]
         public Task<ImmutableList<RawTrip>> ListAll()
         {
             return rawTripService.ListAll();

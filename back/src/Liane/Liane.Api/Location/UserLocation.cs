@@ -8,9 +8,9 @@ namespace Liane.Api.Location
         double Longitude,
         double? Accuracy,
         float? Speed,
-        string PermissionLevel,
-        bool IsApple,
-        bool IsForeground
+        string? PermissionLevel,
+        bool? IsApple,
+        bool? IsForeground
     )
     {
         public LatLng ToLatLng() => new(Latitude, Longitude);

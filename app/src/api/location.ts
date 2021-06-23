@@ -173,8 +173,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       timestamp: l.timestamp,
       latitude: l.coords.latitude,
       longitude: l.coords.longitude,
-      accuracy: l.coords.accuracy,
-      speed: l.coords.speed,
+      accuracy: l.coords.accuracy || undefined,
+      speed: l.coords.speed || undefined,
       permissionLevel: locationPermissionLevel,
       isApple,
       isForeground: AppState.currentState === "active"

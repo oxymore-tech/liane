@@ -57,3 +57,5 @@ HSET position:0623172983 1614696978 Blajoux_Parking
 HSET position:0623172983 1614696988 Florac
 HSET position:0623172983 1614696918 SaintChelyDuTarn_En_Haut
 HSET position:0623172983 1614696908 Champerboux_Eglise
+
+SADD administrator +336XXXXXXX
