@@ -36,9 +36,7 @@ export function ContextProvider(props: { children: ReactNode }) {
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
 
   const setAuthUser = async (a?: AuthUser) => {
-    if (a) {
-      await setStoredToken(a?.token);
-    }
+    await setStoredToken(a?.token);
     setInternalAuthUser(a);
   };
 

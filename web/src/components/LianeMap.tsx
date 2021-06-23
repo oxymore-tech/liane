@@ -15,6 +15,7 @@ import { Select } from "@/components/base/Select";
 import { AvailableTrips } from "@/components/available_trips";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { routingService } from "@/api/routing-service";
+import { LoginLogout } from "@/components/LoginLogout";
 
 const Augustin = require("@/api/augustin.json");
 
@@ -145,6 +146,7 @@ function LianeMap({ className, center }: MapProps) {
       && <AvailableTrips searchedTrips={searchedTrips} />}
       <div className="absolute inset-y-0 right-0 z-10">
         <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-2 m-10">
+          <LoginLogout className="col-span-2" />
           <Select
             className="col-span-2"
             label={(
