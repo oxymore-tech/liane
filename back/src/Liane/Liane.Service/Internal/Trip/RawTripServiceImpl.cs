@@ -74,7 +74,7 @@ namespace Liane.Service.Internal.Trip
             var database = client.GetDatabase(DatabaseName);
             var collection = database.GetCollection<UserRawTrip>(CollectionName);
             var asyncCursor = await collection.FindAsync(_ => true);
-            
+
             return asyncCursor.ToEnumerable()
                 .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
                 .ToImmutableList();
