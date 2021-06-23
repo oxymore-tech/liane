@@ -19,48 +19,52 @@ interface MapProps {
 function LianeMapAdmin({ className, center }: MapProps) {
 
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
-  const [rawTrips, setRawTrips] = useState<RawTrip[]>([]);
+  const [rawTrips, setRawTrips] = useState<RawTrip[]>(Test.map((rawTrip) => (rawTrip)));
   const [displayRawTrips, setDisplayRawTrips] = useState<RawTrip[]>([]);
   const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
 
-  const [displayBackground, setDisplayBackground] = useState(true);
+  // const [displayBackground, setDisplayBackground] = useState(true);
   const [displayForeground, setDisplayForeground] = useState(true);
   const [chosenUser, setChosenUser] = useState<string>();
   const [allUsers, setAllUsers] = useState<boolean>(false);
-  const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
-  const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
+  // const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
+  // const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
 
   // Gets data from FilterAdmin and applies it to the map
   function updateDisplayRawTrips(filterOptions : FilterOptions) {
-    setDisplayBackground(filterOptions.displayBackground);
-    setDistanceBetweenPoints(filterOptions.distanceBetweenPoints);
+    // setDisplayBackground(filterOptions.displayBackground);
+    // setDistanceBetweenPoints(filterOptions.distanceBetweenPoints);
     setAllUsers(filterOptions.allUsers);
     setChosenUser(filterOptions.chosenUser);
     setDisplayForeground(filterOptions.displayForeground);
-    setTimeBetweenPoints(filterOptions.timeBetweenPoints);
+    // setTimeBetweenPoints(filterOptions.timeBetweenPoints);
     setDisplayRallyingPoint(filterOptions.displayRallyingPoints);
 
     // Filtre utilisateurs
-    setRawTrips(Test.map((rawTrip) => (rawTrip)));
     console.log("raw trips", rawTrips);
     // Un utilisateur est choisi donc on récupère ses trajets persos
     // On filtre selon l'utilisateur choisi
-    if (!allUsers) {
+    if (!filterOptions.allUsers) {
       setDisplayRawTrips(rawTrips.filter((rawTrip) => (
-        rawTrip.user === chosenUser
+        rawTrip.user === filterOptions.chosenUser
       )));
     } else {
       setDisplayRawTrips(rawTrips);
     }
-    console.log("displayRawTrips", displayRawTrips);
+    /* if (displayForeground) {
+      setDisplayRawTrips(rawTrips.map((rawTrip : RawTrip) => (
+        rawTrip.locations.filter((l) => {
+          return l.foreground;
+        }))));
+    } */
   }
 
-  useEffect(() => {
+  /* useEffect(() => {
     adminService.getAllRawTrips()
       .then((r) => {
         setRawTrips(r);
       });
-  }, []);
+  }, []); */
 
   useEffect(() => {
     rallyingPointService.list(center.lat, center.lng)
