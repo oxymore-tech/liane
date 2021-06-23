@@ -62,5 +62,4 @@ export interface FilterOptions {
   displayForeground: boolean;
   distanceBetweenPoints?: number;
   timeBetweenPoints?: number;
-
 }

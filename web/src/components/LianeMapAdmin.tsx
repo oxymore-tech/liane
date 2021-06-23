@@ -25,38 +25,39 @@ function LianeMapAdmin({ className, center }: MapProps) {
 
   // const [displayBackground, setDisplayBackground] = useState(true);
   const [displayForeground, setDisplayForeground] = useState(true);
-  const [chosenUser, setChosenUser] = useState<string>();
-  const [allUsers, setAllUsers] = useState<boolean>(false);
-  // const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
-  // const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
 
   // Gets data from FilterAdmin and applies it to the map
   function updateDisplayRawTrips(filterOptions : FilterOptions) {
-    // setDisplayBackground(filterOptions.displayBackground);
-    // setDistanceBetweenPoints(filterOptions.distanceBetweenPoints);
-    setAllUsers(filterOptions.allUsers);
-    setChosenUser(filterOptions.chosenUser);
-    setDisplayForeground(filterOptions.displayForeground);
-    // setTimeBetweenPoints(filterOptions.timeBetweenPoints);
     setDisplayRallyingPoint(filterOptions.displayRallyingPoints);
+    let tempRawTrip : RawTrip[] = rawTrips;
 
     // Filtre utilisateurs
     console.log("raw trips", rawTrips);
     // Un utilisateur est choisi donc on récupère ses trajets persos
     // On filtre selon l'utilisateur choisi
     if (!filterOptions.allUsers) {
-      setDisplayRawTrips(rawTrips.filter((rawTrip) => (
+      tempRawTrip = tempRawTrip.filter((rawTrip) => (
         rawTrip.user === filterOptions.chosenUser
-      )));
-    } else {
-      setDisplayRawTrips(rawTrips);
+      ));
     }
-    /* if (displayForeground) {
-      setDisplayRawTrips(rawTrips.map((rawTrip : RawTrip) => (
-        rawTrip.locations.filter((l) => {
-          return l.foreground;
-        }))));
-    } */
+
+    // pas de foreground => on veut la donnée pas à true
+    // pas de background => on veut la donnée pas à false
+    // ni l'un ni l'autre on veut ni true ni false
+
+    if (filterOptions.displayForeground) {
+      tempRawTrip = tempRawTrip.map((rawTrip : RawTrip) => (
+        { user: rawTrip.user, locations: rawTrip.locations.filter((l) => (l.foreground)) }
+      ));
+    }
+    if (filterOptions.distanceBetweenPoints) {
+      tempRawTrip = tempRawTrip.map((rawTrip : RawTrip) => (
+        { user: rawTrip.user,
+          locations: rawTrip.locations.filter((l, index) => ({ latitude: l.latitude, longitude: l.longitude }.CalculateDistance())) }
+      ));
+    }
+
+    setDisplayRawTrips(tempRawTrip);
   }
 
   /* useEffect(() => {
@@ -72,6 +73,16 @@ function LianeMapAdmin({ className, center }: MapProps) {
         setRallyingPoints(r);
       });
   }, [center]);
+
+  function Distance(location1: UserLocation, location2: UserLocation) {
+    const d1 = location1.latitude * (Math.PI / 180.0);
+    const num1 = location1.longitude * (Math.PI / 180.0);
+    const d2 = location2.latitude * (Math.PI / 180.0);
+    const num2 = location2.longitude * (Math.PI / 180.0) - num1;
+    const d3 = Math.pow(Math.sin((d2 - d1) / 2.0), 2.0)
+        + Math.cos(d1) * Math.cos(d2) * Math.pow(Math.sin(num2 / 2.0), 2.0);
+    return 6376500.0 * (2.0 * Math.atan2(Math.sqrt(d3), Math.sqrt(1.0 - d3)));
+  }
 
   const displayToolTip = (l) => (
     <Tooltip>
