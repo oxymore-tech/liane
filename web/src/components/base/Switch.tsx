@@ -38,7 +38,7 @@ export function Switch({ label, required, color = "green", value, onChange }: Sw
     <>
       {label && <Label className="mr-2" label={label} required={required} />}
       <div
-        className={`outline-none shadow-inner my-2 w-12 h-8 flex items-center rounded-full cursor-pointer p-1 duration-300 ease-in-out ${cl}`}
+        className={`${cl} outline-none shadow-inner my-2 w-12 h-8 flex items-center rounded-full cursor-pointer p-1 duration-300 ease-in-out`}
         onClick={() => {
           if (onChange) {
             onChange(!value);
