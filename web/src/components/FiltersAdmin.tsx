@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Switch } from "@/components/base/Switch";
 import { Select } from "@/components/base/Select";
 import { TextInput } from "@/components/base/TextInput";
-import { FilterOptions } from "@/api";
 import { Button } from "@/components/base/Button";
+import { FilterOptions } from "@/components/LianeMapAdmin";
 
 const Test = require("@/api/tests.json");
 
@@ -33,40 +33,41 @@ export function FiltersAdmin({ callback }: FilterProps) {
     <div className="absolute inset-y-0 right-0 z-10 overflow-scroll">
       <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
 
-        <Switch label="Données brutes ?" value={displayRawTrips} onChange={(v) => { setDisplayRawTrips(v); }} color="yellow" />
-        <Switch label="Rallying points ?" value={displayRallyingPoints} onChange={(v) => { setDisplayRallyingPoints(v); }} color="yellow" />
-        <Switch label="Tous les utilisateurs ?" value={allUsers} onChange={(v) => { setAllUsers(v); }} color="yellow" />
+        <Switch label="Données brutes" value={displayRawTrips} onChange={setDisplayRawTrips} color="yellow" />
+        <Switch label="Points de raliement" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />
+        <Switch label="Tous les utilisateurs" value={allUsers} onChange={setAllUsers} color="yellow" />
 
-        {!allUsers
-          ? (
-            <Select
-              className="col-span-2"
-              label="Choisir votre utilisateur"
-              options={idUsers}
-              value={chosenUser}
-              render={(id) => id}
-              onChange={(id) => setChosenUser(id)}
-
-            />
-          )
-          : null }
+        {
+          !allUsers
+            ? (
+              <Select
+                className="col-span-2"
+                label="Choisir votre utilisateur"
+                options={idUsers}
+                value={chosenUser}
+                render={(id) => id}
+                onChange={(id) => setChosenUser(id)}
+              />
+            )
+            : <></>
+        }
 
         <TextInput
           className="col-span-2"
           type="number"
-          label="Intervalle de temps minimum entre deux points"
-          onChange={(t:number) => { setTimeBetweenPoints(t); }}
+          label="Interval de temps minimal (en min)"
+          onChange={(t: number) => { setTimeBetweenPoints(t); }}
           placeholder="Aucun"
         />
         <TextInput
           className="col-span-2"
           type="number"
-          label="Distance minimum entre deux points"
-          onChange={(d:number) => { setDistanceBetweenPoints(d); }}
+          label="Distance minimale (en m)"
+          onChange={(d: number) => { setDistanceBetweenPoints(d); }}
           placeholder="Aucune"
         />
-        <Switch label="Données background" value={displayBackground} onChange={(v) => { setDisplayBackground(v); }} color="yellow" />
-        <Switch label="Données foreground" value={displayForeground} onChange={(v) => { setDisplayForeground(v); }} color="yellow" />
+        <Switch label="Données background" value={displayBackground} onChange={setDisplayBackground} color="yellow" />
+        <Switch label="Données foreground" value={displayForeground} onChange={setDisplayForeground} color="yellow" />
         <Button
           color="orange"
           className="mt-4 col-span-2"
