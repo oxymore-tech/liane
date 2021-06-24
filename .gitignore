@@ -19,3 +19,5 @@ data/
 
 deploy/.env
 dump.rdb
+
+administrators.txt
