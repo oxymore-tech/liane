@@ -7,8 +7,6 @@ import { rallyingPointService } from "@/api/rallying-point-service";
 import { adminService } from "@/api/admin-service";
 import { FiltersAdmin } from "@/components/FiltersAdmin";
 
-const Test = require("@/api/tests.json");
-
 const colors: string[] = [
   "#22278A",
   "#0B79F9",
@@ -125,7 +123,7 @@ function filterRawTrips(rawTrips: RawTrip[], options: FilterOptions): RawTrip[] 
 function LianeMapAdmin({ className, center }: MapProps) {
 
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
-  const [rawTrips, setRawTrips] = useState<RawTrip[]>(Test.map((rawTrip) => (rawTrip)));
+  const [rawTrips, setRawTrips] = useState<RawTrip[]>([]);
   const [displayRawTrips, setDisplayRawTrips] = useState<RawTrip[]>([]);
   const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
 
