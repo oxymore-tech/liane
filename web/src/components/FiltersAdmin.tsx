@@ -5,13 +5,12 @@ import { TextInput } from "@/components/base/TextInput";
 import { Button } from "@/components/base/Button";
 import { FilterOptions } from "@/components/LianeMapAdmin";
 
-const Test = require("@/api/tests.json");
-
 interface FilterProps {
-  callback: (filterOptions: FilterOptions) => void
+  callback: (filterOptions: FilterOptions) => void,
+  users: Set<string>
 }
 
-export function FiltersAdmin({ callback }: FilterProps) {
+export function FiltersAdmin({ callback, users }: FilterProps) {
 
   const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
@@ -21,7 +20,6 @@ export function FiltersAdmin({ callback }: FilterProps) {
   const [chosenUser, setChosenUser] = useState<string>();
   const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
   const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
-  const idUsers = Test.map((rawTrips) => rawTrips.user);
 
   function cb() {
     callback({
@@ -43,10 +41,11 @@ export function FiltersAdmin({ callback }: FilterProps) {
               <Select
                 className="col-span-2"
                 label="Choisir votre utilisateur"
-                options={idUsers}
+                options={Array.from(users)}
                 value={chosenUser}
                 render={(id) => id}
                 onChange={(id) => setChosenUser(id)}
+                placeholder="Aucun"
               />
             )
             : <></>
@@ -78,5 +77,3 @@ export function FiltersAdmin({ callback }: FilterProps) {
     </div>
   );
 }
-
-export default FiltersAdmin;

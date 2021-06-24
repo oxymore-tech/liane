@@ -4,8 +4,8 @@ import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
 import { LatLng, RallyingPoint, RawTrip, UserLocation } from "@/api";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
-import { FiltersAdmin } from "@/components/FiltersAdmin";
 import { adminService } from "@/api/admin-service";
+import { FiltersAdmin } from "@/components/FiltersAdmin";
 
 const Test = require("@/api/tests.json");
 
@@ -31,6 +31,16 @@ export interface FilterOptions {
   displayForeground: boolean;
   distanceBetweenPoints?: number;
   timeBetweenPoints?: number;
+}
+
+function extractUsers(rawTrips: RawTrip[]) {
+  let users = new Set<string>();
+
+  rawTrips.forEach((r: RawTrip) => {
+    users = users.add(r.user);
+  });
+
+  return users;
 }
 
 function distance(l1: UserLocation, l2: UserLocation) {
@@ -154,13 +164,20 @@ function LianeMapAdmin({ className, center }: MapProps) {
       <p>
         { `Permission : ${l.permissionLevel}` }
       </p>
-      <p>{l.isForeground ? "Foreground" : "Background"}</p>
+      <p>
+        { () => {
+          if (l.isForeground === undefined) {
+            return "Undefined";
+          }
+          return l.isForeground ? "Foreground" : "Background";
+        }}
+      </p>
     </Tooltip>
   );
 
   return (
     <div>
-      <FiltersAdmin callback={updateDisplayRawTrips} />
+      <FiltersAdmin callback={updateDisplayRawTrips} users={extractUsers(rawTrips)} />
       <MapContainer
         className={className}
         center={center}
