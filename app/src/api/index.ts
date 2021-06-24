@@ -12,11 +12,11 @@ export interface UserLocation {
   timestamp: number;
   latitude: number;
   longitude: number;
-  accuracy: number | null;
-  speed: number | null;
-  permissionLevel: LocationPermissionLevel;
-  isApple: boolean;
-  isForeground: boolean;
+  accuracy?: number;
+  speed?: number;
+  permissionLevel?: LocationPermissionLevel;
+  isApple?: boolean;
+  isForeground?: boolean;
 }
 
 export interface LatLng {

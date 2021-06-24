@@ -45,10 +45,15 @@ export interface UserLocation {
   speed?: number;
   permissionLevel?: LocationPermissionLevel;
   isApple?: boolean;
-  foreground?: boolean;
+  isForeground?: boolean;
 }
 
 export interface RawTrip {
   user: string;
   locations: UserLocation[];
+}
+
+export interface AuthUser {
+  phone: string;
+  token: string;
 }
