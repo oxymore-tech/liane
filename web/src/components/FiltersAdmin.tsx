@@ -4,26 +4,48 @@ import { Select } from "@/components/base/Select";
 import { TextInput } from "@/components/base/TextInput";
 import { Button } from "@/components/base/Button";
 import { FilterOptions } from "@/components/LianeMapAdmin";
+import { IndexedRawTrip } from "@/api";
 
 interface FilterProps {
   callback: (filterOptions: FilterOptions) => void,
-  users: Set<string>
+  rawTrips: IndexedRawTrip[]
 }
 
-export function FiltersAdmin({ callback, users }: FilterProps) {
+function extractUsers(rawTrips: IndexedRawTrip[]) {
+  let users = new Set<string>();
+
+  rawTrips.forEach((r: IndexedRawTrip) => {
+    users = users.add(r.user);
+  });
+
+  return users;
+}
+
+export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
 
   const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
   const [allUsers, setAllUsers] = useState(true);
+  const [chosenUser, setChosenUser] = useState<string>();
+  const [allTrips, setAllTrips] = useState(true);
+  const [chosenTrip, setChosenTrip] = useState<number>();
   const [displayBackground, setDisplayBackground] = useState(true);
   const [displayForeground, setDisplayForeground] = useState(true);
-  const [chosenUser, setChosenUser] = useState<string>();
   const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
   const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
 
   function cb() {
     callback({
-      displayRawTrips, displayRallyingPoints, allUsers, chosenUser, displayBackground, displayForeground, distanceBetweenPoints, timeBetweenPoints
+      displayRawTrips,
+      displayRallyingPoints,
+      allUsers,
+      chosenUser,
+      displayBackground,
+      displayForeground,
+      distanceBetweenPoints,
+      timeBetweenPoints,
+      allTrips,
+      chosenTrip
     });
   }
 
@@ -33,18 +55,35 @@ export function FiltersAdmin({ callback, users }: FilterProps) {
 
         <Switch label="Données brutes" value={displayRawTrips} onChange={setDisplayRawTrips} color="yellow" />
         <Switch label="Points de raliement" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />
-        <Switch label="Tous les utilisateurs" value={allUsers} onChange={setAllUsers} color="yellow" />
 
+        <Switch label="Tous les utilisateurs" value={allUsers} onChange={setAllUsers} color="yellow" />
         {
           !allUsers
             ? (
               <Select
                 className="col-span-2"
-                label="Choisir votre utilisateur"
-                options={Array.from(users)}
+                label="Choisir l'utilisateur"
+                options={Array.from(extractUsers(rawTrips))}
                 value={chosenUser}
                 render={(id) => id}
                 onChange={(id) => setChosenUser(id)}
+                placeholder="Aucun"
+              />
+            )
+            : <></>
+        }
+
+        <Switch label="Tous les trajets" value={allTrips} onChange={setAllTrips} color="yellow" />
+        {
+          !allTrips
+            ? (
+              <Select
+                className="col-span-2"
+                label="Choisir le trajet"
+                options={rawTrips.map((r: IndexedRawTrip) => r.index)}
+                value={chosenTrip}
+                render={(id) => id}
+                onChange={(id) => setChosenTrip(id)}
                 placeholder="Aucun"
               />
             )

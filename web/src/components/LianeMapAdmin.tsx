@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
-import { LatLng, RallyingPoint, RawTrip, UserLocation } from "@/api";
+import {
+  IndexedRawTrip, LatLng, RallyingPoint, RawTrip, UserLocation
+} from "@/api";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import { adminService } from "@/api/admin-service";
@@ -23,22 +25,14 @@ interface MapProps {
 export interface FilterOptions {
   displayRawTrips: boolean;
   displayRallyingPoints: boolean;
-  allUsers : boolean ;
-  chosenUser?: string ;
+  allUsers: boolean;
+  chosenUser?: string;
+  allTrips: boolean;
+  chosenTrip?: number;
   displayBackground: boolean;
   displayForeground: boolean;
   distanceBetweenPoints?: number;
   timeBetweenPoints?: number;
-}
-
-function extractUsers(rawTrips: RawTrip[]) {
-  let users = new Set<string>();
-
-  rawTrips.forEach((r: RawTrip) => {
-    users = users.add(r.user);
-  });
-
-  return users;
 }
 
 function distance(l1: UserLocation, l2: UserLocation) {
@@ -51,41 +45,50 @@ function distance(l1: UserLocation, l2: UserLocation) {
   return 6376500.0 * (2.0 * Math.atan2(Math.sqrt(d3), Math.sqrt(1.0 - d3)));
 }
 
-function filterRawTrips(rawTrips: RawTrip[], options: FilterOptions): RawTrip[] {
-  let tRawTrips: RawTrip[] = rawTrips;
+function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): IndexedRawTrip[] {
+  let tRawTrips: IndexedRawTrip[] = rawTrips;
 
   // Filter to the selected user
   if (!options.allUsers) {
-    tRawTrips = tRawTrips.filter((rawTrip: RawTrip) => (
-      rawTrip.user === options.chosenUser
+    tRawTrips = tRawTrips.filter((r: IndexedRawTrip) => (
+      r.user === options.chosenUser
+    ));
+  }
+
+  // Filter for the selected trip
+  if (!options.allTrips) {
+    tRawTrips = tRawTrips.filter((r: IndexedRawTrip) => (
+      r.index === options.chosenTrip
     ));
   }
 
   // Filter foreground locations
   if (!options.displayForeground) {
-    tRawTrips = tRawTrips.map((rawTrip: RawTrip) => (
-      { user: rawTrip.user, locations: rawTrip.locations.filter((l: UserLocation) => (l.isForeground === undefined || l.isForeground)) }
+    tRawTrips = tRawTrips.map((r: IndexedRawTrip) => (
+      { index: r.index, user: r.user, locations: r.locations.filter((l: UserLocation) => (l.isForeground === undefined || l.isForeground)) }
     ));
   }
 
   // Filter background locations
   if (!options.displayBackground) {
-    tRawTrips = tRawTrips.map((rawTrip: RawTrip) => (
-      { user: rawTrip.user, locations: rawTrip.locations.filter((l: UserLocation) => (l.isForeground === undefined || !l.isForeground)) }
+    tRawTrips = tRawTrips.map((r: IndexedRawTrip) => (
+      { index: r.index, user: r.user, locations: r.locations.filter((l: UserLocation) => (l.isForeground === undefined || !l.isForeground)) }
     ));
   }
 
   // Filter locations % distance
-  if (options.distanceBetweenPoints && options.distanceBetweenPoints > 0) {
+  const d = options.distanceBetweenPoints;
+  if (d && d > 0) {
     let j = 0;
-    tRawTrips = tRawTrips.map((rawTrip: RawTrip) => (
+    tRawTrips = tRawTrips.map((r: IndexedRawTrip) => (
       {
-        user: rawTrip.user,
-        locations: rawTrip.locations.filter((l: UserLocation, i: number) => {
+        index: r.index,
+        user: r.user,
+        locations: r.locations.filter((l: UserLocation, i: number) => {
           let valid = false;
-          const previous = rawTrip.locations[j];
+          const previous = r.locations[j];
 
-          if (previous && distance(previous, l) >= options.distanceBetweenPoints!) {
+          if (previous && distance(previous, l) >= d) {
             valid = true;
             j = i;
           }
@@ -97,16 +100,18 @@ function filterRawTrips(rawTrips: RawTrip[], options: FilterOptions): RawTrip[] 
   }
 
   // Filter locations % time
-  if (options.timeBetweenPoints && options.timeBetweenPoints > 0) {
+  const t = options.timeBetweenPoints;
+  if (t && t > 0) {
     let j = 0;
-    tRawTrips = tRawTrips.map((rawTrip: RawTrip) => (
+    tRawTrips = tRawTrips.map((r: IndexedRawTrip) => (
       {
-        user: rawTrip.user,
-        locations: rawTrip.locations.filter((l: UserLocation, i: number) => {
+        index: r.index,
+        user: r.user,
+        locations: r.locations.filter((l: UserLocation, i: number) => {
           let valid = false;
-          const previous = rawTrip.locations[j];
+          const previous = r.locations[j];
 
-          if (previous && l.timestamp - (options.timeBetweenPoints! * 60 * 1000) >= previous.timestamp) {
+          if (previous && l.timestamp - (t * 60 * 1000) >= previous.timestamp) {
             valid = true;
             j = i;
           }
@@ -123,8 +128,8 @@ function filterRawTrips(rawTrips: RawTrip[], options: FilterOptions): RawTrip[] 
 function LianeMapAdmin({ className, center }: MapProps) {
 
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
-  const [rawTrips, setRawTrips] = useState<RawTrip[]>([]);
-  const [displayRawTrips, setDisplayRawTrips] = useState<RawTrip[]>([]);
+  const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
+  const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
   const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
 
   // Gets data from FilterAdmin and applies it to the map
@@ -136,9 +141,8 @@ function LianeMapAdmin({ className, center }: MapProps) {
 
   useEffect(() => {
     adminService.getAllRawTrips()
-      .then((r) => {
-        console.log(r.length);
-        setRawTrips(r);
+      .then((r: RawTrip[]) => {
+        setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
       });
   }, []);
 
@@ -149,9 +153,9 @@ function LianeMapAdmin({ className, center }: MapProps) {
       });
   }, [center]);
 
-  const tooltip = (i: number, j: number, l: UserLocation) => (
+  const tooltip = (index:number, i: number, j: number, l: UserLocation) => (
     <Tooltip>
-      <p>{`Trajet n°${i} | ${j}`}</p>
+      <p>{`Trajet n°${index} | ${i}-${j}`}</p>
       <p>
         {new Intl.DateTimeFormat(
           "fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }
@@ -175,7 +179,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
 
   return (
     <div>
-      <FiltersAdmin callback={updateDisplayRawTrips} users={extractUsers(rawTrips)} />
+      <FiltersAdmin callback={updateDisplayRawTrips} rawTrips={rawTrips} />
       <MapContainer
         className={className}
         center={center}
@@ -191,19 +195,18 @@ function LianeMapAdmin({ className, center }: MapProps) {
         />
         {
           displayRallyingPoints
-            ? (
-              rallyingPoints.map((point: RallyingPoint, i: number) => (
-                <RallyingPointMarker key={`rl_${i}`} value={point} onSelect={() => {}} />
-              )))
-            : <></>
+          && (rallyingPoints.map((point: RallyingPoint, i: number) => (
+            <RallyingPointMarker key={`rl_${i}`} value={point} onSelect={() => {}} />
+          )))
         }
         {
-          displayRawTrips.map((a: RawTrip, k: number) => (
-            a.locations.map((l: UserLocation, j: number) => (
-              <CircleMarker key={`l_${k}_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: colors[k % colors.length] }} radius={10}>
-                {tooltip(k, j, l)}
+          displayRawTrips.map((r: IndexedRawTrip, k: number) => (
+            r.locations.map((l: UserLocation, j: number) => (
+              <CircleMarker key={`l_${k}_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: colors[r.index % colors.length] }} radius={10}>
+                {tooltip(r.index, k, j, l)}
               </CircleMarker>
-            ))))
+            ))
+          ))
         }
       </MapContainer>
     </div>
