@@ -57,7 +57,7 @@ namespace Liane.Service.Internal
         public async Task<IEnumerable<RallyingPoint>> ListRallyingPointsInternal(LatLng center)
         {
             var database = await redis.Get();
-            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), center.Lng, center.Lat, 500, GeoUnit.Kilometers, order: Order.Ascending,
+            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), center.Lng, center.Lat, 50, GeoUnit.Kilometers, order: Order.Ascending,
                 options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
             return results
                 .Select(r =>
