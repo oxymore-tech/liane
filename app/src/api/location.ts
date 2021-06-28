@@ -19,7 +19,7 @@ const FETCH_TIME_KEY = "@Fetch_Time";
 const MIN_TRIP_SIZE = 5;
 
 // Time which we consider is the minimum to separate two trips
-const TRIP_SEPARATING_TIME: number = 1000 * 60 * 5;
+const TRIP_SEPARATING_TIME: number = 1000 * 60 * 7.5;
 
 // Task name
 const LOCATION_TASK_NAME: string = "LOCATION_TASK";
@@ -27,15 +27,15 @@ const LOCATION_TASK_NAME: string = "LOCATION_TASK";
 // Task options
 const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 100,
+  distanceInterval: 250,
   // Notification options, the (only) reliable way to get background task run properly
   foregroundService: {
     notificationTitle: "Localisation",
     notificationBody: "Service de suivi de trajet.",
-    notificationColor: "#FF5B22"
+    notificationColor: "#22278A"
   },
   // Android options
-  timeInterval: 60 * 1000,
+  timeInterval: 2 * 60 * 1000,
   // iOS options
   pausesUpdatesAutomatically: true,
   activityType: Location.ActivityType.AutomotiveNavigation
@@ -160,8 +160,11 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     return;
   }
 
+  // Load the data
+  const { locations } = data as { locations: LocationObject[] };
+
   // Check whether the detected locations belongs to a new trip
-  const newLocationFetchTime: number = Date.now();
+  const newLocationFetchTime: number = locations[locations.length - 1].timestamp;
   const lastLocationFetchTime: number = await getLastLocationFetchTime();
 
   if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
@@ -175,7 +178,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 
   // Iterate over every location received and choose the pertinent ones
   const trip: UserLocation[] = await getTrip();
-  const { locations } = data as { locations: LocationObject[] };
 
   locations.forEach((l) => {
     trip.push({
