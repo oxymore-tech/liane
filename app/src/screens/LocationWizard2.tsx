@@ -7,7 +7,7 @@ import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 
-const logo = require("@/assets/logo_mini.png");
+const logo = require("@/assets/logo_yellow.png");
 
 /**
  * Get the text of the current step.
@@ -162,9 +162,9 @@ const LocationWizard2 = () => {
         ? (<View><AppButton buttonStyle={tw("bg-blue-500 rounded-full m-2 ml-10 mr-10")} onPress={next} title="Continuer" /></View>)
         : (
           <View>
-            <AppButton buttonStyle={tw("bg-blue-500 rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
-            <AppButton buttonStyle={tw("bg-blue-400 rounded-full mt-5 ml-10 mr-10")} onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
-            <AppButton buttonStyle={tw("bg-blue-300 rounded-full mt-5 ml-10 mr-10")} onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
+            <AppButton buttonStyle={tw("bg-liane-orange rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
+            <AppButton buttonStyle={tw("bg-liane-orange-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
+            <AppButton buttonStyle={tw("bg-liane-orange-light rounded-full mt-5 ml-10 mr-10")} onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
           </View>
         )}
     </View>

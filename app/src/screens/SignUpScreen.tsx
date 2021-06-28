@@ -10,7 +10,6 @@ import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
 import { scopedTranslate } from "@/api/i18n";
 
-const image = require("@/assets/images/bg-mountains.jpg");
 const logo = require("@/assets/logo_white.png");
 
 const t = scopedTranslate("SignUp");
@@ -44,54 +43,50 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   return (
     <KeyboardAvoidingView>
-      <ImageBackground source={image} style={tw("h-full")} resizeMode="cover">
+      <View style={tw("h-20 items-center mx-20 mt-32 mb-20")}>
+        <Image
+          style={tw("flex-1 w-64")}
+          source={logo}
+          resizeMode="contain"
+        />
+      </View>
 
-        <View style={tw("h-20 items-center mx-20 mt-32 mb-20")}>
-          <Image
-            style={tw("flex-1 w-64")}
-            source={logo}
-            resizeMode="contain"
+      <View>
+        <AppText
+          style={tw("text-center text-lg text-gray-600")}
+        >
+          {t("Veuillez entrer votre numéro de téléphone")}
+        </AppText>
+        <View
+          style={tw("rounded-full m-20 bg-liane-orange text-white text-2xl flex flex-row h-12")}
+        >
+          <AppTextInput
+            style={tw("text-white text-2xl text-center flex-1")}
+            placeholder=""
+            autoFocus
+            returnKeyLabel="next"
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
+            autoCompleteType="tel"
+            textContentType="telephoneNumber"
+            onSubmitEditing={signUp}
+            maxLength={10}
+          />
+          <AppButton
+            buttonStyle={tw("rounded-r-3xl bg-liane-yellow w-12 h-12")}
+            iconStyle={tw("text-3xl text-white font-bold")}
+            disabled={phoneNumber.length < 10}
+            onPress={signUp}
+            icon="arrow-forward-circle-outline"
           />
         </View>
+        <AppText
+          style={tw("text-center text-lg text-red-600")}
+        >
+          {internalError || authFailure || " "}
+        </AppText>
 
-        <View>
-          <AppText
-            style={tw("text-center text-lg text-gray-600")}
-          >
-            {t("Veuillez entrer votre numéro de téléphone")}
-          </AppText>
-          <View
-            style={tw("rounded-full m-20 bg-gray-100 text-gray-600 text-2xl flex flex-row h-12")}
-          >
-            <AppTextInput
-              style={tw("text-gray-600 text-2xl text-center flex-1")}
-              placeholder=""
-              autoFocus
-              returnKeyLabel="next"
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              autoCompleteType="tel"
-              textContentType="telephoneNumber"
-              onSubmitEditing={signUp}
-              maxLength={10}
-            />
-            <AppButton
-              buttonStyle={tw("rounded-r-3xl bg-orange-light w-12 h-12")}
-              iconStyle={tw("text-3xl text-white font-bold")}
-              disabled={phoneNumber.length < 10}
-              onPress={signUp}
-              icon="arrow-forward-circle-outline"
-            />
-          </View>
-          <AppText
-            style={tw("text-center text-lg text-red-600")}
-          >
-            {internalError || authFailure || " "}
-          </AppText>
-
-        </View>
-
-      </ImageBackground>
+      </View>
     </KeyboardAvoidingView>
   );
 };
