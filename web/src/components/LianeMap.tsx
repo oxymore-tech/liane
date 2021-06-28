@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import {
-  CircleMarker, MapContainer, Polyline, TileLayer, Tooltip
+  CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents
 } from "react-leaflet";
 import { addHours } from "date-fns";
 import {
@@ -19,6 +19,8 @@ import { LoginLogout } from "@/components/LoginLogout";
 
 const Augustin = require("@/api/augustin.json");
 
+const ZOOM_LEVEL_TO_SHOW_RP = 12;
+
 interface MapProps {
   className?: string;
   center: LatLng;
@@ -26,25 +28,35 @@ interface MapProps {
 
 const MemoPolyline = memo(Polyline);
 
-const MultiPolyline = ({ routes }: { routes:RouteStat[] }) => (
-  <>
-    {routes
-      .map((route, i) => {
-        const w = route.stat;
-        const color = `#${(Math.floor((1 - route.stat / 7) * 255)).toString(16)}${(Math.floor((route.stat / 7) * 255)).toString(16)}00`;
-        if (w >= 6) {
-          return <MemoPolyline key={i} positions={route.coordinates} weight={10} color={color} />;
-        }
-        if (w > 1 && w < 6) {
-          return <MemoPolyline key={i} positions={route.coordinates} weight={5} color={color} />;
-        }
-        if (w === 1) {
-          return <MemoPolyline key={i} positions={route.coordinates} weight={2} color={color} />;
-        }
-        return <MemoPolyline key={i} positions={route.coordinates} color={color} />;
-      })}
-  </>
-);
+// const MultiPolyline = ({ routes }: { routes:RouteStat[] }) => (
+//   <>
+//     {routes
+//       .map((route, i) => {
+//         const w = route.stat;
+//         const color = `#${(Math.floor((1 - route.stat / 7) * 255)).toString(16)}${(Math.floor((route.stat / 7) * 255)).toString(16)}00`;
+//         if (w >= 6) {
+//           return <MemoPolyline key={i} positions={route.coordinates} weight={10} color={color} />;
+//         }
+//         if (w > 1 && w < 6) {
+//           return <MemoPolyline key={i} positions={route.coordinates} weight={5} color={color} />;
+//         }
+//         if (w === 1) {
+//           return <MemoPolyline key={i} positions={route.coordinates} weight={2} color={color} />;
+//         }
+//         return <MemoPolyline key={i} positions={route.coordinates} color={color} />;
+//       })}
+//   </>
+// );
+
+function ZoomHandler({ callback }) {
+  const map = useMapEvents({
+    zoomstart(o) {
+      callback(o.target._zoom);
+    }
+  });
+
+  return null;
+}
 
 function LianeMap({ className, center }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
@@ -52,6 +64,7 @@ function LianeMap({ className, center }: MapProps) {
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [availableTrips, setAvailableTrips] = useState(false);
+  const [showRallyingPoints, setShowRallyingPoints] = useState(false);
 
   const nextHour = addHours(new Date(), 1);
 
@@ -140,6 +153,10 @@ function LianeMap({ className, center }: MapProps) {
       .then((result) => setSteps(result));
   }, [searchedTrips, day, startHour, endHour]);
 
+  function zoomHandler(zoom) {
+    setShowRallyingPoints(zoom >= ZOOM_LEVEL_TO_SHOW_RP);
+  }
+
   return (
     <div>
       {availableTrips
@@ -222,12 +239,13 @@ function LianeMap({ className, center }: MapProps) {
         touchZoom={false}
         style={{ zIndex: 0, position: "relative" }}
       >
+        <ZoomHandler callback={zoomHandler} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}
         />
         {route && <MemoPolyline positions={route.coordinates} weight={5} />}
-        {rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
+        {showRallyingPoints && rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
         {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
         {Augustin.map((a:UserLocation, index:number) => (
           <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={20}>
