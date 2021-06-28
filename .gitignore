@@ -13,6 +13,7 @@ web-report/
 
 data/
 .idea/
+venv/
 
 # macOS
 .DS_Store
