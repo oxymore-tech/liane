@@ -45,7 +45,7 @@ namespace Liane.Service.Internal.Location
             // Save the raw data as a trip
             await rawTripService.Save(ImmutableList.Create(new RawTrip(userLocations, null)));
             
-            // Try to create one or more trip from teh raw data
+            // Try to create one or more trip from the raw data
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
 
             foreach (var trip in SplitTrips(userLocations)

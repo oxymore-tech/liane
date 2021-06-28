@@ -125,6 +125,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
   const token = await getStoredToken();
+  h.append('content-type', 'application/json; charset=utf-8');
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }

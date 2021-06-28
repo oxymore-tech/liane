@@ -83,7 +83,9 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
                 options={rawTrips.map((r: IndexedRawTrip) => r.index)}
                 value={chosenTrip}
                 render={(id) => id}
-                onChange={(id) => setChosenTrip(id)}
+                onChange={(id) => {
+                  setChosenTrip(id);
+                }}
                 placeholder="Aucun"
               />
             )
