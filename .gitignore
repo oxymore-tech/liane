@@ -21,3 +21,4 @@ deploy/.env
 dump.rdb
 
 administrators.txt
+*.temprp.*
