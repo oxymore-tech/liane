@@ -2,6 +2,18 @@
 	"container": {
 		"width": "100%"
 	},
+	"bg-liane-orange": {
+		"backgroundColor": "#FF5B22"
+	},
+	"bg-liane-orange-lighter": {
+		"backgroundColor": "#FF865C"
+	},
+	"bg-liane-orange-light": {
+		"backgroundColor": "#FFB399"
+	},
+	"bg-liane-yellow": {
+		"backgroundColor": "#FFB545"
+	},
 	"bg-orange-light": {
 		"--tw-bg-opacity": 1,
 		"backgroundColor": "rgba(255, 181, 69, var(--tw-bg-opacity))"
