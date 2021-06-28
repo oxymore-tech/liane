@@ -1,7 +1,7 @@
 {
   "SignUp": {
-    "Veuillez entrer votre numéro de téléphone": "Please enter your phone number",
-    "Impossible d'effectuer la demande": "Signup failed"
+    "Veuillez entrer votre numéro de téléphone": "Veuillez indiquer votre numéro de téléphone.",
+    "Impossible d'effectuer la demande": "Echec de l'authentification."
   },
   "Home": {
     "Mes trajets": "Mes trajets",

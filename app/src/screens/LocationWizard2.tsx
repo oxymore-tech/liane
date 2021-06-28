@@ -7,7 +7,7 @@ import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 
-const logo = require("@/assets/logo_yellow.png");
+const logo = require("@/assets/adaptive-icon.png");
 
 /**
  * Get the text of the current step.
@@ -20,15 +20,15 @@ function getWizardText(step: number) {
     case 0:
       view = (
         <ScrollView>
-          <AppText style={tw("text-center text-lg text-gray-500 m-2 mt-0 ")}>
+          <AppText style={tw("text-center text-lg text-white m-2 mt-0 ")}>
             Covoiturer à la campagne, en toute liberté.
             Liane relève vos trajets du quotidien entre des points pré-établis.
           </AppText>
-          <AppText style={tw("text-center font-bold text-lg text-gray-500 m-2")}>
+          <AppText style={tw("text-center font-bold text-lg text-white m-2")}>
             Vos trajets sont proposés aux autres utilisateurs de façon 100% anonyme. Vous recevrez ensuite des demandes
             anonymes des autres utilisateurs, que vous pouvez refuser sans vous justifier.
           </AppText>
-          <AppText style={tw("text-center text-lg text-gray-500 m-2")}>
+          <AppText style={tw("text-center text-lg text-white m-2")}>
             Pour cela Liane a besoin d&apos;accéder à vos données de géolocalisation. Vos données de géolocalisation ne sont utilisés dans aucun autre but.
           </AppText>
         </ScrollView>
@@ -37,13 +37,13 @@ function getWizardText(step: number) {
     case 1:
       view = (
         <View>
-          <AppText style={tw("text-center text-lg text-gray-500 m-2 mt-0")}>
+          <AppText style={tw("text-center text-lg text-white m-2 mt-0")}>
             Pour utiliser Liane a son potentiel maximum, elle doit pouvoir suivre votre déplacement en permanence.
           </AppText>
-          <AppText style={tw("text-center font-bold text-lg text-gray-500 m-2")}>
+          <AppText style={tw("text-center font-bold text-lg text-white m-2")}>
             A quel moment voulez-vous autoriser Liane à suivre votre position ?
           </AppText>
-          <AppText style={tw("text-center italic text-sm text-gray-400 m-2")}>
+          <AppText style={tw("text-center italic text-sm text-white m-2")}>
             Vous pourrez toujours le modifier plus tard.
           </AppText>
         </View>
@@ -148,7 +148,7 @@ const LocationWizard2 = () => {
   };
 
   return (
-    <View style={tw("h-full min-h-full bg-gray-50 content-center")}>
+    <View style={tw("h-full min-h-full bg-liane-yellow content-center")}>
       <View style={tw("h-20 items-center m-20")}>
         <Image
           style={tw("flex-1 w-64")}
@@ -159,7 +159,7 @@ const LocationWizard2 = () => {
       { getWizardText(step) }
       { optionalText !== "" && (<AppText style={tw("text-center text-sm text-red-600 m-2")}>{ optionalText }</AppText>) }
       { step === 0
-        ? (<View><AppButton buttonStyle={tw("bg-blue-500 rounded-full m-2 ml-10 mr-10")} onPress={next} title="Continuer" /></View>)
+        ? (<View><AppButton buttonStyle={tw("bg-liane-orange rounded-full m-2 ml-10 mr-10")} onPress={next} title="Continuer" /></View>)
         : (
           <View>
             <AppButton buttonStyle={tw("bg-liane-orange rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from "react";
-import { Image, ImageBackground, View } from "react-native";
+import { Image, KeyboardAvoidingView, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { tw } from "@/api/tailwind";
@@ -10,7 +10,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
 
-const logo = require("@/assets/logo_yellow.png");
+const logo = require("@/assets/adaptive-icon.png");
 
 type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
 
@@ -37,8 +37,8 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   }, [phoneNumber, code, expoPushToken]);
 
   return (
-    <View style={tw("flex h-full")}>
-      <View style={tw("h-20 items-center mx-20 mt-32 mb-20")}>
+    <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
+      <View style={tw("h-40 items-center mt-20 mb-5")}>
         <Image
           style={tw("flex-1 w-64")}
           source={logo}
@@ -47,9 +47,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
       </View>
 
       <View>
-        <AppText
-          style={tw("text-center text-lg text-gray-600")}
-        >
+        <AppText style={tw("text-center text-lg text-gray-600")}>
           Un code vous a été envoyé par sms
         </AppText>
         <View
@@ -73,7 +71,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
           />
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
