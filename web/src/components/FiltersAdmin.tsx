@@ -11,9 +11,18 @@ interface FilterProps {
   rawTrips: IndexedRawTrip[]
 }
 
+function extractIndex(rawTrips: IndexedRawTrip[]) {
+  let indexes = new Set<number|string>();
+  indexes = indexes.add("Tous les trajets");
+  rawTrips.forEach((r: IndexedRawTrip) => {
+    indexes = indexes.add(r.index);
+  });
+  return indexes;
+}
+
 function extractUsers(rawTrips: IndexedRawTrip[]) {
   let users = new Set<string>();
-
+  users = users.add("Tous les utilisateurs");
   rawTrips.forEach((r: IndexedRawTrip) => {
     users = users.add(r.user);
   });
@@ -49,6 +58,24 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
     });
   }
 
+  function selectTripController(id) {
+    if ((typeof id === "string") || (id === 0)) {
+      setAllTrips(true);
+    } else {
+      setAllTrips(false);
+    }
+    setChosenTrip(id);
+  }
+
+  function selectUserController(user) {
+    if (user === "Tous les utilisateurs") {
+      setAllUsers(true);
+    } else {
+      setAllUsers(false);
+    }
+    setChosenUser(user);
+  }
+
   return (
     <div className="absolute inset-y-0 right-0 z-10 overflow-scroll">
       <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
@@ -56,41 +83,27 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
         <Switch label="Données brutes" value={displayRawTrips} onChange={setDisplayRawTrips} color="yellow" />
         <Switch label="Points de raliement" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />
 
-        <Switch label="Tous les utilisateurs" value={allUsers} onChange={setAllUsers} color="yellow" />
-        {
-          !allUsers
-            ? (
-              <Select
-                className="col-span-2"
-                label="Choisir l'utilisateur"
-                options={Array.from(extractUsers(rawTrips))}
-                value={chosenUser}
-                render={(id) => id}
-                onChange={(id) => setChosenUser(id)}
-                placeholder="Aucun"
-              />
-            )
-            : <></>
-        }
+        <Select
+          className="col-span-2"
+          label="Choisir l'utilisateur"
+          options={Array.from(extractUsers(rawTrips))}
+          value={chosenUser}
+          render={(id) => id}
+          onChange={(id) => selectUserController(id)}
+          placeholder="Aucun"
+        />
 
-        <Switch label="Tous les trajets" value={allTrips} onChange={setAllTrips} color="yellow" />
-        {
-          !allTrips
-            ? (
-              <Select
-                className="col-span-2"
-                label="Choisir le trajet"
-                options={rawTrips.map((r: IndexedRawTrip) => r.index)}
-                value={chosenTrip}
-                render={(id) => id}
-                onChange={(id) => {
-                  setChosenTrip(id);
-                }}
-                placeholder="Aucun"
-              />
-            )
-            : <></>
-        }
+        <Select
+          className="col-span-2"
+          label="Choisir le trajet"
+          options={Array.from(extractIndex(rawTrips))}
+          value={chosenTrip}
+          render={(id) => (!(id === 0) ? id : null)}
+          onChange={(id) => {
+            selectTripController(id);
+          }}
+
+        />
 
         <TextInput
           className="col-span-2"
