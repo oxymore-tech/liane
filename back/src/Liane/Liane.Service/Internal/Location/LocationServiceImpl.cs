@@ -16,6 +16,11 @@ namespace Liane.Service.Internal.Location
 {
     public sealed class LocationServiceImpl : ILocationService
     {
+        private const int DeltaTimeTrip = 1000 * 60 * 30; // 30 minutes gap = two different trips
+        private const int DeltaMTrip = 1000 * 5; // 5 000 m gap = two different trips
+        private const int MinLocTrip = 5; // Less than 5 loc isn't a trip
+        private const int MinDistTrip = 1000; // Less than 1 000 m isn't a trip
+        
         private readonly ILogger<LocationServiceImpl> logger;
         private readonly ICurrentContext currentContext;
         private readonly IAddressService addressService;
@@ -49,17 +54,19 @@ namespace Liane.Service.Internal.Location
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
 
             foreach (var trip in SplitTrips(userLocations)
-                .Where(l => l.Count >= 2))
+                .Where(l => l.Count >= MinLocTrip))
             {
                 var from = trip[0];
                 var to = trip[^1];
                 var fromCoordinate = from.ToLatLng();
                 var toCoordinate = to.ToLatLng();
                 var distance = fromCoordinate.CalculateDistance(toCoordinate);
+                
                 if (distance >= 1_000)
                 {
                     var fromAddress = await addressService.GetDisplayName(fromCoordinate);
                     var toAddress = await addressService.GetDisplayName(toCoordinate);
+                    
                     var realTrip = new RealTrip(
                         new Api.Trip.Location(fromCoordinate, fromAddress.Address),
                         new Api.Trip.Location(toCoordinate, toAddress.Address),
@@ -76,30 +83,43 @@ namespace Liane.Service.Internal.Location
             logger.LogInformation("Created {count} trips, expected 1", trips.Count);
         }
 
+        private static RealTrip CreateRealTrip(ImmutableList<UserLocation> trip)
+        {
+            return null;
+        }
+        
+        private static RealTrip CreateRallyingPointTrip(ImmutableList<UserLocation> trip)
+        {
+            // Créer un service RallyingPointTripService -> gère ce nouveau type de données
+            return null;
+        }
+
         private static IEnumerable<ImmutableList<UserLocation>> SplitTrips(ImmutableList<UserLocation> userLocations)
         {
             List<UserLocation> currentTrip = new();
+            var previousIndex = -1;
 
             foreach (var current in userLocations.OrderBy(u => u.Timestamp))
             {
-                if (currentTrip.Count == 0)
+                if (previousIndex < 0)
                 {
                     currentTrip.Add(current);
+                    previousIndex++;
                 }
                 else
                 {
-                    var previous = currentTrip[0];
-                    var deltaTime = current.Timestamp - previous.Timestamp;
-                    var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng());
-                    
-                    if (deltaTime > 3_600_000 || distance > 5_000)
+                    var previous = currentTrip[previousIndex];
+
+                    if (IsPartOfSameTrip(previous, current))
                     {
-                        yield return currentTrip.ToImmutableList();
-                        currentTrip = new List<UserLocation> {current};
+                        currentTrip.Add(current);
+                        previousIndex++;
                     }
                     else
                     {
-                        currentTrip.Add(current);
+                        yield return currentTrip.ToImmutableList();
+                        currentTrip = new List<UserLocation> {current};
+                        previousIndex = -1;
                     }
                 }
             }
@@ -107,9 +127,9 @@ namespace Liane.Service.Internal.Location
 
         private static bool IsPartOfSameTrip(UserLocation previous, UserLocation current)
         {
-            var deltaTime = current.Timestamp - previous.Timestamp;
-            var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng());
-            return distance < 5_000;
+            var time = current.Timestamp - previous.Timestamp <= DeltaTimeTrip;
+            var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng()) <= DeltaMTrip;
+            return time && distance;
         }
 
         // public async Task LogLocation(ImmutableList<UserLocation> userLocations)
