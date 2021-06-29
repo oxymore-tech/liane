@@ -162,6 +162,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         ).format(new Date(l.timestamp))}
       </p>
       <p>{`Vitesse : ${l.speed ? l.speed : "Inconnue"}`}</p>
+      <p>{`Précision : ${l.accuracy ? l.accuracy : "Inconnue"}`}</p>
       <p>{l.isApple ? "Apple" : "Android"}</p>
       <p>
         { `Permission : ${l.permissionLevel}` }
