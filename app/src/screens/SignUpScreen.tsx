@@ -10,7 +10,7 @@ import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
 import { scopedTranslate } from "@/api/i18n";
 
-const logo = require("@/assets/adaptive-icon.png");
+const logo = require("@/assets/logo_orange.png");
 
 const t = scopedTranslate("SignUp");
 
@@ -43,7 +43,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   return (
     <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
-      <View style={tw("h-40 items-center mt-20 mb-5")}>
+      <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}
           source={logo}
@@ -52,7 +52,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
       </View>
 
       <View>
-        <AppText style={tw("text-center text-lg text-white pl-10 pr-10")}>
+        <AppText style={tw("text-center text-lg text-white mx-10 mb-5")}>
           {t("Veuillez entrer votre numéro de téléphone")}
         </AppText>
         <View
@@ -78,10 +78,9 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             icon="arrow-forward-circle-outline"
           />
         </View>
-        <AppText style={tw("text-center text-lg text-red-600")}>
+        <AppText style={tw("text-center text-lg text-red-600 m-5")}>
           {internalError || authFailure || " "}
         </AppText>
-
       </View>
     </KeyboardAvoidingView>
   );

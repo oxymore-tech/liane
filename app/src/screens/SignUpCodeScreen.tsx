@@ -10,7 +10,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
 
-const logo = require("@/assets/adaptive-icon.png");
+const logo = require("@/assets/logo_orange.png");
 
 type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
 
@@ -38,7 +38,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
 
   return (
     <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
-      <View style={tw("h-40 items-center mt-20 mb-5")}>
+      <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}
           source={logo}
@@ -47,14 +47,14 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
       </View>
 
       <View>
-        <AppText style={tw("text-center text-lg text-gray-600")}>
-          Un code vous a été envoyé par sms
+        <AppText style={tw("text-center text-lg text-white mx-10 mb-5")}>
+          Un code vous a été envoyé par SMS.
         </AppText>
         <View
-          style={tw("rounded-full m-20 bg-liane-orange text-gray-600 text-2xl flex flex-row h-12")}
+          style={tw("rounded-full m-20 bg-white text-2xl flex flex-row h-12")}
         >
           <AppTextInput
-            style={tw("text-white text-2xl text-center flex-1")}
+            style={tw("text-gray-800 text-2xl text-center flex-1")}
             autoFocus
             returnKeyLabel="next"
             onChangeText={setCode}
@@ -63,7 +63,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
             maxLength={6}
           />
           <AppButton
-            buttonStyle={tw("rounded-r-3xl bg-liane-yellow w-12 h-12")}
+            buttonStyle={tw("rounded-r-3xl bg-liane-orange w-12 h-12")}
             iconStyle={tw("text-3xl text-white font-bold")}
             disabled={code.length < 6}
             onPress={signIn}

@@ -32,7 +32,7 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   foregroundService: {
     notificationTitle: "Localisation",
     notificationBody: "Service de suivi de trajet.",
-    notificationColor: "#FF5B22"
+    notificationColor: "#22278A"
   },
   // Android options
   timeInterval: 60 * 1000,
