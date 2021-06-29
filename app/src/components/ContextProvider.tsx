@@ -111,8 +111,10 @@ export function ContextProvider(props: { children: ReactNode }) {
   const setAuthUser = async (a?: AuthUser) => {
     if (a) {
       const token = a?.token;
-      console.log("storeToken", token);
+      console.log("storeToken", a?.token);
       await AsyncStorage.setItem("token", token);
+    } else {
+      await AsyncStorage.removeItem("token");
     }
     setInternalAuthUser(a);
   };

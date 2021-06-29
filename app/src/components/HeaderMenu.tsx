@@ -5,8 +5,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { LocationPermissionLevel } from "@/api";
-
-// const Stack = createStackNavigator();
+import { sendTrip } from "@/api/location";
 
 type HeaderMenuProps = {
   name: string
@@ -25,23 +24,28 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
       {open
         ? (
           <>
-            <View style={tw("pt-5 pb-5 flex-row items-center bg-blue-500")}>
+            <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
               <AppText style={tw("absolute text-2xl text-center text-white w-full")}>{name}</AppText>
               <AppButton
-                buttonStyle={tw("bg-blue-500")}
+                buttonStyle={tw("bg-liane-blue")}
                 iconStyle={tw("text-3xl font-bold text-white")}
                 icon="close-outline"
                 onPress={chooseAction}
               />
             </View>
-            <View style={tw("bg-blue-500 p-4")}>
+            <View style={tw("bg-liane-blue p-4")}>
               <AppButton
-                buttonStyle={tw("bg-blue-600 ml-10 mr-10")}
+                buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
+                title="Envoyer le trajet courant"
+                onPress={async () => { await sendTrip(); }}
+              />
+              <AppButton
+                buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
                 title="Paramètres de géolocalisation"
                 onPress={() => { setLocationPermissionLevel(LocationPermissionLevel.NEVER); }}
               />
               <AppButton
-                buttonStyle={tw("bg-blue-600 mt-1 ml-10 mr-10")}
+                buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
                 title="Déconnexion"
                 onPress={() => { setAuthUser(undefined); }}
               />
@@ -49,10 +53,10 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
           </>
         )
         : (
-          <View style={tw("pt-5 pb-5 flex-row items-center bg-blue-500")}>
+          <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
             <AppText style={tw("absolute text-2xl text-white text-center w-full ")}>{name}</AppText>
             <AppButton
-              buttonStyle={tw("bg-blue-500 ")}
+              buttonStyle={tw("bg-liane-blue")}
               iconStyle={tw("text-3xl text-white")}
               icon="menu"
               onPress={chooseAction}
