@@ -10,7 +10,7 @@ import NotificationsScreen from "@/screens/NotificationsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { tw } from "@/api/tailwind";
 import { LocationPermissionLevel } from "@/api";
-import LocationWizard2 from "@/screens/LocationWizard2";
+import LocationWizard2 from "@/screens/LocationWizard";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

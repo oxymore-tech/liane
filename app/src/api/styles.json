@@ -2,6 +2,24 @@
 	"container": {
 		"width": "100%"
 	},
+	"bg-liane-orange": {
+		"backgroundColor": "#FF5B22"
+	},
+	"bg-liane-orange-lighter": {
+		"backgroundColor": "#FF7545"
+	},
+	"bg-liane-yellow": {
+		"backgroundColor": "#FFB545"
+	},
+	"bg-liane-royal": {
+		"backgroundColor": "#22278A"
+	},
+	"bg-liane-blue": {
+		"backgroundColor": "#0B79F9"
+	},
+	"bg-liane-pink": {
+		"backgroundColor": "#FF8484"
+	},
 	"bg-orange-light": {
 		"--tw-bg-opacity": 1,
 		"backgroundColor": "rgba(255, 181, 69, var(--tw-bg-opacity))"
