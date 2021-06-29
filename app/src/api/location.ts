@@ -27,7 +27,7 @@ const LOCATION_TASK_NAME: string = "LOCATION_TASK";
 // Task options
 const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 250,
+  distanceInterval: 150,
   // Notification options, the (only) reliable way to get background task run properly
   foregroundService: {
     notificationTitle: "Localisation",
@@ -35,7 +35,7 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
     notificationColor: "#22278A"
   },
   // Android options
-  timeInterval: 2 * 60 * 1000,
+  timeInterval: 1.5 * 60 * 1000,
   // iOS options
   pausesUpdatesAutomatically: true,
   activityType: Location.ActivityType.AutomotiveNavigation
@@ -139,7 +139,6 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
 
     // Start the task regarding the permission level
     if (permissionLevel === LocationPermissionLevel.ALWAYS || permissionLevel === LocationPermissionLevel.ACTIVE) {
-      console.log("Location task started.");
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS);
       console.log("Location task started.");
     } else {
