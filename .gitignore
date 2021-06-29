@@ -13,6 +13,7 @@ web-report/
 
 data/
 .idea/
+venv/
 
 # macOS
 .DS_Store
@@ -21,3 +22,4 @@ deploy/.env
 dump.rdb
 
 administrators.txt
+*.temprp.*
