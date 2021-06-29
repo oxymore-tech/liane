@@ -2,7 +2,7 @@ import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-const BaseUrl = __DEV__ ? "http://192.168.8.174:8081/api" : "https://liane.gjini.co/api";
+const BaseUrl = "https://liane.gjini.co/api";
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -125,12 +125,11 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
   const token = await getStoredToken();
-  h.append('content-type', 'application/json; charset=utf-8');
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }
   if (body && bodyAsJson) {
-    h.append("Content-Type", "application/json");
+    h.append("Content-Type", "application/json; charset=utf-8");
   }
   return h;
 }
