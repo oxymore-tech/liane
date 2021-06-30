@@ -11,18 +11,28 @@ interface FilterProps {
   rawTrips: IndexedRawTrip[]
 }
 
-function extractIndex(rawTrips: IndexedRawTrip[]) {
+function extractIndex(rawTrips: IndexedRawTrip[], firstLine:string, user?: string) {
   let indexes = new Set<number|string>();
-  indexes = indexes.add("Tous les trajets");
-  rawTrips.forEach((r: IndexedRawTrip) => {
-    indexes = indexes.add(r.index);
-  });
+  indexes = indexes.add(firstLine);
+  if (user) {
+    if (user[0] === "+") {
+      rawTrips.forEach((r: IndexedRawTrip) => {
+        if (r.user === user) {
+          indexes = indexes.add(r.index);
+        }
+      });
+    } else {
+      rawTrips.forEach((r: IndexedRawTrip) => {
+        indexes = indexes.add(r.index);
+      });
+    }
+  }
   return indexes;
 }
 
-function extractUsers(rawTrips: IndexedRawTrip[]) {
+function extractUsers(rawTrips: IndexedRawTrip[], firstLine:string) {
   let users = new Set<string>();
-  users = users.add("Tous les utilisateurs");
+  users = users.add(firstLine);
   rawTrips.forEach((r: IndexedRawTrip) => {
     users = users.add(r.user);
   });
@@ -86,7 +96,7 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
         <Select
           className="col-span-2"
           label="Choisir l'utilisateur"
-          options={Array.from(extractUsers(rawTrips))}
+          options={Array.from(extractUsers(rawTrips, "Tous les utilisateurs"))}
           value={chosenUser}
           render={(id) => id}
           onChange={(id) => selectUserController(id)}
@@ -96,13 +106,12 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
         <Select
           className="col-span-2"
           label="Choisir le trajet"
-          options={Array.from(extractIndex(rawTrips))}
+          options={Array.from(extractIndex(rawTrips, "Tous les trajets", chosenUser))}
           value={chosenTrip}
           render={(id) => (!(id === 0) ? id : null)}
           onChange={(id) => {
             selectTripController(id);
           }}
-
         />
 
         <TextInput
