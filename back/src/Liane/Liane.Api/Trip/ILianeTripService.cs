@@ -10,7 +10,7 @@ namespace Liane.Api.Trip
         /**
          * Save a list of liane.
          */
-        Task Create(ImmutableHashSet<ImmutableHashSet<RallyingPoint>> rallyingPoints);
+        Task Create(ImmutableHashSet<ImmutableHashSet<RallyingPoint>> rallyingPoints, long timestamp);
         
         /**
          * Delete a liane trip and its corresponding liane.
@@ -20,6 +20,6 @@ namespace Liane.Api.Trip
         /**
          * Select the trips to show.
          */
-        Task<List<Liane>> Snap(LatLng center, TripFilter tripFilter);
+        Task<List<FilteredLiane>> Snap(LatLng center, TripFilter tripFilter);
     }
 }
