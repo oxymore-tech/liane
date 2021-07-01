@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 using Liane.Api;
 using Liane.Api.Address;
 using Liane.Api.Location;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util;
 using Liane.Api.Util.Http;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
+using IRedis = Liane.Api.Util.IRedis;
 
 namespace Liane.Service.Internal.Location
 {
@@ -20,7 +23,9 @@ namespace Liane.Service.Internal.Location
         private const int DeltaMTrip = 1000 * 5; // 5 000 m gap = two different trips
         private const int MinLocTrip = 5; // Less than 5 loc isn't a trip
         private const int MinDistTrip = 1000; // Less than 1 000 m isn't a trip
-        
+
+        private const int MinDistRallyingPoint = 500;
+
         private readonly ILogger<LocationServiceImpl> logger;
         private readonly ICurrentContext currentContext;
         private readonly IAddressService addressService;
@@ -28,10 +33,11 @@ namespace Liane.Service.Internal.Location
         private readonly IRallyingPointService rallyingPointService;
         private readonly IRealTripService realTripService;
         private readonly IRawTripService rawTripService;
+        private readonly ILianeTripService lianeTripService;
 
         public LocationServiceImpl(
             ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService, IRealTripService realTripService,
-            IAddressService addressService, IRawTripService rawTripService
+            IAddressService addressService, IRawTripService rawTripService, ILianeTripService lianeTripService
             )
         {
             this.logger = logger;
@@ -41,6 +47,7 @@ namespace Liane.Service.Internal.Location
             this.realTripService = realTripService;
             this.addressService = addressService;
             this.rawTripService = rawTripService;
+            this.lianeTripService = lianeTripService;
         }
 
         public async Task LogLocation(ImmutableList<UserLocation> userLocations)
@@ -52,46 +59,64 @@ namespace Liane.Service.Internal.Location
             
             // Try to create one or more trip from the raw data
             var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
+            var rallyingPoints = ImmutableHashSet.CreateBuilder<ImmutableHashSet<RallyingPoint>>();
 
             foreach (var trip in SplitTrips(userLocations)
                 .Where(l => l.Count >= MinLocTrip))
             {
-                var from = trip[0];
-                var to = trip[^1];
-                var fromCoordinate = from.ToLatLng();
-                var toCoordinate = to.ToLatLng();
-                var distance = fromCoordinate.CalculateDistance(toCoordinate);
+                var distance = trip[0].ToLatLng().CalculateDistance(trip[^1].ToLatLng());
                 
-                if (distance >= 1_000)
+                if (distance >= MinDistTrip)
                 {
-                    var fromAddress = await addressService.GetDisplayName(fromCoordinate);
-                    var toAddress = await addressService.GetDisplayName(toCoordinate);
-                    
-                    var realTrip = new RealTrip(
-                        new Api.Trip.Location(fromCoordinate, fromAddress.Address),
-                        new Api.Trip.Location(toCoordinate, toAddress.Address),
-                        DateTimeOffset.FromUnixTimeMilliseconds(from.Timestamp).DateTime,
-                        DateTimeOffset.FromUnixTimeMilliseconds(to.Timestamp).DateTime
-                    );
-                    
-                    trips.Add(realTrip);
+                    trips.Add(await CreateRealTrip(trip));
+                    rallyingPoints.Add(await CreateRallyingPoints(trip));
                 }
             }
 
             await realTripService.Save(trips.ToImmutable());
-            
+            await lianeTripService.Create(rallyingPoints.ToImmutable());
+
             logger.LogInformation("Created {count} trips, expected 1", trips.Count);
         }
 
-        private static RealTrip CreateRealTrip(ImmutableList<UserLocation> trip)
+        private async Task<RealTrip> CreateRealTrip(ImmutableList<UserLocation> trip)
         {
-            return null;
+            var from = trip[0];
+            var to = trip[^1];
+            var fromCoordinate = from.ToLatLng();
+            var toCoordinate = to.ToLatLng();
+            var fromAddress = await addressService.GetDisplayName(fromCoordinate);
+            var toAddress = await addressService.GetDisplayName(toCoordinate);
+                    
+            var realTrip = new RealTrip(
+                new Api.Trip.Location(fromCoordinate, fromAddress.Address),
+                new Api.Trip.Location(toCoordinate, toAddress.Address),
+                DateTimeOffset.FromUnixTimeMilliseconds(from.Timestamp).DateTime,
+                DateTimeOffset.FromUnixTimeMilliseconds(to.Timestamp).DateTime
+            );
+
+            return realTrip;
         }
         
-        private static RealTrip CreateRallyingPointTrip(ImmutableList<UserLocation> trip)
+        private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
         {
-            // Créer un service RallyingPointTripService -> gère ce nouveau type de données
-            return null;
+            var rallyingPoints = ImmutableHashSet.CreateBuilder<RallyingPoint>();
+            var database = await redis.Get();
+
+            foreach (var l in trip)
+            {
+                var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), l.Longitude, l.Latitude, MinDistRallyingPoint, GeoUnit.Meters, order: Order.Ascending,
+                    options: GeoRadiusOptions.WithCoordinates);
+
+                if (results.Length > 0)
+                {
+                    var r = results.First();
+                    var p = r.Position!.Value;
+                    rallyingPoints.Add(new RallyingPoint(r.Member, new LatLng(p.Latitude, p.Longitude), r.Member));
+                }
+            }
+
+            return rallyingPoints.ToImmutable();
         }
 
         private static IEnumerable<ImmutableList<UserLocation>> SplitTrips(ImmutableList<UserLocation> userLocations)
