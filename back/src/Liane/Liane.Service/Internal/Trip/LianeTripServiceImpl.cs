@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -48,14 +47,14 @@ namespace Liane.Service.Internal.Trip
                     foreach (var to in rallyingPoints.Skip(from.i + 1))
                     {
                         var results = await lianes.FindAsync(new ExpressionFilterDefinition<Liane>(l => l.From == from.r && l.To == to));
-                        results.
+                        
                         if (results.ToEnumerable().Any())
                         {
                             await UpdateLiane(results.First(), timestamp);
                         }
                         else
                         {
-                            await CreateLiane(new Liane(from.r, to, new List<ObjectId>()), timestamp);
+                            await CreateLiane(new Liane(ObjectId.GenerateNewId(), from.r, to, new List<ObjectId>()), timestamp);
                         }
                     }
                 }   
@@ -75,14 +74,13 @@ namespace Liane.Service.Internal.Trip
         private async Task UpdateLiane(Liane liane, long timestamp)
         {
             var lianeUsageId = ObjectId.GenerateNewId();
-            var lianeUsage = new LianeUsage(currentContext.CurrentUser(), timestamp, liane.Id);
+            var lianeUsage = new LianeUsage(lianeUsageId, currentContext.CurrentUser(), timestamp, liane.Id);
         }
 
         private async Task CreateLiane(Liane liane, long timestamp)
         {
-            var lianeId = ObjectId.GenerateNewId();
             var lianeUsageId = ObjectId.GenerateNewId();
-            var lianeUsage = new LianeUsage(currentContext.CurrentUser(), timestamp, lianeId);
+            var lianeUsage = new LianeUsage(lianeUsageId, currentContext.CurrentUser(), timestamp, liane.Id);
         }
         
     }
