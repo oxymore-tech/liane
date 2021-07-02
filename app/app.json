@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "owner": "oxymore-tech",
     "splash": {
       "image": "./assets/splash_vlow.png",
       "resizeMode": "contain",
@@ -27,7 +28,7 @@
         ]
       },
       "bundleIdentifier": "tech.oxymore.liane",
-      "buildNumber": "13"
+      "buildNumber": "14"
     },
     "android": {
       "permissions": [
@@ -37,7 +38,7 @@
         "FOREGROUND_SERVICE"
       ],
       "package": "tech.oxymore.liane",
-      "versionCode": 13,
+      "versionCode": 14,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -45,4 +46,5 @@
       }
     }
   }
+  
 }
