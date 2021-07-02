@@ -4,8 +4,8 @@
     "slug": "liane",
     "version": "1.0.0",
     "orientation": "portrait",
+    "owner" : "augustingjini",
     "icon": "./assets/icon.png",
-    "owner": "oxymore-tech",
     "splash": {
       "image": "./assets/splash_vlow.png",
       "resizeMode": "contain",
