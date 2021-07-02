@@ -20,6 +20,16 @@ namespace Liane.Api.Trip
         /**
          * Select the trips to show.
          */
-        Task<List<FilteredLiane>> Snap(LatLng center, TripFilter tripFilter);
+        Task<ImmutableHashSet<Liane>> Snap(LatLng center, TripFilter tripFilter);
+        
+        /**
+         * Get the current user trips.
+         */
+        Task<ImmutableHashSet<LianeTrip>> Get();
+        
+        /**
+         * Flush the old data and re-generate every liane trip from raw ones.
+         */
+        Task Generate();
     }
 }

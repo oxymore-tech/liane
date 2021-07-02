@@ -1,0 +1,8 @@
+using System.Collections.Generic;
+
+namespace Liane.Api.Trip
+{
+    public sealed record LianeTrip(
+        List<Liane> Lianes
+    );
+}

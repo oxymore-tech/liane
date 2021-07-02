@@ -48,5 +48,10 @@ namespace Liane.Service.Internal.Util
         {
             return "administrator";
         }
+        
+        public static RedisKey LianeGeo()
+        {
+            return "liane_geo";
+        }
     }
 }
