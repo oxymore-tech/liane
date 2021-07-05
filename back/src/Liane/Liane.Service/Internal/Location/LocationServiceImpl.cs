@@ -61,7 +61,7 @@ namespace Liane.Service.Internal.Location
 
                 // Try to create one or more trip from the raw data
                 var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
-                var rallyingPoints = ImmutableHashSet.CreateBuilder<ImmutableHashSet<RallyingPoint>>();
+                var rallyingPointsTrips = ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint>, long)>();
 
                 foreach (var trip in SplitTrips(userLocations)
                     .Where(l => l.Count >= MinLocTrip))
@@ -71,14 +71,14 @@ namespace Liane.Service.Internal.Location
                     if (!(distance >= MinDistTrip)) continue;
                     
                     trips.Add(await CreateRealTrip(trip));
-                    rallyingPoints.Add(await CreateRallyingPoints(trip));
+                    rallyingPointsTrips.Add((await CreateRallyingPoints(trip), trip[0].Timestamp));
                 }
 
                 await realTripService.Save(trips.ToImmutable());
-                await lianeTripService.Create(rallyingPoints.ToImmutable(), userLocations.First().Timestamp);
+                await lianeTripService.Create(rallyingPointsTrips.ToImmutable());
 
                 logger.LogInformation("Created {count} trips, expected 1", trips.Count);
-                logger.LogInformation("Created {count} lianes, expected 1", rallyingPoints.Count);
+                logger.LogInformation("Created {count} lianes, expected 1", rallyingPointsTrips.Count);
             }
         }
 
