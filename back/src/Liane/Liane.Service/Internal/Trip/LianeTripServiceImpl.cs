@@ -128,7 +128,7 @@ namespace Liane.Service.Internal.Trip
             
         }
 
-        private async Task<ImmutableList<ObjectId>> CreateLianes(ObjectId lianeTrip, ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)
+        private async Task<ImmutableList<ObjectId>> CreateLianes(ObjectId lianeTripId, ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)
         {
             List<ObjectId> lianesIds = new();
             
@@ -139,28 +139,20 @@ namespace Liane.Service.Internal.Trip
                     
                 foreach (var to in rallyingPoints.Skip(from.i + 1))
                 {
-                    var results = await lianes.FindAsync(new ExpressionFilterDefinition<UsedLiane>(l => l.From == from.r && l.To == to));
+                    var results = await lianes.FindAsync(l => l.From == from.r && l.To == to);
+                    var lianeUsage = new UserLianeUsage(currentContext.CurrentUser(), isPrimary, timestamp, lianeTripId);
 
                     if (await results.AnyAsync()) // The liane already exists, add an usage
                     {
-                        var liane = results.First();
-                        var lianeUsage = new UserLianeUsage(currentContext.CurrentUser(), isPrimary, timestamp);
-                            
-                        lianesIds.Add(liane.Id);
-                            
-                        await lianes.UpdateOneAsync(l => l.Id == liane.Id, Builders<UsedLiane>.Update.AddToSet(l => l.Usages, lianeUsage));
+                        var lianeId = results.First().Id;
+                        lianesIds.Add(lianeId);
+                        await UpdateLiane(lianeId, lianeUsage);
                     }
                     else // The liane doesn't exists, create it
                     {
-                        var liane = new UsedLiane(ObjectId.GenerateNewId(), from.r, to, new List<UserLianeUsage>());
-                        var lianeUsage = new UserLianeUsage(currentContext.CurrentUser(), isPrimary, timestamp);
-                        var database = await redis.Get();
-                            
-                        lianesIds.Add(liane.Id);
-                        liane.Usages.Add(lianeUsage);
-
-                        database.GeoAdd(RedisKeys.Liane(), from.r.Position.Lat, from.r.Position.Lng, liane.Id.ToString());
-                        await lianes.InsertOneAsync(liane);
+                        var lianeId = ObjectId.GenerateNewId();
+                        lianesIds.Add(lianeId);
+                        await CreateLiane(lianeId, from.r, to, lianeUsage);
                     }
 
                     isPrimary = false;
@@ -168,6 +160,22 @@ namespace Liane.Service.Internal.Trip
             }
 
             return lianesIds.ToImmutableList();
+        }
+
+        private async Task CreateLiane(ObjectId id, RallyingPoint from, RallyingPoint to, UserLianeUsage lianeUsage)
+        {
+            var liane = new UsedLiane(id, from, to, new List<UserLianeUsage>());
+            var database = await redis.Get();
+            
+            liane.Usages.Add(lianeUsage);
+
+            database.GeoAdd(RedisKeys.Liane(), from.Position.Lat, from.Position.Lng, liane.Id.ToString());
+            await lianes.InsertOneAsync(liane);
+        }
+
+        private async Task UpdateLiane(ObjectId id, UserLianeUsage lianeUsage)
+        {
+            await lianes.UpdateOneAsync(l => l.Id == id, Builders<UsedLiane>.Update.AddToSet(l => l.Usages, lianeUsage));
         }
 
     }
