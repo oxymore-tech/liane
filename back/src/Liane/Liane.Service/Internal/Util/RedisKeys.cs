@@ -49,7 +49,7 @@ namespace Liane.Service.Internal.Util
             return "administrator";
         }
         
-        public static RedisKey LianeGeo()
+        public static RedisKey Liane()
         {
             return "liane_geo";
         }

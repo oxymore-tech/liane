@@ -9,6 +9,6 @@ namespace Liane.Service.Internal.Trip
         [property:BsonId] ObjectId Id,
         RallyingPoint From,
         RallyingPoint To,
-        List<ObjectId> Usages
+        List<UserLianeUsage> Usages
     );
 }

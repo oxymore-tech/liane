@@ -24,7 +24,7 @@ namespace Liane.Service.Internal.Location
         private const int MinLocTrip = 2; // Less than 2 loc isn't a trip
         private const int MinDistTrip = 1000; // Less than 1 000 m isn't a trip
 
-        private const int MinDistRallyingPoint = 500;
+        private const int MinDistRallyingPoint = 500; // 500 m
 
         private readonly ILogger<LocationServiceImpl> logger;
         private readonly ICurrentContext currentContext;
