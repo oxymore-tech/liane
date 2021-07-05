@@ -1,5 +1,5 @@
+using Liane.Api.Trip;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Service.Internal.Trip
 {
@@ -8,5 +8,11 @@ namespace Liane.Service.Internal.Trip
         bool IsPrimary,
         long Timestamp,
         ObjectId TripId
-    );
+    )
+    {
+        public LianeUsage ToLianeUsage()
+        {
+            return new (Timestamp, IsPrimary, TripId.ToString());
+        }
+    }
 }
