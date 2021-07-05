@@ -59,31 +59,39 @@ namespace Liane.Service.Internal.Trip
 
         public async Task Delete(string lianeTripId)
         {
-            var result = await lianeTrips.FindAsync(new ExpressionFilterDefinition<UserLianeTrip>(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser()));
+            var result = await lianeTrips.FindAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser());
 
             if (await result.AnyAsync())
             {
                 var lianeTrip = result.ToEnumerable().First();
-                await lianeUsages.DeleteManyAsync(new ExpressionFilterDefinition<UserLianeUsage>(l => lianeTrip.Lianes.Contains(l.Liane) && l.Timestamp == lianeTrip.Timestamp && l.User == currentContext.CurrentUser()));
+                var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
+                await lianes.UpdateManyAsync(
+                    filterBuilder.In(l => l.Id, lianeTrip.Lianes), 
+                    Builders<UsedLiane>.Update.PullFilter(
+                        l => l.Usages, 
+                        u => u.TripId == lianeTrip.Id
+                        )
+                    );
             }
-            
-            await lianeTrips.DeleteOneAsync(new ExpressionFilterDefinition<UserLianeTrip>(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser()));
+
+            await lianeTrips.DeleteOneAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser());
         }
         
         public async Task<ImmutableHashSet<LianeTrip>> Get()
         {
-            var result = await lianeTrips.FindAsync(new ExpressionFilterDefinition<UserLianeTrip>(l => l.User == currentContext.CurrentUser()));
-
-            return result.ToEnumerable()
-                .Select(l => new LianeTrip(l.Timestamp, 
-                    l.Lianes
-                        .Select(async id => await lianes.FindAsync(new ExpressionFilterDefinition<UsedLiane>(ul => ul.Id == id)))
-                        .Select(r => r.Result)
-                        .Where(i => i.Any())
-                        .Select(i => i.First())
-                        .Select(ul => new Api.Trip.Liane(ul.From, ul.To, new List<LianeUsage>()))
-                        .ToList()
-                )).ToImmutableHashSet();
+            // var result = await lianeTrips.FindAsync(new ExpressionFilterDefinition<UserLianeTrip>(l => l.User == currentContext.CurrentUser()));
+            //
+            // return result.ToEnumerable()
+            //     .Select(l => new LianeTrip(l.Timestamp, 
+            //         l.Lianes
+            //             .Select(async id => await lianes.FindAsync(new ExpressionFilterDefinition<UsedLiane>(ul => ul.Id == id)))
+            //             .Select(r => r.Result)
+            //             .Where(i => i.Any())
+            //             .Select(i => i.First())
+            //             .Select(ul => new Api.Trip.Liane(ul.From, ul.To, new List<LianeUsage>()))
+            //             .ToList()
+            //     )).ToImmutableHashSet();
+            return null;
         }
 
         public async Task<ImmutableHashSet<Api.Trip.Liane>> Snap(LatLng center, TripFilter tripFilter)
