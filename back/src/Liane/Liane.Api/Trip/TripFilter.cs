@@ -4,6 +4,7 @@ namespace Liane.Api.Trip
         RallyingPoint? From,
         RallyingPoint? To,
         long? TimestampFrom,
-        long? TimestampTo
+        long? TimestampTo,
+        bool WithHour
     );
 }

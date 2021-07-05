@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -65,6 +66,7 @@ namespace Liane.Service.Internal.Trip
             {
                 var lianeTrip = result.ToEnumerable().First();
                 var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
+                
                 await lianes.UpdateManyAsync(
                     filterBuilder.In(l => l.Id, lianeTrip.Lianes), 
                     Builders<UsedLiane>.Update.PullFilter(
@@ -105,7 +107,7 @@ namespace Liane.Service.Internal.Trip
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
             var lianesList = (await lianes.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
                 
-            // Filter out the data regarding the filter
+            // Filter out the data regarding the position
             if (tripFilter.From is not null)
             {
                 lianesList = lianesList.Where(l => l.From.Id == tripFilter.From.Id);
@@ -115,20 +117,27 @@ namespace Liane.Service.Internal.Trip
             {
                 lianesList = lianesList.Where(l => l.To.Id == tripFilter.To.Id);
             }
-
+            
+            // Filter out the data regarding the date and time
             if (tripFilter.TimestampFrom is not null)
             {
+                var from = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampFrom ?? 0).DateTime;
                 
+                lianesList = lianesList.Where(l => 
+                {
+                    var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
+                    return usagesDates.Any(d => d.DayOfWeek == from.DayOfWeek && (!tripFilter.WithHour || d.Hour == from.Hour));
+                });
             }
 
             if (tripFilter.TimestampTo is not null)
             {
-                
+                // Unused at the moment, needs to rework the previous filter.
+                // At the moment, we only search for a specific time during
+                // a specific day and not a time span.
             }
-            
-            // Select the usages
 
-            return null;
+            return lianesList.Select(l => l.ToLiane()).ToImmutableHashSet();
         }
 
         public async Task Generate()
@@ -149,20 +158,20 @@ namespace Liane.Service.Internal.Trip
                 {
                     var results = await lianes.FindAsync(l => l.From == from.r && l.To == to);
                     var lianeUsage = new UserLianeUsage(currentContext.CurrentUser(), isPrimary, timestamp, lianeTripId);
+                    ObjectId lianeId;
 
                     if (await results.AnyAsync()) // The liane already exists, add an usage
                     {
-                        var lianeId = results.First().Id;
-                        lianesIds.Add(lianeId);
+                        lianeId = results.First().Id;
                         await UpdateLiane(lianeId, lianeUsage);
                     }
                     else // The liane doesn't exists, create it
                     {
-                        var lianeId = ObjectId.GenerateNewId();
-                        lianesIds.Add(lianeId);
+                        lianeId = ObjectId.GenerateNewId();
                         await CreateLiane(lianeId, from.r, to, lianeUsage);
                     }
-
+                    
+                    lianesIds.Add(lianeId);
                     isPrimary = false;
                 }
             }
