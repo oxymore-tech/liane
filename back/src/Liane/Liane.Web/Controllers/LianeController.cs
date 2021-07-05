@@ -9,6 +9,7 @@ namespace Liane.Web.Controllers
 {
     [Route("api/liane")]
     [ApiController]
+    [RequiresAuth]
     public class LianeController : ControllerBase
     {
         private readonly ILianeTripService lianeTripService;
@@ -19,9 +20,9 @@ namespace Liane.Web.Controllers
         }
 
         [Route("snap")]
-        public async Task<ImmutableHashSet<Api.Trip.Liane>> Snap(LatLng center, TripFilter tripFilter)
+        public async Task<ImmutableHashSet<Api.Trip.Liane>> Snap(TripFilter tripFilter)
         {
-            return await lianeTripService.Snap(center, tripFilter);
+            return await lianeTripService.Snap(tripFilter);
         }
         
         [Route("get")]
