@@ -104,19 +104,16 @@ namespace Liane.Service.Internal.Location
         private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
         {
             var rallyingPoints = ImmutableHashSet.CreateBuilder<RallyingPoint>();
-            var database = await redis.Get();
 
             foreach (var l in trip)
             {
-                var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), l.Longitude, l.Latitude, MinDistRallyingPoint, GeoUnit.Meters, order: Order.Ascending,
-                    options: GeoRadiusOptions.WithCoordinates);
+                var result = await rallyingPointService.GetOneClosest(RedisKeys.RallyingPoint(), l.Longitude, l.Latitude, MinDistRallyingPoint, GeoUnit.Meters);
 
-                if (results.Length > 0)
-                {
-                    var r = results.First();
-                    var p = r.Position!.Value;
-                    rallyingPoints.Add(new RallyingPoint(r.Member, new LatLng(p.Latitude, p.Longitude), r.Member));
-                }
+                if (result is null) continue;
+                
+                var r = result.Value;
+                var p = r.Position!.Value;
+                rallyingPoints.Add(new RallyingPoint(r.Member, new LatLng(p.Latitude, p.Longitude), r.Member));
             }
 
             return rallyingPoints.ToImmutable();
