@@ -27,7 +27,7 @@
           "fetch"
         ]
       },
-      "bundleIdentifier": "GJINI.CO",
+      "bundleIdentifier": "tech.oxymore.liane",
       "buildNumber": "14"
     },
     "android": {
