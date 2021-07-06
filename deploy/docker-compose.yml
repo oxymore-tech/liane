@@ -13,7 +13,6 @@ services:
     image: "mongo:4.4.4"
     volumes:
       - "/data/liane/mongo:/data/db"
-      - "/data/liane/dump/mongo:/dump"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}

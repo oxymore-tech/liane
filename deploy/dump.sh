@@ -4,4 +4,4 @@ BASEDIR=$(dirname "$0")
 
 source .env
 
-docker-compose -f ${BASEDIR}/docker-compose.yml -p liane exec mongo mongodump -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD} $*
+docker-compose -f ${BASEDIR}/docker-compose.yml -p liane exec mongo mongodump --archive --gzip -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD} $*
