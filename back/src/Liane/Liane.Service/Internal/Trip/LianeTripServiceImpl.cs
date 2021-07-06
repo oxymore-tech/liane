@@ -64,6 +64,8 @@ namespace Liane.Service.Internal.Trip
                 
                 lianeTrip.Lianes.AddRange(lianesIds);
                 
+                logger.LogInformation("New trip created : " + lianeTrip.ToJson());
+
                 await lianeTrips.InsertOneAsync(lianeTrip);
             }
         }
@@ -197,7 +199,7 @@ namespace Liane.Service.Internal.Trip
 
         private async Task<ImmutableList<ObjectId>> CreateLianes(ObjectId lianeTripId, ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)
         {
-            List<ObjectId> lianesIds = new();
+            var lianesIds = ImmutableList.CreateBuilder<ObjectId>();
             
             // Create the rallying points pairs
             foreach (var from in rallyingPoints.SkipLast(1).Select((r, i) => new { r, i }))
@@ -226,7 +228,7 @@ namespace Liane.Service.Internal.Trip
                 }
             }
 
-            return lianesIds.ToImmutableList();
+            return lianesIds.ToImmutable();
         }
 
         private async Task CreateLiane(ObjectId id, RallyingPoint from, RallyingPoint to, UserLianeUsage lianeUsage)
@@ -238,11 +240,14 @@ namespace Liane.Service.Internal.Trip
 
             database.GeoAdd(RedisKeys.Liane(), from.Position.Lat, from.Position.Lng, liane.Id.ToString());
             await lianes.InsertOneAsync(liane);
+            
+            logger.LogInformation("Liane created : " + liane.ToJson());
         }
 
         private async Task UpdateLiane(ObjectId id, UserLianeUsage lianeUsage)
         {
             await lianes.UpdateOneAsync(l => l.Id == id, Builders<UsedLiane>.Update.AddToSet(l => l.Usages, lianeUsage));
+            logger.LogInformation("Liane updated : " + id);
         }
 
     }
