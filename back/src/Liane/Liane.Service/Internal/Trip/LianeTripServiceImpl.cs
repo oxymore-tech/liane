@@ -35,13 +35,18 @@ namespace Liane.Service.Internal.Trip
         private readonly IMongoCollection<UsedLiane> lianes;
         private readonly IMongoCollection<UserLianeTrip> lianeTrips;
 
-        public LianeTripServiceImpl(IRedis redis, MongoClient mongo, ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, IRallyingPointService rallyingPointService)
+        public LianeTripServiceImpl(IRedis redis, MongoSettings settings, ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, IRallyingPointService rallyingPointService)
         {
             this.redis = redis;
-            this.mongo = mongo;
             this.currentContext = currentContext;
             this.logger = logger;
             this.rallyingPointService = rallyingPointService;
+
+            mongo = new MongoClient(new MongoClientSettings
+            {
+                Server = new MongoServerAddress(settings.Host, 27017),
+                Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
+            });
             
             var database = mongo.GetDatabase(DatabaseKey);
             lianes = database.GetCollection<UsedLiane>(LianeCollectionKey);
@@ -180,7 +185,7 @@ namespace Liane.Service.Internal.Trip
             {
                 var result = await rallyingPointService.GetOneClosest(RedisKeys.RallyingPoint(), l.Longitude, l.Latitude, MinDistRallyingPoint, GeoUnit.Meters);
 
-                if (result is null) continue;
+                if (result is null || result.Value.Position is null) continue;
                 
                 var r = result.Value;
                 var p = r.Position!.Value;
