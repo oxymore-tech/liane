@@ -24,7 +24,7 @@ namespace Liane.Service.Internal.Trip
         private const string LianeTripCollectionKey = "liane_trip";
         
         private const int MinLocTrip = 2; // Less than 2 loc isn't a trip
-        private const int MinDistRallyingPoint = 500; // 500 m
+        private const int MinDistRallyingPoint = 1000; // 500 m
 
         private readonly IRedis redis;
         private readonly MongoClient mongo;
