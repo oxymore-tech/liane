@@ -2,7 +2,7 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
 function dump_on_local {
-    ssh gjini.co -c "/home/ubuntu/liane/deploy/dump.sh" | docker exec -t mongo mongorestore --archive --gzip -u mongoadmin -p secret
+    ssh gjini.co "/home/ubuntu/liane/deploy/dump.sh" | docker exec -t mongo mongorestore --archive --gzip -u mongoadmin -p secret
 }
 
 function mongo_start {
