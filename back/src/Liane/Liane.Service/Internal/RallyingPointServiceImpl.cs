@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -54,11 +55,26 @@ namespace Liane.Service.Internal
                 .ToImmutableList();
         }
 
-        public async Task<IEnumerable<RallyingPoint>> ListRallyingPointsInternal(LatLng center)
+        public async Task<List<GeoRadiusResult>> GetClosest(RedisKey key, double lng, double lat, double radius, GeoUnit unit)
         {
             var database = await redis.Get();
-            var results = await database.GeoRadiusAsync(RedisKeys.RallyingPoint(), center.Lng, center.Lat, 50, GeoUnit.Kilometers, order: Order.Ascending,
-                options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates);
+            var result = await database.GeoRadiusAsync(
+                key, lng, lat, radius, unit, 
+                order: Order.Ascending,
+                options: GeoRadiusOptions.WithDistance | GeoRadiusOptions.WithCoordinates
+                );
+
+            return result is null ? new List<GeoRadiusResult>() : result.ToList();
+        }
+        
+        public async Task<GeoRadiusResult?> GetOneClosest(RedisKey key, double lng, double lat, double radius, GeoUnit unit)
+        {
+            return (await GetClosest(key, lng, lat, radius, unit)).FirstOrDefault();
+        }
+
+        private async Task<IEnumerable<RallyingPoint>> ListRallyingPointsInternal(LatLng center)
+        {
+            var results = await GetClosest(RedisKeys.RallyingPoint(), center.Lng, center.Lat, 50, GeoUnit.Kilometers);
             return results
                 .Select(r =>
                 {

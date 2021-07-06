@@ -5,7 +5,7 @@ import {
 } from "react-leaflet";
 import { addHours } from "date-fns";
 import {
-  DayOfWeek, LatLng, RallyingPoint, Route, RouteStat, Trip, UserLocation
+  DayOfWeek, LatLng, RallyingPoint, Route, RouteStat, Trip, UserLocation, Liane, LianeUsage, RoutingQuery
 } from "@/api";
 import { displayService } from "@/api/display-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
@@ -16,8 +16,10 @@ import { AvailableTrips } from "@/components/available_trips";
 import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { routingService } from "@/api/routing-service";
 import { LoginLogout } from "@/components/LoginLogout";
+import { latLng, map } from "leaflet";
 
 const Augustin = require("@/api/augustin.json");
+const Lianes = require("@/api/testLianes.json");
 
 const ZOOM_LEVEL_TO_SHOW_RP = 12;
 
@@ -88,9 +90,13 @@ function LianeMap({ className, center }: MapProps) {
       });
   }, [center]);
 
-  useEffect(() => {
+  useEffect(() => { /*
     routingService.route(Augustin)
-      .then((r) => setRoute(r));
+      .then((r) => setRoute(r)); */
+  }, []);
+
+  useEffect(() => {
+    Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
   }, []);
 
   const updateStartHour = useCallback((hour: number) => {
@@ -248,12 +254,18 @@ function LianeMap({ className, center }: MapProps) {
         {showRallyingPoints && rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
         {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
         {Augustin.map((a:UserLocation, index:number) => (
-          <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={20}>
+          <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={5}>
             <Tooltip>
               <p>{new Intl.DateTimeFormat("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }).format(new Date(a.timestamp))}</p>
               <p>{a.speed}</p>
             </Tooltip>
           </CircleMarker>
+        ))}
+        {Lianes.map((l:Liane) => (
+          <>
+            <CircleMarker key="From" center={l.from.position} pathOptions={{ color: "blue" }} radius={20} />
+            <CircleMarker key="To" center={l.to.position} pathOptions={{ color: "green" }} radius={20} />
+          </>
         ))}
       </MapContainer>
     </div>

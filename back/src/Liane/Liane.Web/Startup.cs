@@ -67,6 +67,7 @@ namespace Liane.Web
             services.AddService<NotificationServiceImpl>();
             services.AddService<RealTripServiceImpl>();
             services.AddService<RawTripServiceImpl>();
+            services.AddService<LianeTripServiceImpl>();
         }
 
         public static void StartCurrentModule(string[] args)

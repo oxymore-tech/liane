@@ -61,3 +61,19 @@ export interface AuthUser {
   phone: string;
   token: string;
 }
+
+export interface LianeUsage {
+  user : string ;
+  timeStamp : number ;
+}
+
+export interface Liane {
+  from : RallyingPoint ;
+  to : RallyingPoint ;
+  usages : LianeUsage[] ;
+}
+
+export interface RoutingQuery {
+  start : LatLng ;
+  end : LatLng
+}

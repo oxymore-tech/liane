@@ -39,7 +39,7 @@ namespace Liane.Service.Internal.Trip
             
             if (!trips.IsEmpty)
             {
-                logger.LogInformation("{Count} raw trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
+                logger.LogInformation("{Count} raw trip(ls) saved for user '{currentUser}'", trips.Count, currentUser);
                 await collection.InsertManyAsync(
                     trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations.ToList()))
                 );
