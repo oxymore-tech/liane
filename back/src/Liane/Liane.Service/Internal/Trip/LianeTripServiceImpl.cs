@@ -74,7 +74,7 @@ namespace Liane.Service.Internal.Trip
         {
             var result = await lianeTrips.FindAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser());
 
-            if (await result.AnyAsync())
+            if (await result.AnyAsync()) // TODO :  will not work bc it iterates over it already
             {
                 var lianeTrip = result.ToEnumerable().First();
                 var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
@@ -208,13 +208,14 @@ namespace Liane.Service.Internal.Trip
                     
                 foreach (var to in rallyingPoints.Skip(from.i + 1))
                 {
-                    var results = await lianes.FindAsync(l => l.From == from.r && l.To == to);
+                    var results = await (await lianes.FindAsync(l => l.From == from.r && l.To == to)).ToListAsync();
+                    var first = results.FirstOrDefault();
                     var lianeUsage = new UserLianeUsage(currentContext.CurrentUser(), isPrimary, timestamp, lianeTripId);
                     ObjectId lianeId;
 
-                    if (await results.AnyAsync()) // The liane already exists, add an usage
+                    if (first is not null) // The liane already exists, add an usage
                     {
-                        lianeId = results.First().Id;
+                        lianeId = first.Id;
                         await UpdateLiane(lianeId, lianeUsage);
                     }
                     else // The liane doesn't exists, create it
