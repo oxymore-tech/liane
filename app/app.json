@@ -10,6 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
+    "owner": "oxymore-tech",
     "updates": {
       "fallbackToCacheTimeout": 0
     },

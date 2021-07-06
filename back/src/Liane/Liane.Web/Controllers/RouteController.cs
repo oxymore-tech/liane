@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
 {
-    [Route("api/route")]
+    [Route("api/basicRoute")]
     [ApiController]
     public class RouteController : ControllerBase
     {
@@ -17,9 +17,9 @@ namespace Liane.Web.Controllers
         }
 
         [HttpPost("")]
-        public async Task<ActionResult<Route>> Route([FromBody] UserLocation[] locations)
+        public async Task<ActionResult<Route>> BasicRouteMethod([FromBody] RoutingQuery routingQuery)
         {
-            return await routeService.Route(locations);
+            return await routeService.BasicRouteMethod(routingQuery);
         }
 
     }
