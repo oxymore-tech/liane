@@ -1,11 +1,26 @@
+# Liane back-end documentation
+
 ## Overall architecture
 
 The project is built on dotnet core 5 in C#.
 
-- `Liane.Api` : contient les définitions d'objets de base ainsi que les interfaces des services.
-- `Liane.Service` : contient les implémentations des interfaces des services (dans le sous-dossier Internal).
-- `Liane.Web` : contient le fichier Startup.cs où il faut ajouter les services développés et un sous-dossier Controllers où sont définis tous les endpoints de l'API.
-- `Liane.Test` : contient les classes de test des différents services ainsi que des classes contenant des données brutes permettant d'exécuter les tests.
+- `Liane.Api` : services interface ;
+- `Liane.Service` : services implementation ;
+- `Liane.Web` : controllers and services instantiation ;
+- `Liane.Test` : unit testing classes ;
+
+## Trip management
+
+The following diagram explains the architecture.
+
+![](../doc/LIANE_TRIP.jpg)
+
+This architecture answer the need for 4 requests :
+
+- Get all trips of a specific user ;
+- Allow the user to delete a trip ;
+- Get all trips in a specific area and depending on various criteria ;
+- Allow and administrator to re-generate the trips ;
 
 ## Databases
 
@@ -13,7 +28,6 @@ This project uses two databases systems : Mongo and Redis.
 
 In order to launch the databases, it is necessary to install docker. 
 Then, you can use the following commands to manage the database.
-
 
 #### Launch and stop databases
 
@@ -45,7 +59,7 @@ Dotnet is mandatory in order to launch the backend part of the project. To
 get information about dotnet go [here](https://dotnet.microsoft.com).
 
 * On MacOS, you can install it using brew : `brew install homebrew/cask/dotnet` ;
-* On Unbuntu (whether it is WSL or not), you can get detailled instructions [here](https://docs.microsoft.com/fr-fr/dotnet/core/install/linux-ubuntu).
+* On Ubuntu (whether it is WSL or not), you can get detailed instructions [here](https://docs.microsoft.com/fr-fr/dotnet/core/install/linux-ubuntu).
 
 Once dotnet is installed, you can launch the project using : 
 
@@ -53,5 +67,5 @@ Once dotnet is installed, you can launch the project using :
 ./liane start
 ```
 
-You can then go on http://localhost:8081/swagger which displays
+You can then open http://localhost:8081/swagger which displays
 the documentation of each endpoint.
