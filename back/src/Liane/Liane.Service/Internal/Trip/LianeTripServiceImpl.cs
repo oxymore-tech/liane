@@ -158,11 +158,15 @@ namespace Liane.Service.Internal.Trip
             {
                 var database = mongo.GetDatabase(DatabaseKey);
                 var collection = database.GetCollection<UserRawTrip>("raw_trips");
-                var result = (await collection.FindAsync(new ExpressionFilterDefinition<UserRawTrip>(u => u.UserId == currentContext.CurrentUser()))).ToList();
+                var result = (await collection.FindAsync(_ => true)).ToList();
                 var rallyingPointsTrips = ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint>, long)>();
 
+                logger.LogInformation(result.Count + " raw trips founded");
+                
                 foreach (var userRawTrip in result)
                 {
+                    logger.LogInformation(userRawTrip.Locations.Count + " locations");
+                    
                     if (userRawTrip.Locations.Count < MinLocTrip) continue;
 
                     var rallyingPoints = await CreateRallyingPoints(userRawTrip.Locations.ToImmutableList());
