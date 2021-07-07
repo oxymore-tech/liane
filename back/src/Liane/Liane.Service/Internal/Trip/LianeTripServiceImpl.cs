@@ -24,6 +24,7 @@ namespace Liane.Service.Internal.Trip
         private const string LianeTripCollectionKey = "liane_trip";
         
         private const int MinLocTrip = 2; // Less than 2 loc isn't a trip
+        private const int MinLianeTrip = 1; // Less than 1 liane isn't a trip
         private const int MinDistRallyingPoint = 1000; // 500 m
 
         private readonly IRedis redis;
@@ -61,11 +62,11 @@ namespace Liane.Service.Internal.Trip
                 var id = ObjectId.GenerateNewId();
                 var lianeTrip = new UserLianeTrip(id, currentContext.CurrentUser(), timestamp, new List<ObjectId>());
                 var lianesIds = await CreateLianes(id, rallyingPoints, timestamp);
+
+                if (lianesIds.Count < MinLianeTrip) continue;
                 
                 lianeTrip.Lianes.AddRange(lianesIds);
-                
                 logger.LogInformation("New trip created : " + lianeTrip.ToJson());
-
                 await lianeTrips.InsertOneAsync(lianeTrip);
             }
         }
