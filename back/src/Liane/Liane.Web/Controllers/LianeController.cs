@@ -27,7 +27,7 @@ namespace Liane.Web.Controllers
         }
         
         [Route("get")]
-        public async Task<ImmutableHashSet<LianeTrip>> Get()
+        public async Task<ImmutableHashSet<Api.Trip.Liane>> Get()
         {
             return await lianeTripService.Get();
         }

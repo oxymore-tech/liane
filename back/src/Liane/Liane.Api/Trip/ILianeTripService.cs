@@ -18,9 +18,9 @@ namespace Liane.Api.Trip
         Task Delete(string lianeTripId);
         
         /**
-         * Get the current user trips.
+         * Get the current user lianes.
          */
-        Task<ImmutableHashSet<LianeTrip>> Get();
+        Task<ImmutableHashSet<Liane>> Get();
         
         /**
          * Select the trips to show.
