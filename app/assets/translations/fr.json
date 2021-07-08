@@ -11,6 +11,11 @@
       "zero": "Pas de trajet partagé."
     }
   },
+  "TripList": {
+    "trajet réalisé": "Vous avez réalisé ce trajet %{count} fois",
+    "supprimer": "Supprimer",
+    "détail": "Détails"
+  },
   "LocationTaskNotification": {
     "Titre": "Localisation",
     "Description": "Service de suivi de trajet."

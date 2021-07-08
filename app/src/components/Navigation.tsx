@@ -48,6 +48,7 @@ const createDrawer = () => (
 
 export type NavigationParamList = {
   Home: {};
+  TripList: { count?: number };
   LocationWizard: { step?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
   SignUpCode: { phoneNumber: string };

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 import { scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
-import { LianeTrip } from "@/api";
+import { Liane } from "@/api";
 import { listTrips } from "@/api/client";
 import { AppText } from "@/components/base/AppText";
 import HeaderMenu from "@/components/HeaderMenu";
@@ -12,7 +12,7 @@ const t = scopedTranslate("Home");
 
 const HomeScreen = () => {
 
-  const [trips, setTrips] = useState<LianeTrip[]>([]);
+  const [trips, setTrips] = useState<Liane[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ const HomeScreen = () => {
           />
         )}
         keyExtractor={TripListItemKey}
-        data={trips}
+        data={trips.sort((a, b) => b.usages.length - a.usages.length)}
         renderItem={TripListItem}
       />
     </View>

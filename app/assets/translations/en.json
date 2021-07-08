@@ -11,6 +11,11 @@
       "zero": "Pas de trajet partagé"
     }
   },
+  "TripList": {
+    "trajet réalisé": "You've done this trip %{formatted_number} times",
+    "supprimer": "Delete",
+    "détail": "Details"
+  },
   "LocationTaskNotification": {
     "Titre": "Localisation",
     "Description": "Routing service."
