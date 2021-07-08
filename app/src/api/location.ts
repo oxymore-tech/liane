@@ -1,10 +1,10 @@
 import * as Location from "expo-location";
-import { LocationAccuracy, LocationObject, LocationTaskOptions } from "expo-location";
+import {LocationAccuracy, LocationObject, LocationTaskOptions} from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import { logLocation } from "@/api/client";
-import { LocationPermissionLevel, UserLocation } from "@/api/index";
+import {logLocation} from "@/api/client";
+import {LocationPermissionLevel, UserLocation} from "@/api/index";
 import * as Device from "expo-device";
-import { AppState } from "react-native";
+import {AppState} from "react-native";
 // import { scopedTranslate } from "@/api/i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -41,6 +41,11 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   activityType: Location.ActivityType.AutomotiveNavigation
 };
 
+const LOCATION_TASK_OPTIONS_FOREGROUND : LocationTaskOptions = {
+  accuracy: LocationAccuracy.High,
+  distanceInterval: 150
+}
+
 // Is the device an apple device
 const isApple: boolean = Device.brand === "Apple";
 
@@ -51,13 +56,19 @@ let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.N
  * Get the current trip.
  */
 async function getTrip(): Promise<UserLocation[]> {
+  console.log("Entrée dans getTrip")
   let trip: UserLocation[] = [];
-
+  console.log("trip dans getTrip : ", trip);
   try {
+    console.log("Entrée dans le try de getTrip")
+    console.log(TRIP_KEY)
+    console.log("assync storage. get item", AsyncStorage.getItem(TRIP_KEY));
     const result = await AsyncStorage.getItem(TRIP_KEY);
-
     if (result) {
       trip = JSON.parse(result);
+    }
+    else {
+      console.log("result is empty")
     }
   } catch (e) {
     console.log(`An error occured while fetching data : ${e}`);
@@ -70,6 +81,7 @@ async function getTrip(): Promise<UserLocation[]> {
  * Set the current trip.
  */
 async function setTrip(locations: UserLocation[]) {
+  console.log("In setTrip");
   try {
     await AsyncStorage.setItem(TRIP_KEY, JSON.stringify(locations));
   } catch (e) {
@@ -111,8 +123,9 @@ async function setLastLocationFetchTime(lastLocationFetchTime: number) {
  * Send the registered locations to the server and clean
  */
 export async function sendTrip() {
+  console.log("Entrée dans sendTrip");
   const locations: UserLocation[] = await getTrip(); // Get the trip
-
+  console.log("Nombre de locations dans locations", locations.length);
   if (locations.length > MIN_TRIP_SIZE) {
     await logLocation(locations); // Send the trip
     console.log("Trip sent and flushed.");
@@ -123,10 +136,20 @@ export async function sendTrip() {
   await setTrip([]); // Reset the trip
 }
 
+export async function sendCurrentPosition(){
+  console.log("Entrée dans sendCurrentPosition");
+  let location : LocationObject ;
+  await Location.watchPositionAsync(LOCATION_TASK_OPTIONS_FOREGROUND, (o)=> {
+    location = o;
+    console.log("location", location)
+  })
+}
+
 /**
  * Execute a task that will track the user position.
  */
 export async function startLocationTask(permissionLevel: LocationPermissionLevel) {
+  console.log("permission level in startLocationTask",permissionLevel);
   try {
     // Stop a task that may have started previously
     const hasStarted: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
@@ -138,13 +161,18 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
     locationPermissionLevel = permissionLevel;
 
     // Start the task regarding the permission level
-    if (permissionLevel === LocationPermissionLevel.ALWAYS || permissionLevel === LocationPermissionLevel.ACTIVE) {
+    if (permissionLevel === LocationPermissionLevel.ALWAYS ) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS);
-      console.log("Location task started.");
-    } else {
+      console.log("Location task started for always authorization.");
+    } else if (permissionLevel === LocationPermissionLevel.ACTIVE) {
+      await Location.watchPositionAsync(LOCATION_TASK_OPTIONS_FOREGROUND, (o)=> (console.log(o)));
+      console.log("Location task started for active authorization.");
+    }
+    else {
       console.log("Could not start tracking task as permission levels were not met.");
     }
   } catch (e) {
+    // Erreur IOS ici 
     console.log(`Could not start tracking task : ${e}`);
   }
 }

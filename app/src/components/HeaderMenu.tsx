@@ -5,7 +5,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { LocationPermissionLevel } from "@/api";
-import { sendTrip } from "@/api/location";
+import { sendTrip, sendCurrentPosition } from "@/api/location";
 
 type HeaderMenuProps = {
   name: string
@@ -34,6 +34,11 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
               />
             </View>
             <View style={tw("bg-liane-blue p-4")}>
+              <AppButton
+                  buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
+                  title="Récupérer la position courante"
+                  onPress={async () => { await sendCurrentPosition(); }}
+              />
               <AppButton
                 buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
                 title="Envoyer le trajet courant"
