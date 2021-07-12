@@ -21,7 +21,7 @@ namespace Liane.Web.Controllers
 
         [Route("snap")]
         [DisableAuth]
-        public async Task<ImmutableHashSet<Api.Trip.Liane>> Snap(TripFilter tripFilter)
+        public async Task<ImmutableHashSet<RoutedLiane>> Snap(TripFilter tripFilter)
         {
             return await lianeTripService.Snap(tripFilter);
         }

@@ -32,16 +32,22 @@ namespace Liane.Service.Internal.Trip
         private readonly ICurrentContext currentContext;
         private readonly ILogger<LianeTripServiceImpl> logger;
         private readonly IRallyingPointService rallyingPointService;
+        private readonly IRoutingService routingService;
 
         private readonly IMongoCollection<UsedLiane> lianesCollection;
         private readonly IMongoCollection<UserLianeTrip> lianeTripsCollection;
 
-        public LianeTripServiceImpl(IRedis redis, MongoSettings settings, ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, IRallyingPointService rallyingPointService)
+        public LianeTripServiceImpl(
+            IRedis redis, MongoSettings settings, 
+            ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, 
+            IRallyingPointService rallyingPointService, IRoutingService routingService
+            )
         {
             this.redis = redis;
             this.currentContext = currentContext;
             this.logger = logger;
             this.rallyingPointService = rallyingPointService;
+            this.routingService = routingService;
 
             mongo = new MongoClient(new MongoClientSettings
             {
@@ -109,13 +115,14 @@ namespace Liane.Service.Internal.Trip
             return lianesList.Select(ul => ul.ToLiane()).OrderBy(l => l.Usages.Count).ToImmutableHashSet();
         }
 
-        public async Task<ImmutableHashSet<Api.Trip.Liane>> Snap(TripFilter tripFilter)
+        public async Task<ImmutableHashSet<RoutedLiane>> Snap(TripFilter tripFilter)
         {
             // Select the data using redis
             var db = await redis.Get();
-            var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 50, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
+            var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 5000, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
             var lianesIds = result.Select(r => ObjectId.Parse(r.Member)).ToImmutableList();
-            
+            logger.LogInformation("lianes 1 : " + lianesIds.ToJson());
+            logger.LogInformation("lianes 2 : " + result.ToJson());
             // Select the corresponding data using mongo
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
             var lianesList = (await lianesCollection.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
@@ -149,8 +156,19 @@ namespace Liane.Service.Internal.Trip
                 // At the moment, we only search for a specific time during
                 // a specific day and not a time span.
             }
+            var list = lianesList
+                .Select(async l => 
+                    new RoutedLiane(
+                        l.From,
+                        l.To,
+                        l.Usages.Select(u => u.ToLianeUsage()).ToList(),
+                        await routingService.BasicRouteMethod(new RoutingQuery(l.From.Position, l.To.Position))))
+                .Select(t => t.Result)
+                .ToImmutableHashSet();
+            
+            logger.LogInformation("lianes : " + list.ToJson());
 
-            return lianesList.Select(l => l.ToLiane()).ToImmutableHashSet();
+            return list;
         }
 
         public async Task Generate()
@@ -244,7 +262,7 @@ namespace Liane.Service.Internal.Trip
             
             liane.Usages.Add(lianeUsage);
 
-            database.GeoAdd(RedisKeys.Liane(), from.Position.Lat, from.Position.Lng, liane.Id.ToString());
+            database.GeoAdd(RedisKeys.Liane(), from.Position.Lng, from.Position.Lat, liane.Id.ToString());
             await lianesCollection.InsertOneAsync(liane);
             
             logger.LogInformation("Liane created : " + liane.ToJson());

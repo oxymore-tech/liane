@@ -25,7 +25,7 @@ namespace Liane.Api.Trip
         /**
          * Select the trips to show.
          */
-        Task<ImmutableHashSet<Liane>> Snap(TripFilter tripFilter);
+        Task<ImmutableHashSet<RoutedLiane>> Snap(TripFilter tripFilter);
 
         /**
          * Flush the old data and re-generate every liane trip from raw ones.
