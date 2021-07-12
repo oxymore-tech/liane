@@ -1,14 +1,41 @@
 import { ListItem } from "react-native-elements";
-import { ListRenderItemInfo, Text, View } from "react-native";
+import { Alert, ListRenderItemInfo, Text, View } from "react-native";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { scopedTranslate } from "@/api/i18n";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Liane } from "@/api";
+import React, { useEffect, useState } from "react";
+import { Liane, LianeUsage } from "@/api";
 import { AppButton } from "@/components/base/AppButton";
 
 const t = scopedTranslate("TripList");
+
+interface DetailKey {
+  day: string,
+  hour: number
+}
+
+function computeDetails(usages: LianeUsage[]): Map<DetailKey, number> {
+  const details = new Map<DetailKey, number>();
+
+  usages.forEach((u: LianeUsage) => {
+    // Get the date
+    const d: Date = new Date();
+    d.setUTCDate(u.timestamp);
+
+    // Compute the key
+    const key: DetailKey = { day: t(`jour${d.getDay()}`), hour: d.getHours() };
+
+    // Update the dict
+    if (details.has(key)) {
+      details.set(key, details.get(key)! + 1);
+    } else {
+      details.set(key, 1);
+    }
+  });
+
+  return details;
+}
 
 export function TripListItemKey(item: Liane) {
   return item.from.id + item.to.id;
@@ -16,10 +43,31 @@ export function TripListItemKey(item: Liane) {
 
 export function TripListItem({ item } : ListRenderItemInfo<Liane>) {
   const [showDetails, setShowDetails] = useState(false);
+  const [details, setDetails] = useState<Map<DetailKey, number>>();
 
   if (!item.usages || item.usages.length < 1) return <></>;
 
-  const { from, to } = item;
+  const { from, to, usages } = item;
+
+  const updateDetails = () => {
+    setShowDetails(!showDetails);
+
+    if (!details) {
+      setDetails(computeDetails(usages));
+    }
+  };
+
+  const del = () => {
+    Alert.alert(
+      t("suppressionTitle"),
+      t("suppressionText"),
+      [
+        { text: t("suppressionNon"), style: "cancel" },
+        { text: t("suppressionOui") }
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <ListItem bottomDivider>
@@ -44,19 +92,25 @@ export function TripListItem({ item } : ListRenderItemInfo<Liane>) {
               <AppButton
                 buttonStyle={tw("bg-red-500 p-2 m-1 text-xs")}
                 titleStyle={tw("text-sm")}
-                onPress={() => console.log(1)}
+                onPress={del}
                 title={t("supprimer")}
               />
               <AppButton
                 buttonStyle={tw("bg-gray-500 p-2 m-1")}
                 titleStyle={tw("text-sm")}
-                onPress={() => setShowDetails(!showDetails)}
+                onPress={updateDetails}
                 title={t("détail")}
               />
             </View>
           </View>
-          {showDetails
-          && <View><Text>Détails</Text></View>}
+          {
+            showDetails && details
+            && details.forEach((amount, key) => (
+              <AppText style={tw("text-gray-800 font-bold")}>
+                {t("jourheureformat", { count: amount, day: key.day, hour: key.hour })}
+              </AppText>
+            ))
+          }
         </ListItem.Title>
       </ListItem.Content>
     </ListItem>

@@ -12,9 +12,21 @@
     }
   },
   "TripList": {
-    "trajet réalisé": "You've done this trip %{formatted_number} times",
+    "trajet réalisé": "You've done this trip %{count} times",
     "supprimer": "Delete",
-    "détail": "Details"
+    "détail": "Details",
+    "suppressionTitle": "Warning",
+    "suppressionText": "The application being still in development you can't delete trips yet.",
+    "suppressionOui": "Confirm",
+    "suppressionNon": "Cancel",
+    "jourheureformat": "${count} times on ${day} at ${hour}",
+    "jour0": "Sunday",
+    "jour1": "Monday",
+    "jour2": "Tuesday",
+    "jour3": "Wednesday",
+    "jour4": "Thursday",
+    "jour5": "Friday",
+    "jour6": "Saturday"
   },
   "LocationTaskNotification": {
     "Titre": "Localisation",

@@ -14,7 +14,19 @@
   "TripList": {
     "trajet réalisé": "Vous avez réalisé ce trajet %{count} fois",
     "supprimer": "Supprimer",
-    "détail": "Détails"
+    "détail": "Détails",
+    "suppressionTitle": "Attention !",
+    "suppressionText": "L'application étant encore en cours de développement, il n'est pas encore possible de supprimer un trajet.",
+    "suppressionOui": "Confirmer",
+    "suppressionNon": "Annuler",
+    "jourheureformat": "${count} fois le ${day} à ${hour}",
+    "jour0": "Dimanche",
+    "jour1": "Lundi",
+    "jour2": "Mardi",
+    "jour3": "Mercredi",
+    "jour4": "Jeudi",
+    "jour5": "Vendredi",
+    "jour6": "Samedi"
   },
   "LocationTaskNotification": {
     "Titre": "Localisation",
