@@ -4,7 +4,7 @@ import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
 import {
   IndexedRawTrip, LatLng, RallyingPoint, RawTrip, UserLocation
 } from "@/api";
-import { RallyingPointMarker } from "@/components/RallyingPointMarker";
+import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import { adminService } from "@/api/admin-service";
 import { FiltersAdmin } from "@/components/FiltersAdmin";
