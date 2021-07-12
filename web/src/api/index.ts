@@ -1,7 +1,5 @@
 export interface LatLng { lat: number, lng: number }
 
-export interface RallyingPoint { id: string, position: LatLng, label:string }
-
 export interface Trip {
   coordinates: RallyingPoint[],
   user? : string,
@@ -62,18 +60,48 @@ export interface AuthUser {
   token: string;
 }
 
+export interface RallyingPoint {
+  id: string,
+  position: LatLng,
+  label: string,
+  distance?: number
+}
+
 export interface LianeUsage {
-  user : string ;
-  timeStamp : number ;
+  timestamp: number,
+  isPrimary: boolean,
+  tripId: string
 }
 
 export interface Liane {
-  from : RallyingPoint ;
-  to : RallyingPoint ;
-  usages : LianeUsage[] ;
+  from: RallyingPoint,
+  to: RallyingPoint,
+  usages: LianeUsage[]
+}
+
+export interface RoutedLiane {
+  from: RallyingPoint,
+  to: RallyingPoint,
+  usages: LianeUsage[],
+  route: Route
+}
+
+export interface LianeTrip {
+  id: string,
+  timestamp: number,
+  lianes: Liane[]
+}
+
+export interface TripFilter {
+  center: LatLng,
+  from?: RallyingPoint,
+  to?: RallyingPoint,
+  timestampFrom?: number,
+  timestampTo?: number,
+  withHour: boolean
 }
 
 export interface RoutingQuery {
-  start : LatLng ;
-  end : LatLng
+  start: LatLng ;
+  end: LatLng
 }
