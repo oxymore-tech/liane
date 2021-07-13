@@ -17,7 +17,6 @@ import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { routingService } from "@/api/routing-service";
 import { LoginLogout } from "@/components/LoginLogout";
 import { latLng, map } from "leaflet";
-import FilterLianeMap from "@/components/FilterLianeMap";
 
 const Augustin = require("@/api/augustin.json");
 const Lianes = require("@/api/testLianes.json");
@@ -61,7 +60,7 @@ function ZoomHandler({ callback }) {
   return null;
 }
 
-function LianeMap({ className, center }: MapProps) {
+function FilterLianeMap({ className, center }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
@@ -80,7 +79,7 @@ function LianeMap({ className, center }: MapProps) {
 
   const [route, setRoute] = useState<Route>();
 
-  useEffect(() => {
+  /* useEffect(() => {
     rallyingPointService.list(center.lat, center.lng)
       .then((r) => {
         const first = r[0];
@@ -91,6 +90,8 @@ function LianeMap({ className, center }: MapProps) {
       });
   }, [center]);
 
+   */
+
   /*
   useEffect(() => {
     routingService.route(Augustin)
@@ -99,10 +100,9 @@ function LianeMap({ className, center }: MapProps) {
 
   /*
   useEffect(() => {
-     Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
+    Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
   }, []);
-
-   */
+*/
 
   const updateStartHour = useCallback((hour: number) => {
     setStartHour(hour);
@@ -171,42 +171,78 @@ function LianeMap({ className, center }: MapProps) {
   return (
     <div>
       {availableTrips
-      && <AvailableTrips searchedTrips={searchedTrips} />}
-      <FilterLianeMap center={center} />
-      <MapContainer
-        className={className}
-        center={center}
-        zoom={12}
-        scrollWheelZoom
-        dragging
-        touchZoom={false}
-        style={{ zIndex: 0, position: "relative" }}
-      >
-        <ZoomHandler callback={zoomHandler} />
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          zIndex={2}
-        />
-        {route && <MemoPolyline positions={route.coordinates} weight={5} />}
-        {showRallyingPoints && rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
-        {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)}
-        {Augustin.map((a:UserLocation, index:number) => (
-          <CircleMarker key={`a_${index}`} center={[a.latitude, a.longitude]} pathOptions={{ color: "red" }} radius={5}>
-            <Tooltip>
-              <p>{new Intl.DateTimeFormat("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }).format(new Date(a.timestamp))}</p>
-              <p>{a.speed}</p>
-            </Tooltip>
-          </CircleMarker>
-        ))}
-        {Lianes.map((l:Liane) => (
-          <>
-            <CircleMarker key="From" center={l.from.position} pathOptions={{ color: "blue" }} radius={20} />
-            <CircleMarker key="To" center={l.to.position} pathOptions={{ color: "green" }} radius={20} />
-          </>
-        ))}
-      </MapContainer>
+            && <AvailableTrips searchedTrips={searchedTrips} />}
+      <div className="absolute inset-y-0 right-0 z-10">
+        <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-2 m-10">
+          <LoginLogout className="col-span-2" />
+          <Select
+            className="col-span-2"
+            label={(
+              <span className="flex items-center">
+                <img alt="" src="/images/leaflet/marker-icon.png" className="m-2 h-6" />
+                Départ
+              </span>
+                        )}
+            options={rallyingPoints}
+            value={from}
+            placeholder="Sélectionnez un lieu"
+            onChange={(p) => selectMarker(p, true)}
+          />
+          <Select
+            className="col-span-2"
+            label={(
+              <span className="flex items-center">
+                <img alt="" src="/images/leaflet/marker-icon-red.png" className="m-2 h-6" />
+                Arrivée
+              </span>
+                        )}
+            options={rallyingPoints}
+            value={to}
+            onChange={(p) => selectMarker(p, false)}
+            placeholder="Sélectionnez un lieu"
+          />
+          <Select
+            className="col-span-2"
+            label={(
+              <span className="flex items-center">
+                <i className="mdi mdi-calendar-today m-2 text-xl" />
+                Jour
+              </span>
+                        )}
+            placeholder="Sélectionnez un jour"
+            options={Days}
+            keyExtract="value"
+            value={day}
+            onChange={setDay}
+          />
+          <Select
+            label="Entre"
+            inline
+            options={Hours.filter((h) => h.value !== 23)}
+            keyExtract="value"
+            value={startHour}
+            onChange={updateStartHour}
+            placeholder="Sélectionnez une heure"
+          />
+          <Select
+            label=" et "
+            inline
+            options={Hours.filter((h) => h.value !== 0)}
+            keyExtract="value"
+            value={endHour}
+            onChange={updateEndHour}
+            placeholder="Sélectionnez une heure"
+          />
+          <Button
+            color="orange"
+            className="mt-4 col-span-2"
+            label="Rechercher"
+            onClick={getTrips}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
-export default LianeMap;
+export default FilterLianeMap;
