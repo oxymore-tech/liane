@@ -32,7 +32,7 @@ function extractUsers(rawTrips: IndexedRawTrip[]) {
   return users;
 } */
 
-export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
+export function FiltersAdmin({ callback }: FilterProps) {
 
   /* const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
