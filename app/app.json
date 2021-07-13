@@ -48,10 +48,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       }
-    },
-    "plugins": [
-      "expo-location",
-      "expo-task-manager"
-    ]
+    }
   }
 }
