@@ -2,7 +2,8 @@ import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-const BaseUrl = __DEV__ ? "http://192.168.0.34:8081/api" : "https://liane.gjini.co/api";
+// const BaseUrl = __DEV__ ? "http://192.168.0.34:8081/api" : "https://liane.gjini.co/api";
+const BaseUrl = "https://liane.gjini.co/api";
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -102,7 +103,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   if (response.status !== 200 && response.status !== 201) {
     switch (response.status) {
       case 400:
-        if (response.headers.get("content-type") === "application/json") {
+        if (response.headers.get("content-type") === ("application/json"||"application/problem+json")) {
           const json = await response.json();
           throw new ValidationError(json?.errors || {});
         }

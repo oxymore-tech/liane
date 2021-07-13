@@ -43,8 +43,13 @@ function LianeMap({ className, center }: MapProps) {
   // Handle map interaction
 
   const updateFilter = (filter: TripFilter) => {
-
   };
+
+  /*
+  useEffect(() => {
+    Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
+  }, []); */
+
 
   const updateCenter = (center: LatLng) => {
     filter.center = center;
