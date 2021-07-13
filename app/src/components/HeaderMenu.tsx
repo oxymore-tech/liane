@@ -11,7 +11,7 @@ type HeaderMenuProps = {
   name: string
 };
 
-const HeaderMenu = ({ name }:HeaderMenuProps) => {
+function HeaderMenu({ name }:HeaderMenuProps) {
   const { setAuthUser, setLocationPermissionLevel } = useContext(AppContext);
   const [open, setOpen] = useState(false);
 
@@ -65,6 +65,6 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
         )}
     </View>
   );
-};
+}
 
 export default HeaderMenu;

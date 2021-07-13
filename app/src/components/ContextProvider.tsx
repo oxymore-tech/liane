@@ -36,7 +36,7 @@ export const AppContext = createContext<AppContextProps>({
  * Ask for the permission to send push notifications and define their
  * parameters.
  */
-async function registerForPushNotificationsAsync():Promise<string|undefined> {
+async function registerForPushNotificationsAsync(): Promise<string|undefined> {
   if (Constants.isDevice) {
 
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -73,7 +73,7 @@ async function registerForPushNotificationsAsync():Promise<string|undefined> {
  * Initialise the context by getting whether the app. is
  * authorised to track the device and at which level.
  */
-async function init() : Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
+async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
   const permissionBackground = await Location.getBackgroundPermissionsAsync();
   const permissionForeground = await Location.getForegroundPermissionsAsync();
   const storedToken = await getStoredToken();
@@ -101,7 +101,7 @@ async function init() : Promise<{ authUser?:AuthUser, permission:LocationPermiss
 /**
  * Define the context of the application.
  */
-export function ContextProvider(props: { children: ReactNode }) {
+function ContextProvider(props: { children: ReactNode }) {
   const [fontLoaded] = useFonts({ Inter: Inter_400Regular, Inter_600SemiBold, Inter_700Bold });
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
@@ -162,3 +162,5 @@ export function ContextProvider(props: { children: ReactNode }) {
     </AppContext.Provider>
   );
 }
+
+export default ContextProvider;

@@ -6,7 +6,7 @@ import { Liane } from "@/api";
 import { listTrips } from "@/api/client";
 import { AppText } from "@/components/base/AppText";
 import HeaderMenu from "@/components/HeaderMenu";
-import { TripListItem, TripListItemKey } from "@/components/TripListItem";
+import TripListItem, { TripListItemKey } from "@/components/TripListItem";
 
 const t = scopedTranslate("Home");
 

@@ -41,7 +41,7 @@ export function TripListItemKey(item: Liane) {
   return item.from.id + item.to.id;
 }
 
-export function TripListItem({ item } : ListRenderItemInfo<Liane>) {
+function TripListItem({ item } : ListRenderItemInfo<Liane>) {
   const [showDetails, setShowDetails] = useState(false);
   const [details, setDetails] = useState<Map<DetailKey, number>>();
 
@@ -116,3 +116,5 @@ export function TripListItem({ item } : ListRenderItemInfo<Liane>) {
     </ListItem>
   );
 }
+
+export default TripListItem;

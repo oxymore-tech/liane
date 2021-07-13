@@ -55,7 +55,7 @@ export type NavigationParamList = {
   LocationTaskNotification: {};
 };
 
-export function Navigation() {
+function Navigation() {
 
   const { appLoaded, locationPermissionLevel, authUser } = useContext(AppContext);
 
@@ -102,3 +102,5 @@ export function Navigation() {
     </Stack.Navigator>
   );
 }
+
+export default Navigation;
