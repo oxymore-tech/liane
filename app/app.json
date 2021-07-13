@@ -4,7 +4,7 @@
     "slug": "liane",
     "version": "1.0.0",
     "orientation": "portrait",
-    "owner": "oxymore-tech",
+    "owner": "augustingjini",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash_vlow.png",
@@ -29,7 +29,7 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location"
       },
       "bundleIdentifier": "tech.oxymore.liane",
-      "buildNumber": "14"
+      "buildNumber": "15"
     },
     "android": {
       "permissions": [
@@ -42,7 +42,7 @@
         "android.permission.FOREGROUND_SERVICE"
       ],
       "package": "tech.oxymore.liane",
-      "versionCode": 14,
+      "versionCode": 15,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
