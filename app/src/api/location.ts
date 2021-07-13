@@ -142,9 +142,7 @@ async function setLastLocationFetchTime(lastLocationFetchTime: number) {
 
 
 export async function sendTrip() {
-  console.log("Entrée dans sendTrip");
   const locations: UserLocation[] = await getTrip(); // Get the trip
-  console.log("Nombre de locations dans locations", locations.length);
   if (locations.length > MIN_TRIP_SIZE) {
     await logLocation(locations); // Send the trip
     console.log("Trip sent and flushed.");
@@ -164,7 +162,6 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
   try {
     // Stop a task that may have started previously
     const hasStartedBackground: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    const hasStartedForeground: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
     if (hasStartedBackground ) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       console.log("Previous background location task stopped.");
@@ -210,7 +207,7 @@ export async function callbackForeground(o : LocationObject ) {
 
   const trip: UserLocation[] = await getTrip();
   trip.push(location);
-  console.log("New foreground location added : ", location);
+  // New foreground position added
   await setTrip(trip);
 }
 
@@ -246,7 +243,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
           isApple,
           isForeground: AppState.currentState === "active"
         });
-        console.log("New back location added : ", l);
+        // New background location added
       });
 
       await setTrip(trip);
