@@ -81,7 +81,7 @@ const TripListItem = ({ liane } : TripListItemProps) => {
   return (
     <View style={tw("px-3 py-2 border-b-1 border-gray-300")}>
       <View style={tw("flex flex-row items-baseline")}>
-        <View style={tw("")}>
+        <View style={tw("flex-grow")}>
           <View style={tw("flex flex-row items-center")}>
             <View style={tw("flex")}>
               <AppText style={tw("text-gray-800 font-bold")}>{from.label}</AppText>
@@ -95,7 +95,7 @@ const TripListItem = ({ liane } : TripListItemProps) => {
           </View>
           <AppText style={tw("text-gray-400 font-bold text-sm")}>{t("trajet réalisé", { count: liane.usages.length })}</AppText>
         </View>
-        <View style={tw("")}>
+        <View style={tw("flex-none")}>
           <AppButton
             buttonStyle={tw("bg-red-500 p-2 m-1 text-xs")}
             titleStyle={tw("text-sm")}
