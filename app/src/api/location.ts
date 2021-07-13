@@ -58,7 +58,6 @@ let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.N
 let removeSubscriptionForwardLocation: { remove(): void }| undefined ;
 
 
-
 /**
  * Get the current trip.
  */
@@ -95,14 +94,12 @@ async function getLastLocationFetchTime(): Promise<number> {
   let lastLocationFetchTime: number = 0;
   try {
     const result = await AsyncStorage.getItem(FETCH_TIME_KEY);
-
     if (result) {
       lastLocationFetchTime = parseInt(result, 10);
     }
   } catch (e) {
     console.log(`An error occured while fetching data : ${e}`);
   }
-
   return lastLocationFetchTime;
 }
 
@@ -113,15 +110,21 @@ async function getLastLocationFetchTime(): Promise<number> {
 async function createNewTrip(location : LocationObject): Promise<boolean> {
   const newLocationFetchTime: number = location.timestamp;
   const lastLocationFetchTime: number = await getLastLocationFetchTime();
-
-  if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
-    await setLastLocationFetchTime(newLocationFetchTime); // Needs to be updated before performing a long task
-    try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); };
-    return true;
-  } else {
-    await setLastLocationFetchTime(newLocationFetchTime); 
-    return false ;
+  let result: boolean = false ;
+  try {
+    if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
+        await setLastLocationFetchTime(newLocationFetchTime);
+      // Needs to be updated before performing a long task
+      try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
+      return true;
+    } else {
+        await setLastLocationFetchTime(newLocationFetchTime);
+      result = false ;
+    }
+  } catch (e) {
+    console.log(`An error occured while setting last location fetch time : ${e}`);
   }
+  return result ;
 }
 
 
@@ -171,7 +174,7 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
       removeSubscriptionForwardLocation.remove() ;
       removeSubscriptionForwardLocation = undefined ;
     }
-    locationPermissionLevel = permissionLevel;
+    locationPermissionLevel = permissionLevel ;
 
     // Start the task regarding the permission level
     if (permissionLevel === LocationPermissionLevel.ALWAYS ) {

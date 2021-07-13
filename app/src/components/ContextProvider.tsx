@@ -37,47 +37,50 @@ export const AppContext = createContext<AppContextProps>({
  * parameters.
  */
 async function registerForPushNotificationsAsync(): Promise<string|undefined> {
-  if (Constants.isDevice) {
+  try{
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
 
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification!");
+        return undefined;
+      }
 
-    if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
-      return undefined;
-    }
+      const expoPushToken = await Notifications.getExpoPushTokenAsync();
 
-    const expoPushToken = await Notifications.getExpoPushTokenAsync();
-
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C"
-      });
-    }
-
-    return expoPushToken.data;
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "default",
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#FF231F7C"
+        });
+      }
+      return expoPushToken.data;
   }
-  alert("Must use physical device for Push Notifications");
-  return undefined;
-}
+    alert("Must use physical device for Push Notifications");
+    return undefined;
+    } catch (e) {
+    console.log("error while registering for push notifications",e);
+  }
+  }
+
 
 /**
  * Initialise the context by getting whether the app. is
  * authorised to track the device and at which level.
  */
 async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
-  const permissionBackground = await Location.getBackgroundPermissionsAsync();
-  const permissionForeground = await Location.getForegroundPermissionsAsync();
-  const storedToken = await getStoredToken();
-  const authUser = storedToken ? await me().catch(() => undefined) : undefined;
+    const permissionBackground = await Location.getBackgroundPermissionsAsync();
+    const permissionForeground = await Location.getForegroundPermissionsAsync();
+    const storedToken = await getStoredToken();
+    const authUser = storedToken ? await me().catch(() => undefined) : undefined;
 
   console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
   console.log(`Authenticated user is ${authUser}`);
@@ -109,14 +112,18 @@ function ContextProvider(props: { children: ReactNode }) {
   const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
 
   const setAuthUser = async (a?: AuthUser) => {
-    if (a) {
-      const token = a?.token;
-      console.log("storeToken", a?.token);
-      await AsyncStorage.setItem("token", token);
-    } else {
-      await AsyncStorage.removeItem("token");
+    try {
+      if (a) {
+        const token = a?.token;
+        console.log("storeToken", a?.token);
+        await AsyncStorage.setItem("token", token);
+      } else {
+        await AsyncStorage.removeItem("token");
+      }
+      setInternalAuthUser(a);
+    } catch (e) {
+      console.log("Problem while setting auth user : ", e);
     }
-    setInternalAuthUser(a);
   };
 
   // Launch the locations recuperation
