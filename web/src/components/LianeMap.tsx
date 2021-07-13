@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Polyline, TileLayer } from "react-leaflet";
+import { CircleMarker, MapContainer, Polyline, TileLayer } from "react-leaflet";
 import {
   LatLng,
   RallyingPoint,
@@ -10,6 +10,7 @@ import {
 import { displayService } from "@/api/display-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
+import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 const DEFAULT_FILTER: TripFilter = {
@@ -57,7 +58,6 @@ function LianeMap({ className, center }: MapProps) {
 
   const updateLianes = async () => {
     displayService.getLianes(filter).then((newLianes: RoutedLiane[]) => {
-      console.log(newLianes);
       setLianes(newLianes);
     });
   };
@@ -70,7 +70,10 @@ function LianeMap({ className, center }: MapProps) {
 
   // Initialize the map
   useEffect(() => {
-    (async () => { await updateLianes(); })();
+    (async () => {
+      await updateLianes();
+      await updateRallyingPoints();
+    })();
   }, []);
 
   return (
@@ -91,15 +94,11 @@ function LianeMap({ className, center }: MapProps) {
           zIndex={2}
         />
 
-        {/* { */}
-        {/*  showRallyingPoints */}
-        {/*  && rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />) */}
-        {/* } */}
+        { showRallyingPoints
+          && rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} onSelect={(b) => console.log(b)} />)}
 
-        {
-          lianes
-          && lianes.forEach((l: RoutedLiane) => <MemoPolyline positions={l.route.coordinates} />)
-        }
+        { lianes
+          && lianes.map((l: RoutedLiane) => <Polyline positions={l.route.coordinates} weight={5} />)}
 
         {/* {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)} */}
 
