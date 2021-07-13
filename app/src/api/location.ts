@@ -27,7 +27,7 @@ const LOCATION_TASK_NAME: string = "LOCATION_TASK";
 // Task options
 const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 150,
+  distanceInterval: 100,
   // Notification options, the (only) reliable way to get background task run properly
   foregroundService: {
     notificationTitle: "Localisation",
@@ -43,7 +43,7 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
 
 const LOCATION_TASK_OPTIONS_FOREGROUND : LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 150,
+  distanceInterval: 100,
   timeInterval: 1.5 * 60 * 1000
 };
 
@@ -53,9 +53,8 @@ const isApple: boolean = Device.brand === "Apple";
 // Last known permission level
 let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
 
-
-// Function allowing to stop the subscription to the foreground data 
-let removeSubscriptionForwardLocation: { remove(): void }| undefined ;
+// Function allowing to stop the subscription to the foreground data
+let removeSubscriptionForwardLocation: { remove(): void }| undefined;
 
 /**
  * Get the current trip.
@@ -111,24 +110,22 @@ async function createNewTrip(location : LocationObject): Promise<boolean> {
   const newLocationFetchTime: number = location.timestamp;
   const lastLocationFetchTime: number = await getLastLocationFetchTime();
 
-  let result: boolean = false ;
+  let result: boolean = false;
   try {
     if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
-        await setLastLocationFetchTime(newLocationFetchTime);
+      await setLastLocationFetchTime(newLocationFetchTime);
       // Needs to be updated before performing a long task
       try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
       return true;
-    } else {
-        await setLastLocationFetchTime(newLocationFetchTime);
-      result = false ;
     }
+    await setLastLocationFetchTime(newLocationFetchTime);
+    result = false;
+
   } catch (e) {
     console.log(`An error occured while setting last location fetch time : ${e}`);
   }
-  return result ;
+  return result;
 }
-
-
 
 /**
  * Set the last time we received a location.
@@ -209,7 +206,7 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
       removeSubscriptionForwardLocation = undefined;
     }
 
-    locationPermissionLevel = permissionLevel ;
+    locationPermissionLevel = permissionLevel;
 
     // Start the task regarding the permission level
     if (permissionLevel === LocationPermissionLevel.ALWAYS) {
