@@ -43,14 +43,21 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
 
 const LOCATION_TASK_OPTIONS_FOREGROUND : LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 2
+  distanceInterval: 150,
+  timeInterval : 1.5 * 60 * 1000
 }
+
 
 // Is the device an apple device
 const isApple: boolean = Device.brand === "Apple";
 
 // Last known permission level
 let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
+
+// Function allowing to stop the subscription to the foreground data 
+let removeSubscriptionForwardLocation: { remove(): void }| undefined ;
+
+
 
 /**
  * Get the current trip.
@@ -156,10 +163,16 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
   console.log("permission level in startLocationTask",permissionLevel);
   try {
     // Stop a task that may have started previously
-    const hasStarted: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    if (hasStarted) {
+    const hasStartedBackground: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    const hasStartedForeground: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (hasStartedBackground ) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      console.log("Previous location task stopped.");
+      console.log("Previous background location task stopped.");
+    } 
+    if (removeSubscriptionForwardLocation) {
+      console.log("Previous foreground location task stopped.");
+      removeSubscriptionForwardLocation.remove() ;
+      removeSubscriptionForwardLocation = undefined ;
     }
     locationPermissionLevel = permissionLevel;
 
@@ -168,7 +181,7 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS);
       console.log("Location task started for always authorization.");
     } else if (permissionLevel === LocationPermissionLevel.ACTIVE) {
-      await Location.watchPositionAsync(LOCATION_TASK_OPTIONS_FOREGROUND, callbackForeground);
+      removeSubscriptionForwardLocation = await Location.watchPositionAsync(LOCATION_TASK_OPTIONS_FOREGROUND, callbackForeground);
       console.log("Location task started for active authorization.");
     }
     else {
@@ -199,7 +212,7 @@ export async function callbackForeground(o : LocationObject ) {
   trip.push(location);
   console.log("New foreground location added : ", location);
   await setTrip(trip);
-};
+}
 
 
 /**
