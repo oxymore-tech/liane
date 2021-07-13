@@ -13,7 +13,7 @@ interface FilterProps {
   callback: (filterOptions: TripFilter) => void
 }
 
-function extractIndex(rawTrips: IndexedRawTrip[]) {
+/* function extractIndex(rawTrips: IndexedRawTrip[]) {
   let indexes = new Set<number|string>();
   indexes = indexes.add("Tous les trajets");
   rawTrips.forEach((r: IndexedRawTrip) => {
@@ -30,11 +30,11 @@ function extractUsers(rawTrips: IndexedRawTrip[]) {
   });
 
   return users;
-}
+} */
 
 export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
 
-  const [displayRawTrips, setDisplayRawTrips] = useState(true);
+  /* const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
   const [allUsers, setAllUsers] = useState(true);
   const [chosenUser, setChosenUser] = useState<string>();
@@ -77,11 +77,11 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
       setAllUsers(false);
     }
     setChosenUser(user);
-  }
+  } */
 
   return (
     <div className="absolute inset-y-0 right-0 z-10">
-      <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-2 m-10">
+      {/* <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-2 m-10">
         <LoginLogout className="col-span-2" />
         <Select
           className="col-span-2"
@@ -147,7 +147,7 @@ export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
           label="Rechercher"
           onClick={getTrips}
         />
-      </div>
+      </div> */}
     </div>
   );
 }
