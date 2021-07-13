@@ -95,9 +95,10 @@ function LianeMap({ className, center }: MapProps) {
       .then((r) => setRoute(r)); */
   }, []);
 
+  /*
   useEffect(() => {
     Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
-  }, []);
+  }, []); */
 
   const updateStartHour = useCallback((hour: number) => {
     setStartHour(hour);
