@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { CircleMarker, MapContainer, Polyline, TileLayer } from "react-leaflet";
+import { MapContainer, Polyline, TileLayer } from "react-leaflet";
 import {
   LatLng,
   RallyingPoint,
@@ -38,22 +38,22 @@ function LianeMap({ className, center }: MapProps) {
 
   // Map display options
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [filter, setFilter] = useState<TripFilter>(DEFAULT_FILTER);
 
   // Handle map interaction
 
-  const updateFilter = (filter: TripFilter) => {
-  };
+  // const updateFilter = (filter: TripFilter) => {
+  // };
 
   /*
   useEffect(() => {
     Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
   }, []); */
 
-
-  const updateCenter = (center: LatLng) => {
-    filter.center = center;
-  };
+  // const updateCenter = (center: LatLng) => {
+  //   filter.center = center;
+  // };
 
   const handleZoom = (zoom: number) => {
     setShowRallyingPoints(zoom >= ZOOM_LEVEL_TO_SHOW_RP);
@@ -103,7 +103,7 @@ function LianeMap({ className, center }: MapProps) {
           && rallyingPoints.map((point, index) => <RallyingPointMarker key={`rl_${index}`} value={point} onSelect={(b) => console.log(b)} />)}
 
         { lianes
-          && lianes.map((l: RoutedLiane) => <Polyline positions={l.route.coordinates} weight={5} />)}
+          && lianes.map((l: RoutedLiane) => <MemoPolyline positions={l.route.coordinates} weight={5} />)}
 
         {/* {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)} */}
 
