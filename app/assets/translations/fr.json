@@ -19,7 +19,7 @@
     "suppressionText": "L'application étant encore en cours de développement, il n'est pas encore possible de supprimer un trajet.",
     "suppressionOui": "Confirmer",
     "suppressionNon": "Annuler",
-    "jourheureformat": "${count} fois le ${day} à ${hour}",
+    "jourheureformat": "%{count} fois le %{day} à %{hour}h",
     "jour0": "Dimanche",
     "jour1": "Lundi",
     "jour2": "Mardi",
