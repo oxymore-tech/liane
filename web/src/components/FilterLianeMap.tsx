@@ -18,10 +18,8 @@ import { routingService } from "@/api/routing-service";
 import { LoginLogout } from "@/components/LoginLogout";
 import { latLng, map } from "leaflet";
 
-const Augustin = require("@/api/augustin.json");
-const Lianes = require("@/api/testLianes.json");
-
-const ZOOM_LEVEL_TO_SHOW_RP = 12;
+// const Augustin = require("@/api/augustin.json");
+// const Lianes = require("@/api/testLianes.json");
 
 interface MapProps {
   className?: string;
