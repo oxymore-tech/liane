@@ -28,45 +28,12 @@ interface MapProps {
   center: LatLng;
 }
 
-const MemoPolyline = memo(Polyline);
-
-// const MultiPolyline = ({ routes }: { routes:RouteStat[] }) => (
-//   <>
-//     {routes
-//       .map((route, i) => {
-//         const w = route.stat;
-//         const color = `#${(Math.floor((1 - route.stat / 7) * 255)).toString(16)}${(Math.floor((route.stat / 7) * 255)).toString(16)}00`;
-//         if (w >= 6) {
-//           return <MemoPolyline key={i} positions={route.coordinates} weight={10} color={color} />;
-//         }
-//         if (w > 1 && w < 6) {
-//           return <MemoPolyline key={i} positions={route.coordinates} weight={5} color={color} />;
-//         }
-//         if (w === 1) {
-//           return <MemoPolyline key={i} positions={route.coordinates} weight={2} color={color} />;
-//         }
-//         return <MemoPolyline key={i} positions={route.coordinates} color={color} />;
-//       })}
-//   </>
-// );
-
-function ZoomHandler({ callback }) {
-  const map = useMapEvents({
-    zoomstart(o) {
-      callback(o.target._zoom);
-    }
-  });
-
-  return null;
-}
-
 function FilterLianeMap({ className, center }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [availableTrips, setAvailableTrips] = useState(false);
-  const [showRallyingPoints, setShowRallyingPoints] = useState(false);
 
   const nextHour = addHours(new Date(), 1);
 
@@ -101,6 +68,18 @@ function FilterLianeMap({ className, center }: MapProps) {
   };
 
   useEffect(() => {
+    rallyingPointService.list(center.lat, center.lng)
+      .then((r) => {
+        const first = r[0];
+        if (first) {
+          setFrom(first);
+        }
+        setRallyingPoints(r);
+      });
+    console.log("rallying points : ", rallyingPoints);
+  }, [center]);
+
+  useEffect(() => {
     if (from === to) {
       if (lastFromVsTo) {
         setTo(undefined);
@@ -114,19 +93,6 @@ function FilterLianeMap({ className, center }: MapProps) {
     const trips = await displayService.search(day, from, to, startHour, endHour);
     setSearchedTrips(trips);
   }, [day, from, to, startHour, endHour]);
-
-  useEffect(() => {
-    if (from) {
-      rallyingPointService.list(center.lat, center.lng)
-        .then((r) => {
-          const rallyingPoint = r[0];
-          if (rallyingPoint) {
-            setFrom(rallyingPoint);
-          }
-          setRallyingPoints(r);
-        });
-    }
-  }, [center]);
 
   useEffect(() => {
     displayService.getStat(searchedTrips, day, startHour, endHour)

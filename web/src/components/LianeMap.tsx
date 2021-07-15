@@ -113,7 +113,7 @@ function LianeMap({ className, center }: MapProps) {
     }
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (from === to) {
       if (lastFromVsTo) {
         setTo(undefined);
@@ -121,12 +121,7 @@ function LianeMap({ className, center }: MapProps) {
         setFrom(undefined);
       }
     }
-  }, [lastFromVsTo, from, to]);
-
-  const getTrips = useCallback(async () => {
-    const trips = await displayService.search(day, from, to, startHour, endHour);
-    setSearchedTrips(trips);
-  }, [day, from, to, startHour, endHour]);
+  }, [lastFromVsTo, from, to]); */
 
   useEffect(() => {
     if (from) {
