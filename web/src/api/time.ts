@@ -1,12 +1,12 @@
 export const Days = [
-  { label: "N'importe quel jour" },
-  { value: 0, label: "Dimanche" },
-  { value: 1, label: "Lundi" },
-  { value: 2, label: "Mardi" },
-  { value: 3, label: "Mercredi" },
-  { value: 4, label: "Jeudi" },
-  { value: 5, label: "Vendredi" },
-  { value: 6, label: "Samedi" }
+  { value: 8, label: "N'importe quel jour" },
+  { value: 1, label: "Dimanche" },
+  { value: 2, label: "Lundi" },
+  { value: 3, label: "Mardi" },
+  { value: 4, label: "Mercredi" },
+  { value: 5, label: "Jeudi" },
+  { value: 6, label: "Vendredi" },
+  { value: 7, label: "Samedi" }
 ];
 
 export const Hours = Array(24)

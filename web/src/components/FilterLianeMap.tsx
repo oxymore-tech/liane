@@ -13,10 +13,8 @@ import { Days, Hours } from "@/api/time";
 import { Button } from "@/components/base/Button";
 import { Select } from "@/components/base/Select";
 import { AvailableTrips } from "@/components/available_trips";
-import { RallyingPointMarker } from "@/components/RallyingPointMarker";
 import { routingService } from "@/api/routing-service";
 import { LoginLogout } from "@/components/LoginLogout";
-import { latLng, map } from "leaflet";
 
 // const Augustin = require("@/api/augustin.json");
 // const Lianes = require("@/api/testLianes.json");
@@ -34,14 +32,17 @@ function FilterLianeMap({ className, center }: MapProps) {
   const [availableTrips, setAvailableTrips] = useState(false);
 
   const nextHour = addHours(new Date(), 1);
-
+  // True when the last value set between from and to is from
   const [lastFromVsTo, setLastFromVsTo] = useState(true);
   const [from, setFrom] = useState<RallyingPoint>();
   const [to, setTo] = useState<RallyingPoint>();
+  // Initialized with today
   const [day, setDay] = useState<DayOfWeek>(nextHour.getDay());
+  // Initialized with the next hour
   const [startHour, setStartHour] = useState(nextHour.getHours());
   const [endHour, setEndHour] = useState(nextHour.getHours() + 1);
 
+  // Changes start hour when end hour is set before the previous start hour
   const updateStartHour = useCallback((hour: number) => {
     setStartHour(hour);
     if (hour >= endHour) {
@@ -49,6 +50,7 @@ function FilterLianeMap({ className, center }: MapProps) {
     }
   }, [endHour]);
 
+  // Changes end hour when start hour is set after the previous end hour
   const updateEndHour = useCallback((hour: number) => {
     setEndHour(hour);
     if (hour <= startHour) {
@@ -65,6 +67,7 @@ function FilterLianeMap({ className, center }: MapProps) {
     }
   };
 
+  // goes throught the closest rallying points from "center", set "from" to the closest RP
   useEffect(() => {
     rallyingPointService.list(center.lat, center.lng)
       .then((r) => {
@@ -74,9 +77,11 @@ function FilterLianeMap({ className, center }: MapProps) {
         }
         setRallyingPoints(r);
       });
-    console.log("rallying points : ", rallyingPoints);
   }, [center]);
 
+  /* Handle the case of "from" and "to" having the same value
+  * Sets "to" if "from" was changed last and vice-versa
+   */
   useEffect(() => {
     if (from === to) {
       if (lastFromVsTo) {
@@ -87,11 +92,13 @@ function FilterLianeMap({ className, center }: MapProps) {
     }
   }, [lastFromVsTo, from, to]);
 
+  // set searchedTrips to the trips corresponding to the research
   const getTrips = useCallback(async () => {
     const trips = await displayService.search(day, from, to, startHour, endHour);
     setSearchedTrips(trips);
   }, [day, from, to, startHour, endHour]);
 
+  /*
   useEffect(() => {
     displayService.getStat(searchedTrips, day, startHour, endHour)
       .then((result) => {
@@ -99,12 +106,12 @@ function FilterLianeMap({ className, center }: MapProps) {
       });
     displayService.listStepsFrom(searchedTrips)
       .then((result) => setSteps(result));
-  }, [searchedTrips, day, startHour, endHour]);
+  }, [searchedTrips, day, startHour, endHour]); */
 
   return (
     <div>
-      {availableTrips
-            && <AvailableTrips searchedTrips={searchedTrips} />}
+      {/* availableTrips
+            && <AvailableTrips searchedTrips={searchedTrips} /> */}
       <div className="absolute inset-y-0 right-0 z-10">
         <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-2 m-10">
           <LoginLogout className="col-span-2" />
