@@ -119,10 +119,9 @@ namespace Liane.Service.Internal.Trip
         {
             // Select the data using redis
             var db = await redis.Get();
-            var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 5000, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
-            var lianesIds = result.Select(r => ObjectId.Parse(r.Member)).ToImmutableList();
-            logger.LogInformation("lianes 1 : " + lianesIds.ToJson());
-            logger.LogInformation("lianes 2 : " + result.ToJson());
+            var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 50, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
+            var lianesIds = result.Select(r => ObjectId.Parse(r.Member.ToString())).ToImmutableList();
+
             // Select the corresponding data using mongo
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
             var lianesList = (await lianesCollection.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
@@ -156,8 +155,9 @@ namespace Liane.Service.Internal.Trip
                 // At the moment, we only search for a specific time during
                 // a specific day and not a time span.
             }
+            
             var list = lianesList
-                .Select(async l => 
+                .Select(async l =>
                     new RoutedLiane(
                         l.From,
                         l.To,
@@ -165,8 +165,6 @@ namespace Liane.Service.Internal.Trip
                         await routingService.BasicRouteMethod(new RoutingQuery(l.From.Position, l.To.Position))))
                 .Select(t => t.Result)
                 .ToImmutableHashSet();
-            
-            logger.LogInformation("lianes : " + list.ToJson());
 
             return list;
         }
@@ -261,7 +259,7 @@ namespace Liane.Service.Internal.Trip
             var database = await redis.Get();
             
             liane.Usages.Add(lianeUsage);
-
+            
             database.GeoAdd(RedisKeys.Liane(), from.Position.Lng, from.Position.Lat, liane.Id.ToString());
             await lianesCollection.InsertOneAsync(liane);
             
