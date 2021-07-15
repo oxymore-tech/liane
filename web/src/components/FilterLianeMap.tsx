@@ -77,33 +77,6 @@ function FilterLianeMap({ className, center }: MapProps) {
   const [startHour, setStartHour] = useState(nextHour.getHours());
   const [endHour, setEndHour] = useState(nextHour.getHours() + 1);
 
-  const [route, setRoute] = useState<Route>();
-
-  /* useEffect(() => {
-    rallyingPointService.list(center.lat, center.lng)
-      .then((r) => {
-        const first = r[0];
-        if (first) {
-          setFrom(first);
-        }
-        setRallyingPoints(r);
-      });
-  }, [center]);
-
-   */
-
-  /*
-  useEffect(() => {
-    routingService.route(Augustin)
-      .then((r) => setRoute(r));
-  }, []); */
-
-  /*
-  useEffect(() => {
-    Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
-  }, []);
-*/
-
   const updateStartHour = useCallback((hour: number) => {
     setStartHour(hour);
     if (hour >= endHour) {
@@ -163,10 +136,6 @@ function FilterLianeMap({ className, center }: MapProps) {
     displayService.listStepsFrom(searchedTrips)
       .then((result) => setSteps(result));
   }, [searchedTrips, day, startHour, endHour]);
-
-  function zoomHandler(zoom) {
-    setShowRallyingPoints(zoom >= ZOOM_LEVEL_TO_SHOW_RP);
-  }
 
   return (
     <div>

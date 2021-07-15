@@ -104,20 +104,6 @@ function LianeMap({ className, center }: MapProps) {
 
    */
 
-  const updateStartHour = useCallback((hour: number) => {
-    setStartHour(hour);
-    if (hour >= endHour) {
-      setEndHour(hour + 1);
-    }
-  }, [endHour]);
-
-  const updateEndHour = useCallback((hour: number) => {
-    setEndHour(hour);
-    if (hour <= startHour) {
-      setStartHour(hour - 1);
-    }
-  }, [startHour]);
-
   const selectMarker = (point:RallyingPoint, fromVsTo: boolean) => {
     setLastFromVsTo(fromVsTo);
     if (fromVsTo) {
