@@ -11,7 +11,7 @@ type HeaderMenuProps = {
   name: string
 };
 
-const HeaderMenu = ({ name }:HeaderMenuProps) => {
+function HeaderMenu({ name }:HeaderMenuProps) {
   const { setAuthUser, setLocationPermissionLevel } = useContext(AppContext);
   const [open, setOpen] = useState(false);
 
@@ -37,7 +37,7 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
               <AppButton
                 buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
                 title="Envoyer le trajet courant"
-                onPress={async () => { await sendTrip(); }}
+                onPress={async () => { try {await sendTrip();} catch (e){console.log("error while sending trip :", e)} }}
               />
               <AppButton
                 buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
@@ -65,6 +65,6 @@ const HeaderMenu = ({ name }:HeaderMenuProps) => {
         )}
     </View>
   );
-};
+}
 
 export default HeaderMenu;

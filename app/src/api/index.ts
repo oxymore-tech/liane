@@ -55,3 +55,37 @@ export enum LocationPermissionLevel {
   ALWAYS = "always",
   NOT_NOW = "not_now"
 }
+
+export interface RallyingPoint {
+  id: string,
+  position: LatLng,
+  label: string,
+  distance?: number
+}
+
+export interface LianeUsage {
+  timestamp: number,
+  isPrimary: boolean,
+  tripId: string
+}
+
+export interface Liane {
+  from: RallyingPoint,
+  to: RallyingPoint,
+  usages: LianeUsage[]
+}
+
+export interface LianeTrip {
+  id: string,
+  timestamp: number,
+  lianes: Liane[]
+}
+
+export interface TripFilter {
+  center: LatLng,
+  from?: RallyingPoint,
+  to?: RallyingPoint,
+  timestampFrom?: number,
+  timestampTo?: number,
+  withHour: boolean
+}

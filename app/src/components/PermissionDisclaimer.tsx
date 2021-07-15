@@ -9,7 +9,7 @@ interface PermissionDisclaimerProps {
   onAccept?: () => void;
 }
 
-export function PermissionDisclaimer({ onAccept }: PermissionDisclaimerProps) {
+function PermissionDisclaimer({ onAccept }: PermissionDisclaimerProps) {
   return (
     <View style={tailwind("container")}>
 
@@ -52,3 +52,5 @@ export function PermissionDisclaimer({ onAccept }: PermissionDisclaimerProps) {
     </View>
   );
 }
+
+export default PermissionDisclaimer;

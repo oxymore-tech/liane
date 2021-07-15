@@ -34,11 +34,10 @@ export interface RallyingPointMarkerProps {
 }
 
 export function RallyingPointMarker({ value, from, to, onSelect }: RallyingPointMarkerProps) {
-
   const map = useMap();
-
   const isFrom = from?.id === value.id;
   const isTo = to?.id === value.id;
+
   const iconLookup = () => {
     if (isFrom) {
       return IconBlue;

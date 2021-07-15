@@ -1,5 +1,7 @@
 import { post, postAs } from "@/api/http";
-import { DayOfWeek, RallyingPoint, RouteStat, Trip } from ".";
+import {
+  DayOfWeek, Liane, RallyingPoint, RoutedLiane, RouteStat, Trip, TripFilter
+} from ".";
 
 class DisplayService {
 
@@ -29,6 +31,10 @@ class DisplayService {
 
   async notifyDriver(user: string, name: string, number: string): Promise<void> {
     await post("/api/notification", { params: { user, name, number } });
+  }
+
+  async getLianes(filter: TripFilter): Promise<RoutedLiane[]> {
+    return postAs("/api/liane/snap", { body: filter });
   }
 
 }

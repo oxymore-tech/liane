@@ -968,6 +968,18 @@
 	"border-l-0": {
 		"borderLeftWidth": 0
 	},
+	"border-t-1": {
+		"borderTopWidth": 1
+	},
+	"border-r-1": {
+		"borderRightWidth": 1
+	},
+	"border-b-1": {
+		"borderBottomWidth": 1
+	},
+	"border-l-1": {
+		"borderLeftWidth": 1
+	},
 	"border-t-2": {
 		"borderTopWidth": 2
 	},

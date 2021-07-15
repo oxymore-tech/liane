@@ -1,10 +1,10 @@
 import * as Location from "expo-location";
-import {LocationAccuracy, LocationObject, LocationTaskOptions} from "expo-location";
+import { LocationAccuracy, LocationObject, LocationTaskOptions } from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import {logLocation} from "@/api/client";
-import {LocationPermissionLevel, UserLocation} from "@/api/index";
+import { logLocation } from "@/api/client";
+import { LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
-import {AppState} from "react-native";
+import { AppState } from "react-native";
 // import { scopedTranslate } from "@/api/i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -27,7 +27,7 @@ const LOCATION_TASK_NAME: string = "LOCATION_TASK";
 // Task options
 const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 150,
+  distanceInterval: 100,
   // Notification options, the (only) reliable way to get background task run properly
   foregroundService: {
     notificationTitle: "Localisation",
@@ -43,10 +43,9 @@ const LOCATION_TASK_OPTIONS: LocationTaskOptions = {
 
 const LOCATION_TASK_OPTIONS_FOREGROUND : LocationTaskOptions = {
   accuracy: LocationAccuracy.High,
-  distanceInterval: 150,
-  timeInterval : 1.5 * 60 * 1000
-}
-
+  distanceInterval: 100,
+  timeInterval: 1.5 * 60 * 1000
+};
 
 // Is the device an apple device
 const isApple: boolean = Device.brand === "Apple";
@@ -54,28 +53,27 @@ const isApple: boolean = Device.brand === "Apple";
 // Last known permission level
 let locationPermissionLevel: LocationPermissionLevel = LocationPermissionLevel.NEVER;
 
-// Function allowing to stop the subscription to the foreground data 
-let removeSubscriptionForwardLocation: { remove(): void }| undefined ;
-
-
+// Function allowing to stop the subscription to the foreground data
+let removeSubscriptionForwardLocation: { remove(): void }| undefined;
 
 /**
  * Get the current trip.
  */
 async function getTrip(): Promise<UserLocation[]> {
   let trip: UserLocation[] = [];
+
   try {
-    console.log(TRIP_KEY);
     const result = await AsyncStorage.getItem(TRIP_KEY);
+
     if (result) {
       trip = JSON.parse(result);
     }
   } catch (e) {
     console.log(`An error occured while fetching data : ${e}`);
   }
+
   return trip;
 }
-
 
 /**
  * Set the current trip.
@@ -95,14 +93,12 @@ async function getLastLocationFetchTime(): Promise<number> {
   let lastLocationFetchTime: number = 0;
   try {
     const result = await AsyncStorage.getItem(FETCH_TIME_KEY);
-
     if (result) {
       lastLocationFetchTime = parseInt(result, 10);
     }
   } catch (e) {
     console.log(`An error occured while fetching data : ${e}`);
   }
-
   return lastLocationFetchTime;
 }
 
@@ -114,16 +110,22 @@ async function createNewTrip(location : LocationObject): Promise<boolean> {
   const newLocationFetchTime: number = location.timestamp;
   const lastLocationFetchTime: number = await getLastLocationFetchTime();
 
-  if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
-    await setLastLocationFetchTime(newLocationFetchTime); // Needs to be updated before performing a long task
-    try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); };
-    return true;
-  } else {
-    await setLastLocationFetchTime(newLocationFetchTime); 
-    return false ;
-  }
-}
+  let result: boolean = false;
+  try {
+    if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
+      await setLastLocationFetchTime(newLocationFetchTime);
+      // Needs to be updated before performing a long task
+      try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
+      return true;
+    }
+    await setLastLocationFetchTime(newLocationFetchTime);
+    result = false;
 
+  } catch (e) {
+    console.log(`An error occured while setting last location fetch time : ${e}`);
+  }
+  return result;
+}
 
 /**
  * Set the last time we received a location.
@@ -140,7 +142,6 @@ async function setLastLocationFetchTime(lastLocationFetchTime: number) {
  * Send the registered locations to the server and clean
  */
 
-
 export async function sendTrip() {
   const locations: UserLocation[] = await getTrip(); // Get the trip
   if (locations.length > MIN_TRIP_SIZE) {
@@ -153,35 +154,68 @@ export async function sendTrip() {
   await setTrip([]); // Reset the trip
 }
 
+/**
+ * Add an array of locations or send them if expected.
+ */
+async function addLocations(locations: LocationObject[]) {
+  const newLocationFetchTime: number = locations[locations.length - 1].timestamp;
+  const lastLocationFetchTime: number = await getLastLocationFetchTime();
+
+  await setLastLocationFetchTime(newLocationFetchTime); // Needs to be updated before performing the long task
+
+  // Send the previous trip if necessary
+  if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
+    try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
+  }
+
+  // Iterate over every location received and add them
+  const trip: UserLocation[] = await getTrip();
+
+  locations.forEach((l) => {
+    trip.push({
+      timestamp: l.timestamp,
+      latitude: l.coords.latitude,
+      longitude: l.coords.longitude,
+      accuracy: l.coords.accuracy || undefined,
+      speed: l.coords.speed || undefined,
+      permissionLevel: locationPermissionLevel,
+      isApple,
+      isForeground: AppState.currentState === "active"
+    });
+  });
+
+  await setTrip(trip);
+}
 
 /**
  * Execute a task that will track the user position.
  */
 export async function startLocationTask(permissionLevel: LocationPermissionLevel) {
-  console.log("permission level in startLocationTask",permissionLevel);
+  console.log("permission level in startLocationTask", permissionLevel);
   try {
     // Stop a task that may have started previously
     const hasStartedBackground: boolean = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    if (hasStartedBackground ) {
+    if (hasStartedBackground) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       console.log("Previous background location task stopped.");
-    } 
+    }
+
     if (removeSubscriptionForwardLocation) {
       console.log("Previous foreground location task stopped.");
-      removeSubscriptionForwardLocation.remove() ;
-      removeSubscriptionForwardLocation = undefined ;
+      removeSubscriptionForwardLocation.remove();
+      removeSubscriptionForwardLocation = undefined;
     }
+
     locationPermissionLevel = permissionLevel;
 
     // Start the task regarding the permission level
-    if (permissionLevel === LocationPermissionLevel.ALWAYS ) {
+    if (permissionLevel === LocationPermissionLevel.ALWAYS) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS);
       console.log("Location task started for always authorization.");
     } else if (permissionLevel === LocationPermissionLevel.ACTIVE) {
       removeSubscriptionForwardLocation = await Location.watchPositionAsync(LOCATION_TASK_OPTIONS_FOREGROUND, callbackForeground);
       console.log("Location task started for active authorization.");
-    }
-    else {
+    } else {
       console.log("Could not start tracking task as permission levels were not met.");
     }
   } catch (e) {
@@ -190,62 +224,28 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
 }
 
 /**
- * Callback function for watchPositionAsync
+ * Callback function for watchPositionAsync.
  */
-export async function callbackForeground(o : LocationObject ) {
-  await createNewTrip(o);
-  const location : UserLocation = {
-    timestamp: o.timestamp,
-    latitude: o.coords.latitude,
-    longitude: o.coords.longitude,
-    accuracy: o.coords.accuracy || undefined,
-    speed: o.coords.speed || undefined,
-    permissionLevel: locationPermissionLevel,
-    isApple,
-    isForeground: AppState.currentState === "active"
-  }
-
-  const trip: UserLocation[] = await getTrip();
-  trip.push(location);
-  // New foreground position added
-  await setTrip(trip);
+export async function callbackForeground(location: LocationObject) {
+  console.log("New foreground location received.");
+  await addLocations([location]);
 }
-
 
 /**
  * Register the task callback.
  */
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
-      // Handle errors
-      if (error) {
-        console.log(`An error occured during the task ${LOCATION_TASK_NAME} : ${error}`);
-        return;
-      }
+  // Handle errors
+  if (error) {
+    console.log(`An error occured during the task ${LOCATION_TASK_NAME} : ${error}`);
+    return;
+  }
 
-      // Load the data
-      const { locations } = data as { locations: LocationObject[] };
+  console.log("New background location received.");
 
-      // Check whether the detected locations belongs to a new trip
-      await createNewTrip(locations[locations.length - 1]);
+  // Load the data
+  const { locations } = data as { locations: LocationObject[] };
 
-
-      // Iterate over every location received and choose the pertinent ones
-      const trip: UserLocation[] = await getTrip();
-
-      locations.forEach((l) => {
-        trip.push({
-          timestamp: l.timestamp,
-          latitude: l.coords.latitude,
-          longitude: l.coords.longitude,
-          accuracy: l.coords.accuracy || undefined,
-          speed: l.coords.speed || undefined,
-          permissionLevel: locationPermissionLevel,
-          isApple,
-          isForeground: AppState.currentState === "active"
-        });
-        // New background location added
-      });
-
-      await setTrip(trip);
-    }
-);
+  // Add the location
+  await addLocations(locations);
+});

@@ -48,13 +48,14 @@ const createDrawer = () => (
 
 export type NavigationParamList = {
   Home: {};
+  TripList: { count?: number, day?: string, hour?: number };
   LocationWizard: { step?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
   SignUpCode: { phoneNumber: string };
   LocationTaskNotification: {};
 };
 
-export function Navigation() {
+function Navigation() {
 
   const { appLoaded, locationPermissionLevel, authUser } = useContext(AppContext);
 
@@ -101,3 +102,5 @@ export function Navigation() {
     </Stack.Navigator>
   );
 }
+
+export default Navigation;

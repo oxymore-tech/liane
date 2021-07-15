@@ -1,12 +1,12 @@
 import { get, post, postAs } from "@/api/http";
-import { AuthUser, UserLocation, Notification, RealTrip } from "@/api";
+import { AuthUser, UserLocation, Notification, Liane } from "@/api";
 
 export async function logLocation(locations: UserLocation[]) {
   await post("/location", { body: locations });
 }
 
-export function listTrips(): Promise<RealTrip[]> {
-  return get("/trip");
+export function listTrips(): Promise<Liane[]> {
+  return get("/liane/get");
 }
 
 export function me(): Promise<AuthUser> {

@@ -21,13 +21,13 @@ namespace Liane.Web.Controllers
 
         [Route("snap")]
         [DisableAuth]
-        public async Task<ImmutableHashSet<Api.Trip.Liane>> Snap(TripFilter tripFilter)
+        public async Task<ImmutableHashSet<RoutedLiane>> Snap(TripFilter tripFilter)
         {
             return await lianeTripService.Snap(tripFilter);
         }
         
         [Route("get")]
-        public async Task<ImmutableHashSet<LianeTrip>> Get()
+        public async Task<ImmutableHashSet<Api.Trip.Liane>> Get()
         {
             return await lianeTripService.Get();
         }

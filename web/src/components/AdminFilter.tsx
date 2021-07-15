@@ -31,7 +31,7 @@ function extractUsers(rawTrips: IndexedRawTrip[]) {
   return users;
 }
 
-export function FiltersAdmin({ callback, rawTrips }: FilterProps) {
+export function AdminFilter({ callback, rawTrips }: FilterProps) {
 
   const [displayRawTrips, setDisplayRawTrips] = useState(true);
   const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
