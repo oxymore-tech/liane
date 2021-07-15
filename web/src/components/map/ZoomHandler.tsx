@@ -1,16 +1,13 @@
 import React from "react";
-import { useMapEvents } from "react-leaflet";
-import { LeafletEvent } from "leaflet";
+import { useMapEvent } from "react-leaflet";
 
 interface ZoomHandlerProps {
   callback: (number) => void;
 }
 
 function ZoomHandler({ callback } : ZoomHandlerProps) {
-  useMapEvents({
-    zoomstart(o: LeafletEvent) {
-      callback(o.target._zoom);
-    }
+  const map = useMapEvent("zoomend", () => {
+    callback(map.getZoom());
   });
 
   return (<></>);
