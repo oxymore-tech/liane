@@ -86,7 +86,9 @@ function LianeMap({ className, center }: MapProps) {
 
   return (
     <div>
-      {/* <TripFilter /> */}
+      {availableTrips
+      && <AvailableTrips searchedTrips={searchedTrips} />}
+      <FilterLianeMap center={center} />
       <MapContainer
         className={className}
         center={center}
