@@ -12,9 +12,10 @@ import { rallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
-import FilterLianeMap from "@/components/FilterLianeMap";
+import { FilterLianeMap } from "@/components/FilterLianeMap";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
+
 const DEFAULT_FILTER: TripFilter = {
   center: { lat: 0.0, lng: 0.0 },
   from: undefined,
@@ -27,6 +28,11 @@ const DEFAULT_FILTER: TripFilter = {
 interface MapProps {
   className?: string;
   center: LatLng;
+}
+
+export interface FilterOptions {
+  from?: RallyingPoint;
+  to?: RallyingPoint;
 }
 
 const MemoPolyline = memo(Polyline);
@@ -42,8 +48,16 @@ function LianeMap({ className, center }: MapProps) {
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
   const [filter, setFilter] = useState<TripFilter>(DEFAULT_FILTER);
   const [lastCenter, setLastCenter] = useState<LatLng>(center);
+  const [from, setFrom] = useState<RallyingPoint>();
+  const [to, setTo] = useState<RallyingPoint>();
 
   // Handle map interaction
+  function updateFromTo(options : FilterOptions) {
+    console.log("update from");
+    setFrom(options.from);
+    console.log(from, options.from);
+    setTo(options.to);
+  }
 
   // const updateFilter = (filter: TripFilter) => {
   // };
@@ -89,7 +103,7 @@ function LianeMap({ className, center }: MapProps) {
     <div>
       {/* availableTrips
       && <AvailableTrips searchedTrips={searchedTrips} /> */}
-      <FilterLianeMap center={center} />
+      <FilterLianeMap center={center} callback={updateFromTo} />
       <MapContainer
         className={className}
         center={center}

@@ -1,11 +1,12 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import {
-  CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents
-} from "react-leaflet";
 import { addHours } from "date-fns";
 import {
-  DayOfWeek, LatLng, RallyingPoint, Route, RouteStat, Trip, UserLocation, Liane, LianeUsage, RoutingQuery
+  DayOfWeek,
+  LatLng,
+  RallyingPoint,
+  RouteStat,
+  Trip
 } from "@/api";
 import { displayService } from "@/api/display-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
@@ -13,22 +14,24 @@ import { Days, Hours } from "@/api/time";
 import { Button } from "@/components/base/Button";
 import { Select } from "@/components/base/Select";
 import { LoginLogout } from "@/components/LoginLogout";
+import { FilterOptions } from "@/components/LianeMap";
 
 // const Augustin = require("@/api/augustin.json");
 // const Lianes = require("@/api/testLianes.json");
 
 interface MapProps {
-  className?: string;
   center: LatLng;
+  callback: (filterOptions: FilterOptions) => void,
 }
 
-function FilterLianeMap({ className, center }: MapProps) {
+export function FilterLianeMap({ center, callback }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [routes, setRoutes] = useState<RouteStat[]>([]);
   const [searchedTrips, setSearchedTrips] = useState<Trip[]>([]);
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [availableTrips, setAvailableTrips] = useState(false);
 
+  // days count starts at 1 so we have to add an extra day (24 hours) and an extra hour (2 hours)
   const nextHour = addHours(new Date(), 26);
   // True when the last value set between from and to is from
   const [lastFromVsTo, setLastFromVsTo] = useState(true);
@@ -39,6 +42,15 @@ function FilterLianeMap({ className, center }: MapProps) {
   // Initialized with the next hour
   const [startHour, setStartHour] = useState(nextHour.getHours());
   const [endHour, setEndHour] = useState(nextHour.getHours() + 1);
+
+  // calling back
+
+  function callBackFilter() {
+    callback({
+      from,
+      to
+    });
+  }
 
   // Changes start hour when end hour is set before the previous start hour
   const updateStartHour = useCallback((hour: number) => {
@@ -56,14 +68,15 @@ function FilterLianeMap({ className, center }: MapProps) {
     }
   }, [startHour]);
 
-  const selectMarker = (point:RallyingPoint, fromVsTo: boolean) => {
+  function selectMarker(point:RallyingPoint, fromVsTo: boolean) {
     setLastFromVsTo(fromVsTo);
     if (fromVsTo) {
       setFrom(point);
     } else {
       setTo(point);
     }
-  };
+    callBackFilter();
+  }
 
   // goes throught the closest rallying points from "center", set "from" to the closest RP
   useEffect(() => {
@@ -182,5 +195,3 @@ function FilterLianeMap({ className, center }: MapProps) {
     </div>
   );
 }
-
-export default FilterLianeMap;
