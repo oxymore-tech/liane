@@ -11,4 +11,4 @@ export const Days = [
 
 export const Hours = Array(24)
   .fill(0)
-  .map((value, index) => ({ value: index, label: `${index} h` }));
+  .map((value, index) => ({ value: index + 1, label: `${index} h` }));

@@ -12,8 +12,6 @@ import { rallyingPointService } from "@/api/rallying-point-service";
 import { Days, Hours } from "@/api/time";
 import { Button } from "@/components/base/Button";
 import { Select } from "@/components/base/Select";
-import { AvailableTrips } from "@/components/available_trips";
-import { routingService } from "@/api/routing-service";
 import { LoginLogout } from "@/components/LoginLogout";
 
 // const Augustin = require("@/api/augustin.json");
@@ -31,7 +29,7 @@ function FilterLianeMap({ className, center }: MapProps) {
   const [steps, setSteps] = useState<RallyingPoint[]>([]);
   const [availableTrips, setAvailableTrips] = useState(false);
 
-  const nextHour = addHours(new Date(), 1);
+  const nextHour = addHours(new Date(), 26);
   // True when the last value set between from and to is from
   const [lastFromVsTo, setLastFromVsTo] = useState(true);
   const [from, setFrom] = useState<RallyingPoint>();
