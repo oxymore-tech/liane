@@ -42,7 +42,7 @@
         "android.permission.FOREGROUND_SERVICE"
       ],
       "package": "tech.oxymore.liane",
-      "versionCode": 15,
+      "versionCode": 16,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
