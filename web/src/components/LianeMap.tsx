@@ -5,12 +5,13 @@ import {
   LatLng,
   RallyingPoint,
   TripFilter,
-  RoutedLiane
+  RoutedLiane, distance
 } from "@/api";
 import { displayService } from "@/api/display-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
+import CenterHandler from "@/components/map/CenterHandler";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 const DEFAULT_FILTER: TripFilter = {
@@ -38,22 +39,25 @@ function LianeMap({ className, center }: MapProps) {
 
   // Map display options
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [filter, setFilter] = useState<TripFilter>(DEFAULT_FILTER);
+  const [lastCenter, setLastCenter] = useState<LatLng>(center);
 
   // Handle map interaction
 
   // const updateFilter = (filter: TripFilter) => {
   // };
 
-  /*
-  useEffect(() => {
-    Lianes.map((l:Liane) => (routingService.basicRouteMethod({ start: l.from.position, end: l.to.position }))).then((r) => (console.log(r)));
-  }, []); */
+  const handleCenter = (newCenter: LatLng) => {
+    // Update the filter
+    const newFilter = { ...filter };
+    newFilter.center = newCenter;
+    setFilter(newFilter);
 
-  // const updateCenter = (center: LatLng) => {
-  //   filter.center = center;
-  // };
+    // Update if necessary
+    if (distance(lastCenter, newCenter) > 25000) {
+      setLastCenter(newCenter);
+    }
+  };
 
   const handleZoom = (zoom: number) => {
     setShowRallyingPoints(zoom >= ZOOM_LEVEL_TO_SHOW_RP);
@@ -61,7 +65,7 @@ function LianeMap({ className, center }: MapProps) {
 
   // Handle map updates
 
-  const updateLianes = async () => {
+  const updateLianes = () => {
     displayService.getLianes(filter).then((newLianes: RoutedLiane[]) => {
       setLianes(newLianes);
     });
@@ -74,16 +78,17 @@ function LianeMap({ className, center }: MapProps) {
   };
 
   // Initialize the map
+
   useEffect(() => {
-    (async () => {
-      await updateLianes();
-      await updateRallyingPoints();
-    })();
-  }, []);
+    updateLianes();
+    updateRallyingPoints();
+  }, [lastCenter]);
 
   return (
     <div>
-      {/* <TripFilter /> */}
+      {availableTrips
+      && <AvailableTrips searchedTrips={searchedTrips} />}
+      <FilterLianeMap center={center} />
       <MapContainer
         className={className}
         center={center}
@@ -94,6 +99,7 @@ function LianeMap({ className, center }: MapProps) {
         style={{ zIndex: 0, position: "relative" }}
       >
         <ZoomHandler callback={handleZoom} />
+        <CenterHandler callback={handleCenter} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}
@@ -104,8 +110,6 @@ function LianeMap({ className, center }: MapProps) {
 
         { lianes
           && lianes.map((l: RoutedLiane) => <MemoPolyline positions={l.route.coordinates} weight={5} />)}
-
-        {/* {steps.map((point, index) => <RallyingPointMarker key={`s_${index}`} value={point} from={from} to={to} onSelect={(b) => selectMarker(point, b)} />)} */}
 
       </MapContainer>
     </div>

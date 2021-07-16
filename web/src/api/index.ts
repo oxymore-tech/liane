@@ -1,5 +1,15 @@
 export interface LatLng { lat: number, lng: number }
 
+export function distance(l1: LatLng, l2: LatLng) {
+  const d1 = l1.lat * (Math.PI / 180.0);
+  const num1 = l1.lng * (Math.PI / 180.0);
+  const d2 = l2.lat * (Math.PI / 180.0);
+  const num2 = l2.lng * (Math.PI / 180.0) - num1;
+  const d3 = Math.sin((d2 - d1) / 2.0) ** 2.0
+      + Math.cos(d1) * Math.cos(d2) * Math.sin(num2 / 2.0) ** 2.0;
+  return 6376500.0 * (2.0 * Math.atan2(Math.sqrt(d3), Math.sqrt(1.0 - d3)));
+}
+
 export interface Trip {
   coordinates: RallyingPoint[],
   user? : string,
