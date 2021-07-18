@@ -1,6 +1,6 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback } from "react";
 import { Marker, Popup, Tooltip, useMap } from "react-leaflet";
-import { RallyingPoint } from "@/api/index";
+import { RallyingPoint } from "@/api";
 import { icon } from "leaflet";
 import { PopupMenuItem } from "@/components/PopupMenuItem";
 import { Label } from "@/components/base/Label";
