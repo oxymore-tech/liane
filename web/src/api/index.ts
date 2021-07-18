@@ -102,7 +102,7 @@ export interface LianeTrip {
   lianes: Liane[]
 }
 
-export interface TripFilter {
+export interface TripFilterOptions {
   center: LatLng,
   from?: RallyingPoint,
   to?: RallyingPoint,
