@@ -12,6 +12,7 @@ import { rallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
+import FilterLianeMap from "@/components/FilterLianeMap";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 const DEFAULT_FILTER: TripFilter = {
@@ -86,8 +87,8 @@ function LianeMap({ className, center }: MapProps) {
 
   return (
     <div>
-      {availableTrips
-      && <AvailableTrips searchedTrips={searchedTrips} />}
+      {/* availableTrips
+      && <AvailableTrips searchedTrips={searchedTrips} /> */}
       <FilterLianeMap center={center} />
       <MapContainer
         className={className}
