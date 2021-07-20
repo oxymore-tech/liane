@@ -2,7 +2,7 @@ import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-const BaseUrl = process.env.NODE_ENV === "production" ? "https://liane.gjini.co" : "http://172.29.241.94:8081";
+const BaseUrl = process.env.NODE_ENV === "production" ? "https://liane.gjini.co" : "http://192.168.1.25:8081";
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
