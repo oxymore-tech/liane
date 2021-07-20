@@ -103,14 +103,14 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
     switch (response.status) {
       case 400:
         const message400 = await response.text();
-        console.log(`Unexpected error on ${method} ${uri}`, response.status, message400);
+        console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
         throw new Error(message400);
-        if ((response.headers.get("content-type") === "application/json")
+        /*if ((response.headers.get("content-type") === "application/json")
           || (response.headers.get("content-type") ===("application/problem+json"))) {
           const json = await response.json();
           throw new ValidationError(json?.errors);
         }
-        throw new ResourceNotFoundError(await response.text());
+        throw new ResourceNotFoundError(await response.text());*/
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
