@@ -110,7 +110,7 @@ function ContextProvider(props: { children: ReactNode }) {
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
   const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
-
+  
   const setAuthUser = async (a?: AuthUser) => {
     try {
       if (a) {

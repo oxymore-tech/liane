@@ -24,12 +24,10 @@
           "location",
           "fetch"
         ],
-        "NSLocationWhenInUseUsageDescription": "This app collects your GPS location to anonymously register your car travels.",
-        "NSLocationAlwaysUsageDescription": "This app collects your GPS location to anonymously register your car travels.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location"
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app collects your GPS location to anonymously register your car travels."
       },
       "bundleIdentifier": "tech.oxymore.liane",
-      "buildNumber": "15"
+      "buildNumber": "16"
     },
     "android": {
       "permissions": [
