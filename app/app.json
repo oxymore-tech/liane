@@ -4,7 +4,7 @@
     "slug": "liane",
     "version": "1.0.0",
     "orientation": "portrait",
-    "owner": "oxymore-tech",
+    "owner": "augustingjini",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash_vlow.png",
@@ -24,12 +24,10 @@
           "location",
           "fetch"
         ],
-        "NSLocationWhenInUseUsageDescription": "This app collects your GPS location to anonymously register your car travels.",
-        "NSLocationAlwaysUsageDescription": "This app collects your GPS location to anonymously register your car travels.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location"
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app collects your GPS location to anonymously register your car travels."
       },
       "bundleIdentifier": "tech.oxymore.liane",
-      "buildNumber": "14"
+      "buildNumber": "16"
     },
     "android": {
       "permissions": [
@@ -42,7 +40,7 @@
         "android.permission.FOREGROUND_SERVICE"
       ],
       "package": "tech.oxymore.liane",
-      "versionCode": 14,
+      "versionCode": 17,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
