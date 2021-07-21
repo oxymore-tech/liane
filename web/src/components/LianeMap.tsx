@@ -1,11 +1,11 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Polyline, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import {
   LatLng,
   RallyingPoint,
   TripFilterOptions,
-  RoutedLiane, distance, Liane, LianeUsage
+  RoutedLiane, distance, LianeUsage
 } from "@/api";
 import { displayService } from "@/api/display-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
@@ -13,6 +13,7 @@ import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
 import { TripFilter } from "@/components/TripFilter";
+import { LianeRoute } from "@/components/map/LianeRoute";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 
@@ -30,67 +31,13 @@ interface MapProps {
   center: LatLng;
 }
 
-const MemoPolyline = memo(Polyline);
-
-function isPrimary(liane: RoutedLiane): boolean {
-  return liane.usages.filter((u: LianeUsage) => u.isPrimary).length > 0;
-}
-
-function getWeight(liane: RoutedLiane): number {
-  return Math.min(Math.max(liane.usages.length, 2), 8);
-}
-
-function getColor(liane: RoutedLiane): string {
-  let color: string;
-  switch (liane.usages.length) {
-    case 0:
-    case 1:
-    case 2:
-      color = "#F1916F";
-      break;
-    case 3:
-      color = "#ED764C";
-      break;
-    case 4:
-      color = "#EA6031";
-      break;
-    case 5:
-      color = "#E74D17";
-      break;
-    case 6:
-      color = "#D84815";
-      break;
-    case 7:
-      color = "#C14013";
-      break;
-    default:
-      color = "#B33B12";
-  }
-  return color;
-}
-
-function displayLiane(liane: RoutedLiane): JSX.Element {
-  if (isPrimary(liane)) {
-    return (
-      <MemoPolyline smoothFactor={2.0} positions={liane.route.coordinates} color={getColor(liane)} weight={getWeight(liane)}>
-        <Popup closeButton={false}>
-          Fréquence:
-          {" "}
-          {liane.usages.length}
-        </Popup>
-      </MemoPolyline>
-    );
-  }
-
-  return (<></>);
-}
-
 function LianeMap({ className, center }: MapProps) {
   DEFAULT_FILTER.center = center;
 
   // Map features to display
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [lianes, setLianes] = useState<RoutedLiane[]>();
+  const [maxUsages, setMaxUsages] = useState<number>(0);
 
   // Map display options
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
@@ -132,7 +79,15 @@ function LianeMap({ className, center }: MapProps) {
 
   const updateLianes = () => {
     displayService.getLianes(filter).then((newLianes: RoutedLiane[]) => {
-      setLianes(newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.usages.length - a.usages.length));
+      const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.usages.length - a.usages.length);
+      setLianes(l);
+
+      for (let i = l.length - 1; i > 0; i--) {
+        if (l[i].usages.filter((u: LianeUsage) => u.isPrimary).length > 0) {
+          setMaxUsages(l[i].usages.length);
+          break;
+        }
+      }
     });
   };
 
@@ -172,7 +127,7 @@ function LianeMap({ className, center }: MapProps) {
           && rallyingPoints.map((point: RallyingPoint, index: number) => <RallyingPointMarker key={`rl_${index}`} value={point} onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }} />)}
 
         { lianes
-          && lianes.map((l: RoutedLiane) => displayLiane(l))}
+          && lianes.map((l: RoutedLiane) => <LianeRoute liane={l} maxUsages={maxUsages} />) }
 
       </MapContainer>
     </div>
