@@ -60,21 +60,30 @@ namespace Liane.Service.Internal.Trip
             lianeTripsCollection = database.GetCollection<UserLianeTrip>(LianeTripCollectionKey);
         }
         
+        /**
+         * Constructor for test purposes.
+         */
+        public LianeTripServiceImpl(
+            IRedis redis, MongoClient mongo, 
+            ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, 
+            IRallyingPointService rallyingPointService, IRoutingService routingService
+        )
+        {
+            this.redis = redis;
+            this.currentContext = currentContext;
+            this.logger = logger;
+            this.rallyingPointService = rallyingPointService;
+            this.routingService = routingService;
+            this.mongo = mongo;
+            
+            var database = mongo.GetDatabase(DatabaseKey);
+            lianesCollection = database.GetCollection<UsedLiane>(LianeCollectionKey);
+            lianeTripsCollection = database.GetCollection<UserLianeTrip>(LianeTripCollectionKey);
+        }
+        
         public async Task Create(ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips)
         {
-            // Iterate over the hashset
-            foreach (var (rallyingPoints, timestamp) in rallyingPointsTrips)
-            {
-                var id = ObjectId.GenerateNewId();
-                var lianeTrip = new UserLianeTrip(id, currentContext.CurrentUser(), timestamp, new List<ObjectId>());
-                var lianesIds = await CreateLianes(id, rallyingPoints, timestamp);
-
-                if (lianesIds.Count < MinLianeTrip) continue;
-                
-                lianeTrip.Lianes.AddRange(lianesIds);
-                logger.LogInformation("New trip created : " + lianeTrip.ToJson());
-                await lianeTripsCollection.InsertOneAsync(lianeTrip);
-            }
+            await CreateFor(currentContext.CurrentUser(), rallyingPointsTrips);
         }
 
         public async Task Delete(string lianeTripId)
@@ -182,22 +191,46 @@ namespace Liane.Service.Internal.Trip
             // Fetch raw locations
             var rawTripCollection = database.GetCollection<UserRawTrip>("raw_trips");
             var result = (await rawTripCollection.FindAsync(_ => true)).ToList();
-            var rallyingPointsTrips = ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint>, long)>();
+
+            // Order by user
+            var userTrips = new Dictionary<string, ImmutableHashSet<(ImmutableHashSet<RallyingPoint>, long)>.Builder>();
             
             logger.LogInformation(result.Count + " raw trips founded");
             
             // Compute the data
-            foreach (var userRawTrip in result)
+            foreach (var (_, user, locations) in result)
             {
-                logger.LogInformation(userRawTrip.Locations.Count + " locations");
+                logger.LogInformation(locations.Count + " locations");
 
-                if (userRawTrip.Locations.Count < MinLocTrip) continue;
+                if (locations.Count < MinLocTrip) continue;
                 
-                var rallyingPoints = await CreateRallyingPoints(userRawTrip.Locations.ToImmutableList());
-                rallyingPointsTrips.Add((rallyingPoints, userRawTrip.Locations.First().Timestamp));
+                var rallyingPoints = await CreateRallyingPoints(locations.ToImmutableList());
+
+                userTrips.TryAdd(user, ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint>, long)>());
+                userTrips[user].Add((rallyingPoints, locations.First().Timestamp)); // Will never be null
             }
 
-            await Create(rallyingPointsTrips.ToImmutable());
+            foreach (var (user, trips) in userTrips)
+            {
+                await CreateFor(user, trips.ToImmutable());
+            }
+        }
+        
+        private async Task CreateFor(string user, ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips)
+        {
+            // Iterate over the hashset
+            foreach (var (rallyingPoints, timestamp) in rallyingPointsTrips)
+            {
+                var id = ObjectId.GenerateNewId();
+                var lianeTrip = new UserLianeTrip(id, user, timestamp, new List<ObjectId>());
+                var lianesIds = await CreateLianes(user, id, rallyingPoints, timestamp);
+
+                if (lianesIds.Count < MinLianeTrip) continue;
+                
+                lianeTrip.Lianes.AddRange(lianesIds);
+                logger.LogInformation("New trip created : " + lianeTrip.ToJson());
+                await lianeTripsCollection.InsertOneAsync(lianeTrip);
+            }
         }
         
         private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
@@ -218,7 +251,7 @@ namespace Liane.Service.Internal.Trip
             return rallyingPoints.ToImmutable();
         }
 
-        private async Task<ImmutableList<ObjectId>> CreateLianes(ObjectId lianeTripId, ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)
+        private async Task<ImmutableList<ObjectId>> CreateLianes(string user, ObjectId lianeTripId, ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)
         {
             var lianesIds = ImmutableList.CreateBuilder<ObjectId>();
             
@@ -231,7 +264,7 @@ namespace Liane.Service.Internal.Trip
                 {
                     var results = await (await lianesCollection.FindAsync(l => l.From == from.r && l.To == to)).ToListAsync();
                     var first = results.FirstOrDefault();
-                    var lianeUsage = new UserLianeUsage(currentContext.CurrentUser(), isPrimary, timestamp, lianeTripId);
+                    var lianeUsage = new UserLianeUsage(user, isPrimary, timestamp, lianeTripId);
                     ObjectId lianeId;
 
                     if (first is not null) // The liane already exists, add an usage
