@@ -37,7 +37,7 @@ function HeaderMenu({ name }:HeaderMenuProps) {
               <AppButton
                 buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}
                 title="Envoyer le trajet courant"
-                onPress={async () => { try {await sendTrip();} catch (e){console.log("error while sending trip :", e)} }}
+                onPress={async () => { try { await sendTrip(); } catch (e) { console.log("error while sending trip :", e); } }}
               />
               <AppButton
                 buttonStyle={tw("bg-liane-royal rounded-full m-1 mx-10")}

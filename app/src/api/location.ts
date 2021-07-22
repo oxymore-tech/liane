@@ -5,11 +5,7 @@ import { logLocation } from "@/api/client";
 import { LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
 import { AppState } from "react-native";
-// import { scopedTranslate } from "@/api/i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Translation variable
-// const t = scopedTranslate("LocationTaskNotification");
 
 // Storage keys
 const TRIP_KEY = "@Trip";
@@ -100,31 +96,6 @@ async function getLastLocationFetchTime(): Promise<number> {
     console.log(`An error occured while fetching data : ${e}`);
   }
   return lastLocationFetchTime;
-}
-
-/**
- * Give the information about if a location belongs in a trip or should start a new trip
- * Returns true if a new Trip was created, false if not
- */
-async function createNewTrip(location : LocationObject): Promise<boolean> {
-  const newLocationFetchTime: number = location.timestamp;
-  const lastLocationFetchTime: number = await getLastLocationFetchTime();
-
-  let result: boolean = false;
-  try {
-    if (lastLocationFetchTime !== 0 && newLocationFetchTime - lastLocationFetchTime > TRIP_SEPARATING_TIME) {
-      await setLastLocationFetchTime(newLocationFetchTime);
-      // Needs to be updated before performing a long task
-      try { await sendTrip(); } catch (e) { console.log(`Network error : ${e}`); }
-      return true;
-    }
-    await setLastLocationFetchTime(newLocationFetchTime);
-    result = false;
-
-  } catch (e) {
-    console.log(`An error occured while setting last location fetch time : ${e}`);
-  }
-  return result;
 }
 
 /**
