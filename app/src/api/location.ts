@@ -143,8 +143,8 @@ async function addLocations(locations: LocationObject[]) {
   const trip: UserLocation[] = await getTrip();
 
   locations.forEach((l) => {
-    trip.push({
-      timestamp: l.timestamp,
+    const ul = {
+      timestamp: Math.round(l.timestamp),
       latitude: l.coords.latitude,
       longitude: l.coords.longitude,
       accuracy: l.coords.accuracy || undefined,
@@ -152,7 +152,8 @@ async function addLocations(locations: LocationObject[]) {
       permissionLevel: locationPermissionLevel,
       isApple,
       isForeground: AppState.currentState === "active"
-    });
+    };
+    trip.push(ul);
   });
 
   await setTrip(trip);

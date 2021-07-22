@@ -105,9 +105,9 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
         /*
         const message400 = await response.text();
         console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
-        throw new Error(message400);*/
+        throw new Error(message400); */
         if ((response.headers.get("content-type") === "application/json")
-          || (response.headers.get("content-type") ===("application/problem+json"))) {
+          || (response.headers.get("content-type") === ("application/problem+json"))) {
           const json = await response.json();
           throw new ValidationError(json?.errors);
         }
