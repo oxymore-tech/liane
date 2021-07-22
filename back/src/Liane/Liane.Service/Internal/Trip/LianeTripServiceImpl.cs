@@ -119,7 +119,7 @@ namespace Liane.Service.Internal.Trip
         {
             // Select the data using redis
             var db = await redis.Get();
-            var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 50, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
+            var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 25, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
             var lianesIds = result.Select(r => ObjectId.Parse(r.Member.ToString())).ToImmutableList();
 
             // Select the corresponding data using mongo
