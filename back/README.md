@@ -13,6 +13,13 @@ The project is built on dotnet core 5 in C#.
 
 The following diagram explains the architecture.
 
+<div class="mermaid">
+    graph TD
+    A[Client] --> B[Load Balancer]
+    B --> C[Server01]
+    B --> D[Server02]
+  </div>
+
 ```
 classDiagram
 class Liane{
