@@ -16,13 +16,11 @@ namespace Liane.Web.Controllers
     {
         private readonly IDisplayService displayService;
         private readonly IRealTripService realTripService;
-        private readonly IRawTripService rawTripService;
 
-        public DisplayController(IDisplayService displayService, IRealTripService realTripService, IRawTripService rawTripService)
+        public DisplayController(IDisplayService displayService, IRealTripService realTripService)
         {
             this.displayService = displayService;
             this.realTripService = realTripService;
-            this.rawTripService = rawTripService;
         }
 
         [HttpGet("trip")]
