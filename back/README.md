@@ -13,6 +13,25 @@ The project is built on dotnet core 5 in C#.
 
 The following diagram explains the architecture.
 
+```
+classDiagram
+class Liane{
+    string User
+}
+class LianeUsage{
+    RallyingPoint From
+    RallyingPoint To
+}
+class LianeTrip{
+    string User
+    long Timestamp
+}
+
+Liane <-- LianeTrip
+Liane <--> LianeUsage
+
+
+
 ![](../doc/LIANE_TRIP.jpg)
 
 This architecture answer the need for 4 requests :
