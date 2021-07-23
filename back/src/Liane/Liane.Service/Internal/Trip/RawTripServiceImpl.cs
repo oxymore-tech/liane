@@ -83,7 +83,18 @@ namespace Liane.Service.Internal.Trip
 
         public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
         {
-            return null;
+            var asyncCursor = await rawTripCollection.FindAsync(t => 
+                rawTripFilter.Center.CalculateDistance(t.Locations.First().Latitude, t.Locations.First().Longitude) <= 25);
+            
+            // Other filter information are not used yet as the front-end is doing the job
+            // if (rawTripFilter.User is not null)
+            // {
+            //     
+            // }
+
+            return asyncCursor.ToEnumerable()
+                .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
+                .ToImmutableList();
         }
 
     }
