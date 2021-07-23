@@ -80,5 +80,10 @@ namespace Liane.Service.Internal.Trip
                 .ToImmutableList();
         }
 
+        public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
+        {
+            return null;
+        }
+
     }
 }

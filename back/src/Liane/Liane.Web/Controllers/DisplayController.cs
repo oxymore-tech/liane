@@ -44,12 +44,5 @@ namespace Liane.Web.Controllers
         {
             return displayService.ListStepsFrom(trips);
         }
-
-        [HttpGet("raw")]
-        [RequiresAdminAuth]
-        public Task<ImmutableList<RawTrip>> ListAll()
-        {
-            return rawTripService.ListAll();
-        }
     }
 }
