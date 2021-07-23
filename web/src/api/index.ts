@@ -115,3 +115,12 @@ export interface RoutingQuery {
   start: LatLng ;
   end: LatLng
 }
+
+export interface RawTripFilterOptions {
+  center: LatLng,
+  user?: string,
+  timeInterval?: number,
+  distInterval?: number,
+  withForeground?: boolean,
+  withBackGround?: boolean
+}
