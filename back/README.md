@@ -29,7 +29,7 @@ class LianeTrip{
 
 Liane <-- LianeTrip
 Liane <--> LianeUsage
-
+```
 
 
 ![](../doc/LIANE_TRIP.jpg)
