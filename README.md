@@ -5,6 +5,10 @@ https://github.com/BackMarket/github-mermaid-extension
 
 https://github.com/marcozaccari/markdown-diagrams-browser-extension
 
+The diagrams included in the markdown files of this project are written in "mermaid". All the necessary documentation can be viewed here : 
+https://mermaid-js.github.io/mermaid/#/
+
+
 
 # What is Liane :seedling:
 
