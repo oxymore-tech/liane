@@ -1,6 +1,8 @@
 # General information
 Diagrams will not be displayed on github unless you have installed one of the following plugins : 
+
 https://github.com/BackMarket/github-mermaid-extension
+
 https://github.com/marcozaccari/markdown-diagrams-browser-extension
 
 
