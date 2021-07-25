@@ -8,6 +8,7 @@ import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import { adminService } from "@/api/admin-service";
 import { AdminFilter } from "@/components/AdminFilter";
+import { LianeStatistics } from "@/components/LianeStatistics";
 
 const colors: string[] = [
   "#22278A",
@@ -126,7 +127,6 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
 }
 
 function LianeMapAdmin({ className, center }: MapProps) {
-
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
   const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
@@ -168,7 +168,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         { `Permission : ${l.permissionLevel}` }
       </p>
       <p>
-        { () => {
+        {() => {
           if (l.isForeground === undefined) {
             return "Undefined";
           }
@@ -181,6 +181,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   return (
     <div>
       <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
+      <LianeStatistics />
       <MapContainer
         className={className}
         center={center}
