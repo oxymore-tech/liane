@@ -2,14 +2,22 @@ import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
 import {
-  IndexedRawTrip, LatLng, RallyingPoint, RawTrip, UserLocation
+  IndexedRawTrip,
+  LatLng,
+  LianeStats,
+  RallyingPoint,
+  RawTrip,
+  RawTripFilterOptions,
+  RawTripStats,
+  RoutedLiane,
+  UserLocation
 } from "@/api";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import { rallyingPointService } from "@/api/rallying-point-service";
-import { adminService } from "@/api/admin-service";
 import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
 import { TripService } from "@/api/trip-service";
+import { useHistory } from "react-router-dom";
 
 const colors: string[] = [
   "#22278A",
@@ -128,23 +136,38 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
 }
 
 function LianeMapAdmin({ className, center }: MapProps) {
+  // Data
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
+  const [lianes, setLianes] = useState<RoutedLiane[]>([]);
+
+  // Displayed data
   const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
   const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
+  const [displayLianes, setDisplayLianes] = useState(false);
 
-  // Gets data from FilterAdmin and applies it to the map
-  function updateDisplayRawTrips(options : FilterOptions) {
-    console.log("update");
-    setDisplayRallyingPoint(options.displayRallyingPoints);
-    setDisplayRawTrips(filterRawTrips(rawTrips, options));
-  }
+  // Statistics
+  const [rawStats, setRawStats] = useState<RawTripStats>({ numberOfTrips: 0 });
+  const [lianeStats, setLianeStats] = useState<LianeStats>({ numberOfTrips: 0, numberOfUsers: 0 });
 
   useEffect(() => {
-    TripService.getRaw()
-      .then((r: RawTrip[]) => {
-        setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
-      });
+    try {
+      TripService.snapRaw({ center } as RawTripFilterOptions)
+        .then((r: RawTrip[]) => {
+          if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
+        });
+      // TripService.snapLianes({ center, withHour: false })
+      //   .then((l: RoutedLiane[]) => {
+      //     setLianes(l);
+      //   });
+
+      // Fetch statistics
+      TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
+      TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
+    } catch (e) {
+      // const history = useHistory();
+      // history.push("/auth-error");
+    }
   }, []);
 
   useEffect(() => {
@@ -154,6 +177,13 @@ function LianeMapAdmin({ className, center }: MapProps) {
       });
   }, [center]);
 
+  // Get data from FilterAdmin and applies it to the map
+  const updateDisplayRawTrips = (options : FilterOptions) => {
+    setDisplayRallyingPoint(options.displayRallyingPoints);
+    setDisplayRawTrips(filterRawTrips(rawTrips, options));
+  };
+
+  // Create a tooltip view.
   const tooltip = (index:number, i: number, j: number, l: UserLocation) => (
     <Tooltip>
       <p>{`Trajet n°${index} | ${i}-${j}`}</p>
@@ -182,7 +212,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   return (
     <div>
       <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
-      <LianeStatistics numberOfLianes={3} numberOfRaws={4} numberOfUsers={2} />
+      <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
       <MapContainer
         className={className}
         center={center}
