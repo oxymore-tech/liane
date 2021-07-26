@@ -7,7 +7,7 @@ import {
   TripFilterOptions,
   RoutedLiane, distance, LianeUsage
 } from "@/api";
-import { displayService } from "@/api/display-service";
+import { TripService } from "@/api/trip-service";
 import { rallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
@@ -93,7 +93,7 @@ function LianeMap({ className, center }: MapProps) {
   // Handle map updates
 
   const updateLianes = () => {
-    displayService.getLianes(filter).then((newLianes: RoutedLiane[]) => {
+    TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
       const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.usages.length - a.usages.length);
       setLianes(l);
 

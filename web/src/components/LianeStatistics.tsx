@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/base/Button";
-import { adminService } from "@/api/admin-service";
+import { TripService } from "@/api/trip-service";
 
 export function LianeStatistics() {
   return (
@@ -10,7 +10,7 @@ export function LianeStatistics() {
           color="blue"
           className="mt-4 col-span-2"
           label="Re-générer les lianes"
-          onClick={async () => { await adminService.generateLianes(); }}
+          onClick={async () => { await TripService.generateLianes(); }}
         />
       </div>
     </div>

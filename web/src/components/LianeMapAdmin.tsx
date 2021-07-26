@@ -9,6 +9,7 @@ import { rallyingPointService } from "@/api/rallying-point-service";
 import { adminService } from "@/api/admin-service";
 import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
+import { TripService } from "@/api/trip-service";
 
 const colors: string[] = [
   "#22278A",
@@ -140,7 +141,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   }
 
   useEffect(() => {
-    adminService.getAllRawTrips()
+    TripService.getRaw()
       .then((r: RawTrip[]) => {
         setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
       });
