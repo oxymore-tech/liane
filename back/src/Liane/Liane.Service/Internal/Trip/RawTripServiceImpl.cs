@@ -45,7 +45,7 @@ namespace Liane.Service.Internal.Trip
             {
                 var currentUser = currentContext.CurrentUser();
                 
-                logger.LogInformation("{Count} raw trip(ls) saved for user '{currentUser}'", trips.Count, currentUser);
+                logger.LogInformation("{Count} raw trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
                 
                 await rawTripCollection.InsertManyAsync(
                     trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations.ToList()))
@@ -84,9 +84,10 @@ namespace Liane.Service.Internal.Trip
         public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
         {
             var asyncCursor = await rawTripCollection.FindAsync(t => 
-                rawTripFilter.Center.CalculateDistance(t.Locations.First().Latitude, t.Locations.First().Longitude) <= 25);
+                rawTripFilter.Center.CalculateDistance(t.Locations.First().Latitude, t.Locations.First().Longitude) <= Radius);
             
-            // Other filter information are not used yet as the front-end is doing the job
+            // Other filter information are not used yet as the front-end is already filtering
+            // on those field.
             // if (rawTripFilter.User is not null)
             // {
             //     
@@ -95,6 +96,11 @@ namespace Liane.Service.Internal.Trip
             return asyncCursor.ToEnumerable()
                 .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
                 .ToImmutableList();
+        }
+
+        public async Task<RawTripStats> Stats()
+        {
+            return new (await rawTripCollection.CountDocumentsAsync(_ => true));
         }
 
     }

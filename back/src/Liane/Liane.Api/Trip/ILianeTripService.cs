@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Routing;
 
 namespace Liane.Api.Trip
 {
@@ -31,5 +29,10 @@ namespace Liane.Api.Trip
          * Flush the old data and re-generate every liane trip from raw ones.
          */
         Task Generate();
+        
+        /**
+         * Get liane trips statistics.
+         */
+        Task<LianeStats> Stats();
     }
 }

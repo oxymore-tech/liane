@@ -29,6 +29,11 @@ namespace Liane.Api.Trip
          * Get the trips regarding a filter.
          */
         Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter);
-        
+
+        /**
+         * Get raw trips statistics.
+         */
+        Task<RawTripStats> Stats();
+
     }
 }

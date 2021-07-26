@@ -232,6 +232,14 @@ namespace Liane.Service.Internal.Trip
                 await lianeTripsCollection.InsertOneAsync(lianeTrip);
             }
         }
+
+        public async Task<LianeStats> Stats()
+        {
+            return new (
+                await lianesCollection.CountDocumentsAsync(_ => true),
+                (await (await lianeTripsCollection.DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
+            );
+        }
         
         private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
         {

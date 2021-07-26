@@ -38,6 +38,13 @@ namespace Liane.Web.Controllers
         {
             await lianeTripService.Generate();
         }
+        
+        [Route("stats")]
+        [RequiresAdminAuth]
+        public async Task<LianeStats> Stats()
+        {
+            return await lianeTripService.Stats();
+        }
 
     }
 }
