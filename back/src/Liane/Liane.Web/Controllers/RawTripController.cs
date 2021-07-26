@@ -25,7 +25,7 @@ namespace Liane.Web.Controllers
             return rawTripService.ListAll();
         }
         
-        [HttpGet("snap")]
+        [HttpPost("snap")]
         [RequiresAdminAuth]
         public Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
         {

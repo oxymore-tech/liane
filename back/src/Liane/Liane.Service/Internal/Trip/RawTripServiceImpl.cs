@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -83,17 +84,17 @@ namespace Liane.Service.Internal.Trip
 
         public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
         {
-            var asyncCursor = await rawTripCollection.FindAsync(t => 
-                rawTripFilter.Center.CalculateDistance(t.Locations.First().Latitude, t.Locations.First().Longitude) <= Radius);
-            
+            var asyncCursor = await rawTripCollection.FindAsync(_ => true); // Oof
+
             // Other filter information are not used yet as the front-end is already filtering
             // on those field.
             // if (rawTripFilter.User is not null)
             // {
             //     
             // }
-
+            
             return asyncCursor.ToEnumerable()
+                .Where(t => rawTripFilter.Center.CalculateDistance(new LatLng(t.Locations.First().Latitude, t.Locations.First().Longitude)) <= Radius)
                 .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
                 .ToImmutableList();
         }
