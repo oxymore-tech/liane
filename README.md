@@ -1,4 +1,4 @@
-# General information
+# General informations
 Diagrams will not be displayed on github unless you have installed one of the following plugins : 
 
 https://github.com/BackMarket/github-mermaid-extension
