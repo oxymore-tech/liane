@@ -182,7 +182,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   return (
     <div>
       <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
-      <LianeStatistics />
+      <LianeStatistics numberOfLianes={3} numberOfRaws={4} numberOfUsers={2} />
       <MapContainer
         className={className}
         center={center}
