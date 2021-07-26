@@ -17,15 +17,15 @@ export interface Trip {
 }
 
 export interface Route {
-  readonly coordinates: LatLng[];
-  readonly duration: number;
-  readonly distance: number;
-  readonly delta?: number;
+  readonly coordinates: LatLng[],
+  readonly duration: number,
+  readonly distance: number,
+  readonly delta?: number
 }
 
-export interface RouteStat{
-  coordinates: LatLng[];
-  stat: number;
+export interface RouteStat {
+  coordinates: LatLng[],
+  stat: number
 }
 
 export enum DayOfWeek {
@@ -46,28 +46,28 @@ export enum LocationPermissionLevel {
 }
 
 export interface UserLocation {
-  timestamp: number;
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  speed?: number;
-  permissionLevel?: LocationPermissionLevel;
-  isApple?: boolean;
-  isForeground?: boolean;
+  timestamp: number,
+  latitude: number,
+  longitude: number,
+  accuracy?: number,
+  speed?: number,
+  permissionLevel?: LocationPermissionLevel,
+  isApple?: boolean,
+  isForeground?: boolean
 }
 
 export interface RawTrip {
-  user: string;
-  locations: UserLocation[];
+  user: string,
+  locations: UserLocation[]
 }
 
 export interface IndexedRawTrip extends RawTrip {
-  index: number;
+  index: number
 }
 
 export interface AuthUser {
-  phone: string;
-  token: string;
+  phone: string,
+  token: string
 }
 
 export interface RallyingPoint {
@@ -112,7 +112,7 @@ export interface TripFilterOptions {
 }
 
 export interface RoutingQuery {
-  start: LatLng ;
+  start: LatLng,
   end: LatLng
 }
 
@@ -123,4 +123,13 @@ export interface RawTripFilterOptions {
   distInterval?: number,
   withForeground?: boolean,
   withBackGround?: boolean
+}
+
+export interface RawTripStats {
+  numberOfTrips: number
+}
+
+export interface LianeStats {
+  numberOfTrips: number,
+  numberOfUsers: number
 }
