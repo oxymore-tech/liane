@@ -48,7 +48,22 @@ function LianeMap({ className, center }: MapProps) {
 
   // Handle map interactions
 
-  const handleFilter = (filter: TripFilterOptions) => {
+  const handleFilter = (day: number | undefined, startHour: number | undefined, endHour: number | undefined) => {
+    // Update the filter
+    const newFilter = { ...filter };
+
+    newFilter.center = lastCenter;
+    newFilter.from = from;
+    newFilter.to = to;
+    newFilter.withHour = false;
+
+    if (day !== undefined && startHour !== undefined && endHour !== undefined) {
+      newFilter.timestampFrom = startHour;
+      newFilter.timestampTo = endHour;
+      newFilter.withHour = true;
+    }
+
+    setFilter(newFilter);
   };
 
   const handleCenter = (newCenter: LatLng) => {
@@ -102,11 +117,11 @@ function LianeMap({ className, center }: MapProps) {
   useEffect(() => {
     updateLianes();
     updateRallyingPoints();
-  }, [lastCenter]);
+  }, [lastCenter, filter]);
 
   return (
     <div>
-      <TripFilter center={center} from={from} to={to} rpUpdate={handleRp} callback={handleFilter} />
+      <TripFilter rallyingPoints={rallyingPoints} newFrom={from} newTo={to} rpUpdate={handleRp} callback={handleFilter} />
       <MapContainer
         className={className}
         center={center}
