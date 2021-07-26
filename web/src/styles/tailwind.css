@@ -1,3 +1,51 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    @font-face {
+        font-family: Inter;
+        font-weight: 100;
+        src: url(/fonts/Inter-Thin.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 200;
+        src: url(/fonts/Inter-ExtraLight.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 300;
+        src: url(/fonts/Inter-Light.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 400;
+        src: url(/fonts/Inter-Regular.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 500;
+        src: url(/fonts/Inter-Medium.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 600;
+        src: url(/fonts/Inter-SemiBold.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 700;
+        src: url(/fonts/Inter-Bold.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 800;
+        src: url(/fonts/Inter-ExtraBold.ttf) format("woff");
+    }
+    @font-face {
+        font-family: Inter;
+        font-weight: 900;
+        src: url(/fonts/Inter-Black.ttf) format("woff");
+    }
+}

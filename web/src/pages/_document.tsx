@@ -12,24 +12,6 @@ class MyDocument extends Document {
     return (
       <Html>
         <Head>
-          <link
-            rel="preload"
-            href="/fonts/Inter-Regular.ttf"
-            as="font"
-            crossOrigin=""
-          />
-          <link
-            rel="preload"
-            href="/fonts/Inter-SemiBold.ttf"
-            as="font"
-            crossOrigin=""
-          />
-          <link
-            rel="preload"
-            href="/fonts/Inter-Bold.ttf"
-            as="font"
-            crossOrigin=""
-          />
         </Head>
         <body>
           <Main />
