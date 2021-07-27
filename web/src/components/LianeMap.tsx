@@ -8,7 +8,7 @@ import {
   RoutedLiane, distance, LianeUsage
 } from "@/api";
 import { TripService } from "@/api/trip-service";
-import { rallyingPointService } from "@/api/rallying-point-service";
+import { RallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
@@ -107,7 +107,7 @@ function LianeMap({ className, center }: MapProps) {
   };
 
   const updateRallyingPoints = () => {
-    rallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
+    RallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
       setRallyingPoints(newRallyingPoints);
     });
   };

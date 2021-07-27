@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { getStoredToken, setStoredToken } from "@/api/storage";
 import { AuthUser } from "@/api";
-import { authService } from "@/api/auth-service";
+import { AuthService } from "@/api/auth-service";
 
 /**
  * Application context format.
@@ -24,7 +24,7 @@ export const AppContext = createContext<AppContextProps>({
  */
 async function init() : Promise<{ authUser?:AuthUser }> {
   const storedToken = await getStoredToken();
-  const authUser = storedToken ? await authService.me().catch(() => undefined) : undefined;
+  const authUser = storedToken ? await AuthService.me().catch(() => undefined) : undefined;
 
   return { authUser };
 }

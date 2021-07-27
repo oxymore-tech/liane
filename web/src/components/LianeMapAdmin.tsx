@@ -13,7 +13,7 @@ import {
   UserLocation
 } from "@/api";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
-import { rallyingPointService } from "@/api/rallying-point-service";
+import { RallyingPointService } from "@/api/rallying-point-service";
 import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
 import { TripService } from "@/api/trip-service";
@@ -156,22 +156,22 @@ function LianeMapAdmin({ className, center }: MapProps) {
         .then((r: RawTrip[]) => {
           if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
         });
-      // TripService.snapLianes({ center, withHour: false })
-      //   .then((l: RoutedLiane[]) => {
-      //     setLianes(l);
-      //   });
+      TripService.snapLianes({ center, withHour: false })
+        .then((l: RoutedLiane[]) => {
+          setLianes(l);
+        });
 
       // Fetch statistics
       TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
       TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
     } catch (e) {
-      // const history = useHistory();
-      // history.push("/auth-error");
+      const history = useHistory();
+      history.push("/auth-error");
     }
   }, []);
 
   useEffect(() => {
-    rallyingPointService.list(center.lat, center.lng)
+    RallyingPointService.list(center.lat, center.lng)
       .then((r) => {
         setRallyingPoints(r);
       });
