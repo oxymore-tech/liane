@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
 import {
+  distance,
   IndexedRawTrip,
   LatLng,
   LianeStats,
@@ -9,7 +10,7 @@ import {
   RawTrip,
   RawTripFilterOptions,
   RawTripStats,
-  RoutedLiane,
+  RoutedLiane, toLatLng,
   UserLocation
 } from "@/api";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
@@ -43,16 +44,6 @@ export interface FilterOptions {
   displayForeground: boolean;
   distanceBetweenPoints?: number;
   timeBetweenPoints?: number;
-}
-
-function distance(l1: UserLocation, l2: UserLocation) {
-  const d1 = l1.latitude * (Math.PI / 180.0);
-  const num1 = l1.longitude * (Math.PI / 180.0);
-  const d2 = l2.latitude * (Math.PI / 180.0);
-  const num2 = l2.longitude * (Math.PI / 180.0) - num1;
-  const d3 = Math.sin((d2 - d1) / 2.0) ** 2.0
-        + Math.cos(d1) * Math.cos(d2) * Math.sin(num2 / 2.0) ** 2.0;
-  return 6376500.0 * (2.0 * Math.atan2(Math.sqrt(d3), Math.sqrt(1.0 - d3)));
 }
 
 function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): IndexedRawTrip[] {
@@ -98,7 +89,7 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
           let valid = false;
           const previous = r.locations[j];
 
-          if (previous && distance(previous, l) >= d) {
+          if (previous && distance(toLatLng(previous), toLatLng(l)) >= d) {
             valid = true;
             j = i;
           }
