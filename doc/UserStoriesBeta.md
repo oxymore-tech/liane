@@ -5,14 +5,14 @@
 - Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation 
 - Je dois pouvoir naviguer facilement et sans perte de temps dans l'application 
 
-### Je dois me sentir en sécurité quand j'utilisa l'application 
-- Je dois pouvoir m'indentifier de façon sécurisée 
-- Je dois pouvoir garder mon anonymat durant toute l'utilisation de Liane 
-- Je dois pouvoir choisir les autorisations de géolocalisation que Liane a sur mon téléphone 
-- Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment
+### Je dois me sentir en sécurité quand j'utilisa l'application :white_check_mark:
+- Je dois pouvoir m'indentifier de façon sécurisée :white_check_mark:
+- Je dois pouvoir garder mon anonymat durant toute l'utilisation de Liane :white_check_mark:
+- Je dois pouvoir choisir les autorisations de géolocalisation que Liane a sur mon téléphone :white_check_mark:
+- Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment :white_check_mark:
 
 ### Je dois pouvoir partager et gérer mes données 
-- Je dois pouvoir partager mes données de géolocalisation à Liane 
+- Je dois pouvoir partager mes données de géolocalisation à Liane
 - Je dois pouvoir visualiser les informations qui ont été recueillies par Liane 
   - Trajets effectués 
   - Récurrence 
