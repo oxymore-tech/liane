@@ -1,5 +1,6 @@
 # Beta testeur
 ## J'ai un mobile et ai téléchargé liane, je suis conducteur régulier ou occasionnel
+## Je participe à l'élaboration et l'amélioration de l'application
 
 ### Je dois pouvoir accéder à l'application et y naviguer facilement 
 - Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang:
@@ -25,6 +26,7 @@
   - Nombre de lianes générées 
   - Nombre de trajets effectués 
 - Je dois pouvoir supprimer les informations que je veux :seedling:
+
 
 ### Je dois pouvoir permettre l'amélioration de Liane 
 - Je dois pouvoir signaler des erreurs éventuelles :no_entry_sign:
