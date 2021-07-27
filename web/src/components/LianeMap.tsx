@@ -73,7 +73,7 @@ function LianeMap({ className, center }: MapProps) {
     setFilter(newFilter);
 
     // Update if necessary
-    if (distance(lastCenter, newCenter) > 25_000) {
+    if (distance(lastCenter, newCenter) > 15_000) {
       setLastCenter(newCenter);
     }
   };
