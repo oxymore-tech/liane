@@ -5,7 +5,7 @@ import {
   LatLng,
   RallyingPoint,
   TripFilterOptions,
-  RoutedLiane, distance, LianeUsage
+  RoutedLiane, distance
 } from "@/api";
 import { TripService } from "@/api/trip-service";
 import { RallyingPointService } from "@/api/rallying-point-service";
@@ -52,16 +52,29 @@ function LianeMap({ className, center }: MapProps) {
     // Update the filter
     const newFilter = { ...filter };
 
+    const dateFrom = new Date();
+    const dateTo = new Date();
+
     newFilter.center = lastCenter;
     newFilter.from = from;
     newFilter.to = to;
     newFilter.withHour = false;
 
-    if (day !== undefined && startHour !== undefined && endHour !== undefined) {
-      newFilter.timestampFrom = startHour;
-      newFilter.timestampTo = endHour;
-      newFilter.withHour = true;
+    if (day !== undefined && day !== 8) {
+      const currentDay = dateFrom.getDay();
+      dateFrom.setDate(dateFrom.getDate() + day - currentDay);
+      newFilter.withHour = true; // TODO : withHour should be renamed withDay
     }
+
+    if (startHour !== undefined && endHour !== undefined) {
+      dateFrom.setHours(startHour);
+      dateTo.setHours(endHour);
+    }
+
+    newFilter.timestampFrom = dateFrom.getTime();
+    newFilter.timestampTo = dateTo.getTime();
+
+    console.log(newFilter);
 
     setFilter(newFilter);
   };
@@ -96,6 +109,8 @@ function LianeMap({ className, center }: MapProps) {
     TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
       const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.usages.length - a.usages.length);
       setLianes(l);
+
+      console.log(l.length);
 
       if (l.length > 0) {
         setMaxUsages(l[0].usages.length);

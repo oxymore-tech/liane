@@ -131,11 +131,11 @@ namespace Liane.Service.Internal.Trip
             var result = await db.GeoRadiusAsync(RedisKeys.Liane(), tripFilter.Center.Lng, tripFilter.Center.Lat, 25, GeoUnit.Kilometers, order: Order.Ascending, options: GeoRadiusOptions.WithDistance);
             var lianesIds = result.Select(r => ObjectId.Parse(r.Member.ToString())).ToImmutableList();
 
-            // Select the corresponding data using mongo
+            // Select the corresponding data
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
             var lianesList = (await lianesCollection.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
                 
-            // Filter out the data regarding the position
+            // Filter the data regarding the position
             if (tripFilter.From is not null)
             {
                 lianesList = lianesList.Where(l => l.From.Id == tripFilter.From.Id);
@@ -146,23 +146,31 @@ namespace Liane.Service.Internal.Trip
                 lianesList = lianesList.Where(l => l.To.Id == tripFilter.To.Id);
             }
             
-            // Filter out the data regarding the date and time
-            if (tripFilter.TimestampFrom is not null)
+            // Filter the data regarding the date
+            if (tripFilter.WithHour && tripFilter.TimestampFrom is not null) // TODO : rename withHour to withDay
             {
                 var from = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampFrom ?? 0).DateTime;
                 
                 lianesList = lianesList.Where(l => 
                 {
                     var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
-                    return usagesDates.Any(d => d.DayOfWeek == from.DayOfWeek && (!tripFilter.WithHour || d.Hour == from.Hour));
+                    return usagesDates.Any(d => d.DayOfWeek == from.DayOfWeek);
                 });
             }
-
-            if (tripFilter.TimestampTo is not null)
+            
+            // Filter the data regarding the time
+            if (tripFilter.TimestampFrom is not null && tripFilter.TimestampTo is not null)
             {
-                // Unused at the moment, needs to rework the previous filter.
-                // At the moment, we only search for a specific time during
-                // a specific day and not a time span.
+                var from = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampFrom ?? 0).DateTime;
+                var to = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampTo ?? 0).DateTime;
+                
+                logger.LogError("from " + from.Hour + " to " + to.Hour);
+                
+                lianesList = lianesList.Where(l => 
+                {
+                    var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
+                    return usagesDates.Any(d => d.Hour <= from.Hour && d.Hour >= to.Hour);
+                });
             }
             
             var list = lianesList
