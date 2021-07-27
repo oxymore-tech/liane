@@ -17,7 +17,7 @@ namespace Liane.Service.Internal.Trip
         private const string DatabaseName = "liane";
         private const string CollectionName = "raw_trips";
         
-        private const int Radius = 25;
+        private const int Radius = 25_000;
         
         private readonly MongoClient client;
         private readonly ICurrentContext currentContext;
