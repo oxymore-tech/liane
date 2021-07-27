@@ -136,10 +136,24 @@ function LianeMap({ className, center }: MapProps) {
         />
 
         { showRallyingPoints
-          && rallyingPoints.map((point: RallyingPoint, index: number) => <RallyingPointMarker key={`rl_${index}`} value={point} onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }} />)}
+          && rallyingPoints.map((point: RallyingPoint) => (
+            <RallyingPointMarker
+              from={from}
+              to={to}
+              key={`rl_${point.label}`}
+              value={point}
+              onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
+            />
+          ))}
 
         { lianes
-          && lianes.map((l: RoutedLiane) => <LianeRoute liane={l} maxUsages={maxUsages} />) }
+          && lianes.map((l: RoutedLiane) => (
+            <LianeRoute
+              key={`l_${l.from.label}${l.to.label}`}
+              liane={l}
+              maxUsages={maxUsages}
+            />
+          ))}
 
       </MapContainer>
     </div>

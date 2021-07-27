@@ -42,7 +42,7 @@ function getColor(liane: RoutedLiane, maxUsages: number): string {
 
 export function LianeRoute({ liane, maxUsages }: LianeProps) {
   if (isPrimary(liane)) {
-    console.log(maxUsages);
+    // console.log(maxUsages);
     return (
       <MemoPolyline
         smoothFactor={2.0}

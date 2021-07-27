@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { addHours } from "date-fns";
 import { DayOfWeek, RallyingPoint } from "@/api";
@@ -20,11 +20,17 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
   const nextHour = addHours(new Date(), 26);
 
   // Filter options
-  const [from, setFrom] = useState<RallyingPoint | undefined>(newFrom);
-  const [to, setTo] = useState<RallyingPoint | undefined>(newTo);
+  const [from, setFrom] = useState<RallyingPoint>();
+  const [to, setTo] = useState<RallyingPoint>();
   const [day, setDay] = useState<DayOfWeek>(nextHour.getDay());
   const [startHour, setStartHour] = useState(nextHour.getHours());
   const [endHour, setEndHour] = useState(nextHour.getHours() + 1);
+
+  // Initialize the filter
+  useEffect(() => {
+    setFrom(newFrom);
+    setTo(newTo);
+  }, [newFrom, newTo]);
 
   // Changes start hour when end hour is set before the previous start hour
   const updateStartHour = (hour: number) => {
@@ -38,7 +44,7 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
     if (hour <= startHour) setStartHour(hour - 1);
   };
 
-  function selectMarker(point:RallyingPoint, fromVsTo: boolean) {
+  const selectMarker = (point:RallyingPoint, fromVsTo: boolean) => {
     if (fromVsTo) {
       setFrom(point);
     } else {
@@ -46,7 +52,7 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
     }
 
     rpUpdate(point, fromVsTo);
-  }
+  };
 
   return (
     <div className="absolute inset-y-0 right-0 z-10 overflow-auto">

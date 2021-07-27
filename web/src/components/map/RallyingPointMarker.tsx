@@ -39,16 +39,12 @@ export function RallyingPointMarker({ value, from, to, onSelect }: RallyingPoint
   const isTo = to?.id === value.id;
 
   const iconLookup = () => {
-    if (isFrom) {
-      return IconBlue;
-    }
-    if (isTo) {
-      return IconRed;
-    }
+    if (isFrom) return IconBlue;
+    if (isTo) return IconRed;
     return IconGray;
   };
 
-  const select = useCallback((fromVsTo:boolean) => {
+  const select = useCallback((fromVsTo: boolean) => {
     onSelect(fromVsTo);
     map.closePopup();
   }, [map]);
