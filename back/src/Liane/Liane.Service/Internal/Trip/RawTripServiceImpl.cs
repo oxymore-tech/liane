@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -84,7 +83,14 @@ namespace Liane.Service.Internal.Trip
 
         public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
         {
-            var asyncCursor = await rawTripCollection.FindAsync(_ => true); // Oof
+            // [IMPORTANT]
+            // TODO : find a better way to do such a request, this is **bad** and WILL lead to problems.
+            // The reason for this implementation is that the objects of an array field cannot be
+            // accessed in the filter, the ideal solution would be to get the first location and compute its distance
+            // but such seems impossible because of the reasons explained above.
+            // At the moment, this is fine as that request isn't meant to be used very frequently and because
+            // raw trips are meant to be deleted. If it isn't the case anymore, this should be fixed.
+            var asyncCursor = await rawTripCollection.FindAsync(_ => true);
 
             // Other filter information are not used yet as the front-end is already filtering
             // on those field.
