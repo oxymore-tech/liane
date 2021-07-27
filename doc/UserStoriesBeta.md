@@ -14,16 +14,16 @@
 ### Je dois pouvoir partager et gérer mes données 
 - Je dois pouvoir partager mes données de géolocalisation à Liane 
 - Je dois pouvoir visualiser les informations qui ont été recueillies par Liane 
--- Trajets effectués 
--- Récurrence 
+  - Trajets effectués 
+  - Récurrence 
 - Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères 
--- Créneau horaire 
--- Points de départ et arrivée 
--- Mode d'enregistrement des données (comment et pourquoi ces données là ont été envoyées à Liane 
+  - Créneau horaire 
+  - Points de départ et arrivée 
+  - Mode d'enregistrement des données (comment et pourquoi ces données là ont été envoyées à Liane 
 - Je dois pouvoir accéder à de statistiques de mon utilisation de Liane
--- Début sur l'application 
--- Nombre de lianes générées 
--- Nombre de trajets effectués 
+  - Début sur l'application 
+  - Nombre de lianes générées 
+  - Nombre de trajets effectués 
 - Je dois pouvoir supprimer les informations que je veux
 
 ### Je dois pouvoir permettre l'amélioration de Liane 
