@@ -35,6 +35,6 @@
 
 # Légende 
 :white_check_mark: : User Story implémentée et validée 
-:interrobang: : User Story implémentée, à valider
+:interrobang: : Validation nécessaire (soit avant d'avancer plus, soit avant de passer l'US en validée) 
 :no_entry_sign: : User Story non gérée
 :seedling: : User Story en cours de développement
