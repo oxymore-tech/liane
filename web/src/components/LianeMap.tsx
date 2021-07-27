@@ -97,11 +97,8 @@ function LianeMap({ className, center }: MapProps) {
       const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.usages.length - a.usages.length);
       setLianes(l);
 
-      for (let i = l.length - 1; i > 0; i--) {
-        if (l[i].usages.filter((u: LianeUsage) => u.isPrimary).length > 0) {
-          setMaxUsages(l[i].usages.length);
-          break;
-        }
+      if (l.length > 0) {
+        setMaxUsages(l[0].usages.length);
       }
     });
   };
