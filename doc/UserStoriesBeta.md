@@ -23,11 +23,12 @@ Je participe à l'élaboration et l'amélioration de l'application
 | Je dois pouvoir supprimer les informations que je veux :seedling: | |
 
 
-## Je dois pouvoir permettre l'amélioration de Liane 
-- Je dois pouvoir signaler des erreurs éventuelles :no_entry_sign:
-- Je dois pouvoir faire un retour général sur mon expérience utilisateur :no_entry_sign:
-- Je dois pouvoir suggérer des aures de covoiturage sur les routes que j'emprunte régulièrement :no_entry_sign:
-- Je dois pouvoir contacter un administrateur ou un service support facilement :no_entry_sign:
+| Amélioration de Liane | Solution technique |
+| :-------- | :------ |
+| Je dois pouvoir signaler des erreurs éventuelles :no_entry_sign: | |
+| Je dois pouvoir faire un retour général sur mon expérience utilisateur :no_entry_sign: | |
+| Je dois pouvoir suggérer des aures de covoiturage sur les routes que j'emprunte régulièrement :no_entry_sign: | |
+| Je dois pouvoir contacter un administrateur ou un service support facilement :no_entry_sign: | |
 
 
 # Légende 
