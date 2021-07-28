@@ -1,12 +1,13 @@
 # Administrateur Liane
 Je dois avoir une vision générale du réseau Liane 
 
-| Etat | *Accès aux informations disponibles sur le serveur* | Solution technique |
-| :-------------------- |:---------------| :----------------|
-| :white_check_mark: | Je dois pouvoir me connecter en tant qu'administrateur | Système d'autentification via mobile avec code (twilio) |
-| :seedling: | Je dois avoir accès à des statistiques sur l'utilisation de Liane <ul><li>Nombre d'utilisateurs</li><li>Utilisateurs les plus actifs</li><li>Nombre de covoiturages demandés</li><li>Nombre de covoiturages effectués</li><li>Nombre de connexions web</li><li>Nombre total de lianes :white_check_mark:</li><li>Nombre total de trajets :white_check_mark:</li></ul> | |
+|  *Accès aux informations disponibles sur le serveur* | Solution technique |
+| :---------------| :----------------|
+| Je dois pouvoir me connecter en tant qu'administrateur :white_check_mark: | Système d'autentification via mobile avec code (twilio) |
+|  Je dois avoir accès à des statistiques sur l'utilisation de Liane :seedling: <ul><li>Nombre d'utilisateurs</li><li>Utilisateurs les plus actifs</li><li>Nombre de covoiturages demandés</li><li>Nombre de covoiturages effectués</li><li>Nombre de connexions web</li><li>Nombre total de lianes :white_check_mark:</li><li>Nombre total de trajets :white_check_mark:</li></ul> | |
+| | Je dois pouvoir visualiser les données brutes du serveur :seedling: | |
+| | | |
 
-- Je dois pouvoir visualiser les données brutes du serveur :seedling:
 - Je dois pouvoir trier parmi les données brutes et choisir celles que je veux afficher :seedling:
   - Utilisateur :white_check_mark:
   - Trajet :white_check_mark:
