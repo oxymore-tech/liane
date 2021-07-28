@@ -1,7 +1,7 @@
 # Administrateur Liane
-## Je dois avoir une vision générale du réseau Liane 
+Je dois avoir une vision générale du réseau Liane 
 
-### Je dois avoir accès aux informations disponibles sur le serveur 
+## Je dois avoir accès aux informations disponibles sur le serveur 
 - Je dois pouvoir me connecter en tant qu'administrateur :white_check_mark:
 - Je dois avoir accès à des statistiques sur l'utilisation de Liane :seedling:
   - Nombre d'utilisateurs :white_check_mark:
@@ -20,7 +20,7 @@
   - Type de téléphone 
   - Type de recueil de données :seedling:
 
-### Je dois permettre l'amélioration de Liane via les beta testeurs 
+## Je dois permettre l'amélioration de Liane via les beta testeurs 
 - Je dois pouvoir questionner les beta testeurs :no_entry_sign:
 - Je dois voir les erreurs éventuelles signalées par les beta testeurs :no_entry_sign:
 - Je dois pouvoir répondre aux demandes et problèmes des beta testeurs :no_entry_sign:
