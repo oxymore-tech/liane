@@ -6,14 +6,8 @@ Je dois avoir une vision générale du réseau Liane
 | Je dois pouvoir me connecter en tant qu'administrateur :white_check_mark: | Système d'autentification via mobile avec code (twilio) |
 |  Je dois avoir accès à des statistiques sur l'utilisation de Liane :seedling: <ul><li>Nombre d'utilisateurs</li><li>Utilisateurs les plus actifs</li><li>Nombre de covoiturages demandés</li><li>Nombre de covoiturages effectués</li><li>Nombre de connexions web</li><li>Nombre total de lianes :white_check_mark:</li><li>Nombre total de trajets :white_check_mark:</li></ul> | |
 | | Je dois pouvoir visualiser les données brutes du serveur :seedling: | |
-| | | |
+| | Je dois pouvoir trier parmi les données brutes et choisir celles que je veux afficher :seedling: <ul><li>Utilisateur :white_check_mark:</li><li>Trajet :white_check_mark:</li><li>Créneau horaire</li><li>Type de téléphone </li><li>Type de téléphone</li><li>Type de recueil de données :seedling:</li></ul>| |
 
-- Je dois pouvoir trier parmi les données brutes et choisir celles que je veux afficher :seedling:
-  - Utilisateur :white_check_mark:
-  - Trajet :white_check_mark:
-  - Créneau horaire 
-  - Type de téléphone 
-  - Type de recueil de données :seedling:
 
 |  *Amélioration de Liane via beta testeurs* | Solution technique |
 | :---------------| :----------------|
