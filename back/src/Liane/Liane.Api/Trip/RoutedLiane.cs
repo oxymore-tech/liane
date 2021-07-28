@@ -6,7 +6,8 @@ namespace Liane.Api.Trip
     public sealed record RoutedLiane(
         RallyingPoint From,
         RallyingPoint To,
-        List<LianeUsage> Usages,
+        int NumberOfUsages,
+        bool IsPrimary,
         Route Route
     );
 }

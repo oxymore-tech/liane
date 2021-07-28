@@ -85,7 +85,8 @@ export interface Liane {
 export interface RoutedLiane {
   from: RallyingPoint,
   to: RallyingPoint,
-  usages: LianeUsage[],
+  numberOfUsages: number,
+  isPrimary: boolean,
   route: Route
 }
 
@@ -99,9 +100,10 @@ export interface TripFilterOptions {
   center: LatLng,
   from?: RallyingPoint,
   to?: RallyingPoint,
-  timestampFrom?: number,
-  timestampTo?: number,
-  withHour: boolean
+  dayFrom?: number,
+  dayTo?: number,
+  hourFrom?: number,
+  hourTo?: number
 }
 
 export interface RoutingQuery {
