@@ -32,7 +32,7 @@ namespace Liane.Web.Controllers
             return rawTripService.Snap(rawTripFilter);
         }
         
-        [Route("stats")]
+        [HttpGet("stats")]
         [RequiresAdminAuth]
         public async Task<RawTripStats> Stats()
         {
