@@ -14,7 +14,8 @@ Je participe à l'élaboration et l'amélioration de l'application
 | Je dois pouvoir choisir les autorisations de géolocalisation que Liane a sur mon téléphone :white_check_mark: | |
 | Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment :white_check_mark: | |
 
-| Je dois pouvoir partager et gérer mes données | SOlution technique |
+| Je dois pouvoir partager et gérer mes données | Solution technique |
+| :-------- | :--------- |
 | Je dois pouvoir partager mes données de géolocalisation à Liane :seedling: | |
 | Je dois pouvoir visualiser les informations qui ont été recueillies par Liane :interrobang: <ul><li>Trajets effectués :white_check_mark: (mobile)</li><li>Récurrence :white_check_mark: (mobile)</li></ul> | |
 | Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères :interrobang: | |
