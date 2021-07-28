@@ -134,51 +134,52 @@ namespace Liane.Service.Internal.Trip
             // Select the corresponding data
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
             var lianesList = (await lianesCollection.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
-                
+            
+            // Only keep primary ones
+            lianesList = lianesList.Where(l => l.Usages.Any(u => u.IsPrimary));
+
             // Filter the data regarding the position
             if (tripFilter.From is not null)
             {
-                lianesList = lianesList.Where(l => l.From.Id == tripFilter.From.Id);
+                lianesList = lianesList.Where(l => l.From.Id.Equals(tripFilter.From.Id));
             }
 
             if (tripFilter.To is not null)
             {
-                lianesList = lianesList.Where(l => l.To.Id == tripFilter.To.Id);
+                lianesList = lianesList.Where(l => l.To.Id.Equals(tripFilter.To.Id));
             }
-            
+
             // Filter the data regarding the date
-            if (tripFilter.WithHour && tripFilter.TimestampFrom is not null) // TODO : rename withHour to withDay
+            if (tripFilter.dayFrom is not null && tripFilter.dayTo is not null)
             {
-                var from = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampFrom ?? 0).DateTime;
+                logger.LogError("from " + tripFilter.dayFrom + " to " + tripFilter.dayTo);
                 
-                lianesList = lianesList.Where(l => 
+                lianesList = lianesList.Where(l =>
                 {
                     var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
-                    return usagesDates.Any(d => d.DayOfWeek == from.DayOfWeek);
+                    return usagesDates.Any(d => (int) d.DayOfWeek >= tripFilter.dayFrom && (int) d.DayOfWeek <= tripFilter.dayTo);
                 });
             }
             
             // Filter the data regarding the time
-            if (tripFilter.TimestampFrom is not null && tripFilter.TimestampTo is not null)
+            if (tripFilter.hourFrom is not null && tripFilter.hourTo is not null)
             {
-                var from = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampFrom ?? 0).DateTime;
-                var to = DateTimeOffset.FromUnixTimeMilliseconds(tripFilter.TimestampTo ?? 0).DateTime;
+                logger.LogError("from " + tripFilter.hourFrom + " to " + tripFilter.hourTo);
                 
-                logger.LogError("from " + from.Hour + " to " + to.Hour);
-                
-                lianesList = lianesList.Where(l => 
+                lianesList = lianesList.Where(l =>
                 {
                     var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
-                    return usagesDates.Any(d => d.Hour <= from.Hour && d.Hour >= to.Hour);
-                });
+                    return usagesDates.Any(d => d.Hour >= tripFilter.hourFrom && d.Hour <= tripFilter.hourTo);
+                }).ToList();
             }
-            
+
             var list = lianesList
                 .Select(async l =>
                     new RoutedLiane(
                         l.From,
                         l.To,
-                        l.Usages.Select(u => u.ToLianeUsage()).ToList(),
+                        l.Usages.Count,
+                        true, // Automatically primary as other were filtered out
                         await routingService.BasicRouteMethod(new RoutingQuery(l.From.Position, l.To.Position))))
                 .Select(t => t.Result)
                 .ToImmutableHashSet();
@@ -223,6 +224,14 @@ namespace Liane.Service.Internal.Trip
                 await CreateFor(user, trips.ToImmutable());
             }
         }
+
+        public async Task<LianeStats> Stats()
+        {
+            return new (
+                await lianesCollection.CountDocumentsAsync(_ => true),
+                (await (await lianeTripsCollection.DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
+            );
+        }
         
         private async Task CreateFor(string user, ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips)
         {
@@ -239,14 +248,6 @@ namespace Liane.Service.Internal.Trip
                 logger.LogInformation("New trip created : " + lianeTrip.ToJson());
                 await lianeTripsCollection.InsertOneAsync(lianeTrip);
             }
-        }
-
-        public async Task<LianeStats> Stats()
-        {
-            return new (
-                await lianesCollection.CountDocumentsAsync(_ => true),
-                (await (await lianeTripsCollection.DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
-            );
         }
         
         private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
