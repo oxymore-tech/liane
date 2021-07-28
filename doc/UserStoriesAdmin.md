@@ -4,7 +4,15 @@ Je dois avoir une vision générale du réseau Liane
 | Etat | *Accès aux informations disponibles sur le serveur* | Solution technique |
 | :--------------------: |:---------------:| :----------------:|
 | :white_check_mark: | Je dois pouvoir me connecter en tant qu'administrateur | Système d'autentification via mobile avec code (twilio) |
-| :seedling: | Je dois avoir accès à des statistiques sur l'utilisation de Liane *Nombre d'utilisateurs *Utilisateurs les plus actifs *Nombre de covoiturages demandés *Nombre de covoiturages effectués *Nombre de connexions web *Nombre total de lianes *Nombre total de trajets| |
+| :seedling: | Je dois avoir accès à des statistiques sur l'utilisation de Liane
+<ul>
+    <li>Nombre d'utilisateurs *Utilisateurs les plus actifs</li>
+    <li>Nombre de covoiturages demandés</li>
+    <li>Nombre de covoiturages effectués</li>
+    <li>Nombre de connexions web</li>
+    <li>Nombre total de lianes</li>
+    <li>Nombre total de trajets</li>
+</ul> | |
     :white_check_mark:
 
 
