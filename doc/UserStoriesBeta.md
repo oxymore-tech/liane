@@ -18,14 +18,8 @@ Je participe à l'élaboration et l'amélioration de l'application
 | :-------- | :--------- |
 | Je dois pouvoir partager mes données de géolocalisation à Liane :seedling: | |
 | Je dois pouvoir visualiser les informations qui ont été recueillies par Liane :interrobang: <ul><li>Trajets effectués :white_check_mark: (mobile)</li><li>Récurrence :white_check_mark: (mobile)</li></ul> | |
-| Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères :interrobang: | |
-  - Créneau horaire 
-  - Points de départ et arrivée 
-  - Mode d'enregistrement des données (comment et pourquoi ces données là ont été envoyées à Liane)  
-| Je dois pouvoir accéder à de statistiques de mon utilisation de Liane :seedling: | |
-  - Début sur l'application 
-  - Nombre de lianes générées 
-  - Nombre de trajets effectués 
+| Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères :interrobang: <ul><li>Créneau horaire</li><li>Points de départ et arrivée</li><li>Mode d'enregistrement des données (comment et pourquoi ces données là ont été envoyées à Liane) </li></ul>| |
+| Je dois pouvoir accéder à de statistiques de mon utilisation de Liane :seedling: <ul><li>Début sur l'application</li><li>Nombre de lianes générées</li><li>Nombre de trajets effectués</li></ul>| |
 | Je dois pouvoir supprimer les informations que je veux :seedling: | |
 
 
