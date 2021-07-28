@@ -15,11 +15,12 @@ Je dois avoir une vision générale du réseau Liane
   - Type de téléphone 
   - Type de recueil de données :seedling:
 
-## Je dois permettre l'amélioration de Liane via les beta testeurs 
-- Je dois pouvoir questionner les beta testeurs :no_entry_sign:
-- Je dois voir les erreurs éventuelles signalées par les beta testeurs :no_entry_sign:
-- Je dois pouvoir répondre aux demandes et problèmes des beta testeurs :no_entry_sign:
-- Je dois pouvoir voir et valider les nouvelles aires de covoiturage proposées par les beta testeurs :no_entry_sign:
+|  *Amélioration de Liane via beta testeurs* | Solution technique |
+| :---------------| :----------------|
+| Je dois pouvoir questionner les beta testeurs :no_entry_sign: | |
+| Je dois voir les erreurs éventuelles signalées par les beta testeurs :no_entry_sign: | |
+| Je dois pouvoir répondre aux demandes et problèmes des beta testeurs :no_entry_sign: | |
+| Je dois pouvoir voir et valider les nouvelles aires de covoiturage proposées par les beta testeurs :no_entry_sign:| |
 
 
 # Légende 
