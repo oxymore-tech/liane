@@ -15,8 +15,8 @@
 ### Je dois pouvoir partager et gérer mes données 
 - Je dois pouvoir partager mes données de géolocalisation à Liane :seedling:
 - Je dois pouvoir visualiser les informations qui ont été recueillies par Liane :interrobang:
-  - Trajets effectués 
-  - Récurrence 
+  - Trajets effectués :white_check_mark: (mobile)
+  - Récurrence :white_check_mark: (mobile)
 - Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères :interrobang:
   - Créneau horaire 
   - Points de départ et arrivée 
