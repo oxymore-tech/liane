@@ -2,31 +2,32 @@
 J'ai un mobile et ai téléchargé liane, je suis conducteur régulier ou occasionnel
 Je participe à l'élaboration et l'amélioration de l'application
 
-| Je dois pouvoir accéder à l'application et y naviguer facilement | Solution technique |
+| Accès à l'application et navigation | Solution technique |
 | :-------- | :--------- |
 | Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang: | |
 | Je dois pouvoir naviguer facilement et sans perte de temps dans l'application :interrobang: | |
 
-## Je dois me sentir en sécurité quand j'utilise l'application :white_check_mark:
-- Je dois pouvoir m'indentifier de façon sécurisée :white_check_mark:
-- Je dois pouvoir garder mon anonymat durant toute l'utilisation de Liane :white_check_mark:
-- Je dois pouvoir choisir les autorisations de géolocalisation que Liane a sur mon téléphone :white_check_mark:
-- Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment :white_check_mark:
+| Je dois me sentir en sécurité quand j'utilise l'application :white_check_mark: | Solution technique |
+| :-------- | :--------- |
+| Je dois pouvoir m'indentifier de façon sécurisée :white_check_mark: | |
+| Je dois pouvoir garder mon anonymat durant toute l'utilisation de Liane :white_check_mark: | |
+| Je dois pouvoir choisir les autorisations de géolocalisation que Liane a sur mon téléphone :white_check_mark: | |
+| Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment :white_check_mark: | |
 
-## Je dois pouvoir partager et gérer mes données 
-- Je dois pouvoir partager mes données de géolocalisation à Liane :seedling:
-- Je dois pouvoir visualiser les informations qui ont été recueillies par Liane :interrobang:
+| Je dois pouvoir partager et gérer mes données | SOlution technique |
+| Je dois pouvoir partager mes données de géolocalisation à Liane :seedling: | |
+| Je dois pouvoir visualiser les informations qui ont été recueillies par Liane :interrobang: | |
   - Trajets effectués :white_check_mark: (mobile)
   - Récurrence :white_check_mark: (mobile)
-- Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères :interrobang:
+| Je dois pouvoir filtrer les informations recueillies par liane suivant différents critères :interrobang: | |
   - Créneau horaire 
   - Points de départ et arrivée 
   - Mode d'enregistrement des données (comment et pourquoi ces données là ont été envoyées à Liane)  
-- Je dois pouvoir accéder à de statistiques de mon utilisation de Liane :seedling:
+| Je dois pouvoir accéder à de statistiques de mon utilisation de Liane :seedling: | |
   - Début sur l'application 
   - Nombre de lianes générées 
   - Nombre de trajets effectués 
-- Je dois pouvoir supprimer les informations que je veux :seedling:
+| Je dois pouvoir supprimer les informations que je veux :seedling: | |
 
 
 ## Je dois pouvoir permettre l'amélioration de Liane 
