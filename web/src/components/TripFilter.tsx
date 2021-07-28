@@ -12,7 +12,7 @@ interface MapProps {
   newFrom: RallyingPoint | undefined,
   newTo: RallyingPoint | undefined,
   rpUpdate: (from: RallyingPoint, isFrom: boolean) => void,
-  callback: (day: number | undefined, startHour: number | undefined, endHour: number | undefined) => void,
+  callback: (dayFrom?: number, dayTo?: number, hourFrom?: number, hourTo?: number) => void,
 }
 
 export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback }: MapProps) {
@@ -31,6 +31,11 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
     setFrom(newFrom);
     setTo(newTo);
   }, [newFrom, newTo]);
+
+  // Changes the day
+  const updateDay = (d: number) => {
+    setDay(d);
+  };
 
   // Changes start hour when end hour is set before the previous start hour
   const updateStartHour = (hour: number) => {
@@ -96,12 +101,12 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
           options={Days}
           keyExtract="value"
           value={day}
-          onChange={setDay}
+          onChange={updateDay}
         />
         <Select
           label="Entre"
           inline
-          options={Hours.filter((h) => h.value !== 23)}
+          options={Hours.filter((h) => h.value !== 24)}
           keyExtract="value"
           value={startHour}
           onChange={updateStartHour}
@@ -110,7 +115,7 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
         <Select
           label=" et "
           inline
-          options={Hours.filter((h) => h.value !== 0)}
+          options={Hours.filter((h) => h.value !== 1)}
           keyExtract="value"
           value={endHour}
           onChange={updateEndHour}
@@ -120,7 +125,7 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
           color="orange"
           className="mt-4 col-span-2"
           label="Rechercher"
-          onClick={() => callback(day, startHour, endHour)}
+          onClick={() => callback(day === 8 ? undefined : day - 1, day === 8 ? undefined : day - 1, startHour - 1, endHour - 1)}
         />
       </div>
     </div>
