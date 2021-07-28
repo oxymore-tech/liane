@@ -34,6 +34,7 @@ J'ai téléchargé l'application Liane et je suis conducteur ou passager
 
 ## Covoiturage
 | User story  | Solution technique |
+| :-------- | :--------- |
 | Je dois pouvoir demander à participer à un covoiturage entre deux points donnés sur un créneau horaire donné :no_entry_sign: | |
 | Je dois pouvoir communiquer avec un éventuel conducteur :no_entry_sign: | | 
 | Je dois pouvoir recevoir des demandes de covoiturage :no_entry_sign: | |
