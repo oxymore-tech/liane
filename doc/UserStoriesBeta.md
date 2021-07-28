@@ -2,9 +2,10 @@
 J'ai un mobile et ai téléchargé liane, je suis conducteur régulier ou occasionnel
 Je participe à l'élaboration et l'amélioration de l'application
 
-## Je dois pouvoir accéder à l'application et y naviguer facilement 
-- Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang:
-- Je dois pouvoir naviguer facilement et sans perte de temps dans l'application :interrobang:
+| Je dois pouvoir accéder à l'application et y naviguer facilement | Solution technique |
+| :-------- | :--------- |
+| Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang: | |
+| Je dois pouvoir naviguer facilement et sans perte de temps dans l'application :interrobang: | |
 
 ## Je dois me sentir en sécurité quand j'utilise l'application :white_check_mark:
 - Je dois pouvoir m'indentifier de façon sécurisée :white_check_mark:
