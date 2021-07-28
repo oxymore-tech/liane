@@ -17,8 +17,8 @@ type MethodType = "GET" | "POST" | "PUT" | "DELETE";
 type QueryParams = { [k: string]: any };
 
 export interface QueryAsOptions<T> {
-  listOptions?: ListOptions<T>;
-  params?: QueryParams;
+  listOptions?: ListOptions<T>,
+  params?: QueryParams
 }
 
 export interface QueryPostOptions<T> extends QueryAsOptions<T> {

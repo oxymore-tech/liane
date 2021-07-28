@@ -19,24 +19,31 @@ namespace Liane.Web.Controllers
             this.lianeTripService = lianeTripService;
         }
 
-        [Route("snap")]
+        [HttpPost("snap")]
         [DisableAuth]
         public async Task<ImmutableHashSet<RoutedLiane>> Snap(TripFilter tripFilter)
         {
             return await lianeTripService.Snap(tripFilter);
         }
         
-        [Route("get")]
+        [HttpGet("get")]
         public async Task<ImmutableHashSet<Api.Trip.Liane>> Get()
         {
             return await lianeTripService.Get();
         }
         
-        [Route("generate")]
+        [HttpPost("generate")]
         [RequiresAdminAuth]
         public async Task Generate()
         {
             await lianeTripService.Generate();
+        }
+        
+        [HttpGet("stats")]
+        [RequiresAdminAuth]
+        public async Task<LianeStats> Stats()
+        {
+            return await lianeTripService.Stats();
         }
 
     }

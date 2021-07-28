@@ -74,7 +74,7 @@ namespace Liane.Service.Internal
 
         private async Task<IEnumerable<RallyingPoint>> ListRallyingPointsInternal(LatLng center)
         {
-            var results = await GetClosest(RedisKeys.RallyingPoint(), center.Lng, center.Lat, 50, GeoUnit.Kilometers);
+            var results = await GetClosest(RedisKeys.RallyingPoint(), center.Lng, center.Lat, 25, GeoUnit.Kilometers);
             return results
                 .Select(r =>
                 {

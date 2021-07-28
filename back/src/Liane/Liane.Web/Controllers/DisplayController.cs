@@ -16,13 +16,11 @@ namespace Liane.Web.Controllers
     {
         private readonly IDisplayService displayService;
         private readonly IRealTripService realTripService;
-        private readonly IRawTripService rawTripService;
 
-        public DisplayController(IDisplayService displayService, IRealTripService realTripService, IRawTripService rawTripService)
+        public DisplayController(IDisplayService displayService, IRealTripService realTripService)
         {
             this.displayService = displayService;
             this.realTripService = realTripService;
-            this.rawTripService = rawTripService;
         }
 
         [HttpGet("trip")]
@@ -43,13 +41,6 @@ namespace Liane.Web.Controllers
         public ImmutableHashSet<RallyingPoint> ListStepsFrom([FromBody] ImmutableHashSet<Trip> trips)
         {
             return displayService.ListStepsFrom(trips);
-        }
-
-        [HttpGet("raw")]
-        [RequiresAdminAuth]
-        public Task<ImmutableList<RawTrip>> ListAll()
-        {
-            return rawTripService.ListAll();
         }
     }
 }

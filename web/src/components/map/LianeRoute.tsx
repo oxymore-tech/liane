@@ -1,5 +1,5 @@
-import React, { memo } from "react";
-import { LianeUsage, RoutedLiane } from "@/api";
+import React, { memo, useEffect, useState } from "react";
+import { RoutedLiane } from "@/api";
 import { Polyline, Popup } from "react-leaflet";
 
 interface LianeProps {
@@ -8,18 +8,15 @@ interface LianeProps {
 }
 
 const MemoPolyline = memo(Polyline);
-const MAX_WEIGHT = 4;
-
-function isPrimary(liane: RoutedLiane): boolean {
-  return liane.usages.filter((u: LianeUsage) => u.isPrimary).length > 0;
-}
+const MAX_WEIGHT = 8;
+const MIN_WEIGHT = 4;
 
 function getWeight(liane: RoutedLiane, maxUsages: number): number {
-  return MAX_WEIGHT * (maxUsages / liane.usages.length);
+  return Math.max(MAX_WEIGHT * (liane.numberOfUsages / maxUsages), MIN_WEIGHT);
 }
 
 function getColor(liane: RoutedLiane, maxUsages: number): string {
-  const percentage = maxUsages / liane.usages.length;
+  const percentage = liane.numberOfUsages / maxUsages;
   let color: string;
 
   if (percentage <= 0.2) {
@@ -30,7 +27,7 @@ function getColor(liane: RoutedLiane, maxUsages: number): string {
     color = "#e75019";
   } else if (percentage > 0.6 && percentage <= 0.8) {
     color = "#d54c1a";
-  } else if (percentage > 0.8 && percentage <= 1) {
+  } else if (percentage > 0.8) {
     color = "#ba431a";
   } else {
     color = "#d900ff"; // Default case that should not append
@@ -40,22 +37,35 @@ function getColor(liane: RoutedLiane, maxUsages: number): string {
 }
 
 export function LianeRoute({ liane, maxUsages }: LianeProps) {
-  if (isPrimary(liane)) {
-    return (
-      <MemoPolyline
-        smoothFactor={2.0}
-        positions={liane.route.coordinates}
-        color={getColor(liane, maxUsages)}
-        weight={getWeight(liane, maxUsages)}
-      >
-        <Popup closeButton={false}>
+  const [color, setColor] = useState<string>(getColor(liane, maxUsages));
+  const [weight, setWeight] = useState<number>(getWeight(liane, maxUsages));
+
+  useEffect(() => {
+    setColor(getColor(liane, maxUsages));
+    setWeight(getWeight(liane, maxUsages));
+  }, [maxUsages]);
+
+  return (
+    <MemoPolyline
+      smoothFactor={2.0}
+      positions={liane.route.coordinates}
+      color={color}
+      weight={weight}
+    >
+      <Popup closeButton={false}>
+        <p>
+          {liane.from.label}
+          {" "}
+          -
+          {" "}
+          {liane.to.label}
+        </p>
+        <p>
           Fréquence:
           {" "}
-          {liane.usages.length}
-        </Popup>
-      </MemoPolyline>
-    );
-  }
-
-  return (<></>);
+          {liane.numberOfUsages}
+        </p>
+      </Popup>
+    </MemoPolyline>
+  );
 }

@@ -2,12 +2,24 @@ import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
 import {
-  IndexedRawTrip, LatLng, RallyingPoint, RawTrip, UserLocation
+  distance,
+  IndexedRawTrip,
+  LatLng,
+  LianeStats,
+  RallyingPoint,
+  RawTrip,
+  RawTripFilterOptions,
+  RawTripStats,
+  RoutedLiane, toLatLng,
+  UserLocation
 } from "@/api";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
-import { rallyingPointService } from "@/api/rallying-point-service";
-import { adminService } from "@/api/admin-service";
+import { RallyingPointService } from "@/api/rallying-point-service";
 import { AdminFilter } from "@/components/AdminFilter";
+import { LianeStatistics } from "@/components/LianeStatistics";
+import { TripService } from "@/api/trip-service";
+import { useHistory } from "react-router-dom";
+import CenterHandler from "@/components/map/CenterHandler";
 
 const colors: string[] = [
   "#22278A",
@@ -33,16 +45,6 @@ export interface FilterOptions {
   displayForeground: boolean;
   distanceBetweenPoints?: number;
   timeBetweenPoints?: number;
-}
-
-function distance(l1: UserLocation, l2: UserLocation) {
-  const d1 = l1.latitude * (Math.PI / 180.0);
-  const num1 = l1.longitude * (Math.PI / 180.0);
-  const d2 = l2.latitude * (Math.PI / 180.0);
-  const num2 = l2.longitude * (Math.PI / 180.0) - num1;
-  const d3 = Math.sin((d2 - d1) / 2.0) ** 2.0
-        + Math.cos(d1) * Math.cos(d2) * Math.sin(num2 / 2.0) ** 2.0;
-  return 6376500.0 * (2.0 * Math.atan2(Math.sqrt(d3), Math.sqrt(1.0 - d3)));
 }
 
 function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): IndexedRawTrip[] {
@@ -88,7 +90,7 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
           let valid = false;
           const previous = r.locations[j];
 
-          if (previous && distance(previous, l) >= d) {
+          if (previous && distance(toLatLng(previous), toLatLng(l)) >= d) {
             valid = true;
             j = i;
           }
@@ -125,50 +127,32 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
   return tRawTrips;
 }
 
-function LianeMapAdmin({ className, center }: MapProps) {
-
-  const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
-  const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
-  const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
-  const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
-
-  // Gets data from FilterAdmin and applies it to the map
-  function updateDisplayRawTrips(options : FilterOptions) {
-    console.log("update");
-    setDisplayRallyingPoint(options.displayRallyingPoints);
-    setDisplayRawTrips(filterRawTrips(rawTrips, options));
-  }
-
-  useEffect(() => {
-    adminService.getAllRawTrips()
-      .then((r: RawTrip[]) => {
-        setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
-      });
-  }, []);
-
-  useEffect(() => {
-    rallyingPointService.list(center.lat, center.lng)
-      .then((r) => {
-        setRallyingPoints(r);
-      });
-  }, [center]);
-
-  const tooltip = (index:number, i: number, j: number, l: UserLocation) => (
+// Create a tooltip view
+function tooltip(index:number, i: number, j: number, l: UserLocation) {
+  return (
     <Tooltip>
       <p>{`Trajet n°${index} | ${i}-${j}`}</p>
       <p>
         {new Intl.DateTimeFormat(
-          "fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }
+          "fr-FR", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric"
+          }
         ).format(new Date(l.timestamp))}
       </p>
       <p>{`Vitesse : ${l.speed ? l.speed : "Inconnue"}`}</p>
       <p>{`Précision : ${l.accuracy ? l.accuracy : "Inconnue"}`}</p>
       <p>{l.isApple ? "Apple" : "Android"}</p>
       <p>
-        { `Permission : ${l.permissionLevel}` }
+        {`Permission : ${l.permissionLevel}`}
       </p>
       <p>
-        { () => {
+        {() => {
           if (l.isForeground === undefined) {
             return "Undefined";
           }
@@ -177,10 +161,73 @@ function LianeMapAdmin({ className, center }: MapProps) {
       </p>
     </Tooltip>
   );
+}
+
+function LianeMapAdmin({ className, center }: MapProps) {
+  // Data
+  const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
+  const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
+  const [lianes, setLianes] = useState<RoutedLiane[]>([]);
+  const [lastCenter, setLastCenter] = useState<LatLng>(center);
+
+  // Displayed data
+  const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
+  const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
+  const [displayLianes, setDisplayLianes] = useState(false);
+
+  // Statistics
+  const [rawStats, setRawStats] = useState<RawTripStats>({ numberOfTrips: 0 });
+  const [lianeStats, setLianeStats] = useState<LianeStats>({ numberOfTrips: 0, numberOfUsers: 0 });
+
+  // Fetch initial data
+
+  useEffect(() => {
+    try {
+      TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
+      TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
+    } catch (e) {
+      const history = useHistory();
+      history.push("/auth-error");
+    }
+  }, []);
+
+  // Update the map
+
+  useEffect(() => {
+    try {
+      RallyingPointService.list(lastCenter.lat, lastCenter.lng)
+        .then((r) => setRallyingPoints(r));
+
+      TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
+        .then((r: RawTrip[]) => {
+          if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
+        });
+
+      TripService.snapLianes({ center: lastCenter, withHour: false })
+        .then((l: RoutedLiane[]) => setLianes(l));
+    } catch (e) {
+      const history = useHistory();
+      history.push("/auth-error");
+    }
+  }, [lastCenter]);
+
+  // Handle components interaction
+
+  const handleCenter = (newCenter: LatLng) => {
+    if (distance(lastCenter, newCenter) > 15_000) {
+      setLastCenter(newCenter);
+    }
+  };
+
+  const updateDisplayRawTrips = (options : FilterOptions) => {
+    setDisplayRallyingPoint(options.displayRallyingPoints);
+    setDisplayRawTrips(filterRawTrips(rawTrips, options));
+  };
 
   return (
     <div>
       <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
+      <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
       <MapContainer
         className={className}
         center={center}
@@ -190,6 +237,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         touchZoom={false}
         style={{ zIndex: 0, position: "relative" }}
       >
+        <CenterHandler callback={handleCenter} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}

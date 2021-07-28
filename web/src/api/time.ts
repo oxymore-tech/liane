@@ -1,3 +1,7 @@
+// The representation of these values is WRONG, each index
+// is incremented by one. However, due to limitations in the React
+// library, the field "value" cannot be 0, hence it's incremented.
+
 export const Days = [
   { value: 8, label: "N'importe quel jour" },
   { value: 1, label: "Dimanche" },

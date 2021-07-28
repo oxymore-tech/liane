@@ -5,10 +5,10 @@ import {
   LatLng,
   RallyingPoint,
   TripFilterOptions,
-  RoutedLiane, distance, LianeUsage
+  RoutedLiane, distance
 } from "@/api";
-import { displayService } from "@/api/display-service";
-import { rallyingPointService } from "@/api/rallying-point-service";
+import { TripService } from "@/api/trip-service";
+import { RallyingPointService } from "@/api/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
@@ -17,23 +17,12 @@ import { LianeRoute } from "@/components/map/LianeRoute";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 
-const DEFAULT_FILTER: TripFilterOptions = {
-  center: { lat: 0.0, lng: 0.0 },
-  from: undefined,
-  to: undefined,
-  timestampFrom: undefined,
-  timestampTo: undefined,
-  withHour: false
-};
-
 interface MapProps {
   className?: string;
   center: LatLng;
 }
 
 function LianeMap({ className, center }: MapProps) {
-  DEFAULT_FILTER.center = center;
-
   // Map features to display
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [lianes, setLianes] = useState<RoutedLiane[]>();
@@ -41,14 +30,28 @@ function LianeMap({ className, center }: MapProps) {
 
   // Map display options
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
-  const [filter, setFilter] = useState<TripFilterOptions>(DEFAULT_FILTER);
+  const [filter, setFilter] = useState<TripFilterOptions>({ center } as TripFilterOptions);
   const [lastCenter, setLastCenter] = useState<LatLng>(center);
   const [from, setFrom] = useState<RallyingPoint>();
   const [to, setTo] = useState<RallyingPoint>();
 
   // Handle map interactions
 
-  const handleFilter = (filter: TripFilterOptions) => {
+  const handleFilter = (dayFrom?: number, dayTo?: number, hourFrom?: number, hourTo?: number) => {
+    // Update the filter
+    const newFilter = { ...filter };
+
+    newFilter.center = lastCenter;
+    newFilter.from = from;
+    newFilter.to = to;
+    newFilter.dayFrom = dayFrom;
+    newFilter.dayTo = dayTo;
+    newFilter.hourFrom = hourFrom;
+    newFilter.hourTo = hourTo;
+
+    console.log(newFilter);
+
+    setFilter(newFilter);
   };
 
   const handleCenter = (newCenter: LatLng) => {
@@ -58,7 +61,7 @@ function LianeMap({ className, center }: MapProps) {
     setFilter(newFilter);
 
     // Update if necessary
-    if (distance(lastCenter, newCenter) > 25_000) {
+    if (distance(lastCenter, newCenter) > 15_000) {
       setLastCenter(newCenter);
     }
   };
@@ -78,21 +81,19 @@ function LianeMap({ className, center }: MapProps) {
   // Handle map updates
 
   const updateLianes = () => {
-    displayService.getLianes(filter).then((newLianes: RoutedLiane[]) => {
-      const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.usages.length - a.usages.length);
-      setLianes(l);
+    TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
+      const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.numberOfUsages - a.numberOfUsages);
 
-      for (let i = l.length - 1; i > 0; i--) {
-        if (l[i].usages.filter((u: LianeUsage) => u.isPrimary).length > 0) {
-          setMaxUsages(l[i].usages.length);
-          break;
-        }
+      if (l.length > 0) {
+        setMaxUsages(l[0].numberOfUsages);
       }
+
+      setLianes(l);
     });
   };
 
   const updateRallyingPoints = () => {
-    rallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
+    RallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
       setRallyingPoints(newRallyingPoints);
     });
   };
@@ -102,11 +103,11 @@ function LianeMap({ className, center }: MapProps) {
   useEffect(() => {
     updateLianes();
     updateRallyingPoints();
-  }, [lastCenter]);
+  }, [lastCenter, filter]);
 
   return (
     <div>
-      <TripFilter center={center} from={from} to={to} rpUpdate={handleRp} callback={handleFilter} />
+      <TripFilter rallyingPoints={rallyingPoints} newFrom={from} newTo={to} rpUpdate={handleRp} callback={handleFilter} />
       <MapContainer
         className={className}
         center={center}
@@ -124,10 +125,28 @@ function LianeMap({ className, center }: MapProps) {
         />
 
         { showRallyingPoints
-          && rallyingPoints.map((point: RallyingPoint, index: number) => <RallyingPointMarker key={`rl_${index}`} value={point} onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }} />)}
+          && rallyingPoints.map((point: RallyingPoint) => (
+            <RallyingPointMarker
+              from={from}
+              to={to}
+              key={`rl_${point.label}`}
+              value={point}
+              onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
+            />
+          ))}
 
         { lianes
-          && lianes.map((l: RoutedLiane) => <LianeRoute liane={l} maxUsages={maxUsages} />) }
+          && lianes.map((l: RoutedLiane) => (
+            l.isPrimary
+              ? (
+                <LianeRoute
+                  key={`l_${l.from.label}${l.to.label}`}
+                  liane={l}
+                  maxUsages={maxUsages}
+                />
+              )
+              : <></>
+          ))}
 
       </MapContainer>
     </div>

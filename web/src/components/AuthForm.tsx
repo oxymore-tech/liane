@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { TextInput } from "@/components/base/TextInput";
 import { Button } from "@/components/base/Button";
-import { authService } from "@/api/auth-service";
+import { AuthService } from "@/api/auth-service";
 import { AppContext } from "@/components/ContextProvider";
 
 /**
@@ -18,7 +18,7 @@ export function AuthForm() {
     try {
       if (phone) {
         setText("...");
-        await authService.sendSms(phone);
+        await AuthService.sendSms(phone);
         setText("");
         setStep(1);
       }
@@ -30,7 +30,7 @@ export function AuthForm() {
   async function login() {
     try {
       if (code) {
-        const user = await authService.login(phone, code);
+        const user = await AuthService.login(phone, code);
         setAuthUser(user);
       }
     } catch (e) {
