@@ -4,8 +4,8 @@ Je dois avoir une vision générale du réseau Liane
 | Etat  | user story         | solution technique |
 | :-------------------- |:---------------:| ----------------:|
 | :seedling: | *Je dois avoir accès aux informations disponibles sur le serveur* | oskour |
-| :white_check_mark: | Je dois pouvoir me connecter en tant qu'administrateur | Système d'autentification via mobile avec code |
-- Je dois avoir accès à des statistiques sur l'utilisation de Liane :seedling:
+| :white_check_mark: | Je dois pouvoir me connecter en tant qu'administrateur | Système d'autentification via mobile avec code (twilio) |
+| :seedling: | Je dois avoir accès à des statistiques sur l'utilisation de Liane | |
   - Nombre d'utilisateurs :white_check_mark:
   - Utilisateurs les plus actifs
   - Nombre de covoiturages demandés
