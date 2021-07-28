@@ -6,8 +6,9 @@ namespace Liane.Api.Trip
         LatLng Center,
         RallyingPoint? From,
         RallyingPoint? To,
-        long? TimestampFrom,
-        long? TimestampTo,
-        bool WithHour
+        int? dayFrom,
+        int? dayTo,
+        int? hourFrom,
+        int? hourTo
     );
 }
