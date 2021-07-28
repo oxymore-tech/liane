@@ -203,8 +203,8 @@ function LianeMapAdmin({ className, center }: MapProps) {
           if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
         });
 
-      TripService.snapLianes({ center: lastCenter, withHour: false })
-        .then((l: RoutedLiane[]) => setLianes(l));
+      // TripService.snapLianes({ center: lastCenter })
+      //   .then((l: RoutedLiane[]) => setLianes(l));
     } catch (e) {
       const history = useHistory();
       history.push("/auth-error");
