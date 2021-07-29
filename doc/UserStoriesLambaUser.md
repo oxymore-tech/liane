@@ -5,8 +5,8 @@ J'ai téléchargé l'application Liane et je suis conducteur ou passager
 ## Accès à l'application et navigation
 | User story | Solution |
 | :-------- | :--------- |
-| Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang: | Trois pages à la première connexion sur l'application mobile avec les explications nécessaires|
-| Je dois pouvoir naviguer facilement et sans perte de temps dans l'application :interrobang: | Minimiser le nombre d'actions possibles sur l'application mobile, le nombre de boutons, les manipulations nécessaires. |
+| Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang: | Trois pages de texte à la première connexion qui expliquent l’intérêt de l’application et du partage de données de géolocalisation|
+| Je dois pouvoir naviguer facilement et sans perte de temps dans l'application :interrobang: | Application minimaliste avec peu de boutons, pas de manupulations à faire mis à part le partage de la localisation à la première utilisation. |
 
 ## Sécurité
 | User story | Solution technique |
@@ -14,7 +14,7 @@ J'ai téléchargé l'application Liane et je suis conducteur ou passager
 | Je dois pouvoir m'indentifier de façon sécurisée 🟩  | Système d'autentification via mobile avec code envoyé par sms (twilio) sur application web. <br/> Utilisation des requêtes *sms* (envoi de sms) et *login* (vérification des informations de connexion) de l'API *auth*. |
 | Je dois pouvoir garder mon anonymat durant toute l'utilisation de Liane 🟩  | La seule donnée sensible partagée et le numéro de téléphone. Ce numéro n'est visible que par les administrateurs du site (possibilité d'anonymiser aussi à ce niveau là :interrobang:). <br/>  |
 | Je dois pouvoir choisir les autorisations de géolocalisation que Liane a sur mon téléphone 🟩  |Lors de la première connexion, une page dédiée expliquant les différents types de partage de géolocalisation et leur intérêt. Quand l'utilisateur choisit une option, il accède automatiquement au pop-up de son téléphone pour autoriser l'envoi de données. |
-| Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment 🟩  | Page dédiée sur l'application mobile avec un bouton pour chaque type de partage de données. <br/> Lorsque l'utilisateur clique sur un bouton, ses préférences sont modifiées dans le ContextProvider qui est consulté par l'application avant chaque action. |
+| Je dois pouvoir modifier les autorisations de géolocalisation facilement et à tout moment 🟩  | Page dédiée sur l'application mobile avec un bouton pour chaque type de partage de données. <br/> Lorsque l'utilisateur clique sur un bouton, la valeur de la variable Permissions.LOCATION est modifiée dans le ContextProvider qui est consulté par l'application avant chaque action.|
 
 ## Gestion et partage des données personnelles 
 | User story | Solution technique |
