@@ -1,11 +1,11 @@
-# General informations
-Diagrams will not be displayed on github unless you have installed one of the following plugins : 
+# Informations générales
+Les différents diagrammes présents sur ce github ne pourront être affichés à moins d'installer un des plugins suivants :
 
 https://github.com/BackMarket/github-mermaid-extension
 
 https://github.com/marcozaccari/markdown-diagrams-browser-extension
 
-The diagrams included in the markdown files of this project are written in "mermaid". All the necessary documentation can be viewed here : 
+Les diagrammes inclus dans les fichiers markdown de ce projet sont écrits en `mermaid`. Toute la documentation nécessaire peut être trouvée ici : 
 https://mermaid-js.github.io/mermaid/#/
 
 
@@ -22,7 +22,8 @@ Liane n'a pour l'instant pas imaginé de récompense (financière au autre) pour
 
 - [back](back/README.md) : Un serveur qui interroge la base de données, effectue des calculs et échange des informations avec les deux applications
 - [app](app/README.md) : Une application mobile avec laquelle interagissent les conducteurs et qui permet de collecter leurs déplacements
-- [web](web/README.md) : Une application web avec laquelle interagissent les passagers pour chercher des trajets et demander à covoiturer
+- [web](web/README.md) : Une application web avec laquelle interagissent les passagers pour chercher des trajets et demander à covoiturer, ainsi que pour visualiser les informations qui les concernent.
+
 
 # Key Concepts
 
