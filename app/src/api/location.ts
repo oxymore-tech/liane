@@ -12,7 +12,7 @@ const TRIP_KEY = "@Trip";
 const FETCH_TIME_KEY = "@Fetch_Time";
 
 // Minimum size of a trip to send it
-const MIN_TRIP_SIZE = 5;
+const MIN_TRIP_SIZE = 3;
 
 // Time which we consider is the minimum to separate two trips
 const TRIP_SEPARATING_TIME: number = 1000 * 60 * 7.5;
@@ -200,6 +200,7 @@ export async function startLocationTask(permissionLevel: LocationPermissionLevel
  */
 export async function callbackForeground(location: LocationObject) {
   console.log("New foreground location received.");
+  console.log(location);
   await addLocations([location]);
 }
 
