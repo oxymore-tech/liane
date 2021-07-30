@@ -131,6 +131,7 @@ function LianeMap({ className, center }: MapProps) {
               to={to}
               key={`rl_${point.label}`}
               value={point}
+              admin={false}
               onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
             />
           ))}

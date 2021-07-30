@@ -245,7 +245,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         {
           displayRallyingPoints
           && (rallyingPoints.map((point: RallyingPoint, i: number) => (
-            <RallyingPointMarker key={`rl_${i}`} value={point} onSelect={() => {}} />
+            <RallyingPointMarker key={`rl_${i}`} value={point} admin onSelect={() => {}} />
           )))
         }
         {

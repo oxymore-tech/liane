@@ -30,10 +30,11 @@ export interface RallyingPointMarkerProps {
   value: RallyingPoint;
   from?: RallyingPoint;
   to?: RallyingPoint;
+  admin: boolean;
   onSelect: (fromVsTo:boolean) => void;
 }
 
-export function RallyingPointMarker({ value, from, to, onSelect }: RallyingPointMarkerProps) {
+export function RallyingPointMarker({ value, from, to, admin, onSelect }: RallyingPointMarkerProps) {
   const map = useMap();
   const isFrom = from?.id === value.id;
   const isTo = to?.id === value.id;
@@ -52,7 +53,7 @@ export function RallyingPointMarker({ value, from, to, onSelect }: RallyingPoint
   return (
     <Marker
       position={value.position}
-      draggable
+      draggable={admin}
       icon={iconLookup()}
     >
       <Popup closeButton={false}>
