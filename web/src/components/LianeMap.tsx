@@ -14,6 +14,7 @@ import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
 import { TripFilter } from "@/components/TripFilter";
 import { LianeRoute } from "@/components/map/LianeRoute";
+import { Simulate } from "react-dom/test-utils";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 
@@ -133,6 +134,7 @@ function LianeMap({ className, center }: MapProps) {
               value={point}
               admin={false}
               onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
+              center={center}
             />
           ))}
 

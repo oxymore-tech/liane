@@ -1,7 +1,7 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Marker, Popup, Tooltip, useMap } from "react-leaflet";
-import { RallyingPoint } from "@/api";
-import { icon } from "leaflet";
+import { LatLng, RallyingPoint } from "@/api";
+import L, { icon, marker } from "leaflet";
 import { PopupMenuItem } from "@/components/PopupMenuItem";
 import { Label } from "@/components/base/Label";
 
@@ -32,18 +32,29 @@ export interface RallyingPointMarkerProps {
   to?: RallyingPoint;
   admin: boolean;
   onSelect: (fromVsTo:boolean) => void;
+  center: LatLng ;
 }
 
-export function RallyingPointMarker({ value, from, to, admin, onSelect }: RallyingPointMarkerProps) {
+export function RallyingPointMarker({ value, from, to, admin, center, onSelect }: RallyingPointMarkerProps) {
   const map = useMap();
   const isFrom = from?.id === value.id;
   const isTo = to?.id === value.id;
+  const [newPosition, setNewPosition] = useState(center);
 
   const iconLookup = () => {
     if (isFrom) return IconBlue;
     if (isTo) return IconRed;
     return IconGray;
   };
+
+  /*
+  const theMarker = L.marker([value.position.lat, value.position.lng], {
+    draggable: true
+  }).addTo(map);
+
+  theMarker.on("dragend", (e) => {
+    console.log("drag effectué ! ");
+  }); */
 
   const select = useCallback((fromVsTo: boolean) => {
     onSelect(fromVsTo);
@@ -55,6 +66,11 @@ export function RallyingPointMarker({ value, from, to, admin, onSelect }: Rallyi
       position={value.position}
       draggable={admin}
       icon={iconLookup()}
+      eventHandlers={{ dragend: (e) => {
+        const currentMarker = e.target;
+        const currentPosition = currentMarker.getLatLng();
+        setNewPosition(currentPosition);
+      } }}
     >
       <Popup closeButton={false}>
         <Label className="text-center pb-2 mb-2 border-b">
@@ -65,7 +81,13 @@ export function RallyingPointMarker({ value, from, to, admin, onSelect }: Rallyi
           <PopupMenuItem text="Arrivée" selected={isTo} onSelect={() => select(false)} img="/images/leaflet/marker-icon-red.png" />
         </div>
       </Popup>
-      <Tooltip>{value.label}</Tooltip>
+      <Tooltip>
+        {value.label}
+        <br />
+        {newPosition.lat}
+        <br />
+        {newPosition.lng}
+      </Tooltip>
     </Marker>
   );
 }
