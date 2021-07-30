@@ -18,7 +18,7 @@ import { RallyingPointService } from "@/api/rallying-point-service";
 import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
 import { TripService } from "@/api/trip-service";
-import { useHistory } from "react-router-dom";
+// import { useHistory } from "react-router-dom";
 import CenterHandler from "@/components/map/CenterHandler";
 
 const colors: string[] = [
@@ -186,8 +186,8 @@ function LianeMapAdmin({ className, center }: MapProps) {
       TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
       TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
     } catch (e) {
-      const history = useHistory();
-      history.push("/auth-error");
+      // const history = useHistory();
+      // history.push("/auth-error");
     }
   }, []);
 
@@ -206,8 +206,8 @@ function LianeMapAdmin({ className, center }: MapProps) {
       // TripService.snapLianes({ center: lastCenter })
       //   .then((l: RoutedLiane[]) => setLianes(l));
     } catch (e) {
-      const history = useHistory();
-      history.push("/auth-error");
+      // const history = useHistory();
+      // history.push("/auth-error");
     }
   }, [lastCenter]);
 
