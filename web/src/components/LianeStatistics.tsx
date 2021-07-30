@@ -10,11 +10,11 @@ interface LianeStatisticsProps {
 
 export function LianeStatistics({ numberOfLianes, numberOfRaws, numberOfUsers }: LianeStatisticsProps) {
   return (
-    <div className="absolute inset-y-0 left-8 z-10 overflow-auto">
-      <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
+    <div className="absolute left-12 z-10 ">
+      <div className="bg-white w-96 shadow-xl bg-opacity-80 rounded-lg grid grid-cols-2 p-2 gap-2 ">
         <Button
           color="blue"
-          className="mt-4 col-span-2"
+          className="mb-2 col-span-2"
           label="Re-générer les lianes"
           onClick={async () => { await TripService.generateLianes(); }}
         />
