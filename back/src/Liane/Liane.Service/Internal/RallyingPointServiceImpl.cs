@@ -43,7 +43,7 @@ namespace Liane.Service.Internal
             var rallyingPoint = await TrySnap(position);
             if (rallyingPoint == null)
             {
-                throw new ResourceNotFoundException($"RallyingPoint not found arround position {position} within a radius of 500 km");
+                throw new ResourceNotFoundException($"RallyingPoint not found around position {position} within a radius of 500 km");
             }
 
             return rallyingPoint;
@@ -84,5 +84,6 @@ namespace Liane.Service.Internal
                 })
                 .OrderBy(p => p.Distance);
         }
+        
     }
 }

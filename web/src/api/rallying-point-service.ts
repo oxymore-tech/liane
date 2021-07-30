@@ -1,4 +1,4 @@
-import { get } from "@/api/http";
+import { get, post } from "@/api/http";
 import { RallyingPoint } from ".";
 
 export class RallyingPointService {
@@ -13,6 +13,10 @@ export class RallyingPointService {
 
   static async list(lat: number, lng: number): Promise<RallyingPoint[]> {
     return get("/api/rallyingPoint", { params: { lat, lng } });
+  }
+
+  static async setRP(rallyingPoint: RallyingPoint, lat: number, lng: number) {
+    return post("/api/rallyingPoint", { params: { rallyingPoint, lat, lng } });
   }
 
 }

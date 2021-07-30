@@ -1,9 +1,12 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import { LatLng, RallyingPoint } from "@/api";
-import L, { icon, marker } from "leaflet";
+import { icon } from "leaflet";
 import { PopupMenuItem } from "@/components/PopupMenuItem";
 import { Label } from "@/components/base/Label";
+import { RallyingPointService } from "@/api/rallying-point-service";
+import { Button } from "@/components/base/Button";
+import { TripService } from "@/api/trip-service";
 
 export const IconBlue = icon({
   iconUrl: "/images/leaflet/marker-icon.png",
@@ -39,22 +42,13 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
   const map = useMap();
   const isFrom = from?.id === value.id;
   const isTo = to?.id === value.id;
-  const [newPosition, setNewPosition] = useState(center);
+  const [newPosition, setNewPosition] = useState(null);
 
   const iconLookup = () => {
     if (isFrom) return IconBlue;
     if (isTo) return IconRed;
     return IconGray;
   };
-
-  /*
-  const theMarker = L.marker([value.position.lat, value.position.lng], {
-    draggable: true
-  }).addTo(map);
-
-  theMarker.on("dragend", (e) => {
-    console.log("drag effectué ! ");
-  }); */
 
   const select = useCallback((fromVsTo: boolean) => {
     onSelect(fromVsTo);
@@ -72,6 +66,14 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
         setNewPosition(currentPosition);
       } }}
     >
+      {newPosition ? (
+        <Button
+          color="blue"
+          className="absolute mb-2 bottom-10 z-10"
+          label="Enregistrer les modifications"
+          onClick={async () => { await TripService.generateLianes(); }}
+        />
+      ) : null}
       <Popup closeButton={false}>
         <Label className="text-center pb-2 mb-2 border-b">
           {value.label}
@@ -84,9 +86,9 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
       <Tooltip>
         {value.label}
         <br />
-        {newPosition.lat}
+        {newPosition ? newPosition.lat : value.position.lat}
         <br />
-        {newPosition.lng}
+        {newPosition ? newPosition.lng : value.position.lng}
       </Tooltip>
     </Marker>
   );
