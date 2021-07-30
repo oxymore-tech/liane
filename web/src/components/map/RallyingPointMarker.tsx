@@ -52,6 +52,7 @@ export function RallyingPointMarker({ value, from, to, onSelect }: RallyingPoint
   return (
     <Marker
       position={value.position}
+      draggable
       icon={iconLookup()}
     >
       <Popup closeButton={false}>
