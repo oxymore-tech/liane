@@ -89,6 +89,7 @@ namespace Liane.Service.Internal.Trip
 
         public async Task Delete(string lianeTripId)
         {
+            // TODO : might need a review
             var result = await (await lianeTripsCollection.FindAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser())).ToListAsync();
 
             if (result.Any())
