@@ -7,29 +7,28 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Rp;
-using Liane.Service.Internal.Rp;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using StackExchange.Redis;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace Liane.Service
+namespace Liane.Service.Internal.Rp
 {
     /**
      * Classes to load overpass data.
      */
-    sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
+    internal sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
 
-    sealed record OverpassElement(double Lat, double Lng, OverpassTag Tags);
+    internal sealed record OverpassElement(double Lat, double Lng, OverpassTag Tags);
 
-    sealed record OverpassTag(string Name);
+    internal sealed record OverpassTag(string Name);
 
     public class RallyingPointServiceImpl2 : IRallyingPointService2
     {
         private const string FileName = "Ressources/villes.json";
         private const string CoordinatesFieldName = "Coordinates";
+        private const int Radius = 25_000;
         
         private readonly MongoClient mongo;
         private readonly ILogger<RallyingPointServiceImpl2> logger;
@@ -47,22 +46,38 @@ namespace Liane.Service
             
             var database = mongo.GetDatabase(MongoKeys.Database());
             rallyingPointsCollection = database.GetCollection<DbRallyingPoint>(MongoKeys.RallyingPoints());
-            
         }
         
-        public async Task Add()
+        public async Task Add(LatLng pos, string name)
         {
-            
+            await rallyingPointsCollection.InsertOneAsync(new DbRallyingPoint(ObjectId.GenerateNewId(), name, pos));
         }
 
         public async Task Delete(string id)
         {
-            
+            await rallyingPointsCollection.DeleteOneAsync(rp => rp.Id == ObjectId.Parse(id));
         }
 
         public async Task Move(string id, LatLng pos)
         {
-            
+            await rallyingPointsCollection.UpdateOneAsync(
+                rp => rp.Id == ObjectId.Parse(id),
+                Builders<DbRallyingPoint>.Update.Set(
+                    l => l.Coordinates, 
+                    new[] { pos.Lng, pos.Lat }
+                    )
+                );
+        }
+
+        public async Task ChangeState(string id, bool isActive)
+        {
+            await rallyingPointsCollection.UpdateOneAsync(
+                rp => rp.Id == ObjectId.Parse(id),
+                Builders<DbRallyingPoint>.Update.Set(
+                    l => l.IsActive, 
+                    isActive
+                )
+            );
         }
 
         public async Task LoadFile()
@@ -80,8 +95,9 @@ namespace Liane.Service
                 if (data is not null)
                 {
                     // Add the data to the database
-                    IEnumerable<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, new []{e.Lng, e.Lat}));
+                    List<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, new []{e.Lng, e.Lat})).ToList();
                     await rallyingPointsCollection.InsertManyAsync(rallyingPoints);
+                    logger.LogInformation("Rallying points re-created with " + rallyingPoints.Count + " entries.");
                 }
             }
             catch (Exception e)
@@ -93,17 +109,22 @@ namespace Liane.Service
 
         public async Task<ImmutableList<RallyingPoint2>> List(LatLng pos)
         {
-            return null;
+            return await GetClosest(pos, Radius);
         }
 
-        public async Task<List<RallyingPoint2>> GetClosest(RedisKey key, LatLng pos, double radius, GeoUnit unit)
+        public async Task<ImmutableList<RallyingPoint2>> GetClosest(LatLng pos, double radius)
         {
-            return null;
+            var filter = Builders<DbRallyingPoint>.Filter.Near(CoordinatesFieldName, pos.Lng, pos.Lat, Radius);
+            
+            return (await rallyingPointsCollection.FindAsync(filter))
+                .ToEnumerable()
+                .Select(rp => rp.ToRallyingPoint())
+                .ToImmutableList();
         }
 
-        public async Task<RallyingPoint2?> GetFirstClosest(RedisKey key, LatLng pos, double radius, GeoUnit unit)
+        public async Task<RallyingPoint2?> GetFirstClosest(LatLng pos, double radius)
         {
-            return null;
+            return (await GetClosest(pos, Radius)).First();
         }
     }
 }

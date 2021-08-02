@@ -10,38 +10,43 @@ namespace Liane.Api.Rp
     public interface IRallyingPointService2
     {
         /**
-         * Add a rallying point.
+         * Adds a rallying point.
          */
-        Task Add();
+        Task Add(LatLng pos, string name);
         
         /**
-         * Delete a rallying point.
+         * Deletes a rallying point.
          */
         Task Delete(string id);
         
         /**
-         * Move a rallying point.
+         * Moves a rallying point.
          */
         Task Move(string id, LatLng pos);
+
+        /**
+         * Changes the state of a rallying point.
+         */
+        Task ChangeState(string id, bool isActive);
         
         /**
-         * Load rallying points from a file.
+         * Loads rallying points from a file.
          */
         Task LoadFile();
         
         /**
-         * List rallying points close to a point.
+         * Lists rallying points close to a point.
          */
         Task<ImmutableList<RallyingPoint2>> List(LatLng pos);
         
         /**
-         * Get rallying points close to a point.
+         * Gets rallying points close to a point.
          */
-        Task<List<RallyingPoint2>> GetClosest(RedisKey key, LatLng pos, double radius, GeoUnit unit);
+        Task<ImmutableList<RallyingPoint2>> GetClosest(LatLng pos, double radius);
         
         /**
-         * Get the first rallying point close to a point.
+         * Gets the first rallying point close to a point.
          */
-        Task<RallyingPoint2?> GetFirstClosest(RedisKey key, LatLng pos, double radius, GeoUnit unit);
+        Task<RallyingPoint2?> GetFirstClosest(LatLng pos, double radius);
     }
 }

@@ -10,7 +10,7 @@ using Liane.Service.Internal.Util;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
 
-namespace Liane.Service.Internal
+namespace Liane.Service.Internal.Rp
 {
     public sealed class RallyingPointServiceImpl : IRallyingPointService
     {
