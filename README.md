@@ -17,8 +17,8 @@ Des solutions on été mises en place à échelle locale, comme des groupes What
 
 Liane n'a pour l'instant pas imaginé de récompense (financière au autre) pour ses utilisateurs. Le conducteur prend des passagers en covoiturage comme un acte citoyen, pour participer à la vie de la communauté. Le côté communautaire est très important au sein du projet Liane, et le covoiturage est vu comme vecteur de rencontres et de lien social. 
 
-# [Etude comparative des solutions de covoiturage existantes ](doc/Concurrence.md)
-Liane n'a pas pour vocation de remplacer les géants du covoiturage, mais entend trouver sa place dans le marché existant en répondant à une demande différente. En effet, liane souhaite s'imposer comme une solution adaptée au covoiturage en milieu rural et sur des courtes et moyennes distances. Il a donc été indispensable d'étudier les solutions déjà existantes pour s'assurer qu'elles ne répondent pas déjà aux objectifs de Liane. 
+# Etude comparative des solutions de covoiturage existantes 
+Liane n'a pas pour vocation de remplacer les géants du covoiturage, mais entend trouver sa place dans le marché existant en répondant à une demande différente. En effet, liane souhaite s'imposer comme une solution adaptée au covoiturage en milieu rural et sur des courtes et moyennes distances. Il a donc été indispensable d'[étudier les solutions déjà existantes](doc/Concurrence.md) pour s'assurer qu'elles ne répondent pas déjà aux objectifs de Liane. 
 
 
 # Overall architecture :neckbeard:
