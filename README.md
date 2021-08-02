@@ -28,6 +28,13 @@ Liane n'a pas pour vocation de remplacer les géants du covoiturage, mais entend
 - [web](web/README.md) : Une application web avec laquelle interagissent les passagers pour chercher des trajets et demander à covoiturer, ainsi que pour visualiser les informations qui les concernent.
 
 
+# Définition des user stories 
+
+Nous avons définis trois utilisateurs types : 
+- [Les administrateurs](doc/UserStoriesAdmin.md)
+- [Les beta testeurs](doc/UserStoriesBeta.md)
+- [Les utilisateurs lambda](doc/UserStoriesLambaUser.md)
+
 # Key Concepts
 
 - `LatLng` : Coordonnées GPS d'un point au format latitude puis longitude.
