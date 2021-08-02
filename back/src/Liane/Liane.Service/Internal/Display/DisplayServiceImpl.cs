@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Liane.Api;
 using Liane.Api.Display;
 using Liane.Api.Routing;
+using Liane.Api.Rp;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;

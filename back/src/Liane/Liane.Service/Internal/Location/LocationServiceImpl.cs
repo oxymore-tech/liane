@@ -8,6 +8,7 @@ using Liane.Api;
 using Liane.Api.Address;
 using Liane.Api.Location;
 using Liane.Api.Routing;
+using Liane.Api.Rp;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Util;

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Rp;
 
 namespace Liane.Api.Trip
 {

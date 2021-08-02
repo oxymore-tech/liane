@@ -6,6 +6,7 @@ using DeepEqual.Syntax;
 using Liane.Api;
 using Liane.Api.Display;
 using Liane.Api.Routing;
+using Liane.Api.Rp;
 using Liane.Api.Trip;
 using Liane.Service.Internal;
 using Liane.Service.Internal.Display;

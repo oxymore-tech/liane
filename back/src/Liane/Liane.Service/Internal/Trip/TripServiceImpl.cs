@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api;
+using Liane.Api.Rp;
 using Liane.Api.Trip;
 
 namespace Liane.Service.Internal.Trip

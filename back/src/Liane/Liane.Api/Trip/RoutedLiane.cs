@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Liane.Api.Routing;
+using Liane.Api.Rp;
 
 namespace Liane.Api.Trip
 {
