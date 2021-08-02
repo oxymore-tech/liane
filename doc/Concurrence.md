@@ -1,14 +1,14 @@
-| Application | Avantages | Inconvénients | 
+| Application | Avantages | Inconvénients | Fonctionnement |
 |:-----------|:-----------|:-----------|
-|Blablacar | Enorme réseau d'utilisateurs| <ul><li>Trop de démarches à faire pour proposer un trajet</li><li>Compensation financière</li><li>Peu adapté aux courts trajets</li></ul>|
-|Blablalines |<ul><li>Adapté aux courts trajets</li><li>Application simple d'utilisation</li></ul> | <ul><li>Paris Toulouse et Reims seulement pour le moment</li><li>Trajets à enregistrer à l'avance</li><li>Problèmes en cas d'imprévus</li></ul> |
-|Rezo Pouce |<ul><li>Pas besoin de faire de manips à l'avance</li><li>A l'air efficace (1 fois sur 2 moins de 5 min d'attente)</li></ul> |<ul><li>Arrêts prédéfinis, pas trop de flexibilité si pas d'arrêts pouces</li></ul> |
-|Wever | | |
-|IdVroom | Multimodal, trajets 100% féminins | |
-|Oui'Hop | Covoiturage en temps réel, pas de contrainte de rendez vous ou de trajet (ça ressemble à ce qu'on a| Seulement ile de France il semblerait, semble vouloir comprendre le flux pour créer à terme des lignes de covoiturage |
-|Karos | Visiblement on donne un trajet qu'on veut faire et on choisit une des personnes proposées. Différence avec nous : simplifié pour les passagers mais pas les conducteurs visiblement | |
-|Carter | | En Martinique et Guadeloupe uniquement|
-|Klaxit | Pas essentiel de réserver un covoiturage en tant que passager, visiblement une interface pour voir l'état ACTUEL du réseau | Départ et arrivée à préciser |
+|Blablacar | Enorme réseau d'utilisateurs| <ul><li>Trop de démarches à faire pour proposer un trajet</li><li>Compensation financière</li><li>Peu adapté aux courts trajets</li></ul>| |
+|Blablalines |<ul><li>Adapté aux courts trajets</li><li>Application simple d'utilisation</li></ul> | <ul><li>Paris Toulouse et Reims seulement pour le moment</li><li>Trajets à enregistrer à l'avance</li><li>Problèmes en cas d'imprévus</li></ul> | |
+|Rezo Pouce |<ul><li>Pas besoin de faire de manips à l'avance</li><li>A l'air efficace (1 fois sur 2 moins de 5 min d'attente)</li></ul> |<ul><li>Arrêts prédéfinis, pas trop de flexibilité si pas d'arrêts pouces</li></ul> | |
+|Wever | | | |
+|IdVroom | Multimodal, trajets 100% féminins | | |
+|Oui'Hop | Covoiturage en temps réel, pas de contrainte de rendez vous ou de trajet (ça ressemble à ce qu'on a| Seulement ile de France il semblerait, semble vouloir comprendre le flux pour créer à terme des lignes de covoiturage | |
+|Karos | Visiblement on donne un trajet qu'on veut faire et on choisit une des personnes proposées. Différence avec nous : simplifié pour les passagers mais pas les conducteurs visiblement des offres (20euros chez leclerc dès sont premier voyage par exemple)| Visiblement seulement dapté aux trajets maison bureau et seulement si on travaille toujours au même endroit  | Choisir si on veut être conducteur/passager/les deux, entrer son point domicile et lieu de travail, entrer ses horaires de départ (en général) pour l'aller et le retour, possibilité de mettre des heures différentes en fonction des jours de la semaine. Ressemble un peu à liane dans le sens où on partage une partie de notre trajet et pas forcément tout le trajet avec quelqu'un, mais très différent car pas de points de ralliements, l'application calcul le meilleure point de rencontre et de séparation avec un autre "court-voitureur". L'appli nous propose ensuite des conducteurs/passagers pour ce trajet. Possibilité de rajouter à la main des trajets supplémentaires. |
+|Carter | | En Martinique et Guadeloupe uniquement| Pas très intéressant à regarder pour le moment car ils ne rpésentent pas vraiment une concurrence. |
+|Klaxit | Pas essentiel de réserver un covoiturage en tant que passager, visiblement une interface pour voir l'état ACTUEL du réseau | Départ et arrivée à préciser | |
 
 Image provenant de Oui'Hop (racheté par Ecov) 
 <img width="557" alt="Capture d’écran 2021-07-29 à 20 23 06" src="https://user-images.githubusercontent.com/85169666/127545619-712ab7c7-2519-4e83-9590-45c691f24d1d.png">
