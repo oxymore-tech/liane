@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/base/Button";
 import { TripService } from "@/api/trip-service";
+import { RallyingPointService } from "@/api/rallying-point-service";
 
 interface LianeStatisticsProps {
   numberOfLianes: number,
@@ -17,6 +18,12 @@ export function LianeStatistics({ numberOfLianes, numberOfRaws, numberOfUsers }:
           className="mt-4 col-span-2"
           label="Re-générer les lianes"
           onClick={async () => { await TripService.generateLianes(); }}
+        />
+        <Button
+          color="blue"
+          className="mt-4 col-span-2"
+          label="Re-générer les points de ralliement"
+          onClick={async () => { await RallyingPointService.generate(); }}
         />
         <div className="col-span-2">
           <span className="font-bold">Statistiques générales</span>

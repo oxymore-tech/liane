@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
+using Liane.Service;
 using Liane.Service.Internal;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Display;
@@ -64,6 +65,7 @@ namespace Liane.Web
             services.AddService<LocationServiceImpl>();
             services.AddService<TripServiceImpl>();
             services.AddService<RallyingPointServiceImpl>();
+            services.AddService<RallyingPointServiceImpl2>();
             services.AddService<NotificationServiceImpl>();
             services.AddService<RealTripServiceImpl>();
             services.AddService<RawTripServiceImpl>();
