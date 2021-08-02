@@ -1,7 +1,7 @@
 | Application | Avantages | Inconvénients | Fonctionnement |
 |:-----------|:-----------|:-----------| :----------- |
-|Blablacar | Enorme réseau d'utilisateurs| <ul><li>Trop de démarches à faire pour proposer un trajet</li><li>Compensation financière</li><li>Peu adapté aux courts trajets</li></ul>| |
-|Blablalines |<ul><li>Adapté aux courts trajets</li><li>Application simple d'utilisation</li></ul> | <ul><li>Paris Toulouse et Reims seulement pour le moment</li><li>Trajets à enregistrer à l'avance</li><li>Problèmes en cas d'imprévus</li></ul> | |
+|Blablacar | Enorme réseau d'utilisateurs, assez sécurisé car validation pièce d'idientité et système de notation| <ul><li>Trop de démarches à faire pour proposer un trajet</li><li>Compensation financière</li><li>Peu adapté aux courts trajets</li></ul>| Avant chaque trajet, l'utilisateur doit entrer son point de départ, son point d'arrivée ainsi que les points auxquels il peut s'arrêter sur la route. Il choisit ensuite la compensation financière qu'il veut et valide son trajet. Les passagers donnent leur point de départ et d'arrivée souhaités, l'application trouve des trajets de conducteurs dont les points de départ et d'arrivée sont assez proches. Le passager choisit avec qui il veut covoiturer, paye et est mis en contact avec le conducteur via l'application. |
+|Blablacar Daily |<ul><li>Adapté aux courts trajets</li><li>Application simple d'utilisation</li></ul> | <ul><li>Paris Toulouse et Reims seulement pour le moment</li><li>Trajets à enregistrer à l'avance</li><li>Problèmes en cas d'imprévus</li></ul> | |
 |Rezo Pouce |<ul><li>Pas besoin de faire de manips à l'avance</li><li>A l'air efficace (1 fois sur 2 moins de 5 min d'attente)</li></ul> |<ul><li>Arrêts prédéfinis, pas trop de flexibilité si pas d'arrêts pouces</li></ul> | |
 |Wever | | | |
 |IdVroom | Multimodal, trajets 100% féminins | | |
