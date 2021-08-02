@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Liane.Api;
 using Liane.Api.Routing;
 using Liane.Api.Rp;
-using Liane.Api.Util;
+using Liane.Service.Internal.Rp;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Newtonsoft.Json;
 using StackExchange.Redis;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -19,7 +20,7 @@ namespace Liane.Service
     /**
      * Classes to load overpass data.
      */
-    sealed record OverpassData(string Version, string Generator, List<OverpassElement> Elements);
+    sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
 
     sealed record OverpassElement(double Lat, double Lng, OverpassTag Tags);
 
@@ -27,15 +28,17 @@ namespace Liane.Service
 
     public class RallyingPointServiceImpl2 : IRallyingPointService2
     {
-        private const string FileName = "villes.json";
+        private const string FileName = "Ressources/villes.json";
         private const string CoordinatesFieldName = "Coordinates";
         
         private readonly MongoClient mongo;
+        private readonly ILogger<RallyingPointServiceImpl2> logger;
         
-        private readonly IMongoCollection<RallyingPoint2> rallyingPointsCollection;
+        private readonly IMongoCollection<DbRallyingPoint> rallyingPointsCollection;
         
-        public RallyingPointServiceImpl2(MongoSettings settings)
+        public RallyingPointServiceImpl2(MongoSettings settings, ILogger<RallyingPointServiceImpl2> logger)
         {
+            this.logger = logger;
             mongo = new MongoClient(new MongoClientSettings
             {
                 Server = new MongoServerAddress(settings.Host, 27017),
@@ -43,7 +46,7 @@ namespace Liane.Service
             });
             
             var database = mongo.GetDatabase(MongoKeys.Database());
-            rallyingPointsCollection = database.GetCollection<RallyingPoint2>(MongoKeys.RallyingPoints());
+            rallyingPointsCollection = database.GetCollection<DbRallyingPoint>(MongoKeys.RallyingPoints());
             
         }
         
@@ -67,24 +70,24 @@ namespace Liane.Service
             try
             {
                 // Create the database index
-                await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<RallyingPoint2>(Builders<RallyingPoint2>.IndexKeys.Geo2D(CoordinatesFieldName)));
+                await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2D(CoordinatesFieldName)));
             
                 // Load the data
-                var rallyingPoints = new List<RallyingPoint2>();
                 await using var file = File.OpenRead(FileName);
-                var data = await JsonSerializer.DeserializeAsync<OverpassData>(file);
-            
-                foreach (var e in data.Elements)
+                var options = new JsonSerializerOptions {PropertyNameCaseInsensitive = true};
+                var data = await JsonSerializer.DeserializeAsync<OverpassData>(file, options);
+
+                if (data is not null)
                 {
-                    rallyingPoints.Add(new (e.Tags.Name, new []{e.Lng, e.Lat}));
+                    // Add the data to the database
+                    IEnumerable<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, new []{e.Lng, e.Lat}));
+                    await rallyingPointsCollection.InsertManyAsync(rallyingPoints);
                 }
-                
-                // Add the data to the database
-                await rallyingPointsCollection.InsertManyAsync(rallyingPoints);
             }
             catch (Exception e)
             {
-                
+                logger.LogError("An error happened during the creation of the mongo collection : " + e.Message);
+                logger.LogError(e.StackTrace);
             }
         }
 
