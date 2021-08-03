@@ -1,11 +1,10 @@
 # Utilisateur non authentifié (spectateur)
 Il s'agit du status accessible à n'importe quelle personne. Ce statut peut être utilisé seul ou combiné avec un ou plusieurs des statuts suivants :
-- Administrateur 
-- Beta testeur
-- Conducteur 
-- Passager 
+- [Administrateur](doc/UserStoriesAdmin.md)
+- [Beta testeur](doc/UserStoriesBeta.md)
+- [Conducteur](doc/UserStoriesConducteur.md)
+- [Passager](doc/UserStoriesPassager.md)
 
-Les statuts Administrateur et Beta testeur ne sont pas compatibles. 
 
 ## Visualisation du réseau Liane 
 | User story | Solution technique |
