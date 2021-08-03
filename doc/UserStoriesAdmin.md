@@ -10,8 +10,16 @@ Je dois avoir une vision générale du réseau Liane
 | Je dois pouvoir trier parmi les données collectées et choisir celles que je veux afficher :seedling: <ul><li>Utilisateur 🟩</li><li>Trajet 🟩</li><li>Créneau horaire</li><li>Type de recueil de données :seedling:</li></ul>| Un formulaire permet à l'administrateur de sélectionner des données spécifiques. Les données accessibles sur le web sont ensuite triées pour matcher avec la demande de l'administrateur et seules les données demandées sont affichés sur la carte leaflet. |
 | Je dois pouvoir déplacer les points de ralliements qui ont été préalablement définis :seedling: | Les points de raliements sont "draggable", la nouvelle position à laquelle l'utilisateur les déplace est enregistrée au niveau du web puis transmise au back qui pourra alors modifier les bases de données |
 
+## Gestion des points de ralliement 
+|User story | Solution technique |
+| :---------------| :----------------|
+| Je dois pouvoir ajuster la position d'un point de ralliement :seedling: | Les markers leaflet sont rendus *draggable* ce qui permet de les déplacer grâce à un cliquer-glisser. Le déplacement est ensuite validé ou non par l'administrateur. Si le déplacement est validé, l'application web utilise la requête "" de l'API "", qui permettra la modification des coordonnées des points de ralliement dans la base de données.|
+| Je dois pouvoir activer ou désactiver un point de ralliement 🟥 | Un bouton est créé dans un pop-uppour chaque rallying point, qui permet d'activer un rallying point si il n'est pas activé et inversement. Les ralllying point désactivés sont visibles dans une autre couleur sur la carte. Un bouton de validation permet de lancer une requête de l'API * qui modifiera l'état (actif ou non) du rallying point dans la base de données). |
+| Je dois pouvoir supprimer un point de ralliement 🟥 | Lorsqu'on clique sur un rallying point inactif, on a accès à un bouton "supprimer". Un popup s'affiche pour demander la validation de la suppression. Si l'utilisateur valide, une requête est envoyée via l'API * qui permet de supprimer le rallying point de la base de données. |
+| Je dois pouvoir ajouter un nouveau point de ralliement 🟥 | |
 
-|  *Amélioration de Liane via beta testeurs* | Solution technique |
+## Amélioration de Liane via beta testeurs
+| User story | Solution technique |
 | :---------------| :----------------|
 | Je dois pouvoir questionner les beta testeurs 🟥 | |
 | Je dois voir les erreurs éventuelles signalées par les beta testeurs 🟥 | |
