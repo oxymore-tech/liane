@@ -1,5 +1,5 @@
 # Utilisateur authentifié comme conducteur
-J'ai téléchargé l'application Liane, je suis conducteur régulier ou occasionnel. 
+J'ai téléchargé l'application Liane, je suis conducteur régulier ou occasionnel. Je dois avoir accès à toutes les fonctionnalités auxquelles un utilisateur de type spectateur a accès.
 
 ## Accès à l'application et navigation
 | User story | Solution |
