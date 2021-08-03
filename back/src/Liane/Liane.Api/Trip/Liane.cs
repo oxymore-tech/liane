@@ -4,8 +4,8 @@ using Liane.Api.Rp;
 namespace Liane.Api.Trip
 {
     public sealed record Liane(
-        RallyingPoint2 From,
-        RallyingPoint2 To,
+        RallyingPoint From,
+        RallyingPoint To,
         List<LianeUsage> Usages
     );
 }

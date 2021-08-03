@@ -24,18 +24,18 @@ namespace Liane.Service.Internal.Rp
 
     internal sealed record OverpassTag(string Name);
 
-    public class RallyingPointServiceImpl2 : IRallyingPointService2
+    public class RallyingPointServiceImpl : IRallyingPointService
     {
         private const string FileName = "Ressources/villes.json";
         private const string CoordinatesFieldName = "Coordinates";
         private const int Radius = 25_000;
         
         private readonly MongoClient mongo;
-        private readonly ILogger<RallyingPointServiceImpl2> logger;
+        private readonly ILogger<RallyingPointServiceImpl> logger;
         
         private readonly IMongoCollection<DbRallyingPoint> rallyingPointsCollection;
         
-        public RallyingPointServiceImpl2(MongoSettings settings, ILogger<RallyingPointServiceImpl2> logger)
+        public RallyingPointServiceImpl(MongoSettings settings, ILogger<RallyingPointServiceImpl> logger)
         {
             this.logger = logger;
             mongo = new MongoClient(new MongoClientSettings
@@ -107,12 +107,12 @@ namespace Liane.Service.Internal.Rp
             }
         }
 
-        public async Task<ImmutableList<RallyingPoint2>> List(LatLng pos)
+        public async Task<ImmutableList<RallyingPoint>> List(LatLng pos)
         {
             return await GetClosest(pos, Radius);
         }
 
-        public async Task<ImmutableList<RallyingPoint2>> GetClosest(LatLng pos, double radius)
+        public async Task<ImmutableList<RallyingPoint>> GetClosest(LatLng pos, double radius)
         {
             var filter = Builders<DbRallyingPoint>.Filter.Near(CoordinatesFieldName, pos.Lng, pos.Lat, Radius);
             
@@ -122,7 +122,7 @@ namespace Liane.Service.Internal.Rp
                 .ToImmutableList();
         }
 
-        public async Task<RallyingPoint2?> GetFirstClosest(LatLng pos, double radius)
+        public async Task<RallyingPoint?> GetFirstClosest(LatLng pos, double radius)
         {
             return (await GetClosest(pos, Radius)).First();
         }

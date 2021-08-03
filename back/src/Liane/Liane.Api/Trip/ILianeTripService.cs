@@ -9,7 +9,7 @@ namespace Liane.Api.Trip
         /**
          * Save a list of liane.
          */
-        Task Create(ImmutableHashSet<(ImmutableHashSet<RallyingPoint2> rallyingPoints, long timestamp)> rallyingPointsTrips);
+        Task Create(ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips);
         
         /**
          * Delete a liane trip and its corresponding liane.

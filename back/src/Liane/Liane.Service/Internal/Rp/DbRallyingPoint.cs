@@ -19,9 +19,9 @@ namespace Liane.Service.Internal.Rp
         public DbRallyingPoint(ObjectId id, string label, LatLng coordinates, string type = "point", bool isActive = true) 
             : this(id, label, new[] {coordinates.Lng, coordinates.Lat}, type, isActive) {}
 
-        public RallyingPoint2 ToRallyingPoint()
+        public RallyingPoint ToRallyingPoint()
         {
-            return new RallyingPoint2(Id.ToString(), Label, new LatLng(Coordinates[1], Coordinates[0]), Type, IsActive);
+            return new RallyingPoint(Id.ToString(), Label, new LatLng(Coordinates[1], Coordinates[0]), Type, IsActive);
         }
     }
 }

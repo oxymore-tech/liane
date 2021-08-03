@@ -7,7 +7,7 @@ using Liane.Api.Rp;
 namespace Liane.Api.Trip
 {
     public sealed record Trip(
-        ImmutableList<RallyingPoint2> Coordinates,
+        ImmutableList<RallyingPoint> Coordinates,
         string? User = null,
         int? Time = null
     )

@@ -32,7 +32,7 @@ namespace Liane.Service.Internal.Trip
         private readonly MongoClient mongo;
         private readonly ICurrentContext currentContext;
         private readonly ILogger<LianeTripServiceImpl> logger;
-        private readonly IRallyingPointService2 rallyingPointService;
+        private readonly IRallyingPointService rallyingPointService;
         private readonly IRoutingService routingService;
 
         private readonly IMongoCollection<UsedLiane> lianesCollection;
@@ -41,7 +41,7 @@ namespace Liane.Service.Internal.Trip
         public LianeTripServiceImpl(
             IRedis redis, MongoSettings settings, 
             ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, 
-            IRallyingPointService2 rallyingPointService, IRoutingService routingService
+            IRallyingPointService rallyingPointService, IRoutingService routingService
             )
         {
             this.redis = redis;
@@ -67,7 +67,7 @@ namespace Liane.Service.Internal.Trip
         public LianeTripServiceImpl(
             IRedis redis, MongoClient mongo, 
             ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, 
-            IRallyingPointService2 rallyingPointService, IRoutingService routingService
+            IRallyingPointService rallyingPointService, IRoutingService routingService
         )
         {
             this.redis = redis;
@@ -82,7 +82,7 @@ namespace Liane.Service.Internal.Trip
             lianeTripsCollection = database.GetCollection<UserLianeTrip>(LianeTripCollectionKey);
         }
         
-        public async Task Create(ImmutableHashSet<(ImmutableHashSet<RallyingPoint2> rallyingPoints, long timestamp)> rallyingPointsTrips)
+        public async Task Create(ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips)
         {
             await CreateFor(currentContext.CurrentUser(), rallyingPointsTrips);
         }
@@ -204,7 +204,7 @@ namespace Liane.Service.Internal.Trip
             var result = (await rawTripCollection.FindAsync(_ => true)).ToList();
 
             // Order by user
-            var userTrips = new Dictionary<string, ImmutableHashSet<(ImmutableHashSet<RallyingPoint2>, long)>.Builder>();
+            var userTrips = new Dictionary<string, ImmutableHashSet<(ImmutableHashSet<RallyingPoint>, long)>.Builder>();
             
             logger.LogInformation(result.Count + " raw trips founded");
             
@@ -217,7 +217,7 @@ namespace Liane.Service.Internal.Trip
                 
                 var rallyingPoints = await CreateRallyingPoints(locations.ToImmutableList());
 
-                userTrips.TryAdd(user, ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint2>, long)>());
+                userTrips.TryAdd(user, ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint>, long)>());
                 userTrips[user].Add((rallyingPoints, locations.First().Timestamp)); // Will never be null
             }
 
@@ -235,7 +235,7 @@ namespace Liane.Service.Internal.Trip
             );
         }
         
-        private async Task CreateFor(string user, ImmutableHashSet<(ImmutableHashSet<RallyingPoint2> rallyingPoints, long timestamp)> rallyingPointsTrips)
+        private async Task CreateFor(string user, ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips)
         {
             // Iterate over the hashset
             foreach (var (rallyingPoints, timestamp) in rallyingPointsTrips)
@@ -252,9 +252,9 @@ namespace Liane.Service.Internal.Trip
             }
         }
         
-        private async Task<ImmutableHashSet<RallyingPoint2>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
+        private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
         {
-            var rallyingPoints = ImmutableHashSet.CreateBuilder<RallyingPoint2>();
+            var rallyingPoints = ImmutableHashSet.CreateBuilder<RallyingPoint>();
 
             foreach (var l in trip)
             {
@@ -268,7 +268,7 @@ namespace Liane.Service.Internal.Trip
             return rallyingPoints.ToImmutable();
         }
 
-        private async Task<ImmutableList<ObjectId>> CreateLianes(string user, ObjectId lianeTripId, ImmutableHashSet<RallyingPoint2> rallyingPoints, long timestamp)
+        private async Task<ImmutableList<ObjectId>> CreateLianes(string user, ObjectId lianeTripId, ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)
         {
             var lianesIds = ImmutableList.CreateBuilder<ObjectId>();
             
@@ -303,7 +303,7 @@ namespace Liane.Service.Internal.Trip
             return lianesIds.ToImmutable();
         }
 
-        private async Task CreateLiane(ObjectId id, RallyingPoint2 from, RallyingPoint2 to, UserLianeUsage lianeUsage)
+        private async Task CreateLiane(ObjectId id, RallyingPoint from, RallyingPoint to, UserLianeUsage lianeUsage)
         {
             var liane = new UsedLiane(id, from, to, new List<UserLianeUsage>());
             var database = await redis.Get();

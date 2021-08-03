@@ -7,7 +7,7 @@ using StackExchange.Redis;
 
 namespace Liane.Api.Rp
 {
-    public interface IRallyingPointService2
+    public interface IRallyingPointService
     {
         /**
          * Adds a rallying point.
@@ -37,16 +37,16 @@ namespace Liane.Api.Rp
         /**
          * Lists rallying points close to a point.
          */
-        Task<ImmutableList<RallyingPoint2>> List(LatLng pos);
+        Task<ImmutableList<RallyingPoint>> List(LatLng pos);
         
         /**
          * Gets rallying points close to a point.
          */
-        Task<ImmutableList<RallyingPoint2>> GetClosest(LatLng pos, double radius);
+        Task<ImmutableList<RallyingPoint>> GetClosest(LatLng pos, double radius);
         
         /**
          * Gets the first rallying point close to a point.
          */
-        Task<RallyingPoint2?> GetFirstClosest(LatLng pos, double radius);
+        Task<RallyingPoint?> GetFirstClosest(LatLng pos, double radius);
     }
 }

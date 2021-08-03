@@ -2,7 +2,7 @@ using Liane.Api.Routing;
 
 namespace Liane.Api.Rp
 {
-    public sealed record RallyingPoint2(
+    public sealed record RallyingPoint(
         string Id,
         string Label,
         LatLng Coordinates,
