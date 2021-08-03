@@ -1,7 +1,7 @@
 # Utilisateur non authentifié (spectateur)
 Je veux avoir une vision générale du réseau Liane, je veux comprendre comment fonctionne l'application, je regarde l'application par curiosité, je ne suis pas encore authentifié
 
-Il s'agit du status accessible à n'importe quelle personne. Ce statut peut être utilisé seul ou combiné avec un ou plusieurs des statuts suivants :
+Il s'agit du statut accessible à n'importe quelle personne. Ce statut peut être utilisé seul ou combiné avec un ou plusieurs des statuts suivants :
 - [Administrateur](doc/UserStoriesAdmin.md) : J'ai accès à des données privilégiées de Liane, j'ai une vision globale et spécifique du réseau Liane
 - [Beta testeur](doc/UserStoriesBeta.md) : Je signaler des problèmes sur l'application et je participe à l'amélioration de Liane
 - [Conducteur](doc/UserStoriesConducteur.md) : J'ai télépchargé l'application mobile Liane, je suis conducteur régulier ou occasionnel
