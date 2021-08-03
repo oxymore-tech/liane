@@ -13,6 +13,7 @@ using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
+using Liane.Service.Internal.Rp;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
@@ -60,11 +61,9 @@ namespace Liane.Web
             services.AddSettings<TwilioSettings>(context);
             services.AddSettings<AuthSettings>(context);
             services.AddService<AuthServiceImpl>();
-
-            services.AddService<DisplayServiceImpl>();
+            
             services.AddService<LocationServiceImpl>();
             services.AddService<TripServiceImpl>();
-            services.AddService<RallyingPointServiceImpl>();
             services.AddService<RallyingPointServiceImpl2>();
             services.AddService<NotificationServiceImpl>();
             services.AddService<RealTripServiceImpl>();

@@ -9,8 +9,8 @@ namespace Liane.Service.Internal.Trip
 {
     public sealed record UsedLiane(
         [property: BsonId] ObjectId Id,
-        RallyingPoint From,
-        RallyingPoint To,
+        RallyingPoint2 From,
+        RallyingPoint2 To,
         List<UserLianeUsage> Usages
     )
     {

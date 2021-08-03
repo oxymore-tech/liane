@@ -38,9 +38,9 @@ namespace Liane.Service.Internal.Trip
             Blajoux_Montbrun_En_Bas_Mende
         );
 
-        private readonly IRallyingPointService rallyingPointService;
+        private readonly IRallyingPointService2 rallyingPointService;
 
-        public TripServiceImpl(IRallyingPointService rallyingPointService)
+        public TripServiceImpl(IRallyingPointService2 rallyingPointService)
         {
             this.rallyingPointService = rallyingPointService;
         }
@@ -50,11 +50,11 @@ namespace Liane.Service.Internal.Trip
             var trips = new HashSet<Api.Trip.Trip>();
             foreach (var trip in AllTrips)
             {
-                var rallyingPoints = new List<RallyingPoint>();
+                var rallyingPoints = new List<RallyingPoint2>();
                 foreach (var id in trip)
                 {
-                    var point = await rallyingPointService.Get(id);
-                    rallyingPoints.Add(point);
+                    // var point = await rallyingPointService.Get(id);
+                    // rallyingPoints.Add(point);
                 }
 
                 trips.Add(new Api.Trip.Trip(rallyingPoints.ToImmutableList()));

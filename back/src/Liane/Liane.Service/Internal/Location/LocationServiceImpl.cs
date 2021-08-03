@@ -31,13 +31,13 @@ namespace Liane.Service.Internal.Location
         private readonly ICurrentContext currentContext;
         private readonly IAddressService addressService;
         private readonly IRedis redis;
-        private readonly IRallyingPointService rallyingPointService;
+        private readonly IRallyingPointService2 rallyingPointService;
         private readonly IRealTripService realTripService;
         private readonly IRawTripService rawTripService;
         private readonly ILianeTripService lianeTripService;
 
         public LocationServiceImpl(
-            ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService rallyingPointService, IRealTripService realTripService,
+            ILogger<LocationServiceImpl> logger, ICurrentContext currentContext, IRedis redis, IRallyingPointService2 rallyingPointService, IRealTripService realTripService,
             IAddressService addressService, IRawTripService rawTripService, ILianeTripService lianeTripService
             )
         {
@@ -62,7 +62,7 @@ namespace Liane.Service.Internal.Location
 
                 // Try to create one or more trip from the raw data
                 var trips = ImmutableHashSet.CreateBuilder<RealTrip>();
-                var rallyingPointsTrips = ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint>, long)>();
+                var rallyingPointsTrips = ImmutableHashSet.CreateBuilder<(ImmutableHashSet<RallyingPoint2>, long)>();
 
                 foreach (var trip in SplitTrips(userLocations)
                     .Where(l => l.Count >= MinLocTrip))
@@ -102,19 +102,17 @@ namespace Liane.Service.Internal.Location
             return realTrip;
         }
         
-        private async Task<ImmutableHashSet<RallyingPoint>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
+        private async Task<ImmutableHashSet<RallyingPoint2>> CreateRallyingPoints(ImmutableList<UserLocation> trip)
         {
-            var rallyingPoints = ImmutableHashSet.CreateBuilder<RallyingPoint>();
+            var rallyingPoints = ImmutableHashSet.CreateBuilder<RallyingPoint2>();
 
             foreach (var l in trip)
             {
-                var result = await rallyingPointService.GetOneClosest(RedisKeys.RallyingPoint(), l.Longitude, l.Latitude, MinDistRallyingPoint, GeoUnit.Meters);
+                var result = await rallyingPointService.GetFirstClosest(new LatLng(l.Latitude, l.Longitude), MinDistRallyingPoint);
 
                 if (result is null) continue;
                 
-                var r = result.Value;
-                var p = r.Position!.Value;
-                rallyingPoints.Add(new RallyingPoint(r.Member, new LatLng(p.Latitude, p.Longitude), r.Member));
+                rallyingPoints.Add(result);
             }
 
             return rallyingPoints.ToImmutable();
