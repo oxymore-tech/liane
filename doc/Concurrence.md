@@ -1,3 +1,5 @@
+# Etude comparative des solutions de covoiturage existant sur le marché 
+
 | Application | Fonctionnement | Avantages | Inconvénients |
 |:-----------|:-----------|:-----------| :----------- |
 |Blablacar | Avant chaque trajet, le conducteur doit entrer son point de départ, son point d'arrivée ainsi que les points auxquels il peut s'arrêter sur la route. Il choisit ensuite la compensation financière qu'il veut et valide son trajet. Les passagers renseignent leur point de départ et d'arrivée souhaités, l'application trouve les trajets dont les points de départ et d'arrivée sont les plus proches. Le passager choisit avec qui il veut covoiturer, paye et est mis en contact avec le conducteur via l'application. | Réseau d'utilisateurs très développé, propose un mix entre transports collectifs et covoiturage.|Trajets moyenne à longue distance, obligation de renseigner chaque trajet dans l'application.  |
@@ -12,9 +14,10 @@ Image provenant de Oui'Hop (racheté par Ecov)
 <img width="557" alt="Capture d’écran 2021-07-29 à 20 23 06" src="https://user-images.githubusercontent.com/85169666/127545619-712ab7c7-2519-4e83-9590-45c691f24d1d.png">
 
 
-
 Dans la plupart des cas, il y a deux façon de procéder : soit par entreprise soit par collectivité. 
 La majeure différence avec nous c'est que ces solutions ne sont pas adaptées spécifiquement au milieu rural, mais visiblement nous sommes partis vers une application mixte adaptée pour les banlieues ET les milieux ruraux, donc finalement la différenciation sur ce point est faible. 
+
+# Conclusion de l'étude comparative
 
 La conclusion de l'étude de ces différentes applications de covoiturage est que les utilisateurs doivent presque toujours entrer leurs trajets quotidiens à l'avance, ce qui laisse peu de place à l'imprévu. De plus, ces applications sont peu utilisées en zones rurale, ou le sont par extension sans être vraiment adaptées à ces zones.
 
