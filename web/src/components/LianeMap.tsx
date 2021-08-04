@@ -53,6 +53,7 @@ function LianeMap({ className, center }: MapProps) {
     console.log(newFilter);
 
     setFilter(newFilter);
+    setLastCenter(lastCenter); // Update loaded lianes and rallying points
   };
 
   const handleCenter = (newCenter: LatLng) => {
@@ -104,7 +105,7 @@ function LianeMap({ className, center }: MapProps) {
   useEffect(() => {
     updateLianes();
     updateRallyingPoints();
-  }, [lastCenter, filter]);
+  }, [lastCenter]);
 
   return (
     <div>
