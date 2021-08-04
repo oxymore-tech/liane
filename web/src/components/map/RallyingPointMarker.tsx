@@ -51,7 +51,7 @@ export function RallyingPointMarker({ value, from, to, onSelect }: RallyingPoint
 
   return (
     <Marker
-      position={value.position}
+      position={value.coordinates}
       draggable
       icon={iconLookup()}
     >

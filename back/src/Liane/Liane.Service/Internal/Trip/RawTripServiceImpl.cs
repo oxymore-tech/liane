@@ -20,11 +20,11 @@ namespace Liane.Service.Internal.Trip
         
         private readonly MongoClient client;
         private readonly ICurrentContext currentContext;
-        private readonly ILogger<RealTripServiceImpl> logger;
+        private readonly ILogger<RawTripServiceImpl> logger;
         
         private readonly IMongoCollection<UserRawTrip> rawTripCollection;
 
-        public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RealTripServiceImpl> logger)
+        public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RawTripServiceImpl> logger)
         {
             this.currentContext = currentContext;
             this.logger = logger;

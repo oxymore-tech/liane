@@ -4,11 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Castle.Core.Internal;
 using DeepEqual.Syntax;
-using Liane.Api.Trip;
 using Liane.Service.Internal.Display;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
-using Moq;
 using NUnit.Framework;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;
@@ -24,9 +22,6 @@ namespace Liane.Test.Internal.Display
         [SetUp]
         public async Task SetUp()
         {
-            var tripService = new Mock<ITripService>();
-            tripService.Setup(s => s.List())
-                .ReturnsAsync(Trips.AllTrips.ToImmutableHashSet);
             var redisSettings = new RedisSettings("localhost");
             redis = new RedisClient(new TestLogger<RedisClient>(), redisSettings);
 

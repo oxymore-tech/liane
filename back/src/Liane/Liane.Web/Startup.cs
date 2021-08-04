@@ -63,7 +63,6 @@ namespace Liane.Web
             services.AddService<AuthServiceImpl>();
             
             services.AddService<LocationServiceImpl>();
-            services.AddService<TripServiceImpl>();
             services.AddService<RallyingPointServiceImpl>();
             services.AddService<NotificationServiceImpl>();
             services.AddService<RealTripServiceImpl>();
