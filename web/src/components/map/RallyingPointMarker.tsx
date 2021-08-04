@@ -4,9 +4,8 @@ import { LatLng, RallyingPoint } from "@/api";
 import { icon } from "leaflet";
 import { PopupMenuItem } from "@/components/PopupMenuItem";
 import { Label } from "@/components/base/Label";
-import { RallyingPointService } from "@/api/rallying-point-service";
 import { Button } from "@/components/base/Button";
-import { TripService } from "@/api/trip-service";
+import { TripService } from "@/api/services/trip-service";
 
 export const IconBlue = icon({
   iconUrl: "/images/leaflet/marker-icon.png",
@@ -57,7 +56,7 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
 
   return (
     <Marker
-      position={value.position}
+      position={value.coordinates}
       draggable={admin}
       icon={iconLookup()}
       eventHandlers={{ dragend: (e) => {
@@ -86,9 +85,9 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
       <Tooltip>
         {value.label}
         <br />
-        {newPosition ? newPosition.lat : value.position.lat}
+        {newPosition ? newPosition.lat : value.coordinates.lat}
         <br />
-        {newPosition ? newPosition.lng : value.position.lng}
+        {newPosition ? newPosition.lng : value.coordinates.lng}
       </Tooltip>
     </Marker>
   );

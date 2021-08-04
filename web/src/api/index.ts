@@ -67,8 +67,7 @@ export interface RallyingPoint {
   id: string,
   label: string,
   coordinates: LatLng,
-  type?: string,
-  isActive?: boolean
+  isActive: boolean
 }
 
 export interface LianeUsage {
