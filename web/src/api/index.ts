@@ -65,9 +65,10 @@ export interface AuthUser {
 
 export interface RallyingPoint {
   id: string,
-  position: LatLng,
   label: string,
-  distance?: number
+  coordinates: LatLng,
+  type?: string,
+  isActive?: boolean
 }
 
 export interface LianeUsage {
