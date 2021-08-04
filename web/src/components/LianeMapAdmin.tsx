@@ -181,33 +181,27 @@ function LianeMapAdmin({ className, center }: MapProps) {
   // Fetch initial data
 
   useEffect(() => {
-    try {
-      TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
-      TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
-    } catch (e) {
-      // const history = useHistory();
-      // history.push("/auth-error");
-    }
+
+    TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
+    TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
+
   }, []);
 
   // Update the map
 
   useEffect(() => {
-    try {
-      RallyingPointService.list(lastCenter.lat, lastCenter.lng)
-        .then((r) => setRallyingPoints(r));
 
-      TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
-        .then((r: RawTrip[]) => {
-          if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
-        });
+    RallyingPointService.list(lastCenter.lat, lastCenter.lng)
+      .then((r) => setRallyingPoints(r));
 
-      // TripService.snapLianes({ center: lastCenter })
-      //   .then((l: RoutedLiane[]) => setLianes(l));
-    } catch (e) {
-      // const history = useHistory();
-      // history.push("/auth-error");
-    }
+    TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
+      .then((r: RawTrip[]) => {
+        if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
+      });
+
+    // TripService.snapLianes({ center: lastCenter })
+    //   .then((l: RoutedLiane[]) => setLianes(l));
+
   }, [lastCenter]);
 
   // Handle components interaction
@@ -244,7 +238,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         {
           displayRallyingPoints
           && (rallyingPoints.map((point: RallyingPoint, i: number) => (
-            <RallyingPointMarker key={`rl_${i}`} value={point} onSelect={() => {}} />
+            <RallyingPointMarker key={`rl_${i}`} value={point} admin onSelect={() => {}} center={center} />
           )))
         }
         {
