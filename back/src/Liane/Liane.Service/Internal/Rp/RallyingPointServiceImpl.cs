@@ -11,6 +11,7 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Liane.Service.Internal.Rp
@@ -20,14 +21,13 @@ namespace Liane.Service.Internal.Rp
      */
     internal sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
 
-    internal sealed record OverpassElement(double Lat, double Lng, OverpassTag Tags);
+    internal sealed record OverpassElement(double Lat, double Lon, OverpassTag Tags);
 
     internal sealed record OverpassTag(string Name);
 
     public class RallyingPointServiceImpl : IRallyingPointService
     {
         private const string FileName = "Ressources/villes.json";
-        private const string CoordinatesFieldName = "Coordinates";
         private const int Radius = 25_000;
         
         private readonly MongoClient mongo;
@@ -63,8 +63,8 @@ namespace Liane.Service.Internal.Rp
             await rallyingPointsCollection.UpdateOneAsync(
                 rp => rp.Id == ObjectId.Parse(id),
                 Builders<DbRallyingPoint>.Update.Set(
-                    l => l.Coordinates, 
-                    new[] { pos.Lng, pos.Lat }
+                    l => l.Location.Coordinates, 
+                    new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat)
                     )
                 );
         }
@@ -84,9 +84,13 @@ namespace Liane.Service.Internal.Rp
         {
             try
             {
+                // Flush the old database
+                await rallyingPointsCollection.DeleteManyAsync(_ => true);
+                await rallyingPointsCollection.Indexes.DropAllAsync();
+
                 // Create the database index
-                await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2D(CoordinatesFieldName)));
-            
+                await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2DSphere(x => x.Location)));
+                
                 // Load the data
                 await using var file = File.OpenRead(FileName);
                 var options = new JsonSerializerOptions {PropertyNameCaseInsensitive = true};
@@ -95,7 +99,7 @@ namespace Liane.Service.Internal.Rp
                 if (data is not null)
                 {
                     // Add the data to the database
-                    List<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, new []{e.Lng, e.Lat})).ToList();
+                    List<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, e.Lat, e.Lon)).ToList();
                     await rallyingPointsCollection.InsertManyAsync(rallyingPoints);
                     logger.LogInformation("Rallying points re-created with " + rallyingPoints.Count + " entries.");
                 }
@@ -114,12 +118,17 @@ namespace Liane.Service.Internal.Rp
 
         public async Task<ImmutableList<RallyingPoint>> GetClosest(LatLng pos, double radius)
         {
-            var filter = Builders<DbRallyingPoint>.Filter.Near(CoordinatesFieldName, pos.Lng, pos.Lat, Radius);
+            var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat));
+            var filter = Builders<DbRallyingPoint>.Filter.Near(x => x.Location, point, Radius);
             
-            return (await rallyingPointsCollection.FindAsync(filter))
+            var r = (await rallyingPointsCollection.FindAsync(filter))
                 .ToEnumerable()
                 .Select(rp => rp.ToRallyingPoint())
                 .ToImmutableList();
+            
+            logger.LogCritical(r.Count.ToString());
+
+            return r;
         }
 
         public async Task<RallyingPoint?> GetFirstClosest(LatLng pos, double radius)

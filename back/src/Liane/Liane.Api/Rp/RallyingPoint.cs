@@ -6,7 +6,6 @@ namespace Liane.Api.Rp
         string Id,
         string Label,
         LatLng Coordinates,
-        string Type = "point",
         bool IsActive = true
     );
 }

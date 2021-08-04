@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Rp;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers
 {
-    [Route("api/rallyingPoint")]
+    [Route("api/rp")]
     [ApiController]
     [RequiresAuth]
     public sealed class RallyingPointController : ControllerBase
@@ -18,19 +19,47 @@ namespace Liane.Web.Controllers
         {
             this.rallyingPointService = rallyingPointService;
         }
-
-        [HttpGet("snap")]
-        [DisableAuth]
-        public async Task<ImmutableList<RallyingPoint>> Snap([FromQuery] double lat, [FromQuery] double lng)
+        
+        [HttpPost("add")]
+        [RequiresAdminAuth]
+        public async Task Add([FromBody] LatLng pos, [FromRoute] string name)
         {
-            return await rallyingPointService.List(new LatLng(lat, lng));
+            await rallyingPointService.Add(pos, name);
         }
-
+        
+        [HttpPost("delete")]
+        [RequiresAdminAuth]
+        public async Task Delete(string id)
+        {
+            await rallyingPointService.Delete(id);
+        }
+        
+        [HttpPost("move")]
+        [RequiresAdminAuth]
+        public async Task Move([FromRoute] string id, [FromBody] LatLng pos)
+        {
+            await rallyingPointService.Move(id, pos);
+        }
+        
+        [HttpPost("state")]
+        [RequiresAdminAuth]
+        public async Task State([FromRoute] string id, [FromBody] bool isActive)
+        {
+            await rallyingPointService.ChangeState(id, isActive);
+        }
+        
         [HttpPost("generate")]
         [RequiresAdminAuth]
         public async Task Generate()
         {
             await rallyingPointService.LoadFile();
+        }
+
+        [HttpGet("list")]
+        [DisableAuth]
+        public async Task<ImmutableList<RallyingPoint>> List([FromQuery] double lat, [FromQuery] double lng)
+        {
+            return await rallyingPointService.List(new LatLng(lat, lng));
         }
     }
 }
