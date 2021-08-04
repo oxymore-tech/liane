@@ -1,12 +1,6 @@
 # Passager 
 Je dois avoir accès à toutes les fonctionnalités auxquelles un [utilisateur de type spectateur](UserStoriesSpectateur.md) a accès. Je dois pouvoir participer à un covoiturage en tant que passager. 
 
-## Accès à l'application et navigation
-| User story | Solution |
-| :-------- | :--------- |
-| Je dois pouvoir comprendre pourquoi Liane a besoin d'accéder à mes données de géolocalisation :interrobang: | Trois pages de texte à la première connexion qui expliquent l’intérêt de l’application et du partage de données de géolocalisation|
-| Je dois pouvoir naviguer facilement et sans perte de temps dans l'application :interrobang: | Application minimaliste avec peu de boutons, pas de manupulations à faire mis à part le partage de la localisation à la première utilisation. |
-
 ## Sécurité
 | User story | Solution technique |
 | :-------- | :--------- |
