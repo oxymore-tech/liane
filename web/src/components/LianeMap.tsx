@@ -7,8 +7,8 @@ import {
   TripFilterOptions,
   RoutedLiane, distance
 } from "@/api";
-import { TripService } from "@/api/trip-service";
-import { RallyingPointService } from "@/api/rallying-point-service";
+import { TripService } from "@/api/services/trip-service";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";

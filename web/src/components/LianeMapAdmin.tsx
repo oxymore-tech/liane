@@ -14,10 +14,10 @@ import {
   UserLocation
 } from "@/api";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
-import { RallyingPointService } from "@/api/rallying-point-service";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
-import { TripService } from "@/api/trip-service";
+import { TripService } from "@/api/services/trip-service";
 import CenterHandler from "@/components/map/CenterHandler";
 
 const colors: string[] = [
@@ -185,8 +185,8 @@ function LianeMapAdmin({ className, center }: MapProps) {
       TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
       TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
     } catch (e) {
-      const history = useHistory();
-      history.push("/auth-error");
+      // const history = useHistory();
+      // history.push("/auth-error");
     }
   }, []);
 

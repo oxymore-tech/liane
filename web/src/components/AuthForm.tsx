@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { TextInput } from "@/components/base/TextInput";
 import { Button } from "@/components/base/Button";
-import { AuthService } from "@/api/auth-service";
+import { AuthService } from "@/api/services/auth-service";
 import { AppContext } from "@/components/ContextProvider";
 
 /**

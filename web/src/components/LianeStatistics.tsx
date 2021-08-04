@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/base/Button";
-import { TripService } from "@/api/trip-service";
-import { RallyingPointService } from "@/api/rallying-point-service";
+import { TripService } from "@/api/services/trip-service";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 
 interface LianeStatisticsProps {
   numberOfLianes: number,
