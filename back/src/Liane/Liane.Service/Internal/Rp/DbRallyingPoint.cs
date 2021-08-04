@@ -36,7 +36,7 @@ namespace Liane.Service.Internal.Rp
 
         public RallyingPoint ToRallyingPoint()
         {
-            return new (Id.ToString(), Label, new LatLng(Location.Coordinates.Latitude, Location.Coordinates.Latitude), IsActive);
+            return new RallyingPoint(Id.ToString(), Label, new LatLng(Location.Coordinates.Latitude, Location.Coordinates.Longitude), IsActive);
         }
     }
 }
