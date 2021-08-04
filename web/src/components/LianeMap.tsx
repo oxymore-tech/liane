@@ -130,7 +130,7 @@ function LianeMap({ className, center }: MapProps) {
             <RallyingPointMarker
               from={from}
               to={to}
-              key={`rl_${point.label}`}
+              key={`rl_${point.id}`}
               value={point}
               admin={false}
               onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
