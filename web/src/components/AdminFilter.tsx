@@ -32,7 +32,6 @@ function extractUsers(rawTrips: IndexedRawTrip[]) {
 
 export function AdminFilter({ callback, rawTrips }: FilterProps) {
   const [displayRawTrips, setDisplayRawTrips] = useState(true);
-  const [displayRallyingPoints, setDisplayRallyingPoints] = useState(false);
   const [allUsers, setAllUsers] = useState(true);
   const [chosenUser, setChosenUser] = useState<string>();
   const [allTrips, setAllTrips] = useState(true);
@@ -45,7 +44,6 @@ export function AdminFilter({ callback, rawTrips }: FilterProps) {
   function cb() {
     callback({
       displayRawTrips,
-      displayRallyingPoints,
       allUsers,
       chosenUser,
       displayBackground,
@@ -79,7 +77,6 @@ export function AdminFilter({ callback, rawTrips }: FilterProps) {
     <div className="absolute top-0 right-0 z-10 overflow-auto">
       <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
         <Switch label="Données brutes" value={displayRawTrips} onChange={setDisplayRawTrips} color="yellow" />
-        <Switch label="Points de raliement" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />
 
         <Select
           className="col-span-2"
