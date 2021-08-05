@@ -21,7 +21,7 @@ namespace Liane.Web.Controllers
         
         [HttpPost("add")]
         [RequiresAdminAuth]
-        public async Task Add([FromBody] LatLng pos, [FromRoute] string name)
+        public async Task Add([FromQuery] LatLng pos, [FromQuery] string name)
         {
             await rallyingPointService.Add(pos, name);
         }
@@ -35,14 +35,14 @@ namespace Liane.Web.Controllers
         
         [HttpPost("move")]
         [RequiresAdminAuth]
-        public async Task Move([FromRoute] string id, [FromBody] LatLng pos)
+        public async Task Move([FromQuery] string id, [FromQuery] LatLng pos)
         {
             await rallyingPointService.Move(id, pos);
         }
         
         [HttpPost("state")]
         [RequiresAdminAuth]
-        public async Task State([FromRoute] string id, [FromBody] bool isActive)
+        public async Task State([FromQuery] string id, [FromQuery] bool isActive)
         {
             await rallyingPointService.ChangeState(id, isActive);
         }

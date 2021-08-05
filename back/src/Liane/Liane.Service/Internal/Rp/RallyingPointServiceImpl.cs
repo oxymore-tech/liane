@@ -60,11 +60,12 @@ namespace Liane.Service.Internal.Rp
 
         public async Task Move(string id, LatLng pos)
         {
+            logger.LogCritical(pos.ToString());
             await rallyingPointsCollection.UpdateOneAsync(
                 rp => rp.Id == ObjectId.Parse(id),
                 Builders<DbRallyingPoint>.Update.Set(
-                    l => l.Location.Coordinates, 
-                    new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat)
+                    l => l.Location,
+                    GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat))
                     )
                 );
         }
