@@ -10,7 +10,7 @@ export class RallyingPointService {
    * Adds a rallying point.
    */
   static async add(lat: number, lng: number, name: string) {
-    await post("/api/rp/add", { params: { pos: { lat, lng }, name } });
+    await post("/api/rp/add", { params: { lat, lng, name } });
   }
 
   /**
@@ -24,7 +24,8 @@ export class RallyingPointService {
    * Moves a rallying point to specific coordinates.
    */
   static async move(id: string, lat: number, lng: number) {
-    await post("/api/rp/move", { params: { pos: { lat, lng }, id } });
+    console.log(lat, lng);
+    await post("/api/rp/move", { params: { lat, lng, id } });
   }
 
   /**

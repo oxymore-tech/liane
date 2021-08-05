@@ -21,9 +21,9 @@ namespace Liane.Web.Controllers
         
         [HttpPost("add")]
         [RequiresAdminAuth]
-        public async Task Add([FromQuery] LatLng pos, [FromQuery] string name)
+        public async Task Add([FromQuery] double lat, [FromQuery] double lng, [FromQuery] string name)
         {
-            await rallyingPointService.Add(pos, name);
+            await rallyingPointService.Add(new LatLng(lat, lng), name);
         }
         
         [HttpPost("delete")]
@@ -35,9 +35,9 @@ namespace Liane.Web.Controllers
         
         [HttpPost("move")]
         [RequiresAdminAuth]
-        public async Task Move([FromQuery] string id, [FromQuery] LatLng pos)
+        public async Task Move([FromQuery] string id, [FromQuery] double lat, [FromQuery] double lng)
         {
-            await rallyingPointService.Move(id, pos);
+            await rallyingPointService.Move(id, new LatLng(lat, lng));
         }
         
         [HttpPost("state")]
