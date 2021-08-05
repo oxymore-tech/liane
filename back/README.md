@@ -1,17 +1,17 @@
-# Liane back-end documentation
+# Documentation de la partie back-end du Liane
 
-## Overall architecture
+## Architecture générale
 
-The project is built on dotnet core 5 in C#.
+Le projet utilise dotnet core 5, et est implémenté en C#.
 
 - `Liane.Api` : services interface ;
 - `Liane.Service` : services implementation ;
 - `Liane.Web` : controllers and services instantiation ;
 - `Liane.Test` : unit testing classes ;
 
-## Trip management
+## Gestion des trajets (Trips). 
 
-The following diagram explains the architecture.
+Le diagramme suivant explique l'architecture du projet.
 
 
 ```
@@ -40,37 +40,38 @@ classDiagram
 
 ![](../doc/LIANE_TRIP.jpg)
 
-This architecture answer the need for 4 requests :
+Cette architecture répond à quatre nécessités de ce projet :
+- Récupérer l'ensemble des trajets d'un utilisateur ;
+- Permettre à un utilisateur de supprimer un trajet ;
+- Récupérer tous les trajets dans une zone géographique spécifique en fonctions de différents critères ;
+- Permettre aux administrateurs de regénérer les trajets ;
 
-- Get all trips of a specific user ;
-- Allow the user to delete a trip ;
-- Get all trips in a specific area and depending on various criteria ;
-- Allow and administrator to re-generate the trips ;
 
-## Databases
+## Bases de données
 
-This project uses two databases systems : Mongo and Redis. 
+Ce projet utilise deux bases de données : Mongo DB et Redis. 
 
-In order to launch the databases, it is necessary to install docker. 
-Then, you can use the following commands to manage the database.
+Il esrt nécessaire d'installer Docker afin de pouvoir lancer les bases de données. 
+Il est ensuite possible d'utiliser les commandes suivantes pour la gestion des bases de données :
 
-#### Launch and stop databases
+#### Lancer et arrêter les systèmes de bases de données
 
-In order to launch and init the databases Mongo and Redis, you can use the command :
+
+Afin de lancer et d'initialiser les bases de données Mongo et Redis, vous pouvez utiliser la commande suivante :
 
 ```bash
 ./liane init
 ```
 
-If you want to stop the databases, use the following commands : 
+Si vous voulez arrêter les bases de données, vous pouvez utiliser les commandes suivantes :
 
 ```bash
 ./liane stop
 ```
 
-## Twilio configuration
+## Configuration Twilio
 
-To use Twilio (the service to send messages), you need to define three environment variables :
+Pour utiliser Twilio (service permettant l'envoi de sms afin de permettre l'authentification), il est nécessaire de définir trois variables d'environnement :
 
 ```bash
 export LIANE_TWILIO__ACCOUNT=XXX
@@ -78,19 +79,19 @@ export LIANE_TWILIO__FROM=+000
 export LIANE_TWILIO__TOKEN=xxx
 ```
 
-## Launch the project
+## Démarrer le projet 
 
-Dotnet is mandatory in order to launch the backend part of the project. To 
-get information about dotnet go [here](https://dotnet.microsoft.com).
+Dotnet est obligatoire pour lancer la partie backend du projet. Pour 
+obtenir des informations sur Dotnet, cliquez [ici](https://dotnet.microsoft.com).
 
-* On MacOS, you can install it using brew : `brew install homebrew/cask/dotnet` ;
-* On Ubuntu (whether it is WSL or not), you can get detailed instructions [here](https://docs.microsoft.com/fr-fr/dotnet/core/install/linux-ubuntu).
+* Si vous utilisez MacOS, vous pouvez l'installer à l'aide de brew : `brew install homebrew/cask/dotnet` ;
+* Avec ubuntu (que ce soit WSL ou non), vous pouvez récupérer des instructions détaillées [ici](https://docs.microsoft.com/fr-fr/dotnet/core/install/linux-ubuntu).
 
-Once dotnet is installed, you can launch the project using : 
+Une fois que dotnet est installé, vous pouvez lancer le projet en utilisant :
 
 ```bash
 ./liane start
 ```
 
-You can then open http://localhost:8081/swagger which displays
-the documentation of each endpoint.
+Vous pouvez ensuite ouvrir http://localhost:8081/swagger qui affiche
+la documentation de chaque endpoint.
