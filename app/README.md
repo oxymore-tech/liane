@@ -1,24 +1,26 @@
-## Overall architecture
+## Architecture générale 
 
-The project is built on [React](https://fr.reactjs.org/), 
-[Typescript](https://www.typescriptlang.org/) and [Expo.io](https://expo.io/).
+Le projet utilise [React](https://fr.reactjs.org/), 
+[Typescript](https://www.typescriptlang.org/) et [Expo.io](https://expo.io/).
 
-Source organization (`src` folder) :
+Organisation des sources (dossier `src`) :
 
-## `assets`
-## `api`
-## `components`
-## `screens`
+## `api` 
+Interfaces des APIs disponibles
+## `components` 
+L'ensemble des composants implémentés et utilisables dans les différentes pages de l'application
+## `screens` 
+Contient les différentes pages créées. 
 
-## Getting Started
+## Démarrage
 
-In order to use the application in development mode, you need to install expo.io.
-Check [here](https://docs.expo.io/get-started/installation/) for detailled instructions.
-You also need to have installed [nvm](https://github.com/nvm-sh/nvm) (version 15) 
-and [yarn](https://classic.yarnpkg.com/en/) on your computer.
+Afin d'utiliser l'application en mode développement, il est nécessaire d'installer expo.io. 
+Vous trouverez [ici](https://docs.expo.io/get-started/installation/) les instructions détaillées pour ce faire.
+Nvm et yarn doivent aussi être installés sur votre ordinateur. Pour en savoir plus, consultez les liens suivants : [nvm](https://github.com/nvm-sh/nvm) (version 15) 
+[yarn](https://classic.yarnpkg.com/en/).
 
-After installing Expo GLI on you computer and Expo GO on your smartphone 
-(or tablet) you can use the following commands to build and run the application.
+
+Après avoir installé Expo CLI sur votre ordinateur et Expo GO sur téléphone ou tablette, il est possible d'utiliser les commandes suivantes pour build et run l'application : 
 
 ```bash
 nvm use
@@ -26,16 +28,16 @@ yarn
 yarn web
 ```
 
-The application should've launched properly.
+L'application devrait alors s'être lancée correctement. 
 
-To access the deployed application, you can scan the QR code displayed 
-the development tools (or in the terminal) accessible at the address http://localhost:19002/.
-You can also access the application at the address http://localhost:19006/ on your computer.
+Pour accéder à l'application déployée, il est possible de scanner le QR code affiché à l'écran. 
+Les outils de développement sont accessibles à l'adresse :  http://localhost:19002/.
+Vous pouvez aussi accéder à l'application à l'adresse http://localhost:19006/ sur machine.
 
 ## Setting private IP adress
-In dev mode, you shoud give the app your private IP adress so you can access the APIs. 
-Go to ``app/src/api/http.ts``, and change the line : 
-``const BaseUrl = __DEV__ ? "http://192.168.X.XXX:8081/api" : "https://liane.gjini.co/api";``replacing the Xs with your private IP adress. 
-You can ask for your IP in your terminal with the following command : ``ifconfig``.
+En mode développement, il est essentiel de donner à l'application son adresse IP privée afin de pouvoir accéder aux APIs. 
+Allez dans ``app/src/api/http.ts``, et changer la ligne : 
+``const BaseUrl = __DEV__ ? "http://192.168.X.XXX:8081/api" : "https://liane.gjini.co/api";`` en remplaçant les Xs avec votre adresse IP privée. 
+Vous pouvez récupérer votre adresse IP à partir de votre terminal en utilisant la commande suivante :``ifconfig``.
 
 
