@@ -28,7 +28,8 @@ namespace Liane.Service.Internal.Rp
     public class RallyingPointServiceImpl : IRallyingPointService
     {
         private const string FileName = "Ressources/villes.json";
-        private const int Radius = 25_000;
+        private const int RadiusSelection = 25_000;
+        private const int RadiusInterpolation = 1_000;
         
         private readonly MongoClient mongo;
         private readonly ILogger<RallyingPointServiceImpl> logger;
@@ -113,27 +114,41 @@ namespace Liane.Service.Internal.Rp
 
         public async Task<ImmutableList<RallyingPoint>> List(LatLng pos)
         {
-            return await GetClosest(pos, Radius);
+            return await GetClosest(pos, RadiusSelection);
         }
 
         public async Task<ImmutableList<RallyingPoint>> GetClosest(LatLng pos, double radius)
         {
             var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat));
-            var filter = Builders<DbRallyingPoint>.Filter.Near(x => x.Location, point, Radius);
+            var filter = Builders<DbRallyingPoint>.Filter.Near(x => x.Location, point, RadiusSelection);
             
             var r = (await rallyingPointsCollection.FindAsync(filter))
                 .ToEnumerable()
                 .Select(rp => rp.ToRallyingPoint())
                 .ToImmutableList();
-            
-            logger.LogCritical(r.Count.ToString());
 
             return r;
         }
 
         public async Task<RallyingPoint?> GetFirstClosest(LatLng pos, double radius)
         {
-            return (await GetClosest(pos, Radius)).First();
+            return (await GetClosest(pos, RadiusSelection)).First();
+        }
+
+        public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
+        {
+            var rallyingPoints = ImmutableList.CreateBuilder<RallyingPoint>();
+
+            foreach (var l in locations)
+            {
+                var result = await GetFirstClosest(l, RadiusInterpolation);
+
+                if (result is null) continue;
+                
+                rallyingPoints.Add(result);
+            }
+
+            return rallyingPoints.Distinct().ToImmutableList();
         }
     }
 }

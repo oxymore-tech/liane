@@ -45,5 +45,10 @@ namespace Liane.Api.Rp
          * Gets the first rallying point close to a point.
          */
         Task<RallyingPoint?> GetFirstClosest(LatLng pos, double radius);
+        
+        /**
+         * Interpolates a list of location with rallying points.
+         */
+        Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> pos);
     }
 }
