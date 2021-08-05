@@ -76,7 +76,7 @@ export function AdminFilter({ callback, rawTrips }: FilterProps) {
   }
 
   return (
-    <div className="absolute inset-y-0 right-0 z-10 overflow-auto">
+    <div className="absolute top-0 right-0 z-10 overflow-auto">
       <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
         <Switch label="Données brutes" value={displayRawTrips} onChange={setDisplayRawTrips} color="yellow" />
         <Switch label="Points de raliement" value={displayRallyingPoints} onChange={setDisplayRallyingPoints} color="yellow" />

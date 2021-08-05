@@ -11,8 +11,8 @@ interface LianeStatisticsProps {
 
 export function LianeStatistics({ numberOfLianes, numberOfRaws, numberOfUsers }: LianeStatisticsProps) {
   return (
-    <div className="absolute left-12 z-10 ">
-      <div className="bg-white w-96 shadow-xl bg-opacity-80 rounded-lg grid grid-cols-2 p-2 gap-2 ">
+    <div className="absolute top-0 left-0 z-10 overflow-auto">
+      <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-10 gap-2 m-10">
         <Button
           color="blue"
           className="mb-2 col-span-2"
