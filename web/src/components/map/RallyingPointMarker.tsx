@@ -35,18 +35,38 @@ export interface RallyingPointMarkerProps {
   admin: boolean;
   onSelect: (fromVsTo:boolean) => void;
   center: LatLng ;
+  edible?: boolean;
+  active : boolean ;
 }
 
-export function RallyingPointMarker({ value, from, to, admin, center, onSelect }: RallyingPointMarkerProps) {
+export function RallyingPointMarker({ value, from, to, admin, edible, onSelect, active }: RallyingPointMarkerProps) {
   const map = useMap();
+  const firstPosition = value.coordinates;
   const isFrom = from?.id === value.id;
   const isTo = to?.id === value.id;
   const [newPosition, setNewPosition] = useState(null);
+  const [isActive, setIsActive] = useState<boolean>(active);
 
   const iconLookup = () => {
     if (isFrom) return IconBlue;
     if (isTo) return IconRed;
     return IconGray;
+  };
+
+  const cancelRPmodification = () => {
+    // Remettre le point de ralliement à sa position initiale (celle renseignée en BD)
+    // Il faut au préalable avoir enregistré la première position quelque part
+
+    setNewPosition(firstPosition);
+  };
+
+  const saveNewPosition = () => {
+    // Faire la requête pour enregistrer dans la BD la nouvelle position
+  };
+
+  const updateIsActive = () => {
+    setIsActive(!isActive);
+    // Faire la requête pour que le point soit actif/inactif en BD
   };
 
   const select = useCallback((fromVsTo: boolean) => {
@@ -57,7 +77,7 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
   return (
     <Marker
       position={value.coordinates}
-      draggable={admin}
+      draggable={edible}
       icon={iconLookup()}
       eventHandlers={{ dragend: (e) => {
         const currentMarker = e.target;
@@ -65,22 +85,33 @@ export function RallyingPointMarker({ value, from, to, admin, center, onSelect }
         setNewPosition(currentPosition);
       } }}
     >
-      {newPosition ? (
-        <Button
-          color="blue"
-          className="absolute mb-2 bottom-10 z-10"
-          label="Enregistrer les modifications"
-          onClick={async () => { await TripService.generateLianes(); }}
-        />
-      ) : null}
+      {newPosition ? null : null}
       <Popup closeButton={false}>
         <Label className="text-center pb-2 mb-2 border-b">
           {value.label}
         </Label>
-        <div className="w-28 flex flex-col">
-          <PopupMenuItem text="Départ" selected={isFrom} onSelect={() => select(true)} img="/images/leaflet/marker-icon.png" />
-          <PopupMenuItem text="Arrivée" selected={isTo} onSelect={() => select(false)} img="/images/leaflet/marker-icon-red.png" />
-        </div>
+        {
+          edible ? (
+            <div className="w-31 flex flex-col">
+              { isActive
+                ? <PopupMenuItem text="Désactiver le rallying point" selected={isActive} onSelect={updateIsActive} img="/images/leaflet/marker-icon.png" />
+                : <PopupMenuItem text="Activer le rallying point" selected={isActive} onSelect={updateIsActive} img="/images/leaflet/marker-icon.png" />}
+              { newPosition
+                ? (
+                  <div>
+                    <PopupMenuItem text="Annuler le déplacement" selected={newPosition === true} onSelect={cancelRPmodification} img="/images/leaflet/marker-icon.png" />
+                    <PopupMenuItem text="Enregistrer la nouvelle position" selected={newPosition === true} onSelect={saveNewPosition} img="/images/leaflet/marker-icon.png" />
+                  </div>
+                ) : null}
+            </div>
+          ) : (
+            <div className="w-28 flex flex-col">
+              <PopupMenuItem text="Départ" selected={isFrom} onSelect={() => select(false)} img="/images/leaflet/marker-icon.png" />
+              <PopupMenuItem text="Arrivée" selected={isTo} onSelect={() => select(false)} img="/images/leaflet/marker-icon-red.png" />
+            </div>
+          )
+        }
+
       </Popup>
       <Tooltip>
         {value.label}

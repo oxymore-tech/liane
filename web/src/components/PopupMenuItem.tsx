@@ -2,8 +2,8 @@ import React from "react";
 
 interface PopupMenuItemProps {
   text:string;
-  selected:boolean;
-  img:string;
+  selected?:boolean;
+  img?:string;
   onSelect:() => void;
 }
 

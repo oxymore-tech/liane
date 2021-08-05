@@ -14,7 +14,6 @@ import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
 import { TripFilter } from "@/components/TripFilter";
 import { LianeRoute } from "@/components/map/LianeRoute";
-import { Simulate } from "react-dom/test-utils";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 

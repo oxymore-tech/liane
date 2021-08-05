@@ -103,7 +103,8 @@ export interface TripFilterOptions {
   dayFrom?: number,
   dayTo?: number,
   hourFrom?: number,
-  hourTo?: number
+  hourTo?: number,
+  edible?:boolean
 }
 
 export interface RoutingQuery {

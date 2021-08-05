@@ -19,6 +19,7 @@ import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
 import { TripService } from "@/api/services/trip-service";
 import CenterHandler from "@/components/map/CenterHandler";
+import { Switch } from "@/components/base/Switch";
 
 const colors: string[] = [
   "#22278A",
@@ -166,18 +167,19 @@ function LianeMapAdmin({ className, center }: MapProps) {
   // Data
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
-  const [lianes, setLianes] = useState<RoutedLiane[]>([]);
+  // const [lianes, setLianes] = useState<RoutedLiane[]>([]);
   const [lastCenter, setLastCenter] = useState<LatLng>(center);
 
   // Displayed data
   const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
   const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
-  const [displayLianes, setDisplayLianes] = useState(false);
+  // const [displayLianes, setDisplayLianes] = useState(false);
 
   // Statistics
   const [rawStats, setRawStats] = useState<RawTripStats>({ numberOfTrips: 0 });
   const [lianeStats, setLianeStats] = useState<LianeStats>({ numberOfTrips: 0, numberOfUsers: 0 });
 
+  const [edibleRallyingPoint, setEdibleRallyingPoint] = useState(false);
   // Fetch initial data
 
   useEffect(() => {
@@ -217,10 +219,24 @@ function LianeMapAdmin({ className, center }: MapProps) {
     setDisplayRawTrips(filterRawTrips(rawTrips, options));
   };
 
+  const updateEdibleRallyingPoints = () => {
+    setEdibleRallyingPoint(!edibleRallyingPoint);
+    if (edibleRallyingPoint) { setDisplayRallyingPoint(true); }
+  };
+
   return (
     <div>
-      <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
-      <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
+      {edibleRallyingPoint ? null : (
+        <div>
+          <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
+          <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
+        </div>
+      )}
+      <div className="absolute left-0 bottom-0 z-10 p-4">
+        <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
+          <Switch label="Modification des rallying points" value={edibleRallyingPoint} onChange={updateEdibleRallyingPoints} color="yellow" />
+        </div>
+      </div>
       <MapContainer
         className={className}
         center={center}
@@ -238,7 +254,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         {
           displayRallyingPoints
           && (rallyingPoints.map((point: RallyingPoint, i: number) => (
-            <RallyingPointMarker key={`rl_${i}`} value={point} admin onSelect={() => {}} center={center} />
+            <RallyingPointMarker key={`rl_${i}`} value={point} admin onSelect={() => {}} center={center} edible={edibleRallyingPoint} />
           )))
         }
         {
