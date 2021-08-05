@@ -94,3 +94,35 @@ Once dotnet is installed, you can launch the project using :
 
 You can then open http://localhost:8081/swagger which displays
 the documentation of each endpoint.
+
+## Ajouter des points de ralliement
+
+Afin d'obtenir la liste des villes au format JSON, nous utilisons
+l'API [Overpass]() d'[OpenStreetMap](https://www.openstreetmap.fr/).
+Le site web [Overpass Turbo](http://overpass-turbo.eu/) permet d'exécuter
+des requêtes directement et d'exporter les données ainsi récupérées.
+
+La requête utilisée est la suivante :
+
+```
+[out:json][timeout:1000];
+// fetch area “France” to search in
+{{geocodeArea:France}}->.searchArea;
+// gather results
+(
+  node[place~"city|town|village"](area.searchArea);
+);
+// print results
+out body;
+>;
+out skel qt;
+```
+
+Il serait par exemple possible de modifier `place` 
+par `"city|town|village|hamlet"` afin de récupérer aussi
+les hameaux.
+
+Une fois les données récupérées il faut les mettre dans le fichier `villes.json`
+présent dans le dossier `back/src/Liane/Liane.Web/Ressources` et de déclencher la
+re-génération des points de ralliement depuis l'interface administrateur. **Toutes
+les données précédentes seront perdues.**
