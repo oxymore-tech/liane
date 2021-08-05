@@ -25,13 +25,13 @@ namespace Liane.Web.Controllers
         }
 
         [HttpGet("")]
-        public async Task<ImmutableList<Notification>> getNotifications()
+        public async Task<ImmutableList<Notification>> GetNotifications()
         {
             return await notificationService.getNotifications();
         }
 
         [HttpPost("delete")]
-        public async Task deleteNotification([FromQuery] int date)
+        public async Task DeleteNotification([FromQuery] int date)
         {
             await notificationService.DeleteNotification(date);
         }

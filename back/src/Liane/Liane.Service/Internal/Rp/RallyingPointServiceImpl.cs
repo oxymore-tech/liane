@@ -31,7 +31,6 @@ namespace Liane.Service.Internal.Rp
         private const int RadiusSelection = 25_000;
         private const int RadiusInterpolation = 1_000;
         
-        private readonly MongoClient mongo;
         private readonly ILogger<RallyingPointServiceImpl> logger;
         
         private readonly IMongoCollection<DbRallyingPoint> rallyingPointsCollection;
@@ -39,7 +38,7 @@ namespace Liane.Service.Internal.Rp
         public RallyingPointServiceImpl(MongoSettings settings, ILogger<RallyingPointServiceImpl> logger)
         {
             this.logger = logger;
-            mongo = new MongoClient(new MongoClientSettings
+            var mongo = new MongoClient(new MongoClientSettings
             {
                 Server = new MongoServerAddress(settings.Host, 27017),
                 Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)

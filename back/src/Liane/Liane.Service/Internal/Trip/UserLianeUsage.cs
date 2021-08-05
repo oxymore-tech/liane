@@ -12,7 +12,7 @@ namespace Liane.Service.Internal.Trip
     {
         public LianeUsage ToLianeUsage()
         {
-            return new (Timestamp, IsPrimary, TripId.ToString());
+            return new LianeUsage(Timestamp, IsPrimary, TripId.ToString());
         }
     }
 }
