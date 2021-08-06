@@ -1,6 +1,6 @@
 ## Overall architecture
 
-The project is built on [React](https://fr.reactjs.org/) and [Next.js](https://nextjs.org/)
+Ce projet utilise les technologies [React](https://fr.reactjs.org/) et [Next.js](https://nextjs.org/)
 
 `web/src` :
 
