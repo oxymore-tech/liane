@@ -183,7 +183,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
   // const [displayLianes, setDisplayLianes] = useState(false);
-  const [mode, setMode] = useState<Mode>(Mode.RallyingPoints);
+  const [mode, setMode] = useState<Mode>(Mode.RawTrips);
 
   // Statistics
   const [rawStats, setRawStats] = useState<RawTripStats>({ numberOfTrips: 0 });
