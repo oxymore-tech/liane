@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Location;
+using Liane.Api.Rp;
 
 namespace Liane.Api.Trip
 {
@@ -8,7 +10,7 @@ namespace Liane.Api.Trip
         /**
          * Save a list of liane.
          */
-        Task Create(ImmutableHashSet<(ImmutableHashSet<RallyingPoint> rallyingPoints, long timestamp)> rallyingPointsTrips);
+        Task Create(string user, ImmutableList<UserLocation> locations);
         
         /**
          * Delete a liane trip and its corresponding liane.

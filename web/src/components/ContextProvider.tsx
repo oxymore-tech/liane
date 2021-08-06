@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { getStoredToken, setStoredToken } from "@/api/storage";
 import { AuthUser } from "@/api";
-import { AuthService } from "@/api/auth-service";
+import { AuthService } from "@/api/services/auth-service";
 
 /**
  * Application context format.

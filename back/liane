@@ -68,7 +68,7 @@ db.real_liane.createIndex( { "From": 1, "To": 1 }, { unique: true } );
 
 EOF
 
-  docker exec -i redis redis-cli --pipe < "${SCRIPTPATH}/../deploy/redis-data.txt"
+  docker exec -i redis redis-cli --pipe < "${SCRIPTPATH}/admins.txt"
 }
 
 # catch first arguments with $1

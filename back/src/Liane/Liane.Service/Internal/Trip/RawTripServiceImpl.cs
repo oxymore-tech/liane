@@ -13,30 +13,26 @@ namespace Liane.Service.Internal.Trip
 {
     public class RawTripServiceImpl : IRawTripService
     {
-        private const string DatabaseName = "liane";
-        private const string CollectionName = "raw_trips";
-        
         private const int Radius = 25_000;
         
-        private readonly MongoClient client;
         private readonly ICurrentContext currentContext;
-        private readonly ILogger<RealTripServiceImpl> logger;
+        private readonly ILogger<RawTripServiceImpl> logger;
         
         private readonly IMongoCollection<UserRawTrip> rawTripCollection;
 
-        public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RealTripServiceImpl> logger)
+        public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RawTripServiceImpl> logger)
         {
             this.currentContext = currentContext;
             this.logger = logger;
 
-            client = new MongoClient(new MongoClientSettings
+            var mongo = new MongoClient(new MongoClientSettings
             {
                 Server = new MongoServerAddress(settings.Host, 27017),
                 Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
             });
             
-            var database = client.GetDatabase(DatabaseName);
-            rawTripCollection = database.GetCollection<UserRawTrip>(CollectionName);
+            var database = mongo.GetDatabase(MongoKeys.Database());
+            rawTripCollection = database.GetCollection<UserRawTrip>(MongoKeys.RawTrips());
         }
 
         public async Task Save(ImmutableList<RawTrip> trips)
@@ -83,7 +79,6 @@ namespace Liane.Service.Internal.Trip
 
         public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
         {
-            // [IMPORTANT]
             // TODO : find a better way to do such a request, this is **bad** and WILL lead to problems.
             // The reason for this implementation is that the objects of an array field cannot be
             // accessed in the filter, the ideal solution would be to get the first location and compute its distance
@@ -107,7 +102,7 @@ namespace Liane.Service.Internal.Trip
 
         public async Task<RawTripStats> Stats()
         {
-            return new (await rawTripCollection.CountDocumentsAsync(_ => true));
+            return new RawTripStats(await rawTripCollection.CountDocumentsAsync(_ => true));
         }
 
     }

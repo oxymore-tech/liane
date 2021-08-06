@@ -22,4 +22,8 @@
         <ProjectReference Include="..\Liane.Service\Liane.Service.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="Ressources\villes.json" />
+    </ItemGroup>
+
 </Project>

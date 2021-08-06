@@ -10,15 +10,20 @@ import {
   RawTrip,
   RawTripFilterOptions,
   RawTripStats,
-  RoutedLiane, toLatLng,
+  toLatLng,
   UserLocation
 } from "@/api";
-import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
-import { RallyingPointService } from "@/api/rallying-point-service";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 import { AdminFilter } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
-import { TripService } from "@/api/trip-service";
+import { TripService } from "@/api/services/trip-service";
 import CenterHandler from "@/components/map/CenterHandler";
+import { Switch } from "@/components/base/Switch";
+import { Button } from "@/components/base/Button";
+import ZoomHandler from "@/components/map/ZoomHandler";
+import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
+
+const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
 
 const colors: string[] = [
   "#22278A",
@@ -33,9 +38,14 @@ interface MapProps {
   center: LatLng;
 }
 
+enum Mode {
+  RawTrips,
+  Lianes,
+  RallyingPoints
+}
+
 export interface FilterOptions {
   displayRawTrips: boolean;
-  displayRallyingPoints: boolean;
   allUsers: boolean;
   chosenUser?: string;
   allTrips: boolean;
@@ -166,13 +176,14 @@ function LianeMapAdmin({ className, center }: MapProps) {
   // Data
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
-  const [lianes, setLianes] = useState<RoutedLiane[]>([]);
+  // const [lianes, setLianes] = useState<RoutedLiane[]>([]);
   const [lastCenter, setLastCenter] = useState<LatLng>(center);
 
   // Displayed data
   const [displayRawTrips, setDisplayRawTrips] = useState<IndexedRawTrip[]>([]);
-  const [displayRallyingPoints, setDisplayRallyingPoint] = useState(false);
-  const [displayLianes, setDisplayLianes] = useState(false);
+  const [showRallyingPoints, setShowRallyingPoints] = useState(false);
+  // const [displayLianes, setDisplayLianes] = useState(false);
+  const [mode, setMode] = useState<Mode>(Mode.RawTrips);
 
   // Statistics
   const [rawStats, setRawStats] = useState<RawTripStats>({ numberOfTrips: 0 });
@@ -181,33 +192,23 @@ function LianeMapAdmin({ className, center }: MapProps) {
   // Fetch initial data
 
   useEffect(() => {
-    try {
-      TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
-      TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
-    } catch (e) {
-      const history = useHistory();
-      history.push("/auth-error");
-    }
+    TripService.statsLiane().then((s: LianeStats) => setLianeStats(s));
+    TripService.statsRaw().then((s: RawTripStats) => setRawStats(s));
   }, []);
 
   // Update the map
 
   useEffect(() => {
-    try {
-      RallyingPointService.list(lastCenter.lat, lastCenter.lng)
-        .then((r) => setRallyingPoints(r));
+    RallyingPointService.list(lastCenter.lat, lastCenter.lng)
+      .then((r) => setRallyingPoints(r));
 
-      TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
-        .then((r: RawTrip[]) => {
-          if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
-        });
+    TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
+      .then((r: RawTrip[]) => {
+        if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
+      });
 
-      // TripService.snapLianes({ center: lastCenter })
-      //   .then((l: RoutedLiane[]) => setLianes(l));
-    } catch (e) {
-      // const history = useHistory();
-      // history.push("/auth-error");
-    }
+    // TripService.snapLianes({ center: lastCenter })
+    //   .then((l: RoutedLiane[]) => setLianes(l));
   }, [lastCenter]);
 
   // Handle components interaction
@@ -218,44 +219,71 @@ function LianeMapAdmin({ className, center }: MapProps) {
     }
   };
 
+  const handleZoom = (zoom: number) => {
+    setShowRallyingPoints(zoom >= ZOOM_LEVEL_TO_SHOW_RP);
+  };
+
   const updateDisplayRawTrips = (options : FilterOptions) => {
-    setDisplayRallyingPoint(options.displayRallyingPoints);
     setDisplayRawTrips(filterRawTrips(rawTrips, options));
   };
 
   return (
     <div>
-      <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
-      <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
+      <div className="absolute bottom-0 left-0 z-10 overflow-auto">
+        <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
+          <Switch
+            label="Modification des points de ralliement"
+            value={mode === Mode.RallyingPoints}
+            onChange={(state: boolean) => (state ? setMode(Mode.RallyingPoints) : setMode(Mode.RawTrips))}
+            color="yellow"
+          />
+          <Button
+            color="blue"
+            className="col-span-2"
+            label="Re-générer les lianes"
+            onClick={async () => { await TripService.generateLianes(); }}
+          />
+          <Button
+            color="blue"
+            className="col-span-2"
+            label="Re-générer les points de ralliement"
+            onClick={async () => { await RallyingPointService.generate(); }}
+          />
+        </div>
+      </div>
+      {mode === Mode.RallyingPoints ? null : (
+        <div>
+          <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
+          <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
+        </div>
+      )}
       <MapContainer
         className={className}
         center={center}
         zoom={10}
         scrollWheelZoom
+        zoomControl={false}
         dragging
         touchZoom={false}
         style={{ zIndex: 0, position: "relative" }}
       >
+        <ZoomHandler callback={handleZoom} />
         <CenterHandler callback={handleCenter} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}
         />
-        {
-          displayRallyingPoints
-          && (rallyingPoints.map((point: RallyingPoint, i: number) => (
-            <RallyingPointMarker key={`rl_${i}`} value={point} onSelect={() => {}} />
-          )))
-        }
-        {
-          displayRawTrips.map((r: IndexedRawTrip, k: number) => (
-            r.locations.map((l: UserLocation, j: number) => (
-              <CircleMarker key={`l_${k}_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: colors[r.index % colors.length] }} radius={10}>
-                {tooltip(r.index, k, j, l)}
-              </CircleMarker>
-            ))
-          ))
-        }
+        { showRallyingPoints
+          && (rallyingPoints.map((point: RallyingPoint) => (
+            <RallyingPointMarker key={`rl_${point.id}`} value={point} editMode={mode === Mode.RallyingPoints} />
+          )))}
+
+        { displayRawTrips.map((r: IndexedRawTrip, k: number) => (
+          r.locations.map((l: UserLocation, j: number) => (
+            <CircleMarker key={`l_${k}_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: colors[r.index % colors.length] }} radius={10}>
+              {tooltip(r.index, k, j, l)}
+            </CircleMarker>
+          ))))}
       </MapContainer>
     </div>
   );

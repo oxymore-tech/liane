@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Liane.Api;
+using Liane.Api.Rp;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -15,7 +15,7 @@ namespace Liane.Service.Internal.Trip
     {
         public Api.Trip.Liane ToLiane()
         {
-            return new (From, To, Usages.Select(u => u.ToLianeUsage()).ToList());
+            return new Api.Trip.Liane(From, To, Usages.Select(u => u.ToLianeUsage()).ToList());
         }
     }
 }

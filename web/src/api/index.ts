@@ -65,9 +65,9 @@ export interface AuthUser {
 
 export interface RallyingPoint {
   id: string,
-  position: LatLng,
   label: string,
-  distance?: number
+  coordinates: LatLng,
+  isActive: boolean
 }
 
 export interface LianeUsage {
@@ -103,7 +103,8 @@ export interface TripFilterOptions {
   dayFrom?: number,
   dayTo?: number,
   hourFrom?: number,
-  hourTo?: number
+  hourTo?: number,
+  edible?:boolean
 }
 
 export interface RoutingQuery {

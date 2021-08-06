@@ -7,8 +7,8 @@ import {
   TripFilterOptions,
   RoutedLiane, distance
 } from "@/api";
-import { TripService } from "@/api/trip-service";
-import { RallyingPointService } from "@/api/rallying-point-service";
+import { TripService } from "@/api/services/trip-service";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 import ZoomHandler from "@/components/map/ZoomHandler";
 import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
@@ -52,6 +52,7 @@ function LianeMap({ className, center }: MapProps) {
     console.log(newFilter);
 
     setFilter(newFilter);
+    setLastCenter(lastCenter); // Update loaded lianes and rallying points
   };
 
   const handleCenter = (newCenter: LatLng) => {
@@ -103,7 +104,7 @@ function LianeMap({ className, center }: MapProps) {
   useEffect(() => {
     updateLianes();
     updateRallyingPoints();
-  }, [lastCenter, filter]);
+  }, [lastCenter]);
 
   return (
     <div>
@@ -129,7 +130,7 @@ function LianeMap({ className, center }: MapProps) {
             <RallyingPointMarker
               from={from}
               to={to}
-              key={`rl_${point.label}`}
+              key={`rl_${point.id}`}
               value={point}
               onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
             />
