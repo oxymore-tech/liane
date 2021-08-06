@@ -16,3 +16,9 @@ Je dois avoir accès à toutes les fonctionnalités auxquelles un [utilisateur d
 | Je dois pouvoir voir les trajets les plus proches de ma demande si aucun trajet correspondant strictement à ma demande n'est disponible 🟥 | |
 | Je dois pouvoir communiquer avec un éventuel conducteur 🟥 | | 
 | Je dois pouvoir signaler d'éventuels problèmes avec un conducteur 🟥 :interrobang: | |
+
+# Légende 
+🟩 : User Story implémentée et validée 
+🟥 : User Story non gérée
+:seedling: : User Story en cours de développement
+:interrobang: : Validation nécessaire (soit avant d'avancer plus, soit avant de passer l'US en validée) 
