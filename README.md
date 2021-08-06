@@ -30,10 +30,12 @@ Liane n'a pas pour vocation de remplacer les géants du covoiturage, mais entend
 
 # Définition des user stories 
 
-Nous avons définis trois utilisateurs types : 
+Nous avons définis cinq utilisateurs types : 
+- [Les spectateurs](doc/UserStoriesSpectateur.md)
 - [Les administrateurs](doc/UserStoriesAdmin.md)
 - [Les beta testeurs](doc/UserStoriesBeta.md)
-- [Les utilisateurs lambda](doc/UserStoriesLambaUser.md)
+- [Les conducteurs](doc/UserStoriesConducteur.md)
+- [Les passagers](doc/UserStoriesPassager.md) 
 
 # Key Concepts
 
