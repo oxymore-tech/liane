@@ -266,9 +266,7 @@ namespace Liane.Service.Internal.Trip
                     var first = results.FirstOrDefault();
                     var lianeUsage = new UserLianeUsage(user, isPrimary, timestamp, lianeTripId);
                     ObjectId lianeId;
-                    
-                    if (isPrimary) logger.LogCritical(from.r.Label + " + " + to.Label + " = " + isPrimary);
-                    
+
                     if (first is not null) // The liane already exists, add an usage
                     {
                         lianeId = first.Id;

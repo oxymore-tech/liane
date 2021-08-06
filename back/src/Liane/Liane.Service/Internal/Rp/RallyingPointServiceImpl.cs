@@ -60,7 +60,6 @@ namespace Liane.Service.Internal.Rp
 
         public async Task Move(string id, LatLng pos)
         {
-            logger.LogCritical(pos.ToString());
             await rallyingPointsCollection.UpdateOneAsync(
                 rp => rp.Id == ObjectId.Parse(id),
                 Builders<DbRallyingPoint>.Update.Set(
