@@ -29,7 +29,7 @@ function merge() {
 function prepare() {
     local country=$1
 
-    # docker run -t -v "${OSM_DATA}:/data" docker.synergee.com/library/nominatim:3.5 sh /app/init.sh /data/${country}.osm.pbf postgresdata 4:x
+    docker run -t -v "${OSM_DATA}:/data" docker.synergee.com/library/nominatim:3.5 sh /app/init.sh /data/${country}.osm.pbf postgresdata 4:x
 
     docker run -t -v "${OSM_DATA}:/data" osrm/osrm-backend osrm-extract -p /opt/car.lua /data/${country}.osm.pbf
     docker run -t -v "${OSM_DATA}:/data" osrm/osrm-backend osrm-partition /data/${country}.osrm
