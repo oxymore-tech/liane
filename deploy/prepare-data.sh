@@ -7,10 +7,11 @@ OSM_DATA=/data/liane/osm
 sudo mkdir -p ${OSM_DATA}
 
 function download() {
-    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/midi-pyrenees-latest.osm.pbf
-    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/languedoc-roussillon-latest.osm.pbf
-    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/auvergne-latest.osm.pbf
-    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf
+    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france-latest.osm.pbf
+#    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/midi-pyrenees-latest.osm.pbf
+#    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/languedoc-roussillon-latest.osm.pbf
+#    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/auvergne-latest.osm.pbf
+#    wget -P ${OSM_DATA} -N http://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf
 }
 
 function merge() {
@@ -37,6 +38,6 @@ function prepare() {
 
 download
 
-merge
+#merge
 
-prepare all
+prepare france-latest
