@@ -27,9 +27,9 @@ namespace Liane.Service.Internal.Rp
 
     public class RallyingPointServiceImpl : IRallyingPointService
     {
-        private const string FileName = "Ressources/villes.json";
-        private const int RadiusSelection = 25_000;
-        private const int RadiusInterpolation = 1_000;
+        private const string FileName = "Ressources/villes.json"; // Relative to the web project
+        private const int SelectionRadius = 25_000;
+        private const int InterpolationRadius = 1_000;
         
         private readonly ILogger<RallyingPointServiceImpl> logger;
         
@@ -113,13 +113,13 @@ namespace Liane.Service.Internal.Rp
 
         public async Task<ImmutableList<RallyingPoint>> List(LatLng pos)
         {
-            return await GetClosest(pos, RadiusSelection);
+            return await GetClosest(pos, SelectionRadius);
         }
 
         public async Task<ImmutableList<RallyingPoint>> GetClosest(LatLng pos, double radius)
         {
             var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat));
-            var filter = Builders<DbRallyingPoint>.Filter.Near(x => x.Location, point, RadiusSelection);
+            var filter = Builders<DbRallyingPoint>.Filter.Near(x => x.Location, point, SelectionRadius);
             
             var r = (await rallyingPointsCollection.FindAsync(filter))
                 .ToEnumerable()
@@ -131,7 +131,7 @@ namespace Liane.Service.Internal.Rp
 
         public async Task<RallyingPoint?> GetFirstClosest(LatLng pos, double radius)
         {
-            return (await GetClosest(pos, RadiusSelection)).First();
+            return (await GetClosest(pos, SelectionRadius)).First();
         }
 
         public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
@@ -140,7 +140,7 @@ namespace Liane.Service.Internal.Rp
 
             foreach (var l in locations)
             {
-                var result = await GetFirstClosest(l, RadiusInterpolation);
+                var result = await GetFirstClosest(l, InterpolationRadius);
 
                 if (result is null) continue;
                 
