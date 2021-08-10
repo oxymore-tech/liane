@@ -122,7 +122,8 @@ namespace Liane.Service.Internal.Trip
             var lianesList = (await lianesCollection.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
             
             // Keep primary ones
-            lianesList = lianesList.Where(l => l.Usages.Any(u => u.IsPrimary));
+            // No, don't do that, else the search engine will not work
+            // lianesList = lianesList.Where(l => l.Usages.Any(u => u.IsPrimary));
 
             // Filter the data regarding the position
             if (tripFilter.From is not null)
