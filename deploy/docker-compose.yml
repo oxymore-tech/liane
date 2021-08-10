@@ -22,7 +22,7 @@ services:
 
   osrm:
     image: "osrm/osrm-backend"
-    command: osrm-routed --algorithm mld /data/all.osrm
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
     ports:
       - 5000:5000
     volumes:
