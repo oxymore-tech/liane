@@ -6,16 +6,18 @@ import { Days, Hours } from "@/api/time";
 import { Button } from "@/components/base/Button";
 import { Select } from "@/components/base/Select";
 import { LoginLogout } from "@/components/LoginLogout";
+import { Loading } from "@/components/base/Loading";
 
 interface MapProps {
   rallyingPoints: RallyingPoint[],
   newFrom: RallyingPoint | undefined,
   newTo: RallyingPoint | undefined,
   rpUpdate: (from: RallyingPoint, isFrom: boolean) => void,
+  loading: boolean,
   callback: (dayFrom?: number, dayTo?: number, hourFrom?: number, hourTo?: number) => void,
 }
 
-export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback }: MapProps) {
+export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, loading, callback }: MapProps) {
   // Days count starts at 1 so we have to add an extra day (24 hours) and an extra hour (2 hours)
   const nextHour = addHours(new Date(), 26);
 
@@ -127,6 +129,7 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, callback 
           label="Rechercher"
           onClick={() => callback(day === 8 ? undefined : day - 1, day === 8 ? undefined : day - 1, startHour - 1, endHour - 1)}
         />
+        <Loading className={`${loading && "mt-5 col-span-2"}`} loading={loading} />
       </div>
     </div>
   );
