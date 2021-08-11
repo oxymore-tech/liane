@@ -109,7 +109,7 @@ export function RallyingPointMarker({ value, from, to, editMode, onSelect }: Ral
             </div>
           ) : (
             <div className="w-28 flex flex-col">
-              <PopupMenuItem text="Départ" selected={isFrom} onSelect={() => select(false)} img="/images/leaflet/marker-icon.png" />
+              <PopupMenuItem text="Départ" selected={isFrom} onSelect={() => select(true)} img="/images/leaflet/marker-icon.png" />
               <PopupMenuItem text="Arrivée" selected={isTo} onSelect={() => select(false)} img="/images/leaflet/marker-icon-red.png" />
             </div>
           )}
