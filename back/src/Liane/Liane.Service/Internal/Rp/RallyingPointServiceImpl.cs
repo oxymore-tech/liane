@@ -86,10 +86,11 @@ namespace Liane.Service.Internal.Rp
             {
                 // Flush the old database
                 await rallyingPointsCollection.DeleteManyAsync(_ => true);
-                await rallyingPointsCollection.Indexes.DropAllAsync();
 
                 // Create the database index
-                await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2DSphere(x => x.Location)));
+                // Not needed anymore, everything is handled from databases initialisation
+                // await rallyingPointsCollection.Indexes.DropAllAsync();
+                // await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2DSphere(x => x.Location)));
                 
                 // Load the data
                 await using var file = File.OpenRead(FileName);

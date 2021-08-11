@@ -16,8 +16,6 @@ namespace Liane.Service.Internal.Rp
         bool IsActive = true
     )
     {
-        public const string CoordinatesName = "Location";
-        
         public DbRallyingPoint(ObjectId id, string label, double lat, double lng, bool isActive = true) 
             : this(
                 id, 
