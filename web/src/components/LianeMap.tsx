@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, Polyline, TileLayer } from "react-leaflet";
 import {
   LatLng,
   RallyingPoint,
@@ -14,9 +14,10 @@ import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
 import CenterHandler from "@/components/map/CenterHandler";
 import { TripFilter } from "@/components/TripFilter";
 import { LianeRoute } from "@/components/map/LianeRoute";
-import { Loading } from "@/components/base/Loading";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
+const SELECTED_COLOR = "#22278A";
+const SELECTED_WEIGHT = 6;
 
 interface MapProps {
   className?: string;
@@ -29,6 +30,7 @@ function LianeMap({ className, center }: MapProps) {
   const [lianes, setLianes] = useState<RoutedLiane[]>();
   const [maxUsages, setMaxUsages] = useState(0);
   const [numberLoading, setNumberLoading] = useState(0);
+  const [selectedLiane, setSelectedLiane] = useState<RoutedLiane>();
 
   // Map display options
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
@@ -80,6 +82,10 @@ function LianeMap({ className, center }: MapProps) {
     }
   };
 
+  const handleSelection = (l: RoutedLiane | undefined) => {
+    setSelectedLiane(l);
+  };
+
   // Handle map updates
 
   const updateLianes = () => {
@@ -110,8 +116,6 @@ function LianeMap({ className, center }: MapProps) {
     updateLianes();
     updateRallyingPoints();
   }, [lastCenter]);
-
-  console.log(numberLoading);
 
   return (
     <div className="relative">
@@ -151,10 +155,22 @@ function LianeMap({ className, center }: MapProps) {
                   key={`l_${l.from.label}${l.to.label}`}
                   liane={l}
                   maxUsages={maxUsages}
+                  onOpen={() => handleSelection(l)}
+                  onClose={() => handleSelection(undefined)}
                 />
               )
               : <></>
           ))}
+
+        { selectedLiane
+          && (
+          <Polyline
+            smoothFactor={2.0}
+            positions={selectedLiane.route.coordinates}
+            color={SELECTED_COLOR}
+            weight={SELECTED_WEIGHT}
+          />
+          )}
 
       </MapContainer>
     </div>
