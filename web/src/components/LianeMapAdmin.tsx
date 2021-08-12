@@ -14,7 +14,7 @@ import {
   UserLocation
 } from "@/api";
 import { RallyingPointService } from "@/api/services/rallying-point-service";
-import { AdminFilter } from "@/components/AdminFilter";
+import { AdminFilter, FilterOptions } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
 import { TripService } from "@/api/services/trip-service";
 import CenterHandler from "@/components/map/CenterHandler";
@@ -30,7 +30,10 @@ const colors: string[] = [
   "#0B79F9",
   "#FF8484",
   "#FF5B22",
-  "#FFB545"
+  "#FFB545",
+  "#22892C",
+  "#892B22",
+  "#552586"
 ];
 
 interface MapProps {
@@ -44,30 +47,18 @@ enum Mode {
   RallyingPoints
 }
 
-export interface FilterOptions {
-  displayRawTrips: boolean;
-  allUsers: boolean;
-  chosenUser?: string;
-  allTrips: boolean;
-  chosenTrip?: number;
-  displayBackground: boolean;
-  displayForeground: boolean;
-  distanceBetweenPoints?: number;
-  timeBetweenPoints?: number;
-}
-
 function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): IndexedRawTrip[] {
   let tRawTrips: IndexedRawTrip[] = rawTrips;
 
   // Filter to the selected user
-  if (!options.allUsers) {
+  if (options.chosenUser && options.chosenUser !== "Tous les utilisateurs") {
     tRawTrips = tRawTrips.filter((r: IndexedRawTrip) => (
       r.user === options.chosenUser
     ));
   }
 
   // Filter for the selected trip
-  if (!options.allTrips) {
+  if (options.chosenTrip) {
     tRawTrips = tRawTrips.filter((r: IndexedRawTrip) => (
       r.index === options.chosenTrip
     ));
@@ -137,10 +128,11 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
 }
 
 // Create a tooltip view
-function tooltip(index:number, i: number, j: number, l: UserLocation) {
+function tooltip(index: number, i: number, j: number, user: string, l: UserLocation) {
   return (
     <Tooltip>
       <p>{`Trajet n°${index} | ${i}-${j}`}</p>
+      <p>{`Utilisateur : ${user}`}</p>
       <p>
         {new Intl.DateTimeFormat(
           "fr-FR", {
@@ -161,12 +153,7 @@ function tooltip(index:number, i: number, j: number, l: UserLocation) {
         {`Permission : ${l.permissionLevel}`}
       </p>
       <p>
-        {() => {
-          if (l.isForeground === undefined) {
-            return "Undefined";
-          }
-          return l.isForeground ? "Foreground" : "Background";
-        }}
+        {l.isForeground === undefined ?? (l.isForeground ? "Foreground" : "Background")}
       </p>
     </Tooltip>
   );
@@ -177,6 +164,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
   // const [lianes, setLianes] = useState<RoutedLiane[]>([]);
+  const [currentCenter, setCurrentCenter] = useState<LatLng>(center);
   const [lastCenter, setLastCenter] = useState<LatLng>(center);
 
   // Displayed data
@@ -202,11 +190,6 @@ function LianeMapAdmin({ className, center }: MapProps) {
     RallyingPointService.list(lastCenter.lat, lastCenter.lng)
       .then((r) => setRallyingPoints(r));
 
-    TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
-      .then((r: RawTrip[]) => {
-        if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
-      });
-
     // TripService.snapLianes({ center: lastCenter })
     //   .then((l: RoutedLiane[]) => setLianes(l));
   }, [lastCenter]);
@@ -214,6 +197,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   // Handle components interaction
 
   const handleCenter = (newCenter: LatLng) => {
+    setCurrentCenter(newCenter);
     if (distance(lastCenter, newCenter) > 15_000) {
       setLastCenter(newCenter);
     }
@@ -225,6 +209,15 @@ function LianeMapAdmin({ className, center }: MapProps) {
 
   const updateDisplayRawTrips = (options : FilterOptions) => {
     setDisplayRawTrips(filterRawTrips(rawTrips, options));
+  };
+
+  const updateRawTrips = () => {
+    TripService.snapRaw({ center: currentCenter } as RawTripFilterOptions)
+      .then((r: RawTrip[]) => {
+        const newRawTrips = r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i }));
+        setRawTrips(newRawTrips);
+        setDisplayRawTrips(filterRawTrips(newRawTrips, { displayBackground: true, displayForeground: true } as FilterOptions)); // Reset the display
+      });
   };
 
   return (
@@ -253,7 +246,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
       </div>
       {mode === Mode.RallyingPoints ? null : (
         <div>
-          <AdminFilter callback={updateDisplayRawTrips} rawTrips={rawTrips} />
+          <AdminFilter callback={updateDisplayRawTrips} load={updateRawTrips} rawTrips={rawTrips} />
           <LianeStatistics numberOfLianes={lianeStats.numberOfTrips} numberOfRaws={rawStats.numberOfTrips} numberOfUsers={lianeStats.numberOfUsers} />
         </div>
       )}
@@ -281,7 +274,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         { displayRawTrips.map((r: IndexedRawTrip, k: number) => (
           r.locations.map((l: UserLocation, j: number) => (
             <CircleMarker key={`l_${k}_${j}`} center={[l.latitude, l.longitude]} pathOptions={{ color: colors[r.index % colors.length] }} radius={10}>
-              {tooltip(r.index, k, j, l)}
+              {tooltip(r.index, k, j, r.user, l)}
             </CircleMarker>
           ))))}
       </MapContainer>

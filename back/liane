@@ -53,8 +53,8 @@ function start {
 }
 
 function init_db {
-  redis_purge
-  mongo_purge
+#  redis_purge
+#  mongo_purge
   sleep 3
   user=${MONGO_USER:-mongoadmin}
   password=${MONGO_PASSWORD:-secret}
@@ -63,8 +63,9 @@ function init_db {
   docker exec -i "${container}" mongo -u "${user}" -p "${password}" << EOF
 use liane;
 
-db.trip.createIndex( { "UserId": 1, "StartTime": 1 }, { unique: true } );
 db.real_liane.createIndex( { "From": 1, "To": 1 }, { unique: true } );
+db.real_liane.createIndex( { Location: "2dsphere" } );
+db.rp.createIndex( { Location: "2dsphere" } );
 
 EOF
 

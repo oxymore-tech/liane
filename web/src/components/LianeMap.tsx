@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, Polyline, TileLayer } from "react-leaflet";
 import {
   LatLng,
   RallyingPoint,
   TripFilterOptions,
-  RoutedLiane, distance
+  RoutedLiane,
+  distance, compareRallyingPoints
 } from "@/api";
 import { TripService } from "@/api/services/trip-service";
 import { RallyingPointService } from "@/api/services/rallying-point-service";
@@ -16,6 +17,8 @@ import { TripFilter } from "@/components/TripFilter";
 import { LianeRoute } from "@/components/map/LianeRoute";
 
 const ZOOM_LEVEL_TO_SHOW_RP: number = 12;
+const SELECTED_COLOR = "#22278A";
+const SELECTED_WEIGHT = 6;
 
 interface MapProps {
   className?: string;
@@ -26,7 +29,9 @@ function LianeMap({ className, center }: MapProps) {
   // Map features to display
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [lianes, setLianes] = useState<RoutedLiane[]>();
-  const [maxUsages, setMaxUsages] = useState<number>(0);
+  const [maxUsages, setMaxUsages] = useState(0);
+  const [numberLoading, setNumberLoading] = useState(0);
+  const [selectedLiane, setSelectedLiane] = useState<RoutedLiane>();
 
   // Map display options
   const [showRallyingPoints, setShowRallyingPoints] = useState(false);
@@ -40,8 +45,9 @@ function LianeMap({ className, center }: MapProps) {
   const handleFilter = (dayFrom?: number, dayTo?: number, hourFrom?: number, hourTo?: number) => {
     // Update the filter
     const newFilter = { ...filter };
+    const newCenter = { lat: lastCenter.lat, lng: lastCenter.lng + 0.000001 } as LatLng; // Needs to be slightly different
 
-    newFilter.center = lastCenter;
+    newFilter.center = newCenter;
     newFilter.from = from;
     newFilter.to = to;
     newFilter.dayFrom = dayFrom;
@@ -49,10 +55,8 @@ function LianeMap({ className, center }: MapProps) {
     newFilter.hourFrom = hourFrom;
     newFilter.hourTo = hourTo;
 
-    console.log(newFilter);
-
     setFilter(newFilter);
-    setLastCenter(lastCenter); // Update loaded lianes and rallying points
+    setLastCenter(newCenter); // Update loaded lianes and rallying points
   };
 
   const handleCenter = (newCenter: LatLng) => {
@@ -79,9 +83,15 @@ function LianeMap({ className, center }: MapProps) {
     }
   };
 
+  const handleSelection = (l: RoutedLiane | undefined) => {
+    setSelectedLiane(l);
+  };
+
   // Handle map updates
 
   const updateLianes = () => {
+    setNumberLoading(numberLoading + 1);
+
     TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
       const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.numberOfUsages - a.numberOfUsages);
 
@@ -90,12 +100,16 @@ function LianeMap({ className, center }: MapProps) {
       }
 
       setLianes(l);
+      setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
     });
   };
 
   const updateRallyingPoints = () => {
+    setNumberLoading(numberLoading + 1);
+
     RallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
-      setRallyingPoints(newRallyingPoints);
+      setRallyingPoints(newRallyingPoints.sort(compareRallyingPoints));
+      setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
     });
   };
 
@@ -107,8 +121,8 @@ function LianeMap({ className, center }: MapProps) {
   }, [lastCenter]);
 
   return (
-    <div>
-      <TripFilter rallyingPoints={rallyingPoints} newFrom={from} newTo={to} rpUpdate={handleRp} callback={handleFilter} />
+    <div className="relative">
+      <TripFilter rallyingPoints={rallyingPoints} newFrom={from} newTo={to} rpUpdate={handleRp} loading={numberLoading > 0} callback={handleFilter} />
       <MapContainer
         className={className}
         center={center}
@@ -144,10 +158,22 @@ function LianeMap({ className, center }: MapProps) {
                   key={`l_${l.from.label}${l.to.label}`}
                   liane={l}
                   maxUsages={maxUsages}
+                  onOpen={() => handleSelection(l)}
+                  onClose={() => handleSelection(undefined)}
                 />
               )
               : <></>
           ))}
+
+        { selectedLiane
+          && (
+          <Polyline
+            smoothFactor={2.0}
+            positions={selectedLiane.route.coordinates}
+            color={SELECTED_COLOR}
+            weight={SELECTED_WEIGHT}
+          />
+          )}
 
       </MapContainer>
     </div>

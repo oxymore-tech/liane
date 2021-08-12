@@ -4,6 +4,8 @@ import { Polyline, Popup } from "react-leaflet";
 
 interface LianeProps {
   liane: RoutedLiane,
+  onOpen: () => void,
+  onClose: () => void,
   maxUsages: number
 }
 
@@ -36,7 +38,21 @@ function getColor(liane: RoutedLiane, maxUsages: number): string {
   return color;
 }
 
-export function LianeRoute({ liane, maxUsages }: LianeProps) {
+function getUsage(numberUsages: number): string {
+  let usage: string = "Basse";
+
+  if (numberUsages > 100) {
+    usage = "Très élevée";
+  } else if (numberUsages > 50) {
+    usage = "Elevée";
+  } else if (numberUsages > 15) {
+    usage = "Moyenne";
+  }
+
+  return usage;
+}
+
+export function LianeRoute({ liane, onOpen, onClose, maxUsages }: LianeProps) {
   const [color, setColor] = useState<string>(getColor(liane, maxUsages));
   const [weight, setWeight] = useState<number>(getWeight(liane, maxUsages));
 
@@ -51,6 +67,10 @@ export function LianeRoute({ liane, maxUsages }: LianeProps) {
       positions={liane.route.coordinates}
       color={color}
       weight={weight}
+      eventHandlers={{
+        popupopen: onOpen,
+        popupclose: onClose
+      }}
     >
       <Popup closeButton={false}>
         <p>
@@ -61,9 +81,9 @@ export function LianeRoute({ liane, maxUsages }: LianeProps) {
           {liane.to.label}
         </p>
         <p>
-          Fréquence:
+          Utilisation :
           {" "}
-          {liane.numberOfUsages}
+          <span className="font-bold">{getUsage(liane.numberOfUsages)}</span>
         </p>
       </Popup>
     </MemoPolyline>
