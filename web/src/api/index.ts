@@ -143,3 +143,16 @@ export function distance(l1: LatLng, l2: LatLng): number {
 export function toLatLng(ul: UserLocation): LatLng {
   return { lat: ul.latitude, lng: ul.longitude } as LatLng;
 }
+
+export function compareRallyingPoints(a: RallyingPoint, b: RallyingPoint): number {
+  let r: number = 0;
+
+  if (a.label < b.label) {
+    r = -1;
+  }
+  if (a.label > b.label) {
+    r = 1;
+  }
+
+  return r;
+}

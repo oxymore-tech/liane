@@ -5,7 +5,8 @@ import {
   LatLng,
   RallyingPoint,
   TripFilterOptions,
-  RoutedLiane, distance
+  RoutedLiane,
+  distance, compareRallyingPoints
 } from "@/api";
 import { TripService } from "@/api/services/trip-service";
 import { RallyingPointService } from "@/api/services/rallying-point-service";
@@ -90,6 +91,7 @@ function LianeMap({ className, center }: MapProps) {
 
   const updateLianes = () => {
     setNumberLoading(numberLoading + 1);
+
     TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
       const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.numberOfUsages - a.numberOfUsages);
 
@@ -104,8 +106,9 @@ function LianeMap({ className, center }: MapProps) {
 
   const updateRallyingPoints = () => {
     setNumberLoading(numberLoading + 1);
+
     RallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
-      setRallyingPoints(newRallyingPoints);
+      setRallyingPoints(newRallyingPoints.sort(compareRallyingPoints));
       setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
     });
   };
