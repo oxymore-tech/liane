@@ -47,6 +47,16 @@ export function AdminFilter({ callback, load, rawTrips }: FilterProps) {
   const [distanceBetweenPoints, setDistanceBetweenPoints] = useState<number>();
   const [timeBetweenPoints, setTimeBetweenPoints] = useState<number>();
 
+  const resetAndLoad = () => {
+    load();
+    setSelectedUser(undefined);
+    setSelectedTrip(undefined);
+    setDisplayBackground(true);
+    setDisplayForeground(true);
+    setDistanceBetweenPoints(undefined);
+    setTimeBetweenPoints(undefined);
+  };
+
   // Update dynamically
 
   useEffect(() => {
@@ -63,16 +73,16 @@ export function AdminFilter({ callback, load, rawTrips }: FilterProps) {
   return (
     <div className="absolute top-0 right-0 z-10 overflow-auto">
       <div className="bg-white w-96 shadow-xl bg-opacity-60 rounded-lg grid grid-cols-2 p-6 gap-2 m-6">
-        <span>Charger les trajets</span>
+        <span className="font-bold text-lg">Charger les trajets</span>
 
         <Button
           color="orange"
-          className="mt-4 col-span-2"
+          className="col-span-2"
           label="Charger"
-          onClick={load}
+          onClick={resetAndLoad}
         />
 
-        <span>Filtrer les trajets</span>
+        <span className="font-bold text-lg">Filtrer les trajets</span>
 
         <Select
           className="col-span-2"

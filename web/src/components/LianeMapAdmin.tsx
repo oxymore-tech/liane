@@ -153,12 +153,7 @@ function tooltip(index: number, i: number, j: number, user: string, l: UserLocat
         {`Permission : ${l.permissionLevel}`}
       </p>
       <p>
-        {() => {
-          if (l.isForeground === undefined) {
-            return "Undefined";
-          }
-          return l.isForeground ? "Foreground" : "Background";
-        }}
+        {l.isForeground === undefined ?? (l.isForeground ? "Foreground" : "Background")}
       </p>
     </Tooltip>
   );
@@ -169,6 +164,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [rawTrips, setRawTrips] = useState<IndexedRawTrip[]>([]);
   // const [lianes, setLianes] = useState<RoutedLiane[]>([]);
+  const [currentCenter, setCurrentCenter] = useState<LatLng>(center);
   const [lastCenter, setLastCenter] = useState<LatLng>(center);
 
   // Displayed data
@@ -201,6 +197,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
   // Handle components interaction
 
   const handleCenter = (newCenter: LatLng) => {
+    setCurrentCenter(newCenter);
     if (distance(lastCenter, newCenter) > 15_000) {
       setLastCenter(newCenter);
     }
@@ -215,9 +212,11 @@ function LianeMapAdmin({ className, center }: MapProps) {
   };
 
   const updateRawTrips = () => {
-    TripService.snapRaw({ center: lastCenter } as RawTripFilterOptions)
+    TripService.snapRaw({ center: currentCenter } as RawTripFilterOptions)
       .then((r: RawTrip[]) => {
-        if (r.length > 0) setRawTrips(r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i })));
+        const newRawTrips = r.map((rt: RawTrip, i: number) => ({ user: rt.user, locations: rt.locations, index: i }));
+        setRawTrips(newRawTrips);
+        setDisplayRawTrips(filterRawTrips(newRawTrips, { displayBackground: true, displayForeground: true } as FilterOptions)); // Reset the display
       });
   };
 
