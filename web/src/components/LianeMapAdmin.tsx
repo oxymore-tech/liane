@@ -51,7 +51,7 @@ function filterRawTrips(rawTrips: IndexedRawTrip[], options: FilterOptions): Ind
   let tRawTrips: IndexedRawTrip[] = rawTrips;
 
   // Filter to the selected user
-  if (options.chosenUser) {
+  if (options.chosenUser && options.chosenUser !== "Tous les utilisateurs") {
     tRawTrips = tRawTrips.filter((r: IndexedRawTrip) => (
       r.user === options.chosenUser
     ));
