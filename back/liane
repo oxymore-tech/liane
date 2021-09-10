@@ -53,8 +53,8 @@ function start {
 }
 
 function init_db {
-#  redis_purge
-#  mongo_purge
+  redis_purge
+  mongo_purge
   sleep 3
   user=${MONGO_USER:-mongoadmin}
   password=${MONGO_PASSWORD:-secret}
