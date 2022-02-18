@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  KeyboardAvoidingView, SafeAreaView, ScrollView, StatusBar, View
-} from "react-native";
+import { FlatList, SafeAreaView, View } from "react-native";
 import { scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
 import { Liane } from "@/api";
@@ -17,37 +15,35 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    setRefreshing(true);
-    listTrips()
-      .then((l) => {
-        l.sort((a:Liane, b: Liane) => b.usages.length - a.usages.length);
-        setTrips(l);
-      })
-      .finally(() => setRefreshing(false));
+    onRefresh()
+      .then();
   }, []);
 
-  /* const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    listTrips()
-      .then((l) => setTrips(l))
-      .finally(() => setRefreshing(false));
-  }, []); */
+    try {
+      const list = await listTrips();
+      setTrips(list.sort((a, b) => b.usages.length - a.usages.length));
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   return (
     <SafeAreaView style={tw("flex h-full")}>
-      <View style={{ zIndex: 1 }}>
-        <HeaderMenu name="Mes trajets" />
-      </View>
+      <HeaderMenu name="Mes trajets" />
       <View style={tw("rounded-xl bg-orange-light m-4  py-2 items-center")}>
         <AppText style={tw("text-white font-bold text-lg")}>
           {t("trajets partagés", { count: trips.length, formatted_number: Math.floor(trips.length) })}
         </AppText>
       </View>
-      <ScrollView>
-        {
-          trips.map((l: Liane) => <TripListItem liane={l} key={l.from.id + l.to.id} />)
-        }
-      </ScrollView>
+      <FlatList
+        data={trips}
+        keyExtractor={(data: Liane, i) => i.toString()}
+        renderItem={({ item }) => <TripListItem liane={item} key={item.from.id + item.to.id} />}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+      />
     </SafeAreaView>
   );
 };
