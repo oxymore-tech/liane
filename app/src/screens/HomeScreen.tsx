@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import {
+  KeyboardAvoidingView, SafeAreaView, ScrollView, StatusBar, View
+} from "react-native";
 import { scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
 import { Liane } from "@/api";
@@ -32,7 +34,7 @@ const HomeScreen = () => {
   }, []); */
 
   return (
-    <View>
+    <SafeAreaView style={tw("flex h-full")}>
       <View style={{ zIndex: 1 }}>
         <HeaderMenu name="Mes trajets" />
       </View>
@@ -46,7 +48,7 @@ const HomeScreen = () => {
           trips.map((l: Liane) => <TripListItem liane={l} key={l.from.id + l.to.id} />)
         }
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

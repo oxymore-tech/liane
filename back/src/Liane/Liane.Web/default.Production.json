@@ -3,10 +3,7 @@
     "LogLevel": {
       "Default": "Information",
       "System": "Warning",
-      "Microsoft": "Error",
-      "Microsoft.AspNetCore.Mvc.ModelBinding.Binders": "Debug",
-      "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonInputFormatter": "Debug",
-      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
+      "Microsoft": "Error"
     }
   },
   "Redis": {

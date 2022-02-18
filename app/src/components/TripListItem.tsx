@@ -1,4 +1,3 @@
-import { parseJSON } from "date-fns";
 import { Alert, View } from "react-native";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";

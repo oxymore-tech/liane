@@ -42,7 +42,9 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
   }, [phoneNumber]);
 
   return (
-    <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
+    <KeyboardAvoidingView
+      style={tw("flex h-full bg-liane-yellow")}
+    >
       <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}

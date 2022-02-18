@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
-        <PackageReference Include="MongoDB.Driver" Version="2.12.3" />
-        <PackageReference Include="Twilio" Version="5.54.0" />
+        <PackageReference Include="MongoDB.Driver" Version="2.14.1" />
+        <PackageReference Include="Twilio" Version="5.71.0" />
     </ItemGroup>
 
     <ItemGroup>

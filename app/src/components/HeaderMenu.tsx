@@ -1,8 +1,8 @@
 import React, { useContext, useState } from "react";
-import { View } from "react-native";
+import { StatusBar, View } from "react-native";
 import { AppContext } from "@/components/ContextProvider";
 import { AppButton } from "@/components/base/AppButton";
-import { tw } from "@/api/tailwind";
+import { getColor, tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { LocationPermissionLevel } from "@/api";
 import { sendTrip } from "@/api/location";
@@ -21,6 +21,10 @@ function HeaderMenu({ name }:HeaderMenuProps) {
 
   return (
     <View>
+      <StatusBar
+        animated
+        backgroundColor={getColor("liane-blue")}
+      />
       {open
         ? (
           <>

@@ -4,7 +4,7 @@ import i18n from "i18n-js";
 import en from "@/assets/translations/en.json";
 import fr from "@/assets/translations/fr.json";
 import { NavigationContainer } from "@react-navigation/native";
-import { localeAsString } from "@/api/i18n";
+import { locale } from "@/api/i18n";
 import ContextProvider from "@/components/ContextProvider";
 import Navigation from "@/components/Navigation";
 
@@ -12,7 +12,7 @@ i18n.translations = {
   en,
   fr
 };
-i18n.locale = localeAsString;
+i18n.locale = locale;
 i18n.missingBehaviour = "guess";
 
 export type Subscription = {

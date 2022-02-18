@@ -37,7 +37,7 @@ export const AppContext = createContext<AppContextProps>({
  * parameters.
  */
 async function registerForPushNotificationsAsync(): Promise<string|undefined> {
-  try{
+  try {
     if (Constants.isDevice) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -63,24 +63,23 @@ async function registerForPushNotificationsAsync(): Promise<string|undefined> {
         });
       }
       return expoPushToken.data;
-  }
+    }
     alert("Must use physical device for Push Notifications");
     return undefined;
-    } catch (e) {
-    console.log("error while registering for push notifications",e);
+  } catch (e) {
+    console.log("error while registering for push notifications", e);
   }
-  }
-
+}
 
 /**
  * Initialise the context by getting whether the app. is
  * authorised to track the device and at which level.
  */
 async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
-    const permissionBackground = await Location.getBackgroundPermissionsAsync();
-    const permissionForeground = await Location.getForegroundPermissionsAsync();
-    const storedToken = await getStoredToken();
-    const authUser = storedToken ? await me().catch(() => undefined) : undefined;
+  const permissionBackground = await Location.getBackgroundPermissionsAsync();
+  const permissionForeground = await Location.getForegroundPermissionsAsync();
+  const storedToken = await getStoredToken();
+  const authUser = storedToken ? await me().catch(() => undefined) : undefined;
 
   console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
   console.log(`Authenticated user is ${authUser}`);
@@ -110,7 +109,7 @@ function ContextProvider(props: { children: ReactNode }) {
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
   const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
-  
+
   const setAuthUser = async (a?: AuthUser) => {
     try {
       if (a) {

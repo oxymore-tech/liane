@@ -153,7 +153,7 @@ namespace Liane.Web
                     var env = hostingContext.HostingEnvironment;
 
                     var compositeFileProvider = new CompositeFileProvider(
-                        new EmbeddedFileProvider(Assembly.GetAssembly(typeof(Startup))),
+                        new EmbeddedFileProvider(typeof(Startup).Assembly),
                         new PhysicalFileProvider(Directory.GetCurrentDirectory())
                     );
 

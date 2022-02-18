@@ -1,14 +1,4 @@
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Debug",
-      "System": "Warning",
-      "Microsoft": "Error",
-      "Microsoft.AspNetCore.Mvc.ModelBinding.Binders": "Debug",
-      "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonInputFormatter": "Debug",
-      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
-    }
-  },
   "Redis": {
     "Host": "localhost",
     "Password": ""
