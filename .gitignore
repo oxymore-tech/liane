@@ -20,6 +20,6 @@ venv/
 
 deploy/.env
 dump.rdb
-
+.env.local
 administrators.txt
 *.temprp.*
