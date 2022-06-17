@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {
   Alert, FlatList, RefreshControl, Text, View
 } from "react-native";
@@ -13,9 +13,9 @@ const wait = (timeout: number) => new Promise((resolve) => setTimeout(resolve, t
 
 const NotificationsScreen = ({ navigation }: any) => {
   const [list, setList] = useState<any>();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     updateNotifications();
     wait(2000).then(() => setRefreshing(false));
@@ -36,9 +36,11 @@ const NotificationsScreen = ({ navigation }: any) => {
       });
   }
 
-  React.useEffect(() => navigation.addListener("focus", () => {
-    updateNotifications();
-  }), [navigation]);
+  useEffect(() => {
+    return navigation.addListener("focus", () => {
+      updateNotifications();
+    })
+  }, [navigation]);
 
   /*
   [
@@ -88,10 +90,8 @@ const NotificationsScreen = ({ navigation }: any) => {
   );
 
   const renderItem = ({ item }: any) => (
-    <ListItem bottomDivider onPress={() => acceptTrip(item.name)}>
-      {
-        // <Avatar source={{uri: item.avatar_url}} />
-      }
+      // @ts-ignore
+      <ListItem bottomDivider onPress={() => acceptTrip(item.name)}>
       <ListItem.Content>
         <ListItem.Title>{item.name}</ListItem.Title>
         <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>

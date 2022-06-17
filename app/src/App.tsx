@@ -35,24 +35,11 @@ function App() {
   useEffect(() => {
 
     // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current = Notifications.addNotificationReceivedListener(() => {
-    });
+    notificationListener.current = Notifications.addNotificationReceivedListener(() => {});
 
     // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-      const notification = response.notification.request.content.data;
-      /*
-      if(notification.type == 'covoiturage_notification') {
-        var newList = askNotifications.concat({
-            name : notification.name + ' souhaite covoiturer avec vous',
-            subtitle : 'Son numéro est le ' + notification.number,
-            tripId : 1
-        });
-        setAskNotifications(newList);
-      }
-      */
-    });
-
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {});
+    
     return () => {
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
@@ -63,7 +50,7 @@ function App() {
     };
 
   });
-
+  
   return (
     <ContextProvider>
       <NavigationContainer>

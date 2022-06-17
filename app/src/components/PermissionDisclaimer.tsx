@@ -29,7 +29,7 @@ function PermissionDisclaimer({ onAccept }: PermissionDisclaimerProps) {
             Les trajets sont anonymisés et consultables sur le site.
           </AppText>
           <AppText style={tailwind("text-blue-800 text-xl font-semibold")}>
-            Si vous le souhaitez vous pouvez effacer l&apos;hitorique de vos trajets.
+            Si vous le souhaitez vous pouvez effacer l&apos;historique de vos trajets.
           </AppText>
         </View>
       </View>
