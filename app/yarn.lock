@@ -4543,7 +4543,7 @@ expo-sms@~10.2.0:
   resolved "https://registry.yarnpkg.com/expo-sms/-/expo-sms-10.2.0.tgz#7a0eda76ff6dc0b4167fdebc587a7307a1751d90"
   integrity sha512-CvLD/TfoG+ZarDGhz7Da0hrxJ5GLppC0F3vKh95Iu4ScexsM824Uhwx5u7GyWN4x+AbTCG7L7xi5vTMmKHQKkQ==
 
-expo-splash-screen@~0.15.0:
+expo-splash-screen@~0.15.0, expo-splash-screen@~0.15.1:
   version "0.15.1"
   resolved "https://registry.yarnpkg.com/expo-splash-screen/-/expo-splash-screen-0.15.1.tgz#bdfb2434bda7fb1cde97e029fc7a791d7b3e3125"
   integrity sha512-Yvz6p/ig+cQp9c1PLSm1YshpNJXRp/xtxajfwPq2kampf61zA+xnoMk+J6YcNeXeIlqHysj3ND2tMhEEQjM/ow==

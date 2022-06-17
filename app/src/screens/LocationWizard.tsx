@@ -147,6 +147,7 @@ const LocationWizard2 = () => {
     setLocationPermissionLevel(LocationPermissionLevel.NOT_NOW);
   };
 
+  
   return (
     <View style={tw("h-full min-h-full bg-liane-yellow content-center")}>
       <View style={tw("h-10 items-center my-20")}>

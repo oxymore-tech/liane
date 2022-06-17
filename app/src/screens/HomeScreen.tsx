@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, SafeAreaView, StatusBar, View } from "react-native";
 import { scopedTranslate } from "@/api/i18n";
-import { getColor, tw } from "@/api/tailwind";
-import { Liane } from "@/api";
+import { tw } from "@/api/tailwind";
+import {Liane, LianeUsage, RallyingPoint} from "@/api";
 import { listTrips } from "@/api/client";
 import { AppText } from "@/components/base/AppText";
 import TripListItem from "@/components/TripListItem";

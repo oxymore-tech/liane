@@ -11,7 +11,6 @@ import { NavigationParamList } from "@/components/Navigation";
 import { scopedTranslate } from "@/api/i18n";
 
 const logo = require("@/assets/logo_orange.png");
-
 const t = scopedTranslate("SignUp");
 
 type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
@@ -21,6 +20,7 @@ type SignUpProps = {
   route: SignUpRouteProp;
   navigation: SignUpNavigationProp;
 };
+
 
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
   const authFailure = route.params.authFailure && t("Le code est invalide veuillez rééssayer");
