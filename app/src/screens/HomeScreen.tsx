@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, SafeAreaView, View } from "react-native";
 import { scopedTranslate } from "@/api/i18n";
 import { tw } from "@/api/tailwind";
-import { Liane } from "@/api";
+import {Liane, LianeUsage, RallyingPoint} from "@/api";
 import { listTrips } from "@/api/client";
 import { AppText } from "@/components/base/AppText";
 import HeaderMenu from "@/components/HeaderMenu";

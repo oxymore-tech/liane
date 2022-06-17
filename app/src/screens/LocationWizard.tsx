@@ -52,7 +52,7 @@ function getWizardText(step: number) {
     default:
       view = (
         <AppText>
-          Lorem ipsum.
+          Error with the location wizard
         </AppText>
       );
   }
@@ -86,9 +86,9 @@ function alert(message: string, callback: Function) {
  */
 const LocationWizard2 = () => {
   const { setLocationPermissionLevel, authUser } = useContext(AppContext);
-  console.log(authUser);
+  console.log("AuthUser = " + authUser);
   const [step, setStep] = useState(authUser ? 1 : 0);
-  console.log(step);
+  console.log("Current step =" + step);
   const [optionalText, setOptionalText] = useState("");
 
   // Go to next step
@@ -147,6 +147,7 @@ const LocationWizard2 = () => {
     setLocationPermissionLevel(LocationPermissionLevel.NOT_NOW);
   };
 
+  
   return (
     <View style={tw("h-full min-h-full bg-liane-yellow content-center")}>
       <View style={tw("h-10 items-center my-20")}>

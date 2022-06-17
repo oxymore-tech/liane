@@ -1,14 +1,17 @@
-import React, { createContext, ReactNode, useEffect, useState } from "react";
+import React, {createContext, ReactNode, useCallback, useEffect, useState} from "react";
 import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import {Platform, View} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@/api/client";
 import * as Location from "expo-location";
 import { startLocationTask } from "@/api/location";
 import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
+
+import * as SplashScreen from 'expo-splash-screen';
+
 
 /**
  * Application context format.
@@ -105,6 +108,7 @@ async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissi
  */
 function ContextProvider(props: { children: ReactNode }) {
   const [fontLoaded] = useFonts({ Inter: Inter_400Regular, Inter_600SemiBold, Inter_700Bold });
+  
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
@@ -130,14 +134,22 @@ function ContextProvider(props: { children: ReactNode }) {
     startLocationTask(locationPermissionLevel).then();
   }, [locationPermissionLevel]);
 
-  // Modify the permission
+  // Modify the permission and wait for it before showing the app
   useEffect(() => {
-    init()
-      .then((r) => {
-        setLocationPermissionLevel(r.permission);
-        return setAuthUser(r.authUser);
-      })
-      .then(() => setAppLoaded(true));
+    async function prepare() {
+      await SplashScreen.preventAutoHideAsync();
+
+      init()
+          .then((r) => {
+            setLocationPermissionLevel(r.permission);
+            return setAuthUser(r.authUser);
+          })
+          .then(() => {
+            console.log("APP LOADED !")
+            setAppLoaded(true);
+          });
+    }
+    prepare().then();
   }, []);
 
   // Ask for push notification permission
@@ -152,20 +164,32 @@ function ContextProvider(props: { children: ReactNode }) {
   }, []);
 
   const { children } = props;
+  
+  const onLayoutRootView = useCallback(async () => {
+    if (appLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appLoaded]);
 
+  if (!appLoaded) {
+    return null;
+  }
+  
   return (
-    <AppContext.Provider
-      value={{
-        appLoaded: appLoaded && fontLoaded,
-        expoPushToken,
-        locationPermissionLevel,
-        setLocationPermissionLevel,
-        authUser,
-        setAuthUser
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <AppContext.Provider
+            value={{
+              appLoaded: appLoaded && fontLoaded,
+              expoPushToken,
+              locationPermissionLevel,
+              setLocationPermissionLevel,
+              authUser,
+              setAuthUser
+            }}
+        >
+          {children}
+        </AppContext.Provider>
+      </View>
   );
 }
 
