@@ -21,7 +21,6 @@ type SignUpProps = {
   navigation: SignUpNavigationProp;
 };
 
-
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
   const authFailure = route.params.authFailure && t("Le code est invalide veuillez rééssayer");
 

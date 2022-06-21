@@ -9,9 +9,7 @@ import * as Location from "expo-location";
 import { startLocationTask } from "@/api/location";
 import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
-
 import * as SplashScreen from 'expo-splash-screen';
-
 
 /**
  * Application context format.
@@ -145,7 +143,6 @@ function ContextProvider(props: { children: ReactNode }) {
             return setAuthUser(r.authUser);
           })
           .then(() => {
-            console.log("APP LOADED !")
             setAppLoaded(true);
           });
     }

@@ -4,15 +4,17 @@ import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { scopedTranslate } from "@/api/i18n";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState} from "react";
 import { Liane, LianeUsage } from "@/api";
 import { AppButton } from "@/components/base/AppButton";
+import { HomeNavigationProp } from "@/screens/HomeScreen";
 
 const t = scopedTranslate("TripList");
 
 interface TripListItemProps {
   liane: Liane,
-  key: string
+  itemKey: string
+  toDetails: HomeNavigationProp
 }
 
 type DetailKey = string;
@@ -48,23 +50,20 @@ function computeDetails(usages: LianeUsage[]): Map<DetailKey, DetailValue> {
   return details;
 }
 
-const TripListItem = ({ liane } : TripListItemProps) => {
-  const [showDetails, setShowDetails] = useState(false);
+const TripListItem = ({ liane, toDetails } : TripListItemProps) => {
   const [details, setDetails] = useState<Map<DetailKey, DetailValue>>(new Map<DetailKey, DetailValue>());
 
   if (!liane.usages || liane.usages.length < 1) return <></>;
 
   const { from, to, usages } = liane;
-
-  const updateDetails = () => {
-    setShowDetails(!showDetails);
-
-    console.log(showDetails);
-
-    if (!showDetails) {
-      setDetails(computeDetails(usages));
-    }
-  };
+  
+  useEffect(() => {
+    setDetails(computeDetails(usages));
+  }, []);
+  
+  const goToDetails = () => {
+    toDetails.navigate("Details", { tripID: "tripKey" });
+  }
 
   const del = () => {
     Alert.alert(
@@ -105,19 +104,20 @@ const TripListItem = ({ liane } : TripListItemProps) => {
           <AppButton
             buttonStyle={tw("bg-gray-500 p-2 m-1")}
             titleStyle={tw("text-sm")}
-            onPress={updateDetails}
+            onPress={goToDetails}
             title={t("détail")}
           />
         </View>
       </View>
       {
-        showDetails && details
-        && Array.from(details.values()).sort((a: DetailValue, b: DetailValue) => b.count - a.count).map((v: DetailValue) => (
-          <AppText style={tw("text-gray-800")}>
-            {t("jourheureformat", { count: v.count, day: v.day, hour: v.hour })}
-          </AppText>
-        ))
+          details
+          && Array.from(details.entries()).sort((a: [string, DetailValue], b: [string, DetailValue]) => b[1].count - a[1].count).map((v: [string, DetailValue]) => (
+              <AppText key={v[0]} style={tw("text-gray-800")}>
+                {t("jourheureformat", { count: v[1].count, day: v[1].day, hour: v[1].hour })}
+              </AppText>
+          ))
       }
+      
     </View>
   );
 };

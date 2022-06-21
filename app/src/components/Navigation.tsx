@@ -1,26 +1,25 @@
-import React, {useContext, useEffect} from "react";
+import React, { useContext } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import AppLoading from "expo-app-loading";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
-import HomeScreen from "@/screens/HomeScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { tw } from "@/api/tailwind";
 import { LocationPermissionLevel } from "@/api";
 import LocationWizard2 from "@/screens/LocationWizard";
-
-import * as SplashScreen from 'expo-splash-screen';
-import * as Font from 'expo-font';
-
+import CreateTripScreen from "@/screens/CreateTripScreen";
+import ScheduleScreen from "@/screens/ScheduleScreen";
+import SettingsScreen from "@/screens/SettingsScreen";
+import HomeNavigation from "@/components/HomeNavigation";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export type NavigationParamList = {
   Home: {};
+  Details: {tripID: string};
   TripList: { count?: number, day?: string, hour?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
   SignUpCode: { phoneNumber: string };
@@ -55,9 +54,21 @@ function Navigation() {
                     true: "map",
                     false: "map-outline"
                   },
+                  Schedule : {
+                    true: "time",
+                    false: "time-outline"
+                  },
+                  CreateTrip: {
+                    true: "add-circle",
+                    false: "add-circle-outline"
+                  },
                   Notifications: {
                     true: "chatbox-ellipses",
                     false: "chatbox-ellipses-outline"
+                  },
+                  Settings: {
+                    true: "settings",
+                    false: "settings-outline"
                   }
                 };
 
@@ -68,12 +79,25 @@ function Navigation() {
         >
           <Tab.Screen
               name="Home" 
-              component={HomeScreen}
+              component={HomeNavigation}
+          />
+          <Tab.Screen
+              name="Schedule"
+              component={ScheduleScreen}
+          />
+          <Tab.Screen
+              name="CreateTrip"
+              component={CreateTripScreen}
           />
           <Tab.Screen
               name="Notifications"
               component={NotificationsScreen}
           />
+          <Tab.Screen
+              name="Settings"
+              component={SettingsScreen}
+          />
+          
         </Tab.Navigator>
     );
   }
