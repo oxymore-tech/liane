@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, {useEffect, useState} from "react";
 import { SafeAreaView, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -17,13 +17,14 @@ type DetailsProps = {
 const SignUpCodeScreen = ({ route, navigation }: DetailsProps) => {
 
   useEffect(() => {
-    navigation.setOptions({ headerTitle: `Détails du trajet [ID = ${route.params.tripID}]` });
-  });
-
-  return (
-    <SafeAreaView>
-      <View style={tw("rounded-xl bg-gray-300 m-4 p-3 content-center")} />
-    </SafeAreaView>
+    navigation.setOptions({headerTitle: "Détails du trajet [ID = " + route.params.tripID + "]"});
+  })
+  
+  return ( 
+      <SafeAreaView>
+        <View style={tw("rounded-xl bg-gray-300 m-4 p-3 content-center")}>
+        </View>
+      </SafeAreaView>
   );
 };
 
