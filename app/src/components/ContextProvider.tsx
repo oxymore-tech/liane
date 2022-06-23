@@ -85,7 +85,7 @@ async function registerForPushNotificationsAsync(): Promise<string|undefined> {
  * Initialise the context by getting whether the app. is
  * authorised to track the device and at which level.
  */
-async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
+async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
   const permissionBackground = await Location.getBackgroundPermissionsAsync();
   const permissionForeground = await Location.getForegroundPermissionsAsync();
   const storedToken = await getStoredToken();
@@ -108,6 +108,11 @@ async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissi
   }
 
   return { authUser, permission: permissionLevel };
+}
+
+async function waitForContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
+  await SplashScreen.preventAutoHideAsync();
+  return await initContext();
 }
 
 /**
@@ -146,23 +151,15 @@ function ContextProvider(props: { children: ReactNode }) {
   useEffect(() => {
     startLocationTask(locationPermissionLevel).then();
   }, [locationPermissionLevel]);
-
-  // Modify the permission and wait for it before showing the app
+  
+  // Get the context and wait for it before showing the app
   useEffect(() => {
-    async function prepare() {
-      await SplashScreen.preventAutoHideAsync();
-
-      init()
-          .then((r) => {
-            setLocationPermissionLevel(r.permission);
-            return setAuthUser(r.authUser);
-          })
-          .then(() => {
-            setAppLoaded(true);
-          });
-    }
-    prepare().then();
-  }, []);
+    waitForContext()
+        .then((p) => {
+            setLocationPermissionLevel(p.permission);
+            setAuthUser(p.authUser).then(() => setAppLoaded(true));
+        });
+    }, []);
 
   // Ask for push notification permission
   useEffect(() => {
@@ -179,6 +176,10 @@ function ContextProvider(props: { children: ReactNode }) {
   
   const onLayoutRootView = useCallback(async () => {
     if (appLoaded) {
+      // If called after `setAppLoaded`, we may see a blank screen while the app is
+      // loading its initial state and rendering its first pixels. 
+      // So instead, we hide the splash screen once we know the root view has already
+      // performed layout.
       await SplashScreen.hideAsync();
     }
   }, [appLoaded]);
