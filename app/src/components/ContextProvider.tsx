@@ -3,8 +3,10 @@ import {
   Inter_200ExtraLight,
   Inter_300Light,
   Inter_400Regular,
+  Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
+  Inter_800ExtraBold,
   useFonts
 } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
@@ -112,7 +114,13 @@ async function init(): Promise<{ authUser?:AuthUser, permission:LocationPermissi
  * Define the context of the application.
  */
 function ContextProvider(props: { children: ReactNode }) {
-  const [fontLoaded] = useFonts({ Inter: Inter_200ExtraLight, Inter_400Regular, Inter_600SemiBold, Inter_700Bold });
+  const [fontLoaded] = useFonts({
+    Inter_ExtraLight: Inter_200ExtraLight,
+    Inter: Inter_400Regular,
+    Inter_Medium: Inter_500Medium,
+    Inter_SemiBold: Inter_600SemiBold,
+    Inter_Bold: Inter_700Bold
+  });
   
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SafeAreaView, Switch, TextInput, View} from "react-native";
+import {SafeAreaView, Switch, Text, TextInput, View} from "react-native";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
@@ -73,9 +73,9 @@ const CreateTripScreen = () => {
         <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center")}>
           
           <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-extralight")}>Trajet</AppText>
+            <AppText style={tw("text-2xl font-inter-extralight")}>Trajet</AppText>
             <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-bold")}>Aller-Retour</AppText>
+              <AppText style={tw("text-sm font-inter-medium")}>Aller - Retour</AppText>
               <Switch
                   trackColor={{ false: "#767577", true: "#FF5B22" }}
                   thumbColor="#f4f3f4"
@@ -96,14 +96,14 @@ const CreateTripScreen = () => {
             
             <View style={tw("flex flex-col flex-auto")}>
               
-              <AppText style={tw("flex text-base font-semibold")}> Départ</AppText>
+              <AppText style={tw("flex text-base font-inter-medium")}> Départ</AppText>
               <TextInput
                   style={tw("rounded-md bg-white py-2 px-4")}
                   onChangeText={(text) => {setStartingPoint(text)}}
                   value={startingPoint}
                   placeholder="Point de départ"
               />
-              <AppText style={tw("flex text-base font-semibold")}> Arrivé</AppText>
+              <AppText style={tw("flex text-base font-inter-medium")}> Arrivé</AppText>
               <TextInput
                   style={tw("rounded-md bg-white py-2 px-4")}
                   onChangeText={(text) => {setEndingPoint(text)}}
@@ -119,9 +119,9 @@ const CreateTripScreen = () => {
         <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-extralight")}>Horaire</AppText>
+            <AppText style={tw("text-2xl font-inter-normal font-inter-extralight")}>Horaire</AppText>
             <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-bold")}>Régulier</AppText>
+              <AppText style={tw("text-sm font-inter-medium")}>Régulier</AppText>
               <Switch
                   trackColor={{ false: "#767577", true: "#FF5B22" }}
                   thumbColor="#f4f3f4"
@@ -143,7 +143,7 @@ const CreateTripScreen = () => {
             
               <View style={tw("flex flex-row w-full justify-around items-center mt-2")}>
                 <View style={tw("flex flex-col")}>
-                  <AppText style={tw("text-base font-semibold")}> Aller</AppText>
+                  <AppText style={tw("text-base font-inter-medium")}> Aller</AppText>
                   <AppButton title={toTime.getHours() + ":" + (toTime.getMinutes() < 10 ? "0" : "") + toTime.getMinutes()}
                              titleStyle={tw("text-gray-600")}
                              buttonStyle={tw("bg-gray-200")}
@@ -152,7 +152,7 @@ const CreateTripScreen = () => {
                 {
                   isRoundTrip &&
                   <View style={tw("flex flex-col")}>
-                    <AppText style={tw("text-base font-semibold")}> Retour</AppText>
+                    <AppText style={tw("text-base font-inter-medium")}> Retour</AppText>
                     <AppButton title={fromTime.getHours()  + ":" + (fromTime.getMinutes() < 10 ? "0" : "") + fromTime.getMinutes()}
                                titleStyle={tw("text-gray-600")}
                                buttonStyle={tw("bg-gray-200")}
@@ -189,17 +189,17 @@ const CreateTripScreen = () => {
         <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center")}>
           
           <ToggleButton style={tw("flex flex-grow h-full rounded-l-xl rounded-r-none " + (status.passengerStatus ? "bg-liane-orange" : ""))}
-              icon={() => <View><AppText style={tw("text-base " + (status.passengerStatus ? "text-white" : ""))}>Passager</AppText></View>}
+              icon={() => <View><AppText style={tw("text-base " + (status.passengerStatus ? "text-white" : "text-gray-500"))}>Passager</AppText></View>}
               status={status.passengerStatus ? "checked" : "unchecked"}
               onPress={() => onStatusButtonToggle("passenger")} />
           
           <ToggleButton style={tw("flex flex-grow h-full rounded-none " + (status.neutralStatus ? "bg-liane-orange" : ""))}
-              icon={() => <View><AppText style={tw("text-base " + (status.neutralStatus ? "text-white" : ""))}>Neutre</AppText></View>}
+              icon={() => <View><AppText style={tw("text-base " + (status.neutralStatus ? "text-white" : "text-gray-500"))}>Neutre</AppText></View>}
               status={status.neutralStatus ? "checked" : "unchecked"}
               onPress={() => onStatusButtonToggle("neutral")} />
           
           <ToggleButton style={tw("flex flex-grow h-full rounded-r-xl rounded-l-none " + (status.driverStatus ? "bg-liane-orange" : ""))}
-              icon={() => <View><AppText style={tw("text-base " + (status.driverStatus ? "text-white" : ""))}>Conducteur</AppText></View>}
+              icon={() => <View><AppText style={tw("text-base " + (status.driverStatus ? "text-white" : "text-gray-500"))}>Conducteur</AppText></View>}
               status={status.driverStatus ? "checked" : "unchecked"}
               onPress={() => onStatusButtonToggle("driver")} />
         
