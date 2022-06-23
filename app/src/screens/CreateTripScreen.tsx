@@ -55,7 +55,9 @@ const CreateTripScreen = () => {
     setFromTime(selectedTime);
   }
   
-  // Add trips to scheduled trips on press ?
+  const onPublicationPressed = () => {
+    // Add trips to scheduled trips when pressed ?
+  }
   
   return (
       <SafeAreaView>
@@ -203,7 +205,10 @@ const CreateTripScreen = () => {
         
         </View>
         
-        <AppButton title="Publier" buttonStyle={tw("bg-liane-orange rounded-full mx-10")}/>
+        <AppButton title="Publier" 
+                   buttonStyle={tw("bg-liane-orange rounded-full mx-10")}
+                    onPress={onPublicationPressed}
+        />
         
         </View>
         
