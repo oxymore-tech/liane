@@ -32,6 +32,12 @@ export interface Address {
   countryCode: string
 }
 
+export interface AddressResponse {
+  coordinate: LatLng,
+  displayName: string,
+  address: Address
+}
+
 export interface Location {
   coordinate: LatLng;
   address: Address;
