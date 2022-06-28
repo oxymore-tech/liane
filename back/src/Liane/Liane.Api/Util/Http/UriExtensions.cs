@@ -3,59 +3,58 @@ using System.Collections;
 using System.Globalization;
 using System.Web;
 
-namespace Liane.Api.Util.Http
+namespace Liane.Api.Util.Http;
+
+public static class UriExtensions
 {
-    public static class UriExtensions
+    public static string WithParams(this string uri, object? parameters = null)
     {
-        public static string WithParams(this string uri, object? parameters = null)
+        return CreateUri(uri, parameters);
+    }
+
+    public static string CreateUri(string uri, object? parameters = null)
+    {
+        if (parameters == null)
         {
-            return CreateUri(uri, parameters);
+            return uri;
         }
 
-        public static string CreateUri(string uri, object? parameters = null)
+        var properties = parameters.GetType().GetProperties();
+        if (properties.Length == 0)
         {
-            if (parameters == null)
+            return uri;
+        }
+
+        var queryString = HttpUtility.ParseQueryString(string.Empty);
+        foreach (var propertyInfo in properties)
+        {
+            var value = propertyInfo.GetValue(parameters);
+
+            if (value == null)
             {
-                return uri;
+                continue;
             }
 
-            var properties = parameters.GetType().GetProperties();
-            if (properties.Length == 0)
+            if (value is ICollection e)
             {
-                return uri;
-            }
-
-            var queryString = HttpUtility.ParseQueryString(string.Empty);
-            foreach (var propertyInfo in properties)
-            {
-                var value = propertyInfo.GetValue(parameters);
-
-                if (value == null)
+                foreach (var item in e)
                 {
-                    continue;
-                }
-
-                if (value is ICollection e)
-                {
-                    foreach (var item in e)
+                    if (item != null)
                     {
-                        if (item != null)
-                        {
-                            queryString.Add(propertyInfo.Name, Convert.ToString(item, CultureInfo.InvariantCulture));
-                        }
+                        queryString.Add(propertyInfo.Name, Convert.ToString(item, CultureInfo.InvariantCulture));
                     }
                 }
-                else if (value is DateTime d)
-                {
-                    queryString.Add(propertyInfo.Name, d.ToUniversalTime().ToString("o"));
-                }
-                else
-                {
-                    queryString.Add(propertyInfo.Name, Convert.ToString(value, CultureInfo.InvariantCulture));
-                }
             }
-
-            return $"{uri}?{queryString}";
+            else if (value is DateTime d)
+            {
+                queryString.Add(propertyInfo.Name, d.ToUniversalTime().ToString("o"));
+            }
+            else
+            {
+                queryString.Add(propertyInfo.Name, Convert.ToString(value, CultureInfo.InvariantCulture));
+            }
         }
+
+        return $"{uri}?{queryString}";
     }
 }

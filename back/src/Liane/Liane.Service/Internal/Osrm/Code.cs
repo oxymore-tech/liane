@@ -1,15 +1,14 @@
-namespace Liane.Service.Internal.Osrm
+namespace Liane.Service.Internal.Osrm;
+
+public enum Code
 {
-    public enum Code
-    {
-        Ok,
-        InvalidUrl,
-        InvalidService,
-        InvalidVersion,
-        InvalidOptions,
-        InvalidQuery,
-        InvalidValue,
-        NoSegment,
-        TooBig
-    }
+    Ok,
+    InvalidUrl,
+    InvalidService,
+    InvalidVersion,
+    InvalidOptions,
+    InvalidQuery,
+    InvalidValue,
+    NoSegment,
+    TooBig
 }

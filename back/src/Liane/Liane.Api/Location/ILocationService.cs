@@ -1,10 +1,9 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace Liane.Api.Location
+namespace Liane.Api.Location;
+
+public interface ILocationService
 {
-    public interface ILocationService
-    {
-        Task LogLocation(ImmutableList<UserLocation> userLocations);
-    }
+    Task LogLocation(ImmutableList<UserLocation> userLocations);
 }

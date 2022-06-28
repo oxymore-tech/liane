@@ -2,32 +2,31 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Microsoft.AspNetCore.Http;
 
-namespace Liane.Service.Internal.Util
+namespace Liane.Service.Internal.Util;
+
+public sealed class CurrentContextImpl : ICurrentContext
 {
-    public sealed class CurrentContextImpl : ICurrentContext
+    private readonly IHttpContextAccessor httpContextAccessor;
+
+    public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
     {
-        private readonly IHttpContextAccessor httpContextAccessor;
+        this.httpContextAccessor = httpContextAccessor;
+    }
 
-        public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
+    public string CurrentUser()
+    {
+        if (httpContextAccessor.HttpContext == null)
         {
-            this.httpContextAccessor = httpContextAccessor;
+            throw new ForbiddenException();
         }
 
-        public string CurrentUser()
+        var user = httpContextAccessor.HttpContext.User.Identity?.Name;
+
+        if (user == null)
         {
-            if (httpContextAccessor.HttpContext == null)
-            {
-                throw new ForbiddenException();
-            }
-
-            var user = httpContextAccessor.HttpContext.User.Identity?.Name;
-
-            if (user == null)
-            {
-                throw new ForbiddenException();
-            }
-
-            return user;
+            throw new ForbiddenException();
         }
+
+        return user;
     }
 }

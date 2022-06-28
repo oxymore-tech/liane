@@ -1,10 +1,8 @@
-namespace Liane.Api.Util.Exception
+namespace Liane.Api.Util.Exception;
 
+public class ExpectationFailedException : System.Exception
 {
-    public class ExpectationFailedException : System.Exception
+    public ExpectationFailedException(string message) : base(message)
     {
-        public ExpectationFailedException(string message) : base(message)
-        {
-        }
     }
 }
