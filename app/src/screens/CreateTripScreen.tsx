@@ -9,29 +9,7 @@ import { getRallyingPoints } from "@/api/client";
 import Autocomplete from 'react-native-autocomplete-input';
 import {AppTextInput} from "@/components/base/AppTextInput";
 import { RallyingPoint } from "@/api";
-
-// STUB
-const pos = {
-  lat: 45,
-  lng: 3
-}
-const stubPoints: RallyingPoint[] = [
-  {
-    id: "ID_1",
-    position: pos,
-    label: "Aurillac"
-  },
-  {
-    id: "ID_2",
-    position: pos,
-    label: "Saint-Paul-des-Landes"
-  },
-  {
-    id: "ID_3",
-    position: pos,
-    label: "Saint-Bauzille-de-Putois"
-  }
-]
+import {getLastKnownLocation} from "@/api/location";
 
 const CreateTripScreen = () => {
 
@@ -89,17 +67,19 @@ const CreateTripScreen = () => {
   const [endStart, setEndPoint] = useState<RallyingPoint | null>(null);
   const [shownEndPoint, setShownEndPoint] = useState("");
 
-  const findStartPoint = (query) => {
+  const findStartPoint = async (query) => {
     setShownStartPoint(query);
     setStartPoint(null);
 
     if (query) {
       const regex = new RegExp(`${query.trim()}`, 'i');
+      let location = await getLastKnownLocation();
       
-      getRallyingPoints(query).then((r) => {
-        const f = r.filter((point) => point.label.search(regex) >= 0);
-        setFilteredStartPoints(f);
-      });
+      await getRallyingPoints(query, location)
+          .then((r) => {
+            const f = r.filter((point) => point.label.search(regex) >= 0);
+            setFilteredStartPoints(f);
+          });
       
     } else {
       setFilteredStartPoints([]);

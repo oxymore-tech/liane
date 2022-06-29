@@ -1,5 +1,5 @@
-import { get, post, postAs } from "@/api/http";
-import {AuthUser, UserLocation, Notification, Liane, AddressResponse, RallyingPoint} from "@/api";
+import {get, post, postAs, QueryAsOptions} from "@/api/http";
+import {AuthUser, UserLocation, Notification, Liane, AddressResponse, RallyingPoint, LatLng} from "@/api";
 
 export async function logLocation(locations: UserLocation[]) {
   await post("/location", { body: locations });
@@ -29,6 +29,6 @@ export async function deleteNotification(notificationTimestamp: number) {
   return post("/auth/notification/delete", { params: { date: notificationTimestamp } });
 }
 
-export async function getRallyingPoints(name: string): Promise<RallyingPoint[]> {
-  return get("/rallying_point", { params: { search: name } });
+export async function getRallyingPoints(name: string, location?: LatLng): Promise<RallyingPoint[]> {
+  return get("/rallying_point", { params: { search: name, lng: location?.lng, lat: location?.lat } });
 }
