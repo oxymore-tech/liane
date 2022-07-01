@@ -5,13 +5,13 @@ services:
     image: 'redis:6.0'
     command: [ "sh", "-c", "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}" ]
     volumes:
-      - "/data/${PROJECT}/redis:/data"
+      - "/data/${COMPOSE_PROJECT_NAME}/redis:/data"
     restart: unless-stopped
 
   mongo:
     image: "mongo:4.4.4"
     volumes:
-      - "/data/${PROJECT}/mongo:/data/db"
+      - "/data/${COMPOSE_PROJECT_NAME}/mongo:/data/db"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
@@ -20,16 +20,16 @@ services:
   back:
     build: ../back
     labels:
-      traefik.enable: "true"
-      traefik.docker.network: "gateway"
-      traefik.http.routers.${PROJECT}-back.rule: "Host(`${PROJECT}${environment}.gjini.co`) && PathPrefix(`/api`)"
-      traefik.http.routers.${PROJECT}-back.entrypoints: "web"
-      traefik.http.routers.${PROJECT}-back.middlewares: "redirect@file"
-      traefik.http.routers.${PROJECT}-back-secure.rule: "Host(`${PROJECT}.gjini.co`) && PathPrefix(`/api`)"
-      traefik.http.routers.${PROJECT}-back-secure.entrypoints: "web-secure"
-      traefik.http.routers.${PROJECT}-back-secure.middlewares: "compress@file"
-      traefik.http.routers.${PROJECT}-back-secure.tls.certResolver: "gjinico"
-      traefik.http.services.${PROJECT}-back.loadbalancer.server.port: "8081"
+      - "traefik.enable=true"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back.rule=Host(`${COMPOSE_PROJECT_NAME}${environment}.gjini.co`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back.entrypoints=web"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back.middlewares=redirect@file"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back-secure.rule=Host(`${COMPOSE_PROJECT_NAME}.gjini.co`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back-secure.entrypoints=web-secure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back-secure.middlewares=compress@file"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-back-secure.tls.certResolver=gjinico"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME}-back.loadbalancer.server.port=8081"
     depends_on:
       - mongo
       - redis
@@ -53,16 +53,16 @@ services:
   web:
     build: ../web
     labels:
-      traefik.enable: "true"
-      traefik.docker.network: "gateway"
-      traefik.http.routers.${PROJECT}-web.rule: "Host(`${PROJECT}.gjini.co`) && PathPrefix(`/`)"
-      traefik.http.routers.${PROJECT}-web.entrypoints: "web"
-      traefik.http.routers.${PROJECT}-web.middlewares: "redirect@file"
-      traefik.http.routers.${PROJECT}-web-secure.rule: "Host(`${PROJECT}.gjini.co`) && PathPrefix(`/`)"
-      traefik.http.routers.${PROJECT}-web-secure.entrypoints: "web-secure"
-      traefik.http.routers.${PROJECT}-web-secure.middlewares: "compress@file"
-      traefik.http.routers.${PROJECT}-web-secure.tls.certResolver: "gjinico"
-      traefik.http.services.${PROJECT}-web.loadbalancer.server.port: "3000"
+      - "traefik.enable=true"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web.rule=Host(`${COMPOSE_PROJECT_NAME}.gjini.co`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web.entrypoints=web"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web.middlewares=redirect@file"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web-secure.rule=Host(`${COMPOSE_PROJECT_NAME}.gjini.co`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web-secure.entrypoints=web-secure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web-secure.middlewares=compress@file"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-web-secure.tls.certResolver=gjinico"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME}-web.loadbalancer.server.port=3000"
     restart: unless-stopped
     networks:
       - gateway

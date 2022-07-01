@@ -11,4 +11,4 @@ docker-compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
 
 PROJECT=$(getProject) 
 
-docker-compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" -e "PROJECT=${PROJECT}" up -d $*
+docker-compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d $*
