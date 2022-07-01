@@ -5,6 +5,6 @@ LIANE_HOME=$(cd "$(dirname "$0")/.." || exit;pwd)
 
 source "${LIANE_HOME}/deploy/utils.sh"
 
-PROJECT=$(getProject)
+PROJECT=$(get_project)
 
 docker compose -p "${PROJECT}" down

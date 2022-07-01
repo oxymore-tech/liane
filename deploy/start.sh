@@ -5,11 +5,11 @@ LIANE_HOME=$(cd "$(dirname "$0")/.." || exit;pwd)
 
 source "${LIANE_HOME}/deploy/utils.sh"
 
-createOsmNetwork
+PROJECT=$(get_project)
+
+create_osm_network
 
 docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
-
-PROJECT=$(getProject)
 
 export PROJECT
 
