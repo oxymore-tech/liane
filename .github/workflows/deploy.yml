@@ -4,13 +4,25 @@ on:
   push:
     branches:
       - develop
+      - main
 
 jobs:
   deployment:
     runs-on: ubuntu-latest
-    environment: dev
-    concurrency: dev
+    environment: production
+    concurrency: production
     steps:
+
+      - name: Set variables
+        run: |
+          if [[ "${{ github.base_ref }}" == "main" ]]; then
+            echo "::set-output name=project::liane"
+          fi
+
+          if [[ "${{ github.base_ref }}" == "develop" ]]; then
+            echo "::set-output name=project::liane-dev"
+          fi
+          
       - name: Deploy on server
         uses: appleboy/ssh-action@master
         with:
@@ -20,7 +32,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ~
-            git clone -b develop git@github.com:oxymore-tech/liane.git liane-dev || true;
-            cd ~/liane-dev/deploy
+            git clone -b "${{ github.base_ref }}" git@github.com:oxymore-tech/liane.git "${{ project }}" || true;
+            cd "~/${{ project }}/deploy"
             git pull
             ./start.sh --build --remove-orphans
