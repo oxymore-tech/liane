@@ -12,8 +12,7 @@ public sealed class TestLogger<T> : ILogger<T>, IDisposable
     {
     }
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
-        Func<TState, Exception, string> formatter) => output(formatter(state, exception));
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) => output(formatter(state, exception));
 
     public bool IsEnabled(LogLevel logLevel) => true;
 

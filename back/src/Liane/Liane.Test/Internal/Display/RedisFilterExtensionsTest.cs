@@ -120,7 +120,7 @@ public sealed class RedisFilterExtensionsTest
     public async Task FilterByStartPoint()
     {
         var edgeKeys = await redis!.ListEdgeKeys();
-        var actual = edgeKeys.FilterByStartPoint(LabeledPositions.Rouffiac_Boulangerie.Id);
+        var actual = edgeKeys.FilterByStartPoint(LabeledPositions.Rouffiac_Boulangerie.Id!);
         var expected = ImmutableHashSet.Create(new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Monday|8"),
             new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Tuesday|8"),
             new RedisKey("Rouffiac_Boulangerie|SaintEnimie_Parking|Friday|8"));
@@ -133,7 +133,7 @@ public sealed class RedisFilterExtensionsTest
     public async Task FilterByEndPoint()
     {
         var edgeKeys = await redis!.ListEdgeKeys();
-        var actual = edgeKeys.FilterByEndPoint(LabeledPositions.La_Malene_Parking.Id);
+        var actual = edgeKeys.FilterByEndPoint(LabeledPositions.La_Malene_Parking.Id!);
         var expected = ImmutableHashSet.Create(new RedisKey("Montbrun_En_Bas|La_Malene_Parking|Wednesday|9"),
             new RedisKey("Prades|La_Malene_Parking|Wednesday|9"));
         actual.WithDeepEqual(expected)

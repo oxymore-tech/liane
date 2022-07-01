@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Util;
 using Liane.Test.Util;
@@ -12,7 +13,7 @@ public sealed class NominatimJsonTest
     [Test]
     public void ShouldDeserializeAddress()
     {
-        var options = new JsonSerializerOptions {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), DefaultIgnoreCondition = JsonIgnoreCondition.Always, PropertyNameCaseInsensitive = true };
         var actual = JsonSerializer.Deserialize<Api.Address.Address>(AssertExtensions.ReadTestResource("nominatim-address.json"), options);
         Assert.NotNull(actual);
     }
@@ -20,7 +21,7 @@ public sealed class NominatimJsonTest
     [Test]
     public void ShouldDeserializeReverseResponse()
     {
-        var options = new JsonSerializerOptions {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), DefaultIgnoreCondition = JsonIgnoreCondition.Always, PropertyNameCaseInsensitive = true };
         var actual = JsonSerializer.Deserialize<Response>(AssertExtensions.ReadTestResource("nominatim-reverse.json"), options);
         Assert.NotNull(actual);
     }

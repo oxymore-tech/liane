@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
+using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -18,9 +18,6 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Liane.Service.Internal.RallyingPoint;
 
-/**
-     * Classes to load overpass data.
-     */
 internal sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
 
 internal sealed record OverpassElement(double Lat, double Lon, OverpassTag Tags);
@@ -29,7 +26,6 @@ internal sealed record OverpassTag(string Name);
 
 public class RallyingPointServiceImpl : IRallyingPointService
 {
-    private const string FileName = "Resources.villes.json"; // Relative to the web project
     private const int SelectionRadius = 25_000;
     private const int InterpolationRadius = 1_000;
     private const int MaxRallyingPoint = 10;
@@ -81,21 +77,16 @@ public class RallyingPointServiceImpl : IRallyingPointService
     {
         try
         {
-            // Flush the old database
             await rallyingPointsCollection.DeleteManyAsync(_ => true);
 
-            // Create the database index
-            // Not needed anymore, everything is handled from databases initialisation
-            // await rallyingPointsCollection.Indexes.DropAllAsync();
-            // await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2DSphere(x => x.Location)));
+            var assembly = Assembly.GetEntryAssembly()!;
 
-            // Load the data
-            var assembly = Assembly.GetEntryAssembly();
-            logger.LogInformation(" Assembly Names = {0}\n", string.Join("\n", assembly.GetManifestResourceNames()));
-            logger.LogInformation(" Assembly FullName = {0}\n", assembly.FullName);
-
-            var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("villes.json"));
+            var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("cities.json"));
             await using var file = assembly.GetManifestResourceStream(resourceName);
+            if (file is null)
+            {
+                throw new ResourceNotFoundException("Unable to find cities.json");
+            }
 
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var data = await JsonSerializer.DeserializeAsync<OverpassData>(file, options);
@@ -160,7 +151,7 @@ public class RallyingPointServiceImpl : IRallyingPointService
         return (await ListInternal(pos, null)).First();
     }
 
-    public async Task<ImmutableList<Api.RallyingPoint.RallyingPoint>> Interpolate(ImmutableList<LatLng?> locations)
+    public async Task<ImmutableList<Api.RallyingPoint.RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
     {
         var rallyingPoints = ImmutableList.CreateBuilder<Api.RallyingPoint.RallyingPoint>();
 

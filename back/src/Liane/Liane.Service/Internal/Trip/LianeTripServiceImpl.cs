@@ -122,12 +122,12 @@ public class LianeTripServiceImpl : ILianeTripService
         // Filter the data regarding the position
         if (tripFilter.From is not null)
         {
-            lianesList = lianesList.Where(l => l.From.Id.Equals(tripFilter.From.Id));
+            lianesList = lianesList.Where(l => l.From.Id == tripFilter.From.Id);
         }
 
         if (tripFilter.To is not null)
         {
-            lianesList = lianesList.Where(l => l.To.Id.Equals(tripFilter.To.Id));
+            lianesList = lianesList.Where(l => l.To.Id == tripFilter.To.Id);
         }
 
         // Filter the data regarding the date

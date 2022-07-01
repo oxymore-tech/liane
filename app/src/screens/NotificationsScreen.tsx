@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert, FlatList, RefreshControl, Text, View
 } from "react-native";
@@ -7,7 +7,7 @@ import { deleteNotification, getNotifications } from "@/api/client";
 import * as SMS from "expo-sms";
 
 import { tw } from "@/api/tailwind";
-import {AppText} from "@/components/base/AppText";
+import { AppText } from "@/components/base/AppText";
 
 const wait = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout));
 
@@ -36,20 +36,18 @@ const NotificationsScreen = ({ navigation }: any) => {
       });
   }
 
-  useEffect(() => {
-    return navigation.addListener("focus", () => {
-      updateNotifications();
-    })
-  }, [navigation]);
-  
+  useEffect(() => navigation.addListener("focus", () => {
+    updateNotifications();
+  }), [navigation]);
+
   const keyExtractor = (item: any, index: { toString: () => any; }) => index.toString();
-  
-  const acceptTrip = async function (message: string) {
+
+  const acceptTrip = async (message: string) => {
     const isAvailable = await SMS.isAvailableAsync();
     const phoneNumber = message.split(" ").pop();
     const user = message.split(" ")[0];
     if (isAvailable && phoneNumber) {
-      const { result } = await SMS.sendSMSAsync(
+      await SMS.sendSMSAsync(
         phoneNumber,
         `Bonjour ${user}, je suis disposé à covoiturer avec vous.`
       );
@@ -75,11 +73,12 @@ const NotificationsScreen = ({ navigation }: any) => {
   );
 
   const renderItem = ({ item }: any) => (
-      <ListItem hasTVPreferredFocus={undefined}
-                tvParallaxProperties={undefined} 
-                bottomDivider 
-                onPress={() => acceptTrip(item.name)}
-      >
+    <ListItem
+      hasTVPreferredFocus={undefined}
+      tvParallaxProperties={undefined}
+      bottomDivider
+      onPress={() => acceptTrip(item.name)}
+    >
       <ListItem.Content>
         <ListItem.Title>{item.name}</ListItem.Title>
         <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>
@@ -93,7 +92,7 @@ const NotificationsScreen = ({ navigation }: any) => {
       <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
         <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Messages</AppText>
       </View>
-      
+
       <FlatList
         refreshControl={(
           <RefreshControl

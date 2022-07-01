@@ -22,7 +22,9 @@ public sealed record UsedLiane(
             to,
             GeoJson.Point(new GeoJson2DGeographicCoordinates(from.Location.Lng, from.Location.Lat)),
             usages
-        ) {}
+        )
+    {
+    }
 
     public Api.Trip.Liane ToLiane()
     {

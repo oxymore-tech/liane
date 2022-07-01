@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using Liane.Api.Display;
 
 namespace Liane.Api.Trip;
 

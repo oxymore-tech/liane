@@ -4,7 +4,7 @@ import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { scopedTranslate } from "@/api/i18n";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { Liane, LianeUsage } from "@/api";
 import { AppButton } from "@/components/base/AppButton";
 import { HomeNavigationProp } from "@/screens/HomeScreen";
@@ -13,7 +13,6 @@ const t = scopedTranslate("TripList");
 
 interface TripListItemProps {
   liane: Liane,
-  itemKey: string
   toDetails: HomeNavigationProp
 }
 
@@ -56,14 +55,14 @@ const TripListItem = ({ liane, toDetails } : TripListItemProps) => {
   if (!liane.usages || liane.usages.length < 1) return <></>;
 
   const { from, to, usages } = liane;
-  
+
   useEffect(() => {
     setDetails(computeDetails(usages));
   }, []);
-  
+
   const goToDetails = () => {
     toDetails.navigate("Details", { tripID: "tripKey" });
-  }
+  };
 
   const del = () => {
     Alert.alert(
@@ -112,12 +111,12 @@ const TripListItem = ({ liane, toDetails } : TripListItemProps) => {
       {
           details
           && Array.from(details.entries()).sort((a: [string, DetailValue], b: [string, DetailValue]) => b[1].count - a[1].count).map((v: [string, DetailValue]) => (
-              <AppText key={v[0]} style={tw("text-gray-800")}>
-                {t("jourheureformat", { count: v[1].count, day: v[1].day, hour: v[1].hour })}
-              </AppText>
+            <AppText key={v[0]} style={tw("text-gray-800")}>
+              {t("jourheureformat", { count: v[1].count, day: v[1].day, hour: v[1].hour })}
+            </AppText>
           ))
       }
-      
+
     </View>
   );
 };

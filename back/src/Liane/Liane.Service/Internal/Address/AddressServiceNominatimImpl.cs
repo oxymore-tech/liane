@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Liane.Api.Address;
 using Liane.Api.Routing;
@@ -16,7 +17,7 @@ namespace Liane.Service.Internal.Address;
 public sealed class AddressServiceNominatimImpl : IAddressService
 {
     private readonly HttpClient client;
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new() {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+    private static readonly JsonSerializerOptions JsonOptions = new() {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), DefaultIgnoreCondition = JsonIgnoreCondition.Always, PropertyNameCaseInsensitive = true};
 
     public AddressServiceNominatimImpl(NominatimSettings settings)
     {
@@ -32,7 +33,7 @@ public sealed class AddressServiceNominatimImpl : IAddressService
             lon,
             format = "jsonv2",
             addressdetails = 1
-        }), JSON_OPTIONS);
+        }), JsonOptions);
 
         if (response == null)
         {
@@ -61,7 +62,7 @@ public sealed class AddressServiceNominatimImpl : IAddressService
             format = "jsonv2",
             addressdetails = 1
         });
-        var responses = await client.GetFromJsonAsync<ImmutableList<Response>>(uri, JSON_OPTIONS);
+        var responses = await client.GetFromJsonAsync<ImmutableList<Response>>(uri, JsonOptions);
 
         if (responses == null)
         {

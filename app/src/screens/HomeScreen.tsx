@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, SafeAreaView, StatusBar, View } from "react-native";
 import { scopedTranslate } from "@/api/i18n";
-import {getColor, tw} from "@/api/tailwind";
+import { getColor, tw } from "@/api/tailwind";
 import { Liane } from "@/api";
 import { listTrips } from "@/api/client";
 import { AppText } from "@/components/base/AppText";
 import TripListItem from "@/components/TripListItem";
-import { RouteProp } from "@react-navigation/native";
 import { NavigationParamList } from "@/components/Navigation";
 import { StackNavigationProp } from "@react-navigation/stack";
 
@@ -18,14 +17,14 @@ const stubLiane = () : Liane[] => {
 
   const rp1 = {
     id: "p1",
-    position: ll1,
+    location: ll1,
     label: "Test RallyingPoint 1",
     distance: 0
   };
 
   const rp2 = {
     id: "p2",
-    position: ll1,
+    location: ll1,
     label: "Test RallyingPoint 2",
     distance: 0
   };
@@ -36,7 +35,7 @@ const stubLiane = () : Liane[] => {
       isPrimary: true,
       tripId: "id1"
     }
-  ]
+  ];
 
   return [
     {
@@ -44,28 +43,26 @@ const stubLiane = () : Liane[] => {
       to: rp2,
       usages: lu1
     }
-  ]
-}
+  ];
+};
 
 const t = scopedTranslate("Home");
 
-type HomeRouteProp = RouteProp<NavigationParamList, "Home">;
 export type HomeNavigationProp = StackNavigationProp<NavigationParamList, "Home">;
 
 type HomeProps = {
-  route: HomeRouteProp;
   navigation: HomeNavigationProp;
 };
 
-const HomeScreen = ({route, navigation }: HomeProps) => {
-  const [trips, setTrips] = useState<Liane[]>([]);
+const HomeScreen = ({ navigation }: HomeProps) => {
+  const [, setTrips] = useState<Liane[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     onRefresh()
       .then();
   }, []);
-  
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -75,13 +72,13 @@ const HomeScreen = ({route, navigation }: HomeProps) => {
       setRefreshing(false);
     }
   }, []);
-  
+
   return (
     <SafeAreaView style={tw("flex h-full")}>
 
       <View>
         <StatusBar
-            backgroundColor={getColor("liane-blue")}
+          backgroundColor={getColor("liane-blue")}
         />
         <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
           <AppText style={tw("absolute text-2xl text-white text-center w-full ")}>Trajets</AppText>
@@ -96,10 +93,12 @@ const HomeScreen = ({route, navigation }: HomeProps) => {
       <FlatList
         data={stubLiane()}
         keyExtractor={(data: Liane, i) => i.toString()}
-        renderItem={({ item }) => <TripListItem liane={item} 
-                                                itemKey={item.from.id + item.to.id } 
-                                                toDetails={navigation} 
-        />}
+        renderItem={({ item }) => (
+          <TripListItem
+            liane={item}
+            toDetails={navigation}
+          />
+        )}
         onRefresh={onRefresh}
         refreshing={refreshing}
       />
