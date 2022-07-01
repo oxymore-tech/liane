@@ -7,7 +7,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - "/data/osm/osrm:/data:ro"
+      - "/data/osm:/data:ro"
     restart: unless-stopped
     networks:
       - osm
