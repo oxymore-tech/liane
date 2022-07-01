@@ -1,4 +1,4 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable max-len */
 import React from "react";
 import { Arrow } from "@/components/base/Arrow";
 

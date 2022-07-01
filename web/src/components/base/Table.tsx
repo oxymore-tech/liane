@@ -65,6 +65,7 @@ export function Table<T>({ className, data, columns, sort = {}, onSortChange, ke
           columns.map((c, ci) => (
             <td className="bg-white px-2 py-2 whitespace-no-wrap border-b border-gray-200" key={ci}>
               {
+                // eslint-disable-next-line no-nested-ternary
             c.render ? c.render(d) : (c.field ? d[c.field] : JSON.stringify(d))
           }
             </td>

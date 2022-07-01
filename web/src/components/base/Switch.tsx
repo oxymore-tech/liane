@@ -1,7 +1,3 @@
-/* eslint-disable react/require-default-props */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable import/prefer-default-export */
 import React from "react";
 import { Label } from "./Label";
 

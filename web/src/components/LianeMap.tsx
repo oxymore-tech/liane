@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Polyline, TileLayer } from "react-leaflet";
 import {
@@ -89,7 +89,7 @@ function LianeMap({ className, center }: MapProps) {
 
   // Handle map updates
 
-  const updateLianes = () => {
+  const updateLianes = useCallback(() => {
     setNumberLoading(numberLoading + 1);
 
     TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
@@ -102,23 +102,23 @@ function LianeMap({ className, center }: MapProps) {
       setLianes(l);
       setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
     });
-  };
+  }, [filter, numberLoading]);
 
-  const updateRallyingPoints = () => {
+  const updateRallyingPoints = useCallback(() => {
     setNumberLoading(numberLoading + 1);
 
     RallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
       setRallyingPoints(newRallyingPoints.sort(compareRallyingPoints));
       setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
     });
-  };
+  }, [filter.center.lat, filter.center.lng, numberLoading]);
 
   // Initialize the map
 
   useEffect(() => {
     updateLianes();
     updateRallyingPoints();
-  }, [lastCenter]);
+  }, [lastCenter, updateLianes, updateRallyingPoints]);
 
   return (
     <div className="relative">

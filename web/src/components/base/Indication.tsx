@@ -115,7 +115,7 @@ export function Indication({
     }
     return () => {
     };
-  }, [notify, value]);
+  }, [duration, notify, value]);
 
   return (
     <div

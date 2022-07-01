@@ -55,7 +55,7 @@ export function AuthForm() {
                 className="ml-10 mr-10"
                 label="Recevoir le code"
                 color="orange"
-                onClick={sendSms}
+                onClick={() => sendSms()}
               />
             </div>
             {step > 0
@@ -71,7 +71,7 @@ export function AuthForm() {
                 className="ml-10 mr-10"
                 label="Valider"
                 color="orange"
-                onClick={login}
+                onClick={() => login()}
               />
             </div>
             )}

@@ -21,7 +21,7 @@ export interface FilterOptions {
 }
 
 function extractIndex(rawTrips: IndexedRawTrip[]) {
-  let indexes = new Set<number|string>();
+  let indexes = new Set<number | string>();
 
   indexes = indexes.add("Tous les trajets");
   rawTrips.forEach((r: IndexedRawTrip) => {
@@ -71,7 +71,7 @@ export function AdminFilter({ callback, load, rawTrips }: FilterProps) {
       timeBetweenPoints,
       chosenTrip
     });
-  }, [chosenUser, displayBackground, displayForeground, distanceBetweenPoints, timeBetweenPoints, chosenTrip]);
+  }, [chosenUser, displayBackground, displayForeground, distanceBetweenPoints, timeBetweenPoints, chosenTrip, callback]);
 
   return (
     <div className="absolute top-0 right-0 z-10 overflow-auto">

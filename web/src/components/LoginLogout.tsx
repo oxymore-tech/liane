@@ -22,7 +22,7 @@ export function LoginLogout({ className = "" }: LoginLogoutProps) {
             <Button
               label="Déconnexion"
               color="orange"
-              onClick={disconnect}
+              onClick={() => disconnect()}
             />
           </>
         )

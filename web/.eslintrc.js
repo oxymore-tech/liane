@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['airbnb-typescript'],
+  extends: ["airbnb-typescript", "next"],
   parserOptions: {
     project: './tsconfig.json',
   },
@@ -40,9 +40,22 @@ module.exports = {
     "padded-blocks": ["error", {
       "classes": "always"
     }],
-    "react/jsx-props-no-spreading": "off",
-    "eol-last": "off",
-    "max-classes-per-file": ["warn", 5],
-    "@typescript-eslint/no-non-null-assertion": "off"
+    "react/prop-types": "off",
+    "jsx-a11y/control-has-associated-label": "off",
+    "react/button-has-type": "off",
+    "max-classes-per-file": "off",
+    "import/extensions": ['error', 'never', {ignorePackages: true} ],
+    "jsx-a11y/anchor-is-valid": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "@next/next/no-img-element": "off",
+    "lines-around-directive": "off",
+    "padding-line-between-statements": "off",
+    "no-spaced-func": "off",
+    "func-call-spacing": "off",
+    "global-require": "off",
+    "no-buffer-constructor": "off",
+    "no-new-require": "off",
+    "no-path-concat": "off"
   }
 };

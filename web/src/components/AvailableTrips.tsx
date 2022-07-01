@@ -9,10 +9,9 @@ interface TripsProps {
 
 export function AvailableTrips({ searchedTrips }: TripsProps) {
   const [show, setShow] = useState(false);
-  const [currentUser, setCurrentUser] = useState("");
 
-  function printModal(user:string) {
-    setCurrentUser(user);
+  function printModal() {
+    // setCurrentUser(user);
     setShow(true);
   }
 
@@ -25,7 +24,7 @@ export function AvailableTrips({ searchedTrips }: TripsProps) {
       <div className="container" style={{ background: "white", bottom: 10, left: 0, width: 500, zIndex: 3, position: "absolute" }}>
         <ul className="list-disc">
           {searchedTrips.map((search) => (
-            <li style={{ margin: 10 }}>
+            <li key={`${search.user}_${search.time}`} style={{ margin: 10 }}>
               {search.coordinates[0].id}
               {" "}
               -
@@ -36,12 +35,12 @@ export function AvailableTrips({ searchedTrips }: TripsProps) {
               {search.time}
               h -
               {" "}
-              <Button label="Demandez à covoiturer" onClick={() => search.user && printModal(search.user)} />
+              <Button label="Demandez à covoiturer" onClick={() => search.user && printModal()} />
             </li>
           ))}
         </ul>
       </div>
-      {show && <Modal onConfirm={hideModal} onCancel={hideModal} />}
+      {show && <Modal onConfirm={() => hideModal()} onCancel={() => hideModal()} />}
     </div>
   );
 }
