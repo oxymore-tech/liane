@@ -9,6 +9,6 @@ PROJECT=$(getProject)
 
 createOsmNetwork
 
-docker-compose -f "${LIANE_HOME}/osm.yml" -p "osm" up -d
+docker-compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
 
-docker-compose -f "${LIANE_HOME}/liane.yml" -p "${PROJECT}" up -d $*
+docker-compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d $*

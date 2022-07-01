@@ -7,4 +7,4 @@ source "${LIANE_HOME}/deploy/utils.sh"
 
 PROJECT=$(getProject)
 
-docker-compose -f "${LIANE_HOME}/deploy/docker-compose.yml" -p "${PROJECT}" down
+docker-compose -p "${PROJECT}" down
