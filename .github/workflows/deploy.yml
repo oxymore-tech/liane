@@ -1,0 +1,25 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production
+    steps:
+      - name: multiple command
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ~/liane-dev/deploy
+            git checkout develop
+            git pull
+            ./start.sh --build --remove-orphans

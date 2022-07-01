@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+
+  osrm:
+    image: "osrm/osrm-backend"
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
+    ports:
+      - "5000:5000"
+    volumes:
+      - "/data/osm/osrm:/data:ro"
+    restart: unless-stopped
+    networks:
+      - osm
+
+  nominatim:
+    image: "docker.synergee.com/library/nominatim:3.5"
+    command: bash /app/start.sh
+    ports:
+      - "7070:8080"
+    volumes:
+      - "/data/osm/nominatim:/var/lib/postgresql/12/main"
+    restart: unless-stopped
+    networks:
+      - osm
+
+networks:
+  osm:
+    external: true

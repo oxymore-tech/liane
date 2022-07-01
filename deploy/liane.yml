@@ -1,0 +1,75 @@
+version: "3.7"
+services:
+
+  redis:
+    image: 'redis:6.0'
+    command: [ "sh", "-c", "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}" ]
+    volumes:
+      - "/data/${PROJECT}/redis:/data"
+    restart: unless-stopped
+
+  mongo:
+    image: "mongo:4.4.4"
+    volumes:
+      - "/data/${PROJECT}/mongo:/data/db"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    restart: unless-stopped
+
+  back:
+    build: ../back
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "gateway"
+      traefik.http.routers.${PROJECT}-back.rule: "Host(`${PROJECT}${environment}.gjini.co`) && PathPrefix(`/api`)"
+      traefik.http.routers.${PROJECT}-back.entrypoints: "web"
+      traefik.http.routers.${PROJECT}-back.middlewares: "redirect@file"
+      traefik.http.routers.${PROJECT}-back-secure.rule: "Host(`${PROJECT}.gjini.co`) && PathPrefix(`/api`)"
+      traefik.http.routers.${PROJECT}-back-secure.entrypoints: "web-secure"
+      traefik.http.routers.${PROJECT}-back-secure.middlewares: "compress@file"
+      traefik.http.routers.${PROJECT}-back-secure.tls.certResolver: "gjinico"
+      traefik.http.services.${PROJECT}-back.loadbalancer.server.port: "8081"
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      LIANE_Mongo__Username: ${MONGO_USERNAME}
+      LIANE_Mongo__Password: ${MONGO_PASSWORD}
+      LIANE_Redis__Password: ${REDIS_PASSWORD}
+      LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
+      LIANE_Twilio__Token: ${TWILIO_TOKEN}
+      LIANE_Twilio__From: ${TWILIO_FROM}
+      LIANE_Auth__Validity: ${AUTH_VALIDITY}
+      LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
+      LIANE_Auth__TestAccount: ${AUTH_TEST_ACCOUNT}
+      LIANE_Auth__TestCode: ${AUTH_TEST_CODE}
+    restart: unless-stopped
+    networks:
+      - gateway
+      - osm
+      - default
+
+  web:
+    build: ../web
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "gateway"
+      traefik.http.routers.${PROJECT}-web.rule: "Host(`${PROJECT}.gjini.co`) && PathPrefix(`/`)"
+      traefik.http.routers.${PROJECT}-web.entrypoints: "web"
+      traefik.http.routers.${PROJECT}-web.middlewares: "redirect@file"
+      traefik.http.routers.${PROJECT}-web-secure.rule: "Host(`${PROJECT}.gjini.co`) && PathPrefix(`/`)"
+      traefik.http.routers.${PROJECT}-web-secure.entrypoints: "web-secure"
+      traefik.http.routers.${PROJECT}-web-secure.middlewares: "compress@file"
+      traefik.http.routers.${PROJECT}-web-secure.tls.certResolver: "gjinico"
+      traefik.http.services.${PROJECT}-web.loadbalancer.server.port: "3000"
+    restart: unless-stopped
+    networks:
+      - gateway
+      - default
+
+networks:
+  gateway:
+    external: true
+  osm:
+    external: true

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
-BASEDIR=$(dirname "$0")
+LIANE_HOME=$(cd "$(dirname "$0")/.." || exit;pwd)
 
-docker-compose -f ${BASEDIR}/docker-compose.yml -p liane down
+source "${LIANE_HOME}/deploy/utils.sh"
+
+PROJECT=$(getProject)
+
+docker-compose -f "${LIANE_HOME}/deploy/docker-compose.yml" -p "${PROJECT}" down

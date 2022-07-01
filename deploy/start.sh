@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
-BASEDIR=$(dirname "$0")
+LIANE_HOME=$(cd "$(dirname "$0")/.." || exit;pwd)
 
-docker-compose -f ${BASEDIR}/docker-compose.yml -p liane up -d $*
+source "${LIANE_HOME}/deploy/utils.sh"
+
+PROJECT=$(getProject)
+
+createOsmNetwork
+
+docker-compose -f "${LIANE_HOME}/osm.yml" -p "osm" up -d
+
+docker-compose -f "${LIANE_HOME}/liane.yml" -p "${PROJECT}" up -d $*
