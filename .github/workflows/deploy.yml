@@ -37,4 +37,4 @@ jobs:
             git clone -b "${{ env.branch }}" git@github.com:oxymore-tech/liane.git "${{ env.project }}" || true;
             cd "${{ env.project }}/deploy"
             git pull
-            ./start.sh --build --remove-orphans
+            ./start.sh
