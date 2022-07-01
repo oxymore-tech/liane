@@ -112,7 +112,6 @@ async function setLastLocationFetchTime(lastLocationFetchTime: number) {
 /**
  * Send the registered locations to the server and clean
  */
-
 export async function sendTrip() {
   const locations: UserLocation[] = await getTrip(); // Get the trip
   if (locations.length > MIN_TRIP_SIZE) {

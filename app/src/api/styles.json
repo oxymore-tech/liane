@@ -1177,6 +1177,21 @@
 	"font-black": {
 		"fontWeight": "900"
 	},
+	"font-inter-extralight": {
+		"fontFamily": "Inter_ExtraLight"
+	},
+	"font-inter-normal": {
+		"fontFamily": "Inter"
+	},
+	"font-inter-medium": {
+		"fontFamily": "Inter_Medium"
+	},
+	"font-inter-semibold": {
+		"fontFamily": "Inter_SemiBold"
+	},
+	"font-inter-bold": {
+		"fontFamily": "Inter_Bold"
+	},
 	"h-0": {
 		"height": 0
 	},
