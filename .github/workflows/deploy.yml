@@ -15,7 +15,7 @@ jobs:
 
       - name: Set variables
         run: |
-          if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/develop" ]]; then
+          if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
             echo "project=liane" >> $GITHUB_ENV
             echo "branch=main" >> $GITHUB_ENV
           fi
