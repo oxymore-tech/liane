@@ -25,7 +25,7 @@ services:
       - "traefik.http.routers.${PROJECT}-back.rule=Host(`${PROJECT}.gjini.co`) && (PathPrefix(`/api`) || PathPrefix(`/swagger`))"
       - "traefik.http.routers.${PROJECT}-back.entrypoints=web"
       - "traefik.http.routers.${PROJECT}-back.middlewares=redirect@file"
-      - "traefik.http.routers.${PROJECT}-back-secure.rule=Host(`${PROJECT}.gjini.co`) && (PathPrefix(`/api`) || PathPrefix(`/swagger`)"
+      - "traefik.http.routers.${PROJECT}-back-secure.rule=Host(`${PROJECT}.gjini.co`) && (PathPrefix(`/api`) || PathPrefix(`/swagger`))"
       - "traefik.http.routers.${PROJECT}-back-secure.entrypoints=web-secure"
       - "traefik.http.routers.${PROJECT}-back-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-back-secure.tls.certResolver=gjinico"
