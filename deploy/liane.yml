@@ -22,7 +22,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
-      - "traefik.http.routers.${PROJECT}-back.rule=Host(`${PROJECT}${environment}.gjini.co`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.${PROJECT}-back.rule=Host(`${PROJECT}.gjini.co`) && PathPrefix(`/api`)"
       - "traefik.http.routers.${PROJECT}-back.entrypoints=web"
       - "traefik.http.routers.${PROJECT}-back.middlewares=redirect@file"
       - "traefik.http.routers.${PROJECT}-back-secure.rule=Host(`${PROJECT}.gjini.co`) && PathPrefix(`/api`)"
