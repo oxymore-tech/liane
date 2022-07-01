@@ -1,7 +1,6 @@
-namespace Liane.Api.Matching
+namespace Liane.Api.Matching;
+
+public sealed class DriverProposal
 {
-    public sealed class DriverProposal
-    {
         
-    }
 }

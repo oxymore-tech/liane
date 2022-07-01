@@ -17,14 +17,14 @@ const stubLiane = () : Liane[] => {
 
   const rp1 = {
     id: "p1",
-    position: ll1,
+    location: ll1,
     label: "Test RallyingPoint 1",
     distance: 0
   };
 
   const rp2 = {
     id: "p2",
-    position: ll1,
+    location: ll1,
     label: "Test RallyingPoint 2",
     distance: 0
   };
@@ -92,7 +92,7 @@ const HomeScreen = ({ navigation }: HomeProps) => {
       </View>
       <FlatList
         data={stubLiane()}
-        keyExtractor={(item) => item.from.id + item.to.id}
+        keyExtractor={(data: Liane, i) => i.toString()}
         renderItem={({ item }) => (
           <TripListItem
             liane={item}

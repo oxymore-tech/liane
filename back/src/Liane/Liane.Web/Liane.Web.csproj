@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="Resources\villes.json" />
+      <EmbeddedResource Include="Resources\cities.json" />
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,5 @@
-namespace Liane.Api.User
+namespace Liane.Api.User;
+
+public abstract class User
 {
-    public abstract class User
-    {
-    }
 }

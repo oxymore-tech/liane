@@ -1,64 +1,62 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
-using Liane.Api.Rp;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Liane.Web.Controllers
+namespace Liane.Web.Controllers;
+
+[Route("api/rallying_point")]
+[ApiController]
+[RequiresAuth]
+public sealed class RallyingPointController : ControllerBase
 {
-    [Route("api/rp")]
-    [ApiController]
-    [RequiresAuth]
-    public sealed class RallyingPointController : ControllerBase
+    private readonly IRallyingPointService rallyingPointService;
+
+    public RallyingPointController(IRallyingPointService rallyingPointService)
     {
-        private readonly IRallyingPointService rallyingPointService;
+        this.rallyingPointService = rallyingPointService;
+    }
+        
+    [HttpPost("")]
+    [RequiresAdminAuth]
+    public async Task<RallyingPoint> Create([FromBody] RallyingPoint rallyingPoint)
+    {
+        return await rallyingPointService.Create(rallyingPoint);
+    }
+    
+    [HttpDelete("{id}")]
+    [RequiresAdminAuth]
+    public async Task Delete(string id)
+    {
+        await rallyingPointService.Delete(id);
+    }
+    
+    [HttpPut("{id}")]
+    [RequiresAdminAuth]
+    public async Task Update([FromQuery] string id, [FromBody] RallyingPoint rallyingPoint)
+    {
+        await rallyingPointService.Update(id, rallyingPoint);
+    }
 
-        public RallyingPointController(IRallyingPointService rallyingPointService)
-        {
-            this.rallyingPointService = rallyingPointService;
-        }
-        
-        [HttpPost("add")]
-        [RequiresAdminAuth]
-        public async Task Add([FromQuery] double lat, [FromQuery] double lng, [FromQuery] string name)
-        {
-            await rallyingPointService.Add(new LatLng(lat, lng), name);
-        }
-        
-        [HttpPost("delete")]
-        [RequiresAdminAuth]
-        public async Task Delete(string id)
-        {
-            await rallyingPointService.Delete(id);
-        }
-        
-        [HttpPost("move")]
-        [RequiresAdminAuth]
-        public async Task Move([FromQuery] string id, [FromQuery] double lat, [FromQuery] double lng)
-        {
-            await rallyingPointService.Move(id, new LatLng(lat, lng));
-        }
-        
-        [HttpPost("state")]
-        [RequiresAdminAuth]
-        public async Task State([FromQuery] string id, [FromQuery] bool isActive)
-        {
-            await rallyingPointService.ChangeState(id, isActive);
-        }
-        
-        [HttpPost("generate")]
-        [RequiresAdminAuth]
-        public async Task Generate()
-        {
-            await rallyingPointService.LoadFile();
-        }
+    [HttpPost("generate")]
+    [RequiresAdminAuth]
+    public async Task Generate()
+    {
+        await rallyingPointService.ImportCities();
+    }
 
-        [HttpGet("list")]
-        [DisableAuth]
-        public async Task<ImmutableList<RallyingPoint>> List([FromQuery] double lat, [FromQuery] double lng)
+    [HttpGet("")]
+    [DisableAuth]
+    public async Task<ImmutableList<RallyingPoint>> List([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] string? search = null)
+    {
+        LatLng? latLng = null;
+        if (lat != null && lng != null)
         {
-            return await rallyingPointService.List(new LatLng(lat, lng));
+            latLng = new LatLng((double) lat, (double) lng);
         }
+        
+        return await rallyingPointService.List(latLng, search);
     }
 }

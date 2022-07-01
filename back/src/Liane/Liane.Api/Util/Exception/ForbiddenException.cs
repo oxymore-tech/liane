@@ -1,9 +1,8 @@
-namespace Liane.Api.Util.Exception
+namespace Liane.Api.Util.Exception;
+
+public class ForbiddenException : System.Exception
 {
-    public class ForbiddenException : System.Exception
+    public ForbiddenException(string message = "Access forbidden") : base(message)
     {
-        public ForbiddenException(string message = "Access forbidden") : base(message)
-        {
-        }
     }
 }

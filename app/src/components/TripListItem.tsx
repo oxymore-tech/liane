@@ -27,8 +27,10 @@ function computeDetails(usages: LianeUsage[]): Map<DetailKey, DetailValue> {
   const details = new Map<DetailKey, DetailValue>();
 
   usages.forEach((u: LianeUsage) => {
+    // Get the date
     const d: Date = parseJSON(u.timestamp);
 
+    // Compute the key
     const key: DetailKey = d.getDay().toString() + d.getHours().toString();
     const value: DetailValue = {
       day: t(`jour${d.getDay()}`),
@@ -36,6 +38,7 @@ function computeDetails(usages: LianeUsage[]): Map<DetailKey, DetailValue> {
       count: 1
     };
 
+    // Update the dict
     if (details.has(key)) {
       value.count += details.get(key)!.count;
     }

@@ -48,7 +48,7 @@ function Navigation() {
           style: tw("h-20")
         }}
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused } : { focused: boolean }) => {
+          tabBarIcon: ({ focused }: { focused:boolean }) => {
             const icons = {
               Home: {
                 true: "map",

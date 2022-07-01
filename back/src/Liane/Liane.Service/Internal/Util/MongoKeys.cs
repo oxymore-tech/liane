@@ -1,30 +1,29 @@
-namespace Liane.Service.Internal.Util
+namespace Liane.Service.Internal.Util;
+
+internal static class MongoKeys
 {
-    public static class MongoKeys
+    public static string Database()
     {
-        public static string Database()
-        {
-            return "liane";
-        }
-        
-        public static string RallyingPoints()
-        {
-            return "rp";
-        }
-        
-        public static string RawTrips()
-        {
-            return "raw_trips";
-        }
-        
-        public static string Lianes()
-        {
-            return "real_liane";
-        }
-        
-        public static string LianesTrips()
-        {
-            return "liane_trip";
-        }
+        return "liane";
+    }
+
+    public static string RallyingPoint()
+    {
+        return "rallying_point";
+    }
+
+    public static string RawTrip()
+    {
+        return "raw_trip";
+    }
+
+    public static string Liane()
+    {
+        return "real_liane";
+    }
+
+    public static string LianeTrip()
+    {
+        return "liane_trip";
     }
 }

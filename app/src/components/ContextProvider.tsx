@@ -46,7 +46,7 @@ export const AppContext = createContext<AppContextProps>({
  * Ask for the permission to send push notifications and define their
  * parameters.
  */
-async function registerForPushNotificationsAsync() {
+async function registerForPushNotificationsAsync(): Promise<string|undefined> {
   try {
     if (Constants.isDevice) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -74,6 +74,7 @@ async function registerForPushNotificationsAsync() {
       }
       return expoPushToken.data;
     }
+    alert("Must use physical device for Push Notifications");
   } catch (e) {
     console.log("error while registering for push notifications", e);
   }

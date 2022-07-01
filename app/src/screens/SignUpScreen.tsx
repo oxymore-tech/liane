@@ -23,7 +23,7 @@ type SignUpProps = {
 };
 
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
-  const authFailure = route.params.authFailure && t("Le code est invalide veuillez rééssayer");
+  const authFailure = route.params?.authFailure && t("Le code est invalide veuillez rééssayer");
 
   const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
   const [internalError, setInternalError] = useState<string>();

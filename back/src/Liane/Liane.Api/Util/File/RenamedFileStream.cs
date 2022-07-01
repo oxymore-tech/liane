@@ -2,36 +2,35 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Liane.Api.Util.File
+namespace Liane.Api.Util.File;
+
+public sealed class RenamedFileStream : IFileStream
 {
-    public sealed class RenamedFileStream : IFileStream
+    private readonly IFileStream fileStream;
+
+    public RenamedFileStream(IFileStream fileStream, string newFileName)
     {
-        private readonly IFileStream fileStream;
+        this.fileStream = fileStream;
+        FileName = newFileName;
+    }
 
-        public RenamedFileStream(IFileStream fileStream, string newFileName)
-        {
-            this.fileStream = fileStream;
-            FileName = newFileName;
-        }
+    public string FileName { get; }
 
-        public string FileName { get; }
+    public string ContentType => fileStream.ContentType;
 
-        public string ContentType => fileStream.ContentType;
+    public long? ContentLength => fileStream.ContentLength;
 
-        public long? ContentLength => fileStream.ContentLength;
+    public string? ETag => fileStream.ETag;
 
-        public string? ETag => fileStream.ETag;
+    public DateTimeOffset? LastModified => fileStream.LastModified;
 
-        public DateTimeOffset? LastModified => fileStream.LastModified;
+    public Task<Stream> OpenStream()
+    {
+        return fileStream.OpenStream();
+    }
 
-        public Task<Stream> OpenStream()
-        {
-            return fileStream.OpenStream();
-        }
-
-        public Task WriteToAsync(Stream stream)
-        {
-            return fileStream.WriteToAsync(stream);
-        }
+    public Task WriteToAsync(Stream stream)
+    {
+        return fileStream.WriteToAsync(stream);
     }
 }

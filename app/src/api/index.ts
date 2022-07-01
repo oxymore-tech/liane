@@ -24,26 +24,6 @@ export interface LatLng {
   lng: number
 }
 
-export interface Address {
-  street: string,
-  city: string,
-  zipCode: string,
-  country: string,
-  countryCode: string
-}
-
-export interface Location {
-  coordinate: LatLng;
-  address: Address;
-}
-
-export interface RealTrip {
-  from: Location;
-  to: Location;
-  startTime: Date;
-  endTime: Date;
-}
-
 // Define the permission level regarding the recuperation of the location
 // NEVER : no tracking
 // ACTIVE : only when the app. is active
@@ -58,9 +38,8 @@ export enum LocationPermissionLevel {
 
 export interface RallyingPoint {
   id: string,
-  position: LatLng,
+  location: LatLng,
   label: string,
-  distance?: number
 }
 
 export interface LianeUsage {
@@ -75,17 +54,10 @@ export interface Liane {
   usages: LianeUsage[]
 }
 
-export interface LianeTrip {
-  id: string,
-  timestamp: number,
-  lianes: Liane[]
-}
-
-export interface TripFilter {
-  center: LatLng,
-  from?: RallyingPoint,
-  to?: RallyingPoint,
-  timestampFrom?: number,
-  timestampTo?: number,
-  withHour: boolean
+export interface TripIntent {
+  from: RallyingPoint,
+  to: RallyingPoint,
+  fromTime: string,
+  toTime?: string,
+  name?: string
 }

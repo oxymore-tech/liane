@@ -9,101 +9,100 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace Liane.Service.Internal.Trip
+namespace Liane.Service.Internal.Trip;
+
+public class RawTripServiceImpl : IRawTripService
 {
-    public class RawTripServiceImpl : IRawTripService
+    private const int Radius = 25_000;
+        
+    private readonly ICurrentContext currentContext;
+    private readonly ILogger<RawTripServiceImpl> logger;
+        
+    private readonly IMongoCollection<UserRawTrip> rawTripCollection;
+
+    public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RawTripServiceImpl> logger)
     {
-        private const int Radius = 25_000;
-        
-        private readonly ICurrentContext currentContext;
-        private readonly ILogger<RawTripServiceImpl> logger;
-        
-        private readonly IMongoCollection<UserRawTrip> rawTripCollection;
+        this.currentContext = currentContext;
+        this.logger = logger;
 
-        public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RawTripServiceImpl> logger)
+        var mongo = new MongoClient(new MongoClientSettings
         {
-            this.currentContext = currentContext;
-            this.logger = logger;
-
-            var mongo = new MongoClient(new MongoClientSettings
-            {
-                Server = new MongoServerAddress(settings.Host, 27017),
-                Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
-            });
+            Server = new MongoServerAddress(settings.Host, 27017),
+            Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
+        });
             
-            var database = mongo.GetDatabase(MongoKeys.Database());
-            rawTripCollection = database.GetCollection<UserRawTrip>(MongoKeys.RawTrips());
-        }
+        var database = mongo.GetDatabase(MongoKeys.Database());
+        rawTripCollection = database.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
+    }
 
-        public async Task Save(ImmutableList<RawTrip> trips)
-        {
-            if (!trips.IsEmpty)
-            {
-                var currentUser = currentContext.CurrentUser();
-                
-                logger.LogInformation("{Count} raw trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
-                
-                await rawTripCollection.InsertManyAsync(
-                    trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations.ToList()))
-                );
-            }
-        }
-
-        public async Task<ImmutableList<RawTrip>> List()
+    public async Task Save(ImmutableList<RawTrip> trips)
+    {
+        if (!trips.IsEmpty)
         {
             var currentUser = currentContext.CurrentUser();
-            var asyncCursor = await rawTripCollection.FindAsync(t => t.UserId == currentUser);
-            
-            return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations.ToImmutableList(), null))
-                .ToImmutableList();
+                
+            logger.LogInformation("{Count} raw trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
+                
+            await rawTripCollection.InsertManyAsync(
+                trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations.ToList()))
+            );
         }
-
-        public async Task<ImmutableList<RawTrip>> ListFor(string userId)
-        {
-            var asyncCursor = await rawTripCollection.FindAsync(t => t.UserId == userId);
-            
-            return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations.ToImmutableList(), userId))
-                .ToImmutableList();
-        }
-
-        public async Task<ImmutableList<RawTrip>> ListAll()
-        {
-            var asyncCursor = await rawTripCollection.FindAsync(_ => true);
-
-            return asyncCursor.ToEnumerable()
-                .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
-                .ToImmutableList();
-        }
-
-        public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
-        {
-            // TODO : find a better way to do such a request, this is **bad** and WILL lead to problems.
-            // The reason for this implementation is that the objects of an array field cannot be
-            // accessed in the filter, the ideal solution would be to get the first location and compute its distance
-            // but such seems impossible because of the reasons explained above.
-            // At the moment, this is fine as that request isn't meant to be used very frequently and because
-            // raw trips are meant to be deleted. If it isn't the case anymore, this should be fixed.
-            var asyncCursor = await rawTripCollection.FindAsync(_ => true);
-
-            // Other filter information are not used yet as the front-end is already filtering
-            // on those field.
-            // if (rawTripFilter.User is not null)
-            // {
-            //     
-            // }
-            
-            return asyncCursor.ToEnumerable()
-                .Where(t => rawTripFilter.Center.CalculateDistance(new LatLng(t.Locations.First().Latitude, t.Locations.First().Longitude)) <= Radius)
-                .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
-                .ToImmutableList();
-        }
-
-        public async Task<RawTripStats> Stats()
-        {
-            return new RawTripStats(await rawTripCollection.CountDocumentsAsync(_ => true));
-        }
-
     }
+
+    public async Task<ImmutableList<RawTrip>> List()
+    {
+        var currentUser = currentContext.CurrentUser();
+        var asyncCursor = await rawTripCollection.FindAsync(t => t.UserId == currentUser);
+            
+        return asyncCursor.ToEnumerable()
+            .Select(u => new RawTrip(u.Locations.ToImmutableList(), null))
+            .ToImmutableList();
+    }
+
+    public async Task<ImmutableList<RawTrip>> ListFor(string userId)
+    {
+        var asyncCursor = await rawTripCollection.FindAsync(t => t.UserId == userId);
+            
+        return asyncCursor.ToEnumerable()
+            .Select(u => new RawTrip(u.Locations.ToImmutableList(), userId))
+            .ToImmutableList();
+    }
+
+    public async Task<ImmutableList<RawTrip>> ListAll()
+    {
+        var asyncCursor = await rawTripCollection.FindAsync(_ => true);
+
+        return asyncCursor.ToEnumerable()
+            .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
+            .ToImmutableList();
+    }
+
+    public async Task<ImmutableList<RawTrip>> Snap(RawTripFilter rawTripFilter)
+    {
+        // TODO : find a better way to do such a request, this is **bad** and WILL lead to problems.
+        // The reason for this implementation is that the objects of an array field cannot be
+        // accessed in the filter, the ideal solution would be to get the first location and compute its distance
+        // but such seems impossible because of the reasons explained above.
+        // At the moment, this is fine as that request isn't meant to be used very frequently and because
+        // raw trips are meant to be deleted. If it isn't the case anymore, this should be fixed.
+        var asyncCursor = await rawTripCollection.FindAsync(_ => true);
+
+        // Other filter information are not used yet as the front-end is already filtering
+        // on those field.
+        // if (rawTripFilter.User is not null)
+        // {
+        //     
+        // }
+            
+        return asyncCursor.ToEnumerable()
+            .Where(t => rawTripFilter.Center.CalculateDistance(new LatLng(t.Locations.First().Latitude, t.Locations.First().Longitude)) <= Radius)
+            .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
+            .ToImmutableList();
+    }
+
+    public async Task<RawTripStats> Stats()
+    {
+        return new RawTripStats(await rawTripCollection.CountDocumentsAsync(_ => true));
+    }
+
 }

@@ -1090,7 +1090,7 @@
 	},
 	"self-start": {
 		"alignSelf": "flex-start"
-	},
+	},	
 	"self-end": {
 		"alignSelf": "flex-end"
 	},
