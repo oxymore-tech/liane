@@ -185,13 +185,6 @@ namespace Liane.Web
                             .AllowAnyMethod()
                             .AllowAnyHeader()
                             .AllowCredentials());
-
-                    options.AddPolicy("AllowProd",
-                        p => p.WithOrigins("https://liane.gjini.co")
-                            .SetIsOriginAllowedToAllowWildcardSubdomains()
-                            .AllowAnyMethod()
-                            .AllowAnyHeader()
-                            .AllowCredentials());
                 }
             );
 
