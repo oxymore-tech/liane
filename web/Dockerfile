@@ -11,10 +11,6 @@ COPY . ./
 
 RUN yarn build
 
-ARG PROJECT
-ENV NEXT_PUBLIC_APP_URL https://${PROJECT}.gjini.co
-ENV NEXT_PUBLIC_GOOGLE_ANALYTICS_ID 000
-
 FROM node:16
 
 WORKDIR /app
@@ -22,6 +18,8 @@ WORKDIR /app
 COPY --from=build /app /app
 
 ENV HOST 0.0.0.0
+ARG PROJECT
+ENV NEXT_PUBLIC_APP_URL https://${PROJECT}.gjini.co
 
 EXPOSE 3000
 
