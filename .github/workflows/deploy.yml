@@ -20,7 +20,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ~
-            git clone -b ${GITHUB_REF##*/} git@github.com:oxymore-tech/liane.git liane-dev
+            git clone -b "${{GITHUB_REF##*/}}" git@github.com:oxymore-tech/liane.git liane-dev
             cd ~/liane-dev/deploy
             git pull
             ./start.sh --build --remove-orphans
