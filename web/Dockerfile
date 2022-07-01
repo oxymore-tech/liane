@@ -1,4 +1,4 @@
-FROM node:15.2 AS build
+FROM node:16 AS build
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN yarn build
 
 
 
-FROM node:15.2
+FROM node:16
 
 WORKDIR /app
 
