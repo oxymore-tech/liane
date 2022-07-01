@@ -8,7 +8,7 @@ import { Select } from "@/components/base/Select";
 import { LoginLogout } from "@/components/LoginLogout";
 import { Loading } from "@/components/base/Loading";
 
-interface MapProps {
+interface TripFilterProps {
   rallyingPoints: RallyingPoint[],
   newFrom: RallyingPoint | undefined,
   newTo: RallyingPoint | undefined,
@@ -17,7 +17,7 @@ interface MapProps {
   callback: (dayFrom?: number, dayTo?: number, hourFrom?: number, hourTo?: number) => void,
 }
 
-export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, loading, callback }: MapProps) {
+export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, loading, callback }: TripFilterProps) {
   // Days count starts at 1 so we have to add an extra day (24 hours) and an extra hour (2 hours)
   const nextHour = addHours(new Date(), 26);
 
@@ -127,7 +127,7 @@ export function TripFilter({ newFrom, newTo, rallyingPoints, rpUpdate, loading, 
           color="orange"
           className="mt-4 col-span-2"
           label="Rechercher"
-          onClick={() => callback(day === 8 ? undefined : day - 1, day === 8 ? undefined : day - 1, startHour - 1, endHour - 1)}
+          onClick={() => callback(day === 7 ? undefined : day - 1, day === 7 ? undefined : day - 1, startHour - 1, endHour - 1)}
         />
         <Loading className={`${loading && "mt-5 col-span-2"}`} loading={loading} />
       </div>
