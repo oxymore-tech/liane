@@ -8,10 +8,10 @@ on:
 jobs:
   deployment:
     runs-on: ubuntu-latest
-    environment: production
-    concurrency: production
+    environment: dev
+    concurrency: dev
     steps:
-      - name: multiple command
+      - name: Deploy on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -19,7 +19,8 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            cd ~
+            git clone -b ${GITHUB_REF##*/} git@github.com:oxymore-tech/liane.git liane-dev || return 0;
             cd ~/liane-dev/deploy
-            git checkout develop
             git pull
             ./start.sh --build --remove-orphans
