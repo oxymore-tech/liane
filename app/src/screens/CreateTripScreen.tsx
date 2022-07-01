@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { SafeAreaView, Switch, TouchableOpacity, View, StyleSheet } from "react-native";
+import {SafeAreaView, Switch, TouchableOpacity, View, StyleSheet, Alert} from "react-native";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { ToggleButton } from 'react-native-paper';
 import { AppButton } from "@/components/base/AppButton";
-import { getRallyingPoints } from "@/api/client";
+import {getRallyingPoints, sendTripIntent} from "@/api/client";
 import Autocomplete from 'react-native-autocomplete-input';
 import {AppTextInput} from "@/components/base/AppTextInput";
-import { RallyingPoint } from "@/api";
+import {RallyingPoint, TripIntent} from "@/api";
 import {getLastKnownLocation} from "@/api/location";
 
 const CreateTripScreen = () => {
@@ -23,12 +23,8 @@ const CreateTripScreen = () => {
   const [showToTime, setShowToTime] = useState(false);
   const [showFromTime, setShowFromTime] = useState(false);
 
-  const [toTime, setToTime] = useState(new Date());
-  const [fromTime, setFromTime] = useState( () => {
-    const fromDate = new Date();
-    fromDate.setHours(fromDate.getHours() + 1)
-    return fromDate;
-  });
+  const [fromTime, setFromTime] = useState<Date>(new Date());
+  const [toTime, setToTime] = useState<Date | null>(null);
   
   const [status, setStatus] = useState({driverStatus: false, passengerStatus: false, neutralStatus: false});
   
@@ -47,15 +43,15 @@ const CreateTripScreen = () => {
     setShowDay(false);
     setDay(selectedDay);
   }
-  
-  const onChangeToTime = (event, selectedTime) => {
-    setShowToTime(false);
-    setToTime(selectedTime);
-  }
 
   const onChangeFromTime = (event, selectedTime) => {
     setShowFromTime(false);
     setFromTime(selectedTime);
+  }
+
+  const onChangeToTime = (event, selectedTime) => {
+    setShowToTime(false);
+    setToTime(selectedTime);
   }
   
   const [filteredStartPoints, setFilteredStartPoints] = useState<RallyingPoint[]>([]);
@@ -64,7 +60,7 @@ const CreateTripScreen = () => {
   const [startPoint, setStartPoint] = useState<RallyingPoint | null>(null);
   const [shownStartPoint, setShownStartPoint] = useState("");
 
-  const [endStart, setEndPoint] = useState<RallyingPoint | null>(null);
+  const [endPoint, setEndPoint] = useState<RallyingPoint | null>(null);
   const [shownEndPoint, setShownEndPoint] = useState("");
 
   const findStartPoint = async (query) => {
@@ -102,9 +98,51 @@ const CreateTripScreen = () => {
       setFilteredEndPoints([]);
     }
   }
-  
-  const onPublicationPressed = () => {
-    // Add trips to scheduled trips when pressed ?
+  const onPublicationPressed = async () => {
+    let isValid = true;
+    let message = "";
+    
+    if (startPoint == null || endPoint == null) {
+      message += "Point de départ et/ou d'arrivé invalides\n"
+      isValid = false;
+    }
+    if (isRoundTrip && fromTime.getTime() >= toTime!.getTime()) {
+      message += "Horaires invalides\n"
+      isValid = false;
+    }
+    
+    if (!isValid) {
+      Alert.alert(
+          "Trajet invalide",
+          message,
+          [
+            {
+              text: "OK",
+            }
+          ],
+          { cancelable: true }
+      );
+    } else {
+      const tripIntent: TripIntent = {
+        from: startPoint!,
+        to: endPoint!,
+        fromTime: fromTime.toISOString(),
+        toTime: toTime!.toISOString()
+      }
+      
+      // Send tripIntent
+      await sendTripIntent(tripIntent);
+
+      // Reset all
+      setStartPoint(null);
+      setShownStartPoint("");
+      setEndPoint(null);
+      setShownEndPoint("");
+      const date = new Date();
+      setToTime(date);
+      date.setHours(date.getHours() + 1)
+      setFromTime(date);
+    }
   }
     
   return (
@@ -128,7 +166,14 @@ const CreateTripScreen = () => {
                   trackColor={{ false: "#767577", true: "#FF5B22" }}
                   thumbColor="#f4f3f4"
                   ios_backgroundColor="#3e3e3e"
-                  onValueChange={() => setIsRoundTrip(previousState => !previousState)}
+                  onValueChange={() => {
+                    setIsRoundTrip(previousState => !previousState)
+                    if (!isRoundTrip) {
+                      const toDate = new Date(fromTime.getTime());
+                      toDate!.setHours(toDate!.getHours() + 1)
+                      setToTime(toDate);
+                    }
+                  }}
                   value={isRoundTrip}
               />
             </View>
@@ -207,8 +252,9 @@ const CreateTripScreen = () => {
           <View style={tw("flex flex-row w-full justify-between items-center")}>
             <AppText style={tw("text-2xl font-inter-normal font-inter-extralight")}>Horaire</AppText>
             <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-inter-medium")}>Régulier</AppText>
+              <AppText style={tw("text-sm font-inter-medium text-gray-500")}>Régulier</AppText>
               <Switch
+                  disabled={true}
                   trackColor={{ false: "#767577", true: "#FF5B22" }}
                   thumbColor="#f4f3f4"
                   ios_backgroundColor="#3e3e3e"
@@ -221,6 +267,7 @@ const CreateTripScreen = () => {
           <View style={tw("flex flex-col w-full flex-auto")}>
 
               <AppButton
+                  disabled={true}
                   title={day.toDateString()}
                   titleStyle={tw("text-gray-600")}
                   buttonStyle={tw("rounded-md bg-white py-2 px-4")}
@@ -230,19 +277,20 @@ const CreateTripScreen = () => {
               <View style={tw("flex flex-row w-full justify-around items-center mt-2")}>
                 <View style={tw("flex flex-col")}>
                   <AppText style={tw("text-base font-inter-medium")}> Aller</AppText>
-                  <AppButton title={toTime.getHours() + ":" + (toTime.getMinutes() < 10 ? "0" : "") + toTime.getMinutes()}
+                  <AppButton title={fromTime.getHours() + ":" + (fromTime.getMinutes() < 10 ? "0" : "") + fromTime.getMinutes()}
                              titleStyle={tw("text-gray-600")}
                              buttonStyle={tw("bg-gray-200")}
-                             onPress={() => setShowToTime(true)}/>
+                             onPress={() => setShowFromTime(true)}/>
                 </View>
                 {
                   isRoundTrip &&
                   <View style={tw("flex flex-col")}>
                     <AppText style={tw("text-base font-inter-medium")}> Retour</AppText>
-                    <AppButton title={fromTime.getHours()  + ":" + (fromTime.getMinutes() < 10 ? "0" : "") + fromTime.getMinutes()}
+                    <AppButton title={toTime != null ? toTime.getHours()  + ":" + (toTime.getMinutes() < 10 ? "0" : "") + toTime.getMinutes() : ""}
                                titleStyle={tw("text-gray-600")}
                                buttonStyle={tw("bg-gray-200")}
-                               onPress={() => setShowFromTime(true)}/>
+                               onPress={() => setShowToTime(true)}
+                    />
                   </View>
                 }
               </View>
@@ -258,7 +306,7 @@ const CreateTripScreen = () => {
           }
           {
             showToTime &&
-            <RNDateTimePicker mode="time" value={toTime} 
+            <RNDateTimePicker mode="time" value={toTime!} 
                               onChange={onChangeToTime}
                               style={tw("h-5 w-5")}/>
           }
