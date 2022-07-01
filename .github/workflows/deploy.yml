@@ -15,11 +15,11 @@ jobs:
 
       - name: Set variables
         run: |
-          if [[ "${{ github.base_ref }}" == "main" ]]; then
+          if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/develop" ]]; then
             echo "::set-output name=project::liane"
           fi
 
-          if [[ "${{ github.base_ref }}" == "develop" ]]; then
+          if [[ "${{ github.base_ref }}" == "develop" || "${{github.ref}}" == "refs/heads/develop"  ]]; then
             echo "::set-output name=project::liane-dev"
           fi
           
