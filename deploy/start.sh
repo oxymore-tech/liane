@@ -7,12 +7,12 @@ source "${LIANE_HOME}/deploy/utils.sh"
 
 createOsmNetwork
 
-docker-compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
+docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
 
 PROJECT=$(getProject)
 
 export PROJECT
 
-docker-compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" build --build-arg "PROJECT=${PROJECT}"
+docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" build --build-arg "PROJECT=${PROJECT}"
 
-docker-compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --remove-orphans
+docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --remove-orphans
