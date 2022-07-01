@@ -18,11 +18,7 @@ function getProject() {
 function createOsmNetwork() {
   exist=$(docker network ls | grep -c osm || true)
   if [[ exist -eq 0 ]]; then
-    docker network create \
-        --driver=overlay \
-        --internal=false \
-        --subnet=10.15.0.0/16 \
-        osm
+    docker network create osm
   else
     printf "osm network exists\n"
     printf "Skipping creation...\n"
