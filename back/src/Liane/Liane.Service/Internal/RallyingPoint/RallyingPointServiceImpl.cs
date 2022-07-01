@@ -90,11 +90,9 @@ public class RallyingPointServiceImpl : IRallyingPointService
             // await rallyingPointsCollection.Indexes.CreateOneAsync(new CreateIndexModel<DbRallyingPoint>(Builders<DbRallyingPoint>.IndexKeys.Geo2DSphere(x => x.Location)));
 
             // Load the data
-
-
             var assembly = Assembly.GetEntryAssembly();
-            logger.LogInformation(" Assembly Names = " + string.Join("\n", assembly.GetManifestResourceNames()));
-            logger.LogInformation(" Assembly Name = {0}\n", assembly.FullName);
+            logger.LogInformation(" Assembly Names = {0}\n", string.Join("\n", assembly.GetManifestResourceNames()));
+            logger.LogInformation(" Assembly FullName = {0}\n", assembly.FullName);
 
             var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("villes.json"));
             await using var file = assembly.GetManifestResourceStream(resourceName);

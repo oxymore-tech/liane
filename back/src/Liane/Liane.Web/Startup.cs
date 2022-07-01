@@ -14,6 +14,7 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Service.TripIntent;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
@@ -61,6 +62,7 @@ public static class Startup
             
         services.AddService<LocationServiceImpl>();
         services.AddService<RallyingPointServiceImpl>();
+        services.AddService<TripIntentServiceImpl>();
         services.AddService<NotificationServiceImpl>();
         services.AddService<RawTripServiceImpl>();
         services.AddService<LianeTripServiceImpl>();
