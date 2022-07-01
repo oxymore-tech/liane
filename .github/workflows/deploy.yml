@@ -32,7 +32,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ~
-            git clone -b "${{ github.base_ref }}" git@github.com:oxymore-tech/liane.git "${{ project }}" || true;
-            cd "~/${{ project }}/deploy"
+            git clone -b "${{ github.base_ref }}" git@github.com:oxymore-tech/liane.git "${{ needs.init.outputs.project }}" || true;
+            cd "~/${{ needs.init.outputs.project }}/deploy"
             git pull
             ./start.sh --build --remove-orphans
