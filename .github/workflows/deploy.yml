@@ -16,11 +16,13 @@ jobs:
       - name: Set variables
         run: |
           if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/develop" ]]; then
-            echo "::set-output name=project::liane"
+            echo "project=liane" >> $GITHUB_ENV
+            echo "branch=main" >> $GITHUB_ENV
           fi
 
           if [[ "${{ github.base_ref }}" == "develop" || "${{github.ref}}" == "refs/heads/develop"  ]]; then
-            echo "::set-output name=project::liane-dev"
+            echo "project=liane-dev" >> $GITHUB_ENV
+            echo "branch=develop" >> $GITHUB_ENV
           fi
           
       - name: Deploy on server
@@ -32,7 +34,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd ~
-            git clone -b "${{ github.base_ref }}" git@github.com:oxymore-tech/liane.git "${{ needs.init.outputs.project }}" || true;
-            cd "~/${{ needs.init.outputs.project }}/deploy"
+            git clone -b "${{ env.branch }}" git@github.com:oxymore-tech/liane.git "${{ env.project }}" || true;
+            cd "~/${{ env.project }}/deploy"
             git pull
             ./start.sh --build --remove-orphans
