@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 LIANE_HOME=$(cd "$(dirname "$0")/.." || exit;pwd)
 
