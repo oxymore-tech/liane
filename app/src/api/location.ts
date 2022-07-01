@@ -2,7 +2,7 @@ import * as Location from "expo-location";
 import { LocationAccuracy, LocationObject, LocationTaskOptions } from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { logLocation } from "@/api/client";
-import {LatLng, LocationPermissionLevel, UserLocation} from "@/api/index";
+import { LatLng, LocationPermissionLevel, UserLocation } from "@/api/index";
 import * as Device from "expo-device";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -225,15 +225,13 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 export async function getLastKnownLocation(): Promise<LatLng> {
   let l;
   await Location.getLastKnownPositionAsync()
-      .then((location) => {
-         l = location != null ? 
-            {
-              lat: location.coords.latitude, 
-              lng: location.coords.longitude
-            }
-            :
-             null;
-      }
-  );
+    .then((location) => {
+      l = location != null
+        ? {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude
+        }
+        : null;
+    });
   return l;
 }

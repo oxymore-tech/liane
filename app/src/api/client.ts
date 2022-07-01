@@ -1,5 +1,7 @@
-import {get, post, postAs, QueryAsOptions} from "@/api/http";
-import { AuthUser, UserLocation, Notification, Liane, RallyingPoint, LatLng, TripIntent } from "@/api";
+import { get, post, postAs } from "@/api/http";
+import {
+  AuthUser, UserLocation, Notification, Liane, RallyingPoint, LatLng, TripIntent
+} from "@/api";
 
 export async function logLocation(locations: UserLocation[]) {
   await post("/location", { body: locations });
