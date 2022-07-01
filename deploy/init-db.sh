@@ -9,4 +9,4 @@ PROJECT=$(get_project)
 
 source .env
 
-init_db "${PROJECT}_redis_1" "${REDIS_PASSWORD}" "${PROJECT}_mongo_1" "${MONGO_USER}" "${MONGO_PASSWORD}" "${LIANE_HOME}/deploy/db"
+init_db "${PROJECT}-redis-1" "${REDIS_PASSWORD}" "${PROJECT}-mongo-1" "${MONGO_USER}" "${MONGO_PASSWORD}" "${LIANE_HOME}/deploy/db"
