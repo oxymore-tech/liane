@@ -1,24 +1,24 @@
-import React, {createContext, ReactNode, useCallback, useEffect, useState} from "react";
+import React, {
+  createContext, ReactNode, useCallback, useEffect, useState
+} from "react";
 import {
   Inter_200ExtraLight,
-  Inter_300Light,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-  Inter_800ExtraBold,
   useFonts
 } from "@expo-google-fonts/inter";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import {Platform, View} from "react-native";
+import { Platform, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { me } from "@/api/client";
 import * as Location from "expo-location";
 import { startLocationTask } from "@/api/location";
 import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
-import * as SplashScreen from 'expo-splash-screen';
+import * as SplashScreen from "expo-splash-screen";
 
 /**
  * Application context format.
@@ -46,7 +46,7 @@ export const AppContext = createContext<AppContextProps>({
  * Ask for the permission to send push notifications and define their
  * parameters.
  */
-async function registerForPushNotificationsAsync(): Promise<string|undefined> {
+async function registerForPushNotificationsAsync() {
   try {
     if (Constants.isDevice) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -74,11 +74,10 @@ async function registerForPushNotificationsAsync(): Promise<string|undefined> {
       }
       return expoPushToken.data;
     }
-    alert("Must use physical device for Push Notifications");
-    return undefined;
   } catch (e) {
     console.log("error while registering for push notifications", e);
   }
+  return undefined;
 }
 
 /**
@@ -112,7 +111,7 @@ async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationP
 
 async function waitForContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
   await SplashScreen.preventAutoHideAsync();
-  return await initContext();
+  return initContext();
 }
 
 /**
@@ -126,7 +125,7 @@ function ContextProvider(props: { children: ReactNode }) {
     Inter_SemiBold: Inter_600SemiBold,
     Inter_Bold: Inter_700Bold
   });
-  
+
   const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
@@ -151,15 +150,15 @@ function ContextProvider(props: { children: ReactNode }) {
   useEffect(() => {
     startLocationTask(locationPermissionLevel).then();
   }, [locationPermissionLevel]);
-  
+
   // Get the context and wait for it before showing the app
   useEffect(() => {
     waitForContext()
-        .then((p) => {
-            setLocationPermissionLevel(p.permission);
-            setAuthUser(p.authUser).then(() => setAppLoaded(true));
-        });
-    }, []);
+      .then((p) => {
+        setLocationPermissionLevel(p.permission);
+        setAuthUser(p.authUser).then(() => setAppLoaded(true));
+      });
+  }, []);
 
   // Ask for push notification permission
   useEffect(() => {
@@ -173,11 +172,11 @@ function ContextProvider(props: { children: ReactNode }) {
   }, []);
 
   const { children } = props;
-  
+
   const onLayoutRootView = useCallback(async () => {
     if (appLoaded) {
       // If called after `setAppLoaded`, we may see a blank screen while the app is
-      // loading its initial state and rendering its first pixels. 
+      // loading its initial state and rendering its first pixels.
       // So instead, we hide the splash screen once we know the root view has already
       // performed layout.
       await SplashScreen.hideAsync();
@@ -187,22 +186,22 @@ function ContextProvider(props: { children: ReactNode }) {
   if (!appLoaded) {
     return null;
   }
-  
+
   return (
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <AppContext.Provider
-            value={{
-              appLoaded: appLoaded && fontLoaded,
-              expoPushToken,
-              locationPermissionLevel,
-              setLocationPermissionLevel,
-              authUser,
-              setAuthUser
-            }}
-        >
-          {children}
-        </AppContext.Provider>
-      </View>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <AppContext.Provider
+        value={{
+          appLoaded: appLoaded && fontLoaded,
+          expoPushToken,
+          locationPermissionLevel,
+          setLocationPermissionLevel,
+          authUser,
+          setAuthUser
+        }}
+      >
+        {children}
+      </AppContext.Provider>
+    </View>
   );
 }
 

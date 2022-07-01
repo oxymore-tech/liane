@@ -35,8 +35,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
       navigation.navigate("SignUp", { phoneNumber, authFailure: true });
     }
   }, [phoneNumber, code, expoPushToken]);
-  
-  
+
   return (
     <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
       <View style={tw("h-10 items-center my-20")}>

@@ -19,7 +19,7 @@ const Tab = createBottomTabNavigator();
 
 export type NavigationParamList = {
   Home: {};
-  Details: {tripID: string};
+  Details: { tripID: string };
   TripList: { count?: number, day?: string, hour?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
   SignUpCode: { phoneNumber: string };
@@ -28,7 +28,7 @@ export type NavigationParamList = {
 function Navigation() {
 
   const { locationPermissionLevel, authUser } = useContext(AppContext);
-  
+
   if (locationPermissionLevel === LocationPermissionLevel.NEVER) {
     return (
       <Stack.Navigator>
@@ -40,65 +40,65 @@ function Navigation() {
       </Stack.Navigator>
     );
   }
-  
+
   if (authUser) {
     return (
-        <Tab.Navigator
-            tabBarOptions={{
-              style: tw("h-20")
-            }}
-            screenOptions={({ route }) => ({
-              tabBarIcon: ({ focused }) => {
-                const icons = {
-                  Home: {
-                    true: "map",
-                    false: "map-outline"
-                  },
-                  Schedule : {
-                    true: "time",
-                    false: "time-outline"
-                  },
-                  CreateTrip: {
-                    true: "add-circle",
-                    false: "add-circle-outline"
-                  },
-                  Notifications: {
-                    true: "chatbox-ellipses",
-                    false: "chatbox-ellipses-outline"
-                  },
-                  Settings: {
-                    true: "settings",
-                    false: "settings-outline"
-                  }
-                };
-
-                return <Ionicons name={icons[route.name][focused]} style={tw(`text-4xl mt-4 ${focused ? "text-orange" : ""}`)} />;
+      <Tab.Navigator
+        tabBarOptions={{
+          style: tw("h-20")
+        }}
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused } : { focused: boolean }) => {
+            const icons = {
+              Home: {
+                true: "map",
+                false: "map-outline"
               },
-              tabBarLabel: ""
-            })}
-        >
-          <Tab.Screen
-              name="Home" 
-              component={HomeNavigation}
-          />
-          <Tab.Screen
-              name="Schedule"
-              component={ScheduleScreen}
-          />
-          <Tab.Screen
-              name="CreateTrip"
-              component={CreateTripScreen}
-          />
-          <Tab.Screen
-              name="Notifications"
-              component={NotificationsScreen}
-          />
-          <Tab.Screen
-              name="Settings"
-              component={SettingsScreen}
-          />
-          
-        </Tab.Navigator>
+              Schedule: {
+                true: "time",
+                false: "time-outline"
+              },
+              CreateTrip: {
+                true: "add-circle",
+                false: "add-circle-outline"
+              },
+              Notifications: {
+                true: "chatbox-ellipses",
+                false: "chatbox-ellipses-outline"
+              },
+              Settings: {
+                true: "settings",
+                false: "settings-outline"
+              }
+            };
+
+            return <Ionicons name={icons[route.name][focused]} style={tw(`text-4xl mt-4 ${focused ? "text-orange" : ""}`)} />;
+          },
+          tabBarLabel: ""
+        })}
+      >
+        <Tab.Screen
+          name="Home"
+          component={HomeNavigation}
+        />
+        <Tab.Screen
+          name="Schedule"
+          component={ScheduleScreen}
+        />
+        <Tab.Screen
+          name="CreateTrip"
+          component={CreateTripScreen}
+        />
+        <Tab.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+        />
+
+      </Tab.Navigator>
     );
   }
 

@@ -39,7 +39,7 @@ function App() {
 
     // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {});
-    
+
     return () => {
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
@@ -50,7 +50,7 @@ function App() {
     };
 
   });
-  
+
   return (
     <ContextProvider>
       <NavigationContainer>
