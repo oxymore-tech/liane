@@ -6,7 +6,7 @@ import {
   RallyingPoint,
   TripFilterOptions,
   RoutedLiane,
-  distance, compareRallyingPoints
+  distance
 } from "@/api";
 import { TripService } from "@/api/services/trip-service";
 import { RallyingPointService } from "@/api/services/rallying-point-service";
@@ -30,7 +30,7 @@ function LianeMap({ className, center }: MapProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   const [lianes, setLianes] = useState<RoutedLiane[]>();
   const [maxUsages, setMaxUsages] = useState(0);
-  const [numberLoading, setNumberLoading] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [selectedLiane, setSelectedLiane] = useState<RoutedLiane>();
 
   // Map display options
@@ -87,42 +87,29 @@ function LianeMap({ className, center }: MapProps) {
     setSelectedLiane(l);
   };
 
-  // Handle map updates
-
-  const updateLianes = useCallback(() => {
-    setNumberLoading(numberLoading + 1);
-
-    TripService.snapLianes(filter).then((newLianes: RoutedLiane[]) => {
-      const l = newLianes.sort((a: RoutedLiane, b: RoutedLiane) => b.numberOfUsages - a.numberOfUsages);
-
-      if (l.length > 0) {
-        setMaxUsages(l[0].numberOfUsages);
+  const updateLianes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const newRallyingPoints = await RallyingPointService.list(filter.center.lat, filter.center.lng);
+      setRallyingPoints(newRallyingPoints);
+      const newLianes = (await TripService.snapLianes(filter))
+        .sort((a: RoutedLiane, b: RoutedLiane) => b.numberOfUsages - a.numberOfUsages);
+      if (newLianes.length > 0) {
+        setMaxUsages(newLianes[0].numberOfUsages);
       }
-
-      setLianes(l);
-      setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
-    });
-  }, [filter, numberLoading]);
-
-  const updateRallyingPoints = useCallback(() => {
-    setNumberLoading(numberLoading + 1);
-
-    RallyingPointService.list(filter.center.lat, filter.center.lng).then((newRallyingPoints: RallyingPoint[]) => {
-      setRallyingPoints(newRallyingPoints.sort(compareRallyingPoints));
-      setNumberLoading(numberLoading > 0 ? numberLoading - 1 : 0);
-    });
-  }, [filter.center.lat, filter.center.lng, numberLoading]);
-
-  // Initialize the map
+      setLianes(newLianes);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
 
   useEffect(() => {
-    updateLianes();
-    updateRallyingPoints();
-  }, [lastCenter, updateLianes, updateRallyingPoints]);
+    updateLianes().then();
+  }, [lastCenter, updateLianes]);
 
   return (
     <div className="relative">
-      <TripFilter rallyingPoints={rallyingPoints} newFrom={from} newTo={to} rpUpdate={handleRp} loading={numberLoading > 0} callback={handleFilter} />
+      <TripFilter rallyingPoints={rallyingPoints} newFrom={from} newTo={to} rpUpdate={handleRp} loading={loading} callback={handleFilter} />
       <MapContainer
         className={className}
         center={center}
