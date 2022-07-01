@@ -13,6 +13,4 @@ PROJECT=$(getProject)
 
 export PROJECT
 
-docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" build --build-arg "PROJECT=${PROJECT}"
-
-docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --remove-orphans
+docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --build --remove-orphans
