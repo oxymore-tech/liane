@@ -93,16 +93,16 @@ const CreateTripScreen = () => {
       const location = await getLastKnownLocation();
 
       await getRallyingPoints(query, location)
-        .then((r) => {
-          const f = r.filter((point) => point.label.search(regex) >= 0);
-          setFilteredEndPoints(f);
-        });
+          .then((r) => {
+            const f = r.filter((point) => point.label.search(regex) >= 0);
+            setFilteredEndPoints(f);
+          });
 
     } else {
       setFilteredEndPoints([]);
     }
   };
-
+  
   const onPublicationPressed = async () => {
     let isValid = true;
     let message = "";
