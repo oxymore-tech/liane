@@ -27,6 +27,7 @@ internal sealed record OverpassTag(string Name);
 public class RallyingPointServiceImpl : IRallyingPointService
 {
     private const int SelectionRadius = 25_000;
+    private const int MaxRadius = 400_000;
     private const int InterpolationRadius = 1_000;
     private const int MaxRallyingPoint = 10;
     
@@ -118,7 +119,7 @@ public class RallyingPointServiceImpl : IRallyingPointService
         var searchRadius = SelectionRadius;
         
         // Keep looking for matching rallying points (name and location) by doubling the selection radius around the location
-        while (result.IsEmpty)
+        while (result.IsEmpty && searchRadius < MaxRadius)
         {
             var filter = FilterDefinition<DbRallyingPoint>.Empty;
             if (pos != null)
