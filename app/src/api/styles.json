@@ -3401,6 +3401,9 @@
 	"min-h-full": {
 		"minHeight": "100%"
 	},
+	"min-h-1/2": {
+		"minHeight": "50%"
+	},
 	"min-w-0": {
 		"minWidth": 0
 	},
