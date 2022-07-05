@@ -4,8 +4,9 @@ namespace Liane.Api.TripIntent;
 
 public sealed record TripIntent (
     string? Id,
-    RallyingPoint.RallyingPoint from,
-    RallyingPoint.RallyingPoint to,
-    DateTime fromTime,
-    DateTime? toTime 
+    string User,
+    RallyingPoint.RallyingPoint From,
+    RallyingPoint.RallyingPoint To,
+    DateTime FromTime,
+    DateTime? ToTime 
 );

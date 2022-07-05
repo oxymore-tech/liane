@@ -50,22 +50,20 @@ public static class TripIntentStub
         var saintsimon = new RallyingPoint(
             "rp10","Saint-Simon", 
             new LatLng(44.9642272, 2.4898166), true);
-        
-       
+
+
         // Trip Intents
         DateTime getTime(string timeStr)
         {
              return DateTime.ParseExact(timeStr, "HH:mm", null);
         }
-   
-        
 
-        var blanc = new TripIntent("ti1", laroquebrou, arpajon, getTime("09:00"), getTime("17:00"));
-        var vert = new TripIntent("ti2", saintpaul, aurillac, getTime("09:00"), getTime("17:00"));
-        var jaune = new TripIntent("ti3", ytrac, vic, getTime("09:00"), getTime("17:00"));
-        var rose = new TripIntent("ti4", sansac, saintsimon, getTime("09:00"), getTime("17:00"));
-        var rouge = new TripIntent("ti5", reilhac, vic, getTime("09:00"), getTime("17:00"));
-        var bleu = new TripIntent("ti6", naucelles, aurillac, getTime("09:00"), getTime("17:00"));
+        var blanc = new TripIntent("ti1","1", laroquebrou, arpajon, getTime("09:00"), getTime("17:00"));
+        var vert = new TripIntent("ti2","2" ,saintpaul, aurillac, getTime("09:00"), getTime("17:00"));
+        var jaune = new TripIntent("ti3","3" ,ytrac, vic, getTime("09:00"), getTime("17:00"));
+        var rose = new TripIntent("ti4","4" ,sansac, saintsimon, getTime("09:00"), getTime("17:00"));
+        var rouge = new TripIntent("ti5","5", reilhac, vic, getTime("09:00"), getTime("17:00"));
+        var bleu = new TripIntent("ti6","6", naucelles, aurillac, getTime("09:00"), getTime("17:00"));
 
         List<TripIntent> tripIntents = new List<TripIntent>()
         {

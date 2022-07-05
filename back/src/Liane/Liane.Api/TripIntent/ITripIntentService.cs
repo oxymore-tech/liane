@@ -1,15 +1,22 @@
-using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Routing;
 
 namespace Liane.Api.TripIntent;
 
 public interface ITripIntentService
 {
-    Task<TripIntent> Create(TripIntent tripIntent);
+    Task<TripIntent> Create(ReceivedTripIntent tripIntent);
     
     Task Delete(string id);
     
     Task<ImmutableList<TripIntent>> List();
+
+    Task<ImmutableList<TripIntent>> ListByUser();
 }
+
+public sealed record ReceivedTripIntent(
+    RallyingPoint.RallyingPoint From, 
+    RallyingPoint.RallyingPoint To, 
+    string FromTime,
+    string? ToTime 
+);
