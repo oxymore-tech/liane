@@ -62,8 +62,8 @@ public static class TripIntentStub
         new LatLng(44.8824607, 2.3485484), true);
 
     private static RallyingPoint saintsimon = new RallyingPoint(
-        "rp10", "Saint-Simon",
-        new LatLng(44.9642272, 2.4898166), true);
+            "rp10","Saint-Simon", 
+            new LatLng(44.9642272, 2.4898166), true);
 
     private static RallyingPoint mauriac = new RallyingPoint(
         "rp11", "Mauriac",
@@ -72,6 +72,19 @@ public static class TripIntentStub
     private static RallyingPoint saintcernin = new RallyingPoint(
         "rp12", "Saint-Cernin",
         new LatLng(45.0591427, 2.4213159), true);
+
+    // Trip Intents
+    DateTime getTime(string timeStr)
+    {
+        return DateTime.ParseExact(timeStr, "HH:mm", null);
+    }
+
+    var blanc = new TripIntent("ti1","1", laroquebrou, arpajon, getTime("09:00"), getTime("17:00"));
+    var vert = new TripIntent("ti2","2" ,saintpaul, aurillac, getTime("09:00"), getTime("17:00"));
+    var jaune = new TripIntent("ti3","3" ,ytrac, vic, getTime("09:00"), getTime("17:00"));
+    var rose = new TripIntent("ti4","4" ,sansac, saintsimon, getTime("09:00"), getTime("17:00"));
+    var rouge = new TripIntent("ti5","5", reilhac, vic, getTime("09:00"), getTime("17:00"));
+    var bleu = new TripIntent("ti6","6", naucelles, aurillac, getTime("09:00"), getTime("17:00"));
 
     public static Dictionary<CantalPoints, RallyingPoint> GetRallyingPoints()
     {

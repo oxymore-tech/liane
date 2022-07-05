@@ -12,12 +12,12 @@ namespace Liane.Web.Controllers;
 public sealed class TripIntentController : ControllerBase
 {
     private readonly ITripIntentService tripIntentService;
-
+    
     public TripIntentController(ITripIntentService tripIntentService)
     {
         this.tripIntentService = tripIntentService;
     }
-
+    
     [HttpPost("")]
     public async Task<TripIntent> Create([FromBody] ReceivedTripIntent tripIntent)
     {
@@ -31,8 +31,15 @@ public sealed class TripIntentController : ControllerBase
     }
 
     [HttpGet("")]
+    [DisableAuth]
     public async Task<ImmutableList<TripIntent>> List()
     {
         return await tripIntentService.List();
+    }
+    
+    [HttpGet("user")]
+    public async Task<ImmutableList<TripIntent>> ListByUser()
+    {
+        return await tripIntentService.ListByUser();
     }
 }
