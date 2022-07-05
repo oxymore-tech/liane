@@ -15,21 +15,16 @@ namespace Liane.Web.Controllers;
 public sealed class TripIntentController : ControllerBase
 {
     private readonly ITripIntentService tripIntentService;
-
+    
     public TripIntentController(ITripIntentService tripIntentService)
     {
         this.tripIntentService = tripIntentService;
     }
-        
+    
     [HttpPost("")]
     public async Task<TripIntent> Create([FromBody] ReceivedTripIntent tripIntent)
     {
-        var ti = new TripIntent(null, tripIntent.from, tripIntent.to,
-            DateTime.Parse(tripIntent.fromTime, null, DateTimeStyles.RoundtripKind),
-            tripIntent.toTime is null ? null : DateTime.Parse(tripIntent.toTime, null, DateTimeStyles.RoundtripKind)
-            );
-        
-        return await tripIntentService.Create(ti);
+        return await tripIntentService.Create(tripIntent);
     }
     
     [HttpDelete("{id}")]
@@ -39,17 +34,16 @@ public sealed class TripIntentController : ControllerBase
     }
 
     [HttpGet("")]
+    [DisableAuth]
     public async Task<ImmutableList<TripIntent>> List()
     {
         return await tripIntentService.List();
     }
     
-    public sealed record ReceivedTripIntent(
-        string? Id, 
-        RallyingPoint from, 
-        RallyingPoint to, 
-        string fromTime,
-        string? toTime 
-    );
+    [HttpGet("user")]
+    public async Task<ImmutableList<TripIntent>> ListByUser()
+    {
+        return await tripIntentService.ListByUser();
+    }
 }
 
