@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoint;
 using Liane.Api.TripIntent;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -28,22 +25,24 @@ public sealed class TripIntentController : ControllerBase
     }
     
     [HttpDelete("{id}")]
-    public async Task Delete([FromQuery] string id)
+    [DisableAuth]
+    public async Task Delete(string id)
     {
         await tripIntentService.Delete(id);
     }
 
     [HttpGet("")]
     [DisableAuth]
+    public async Task<ImmutableList<TripIntent>> ListAll()
+    {
+        return await tripIntentService.ListAll();
+    }
+    
+    [HttpGet("all")]
+    [RequiresAdminAuth]
     public async Task<ImmutableList<TripIntent>> List()
     {
         return await tripIntentService.List();
-    }
-    
-    [HttpGet("user")]
-    public async Task<ImmutableList<TripIntent>> ListByUser()
-    {
-        return await tripIntentService.ListByUser();
     }
 }
 
