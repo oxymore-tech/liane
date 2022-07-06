@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.TripIntent;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -32,14 +33,15 @@ public sealed class TripIntentController : ControllerBase
 
     [HttpGet("")]
     [DisableAuth]
+    public async Task<ImmutableList<TripIntent>> ListAll()
+    {
+        return await tripIntentService.ListAll();
+    }
+    
+    [HttpGet("all")]
+    [RequiresAdminAuth]
     public async Task<ImmutableList<TripIntent>> List()
     {
         return await tripIntentService.List();
-    }
-    
-    [HttpGet("user")]
-    public async Task<ImmutableList<TripIntent>> ListByUser()
-    {
-        return await tripIntentService.ListByUser();
     }
 }

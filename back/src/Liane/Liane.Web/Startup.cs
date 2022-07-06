@@ -12,6 +12,7 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.TripIntent;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Exception;
