@@ -4,17 +4,17 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
 using Liane.Api.TripIntent;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.RallyingPoint;
 using Liane.Service.Internal.Util;
+using Liane.Service.TripIntent;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace Liane.Service.TripIntent;
+namespace Liane.Service.Internal.TripIntent;
 
 public class TripIntentServiceImpl : ITripIntentService
 {
@@ -55,12 +55,12 @@ public class TripIntentServiceImpl : ITripIntentService
         return created;
     }
 
-    public Task Delete(string id)
+    public async Task Delete(string id)
     {
-        throw new NotImplementedException();
+        await tripIntentsCollection.DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
     }
 
-    public async Task<ImmutableList<Api.TripIntent.TripIntent>> List()
+    public async Task<ImmutableList<Api.TripIntent.TripIntent>> ListAll()
     {
         var filter = FilterDefinition<DbTripIntent>.Empty;
         
@@ -72,13 +72,14 @@ public class TripIntentServiceImpl : ITripIntentService
         return result;
     }
 
-    public async Task<ImmutableList<Api.TripIntent.TripIntent>> ListByUser()
+    public async Task<ImmutableList<Api.TripIntent.TripIntent>> List()
     {
         var filter = FilterDefinition<DbTripIntent>.Empty;
         
         // Filter on user
         var builder = Builders<DbTripIntent>.Filter;
-        var regex = new Regex( "\\" + currentContext.CurrentUser(), RegexOptions.None);
+        
+        var regex = new Regex(Regex.Escape(currentContext.CurrentUser()), RegexOptions.None);
         filter &= builder.Regex(x => x.User , new BsonRegularExpression(regex));
         
         var result = (await tripIntentsCollection.FindAsync(filter))
@@ -102,10 +103,10 @@ public class TripIntentServiceImpl : ITripIntentService
         dbTripIntent.FromTime, dbTripIntent.ToTime);
     }
 
-    private static RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
+    private static Api.RallyingPoint.RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
     {
         var loc = new LatLng(rallyingPoint.Location.Coordinates.Latitude, rallyingPoint.Location.Coordinates.Longitude);
-        return new RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
+        return new Api.RallyingPoint.RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
     }
 
 }

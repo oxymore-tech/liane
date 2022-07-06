@@ -9,9 +9,9 @@ public interface ITripIntentService
     
     Task Delete(string id);
     
-    Task<ImmutableList<TripIntent>> List();
+    Task<ImmutableList<TripIntent>> ListAll();
 
-    Task<ImmutableList<TripIntent>> ListByUser();
+    Task<ImmutableList<TripIntent>> List();
 }
 
 public sealed record ReceivedTripIntent(
