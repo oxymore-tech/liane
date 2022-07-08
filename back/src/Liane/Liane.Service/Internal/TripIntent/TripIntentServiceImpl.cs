@@ -10,7 +10,6 @@ using Liane.Api.Util.Http;
 using Liane.Service.Internal.RallyingPoint;
 using Liane.Service.Internal.Util;
 using Liane.Service.TripIntent;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -18,30 +17,20 @@ namespace Liane.Service.Internal.TripIntent;
 
 public class TripIntentServiceImpl : ITripIntentService
 {
-    private readonly ILogger<TripIntentServiceImpl> logger;
     private readonly ICurrentContext currentContext;
-    private readonly IMongoCollection<DbTripIntent> tripIntentsCollection;
+    private readonly IMongoDatabase mongo;
 
-    public TripIntentServiceImpl(MongoSettings settings, ILogger<TripIntentServiceImpl> logger, ICurrentContext currentContext)
+    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext)
     {
-        this.logger = logger;
         this.currentContext = currentContext;
-        
-        var mongo = new MongoClient(new MongoClientSettings
-        {
-            Server = new MongoServerAddress(settings.Host, 27017),
-            Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
-        });
-
-        var database = mongo.GetDatabase(MongoKeys.Database());
-        tripIntentsCollection = database.GetCollection<DbTripIntent>(MongoKeys.TripIntent());
+        mongo = settings.GetDatabase();
     }
     
     public async Task<Api.TripIntent.TripIntent> Create(ReceivedTripIntent tripIntent)
     {
         var ti = new Api.TripIntent.TripIntent(
             null,
-            currentContext.CurrentUser(),
+            currentContext.CurrentUser().Phone,
             tripIntent.From, 
             tripIntent.To,
             DateTime.Parse(tripIntent.FromTime, null, DateTimeStyles.RoundtripKind),
@@ -51,38 +40,29 @@ public class TripIntentServiceImpl : ITripIntentService
         var newId = ObjectId.GenerateNewId();
         var created = ti with { Id = newId.ToString() };
 
-        await tripIntentsCollection.InsertOneAsync(ToDbTripIntent(created));
+        await mongo.GetCollection<DbTripIntent>().InsertOneAsync(ToDbTripIntent(created));
         return created;
     }
 
     public async Task Delete(string id)
     {
-        await tripIntentsCollection.DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
-    }
-
-    public async Task<ImmutableList<Api.TripIntent.TripIntent>> ListAll()
-    {
-        var filter = FilterDefinition<DbTripIntent>.Empty;
-        
-        var result = (await tripIntentsCollection.FindAsync(filter))
-            .ToEnumerable()
-            .Select(ToTripIntent)
-            .ToImmutableList();
-
-        return result;
+        await mongo.GetCollection<DbTripIntent>().DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
     }
 
     public async Task<ImmutableList<Api.TripIntent.TripIntent>> List()
     {
         var filter = FilterDefinition<DbTripIntent>.Empty;
         
-        // Filter on user
         var builder = Builders<DbTripIntent>.Filter;
-        
-        var regex = new Regex(Regex.Escape(currentContext.CurrentUser()), RegexOptions.None);
-        filter &= builder.Regex(x => x.User , new BsonRegularExpression(regex));
-        
-        var result = (await tripIntentsCollection.FindAsync(filter))
+        var currentUser = currentContext.CurrentUser();
+
+        if (!currentUser.IsAdmin)
+        {
+            var regex = new Regex(Regex.Escape(currentUser.Phone), RegexOptions.None);
+            filter &= builder.Regex(x => x.User , new BsonRegularExpression(regex));
+        }
+
+        var result = (await mongo.GetCollection<DbTripIntent>().FindAsync(filter))
             .ToEnumerable()
             .Select(ToTripIntent)
             .ToImmutableList();
