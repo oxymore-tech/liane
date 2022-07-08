@@ -6,7 +6,7 @@ namespace Liane.Web.Internal.Auth;
 [AttributeUsage(AttributeTargets.Method)]
 public class RequiresAdminAuthAttribute : TypeFilterAttribute
 {
-    public RequiresAdminAuthAttribute() : base(typeof(RequiresAdminAuthAttributeFilter))
+    public RequiresAdminAuthAttribute() : base(typeof(RequiresAdminRoleFilter))
     {
             
     }

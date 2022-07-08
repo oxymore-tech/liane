@@ -25,14 +25,11 @@ public class LianeTripServiceImpl : ILianeTripService
     private const int MinLianeTrip = 1; // Less than 1 liane isn't a trip
     private const int SelectionRadius = 25_000;
         
-    private readonly MongoClient mongo;
+    private readonly IMongoDatabase mongo;
     private readonly ICurrentContext currentContext;
     private readonly ILogger<LianeTripServiceImpl> logger;
     private readonly IRallyingPointService rallyingPointService;
     private readonly IRoutingService routingService;
-
-    private readonly IMongoCollection<UsedLiane> lianesCollection;
-    private readonly IMongoCollection<UserLianeTrip> lianeTripsCollection;
 
     public LianeTripServiceImpl(
         MongoSettings settings, 
@@ -45,15 +42,7 @@ public class LianeTripServiceImpl : ILianeTripService
         this.rallyingPointService = rallyingPointService;
         this.routingService = routingService;
 
-        mongo = new MongoClient(new MongoClientSettings
-        {
-            Server = new MongoServerAddress(settings.Host, 27017),
-            Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
-        });
-            
-        var database = mongo.GetDatabase(MongoKeys.Database());
-        lianesCollection = database.GetCollection<UsedLiane>(MongoKeys.Liane());
-        lianeTripsCollection = database.GetCollection<UserLianeTrip>(MongoKeys.LianeTrip());
+        mongo = settings.GetDatabase();
     }
 
     public async Task Create(string user, ImmutableList<UserLocation> userLocations)
@@ -72,14 +61,14 @@ public class LianeTripServiceImpl : ILianeTripService
     public async Task Delete(string lianeTripId)
     {
         // TODO : will need a review
-        var result = await (await lianeTripsCollection.FindAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser())).ToListAsync();
+        var result = await (await mongo.GetCollection<UserLianeTrip>().FindAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser().Phone)).ToListAsync();
 
         if (result.Any())
         {
             var lianeTrip = result.First();
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
                 
-            await lianesCollection.UpdateManyAsync(
+            await mongo.GetCollection<UsedLiane>().UpdateManyAsync(
                 filterBuilder.In(l => l.Id, lianeTrip.Lianes), 
                 Builders<UsedLiane>.Update.PullFilter(
                     l => l.Usages, 
@@ -88,21 +77,21 @@ public class LianeTripServiceImpl : ILianeTripService
             );
         }
 
-        await lianeTripsCollection.DeleteOneAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser());
+        await mongo.GetCollection<UserLianeTrip>().DeleteOneAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser().Phone);
     }
         
     public async Task<ImmutableHashSet<Api.Trip.Liane>> Get()
     {
         // Select the user trips
         var currentUser = currentContext.CurrentUser();
-        var trips = (await lianeTripsCollection.FindAsync(l => l.User == currentUser)).ToEnumerable();
+        var trips = (await mongo.GetCollection<UserLianeTrip>().FindAsync(l => l.User == currentUser.Phone)).ToEnumerable();
             
         // Fin every liane id
         var lianesIds = trips.SelectMany(t => t.Lianes).ToImmutableHashSet();
             
         // Select the corresponding lianes
         var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
-        var lianesList = (await lianesCollection.FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
+        var lianesList = (await mongo.GetCollection<UsedLiane>().FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
             
         // Convert the lianes and order them
         return lianesList.Select(ul => ul.ToLiane()).OrderBy(l => l.Usages.Count).ToImmutableHashSet();
@@ -113,7 +102,7 @@ public class LianeTripServiceImpl : ILianeTripService
         // Select the data using geo. location of mongo
         var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(tripFilter.Center.Lng, tripFilter.Center.Lat));
         var filter = Builders<UsedLiane>.Filter.Near(x => x.Location, point, SelectionRadius);
-        var lianesList = (await lianesCollection.FindAsync(filter)).ToEnumerable();
+        var lianesList = (await mongo.GetCollection<UsedLiane>().FindAsync(filter)).ToEnumerable();
             
         // Keep primary ones
         // No, don't do that, else the search engine will not work
@@ -166,14 +155,12 @@ public class LianeTripServiceImpl : ILianeTripService
 
     public async Task Generate()
     {
-        var database = mongo.GetDatabase(MongoKeys.Database());
-
         // Delete the previous data
-        await lianesCollection.DeleteManyAsync(_ => true);
-        await lianeTripsCollection.DeleteManyAsync(_ => true);
-            
+        await mongo.GetCollection<UsedLiane>().DeleteManyAsync(_ => true);
+        await mongo.GetCollection<UserLianeTrip>().DeleteManyAsync(_ => true);
+        
         // Fetch raw locations
-        var rawTripCollection = database.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
+        var rawTripCollection = mongo.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
         var result = (await rawTripCollection.FindAsync(_ => true)).ToList();
 
         logger.LogInformation(result.Count + " raw trips founded");
@@ -189,11 +176,11 @@ public class LianeTripServiceImpl : ILianeTripService
     public async Task<LianeStats> Stats()
     {
         return new LianeStats(
-            await lianesCollection.CountDocumentsAsync(_ => true),
-            (await (await lianeTripsCollection.DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
+            await mongo.GetCollection<UsedLiane>().CountDocumentsAsync(_ => true),
+            (await (await mongo.GetCollection<UserLianeTrip>().DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
         );
     }
-        
+    
     private static IEnumerable<ImmutableList<UserLocation>> SplitTrip(ImmutableList<UserLocation> trip)
     {
         List<UserLocation> currentTrip = new();
@@ -231,7 +218,7 @@ public class LianeTripServiceImpl : ILianeTripService
         var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng()) <= DeltaMTrip;
         return time && distance;
     }
-        
+    
     private async Task CreateLianeTrip(string user, long timestamp, ImmutableList<Api.RallyingPoint.RallyingPoint> rallyingPoints)
     {
         var id = ObjectId.GenerateNewId();
@@ -241,7 +228,7 @@ public class LianeTripServiceImpl : ILianeTripService
         if (lianesIds.Count >= MinLianeTrip)
         {
             lianeTrip.Lianes.AddRange(lianesIds);
-            await lianeTripsCollection.InsertOneAsync(lianeTrip);
+            await mongo.GetCollection<UserLianeTrip>().InsertOneAsync(lianeTrip);
         }
     }
 
@@ -256,7 +243,7 @@ public class LianeTripServiceImpl : ILianeTripService
                     
             foreach (var to in rallyingPoints.Skip(from.i + 1))
             {
-                var results = await (await lianesCollection.FindAsync(l => l.From == from.r && l.To == to)).ToListAsync();
+                var results = await (await mongo.GetCollection<UsedLiane>().FindAsync(l => l.From == from.r && l.To == to)).ToListAsync();
                 var first = results.FirstOrDefault();
                 var lianeUsage = new UserLianeUsage(user, isPrimary, timestamp, lianeTripId);
                 ObjectId lianeId;
@@ -286,14 +273,14 @@ public class LianeTripServiceImpl : ILianeTripService
 
         liane.Usages.Add(lianeUsage);
             
-        await lianesCollection.InsertOneAsync(liane);
+        await mongo.GetCollection<UsedLiane>().InsertOneAsync(liane);
             
         // logger.LogInformation("Liane created : " + liane.ToJson());
     }
 
     private async Task UpdateLiane(ObjectId id, UserLianeUsage lianeUsage)
     {
-        await lianesCollection.UpdateOneAsync(l => l.Id == id, Builders<UsedLiane>.Update.AddToSet(l => l.Usages, lianeUsage));
+        await mongo.GetCollection<UsedLiane>().UpdateOneAsync(l => l.Id == id, Builders<UsedLiane>.Update.AddToSet(l => l.Usages, lianeUsage));
         // logger.LogInformation("Liane updated : " + id);
     }
 

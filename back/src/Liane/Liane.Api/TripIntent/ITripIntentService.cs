@@ -9,8 +9,6 @@ public interface ITripIntentService
     
     Task Delete(string id);
     
-    Task<ImmutableList<TripIntent>> ListAll();
-
     Task<ImmutableList<TripIntent>> List();
 }
 
@@ -18,5 +16,5 @@ public sealed record ReceivedTripIntent(
     RallyingPoint.RallyingPoint From, 
     RallyingPoint.RallyingPoint To, 
     string FromTime,
-    string? ToTime 
+    string? ToTime
 );

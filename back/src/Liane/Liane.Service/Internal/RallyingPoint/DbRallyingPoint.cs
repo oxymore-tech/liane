@@ -5,11 +5,8 @@ using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.RallyingPoint;
 
-/**
-     * Represent the data structure of a rallying point in Mongo.
-     */
 public sealed record DbRallyingPoint(
-    [property: BsonId] ObjectId Id,
+    ObjectId Id,
     string Label,
     GeoJsonPoint<GeoJson2DGeographicCoordinates> Location,
     bool IsActive = true

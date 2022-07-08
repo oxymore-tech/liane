@@ -32,6 +32,6 @@ public sealed class LocationServiceImpl : ILocationService
         await rawTripService.Save(ImmutableList.Create(new RawTrip(userLocations, null)));
                 
         // Save the data as a liane
-        await lianeTripService.Create(currentContext.CurrentUser(), userLocations);
+        await lianeTripService.Create(currentContext.CurrentUser().Phone, userLocations);
     }
 }
