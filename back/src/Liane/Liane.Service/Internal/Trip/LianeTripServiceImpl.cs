@@ -158,7 +158,7 @@ public class LianeTripServiceImpl : ILianeTripService
         // Delete the previous data
         await mongo.GetCollection<UsedLiane>().DeleteManyAsync(_ => true);
         await mongo.GetCollection<UserLianeTrip>().DeleteManyAsync(_ => true);
-
+        
         // Fetch raw locations
         var rawTripCollection = mongo.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
         var result = (await rawTripCollection.FindAsync(_ => true)).ToList();
@@ -180,7 +180,7 @@ public class LianeTripServiceImpl : ILianeTripService
             (await (await mongo.GetCollection<UserLianeTrip>().DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
         );
     }
-
+    
     private static IEnumerable<ImmutableList<UserLocation>> SplitTrip(ImmutableList<UserLocation> trip)
     {
         List<UserLocation> currentTrip = new();
@@ -218,7 +218,7 @@ public class LianeTripServiceImpl : ILianeTripService
         var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng()) <= DeltaMTrip;
         return time && distance;
     }
-
+    
     private async Task CreateLianeTrip(string user, long timestamp, ImmutableList<RallyingPoint> rallyingPoints)
     {
         var id = ObjectId.GenerateNewId();

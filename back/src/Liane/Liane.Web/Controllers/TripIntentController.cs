@@ -32,14 +32,6 @@ public sealed class TripIntentController : ControllerBase
     }
 
     [HttpGet("")]
-    [DisableAuth]
-    public async Task<ImmutableList<TripIntent>> ListAll()
-    {
-        return await tripIntentService.ListAll();
-    }
-    
-    [HttpGet("all")]
-    [RequiresAdminAuth]
     public async Task<ImmutableList<TripIntent>> List()
     {
         return await tripIntentService.List();

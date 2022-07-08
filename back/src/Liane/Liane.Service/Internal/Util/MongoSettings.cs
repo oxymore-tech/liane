@@ -23,6 +23,6 @@ public static class MongoDatabaseExtensions
     public static IMongoCollection<T> GetCollection<T>(this IMongoDatabase mongoDatabase)
     {
         var collectionName = typeof(T).Name.Replace("Db", "", StringComparison.OrdinalIgnoreCase);
-        return mongoDatabase.GetCollection<T>(collectionName.ToSnakeCase());
+        return mongoDatabase.GetCollection<T>(collectionName.NormalizeToCamelCase());
     }
 }

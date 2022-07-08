@@ -63,7 +63,7 @@ public sealed class AuthServiceImpl : IAuthService
                 var generator = new Random();
                 var code = generator.Next(0, 1000000).ToString("D6");
 
-                smsCodeCache.Set(phoneNumber.ToString(), code, TimeSpan.FromMinutes(2));
+                smsCodeCache.Set(phoneNumber, code, TimeSpan.FromMinutes(2));
 
                 var message = await MessageResource.CreateAsync(
                     body: $"{code} est votre code liane",
@@ -84,8 +84,7 @@ public sealed class AuthServiceImpl : IAuthService
         }
         
         var phoneNumber = ParseNumber(phone);
-
-        if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string expectedCode))
+        if (!smsCodeCache.TryGetValue(phoneNumber, out string expectedCode))
         {
             throw new UnauthorizedAccessException("Invalid code");
         }
