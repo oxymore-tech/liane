@@ -49,7 +49,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return created;
     }
 
-    public static DbRallyingPoint ToDbRallyingPoint(Api.RallyingPoint.RallyingPoint rallyingPoint)
+    public static DbRallyingPoint ToDbRallyingPoint(RallyingPoint rallyingPoint)
     {
         return new DbRallyingPoint(ObjectId.Parse(rallyingPoint.Id), rallyingPoint.Label, rallyingPoint.Location, rallyingPoint.IsActive);
     }

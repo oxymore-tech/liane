@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Trip;
 using Liane.Api.TripIntent;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
@@ -13,12 +14,12 @@ namespace Liane.Web.Controllers;
 public sealed class TripIntentController : ControllerBase
 {
     private readonly ITripIntentService tripIntentService;
-    
+
     public TripIntentController(ITripIntentService tripIntentService)
     {
         this.tripIntentService = tripIntentService;
     }
-    
+
     [HttpPost("")]
     public async Task<TripIntent> Create([FromBody] ReceivedTripIntent tripIntent)
     {

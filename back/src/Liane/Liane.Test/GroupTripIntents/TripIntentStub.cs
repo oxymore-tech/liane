@@ -62,8 +62,8 @@ public static class TripIntentStub
         new LatLng(44.8824607, 2.3485484), true);
 
     private static RallyingPoint saintsimon = new RallyingPoint(
-            "rp10","Saint-Simon", 
-            new LatLng(44.9642272, 2.4898166), true);
+        "rp10", "Saint-Simon",
+        new LatLng(44.9642272, 2.4898166), true);
 
     private static RallyingPoint mauriac = new RallyingPoint(
         "rp11", "Mauriac",
@@ -72,19 +72,6 @@ public static class TripIntentStub
     private static RallyingPoint saintcernin = new RallyingPoint(
         "rp12", "Saint-Cernin",
         new LatLng(45.0591427, 2.4213159), true);
-
-    // Trip Intents
-    DateTime getTime(string timeStr)
-    {
-        return DateTime.ParseExact(timeStr, "HH:mm", null);
-    }
-
-    var blanc = new TripIntent("ti1","1", laroquebrou, arpajon, getTime("09:00"), getTime("17:00"));
-    var vert = new TripIntent("ti2","2" ,saintpaul, aurillac, getTime("09:00"), getTime("17:00"));
-    var jaune = new TripIntent("ti3","3" ,ytrac, vic, getTime("09:00"), getTime("17:00"));
-    var rose = new TripIntent("ti4","4" ,sansac, saintsimon, getTime("09:00"), getTime("17:00"));
-    var rouge = new TripIntent("ti5","5", reilhac, vic, getTime("09:00"), getTime("17:00"));
-    var bleu = new TripIntent("ti6","6", naucelles, aurillac, getTime("09:00"), getTime("17:00"));
 
     public static Dictionary<CantalPoints, RallyingPoint> GetRallyingPoints()
     {
@@ -103,5 +90,42 @@ public static class TripIntentStub
             { CantalPoints.mauriac, mauriac },
             { CantalPoints.saintcernin, saintcernin },
         };
+    }
+
+    // Trip Intents
+    public static DateTime GetTime(string timeStr)
+    {
+        return DateTime.ParseExact(timeStr, "HH:mm", null);
+    }
+
+
+    public static List<TripIntent> GetTripIntents()
+    {
+        var blanc = new TripIntent("blanc1", "1", laroquebrou, arpajon, GetTime("09:00"), GetTime("17:00"));
+
+        var vert = new TripIntent("vert2", "2", saintpaul, aurillac, GetTime("09:00"), GetTime("17:00"));
+
+        var jaune = new TripIntent("jaune3", "3", ytrac, vic, GetTime("09:00"), GetTime("17:00"));
+
+        var rose = new TripIntent("rose4", "4", sansac, saintsimon, GetTime("09:00"), GetTime("17:00"));
+
+        var rouge = new TripIntent("rouge5", "5", reilhac, vic, GetTime("09:00"), GetTime("17:00"));
+
+        var bleu = new TripIntent("bleu6", "6", naucelles, aurillac, GetTime("09:00"), GetTime("17:00"));
+
+        var noir = new TripIntent("noir7", "7", arpajon, vic, GetTime("09:00"), GetTime("17:00"));
+
+        var tripIntents = new List<TripIntent>()
+        {
+            blanc,
+            vert,
+            jaune,
+            rose,
+            rouge,
+            bleu,
+            noir
+        };
+
+        return tripIntents;
     }
 }
