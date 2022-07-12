@@ -1,12 +1,12 @@
 using System;
 
-namespace Liane.Api.TripIntent;
+namespace Liane.Api.Trip;
 
 public sealed record TripIntent (
     string? Id,
     string User,
-    RallyingPoint.RallyingPoint From,
-    RallyingPoint.RallyingPoint To,
+    RallyingPoints.RallyingPoint From,
+    RallyingPoints.RallyingPoint To,
     DateTime FromTime,
     DateTime? ToTime 
 );

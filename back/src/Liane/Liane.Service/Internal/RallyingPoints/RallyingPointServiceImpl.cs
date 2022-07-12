@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoint;
+using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Util;
@@ -14,9 +14,8 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace Liane.Service.Internal.RallyingPoint;
+namespace Liane.Service.Internal.RallyingPoints;
 
 internal sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
 
@@ -41,7 +40,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         mongo = settings.GetDatabase();
     }
 
-    public async Task<Api.RallyingPoint.RallyingPoint> Create(Api.RallyingPoint.RallyingPoint rallyingPoint)
+    public async Task<RallyingPoint> Create(RallyingPoint rallyingPoint)
     {
         var newId = ObjectId.GenerateNewId();
         var created = rallyingPoint with { Id = newId.ToString() };
@@ -50,7 +49,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return created;
     }
 
-    public static DbRallyingPoint ToDbRallyingPoint(Api.RallyingPoint.RallyingPoint rallyingPoint)
+    public static DbRallyingPoint ToDbRallyingPoint(RallyingPoint rallyingPoint)
     {
         return new DbRallyingPoint(ObjectId.Parse(rallyingPoint.Id), rallyingPoint.Label, rallyingPoint.Location, rallyingPoint.IsActive);
     }
@@ -61,7 +60,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
             .DeleteOneAsync(rp => rp.Id == ObjectId.Parse(id));
     }
 
-    public async Task Update(string id, Api.RallyingPoint.RallyingPoint rallyingPoint)
+    public async Task Update(string id, RallyingPoint rallyingPoint)
     {
         await mongo.GetCollection<DbRallyingPoint>()
             .ReplaceOneAsync(
@@ -105,15 +104,15 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         }
     }
 
-    public async Task<ImmutableList<Api.RallyingPoint.RallyingPoint>> List(LatLng? pos, string? search)
+    public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
     {
         return await ListInternal(pos, search);
     }
 
-    private async Task<ImmutableList<Api.RallyingPoint.RallyingPoint>> ListInternal(LatLng? pos, string? search)
+    private async Task<ImmutableList<RallyingPoint>> ListInternal(LatLng? pos, string? search)
     {
         var builder = Builders<DbRallyingPoint>.Filter;
-        var result = ImmutableList.Create<Api.RallyingPoint.RallyingPoint>();
+        var result = ImmutableList.Create<RallyingPoint>();
         var searchRadius = SelectionRadius;
 
         // Keep looking for matching rallying points (name and location) by doubling the selection radius around the location
@@ -146,14 +145,14 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return result;
     }
 
-    private async Task<Api.RallyingPoint.RallyingPoint?> GetFirstClosest(LatLng? pos, double radius)
+    private async Task<RallyingPoint?> GetFirstClosest(LatLng? pos, double radius)
     {
         return (await ListInternal(pos, null)).First();
     }
 
-    public async Task<ImmutableList<Api.RallyingPoint.RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
+    public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
     {
-        var rallyingPoints = ImmutableList.CreateBuilder<Api.RallyingPoint.RallyingPoint>();
+        var rallyingPoints = ImmutableList.CreateBuilder<RallyingPoint>();
 
         foreach (var l in locations)
         {
