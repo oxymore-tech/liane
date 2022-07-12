@@ -1,8 +1,8 @@
 using System;
-using Liane.Service.Internal.RallyingPoint;
+using Liane.Service.Internal.RallyingPoints;
 using MongoDB.Bson;
 
-namespace Liane.Service.TripIntent;
+namespace Liane.Service.Internal.Trip;
 
 public sealed record DbTripIntent(
     ObjectId? Id,

@@ -4,16 +4,16 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
-using Liane.Api.TripIntent;
+using Liane.Api.Trip;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.RallyingPoint;
+using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Util;
-using Liane.Service.TripIntent;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace Liane.Service.Internal.TripIntent;
+namespace Liane.Service.Internal.Trip;
 
 public class TripIntentServiceImpl : ITripIntentService
 {
@@ -25,18 +25,18 @@ public class TripIntentServiceImpl : ITripIntentService
         this.currentContext = currentContext;
         mongo = settings.GetDatabase();
     }
-    
-    public async Task<Api.TripIntent.TripIntent> Create(ReceivedTripIntent tripIntent)
+
+    public async Task<TripIntent> Create(ReceivedTripIntent tripIntent)
     {
-        var ti = new Api.TripIntent.TripIntent(
+        var ti = new TripIntent(
             null,
             currentContext.CurrentUser().Phone,
-            tripIntent.From, 
+            tripIntent.From,
             tripIntent.To,
             DateTime.Parse(tripIntent.FromTime, null, DateTimeStyles.RoundtripKind),
-            tripIntent.ToTime is null ? null: DateTime.Parse(tripIntent.ToTime, null, DateTimeStyles.RoundtripKind)
+            tripIntent.ToTime is null ? null : DateTime.Parse(tripIntent.ToTime, null, DateTimeStyles.RoundtripKind)
         );
-        
+
         var newId = ObjectId.GenerateNewId();
         var created = ti with { Id = newId.ToString() };
 
@@ -49,17 +49,17 @@ public class TripIntentServiceImpl : ITripIntentService
         await mongo.GetCollection<DbTripIntent>().DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
     }
 
-    public async Task<ImmutableList<Api.TripIntent.TripIntent>> List()
+    public async Task<ImmutableList<TripIntent>> List()
     {
         var filter = FilterDefinition<DbTripIntent>.Empty;
-        
+
         var builder = Builders<DbTripIntent>.Filter;
         var currentUser = currentContext.CurrentUser();
 
         if (!currentUser.IsAdmin)
         {
             var regex = new Regex(Regex.Escape(currentUser.Phone), RegexOptions.None);
-            filter &= builder.Regex(x => x.User , new BsonRegularExpression(regex));
+            filter &= builder.Regex(x => x.User, new BsonRegularExpression(regex));
         }
 
         var result = (await mongo.GetCollection<DbTripIntent>().FindAsync(filter))
@@ -70,23 +70,22 @@ public class TripIntentServiceImpl : ITripIntentService
         return result;
     }
 
-    private static DbTripIntent ToDbTripIntent(Api.TripIntent.TripIntent tripIntent)
+    private static DbTripIntent ToDbTripIntent(TripIntent tripIntent)
     {
         return new DbTripIntent(tripIntent.Id is null ? null : ObjectId.Parse(tripIntent.Id), tripIntent.User,
             RallyingPointServiceImpl.ToDbRallyingPoint(tripIntent.From), RallyingPointServiceImpl.ToDbRallyingPoint(tripIntent.To),
             tripIntent.FromTime, tripIntent.ToTime);
     }
-    
-    private static Api.TripIntent.TripIntent ToTripIntent(DbTripIntent dbTripIntent)
+
+    private static TripIntent ToTripIntent(DbTripIntent dbTripIntent)
     {
-        return new Api.TripIntent.TripIntent(dbTripIntent.Id.ToString(), dbTripIntent.User, ToRallyingPoint(dbTripIntent.From) , ToRallyingPoint(dbTripIntent.To),
-        dbTripIntent.FromTime, dbTripIntent.ToTime);
+        return new TripIntent(dbTripIntent.Id.ToString(), dbTripIntent.User, ToRallyingPoint(dbTripIntent.From), ToRallyingPoint(dbTripIntent.To),
+            dbTripIntent.FromTime, dbTripIntent.ToTime);
     }
 
-    private static Api.RallyingPoint.RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
+    private static RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
     {
         var loc = new LatLng(rallyingPoint.Location.Coordinates.Latitude, rallyingPoint.Location.Coordinates.Longitude);
-        return new Api.RallyingPoint.RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
+        return new RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
     }
-
 }

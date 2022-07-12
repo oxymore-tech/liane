@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace Liane.Api.TripIntent;
+namespace Liane.Api.Trip;
 
 public interface ITripIntentService
 {
@@ -13,8 +13,8 @@ public interface ITripIntentService
 }
 
 public sealed record ReceivedTripIntent(
-    RallyingPoint.RallyingPoint From, 
-    RallyingPoint.RallyingPoint To, 
+    RallyingPoints.RallyingPoint From, 
+    RallyingPoints.RallyingPoint To, 
     string FromTime,
     string? ToTime
 );

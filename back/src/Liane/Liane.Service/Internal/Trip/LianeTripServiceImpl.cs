@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Location;
-using Liane.Api.RallyingPoint;
+using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
@@ -24,7 +24,7 @@ public class LianeTripServiceImpl : ILianeTripService
     private const int MinLocTrip = 2; // Less than 2 loc isn't a trip
     private const int MinLianeTrip = 1; // Less than 1 liane isn't a trip
     private const int SelectionRadius = 25_000;
-        
+
     private readonly IMongoDatabase mongo;
     private readonly ICurrentContext currentContext;
     private readonly ILogger<LianeTripServiceImpl> logger;
@@ -32,8 +32,8 @@ public class LianeTripServiceImpl : ILianeTripService
     private readonly IRoutingService routingService;
 
     public LianeTripServiceImpl(
-        MongoSettings settings, 
-        ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger, 
+        MongoSettings settings,
+        ICurrentContext currentContext, ILogger<LianeTripServiceImpl> logger,
         IRallyingPointService rallyingPointService, IRoutingService routingService
     )
     {
@@ -50,7 +50,7 @@ public class LianeTripServiceImpl : ILianeTripService
         var trips = SplitTrip(userLocations)
             .Where(l => l.Count >= MinLocTrip)
             .Where(l => l[0].ToLatLng().CalculateDistance(l[^1].ToLatLng()) >= MinDistTrip);
-            
+
         foreach (var trip in trips)
         {
             var rallyingPoints = await rallyingPointService.Interpolate(trip.Select(t => t.ToLatLng()).ToImmutableList());
@@ -67,11 +67,11 @@ public class LianeTripServiceImpl : ILianeTripService
         {
             var lianeTrip = result.First();
             var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
-                
+
             await mongo.GetCollection<UsedLiane>().UpdateManyAsync(
-                filterBuilder.In(l => l.Id, lianeTrip.Lianes), 
+                filterBuilder.In(l => l.Id, lianeTrip.Lianes),
                 Builders<UsedLiane>.Update.PullFilter(
-                    l => l.Usages, 
+                    l => l.Usages,
                     u => u.TripId == lianeTrip.Id
                 )
             );
@@ -79,20 +79,20 @@ public class LianeTripServiceImpl : ILianeTripService
 
         await mongo.GetCollection<UserLianeTrip>().DeleteOneAsync(l => l.Id == ObjectId.Parse(lianeTripId) && l.User == currentContext.CurrentUser().Phone);
     }
-        
+
     public async Task<ImmutableHashSet<Api.Trip.Liane>> Get()
     {
         // Select the user trips
         var currentUser = currentContext.CurrentUser();
         var trips = (await mongo.GetCollection<UserLianeTrip>().FindAsync(l => l.User == currentUser.Phone)).ToEnumerable();
-            
+
         // Fin every liane id
         var lianesIds = trips.SelectMany(t => t.Lianes).ToImmutableHashSet();
-            
+
         // Select the corresponding lianes
         var filterBuilder = new FilterDefinitionBuilder<UsedLiane>();
         var lianesList = (await mongo.GetCollection<UsedLiane>().FindAsync(filterBuilder.In(l => l.Id, lianesIds))).ToEnumerable();
-            
+
         // Convert the lianes and order them
         return lianesList.Select(ul => ul.ToLiane()).OrderBy(l => l.Usages.Count).ToImmutableHashSet();
     }
@@ -103,7 +103,7 @@ public class LianeTripServiceImpl : ILianeTripService
         var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(tripFilter.Center.Lng, tripFilter.Center.Lat));
         var filter = Builders<UsedLiane>.Filter.Near(x => x.Location, point, SelectionRadius);
         var lianesList = (await mongo.GetCollection<UsedLiane>().FindAsync(filter)).ToEnumerable();
-            
+
         // Keep primary ones
         // No, don't do that, else the search engine will not work
         // lianesList = lianesList.Where(l => l.Usages.Any(u => u.IsPrimary));
@@ -125,10 +125,10 @@ public class LianeTripServiceImpl : ILianeTripService
             lianesList = lianesList.Where(l =>
             {
                 var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
-                return usagesDates.Any(d => (int) d.DayOfWeek >= tripFilter.dayFrom && (int) d.DayOfWeek <= tripFilter.dayTo);
+                return usagesDates.Any(d => (int)d.DayOfWeek >= tripFilter.dayFrom && (int)d.DayOfWeek <= tripFilter.dayTo);
             });
         }
-            
+
         // Filter the data regarding the time
         if (tripFilter.hourFrom is not null && tripFilter.hourTo is not null)
         {
@@ -158,13 +158,13 @@ public class LianeTripServiceImpl : ILianeTripService
         // Delete the previous data
         await mongo.GetCollection<UsedLiane>().DeleteManyAsync(_ => true);
         await mongo.GetCollection<UserLianeTrip>().DeleteManyAsync(_ => true);
-        
+
         // Fetch raw locations
         var rawTripCollection = mongo.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
         var result = (await rawTripCollection.FindAsync(_ => true)).ToList();
 
         logger.LogInformation(result.Count + " raw trips founded");
-            
+
         // Compute the data
         foreach (var (_, user, locations) in result)
         {
@@ -180,7 +180,7 @@ public class LianeTripServiceImpl : ILianeTripService
             (await (await mongo.GetCollection<UserLianeTrip>().DistinctAsync<string>("User", FilterDefinition<UserLianeTrip>.Empty)).ToListAsync()).Count
         );
     }
-    
+
     private static IEnumerable<ImmutableList<UserLocation>> SplitTrip(ImmutableList<UserLocation> trip)
     {
         List<UserLocation> currentTrip = new();
@@ -205,7 +205,7 @@ public class LianeTripServiceImpl : ILianeTripService
                 else
                 {
                     yield return currentTrip.ToImmutableList();
-                    currentTrip = new List<UserLocation> {current};
+                    currentTrip = new List<UserLocation> { current };
                     previousIndex = -1;
                 }
             }
@@ -218,8 +218,8 @@ public class LianeTripServiceImpl : ILianeTripService
         var distance = previous.ToLatLng().CalculateDistance(current.ToLatLng()) <= DeltaMTrip;
         return time && distance;
     }
-    
-    private async Task CreateLianeTrip(string user, long timestamp, ImmutableList<Api.RallyingPoint.RallyingPoint> rallyingPoints)
+
+    private async Task CreateLianeTrip(string user, long timestamp, ImmutableList<RallyingPoint> rallyingPoints)
     {
         var id = ObjectId.GenerateNewId();
         var lianeTrip = new UserLianeTrip(id, user, timestamp, new List<ObjectId>());
@@ -232,15 +232,15 @@ public class LianeTripServiceImpl : ILianeTripService
         }
     }
 
-    private async Task<ImmutableList<ObjectId>> CreateLianes(string user, ObjectId lianeTripId, ImmutableList<Api.RallyingPoint.RallyingPoint> rallyingPoints, long timestamp)
+    private async Task<ImmutableList<ObjectId>> CreateLianes(string user, ObjectId lianeTripId, ImmutableList<RallyingPoint> rallyingPoints, long timestamp)
     {
         var lianesIds = ImmutableList.CreateBuilder<ObjectId>();
-            
+
         // Create the rallying points pairs
         foreach (var from in rallyingPoints.SkipLast(1).Select((r, i) => new { r, i }))
         {
             var isPrimary = true;
-                    
+
             foreach (var to in rallyingPoints.Skip(from.i + 1))
             {
                 var results = await (await mongo.GetCollection<UsedLiane>().FindAsync(l => l.From == from.r && l.To == to)).ToListAsync();
@@ -258,7 +258,7 @@ public class LianeTripServiceImpl : ILianeTripService
                     lianeId = ObjectId.GenerateNewId();
                     await CreateLiane(lianeId, from.r, to, lianeUsage);
                 }
-                    
+
                 lianesIds.Add(lianeId);
                 isPrimary = false;
             }
@@ -267,14 +267,14 @@ public class LianeTripServiceImpl : ILianeTripService
         return lianesIds.ToImmutable();
     }
 
-    private async Task CreateLiane(ObjectId id, Api.RallyingPoint.RallyingPoint from, Api.RallyingPoint.RallyingPoint to, UserLianeUsage lianeUsage)
+    private async Task CreateLiane(ObjectId id, RallyingPoint from, RallyingPoint to, UserLianeUsage lianeUsage)
     {
         var liane = new UsedLiane(id, from, to, new List<UserLianeUsage>());
 
         liane.Usages.Add(lianeUsage);
-            
+
         await mongo.GetCollection<UsedLiane>().InsertOneAsync(liane);
-            
+
         // logger.LogInformation("Liane created : " + liane.ToJson());
     }
 
@@ -283,5 +283,4 @@ public class LianeTripServiceImpl : ILianeTripService
         await mongo.GetCollection<UsedLiane>().UpdateOneAsync(l => l.Id == id, Builders<UsedLiane>.Update.AddToSet(l => l.Usages, lianeUsage));
         // logger.LogInformation("Liane updated : " + id);
     }
-
 }

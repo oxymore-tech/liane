@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Liane.Api.Routing;
+using Liane.Api.RallyingPoints;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver.GeoJsonObjectModel;
@@ -9,13 +9,13 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed record UsedLiane(
     [property: BsonId] ObjectId Id,
-    Api.RallyingPoint.RallyingPoint From,
-    Api.RallyingPoint.RallyingPoint To,
+    RallyingPoint From,
+    RallyingPoint To,
     GeoJsonPoint<GeoJson2DGeographicCoordinates> Location,
     List<UserLianeUsage> Usages
 )
 {
-    public UsedLiane(ObjectId id, Api.RallyingPoint.RallyingPoint from, Api.RallyingPoint.RallyingPoint to, List<UserLianeUsage> usages)
+    public UsedLiane(ObjectId id, RallyingPoint from, RallyingPoint to, List<UserLianeUsage> usages)
         : this(
             id,
             from,
