@@ -55,9 +55,9 @@ export interface Liane {
 }
 
 export interface TripIntent {
+  id?: string,
   from: RallyingPoint,
   to: RallyingPoint,
   fromTime: string,
   toTime?: string,
-  name?: string
 }
