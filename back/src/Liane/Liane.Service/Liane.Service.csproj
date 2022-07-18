@@ -15,8 +15,4 @@
         <ProjectReference Include="..\Liane.Api\Liane.Api.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Internal\TripIntent" />
-    </ItemGroup>
-
 </Project>

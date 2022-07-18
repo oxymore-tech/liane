@@ -91,41 +91,4 @@ public static class TripIntentStub
             { CantalPoints.saintcernin, saintcernin },
         };
     }
-
-    // Trip Intents
-    public static DateTime GetTime(string timeStr)
-    {
-        return DateTime.ParseExact(timeStr, "HH:mm", null);
-    }
-
-
-    public static List<TripIntent> GetTripIntents()
-    {
-        var blanc = new TripIntent("blanc1", "1", laroquebrou, arpajon, GetTime("09:00"), GetTime("17:00"));
-
-        var vert = new TripIntent("vert2", "2", saintpaul, aurillac, GetTime("09:00"), GetTime("17:00"));
-
-        var jaune = new TripIntent("jaune3", "3", ytrac, vic, GetTime("09:00"), GetTime("17:00"));
-
-        var rose = new TripIntent("rose4", "4", sansac, saintsimon, GetTime("09:00"), GetTime("17:00"));
-
-        var rouge = new TripIntent("rouge5", "5", reilhac, vic, GetTime("09:00"), GetTime("17:00"));
-
-        var bleu = new TripIntent("bleu6", "6", naucelles, aurillac, GetTime("09:00"), GetTime("17:00"));
-
-        var noir = new TripIntent("noir7", "7", arpajon, vic, GetTime("09:00"), GetTime("17:00"));
-
-        var tripIntents = new List<TripIntent>()
-        {
-            blanc,
-            vert,
-            jaune,
-            rose,
-            rouge,
-            bleu,
-            noir
-        };
-
-        return tripIntents;
-    }
 }

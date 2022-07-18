@@ -25,7 +25,6 @@ public sealed class TripIntentController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [DisableAuth]
     public async Task Delete(string id)
     {
         await tripIntentService.Delete(id);
