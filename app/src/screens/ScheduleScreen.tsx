@@ -1,108 +1,107 @@
-import React, { useState } from "react";
-import { FlatList, SafeAreaView, TouchableOpacity, View } from "react-native";
-import { tw } from "@/api/tailwind";
-import { AppText } from "@/components/base/AppText";
-import { ListItem } from "react-native-elements";
+import React, {useEffect, useState} from "react";
+import {FlatList, SafeAreaView, TouchableOpacity, View} from "react-native";
+import {tw} from "@/api/tailwind";
+import {AppText} from "@/components/base/AppText";
+import {ListItem} from "react-native-elements";
 import Autocomplete from "react-native-autocomplete-input";
+import {Liane, RallyingPoint, TripIntent} from "@/api";
+import {Ionicons} from "@expo/vector-icons";
+import {AppButton} from "@/components/base/AppButton";
+import {StackNavigationProp} from "@react-navigation/stack";
+import {NavigationParamList} from "@/components/Navigation";
+import {HomeNavigationProp} from "@/screens/HomeScreen";
+import TripListItem from "@/components/TripListItem";
+import ScheduleTripItem from "@/components/ScheduleTripItem";
+import {getTripIntents} from "@/api/client";
+import {useFocusEffect} from "@react-navigation/native";
 
-export interface Trip {
-  name: string;
-  start: string;
-  end: string;
-}
-
-const stubTrips: Trip[] = [
-  {
-    name: "Depart école",
-    start: "Saint-Paul-des-Landes",
-    end: "Aurillac"
-  },
-  {
-    name: "Retour école",
-    start: "Aurillac",
-    end: "Saint-Paul-des-Landes"
-  },
-  {
-    name: "Vacances",
-    start: "Saint-Paul-des-Landes",
-    end: "Saint-Bauzille-de-Putois"
+const aurillac: RallyingPoint = {
+  "id": "62b99d1982229ff1d341098f",
+  "label": "Aurillac",
+  "location": {
+    "lat": 44.9285441,
+    "lng": 2.4433101
   }
+};
+
+const saintpaul: RallyingPoint = {
+  "id": "62b99d1982229ff1d3414ba3",
+  "label": "Saint-Paul-des-Landes",
+  "location": {
+    "lat": 44.9439943,
+    "lng": 2.3125999
+  }
+};
+
+const saintbau: RallyingPoint = {
+  "id": "62b99d1982229ff1d34125ba",
+  "label": "Saint-Bauzille-de-Putois",
+  "location": {
+    "lat": 43.895497,
+    "lng": 3.7352498
+  }
+};
+
+const stubTrips: TripIntent[] = [
+  {
+    id: "id1",
+    from: saintpaul,
+    to: aurillac,
+    fromTime: new Date().toISOString(),
+  },
+    
+  {
+    id: "id2",
+    from: aurillac,
+    to: saintpaul,
+    fromTime: new Date().toISOString(),
+  },
+  {
+    id: "id3",
+    from: saintpaul,
+    to: saintbau,
+    fromTime: new Date().toISOString(),
+  }
+     
 ];
 
-const ScheduleScreen = () => {
+export type ScheduleNavigationProp = StackNavigationProp<NavigationParamList, "Schedule">;
 
-  // Refresh planned trips on render ?
+type ScheduleProps = {
+  navigation: ScheduleNavigationProp;
+};
 
-  // Temporary render function for a scheduled trip item
-  const renderItem = ({ item }) => (
-    <ListItem
-      hasTVPreferredFocus={undefined}
-      tvParallaxProperties={undefined}
-      bottomDivider
-      style={tw("flex flex-row items-center")}
-    >
-      <ListItem.Content>
-        <ListItem.Title>{item.name}</ListItem.Title>
-        <ListItem.Subtitle>{`${item.start} -> ${item.end}`}</ListItem.Subtitle>
-      </ListItem.Content>
-    </ListItem>
+const ScheduleScreen = ({ navigation }: ScheduleProps) => {
+  const [tripIntents, setTripIntents] = useState<TripIntent[]>([]);
+  
+  const refreshIntents = () => {
+    getTripIntents().then(intents => setTripIntents(intents))
+  }
+  
+  useFocusEffect(
+      React.useCallback(refreshIntents, [])
   );
-
-  /// /
-  const [filteredPoints, setFilteredPoints] = useState<Trip[]>([]);
-  const [, setSelectedPoint] = useState<Trip | null>(null);
-  const [shownPoint, setShownPoint] = useState("");
-
-  const findTrip = (query) => {
-    setShownPoint(query);
-    setSelectedPoint(null);
-    if (query) {
-      const regex = new RegExp(`${query.trim()}`, "i");
-      setFilteredPoints(stubTrips.filter((point) => point.name.search(regex) >= 0));
-    } else {
-      setFilteredPoints([]);
-    }
-  };
-  /// /
-
+  
   return (
-    <SafeAreaView style={tw("flex flex-col h-full")}>
+      <SafeAreaView style={tw("flex flex-col h-full")}>
 
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
-        <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
-      </View>
-
-      <View style={tw("flex-row mt-10 absolute inset-0 z-10")}>
-        <Autocomplete
-          data={filteredPoints}
-          placeholder="Point de départ"
-          value={shownPoint}
-          onChangeText={(text) => findTrip(text)}
-          flatListProps={{
-            renderItem: ({ item }:{ item:Trip }) => (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedPoint(item);
-                  setShownPoint(item.name);
-                  setFilteredPoints([]);
-                }}
-              >
-                <AppText style={tw("flex-row bg-white py-2 pl-2")}>{item.name}</AppText>
-              </TouchableOpacity>
-            )
-          }}
+        <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
+          <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
+        </View>
+        
+        <FlatList 
+            style={tw("flex")} 
+            data={tripIntents} 
+            renderItem={({ item }) => (
+                <ScheduleTripItem 
+                    tripIntent={item} 
+                    toDetails={navigation}
+                    refreshList={refreshIntents}
+                />
+            )}
+            keyExtractor={(data: TripIntent) => data.id!}
         />
-      </View>
-
-      <View style={tw("flex-row relative top-20")}>
-        <FlatList
-          style={tw("flex")}
-          data={stubTrips}
-          renderItem={renderItem}
-        />
-      </View>
-
-    </SafeAreaView>
+      </SafeAreaView>
   );
 };
 

@@ -10,15 +10,16 @@ import { tw } from "@/api/tailwind";
 import { LocationPermissionLevel } from "@/api";
 import LocationWizard2 from "@/screens/LocationWizard";
 import CreateTripScreen from "@/screens/CreateTripScreen";
-import ScheduleScreen from "@/screens/ScheduleScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import HomeNavigation from "@/components/HomeNavigation";
+import ScheduleNavigation from "@/components/ScheduleNavigation";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export type NavigationParamList = {
   Home: {};
+  Schedule: {};
   Details: { tripID: string };
   TripList: { count?: number, day?: string, hour?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
@@ -83,7 +84,7 @@ function Navigation() {
         />
         <Tab.Screen
           name="Schedule"
-          component={ScheduleScreen}
+          component={ScheduleNavigation}
         />
         <Tab.Screen
           name="CreateTrip"
