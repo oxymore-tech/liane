@@ -39,10 +39,6 @@ export async function sendTripIntent(tripIntent: TripIntent) {
   return post("/trip_intent", { body: tripIntent });
 }
 
-export async function snapLianes(filter: TripFilterOptions): Promise<RoutedLiane[]> {
-  return postAs("/liane/snap", { body: filter });
-}
-
 export async function getTripIntents(): Promise<TripIntent[]> {
   return get("/trip_intent");
 }
