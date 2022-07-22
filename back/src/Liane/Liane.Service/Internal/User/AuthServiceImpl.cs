@@ -89,7 +89,6 @@ public sealed class AuthServiceImpl : IAuthService
         {
             throw new UnauthorizedAccessException("Invalid code");
         }
-        Console.WriteLine("HERE 1 > " + expectedCode);
         
         if (expectedCode != code)
         {

@@ -1,10 +1,13 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Notification;
@@ -14,17 +17,24 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Controllers;
+using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Config;
 using NLog.Layouts;
@@ -56,7 +66,7 @@ public static class Startup
 
         services.AddService<CurrentContextImpl>();
         services.AddSettings<TwilioSettings>(context);
-        services.AddSettings<AuthSettings>(context);
+        services.AddSettings<AuthSettings>(context); // ?
         services.AddService<AuthServiceImpl>();
 
         services.AddService<LocationServiceImpl>();
@@ -65,6 +75,7 @@ public static class Startup
         services.AddService<NotificationServiceImpl>();
         services.AddService<RawTripServiceImpl>();
         services.AddService<LianeTripServiceImpl>();
+        services.AddService<ChatServiceImpl>();
     }
 
     public static void StartCurrentModule(string[] args)
@@ -139,6 +150,81 @@ public static class Startup
         return logger;
     }
 
+    private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        ConfigureLianeServices(context, services);
+        services.AddService<FileStreamResultExecutor>();
+        services.AddControllers();
+        services.AddCors(options =>
+            {
+                options.AddPolicy("AllowLocal",
+                    p => p.WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+            }
+        );
+
+        services.AddMvcCore(options => { options.Filters.Add<ExceptionFilter>(); });
+        services.AddService<HttpContextAccessor>();
+        services.AddSwaggerDocument(settings =>
+        {
+            settings.Title = "Liane API";
+            settings.Version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            settings.AddSecurity("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                In = OpenApiSecurityApiKeyLocation.Header,
+                Type = OpenApiSecuritySchemeType.ApiKey
+            });
+        });
+        
+        // For chat
+        
+        services.AddAuthentication(o =>
+            {
+                o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(o =>
+            {
+                o.RequireHttpsMetadata = false;
+
+                o.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = (receivedContext) =>
+                    {
+                        var path = receivedContext.HttpContext.Request.Path;
+                        Console.Out.WriteLine("PATH : " + path.ToString());
+                        
+                        if (path.StartsWithSegments("/hub"))
+                        {
+                            var accessToken = receivedContext.Request.Query["access_token"];
+                            Console.Out.WriteLine("FROM QUERY access_token : " + accessToken);
+                            
+                            if (path.StartsWithSegments("/hub/negotiate"))
+                            {
+                                accessToken = receivedContext.Request.Headers.Authorization;
+                                var match = Regex.Match(accessToken, @"Bearer[\s]*(.*)", RegexOptions.IgnoreCase);
+                                accessToken = match.Groups[1].Value;
+                                Console.Out.WriteLine("FROM HEADERS access_token : " + accessToken);
+                            }
+                            
+                            if (!string.IsNullOrWhiteSpace(accessToken))
+                            {
+                                receivedContext.Token = accessToken;
+                            }
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+        services.AddSignalR();
+    }
+
     private static void StartCurrentModuleWeb(string[] args)
     {
         WebHost.CreateDefaultBuilder(args)
@@ -174,40 +260,10 @@ public static class Startup
             .Run();
     }
 
-    private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
-    {
-        ConfigureLianeServices(context, services);
-        services.AddService<FileStreamResultExecutor>();
-        services.AddControllers();
-        services.AddCors(options =>
-            {
-                options.AddPolicy("AllowLocal",
-                    p => p.WithOrigins("http://localhost:3000")
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials());
-            }
-        );
-
-        services.AddMvcCore(options => { options.Filters.Add<ExceptionFilter>(); });
-        services.AddService<HttpContextAccessor>();
-        services.AddSwaggerDocument(settings =>
-        {
-            settings.Title = "Liane API";
-            settings.Version = Assembly.GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion;
-            settings.AddSecurity("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                In = OpenApiSecurityApiKeyLocation.Header,
-                Type = OpenApiSecuritySchemeType.ApiKey
-            });
-        });
-    }
-
     private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
     {
+        app.UseWebSockets(); // For chat
+        
         app.UseOpenApi();
         app.UseSwaggerUi3();
         app.UseCors("AllowLocal");
@@ -223,7 +279,15 @@ public static class Startup
         }
 
         app.UseRouting();
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        
+        app.UseAuthentication();
+        app.UseAuthorization();
+        
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapHub<ChatHub>("/hub");
+            endpoints.MapControllers();
+        });
 
         StartServicesHook(app.ApplicationServices)
             .GetAwaiter()

@@ -37,7 +37,9 @@ public class RequiresAuthFilter : IAsyncAuthorizationFilter
                 throw new UnauthorizedAccessException();
             }
 
+            Console.WriteLine("FILTERING TOKEN");
             context.HttpContext.User = authService.IsTokenValid(token);
+            Console.WriteLine("USER IDENTITY NAME : " + context.HttpContext.User?.Identity?.Name);
         }
         catch (System.Exception e)
         {
@@ -76,6 +78,13 @@ public class RequiresAuthFilter : IAsyncAuthorizationFilter
         if (requestCookie != null)
         {
             return ParseBearer(requestCookie);
+        }
+
+        // Added for Signalr
+        var requestAccessToken = context.HttpContext.Request.Query["access_token"];
+        if (!string.IsNullOrWhiteSpace(requestAccessToken))
+        {
+            return ParseBearer(requestAccessToken!);
         }
 
         return context.HttpContext.Request.Query["ApiToken"];
