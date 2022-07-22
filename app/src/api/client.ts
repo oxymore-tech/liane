@@ -1,6 +1,6 @@
 import {get, post, postAs, remove} from "@/api/http";
 import {
-  AuthUser, UserLocation, Notification, Liane, RallyingPoint, LatLng, TripIntent
+  AuthUser, UserLocation, Notification, Liane, RallyingPoint, LatLng, TripIntent, TripFilterOptions, RoutedLiane
 } from "@/api";
 
 export async function logLocation(locations: UserLocation[]) {
@@ -37,6 +37,10 @@ export async function getRallyingPoints(name: string, location?: LatLng): Promis
 
 export async function sendTripIntent(tripIntent: TripIntent) {
   return post("/trip_intent", { body: tripIntent });
+}
+
+export async function snapLianes(filter: TripFilterOptions): Promise<RoutedLiane[]> {
+  return postAs("/liane/snap", { body: filter });
 }
 
 export async function getTripIntents(): Promise<TripIntent[]> {
