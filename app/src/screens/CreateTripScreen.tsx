@@ -152,7 +152,7 @@ const CreateTripScreen = () => {
 
   return (
     <SafeAreaView>
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
         <AppText style={tw("absolute text-lg text-center text-white w-full")}>
           Enregistrement d&apos;un trajet
         </AppText>

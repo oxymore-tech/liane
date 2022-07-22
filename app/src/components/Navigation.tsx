@@ -7,7 +7,7 @@ import { AppContext } from "@/components/ContextProvider";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { tw } from "@/api/tailwind";
-import { LocationPermissionLevel } from "@/api";
+import {LocationPermissionLevel, TripIntent} from "@/api";
 import LocationWizard2 from "@/screens/LocationWizard";
 import CreateTripScreen from "@/screens/CreateTripScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
@@ -20,6 +20,7 @@ const Tab = createBottomTabNavigator();
 export type NavigationParamList = {
   Home: {};
   Schedule: {};
+  Chat: { tripIntent: TripIntent };
   Details: { tripID: string };
   TripList: { count?: number, day?: string, hour?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };

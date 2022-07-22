@@ -16,7 +16,7 @@ interface ScheduleTripItemProps {
 const ScheduleTripItem = ( { tripIntent, toDetails, refreshList } : ScheduleTripItemProps) => {
 
   const goToDetails = () => {
-    toDetails.navigate("Details", { tripID: tripIntent.id! });
+    toDetails.navigate("Chat", { tripIntent: tripIntent });
   };
   
   const deleteIntent = async () => {
@@ -50,12 +50,12 @@ const ScheduleTripItem = ( { tripIntent, toDetails, refreshList } : ScheduleTrip
                   size={65}
         />
         
-        <View style={tw("flex-col justify-around w-2/12 ")} >
+        <View style={tw("flex-col justify-around w-2/12 mr-2 ")} >
           <AppText style={tw("flex-row ml-3 text-lg")}>
             {
               new Date(tripIntent.fromTime).getHours().toString().padStart(2, '0') 
                 + ":" 
-                + new Date(tripIntent.fromTime).getMinutes()
+                + new Date(tripIntent.fromTime).getMinutes().toString().padStart(2, '0')
             }
           </AppText>
 
