@@ -1,7 +1,6 @@
-namespace Liane.Api.Trip
-{
-    public sealed record LianeStats(
-        long NumberOfTrips,
-        int NumberOfUsers
-    );
-}
+namespace Liane.Api.Trip;
+
+public sealed record LianeStats(
+    long NumberOfTrips,
+    int NumberOfUsers
+);

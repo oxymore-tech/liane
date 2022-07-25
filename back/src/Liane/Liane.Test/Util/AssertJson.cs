@@ -5,34 +5,33 @@ using System.Text;
 using System.Text.Json;
 using NUnit.Framework;
 
-namespace Liane.Test.Util
+namespace Liane.Test.Util;
+
+public static class AssertJson
 {
-    public static class AssertJson
+    public static void AreEqual(string expectedJsonFile, object actual)
     {
-        public static void AreEqual(string expectedJsonFile, object actual)
-        {
-            var assembly = Assembly.GetCallingAssembly();
-            using var stream = AssertExtensions.ReadTestResource(expectedJsonFile, assembly);
+        var assembly = Assembly.GetCallingAssembly();
+        using var stream = AssertExtensions.ReadTestResource(expectedJsonFile, assembly);
 
-            var expectedJson = new StreamReader(stream, Encoding.UTF8).ReadToEnd();
-            var options = new JsonSerializerOptions {WriteIndented = true};
-            var serializeObject = JsonSerializer.Serialize(actual, options);
-            try
-            {
-                Assert.AreEqual(expectedJson, serializeObject);
-            }
-            catch (AssertionException)
-            {
-                Console.Write(serializeObject);
-            }
-        }
-
-        public static T ReadJson<T>(string jsonFile)
+        var expectedJson = new StreamReader(stream, Encoding.UTF8).ReadToEnd();
+        var options = new JsonSerializerOptions {WriteIndented = true};
+        var serializeObject = JsonSerializer.Serialize(actual, options);
+        try
         {
-            var assembly = Assembly.GetCallingAssembly();
-            using var stream = AssertExtensions.ReadTestResource(jsonFile, assembly);
-            var expectedJson = new StreamReader(stream, Encoding.UTF8).ReadToEnd();
-            return JsonSerializer.Deserialize<T>(expectedJson)!;
+            Assert.AreEqual(expectedJson, serializeObject);
         }
+        catch (AssertionException)
+        {
+            Console.Write(serializeObject);
+        }
+    }
+
+    public static T ReadJson<T>(string jsonFile)
+    {
+        var assembly = Assembly.GetCallingAssembly();
+        using var stream = AssertExtensions.ReadTestResource(jsonFile, assembly);
+        var expectedJson = new StreamReader(stream, Encoding.UTF8).ReadToEnd();
+        return JsonSerializer.Deserialize<T>(expectedJson)!;
     }
 }

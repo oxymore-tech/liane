@@ -24,7 +24,7 @@ export function AppButton({ title = "", icon, iconStyle, type = "solid", buttonS
       title={title}
       icon={i}
       type={type}
-      titleStyle={{ ...(titleStyle as object), fontFamily: "Inter" }}
+      titleStyle={{ fontFamily: "Inter", ...(titleStyle as object) }}
       buttonStyle={buttonStyle}
       {...props}
     />

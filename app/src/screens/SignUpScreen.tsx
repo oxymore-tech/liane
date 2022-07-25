@@ -15,7 +15,6 @@ const logo = require("@/assets/logo_orange.png");
 const t = scopedTranslate("SignUp");
 
 type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
-
 type SignUpNavigationProp = StackNavigationProp<NavigationParamList, "SignUp">;
 
 type SignUpProps = {
@@ -24,7 +23,6 @@ type SignUpProps = {
 };
 
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
-
   const authFailure = route.params?.authFailure && t("Le code est invalide veuillez rééssayer");
 
   const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
@@ -32,6 +30,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   const signUp = useCallback(async () => {
     try {
+      console.log("Phone number SUBMITTED");
       setInternalError(undefined);
       await sendSms(phoneNumber);
       navigation.navigate("SignUpCode", { phoneNumber });
@@ -67,7 +66,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             returnKeyLabel="next"
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
-            autoCompleteType="tel"
+            autoComplete="tel"
             textContentType="telephoneNumber"
             onSubmitEditing={signUp}
             maxLength={10}

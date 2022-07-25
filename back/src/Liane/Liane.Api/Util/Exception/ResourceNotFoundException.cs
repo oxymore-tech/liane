@@ -1,10 +1,8 @@
-namespace Liane.Api.Util.Exception
+namespace Liane.Api.Util.Exception;
 
+public class ResourceNotFoundException : System.Exception
 {
-    public class ResourceNotFoundException : System.Exception
+    public ResourceNotFoundException(string message) : base(message)
     {
-        public ResourceNotFoundException(string message) : base(message)
-        {
-        }
     }
 }

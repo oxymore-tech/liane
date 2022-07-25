@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
@@ -52,27 +53,14 @@ function start {
   dotnet run --project "${SCRIPTPATH}/src/Liane/Liane.Web/Liane.Web.csproj"
 }
 
-function init_db {
+function init {
   redis_purge
   mongo_purge
   sleep 3
-  user=${MONGO_USER:-mongoadmin}
-  password=${MONGO_PASSWORD:-secret}
-  container=${MONGO_CONTAINER:-mongo}
-
-  docker exec -i "${container}" mongo -u "${user}" -p "${password}" << EOF
-use liane;
-
-db.real_liane.createIndex( { "From": 1, "To": 1 }, { unique: true } );
-db.real_liane.createIndex( { Location: "2dsphere" } );
-db.rp.createIndex( { Location: "2dsphere" } );
-
-EOF
-
-  docker exec -i redis redis-cli --pipe < "${SCRIPTPATH}/admins.txt"
+  source "${SCRIPTPATH}/../deploy/utils.sh"  
+  init_db "redis" "${REDIS_PASSWORD}" "mongo" "mongoadmin" "secret" "${SCRIPTPATH}/../deploy/db"
 }
 
-# catch first arguments with $1
 case "$1" in
  stop)
   stop
@@ -81,13 +69,13 @@ case "$1" in
   start
   ;;
  init)
-  init_db
+  init
   ;;
  dump_on_local)
   dump_on_local
   ;;
  *)
   # else
-  echo "Usage: (init|start|stop)"
+  echo "Usage: (init|start|stop|dump_on_local)"
   ;;
 esac

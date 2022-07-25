@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 
-namespace Liane.Api.Util.Startup
+namespace Liane.Api.Util.Startup;
+
+public interface IOnStartup
 {
-    public interface IOnStartup
-    {
-        Task OnStartup();
-    }
+    Task OnStartup();
 }

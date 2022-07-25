@@ -1,4 +1,3 @@
-namespace Liane.Api.User
-{
-    public sealed record AuthUser(string Phone, string Token);
-}
+namespace Liane.Api.User;
+
+public sealed record AuthUser(string Phone, string Token, bool IsAdmin);

@@ -1,33 +1,37 @@
+using System.Linq;
+using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
+using Liane.Service.Internal.User;
 using Microsoft.AspNetCore.Http;
 
-namespace Liane.Service.Internal.Util
+namespace Liane.Service.Internal.Util;
+
+public sealed class CurrentContextImpl : ICurrentContext
 {
-    public sealed class CurrentContextImpl : ICurrentContext
+    private readonly IHttpContextAccessor httpContextAccessor;
+
+    public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
     {
-        private readonly IHttpContextAccessor httpContextAccessor;
+        this.httpContextAccessor = httpContextAccessor;
+    }
 
-        public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
+    public AuthUser CurrentUser()
+    {
+        if (httpContextAccessor.HttpContext == null)
         {
-            this.httpContextAccessor = httpContextAccessor;
+            throw new ForbiddenException();
         }
 
-        public string CurrentUser()
+        var userId = httpContextAccessor.HttpContext.User.Identity?.Name;
+
+        if (userId == null)
         {
-            if (httpContextAccessor.HttpContext == null)
-            {
-                throw new ForbiddenException();
-            }
-
-            var user = httpContextAccessor.HttpContext.User.Identity?.Name;
-
-            if (user == null)
-            {
-                throw new ForbiddenException();
-            }
-
-            return user;
+            throw new ForbiddenException();
         }
+
+        var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(e => e.Type.Equals("role") && e.Value == AuthServiceImpl.AdminRole);
+
+        return new AuthUser(userId, "", isAdmin);
     }
 }

@@ -1,7 +1,8 @@
-namespace Liane.Api.Util.Http
+using Liane.Api.User;
+
+namespace Liane.Api.Util.Http;
+
+public interface ICurrentContext
 {
-    public interface ICurrentContext
-    {
-        string CurrentUser();
-    }
+    AuthUser CurrentUser();
 }

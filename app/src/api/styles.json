@@ -1090,7 +1090,7 @@
 	},
 	"self-start": {
 		"alignSelf": "flex-start"
-	},
+	},	
 	"self-end": {
 		"alignSelf": "flex-end"
 	},
@@ -1176,6 +1176,21 @@
 	},
 	"font-black": {
 		"fontWeight": "900"
+	},
+	"font-inter-extralight": {
+		"fontFamily": "Inter_ExtraLight"
+	},
+	"font-inter-normal": {
+		"fontFamily": "Inter"
+	},
+	"font-inter-medium": {
+		"fontFamily": "Inter_Medium"
+	},
+	"font-inter-semibold": {
+		"fontFamily": "Inter_SemiBold"
+	},
+	"font-inter-bold": {
+		"fontFamily": "Inter_Bold"
 	},
 	"h-0": {
 		"height": 0
@@ -3385,6 +3400,9 @@
 	},
 	"min-h-full": {
 		"minHeight": "100%"
+	},
+	"min-h-1/2": {
+		"minHeight": "50%"
 	},
 	"min-w-0": {
 		"minWidth": 0
