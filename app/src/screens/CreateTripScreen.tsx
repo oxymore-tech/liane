@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  SafeAreaView, Switch, TouchableOpacity, View, StyleSheet, Alert
+  SafeAreaView, Switch, TouchableOpacity, View, Alert
 } from "react-native";
 import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
@@ -84,22 +84,25 @@ const CreateTripScreen = () => {
     }
   };
 
-  const findEndPoint = (query) => {
+  const findEndPoint = async (query) => {
     setShownEndPoint(query);
     setEndPoint(null);
 
     if (query) {
       const regex = new RegExp(`${query.trim()}`, "i");
+      const location = await getLastKnownLocation();
 
-      getRallyingPoints(query).then((r) => {
-        const f = r.filter((point) => point.label.search(regex) >= 0);
-        setFilteredEndPoints(f);
-      });
+      await getRallyingPoints(query, location)
+          .then((r) => {
+            const f = r.filter((point) => point.label.search(regex) >= 0);
+            setFilteredEndPoints(f);
+          });
 
     } else {
       setFilteredEndPoints([]);
     }
   };
+  
   const onPublicationPressed = async () => {
     let isValid = true;
     let message = "";
@@ -129,7 +132,7 @@ const CreateTripScreen = () => {
         from: startPoint!,
         to: endPoint!,
         fromTime: fromTime.toISOString(),
-        toTime: toTime!.toISOString()
+        toTime: toTime ? toTime.toISOString() : undefined
       };
 
       // Send tripIntent
@@ -189,9 +192,9 @@ const CreateTripScreen = () => {
               <View style={tw("h-3 w-3 bg-orange-light rounded-full -mt-1")} />
             </View>
 
-            <View style={autocompleteStyle.autocompleteContainer}>
+            <View style={tw("flex-grow self-stretch")}>
 
-              <View style={autocompleteStyle.autocompleteContainerTop}>
+              <View style={tw("absolute min-h-1/2 -top-2 left-0 right-0 z-20")}>
                 <AppText style={tw("flex-row text-base font-inter-medium")}> Départ</AppText>
                 <Autocomplete
                   inputContainerStyle={tw("border-0")}
@@ -216,7 +219,7 @@ const CreateTripScreen = () => {
                   }}
                 />
               </View>
-              <View style={autocompleteStyle.autocompleteContainerBot}>
+              <View style={tw("absolute min-h-1/2 top-1/2 left-0 right-0 z-10")}>
                 <AppText style={tw("flex-row text-base font-inter-medium")}> Arrivé</AppText>
                 <Autocomplete
                   inputContainerStyle={tw("border-0")}
@@ -340,23 +343,23 @@ const CreateTripScreen = () => {
         </View>
 
         {/* Status selection */}
-        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center")}>
+        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center hidden")}>
 
-          <ToggleButton
+          <ToggleButton disabled={true}
             style={tw(`flex flex-grow h-full rounded-l-xl rounded-r-none ${status.passengerStatus ? "bg-liane-orange" : ""}`)}
             icon={() => <View><AppText style={tw(`text-base ${status.passengerStatus ? "text-white" : "text-gray-500"}`)}>Passager</AppText></View>}
             status={status.passengerStatus ? "checked" : "unchecked"}
             onPress={() => onStatusButtonToggle("passenger")}
           />
 
-          <ToggleButton
+          <ToggleButton disabled={true}
             style={tw(`flex flex-grow h-full rounded-none ${status.neutralStatus ? "bg-liane-orange" : ""}`)}
             icon={() => <View><AppText style={tw(`text-base ${status.neutralStatus ? "text-white" : "text-gray-500"}`)}>Neutre</AppText></View>}
             status={status.neutralStatus ? "checked" : "unchecked"}
             onPress={() => onStatusButtonToggle("neutral")}
           />
 
-          <ToggleButton
+          <ToggleButton disabled={true}
             style={tw(`flex flex-grow h-full rounded-r-xl rounded-l-none ${status.driverStatus ? "bg-liane-orange" : ""}`)}
             icon={() => <View><AppText style={tw(`text-base ${status.driverStatus ? "text-white" : "text-gray-500"}`)}>Conducteur</AppText></View>}
             status={status.driverStatus ? "checked" : "unchecked"}
@@ -376,29 +379,5 @@ const CreateTripScreen = () => {
     </SafeAreaView>
   );
 };
-
-const autocompleteStyle = StyleSheet.create({
-  autocompleteContainer: {
-    flex: 1,
-    flexGrow: 1,
-    alignSelf: "stretch"
-  },
-  autocompleteContainerTop: {
-    position: "absolute",
-    minHeight: "50%",
-    top: "-4%",
-    left: 0,
-    right: 0,
-    zIndex: 20
-  },
-  autocompleteContainerBot: {
-    position: "absolute",
-    minHeight: "50%",
-    top: "52%",
-    left: 0,
-    right: 0,
-    zIndex: 10
-  }
-});
 
 export default CreateTripScreen;

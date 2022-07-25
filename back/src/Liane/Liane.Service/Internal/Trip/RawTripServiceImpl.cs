@@ -17,22 +17,13 @@ public class RawTripServiceImpl : IRawTripService
         
     private readonly ICurrentContext currentContext;
     private readonly ILogger<RawTripServiceImpl> logger;
-        
-    private readonly IMongoCollection<UserRawTrip> rawTripCollection;
+    private readonly IMongoDatabase mongo;
 
     public RawTripServiceImpl(ICurrentContext currentContext, MongoSettings settings, ILogger<RawTripServiceImpl> logger)
     {
         this.currentContext = currentContext;
         this.logger = logger;
-
-        var mongo = new MongoClient(new MongoClientSettings
-        {
-            Server = new MongoServerAddress(settings.Host, 27017),
-            Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password)
-        });
-            
-        var database = mongo.GetDatabase(MongoKeys.Database());
-        rawTripCollection = database.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
+        mongo = settings.GetDatabase();
     }
 
     public async Task Save(ImmutableList<RawTrip> trips)
@@ -43,8 +34,8 @@ public class RawTripServiceImpl : IRawTripService
                 
             logger.LogInformation("{Count} raw trip(s) saved for user '{currentUser}'", trips.Count, currentUser);
                 
-            await rawTripCollection.InsertManyAsync(
-                trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser, t.Locations.ToList()))
+            await mongo.GetCollection<UserRawTrip>().InsertManyAsync(
+                trips.Select(t => new UserRawTrip(ObjectId.GenerateNewId(), currentUser.Phone, t.Locations.ToList()))
             );
         }
     }
@@ -52,7 +43,7 @@ public class RawTripServiceImpl : IRawTripService
     public async Task<ImmutableList<RawTrip>> List()
     {
         var currentUser = currentContext.CurrentUser();
-        var asyncCursor = await rawTripCollection.FindAsync(t => t.UserId == currentUser);
+        var asyncCursor = await mongo.GetCollection<UserRawTrip>().FindAsync(t => t.UserId == currentUser.Phone);
             
         return asyncCursor.ToEnumerable()
             .Select(u => new RawTrip(u.Locations.ToImmutableList(), null))
@@ -61,7 +52,7 @@ public class RawTripServiceImpl : IRawTripService
 
     public async Task<ImmutableList<RawTrip>> ListFor(string userId)
     {
-        var asyncCursor = await rawTripCollection.FindAsync(t => t.UserId == userId);
+        var asyncCursor = await mongo.GetCollection<UserRawTrip>().FindAsync(t => t.UserId == userId);
             
         return asyncCursor.ToEnumerable()
             .Select(u => new RawTrip(u.Locations.ToImmutableList(), userId))
@@ -70,7 +61,7 @@ public class RawTripServiceImpl : IRawTripService
 
     public async Task<ImmutableList<RawTrip>> ListAll()
     {
-        var asyncCursor = await rawTripCollection.FindAsync(_ => true);
+        var asyncCursor = await mongo.GetCollection<UserRawTrip>().FindAsync(_ => true);
 
         return asyncCursor.ToEnumerable()
             .Select(u => new RawTrip(u.Locations.ToImmutableList(), u.UserId))
@@ -85,7 +76,7 @@ public class RawTripServiceImpl : IRawTripService
         // but such seems impossible because of the reasons explained above.
         // At the moment, this is fine as that request isn't meant to be used very frequently and because
         // raw trips are meant to be deleted. If it isn't the case anymore, this should be fixed.
-        var asyncCursor = await rawTripCollection.FindAsync(_ => true);
+        var asyncCursor = await mongo.GetCollection<UserRawTrip>().FindAsync(_ => true);
 
         // Other filter information are not used yet as the front-end is already filtering
         // on those field.
@@ -102,7 +93,7 @@ public class RawTripServiceImpl : IRawTripService
 
     public async Task<RawTripStats> Stats()
     {
-        return new RawTripStats(await rawTripCollection.CountDocumentsAsync(_ => true));
+        return new RawTripStats(await mongo.GetCollection<UserRawTrip>().CountDocumentsAsync(_ => true));
     }
 
 }

@@ -26,4 +26,9 @@ internal static class MongoKeys
     {
         return "liane_trip";
     }
+    
+    public static string TripIntent()
+    {
+        return "trip_intents";
+    }
 }

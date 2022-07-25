@@ -6,7 +6,7 @@ namespace Liane.Web.Internal.Auth;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class RequiresAuthAttribute : TypeFilterAttribute
 {
-    public RequiresAuthAttribute() : base(typeof(RequiresAuthAttributeFilter))
+    public RequiresAuthAttribute() : base(typeof(RequiresAuthFilter))
     {
     }
 }

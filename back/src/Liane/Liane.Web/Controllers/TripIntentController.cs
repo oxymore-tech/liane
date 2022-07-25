@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoint;
-using Liane.Api.TripIntent;
+using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,20 +17,15 @@ public sealed class TripIntentController : ControllerBase
     {
         this.tripIntentService = tripIntentService;
     }
-        
+
     [HttpPost("")]
     public async Task<TripIntent> Create([FromBody] ReceivedTripIntent tripIntent)
     {
-        var ti = new TripIntent(null, tripIntent.from, tripIntent.to,
-            DateTime.Parse(tripIntent.fromTime, null, DateTimeStyles.RoundtripKind),
-            tripIntent.toTime is null ? null : DateTime.Parse(tripIntent.toTime, null, DateTimeStyles.RoundtripKind)
-            );
-        
-        return await tripIntentService.Create(ti);
+        return await tripIntentService.Create(tripIntent);
     }
-    
+
     [HttpDelete("{id}")]
-    public async Task Delete([FromQuery] string id)
+    public async Task Delete(string id)
     {
         await tripIntentService.Delete(id);
     }
@@ -43,13 +35,4 @@ public sealed class TripIntentController : ControllerBase
     {
         return await tripIntentService.List();
     }
-    
-    public sealed record ReceivedTripIntent(
-        string? Id, 
-        RallyingPoint from, 
-        RallyingPoint to, 
-        string fromTime,
-        string? toTime 
-    );
 }
-

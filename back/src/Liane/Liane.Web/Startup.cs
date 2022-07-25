@@ -9,12 +9,11 @@ using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.RallyingPoint;
+using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
-using Liane.Service.TripIntent;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
@@ -59,7 +58,7 @@ public static class Startup
         services.AddSettings<TwilioSettings>(context);
         services.AddSettings<AuthSettings>(context);
         services.AddService<AuthServiceImpl>();
-            
+
         services.AddService<LocationServiceImpl>();
         services.AddService<RallyingPointServiceImpl>();
         services.AddService<TripIntentServiceImpl>();
@@ -122,13 +121,13 @@ public static class Startup
             RowHighlightingRules =
             {
                 new ConsoleRowHighlightingRule
-                    {Condition = "level <= LogLevel.Debug", ForegroundColor = ConsoleOutputColor.DarkGray},
+                    { Condition = "level <= LogLevel.Debug", ForegroundColor = ConsoleOutputColor.DarkGray },
                 new ConsoleRowHighlightingRule
-                    {Condition = "level == LogLevel.Info", ForegroundColor = ConsoleOutputColor.DarkBlue},
+                    { Condition = "level == LogLevel.Info", ForegroundColor = ConsoleOutputColor.DarkBlue },
                 new ConsoleRowHighlightingRule
-                    {Condition = "level == LogLevel.Warn", ForegroundColor = ConsoleOutputColor.DarkYellow},
+                    { Condition = "level == LogLevel.Warn", ForegroundColor = ConsoleOutputColor.DarkYellow },
                 new ConsoleRowHighlightingRule
-                    {Condition = "level >= LogLevel.Error", ForegroundColor = ConsoleOutputColor.Red}
+                    { Condition = "level >= LogLevel.Error", ForegroundColor = ConsoleOutputColor.Red }
             },
             Layout = Env.IsDevelopment() ? devLayout : jsonLayout
         };

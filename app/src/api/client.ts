@@ -1,4 +1,4 @@
-import { get, post, postAs } from "@/api/http";
+import {get, post, postAs, remove} from "@/api/http";
 import {
   AuthUser, UserLocation, Notification, Liane, RallyingPoint, LatLng, TripIntent
 } from "@/api";
@@ -37,4 +37,12 @@ export async function getRallyingPoints(name: string, location?: LatLng): Promis
 
 export async function sendTripIntent(tripIntent: TripIntent) {
   return post("/trip_intent", { body: tripIntent });
+}
+
+export async function getTripIntents(): Promise<TripIntent[]> {
+  return get("/trip_intent");
+}
+
+export async function deleteTripIntent(id: string) {
+  return remove(`/trip_intent/${id}`);
 }

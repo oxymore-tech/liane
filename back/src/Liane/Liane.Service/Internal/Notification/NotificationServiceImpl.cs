@@ -74,7 +74,7 @@ public sealed class NotificationServiceImpl : INotificationService
     {
         var user = currentContext.CurrentUser();
         var database = await redis.Get();
-        var redisKey = RedisKeys.Notification(user);
+        var redisKey = RedisKeys.Notification(user.Phone);
         await database.HashDeleteAsync(redisKey, date);
     }
 
@@ -82,7 +82,7 @@ public sealed class NotificationServiceImpl : INotificationService
     {
         var user = currentContext.CurrentUser();
         var database = await redis.Get();
-        var redisKey = RedisKeys.Notification(user);
+        var redisKey = RedisKeys.Notification(user.Phone);
         var result = await database.HashGetAllAsync(redisKey);
 
         return result.Select(r => new Api.Notification.Notification(Convert.ToInt32(r.Name), r.Value))

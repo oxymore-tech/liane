@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoint;
+using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -18,21 +18,21 @@ public sealed class RallyingPointController : ControllerBase
     {
         this.rallyingPointService = rallyingPointService;
     }
-        
+
     [HttpPost("")]
     [RequiresAdminAuth]
     public async Task<RallyingPoint> Create([FromBody] RallyingPoint rallyingPoint)
     {
         return await rallyingPointService.Create(rallyingPoint);
     }
-    
+
     [HttpDelete("{id}")]
     [RequiresAdminAuth]
     public async Task Delete(string id)
     {
         await rallyingPointService.Delete(id);
     }
-    
+
     [HttpPut("{id}")]
     [RequiresAdminAuth]
     public async Task Update([FromQuery] string id, [FromBody] RallyingPoint rallyingPoint)
@@ -54,9 +54,9 @@ public sealed class RallyingPointController : ControllerBase
         LatLng? latLng = null;
         if (lat != null && lng != null)
         {
-            latLng = new LatLng((double) lat, (double) lng);
+            latLng = new LatLng((double)lat, (double)lng);
         }
-        
+
         return await rallyingPointService.List(latLng, search);
     }
 }
