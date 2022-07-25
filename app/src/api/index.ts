@@ -61,3 +61,29 @@ export interface TripIntent {
   fromTime: string,
   toTime?: string,
 }
+
+export interface Route {
+  readonly coordinates: LatLng[],
+  readonly duration: number,
+  readonly distance: number,
+  readonly delta?: number
+}
+
+export interface RoutedLiane {
+  from: RallyingPoint,
+  to: RallyingPoint,
+  numberOfUsages: number,
+  isPrimary: boolean,
+  route: Route
+}
+
+export interface TripFilterOptions {
+  center: LatLng,
+  from?: RallyingPoint,
+  to?: RallyingPoint,
+  dayFrom?: number,
+  dayTo?: number,
+  hourFrom?: number,
+  hourTo?: number,
+  edible?:boolean
+}
