@@ -1,8 +1,11 @@
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
+import Constants from "expo-constants";
 
-const BaseUrl = `https://${process.env.ENV_NAME}.gjini.co/api`;
+const domain = Constants.manifest?.extra?.envName ?? "liane-dev";
+
+const BaseUrl = `https://${domain}.gjini.co/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;

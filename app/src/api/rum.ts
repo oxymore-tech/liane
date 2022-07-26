@@ -1,19 +1,19 @@
 import "./mockDatadog";
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "@datadog/mobile-react-native";
-
-// DD_CLIENT_TOKEN and DD_APP_ID registered as secrets
-// ENV_NAME as any other envi. variable
-const { DD_CLIENT_TOKEN, DD_APP_ID, ENV_NAME } = process.env;
+import Constants from "expo-constants";
 
 // Register the RUM
 export async function registerRum() {
-  if (DD_CLIENT_TOKEN && DD_APP_ID && ENV_NAME) {
-    const config = new DdSdkReactNativeConfiguration(DD_CLIENT_TOKEN, ENV_NAME, DD_APP_ID, true, true, true);
+  if (Constants.manifest?.extra) {
+    const { envName, datadogClientToken, datadogAppId } = Constants.manifest.extra;
+    if (envName && datadogClientToken && datadogAppId) {
+      const config = new DdSdkReactNativeConfiguration(datadogClientToken, envName, datadogAppId, true, true, true);
 
-    config.site = "EU";
-    config.nativeCrashReportEnabled = true;
+      config.site = "EU";
+      config.nativeCrashReportEnabled = true;
 
-    await DdSdkReactNative.initialize(config);
+      await DdSdkReactNative.initialize(config);
+    }
   }
 }
 
