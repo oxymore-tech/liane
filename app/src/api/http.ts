@@ -2,7 +2,7 @@ import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-const BaseUrl = __DEV__ ? "https://liane.gjini.co/api" : "https://liane-dev.gjini.co/api";
+const BaseUrl = `https://${process.env.ENV_NAME}.gjini.co/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
