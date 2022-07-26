@@ -28,7 +28,7 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app collects your GPS location to anonymously register your car travels."
       },
       "bundleIdentifier": "tech.oxymore.liane",
-      "buildNumber": "22"
+      "buildNumber": "23"
     },
     "android": {
       "permissions": [
@@ -41,7 +41,7 @@
         "android.permission.FOREGROUND_SERVICE"
       ],
       "package": "tech.oxymore.liane",
-      "versionCode": 21,
+      "versionCode": 22,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
