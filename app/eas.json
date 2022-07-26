@@ -16,12 +16,6 @@
     "production": {
       "env": {
         "ENV_NAME": "liane-dev"
-      },
-      "android": {
-        "autoIncrement": true
-      },
-      "ios": {
-        "autoIncrement": true
       }
     }
   },
