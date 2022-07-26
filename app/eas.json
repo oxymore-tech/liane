@@ -4,6 +4,9 @@
   },
   "build": {
     "development": {
+      "env": {
+        "ENV_NAME": "liane-dev"
+      },
       "developmentClient": true,
       "distribution": "internal"
     },
@@ -11,12 +14,15 @@
       "distribution": "internal"
     },
     "production": {
-    "android": {
-      "autoIncrement": true
-    },
-    "ios": {
-      "autoIncrement": true
-    }
+      "env": {
+        "ENV_NAME": "liane-dev"
+      },
+      "android": {
+        "autoIncrement": true
+      },
+      "ios": {
+        "autoIncrement": true
+      }
     }
   },
   "submit": {

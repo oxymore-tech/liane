@@ -19,6 +19,7 @@ import { startLocationTask } from "@/api/location";
 import { AuthUser, LocationPermissionLevel } from "@/api";
 import { getStoredToken } from "@/api/storage";
 import * as SplashScreen from "expo-splash-screen";
+import { registerRum, registerRumUser } from "@/api/rum";
 
 /**
  * Application context format.
@@ -105,6 +106,12 @@ async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationP
     permissionLevel = LocationPermissionLevel.NEVER;
   } else {
     permissionLevel = LocationPermissionLevel.NEVER;
+  }
+
+  // Initialize the RUM
+  await registerRum();
+  if (authUser && authUser.phone && authUser.token) {
+    await registerRumUser(authUser.phone, authUser.token);
   }
 
   return { authUser, permission: permissionLevel };

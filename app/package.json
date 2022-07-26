@@ -8,6 +8,8 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "@datadog/mobile-react-native": "^1.0.0-rc9",
+    "@datadog/mobile-react-navigation": "^1.0.0-rc9",
     "@expo-google-fonts/inter": "^0.2.2",
     "@react-native-async-storage/async-storage": "~1.17.3",
     "@react-native-community/datetimepicker": "6.1.2",
