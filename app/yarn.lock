@@ -1705,6 +1705,16 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
+"@datadog/mobile-react-native@^1.0.0-rc9":
+  version "1.0.0-rc9"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-native/-/mobile-react-native-1.0.0-rc9.tgz#9214b484488aced309751fd2857f9de897e65878"
+  integrity sha512-NxAhUlF7obC7jtGTKW/hqVqmV2TsTjkbnwDuUNbxUu4B0Y8cylxMSyqTJe09B03DVfoaAYcSMzjErwhUCT0fhg==
+
+"@datadog/mobile-react-navigation@^1.0.0-rc9":
+  version "1.0.0-rc9"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-navigation/-/mobile-react-navigation-1.0.0-rc9.tgz#4bea3bcd4bb01ab17949abbc9cefba45ee6b0670"
+  integrity sha512-MZQ8O31Lmstc75M/a2FSnq6D6extYtBUB4AcJ/+Ujvh3uBeyiUnwVAbUX8pH69+uGSW4bdQCVGJHEG6ENcL4mQ==
+
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
   resolved "https://registry.yarnpkg.com/@egjs/hammerjs/-/hammerjs-2.0.17.tgz#5dc02af75a6a06e4c2db0202cae38c9263895124"

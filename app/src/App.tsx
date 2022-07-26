@@ -7,6 +7,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { locale } from "@/api/i18n";
 import ContextProvider from "@/components/ContextProvider";
 import Navigation from "@/components/Navigation";
+import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
 
 i18n.translations = {
   en,
@@ -31,6 +32,7 @@ function App() {
 
   const notificationListener = useRef<Subscription>();
   const responseListener = useRef<Subscription>();
+  const navigationRef = useRef(null);
 
   useEffect(() => {
 
@@ -39,7 +41,7 @@ function App() {
 
     // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {});
-    
+
     return () => {
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
@@ -50,10 +52,15 @@ function App() {
     };
 
   });
-  
+
   return (
     <ContextProvider>
-      <NavigationContainer>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+        }}
+      >
         <Navigation />
       </NavigationContainer>
     </ContextProvider>
