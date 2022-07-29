@@ -165,4 +165,10 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
         return rallyingPoints.Distinct().ToImmutableList();
     }
+    
+    public static RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
+    {
+        var loc = new LatLng(rallyingPoint.Location.Coordinates.Latitude, rallyingPoint.Location.Coordinates.Longitude);
+        return new RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
+    }
 }

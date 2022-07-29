@@ -21,12 +21,13 @@ public sealed class TripIntentController : ControllerBase
     }
 
     [HttpPost("")]
-    public async Task<TripIntent> Create([FromBody] ReceivedTripIntent tripIntent)
+    public async Task<TripIntent> Create([FromBody] TripIntent tripIntent)
     {
-        return await tripIntentService.Create(tripIntent);
+        return await tripIntentService.Create(tripIntent);;
     }
 
     [HttpDelete("{id}")]
+    [DisableAuth]
     public async Task Delete(string id)
     {
         await tripIntentService.Delete(id);
