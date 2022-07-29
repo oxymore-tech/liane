@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useContext, useState} from "react";
 import {
   SafeAreaView, Switch, TouchableOpacity, View, Alert
 } from "react-native";
@@ -12,8 +12,10 @@ import Autocomplete from "react-native-autocomplete-input";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
+import {AppContext} from "@/components/ContextProvider";
 
 const CreateTripScreen = () => {
+  const { authUser } = useContext(AppContext);
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
 
@@ -129,12 +131,13 @@ const CreateTripScreen = () => {
       );
     } else {
       const tripIntent: TripIntent = {
+        user: authUser?.phone!,
         from: startPoint!,
         to: endPoint!,
-        fromTime: fromTime.toISOString(),
-        toTime: toTime ? toTime.toISOString() : undefined
+        fromTime: fromTime,
+        toTime: toTime ? toTime : undefined
       };
-
+      
       // Send tripIntent
       await sendTripIntent(tripIntent);
 

@@ -4,19 +4,20 @@ import {AppText} from "@/components/base/AppText";
 import {Ionicons} from "@expo/vector-icons";
 import React from "react";
 import { ScheduleNavigationProp } from "@/screens/ScheduleScreen";
-import { TripIntent } from "@/api";
+import {MatchedTripIntent, TripIntent} from "@/api";
 import {deleteTripIntent} from "@/api/client";
 
 interface ScheduleTripItemProps {
   tripIntent: TripIntent,
+  matchedIntent: MatchedTripIntent | null,
   toDetails: ScheduleNavigationProp
   refreshList: Function
 }
 
-const ScheduleTripItem = ( { tripIntent, toDetails, refreshList } : ScheduleTripItemProps) => {
+const ScheduleTripItem = ( { tripIntent, matchedIntent, toDetails, refreshList } : ScheduleTripItemProps) => {
 
   const goToDetails = () => {
-    toDetails.navigate("Chat", { tripIntent: tripIntent });
+    toDetails.navigate("Chat", { tripIntent: tripIntent, matchedIntent: matchedIntent });
   };
   
   const deleteIntent = async () => {
@@ -51,7 +52,7 @@ const ScheduleTripItem = ( { tripIntent, toDetails, refreshList } : ScheduleTrip
         />
         
         <View style={tw("flex-col justify-around w-2/12 mr-2 ")} >
-          <AppText style={tw("flex-row ml-3 text-lg")}>
+          <AppText style={tw("flex-row ml-3 text-base")}>
             {
               new Date(tripIntent.fromTime).getHours().toString().padStart(2, '0') 
                 + ":" 

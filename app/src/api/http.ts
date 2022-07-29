@@ -30,7 +30,7 @@ export interface QueryPostOptions<T> extends QueryAsOptions<T> {
 }
 
 function formatUrl<T>(uri: string, { listOptions, params }: QueryAsOptions<T>) {
-  const url = new URL(uri, BaseUrl);
+  const url = new URL(BasePath + uri, BaseUrl);
   if (listOptions) {
     const { filter, skip, limit, sort, search } = listOptions;
     if (filter) {

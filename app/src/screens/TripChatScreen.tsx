@@ -1,28 +1,15 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useContext, useState} from "react";
 import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {StackNavigationProp} from "@react-navigation/stack";
 import {NavigationParamList} from "@/components/Navigation";
-import {Bubble, GiftedChat, QuickReplies, User} from 'react-native-gifted-chat'
-import {Websocket} from 'websocket-ts';
+import {Bubble, GiftedChat} from 'react-native-gifted-chat'
 import {tw} from "@/api/tailwind";
-import {getStoredToken} from "@/api/storage";
-import {BaseUrl} from "@/api/http";
-import {HttpTransportType, HubConnection, HubConnectionBuilder, LogLevel} from "@microsoft/signalr";
-
-export interface IMessage {
-  _id: string | number
-  text: string
-  createdAt: Date | number
-  user: User
-  image?: string
-  video?: string
-  audio?: string
-  system?: boolean
-  sent?: boolean
-  received?: boolean
-  pending?: boolean
-  quickReplies?: QuickReplies
-}
+import {HubConnection} from "@microsoft/signalr";
+import {IMessage, MatchedTripIntent} from "@/api";
+import {getChatConnection} from "@/api/chat";
+import {Alert, KeyboardAvoidingView} from "react-native";
+import ProposalBubble, {Proposal} from "@/components/chat/ProposalBubble";
+import {AppContext} from "@/components/ContextProvider";
 
 type ChatRouteProp = RouteProp<NavigationParamList, "Chat">;
 type ChatNavigationProp = StackNavigationProp<NavigationParamList, "Chat">;
@@ -31,136 +18,100 @@ type ChatProps = {
   navigation: ChatNavigationProp;
 };
 
-const TripChatScreen = ({ route, navigation }: ChatProps) => {
-  const [isSending, setIsSending] = useState(false);
+const TripChatScreen = ({route, navigation}: ChatProps) => {
+  const { authUser } = useContext(AppContext);
+  const [messages, setMessages] = useState<IMessage[]>([]);
   
-  let tmpID = 486;
-  let ws: Websocket; // Websocket
-  let connection : HubConnection;
-  
+  let connection: HubConnection;
+  let groupId;
+  let username = "Alex";
+
+  let matchedIntent : MatchedTripIntent | null;
   useFocusEffect(
       React.useCallback(() => {
-
-        console.log("INIT CHAT")
         const tripIntent = route.params.tripIntent;
-        navigation.setOptions({ headerTitle: `${tripIntent.from.label} -> ${tripIntent.to.label}` });
+        navigation.setOptions({headerTitle: `${tripIntent.from.label} -> ${tripIntent.to.label}`});
+        matchedIntent = route.params.matchedIntent;
         
-        /*
-        // Create new websocket
-        getStoredToken().then((token) => {
-          ws = new WebsocketBuilder(BaseUrl + "/ws?ApiToken=" + token)
-              .onOpen((i, ev) => { console.log("opened") })
-              .onClose((i, ev) => { console.log("closed") })
-              .onError((i, ev) => { console.log("error") })
-              .onRetry((i, ev) => { console.log("retry") })
-              .onMessage((i, ev) => {
+        // If there is a match open the chat connection
+        if (matchedIntent != null) {
+          groupId = matchedIntent.p1.id + " " + matchedIntent.p2.id;
 
-                tmpID++;
-                if (isSending) {
-                  setIsSending(false);
-                }
-                else {
-                  const m : IMessage[] = [{
-                    _id: tmpID,
-                    text: ev.data,
-                    createdAt: new Date(),
-                    user: { _id: 3 },
-                  }];
-
-                  setMessages(previousMessages => GiftedChat.append(previousMessages, m))
-                }
-              })
-              .build();
-        }        
-         
-      );
-      */
-        
-        // Create signalr hub connection
-        connection = new HubConnectionBuilder()
-            .withUrl(BaseUrl + "/hub", {
-              accessTokenFactory: async () : Promise<string> => {
-                return await getStoredToken() as string;
-                }, 
-              //skipNegotiation: true,
-              //transport: HttpTransportType.WebSockets
-            })
-            .configureLogging(LogLevel.Trace)
-            .build();
-
-        connection.start().then(() => {
-          connection.on("ReceiveMessage", (user, message) => {
-            tmpID++;
-            const m: IMessage[] = [{
-              _id: tmpID,
-              text: message,
-              createdAt: new Date(),
-              user: {_id: 3},
-            }];
-
-            setMessages(previousMessages => GiftedChat.append(previousMessages, m));
+          connection = getChatConnection();
+          connection.start().then(() => {
+            connection.invoke("JoinGroupChat", groupId).then((conversation: IMessage[]) => {
+              setMessages(previousMessages => GiftedChat.append(previousMessages, conversation));
+              connection.on("ReceiveMessage", (message) => {
+                setMessages(previousMessages => GiftedChat.append(previousMessages, [message]));
+              });
+            });
           });
-        });
-
- 
+        }
         
         return () => {
-          // Close websocket
-          // ws.close();
-         }
+          if (matchedIntent != null) {
+            connection.stop().then(r => console.log("Connection closed on " + groupId));
+          }
+        }
       }, [])
   );
+
+  const onSend = useCallback((messages: IMessage[] = []) => {
+    if (matchedIntent != null) {
+      connection.invoke("SendToGroup", messages[0], groupId)
+          .catch((reason) => console.log(reason));
+    } else {
+      Alert.alert(
+          "Vous êtes le seul membre de ce groupe de trajet",
+          "",
+          [
+            {
+              text: "OK"
+            }
+          ],
+          { cancelable: true }
+      );
+    }
+  }, []);
   
-  const [messages, setMessages] = useState<IMessage[]>([]);
-
-  useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/190/150/any',
-        },
-      },
-    ])
-  }, [])
-
-  const onSend = useCallback((messages = []) => {
-    /*
-    setIsSending(true);
-     ws.send(messages[0].text);
-    setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
-     */
+  const renderBubble = (props, proposal?: Proposal | null ) => {
     
-    connection.invoke("SendMessage", messages[0]._id.toString() , messages[0].text).then(
-        (value) => console.log("SUCCESS :" + value), 
-        (reason) => console.log(reason)
-    );
-    setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
-    
-  }, [])
-     
+    return (
+        proposal == null &&
+        (
+            <Bubble {...props}
+                wrapperStyle={{
+                  left: tw("bg-liane-yellow"),
+                  right: tw("bg-liane-orange-lighter")
+                }} 
+            />  
+        )
+        || proposal != null && 
+        (
+            <ProposalBubble props={props} proposal={proposal}  />
+        )
+    )
+  };
   
   return (
-      <GiftedChat 
-          messages={messages}
-          onSend={messages => onSend(messages)}
-          renderBubble={(props) => {
-            return (
-                <Bubble {...props}
-                        wrapperStyle={{
-                          left: tw("bg-liane-yellow"),
-                          right: tw("bg-liane-orange-lighter")
-                        }}
-                />
-            )}}
-          user={{
-            _id: 1,
-          }}
-      />
+      <KeyboardAvoidingView
+          style={tw("flex-1")}
+      >
+        <GiftedChat
+            alignTop={false}
+            initialText={""}
+            
+            renderUsernameOnMessage={true}
+            user={{
+              _id: authUser?.uid!,
+              name: `${username} | (${route.params.tripIntent.from.label} > ${route.params.tripIntent.to.label})`
+            }}
+            messages={messages}
+            onSend={messages => onSend(messages)}
+            renderBubble={(props) => renderBubble(props)}
+        />
+
+      </KeyboardAvoidingView>
   );
 };
 
