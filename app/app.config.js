@@ -1,6 +1,6 @@
-// DD_CLIENT_TOKEN and DD_APP_ID registered as secrets
-// ENV_NAME as any other envi. variable
-const { DD_CLIENT_TOKEN, DD_APP_ID, ENV_NAME } = process.env;
+// GOOGLE_API_KEY, DD_CLIENT_TOKEN and DD_APP_ID registered as secrets
+// ENV_NAME as any other env. variable
+const { GOOGLE_API_KEY, DD_CLIENT_TOKEN, DD_APP_ID, ENV_NAME } = process.env;
 
 export default {
   name: "Liane",
@@ -31,7 +31,10 @@ export default {
       NSLocationAlwaysAndWhenInUseUsageDescription: "This app collects your GPS location to anonymously register your car travels."
     },
     bundleIdentifier: "tech.oxymore.liane",
-    buildNumber: "24"
+    buildNumber: "25",
+    config: {
+      googleMapsApiKey: GOOGLE_API_KEY
+    }
   },
   android: {
     permissions: [
@@ -44,13 +47,16 @@ export default {
       "android.permission.FOREGROUND_SERVICE"
     ],
     package: "tech.oxymore.liane",
-    versionCode: 24,
+    versionCode: 25,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#FFFFFF"
     },
-    softwareKeyboardLayoutMode: "pan"
+    softwareKeyboardLayoutMode: "pan",
+    config: {
+      "googleMaps.apiKey": GOOGLE_API_KEY
+    }
   },
   extra: {
     envName: ENV_NAME,

@@ -1,5 +1,5 @@
 import * as React from "react";
-import MapView, { UrlTile, Marker, Polyline, LatLng } from "react-native-maps";
+import MapView, { Marker, Polyline, LatLng } from "react-native-maps";
 import { StyleProp, ViewStyle } from "react-native";
 
 const colors: string[] = ["#0B79F9", "#22278A", "#FFB545", "#FF7545", "#FF5B22"];
