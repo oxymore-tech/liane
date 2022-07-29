@@ -1,13 +1,12 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Grouping;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Notification;
@@ -17,24 +16,20 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
-using Liane.Web.Controllers;
+using Liane.Web.Hubs;
 using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Connections;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Config;
 using NLog.Layouts;
@@ -49,6 +44,8 @@ namespace Liane.Web;
 
 public static class Startup
 {
+    public const string ChatAuthorizationPolicy = nameof(ChatAuthorizationPolicy);
+
     private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
     {
         services.AddService<OsrmServiceImpl>();
@@ -66,7 +63,7 @@ public static class Startup
 
         services.AddService<CurrentContextImpl>();
         services.AddSettings<TwilioSettings>(context);
-        services.AddSettings<AuthSettings>(context); // ?
+        services.AddSettings<AuthSettings>(context);
         services.AddService<AuthServiceImpl>();
 
         services.AddService<LocationServiceImpl>();
@@ -76,6 +73,7 @@ public static class Startup
         services.AddService<RawTripServiceImpl>();
         services.AddService<LianeTripServiceImpl>();
         services.AddService<ChatServiceImpl>();
+        services.AddService<IntentsMatchingServiceImpl>();
     }
 
     public static void StartCurrentModule(string[] args)
@@ -180,48 +178,10 @@ public static class Startup
                 Type = OpenApiSecuritySchemeType.ApiKey
             });
         });
-        
+
         // For chat
-        
-        services.AddAuthentication(o =>
-            {
-                o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(o =>
-            {
-                o.RequireHttpsMetadata = false;
-
-                o.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = (receivedContext) =>
-                    {
-                        var path = receivedContext.HttpContext.Request.Path;
-                        Console.Out.WriteLine("PATH : " + path.ToString());
-                        
-                        if (path.StartsWithSegments("/hub"))
-                        {
-                            var accessToken = receivedContext.Request.Query["access_token"];
-                            Console.Out.WriteLine("FROM QUERY access_token : " + accessToken);
-                            
-                            if (path.StartsWithSegments("/hub/negotiate"))
-                            {
-                                accessToken = receivedContext.Request.Headers.Authorization;
-                                var match = Regex.Match(accessToken, @"Bearer[\s]*(.*)", RegexOptions.IgnoreCase);
-                                accessToken = match.Groups[1].Value;
-                                Console.Out.WriteLine("FROM HEADERS access_token : " + accessToken);
-                            }
-                            
-                            if (!string.IsNullOrWhiteSpace(accessToken))
-                            {
-                                receivedContext.Token = accessToken;
-                            }
-                        }
-                        return Task.CompletedTask;
-                    }
-                };
-            });
-
+        services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
+        services.AddAuthorization(x => { x.AddPolicy(ChatAuthorizationPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); }); });
         services.AddSignalR();
     }
 
@@ -262,8 +222,6 @@ public static class Startup
 
     private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
     {
-        app.UseWebSockets(); // For chat
-        
         app.UseOpenApi();
         app.UseSwaggerUi3();
         app.UseCors("AllowLocal");
@@ -279,10 +237,15 @@ public static class Startup
         }
 
         app.UseRouting();
-        
+
+        app.UseCors(x => x
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+
         app.UseAuthentication();
         app.UseAuthorization();
-        
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapHub<ChatHub>("/hub");

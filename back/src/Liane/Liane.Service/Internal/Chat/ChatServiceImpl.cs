@@ -1,45 +1,49 @@
 using System;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Api.Util.Http;
+using Liane.Service.Internal.User;
+using Liane.Service.Internal.Util;
+using Liane.Web.Hubs;
+using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Chat;
 
 public class ChatServiceImpl : IChatService
 {
-    private readonly ICurrentContext currentContext;
+    private readonly IMongoDatabase mongo;
 
-    public ChatServiceImpl(ICurrentContext currentContext)
+    public ChatServiceImpl(MongoSettings settings)
     {
-        this.currentContext = currentContext;
+        mongo = settings.GetDatabase();
     }
-    
-    public async Task Echo(WebSocket webSocket)
+
+    public Task SaveMessageInGroup(ChatMessage message, string groupId)
     {
-        var buffer = new byte[1024 * 4];
-        var receiveResult = await webSocket.ReceiveAsync(
-            new ArraySegment<byte>(buffer), CancellationToken.None);
+        var update = Builders<DbGroupConversation>.Update.AddToSet(g => g.Messages, message);
+        var filter = Builders<DbGroupConversation>.Filter.Eq(g => g.GroupId, groupId);
+
+        var result = mongo.GetCollection<DbGroupConversation>().FindOneAndUpdateAsync(filter, update);
         
-        while (!receiveResult.CloseStatus.HasValue)
+        return result;
+    }
+
+    public async Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId)
+    {
+        var result = (await mongo.GetCollection<DbGroupConversation>().FindAsync(g => g.GroupId == groupId)).ToList();
+
+        if (result.Any())
         {
-            await webSocket.SendAsync(
-                new ArraySegment<byte>(buffer, 0, receiveResult.Count),
-                receiveResult.MessageType,
-                receiveResult.EndOfMessage,
-                CancellationToken.None);
-
-            Console.WriteLine(currentContext.CurrentUser().Phone + " SENT " + Encoding.UTF8.GetString(buffer, 0, receiveResult.Count)); ////
-
-            receiveResult = await webSocket.ReceiveAsync(
-                new ArraySegment<byte>(buffer), CancellationToken.None);
+            var r = result.Select(g => g.Messages).First();
+            r.Reverse();
+            return r.ToImmutableList();
         }
 
-        await webSocket.CloseAsync(
-            receiveResult.CloseStatus.Value,
-            receiveResult.CloseStatusDescription,
-            CancellationToken.None);
+        var list = new List<ChatMessage>();
+        await mongo.GetCollection<DbGroupConversation>().InsertOneAsync(new DbGroupConversation(groupId, list));
+        
+        return list.ToImmutableList();
     }
 }

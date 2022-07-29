@@ -37,9 +37,7 @@ public class RequiresAuthFilter : IAsyncAuthorizationFilter
                 throw new UnauthorizedAccessException();
             }
 
-            Console.WriteLine("FILTERING TOKEN");
             context.HttpContext.User = authService.IsTokenValid(token);
-            Console.WriteLine("USER IDENTITY NAME : " + context.HttpContext.User?.Identity?.Name);
         }
         catch (System.Exception e)
         {

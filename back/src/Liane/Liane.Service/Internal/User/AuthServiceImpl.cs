@@ -80,7 +80,7 @@ public sealed class AuthServiceImpl : IAuthService
     {
         if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
         {
-            return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount, false), false);
+            return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount, false), ObjectId.GenerateNewId().ToString(), false);
         }
         
         var phoneNumber = ParseNumber(phone);
@@ -103,12 +103,13 @@ public sealed class AuthServiceImpl : IAuthService
             .FirstOrDefault();
 
         var isAdmin = dbUser?.IsAdmin ?? false;
+        var userId = ObjectId.GenerateNewId();
         if (dbUser is null)
         {
-            await mongoCollection.InsertOneAsync(new DbUser(ObjectId.GenerateNewId(), isAdmin, number));
+            await mongoCollection.InsertOneAsync(new DbUser(userId, isAdmin, number));
         }
 
-        return new AuthUser(number, GenerateToken(number, isAdmin), isAdmin);
+        return new AuthUser(number, GenerateToken(number, isAdmin), userId.ToString(), isAdmin);
     }
 
     public ClaimsPrincipal IsTokenValid(string token)
@@ -130,11 +131,13 @@ public sealed class AuthServiceImpl : IAuthService
         }
     }
 
-    public Task<AuthUser> Me()
+    public async Task<AuthUser> Me()
     {
         var authUser = currentContext.CurrentUser();
         var token = GenerateToken(authUser.Phone, authUser.IsAdmin);
-        return Task.FromResult(authUser with { Token = token });
+        var dbUserId = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Phone == currentContext.CurrentUser().Phone))
+            .FirstOrDefault().Id.ToString();
+        return authUser with { Token = token, Uid = dbUserId};
     }
 
     private static PhoneNumber ParseNumber(string number)

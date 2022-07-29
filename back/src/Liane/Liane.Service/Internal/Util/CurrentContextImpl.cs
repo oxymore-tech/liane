@@ -23,15 +23,15 @@ public sealed class CurrentContextImpl : ICurrentContext
             throw new ForbiddenException();
         }
 
-        var userId = httpContextAccessor.HttpContext.User.Identity?.Name;
+        var phone = httpContextAccessor.HttpContext.User.Identity?.Name;
 
-        if (userId == null)
+        if (phone == null)
         {
             throw new ForbiddenException();
         }
 
         var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(e => e.Type.Equals("role") && e.Value == AuthServiceImpl.AdminRole);
 
-        return new AuthUser(userId, "", isAdmin);
+        return new AuthUser(phone, "", "", isAdmin);
     }
 }
