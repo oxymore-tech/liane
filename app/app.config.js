@@ -55,7 +55,9 @@ export default {
     },
     softwareKeyboardLayoutMode: "pan",
     config: {
-      "googleMaps.apiKey": GOOGLE_API_KEY
+      googleMaps: {
+        apiKey: GOOGLE_API_KEY
+      }
     }
   },
   extra: {
