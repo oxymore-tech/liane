@@ -345,7 +345,7 @@ const CreateTripScreen = () => {
         </View>
 
         {/* Status selection */}
-        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center hidden")}>
+        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center")}>
 
           <ToggleButton
             disabled
