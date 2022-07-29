@@ -41,23 +41,6 @@ public sealed class GroupTripIntentTest
         return r;
     } 
     
-    // Taken from TripIntentServiceImpl
-    private class DbRallyingPointEqualityComparer : IEqualityComparer<DbRallyingPoint>
-    {
-        public bool Equals(DbRallyingPoint? x, DbRallyingPoint? y)
-        {
-            if (ReferenceEquals(x, y)) return true;
-            if (ReferenceEquals(x, null)) return false;
-            if (ReferenceEquals(y, null)) return false;
-            return x.Id == y.Id;
-        }
-
-        public int GetHashCode(DbRallyingPoint obj)
-        {
-            return obj.Id.GetHashCode();
-        }
-    }
-    
     // Adapted from TripIntentServiceImpl
     private async Task<DbTripIntent> LinkToPoints(TripIntent ti)
     {
@@ -68,7 +51,7 @@ public sealed class GroupTripIntentTest
         var route = await routingService.BasicRouteMethod(new RoutingQuery(start, end));
 
         // Interpolate to find the RallyingPoints it passes by (< 1 km)
-        var waySegments = new Dictionary<DbRallyingPoint, DbRallyingPoint>(new DbRallyingPointEqualityComparer());
+        var waySegments = new Dictionary<DbRallyingPoint, DbRallyingPoint>();
 
         DbRallyingPoint? previousPoint = null;
         foreach (var wp in route.Coordinates)
