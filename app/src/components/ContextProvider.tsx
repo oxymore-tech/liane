@@ -108,7 +108,6 @@ async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationP
     permissionLevel = LocationPermissionLevel.NEVER;
   }
 
-  // Initialize the RUM
   await registerRum();
   if (authUser && authUser.phone && authUser.token) {
     await registerRumUser(authUser.phone, authUser.token);

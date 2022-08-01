@@ -93,16 +93,16 @@ const CreateTripScreen = () => {
       const location = await getLastKnownLocation();
 
       await getRallyingPoints(query, location)
-          .then((r) => {
-            const f = r.filter((point) => point.label.search(regex) >= 0);
-            setFilteredEndPoints(f);
-          });
+        .then((r) => {
+          const f = r.filter((point) => point.label.search(regex) >= 0);
+          setFilteredEndPoints(f);
+        });
 
     } else {
       setFilteredEndPoints([]);
     }
   };
-  
+
   const onPublicationPressed = async () => {
     let isValid = true;
     let message = "";
@@ -305,7 +305,6 @@ const CreateTripScreen = () => {
 
           </View>
 
-          {/* DatePickers */}
           {
               showDay
               && (
@@ -345,21 +344,24 @@ const CreateTripScreen = () => {
         {/* Status selection */}
         <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center hidden")}>
 
-          <ToggleButton disabled={true}
+          <ToggleButton
+            disabled
             style={tw(`flex flex-grow h-full rounded-l-xl rounded-r-none ${status.passengerStatus ? "bg-liane-orange" : ""}`)}
             icon={() => <View><AppText style={tw(`text-base ${status.passengerStatus ? "text-white" : "text-gray-500"}`)}>Passager</AppText></View>}
             status={status.passengerStatus ? "checked" : "unchecked"}
             onPress={() => onStatusButtonToggle("passenger")}
           />
 
-          <ToggleButton disabled={true}
+          <ToggleButton
+            disabled
             style={tw(`flex flex-grow h-full rounded-none ${status.neutralStatus ? "bg-liane-orange" : ""}`)}
             icon={() => <View><AppText style={tw(`text-base ${status.neutralStatus ? "text-white" : "text-gray-500"}`)}>Neutre</AppText></View>}
             status={status.neutralStatus ? "checked" : "unchecked"}
             onPress={() => onStatusButtonToggle("neutral")}
           />
 
-          <ToggleButton disabled={true}
+          <ToggleButton
+            disabled
             style={tw(`flex flex-grow h-full rounded-r-xl rounded-l-none ${status.driverStatus ? "bg-liane-orange" : ""}`)}
             icon={() => <View><AppText style={tw(`text-base ${status.driverStatus ? "text-white" : "text-gray-500"}`)}>Conducteur</AppText></View>}
             status={status.driverStatus ? "checked" : "unchecked"}
