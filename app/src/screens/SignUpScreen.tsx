@@ -30,7 +30,6 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   const signUp = useCallback(async () => {
     try {
-      console.log("Phone number SUBMITTED");
       setInternalError(undefined);
       await sendSms(phoneNumber);
       navigation.navigate("SignUpCode", { phoneNumber });

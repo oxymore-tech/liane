@@ -93,7 +93,7 @@ async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationP
   const authUser = storedToken ? await me().catch(() => undefined) : undefined;
 
   console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
-  console.log(`Authenticated user is ${authUser}`);
+  console.log(`Authenticated user is ${JSON.stringify(authUser)}`);
 
   // Select the right permission level
   // with the assumption that : background => foreground
@@ -107,7 +107,7 @@ async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationP
   } else {
     permissionLevel = LocationPermissionLevel.NEVER;
   }
-
+  
   await registerRum();
   if (authUser && authUser.phone && authUser.token) {
     await registerRumUser(authUser.phone, authUser.token);

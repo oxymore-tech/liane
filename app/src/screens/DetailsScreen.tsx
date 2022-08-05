@@ -14,7 +14,7 @@ type DetailsProps = {
   navigation: DetailsNavigationProp;
 };
 
-const SignUpCodeScreen = ({ route, navigation }: DetailsProps) => {
+const DetailsScreen = ({ route, navigation }: DetailsProps) => {
 
   useEffect(() => {
     navigation.setOptions({ headerTitle: `Détails du trajet [ID = ${route.params.tripID}]` });
@@ -27,4 +27,4 @@ const SignUpCodeScreen = ({ route, navigation }: DetailsProps) => {
   );
 };
 
-export default SignUpCodeScreen;
+export default DetailsScreen;

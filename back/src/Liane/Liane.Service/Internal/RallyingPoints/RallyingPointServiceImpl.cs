@@ -27,7 +27,6 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 {
     private const int SelectionRadius = 25_000;
     private const int MaxRadius = 400_000;
-    private const int InterpolationRadius = 1_000;
     private const int MaxRallyingPoint = 10;
 
     private readonly ILogger<RallyingPointServiceImpl> logger;
@@ -145,7 +144,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return result;
     }
 
-    private async Task<RallyingPoint?> GetFirstClosest(LatLng? pos, double radius)
+    private async Task<RallyingPoint?> GetFirstClosest(LatLng? pos)
     {
         return (await ListInternal(pos, null)).First();
     }
@@ -156,7 +155,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
         foreach (var l in locations)
         {
-            var result = await GetFirstClosest(l, InterpolationRadius);
+            var result = await GetFirstClosest(l);
 
             if (result is null) continue;
 
@@ -164,5 +163,11 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         }
 
         return rallyingPoints.Distinct().ToImmutableList();
+    }
+
+    public static RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
+    {
+        var loc = new LatLng(rallyingPoint.Location.Coordinates.Latitude, rallyingPoint.Location.Coordinates.Longitude);
+        return new RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
     }
 }

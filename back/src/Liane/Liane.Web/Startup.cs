@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Grouping;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Notification;
@@ -14,9 +16,12 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Hubs;
+using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +44,8 @@ namespace Liane.Web;
 
 public static class Startup
 {
+    public const string ChatAuthorizationPolicy = nameof(ChatAuthorizationPolicy);
+
     private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
     {
         services.AddService<OsrmServiceImpl>();
@@ -65,6 +72,8 @@ public static class Startup
         services.AddService<NotificationServiceImpl>();
         services.AddService<RawTripServiceImpl>();
         services.AddService<LianeTripServiceImpl>();
+        services.AddService<ChatServiceImpl>();
+        services.AddService<IntentsMatchingServiceImpl>();
     }
 
     public static void StartCurrentModule(string[] args)
@@ -139,6 +148,43 @@ public static class Startup
         return logger;
     }
 
+    private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+    {
+        ConfigureLianeServices(context, services);
+        services.AddService<FileStreamResultExecutor>();
+        services.AddControllers();
+        services.AddCors(options =>
+            {
+                options.AddPolicy("AllowLocal",
+                    p => p.WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+            }
+        );
+
+        services.AddMvcCore(options => { options.Filters.Add<ExceptionFilter>(); });
+        services.AddService<HttpContextAccessor>();
+        services.AddSwaggerDocument(settings =>
+        {
+            settings.Title = "Liane API";
+            settings.Version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            settings.AddSecurity("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                In = OpenApiSecurityApiKeyLocation.Header,
+                Type = OpenApiSecuritySchemeType.ApiKey
+            });
+        });
+
+        // For chat
+        services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
+        services.AddAuthorization(x => { x.AddPolicy(ChatAuthorizationPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); }); });
+        services.AddSignalR();
+    }
+
     private static void StartCurrentModuleWeb(string[] args)
     {
         WebHost.CreateDefaultBuilder(args)
@@ -174,38 +220,6 @@ public static class Startup
             .Run();
     }
 
-    private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
-    {
-        ConfigureLianeServices(context, services);
-        services.AddService<FileStreamResultExecutor>();
-        services.AddControllers();
-        services.AddCors(options =>
-            {
-                options.AddPolicy("AllowLocal",
-                    p => p.WithOrigins("http://localhost:3000")
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials());
-            }
-        );
-
-        services.AddMvcCore(options => { options.Filters.Add<ExceptionFilter>(); });
-        services.AddService<HttpContextAccessor>();
-        services.AddSwaggerDocument(settings =>
-        {
-            settings.Title = "Liane API";
-            settings.Version = Assembly.GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion;
-            settings.AddSecurity("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                In = OpenApiSecurityApiKeyLocation.Header,
-                Type = OpenApiSecuritySchemeType.ApiKey
-            });
-        });
-    }
-
     private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
     {
         app.UseOpenApi();
@@ -223,7 +237,20 @@ public static class Startup
         }
 
         app.UseRouting();
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+
+        app.UseCors(x => x
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapHub<ChatHub>("/hub");
+            endpoints.MapControllers();
+        });
 
         StartServicesHook(app.ApplicationServices)
             .GetAwaiter()

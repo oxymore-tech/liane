@@ -27,7 +27,7 @@ public sealed class NotificationController : ControllerBase
     [HttpGet("")]
     public async Task<ImmutableList<Notification>> GetNotifications()
     {
-        return await notificationService.getNotifications();
+        return await notificationService.List();
     }
 
     [HttpPost("delete")]

@@ -1,6 +1,9 @@
+import {QuickReplies, User} from "react-native-gifted-chat";
+
 export interface AuthUser {
   phone: string,
-  token: string
+  token: string,
+  uid: string
 }
 
 export interface Notification {
@@ -56,34 +59,31 @@ export interface Liane {
 
 export interface TripIntent {
   id?: string,
+  user: string,
   from: RallyingPoint,
   to: RallyingPoint,
-  fromTime: string,
-  toTime?: string,
+  fromTime: Date,
+  toTime?: Date,
 }
 
-export interface Route {
-  readonly coordinates: LatLng[],
-  readonly duration: number,
-  readonly distance: number,
-  readonly delta?: number
+export interface MatchedTripIntent {
+  tripIntent: TripIntent,
+  p1: RallyingPoint,
+  p2: RallyingPoint,
+  members: string[]
 }
 
-export interface RoutedLiane {
-  from: RallyingPoint,
-  to: RallyingPoint,
-  numberOfUsages: number,
-  isPrimary: boolean,
-  route: Route
-}
-
-export interface TripFilterOptions {
-  center: LatLng,
-  from?: RallyingPoint,
-  to?: RallyingPoint,
-  dayFrom?: number,
-  dayTo?: number,
-  hourFrom?: number,
-  hourTo?: number,
-  edible?:boolean
+export interface IMessage {
+  _id: string | number
+  text: string
+  createdAt: Date | number
+  user: User
+  image?: string
+  video?: string
+  audio?: string
+  system?: boolean
+  sent?: boolean
+  received?: boolean
+  pending?: boolean
+  quickReplies?: QuickReplies
 }

@@ -96,9 +96,9 @@ const HomeScreen = ({ navigation }: HomeProps) => {
     <SafeAreaView style={tw("flex h-full")}>
       <View>
         <StatusBar
-          backgroundColor={getColor("liane-blue")}
+          backgroundColor={getColor("liane-orange")}
         />
-        <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
+        <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
           <AppText style={tw("absolute text-2xl text-white text-center w-full ")}>Trajets</AppText>
         </View>
       </View>

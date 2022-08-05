@@ -34,7 +34,7 @@ public sealed class OsrmServiceImpl : IOsrmService
         string annotations = "false",
         string continueStraight = "default")
     {
-        string uri = $"/route/v1/driving/{Format(coordinates)}";
+        var uri = $"/route/v1/driving/{Format(coordinates)}";
 
         var result = await client.GetFromJsonAsync<Response.Routing>(uri.WithParams(new
         {

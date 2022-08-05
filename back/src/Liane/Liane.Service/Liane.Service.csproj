@@ -7,12 +7,18 @@
 
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="MongoDB.Bson" Version="2.14.1" />
         <PackageReference Include="MongoDB.Driver" Version="2.14.1" />
         <PackageReference Include="Twilio" Version="5.71.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Liane.Api\Liane.Api.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Internal\Grouping\TripIntentsGrouping.cs" />
+      <Compile Remove="Internal\Grouping\TripToPoints.cs" />
     </ItemGroup>
 
 </Project>

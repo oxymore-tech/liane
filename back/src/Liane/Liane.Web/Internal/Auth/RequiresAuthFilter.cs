@@ -78,6 +78,13 @@ public class RequiresAuthFilter : IAsyncAuthorizationFilter
             return ParseBearer(requestCookie);
         }
 
+        // Added for Signalr
+        var requestAccessToken = context.HttpContext.Request.Query["access_token"];
+        if (!string.IsNullOrWhiteSpace(requestAccessToken))
+        {
+            return ParseBearer(requestAccessToken!);
+        }
+
         return context.HttpContext.Request.Query["ApiToken"];
     }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useContext, useState} from "react";
 import {
   SafeAreaView, Switch, TouchableOpacity, View, Alert
 } from "react-native";
@@ -12,8 +12,10 @@ import Autocomplete from "react-native-autocomplete-input";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
+import {AppContext} from "@/components/ContextProvider";
 
 const CreateTripScreen = () => {
+  const { authUser } = useContext(AppContext);
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
 
@@ -93,16 +95,16 @@ const CreateTripScreen = () => {
       const location = await getLastKnownLocation();
 
       await getRallyingPoints(query, location)
-        .then((r) => {
-          const f = r.filter((point) => point.label.search(regex) >= 0);
-          setFilteredEndPoints(f);
-        });
+          .then((r) => {
+            const f = r.filter((point) => point.label.search(regex) >= 0);
+            setFilteredEndPoints(f);
+          });
 
     } else {
       setFilteredEndPoints([]);
     }
   };
-
+  
   const onPublicationPressed = async () => {
     let isValid = true;
     let message = "";
@@ -129,12 +131,13 @@ const CreateTripScreen = () => {
       );
     } else {
       const tripIntent: TripIntent = {
+        user: authUser?.phone!,
         from: startPoint!,
         to: endPoint!,
-        fromTime: fromTime.toISOString(),
-        toTime: toTime ? toTime.toISOString() : undefined
+        fromTime: fromTime,
+        toTime: toTime ? toTime : undefined
       };
-
+      
       // Send tripIntent
       await sendTripIntent(tripIntent);
 
@@ -152,7 +155,7 @@ const CreateTripScreen = () => {
 
   return (
     <SafeAreaView>
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-blue")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
         <AppText style={tw("absolute text-lg text-center text-white w-full")}>
           Enregistrement d&apos;un trajet
         </AppText>
@@ -342,7 +345,7 @@ const CreateTripScreen = () => {
         </View>
 
         {/* Status selection */}
-        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center hidden")}>
+        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center")}>
 
           <ToggleButton
             disabled

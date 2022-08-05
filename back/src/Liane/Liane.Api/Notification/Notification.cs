@@ -1,3 +1,3 @@
 namespace Liane.Api.Notification;
 
-public sealed record Notification(int date, string message);
+public sealed record Notification(int Date, string Message);
