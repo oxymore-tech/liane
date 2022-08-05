@@ -1,8 +1,6 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
-using Liane.Api.TripIntent;
-using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +21,7 @@ public sealed class TripIntentController : ControllerBase
     [HttpPost("")]
     public async Task<TripIntent> Create([FromBody] TripIntent tripIntent)
     {
-        return await tripIntentService.Create(tripIntent);;
+        return await tripIntentService.Create(tripIntent);
     }
 
     [HttpDelete("{id}")]

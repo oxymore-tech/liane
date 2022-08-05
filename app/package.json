@@ -8,6 +8,8 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "@datadog/mobile-react-native": "^1.0.0-rc9",
+    "@datadog/mobile-react-navigation": "^1.0.0-rc9",
     "@expo-google-fonts/inter": "^0.2.2",
     "@microsoft/signalr": "^6.0.7",
     "@react-native-async-storage/async-storage": "~1.17.3",
@@ -16,7 +18,6 @@
     "@react-navigation/bottom-tabs": "^5.11.11",
     "@react-navigation/native": "^5.9.4",
     "@react-navigation/stack": "^5.14.4",
-    "@types/websocket": "^1.0.5",
     "date-fns": "^2.28.0",
     "expo": "^45.0.0",
     "expo-app-loading": "~2.0.0",
@@ -25,7 +26,7 @@
     "expo-font": "~10.1.0",
     "expo-localization": "~13.0.0",
     "expo-location": "~14.2.2",
-    "expo-notifications": "~0.15.2",
+    "expo-notifications": "~0.15.4",
     "expo-permissions": "~13.2.0",
     "expo-sms": "~10.2.0",
     "expo-splash-screen": "~0.15.1",
@@ -39,14 +40,13 @@
     "react-native-dropdown-picker": "^5.4.2",
     "react-native-elements": "^3.4.1",
     "react-native-gesture-handler": "~2.2.1",
+    "react-native-maps": "0.30.2",
     "react-native-gifted-chat": "^1.0.3",
     "react-native-keyboard-spacer": "^0.4.1",
     "react-native-paper": "^4.12.1",
     "react-native-screens": "~3.11.1",
     "react-native-web": "0.17.7",
-    "stream-chat-expo": "^4.10.0",
-    "tailwind-rn": "^3.0.1",
-    "websocket-ts": "^1.1.1"
+    "tailwind-rn": "^3.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
