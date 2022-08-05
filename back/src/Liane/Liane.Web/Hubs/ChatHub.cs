@@ -2,13 +2,10 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 
 namespace Liane.Web.Hubs;
 
@@ -16,7 +13,7 @@ namespace Liane.Web.Hubs;
 public class ChatHub : Hub
 {
     private readonly ILogger<LianeTripServiceImpl> logger;
-    private IChatService chatService;
+    private readonly IChatService chatService;
 
     private const string ReceiveMessage = "ReceiveMessage";
 
@@ -24,18 +21,6 @@ public class ChatHub : Hub
     {
         this.logger = logger;
         this.chatService = chatService;
-    }
-
-    // Send message to every existing client/group
-    private async Task Send(string user, string message)
-    {
-        await Clients.All.SendAsync(ReceiveMessage, user, message);
-    }
-    
-    // Reply to caller
-    private async Task SendToCaller(string user, string message)
-    {
-        await Clients.Caller.SendAsync(ReceiveMessage, user, message);
     }
 
     public async Task SendToGroup(ChatMessage message, string groupId)
@@ -58,7 +43,7 @@ public class ChatHub : Hub
     public override async Task OnConnectedAsync()
     {
         logger.LogInformation("User " + Context.User?.Identity?.Name
-                                      + " connected to hub with connection ID : " 
+                                      + " connected to hub with connection ID : "
                                       + Context.ConnectionId);
         await base.OnConnectedAsync();
     }

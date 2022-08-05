@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Service.Internal.Display;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using IRedis = Liane.Api.Util.IRedis;

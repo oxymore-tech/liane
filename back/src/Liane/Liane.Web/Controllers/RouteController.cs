@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Liane.Api.Location;
 using Liane.Api.Routing;
 using Microsoft.AspNetCore.Mvc;
 

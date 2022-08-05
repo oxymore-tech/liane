@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
-using Liane.Api.Trip;
 using MongoDB.Bson;
 using MongoDB.Driver.GeoJsonObjectModel;
 

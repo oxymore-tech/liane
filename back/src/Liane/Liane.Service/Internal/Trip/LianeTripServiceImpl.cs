@@ -120,22 +120,22 @@ public class LianeTripServiceImpl : ILianeTripService
         }
 
         // Filter the data regarding the date
-        if (tripFilter.dayFrom is not null && tripFilter.dayTo is not null)
+        if (tripFilter.DayFrom is not null && tripFilter.DayTo is not null)
         {
             lianesList = lianesList.Where(l =>
             {
                 var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
-                return usagesDates.Any(d => (int)d.DayOfWeek >= tripFilter.dayFrom && (int)d.DayOfWeek <= tripFilter.dayTo);
+                return usagesDates.Any(d => (int)d.DayOfWeek >= tripFilter.DayFrom && (int)d.DayOfWeek <= tripFilter.DayTo);
             });
         }
 
         // Filter the data regarding the time
-        if (tripFilter.hourFrom is not null && tripFilter.hourTo is not null)
+        if (tripFilter.HourFrom is not null && tripFilter.HourTo is not null)
         {
             lianesList = lianesList.Where(l =>
             {
                 var usagesDates = l.Usages.Select(u => DateTimeOffset.FromUnixTimeMilliseconds(u.Timestamp).DateTime);
-                return usagesDates.Any(d => d.Hour >= tripFilter.hourFrom && d.Hour <= tripFilter.hourTo);
+                return usagesDates.Any(d => d.Hour >= tripFilter.HourFrom && d.Hour <= tripFilter.HourTo);
             });
         }
 

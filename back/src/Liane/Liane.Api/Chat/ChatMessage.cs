@@ -1,10 +1,6 @@
-using System.Text.Json.Serialization;
-using Newtonsoft.Json;
+namespace Liane.Api.Chat;
 
-namespace Liane.Web.Hubs;
-
-public record ChatMessage(
-    [property:JsonPropertyName("_id")]
+public sealed record ChatMessage(
     string Id,
     string Text,
     string CreatedAt,

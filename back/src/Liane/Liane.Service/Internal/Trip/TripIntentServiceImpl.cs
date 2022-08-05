@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -27,7 +25,8 @@ public class TripIntentServiceImpl : ITripIntentService
 
     private const int InterpolationRadius = 2_000; // Adaptable
 
-    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService, IIntentsMatchingService intentsMatchingService)
+    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
+        IIntentsMatchingService intentsMatchingService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
@@ -39,14 +38,14 @@ public class TripIntentServiceImpl : ITripIntentService
     public async Task<TripIntent> Create(TripIntent tripIntent)
     {
         var dbTripIntent = await LinkToPoints(tripIntent);
-       var created = tripIntent with { Id = dbTripIntent.Id.ToString() };
-       await mongo.GetCollection<DbTripIntent>().InsertOneAsync(dbTripIntent);
+        var created = tripIntent with { Id = dbTripIntent.Id.ToString() };
+        await mongo.GetCollection<DbTripIntent>().InsertOneAsync(dbTripIntent);
 
-       await intentsMatchingService.UpdateTripGroups();
-       
-       return created;
+        await intentsMatchingService.UpdateTripGroups();
+
+        return created;
     }
-    
+
     private async Task<DbTripIntent> LinkToPoints(TripIntent ti)
     {
         LatLng start = ti.From.Location;
@@ -74,7 +73,7 @@ public class TripIntentServiceImpl : ITripIntentService
                 previousPoint = closestPoint;
             }
         }
-        
+
         return new DbTripIntent(
             ObjectId.GenerateNewId(), ti.User,
             RallyingPointServiceImpl.ToDbRallyingPoint(ti.From), RallyingPointServiceImpl.ToDbRallyingPoint(ti.To),
@@ -85,15 +84,15 @@ public class TripIntentServiceImpl : ITripIntentService
     private async Task<(DbRallyingPoint point, double distance)> FindClosest(LatLng loc)
     {
         var rallyingPoints = (await rallyingPointService.List(loc, null));
-        
-        int i = 0;
-        var closestPoint = rallyingPoints?[i];
-        double minDistance = closestPoint!.Location.CalculateDistance(loc);
+
+        var i = 0;
+        var closestPoint = rallyingPoints[i];
+        var minDistance = closestPoint.Location.CalculateDistance(loc);
 
         i++;
-        while (i < rallyingPoints!.Count)
+        while (i < rallyingPoints.Count)
         {
-            double currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
+            var currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
             if (currentDistance < minDistance)
             {
                 minDistance = currentDistance;
@@ -105,7 +104,7 @@ public class TripIntentServiceImpl : ITripIntentService
 
         return (RallyingPointServiceImpl.ToDbRallyingPoint(closestPoint), minDistance);
     }
-    
+
     public async Task Delete(string id)
     {
         await mongo.GetCollection<DbTripIntent>().DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
@@ -116,7 +115,7 @@ public class TripIntentServiceImpl : ITripIntentService
         var filter = FilterDefinition<DbTripIntent>.Empty;
 
         var builder = Builders<DbTripIntent>.Filter;
-        
+
         var currentUser = currentContext.CurrentUser();
 
         if (!currentUser.IsAdmin)
@@ -124,7 +123,7 @@ public class TripIntentServiceImpl : ITripIntentService
             var regex = new Regex(Regex.Escape(currentUser.Phone), RegexOptions.None);
             filter &= builder.Regex(x => x.User, new BsonRegularExpression(regex));
         }
-        
+
         var result = (await mongo.GetCollection<DbTripIntent>().FindAsync(filter))
             .ToEnumerable()
             .Select(ToTripIntent)
@@ -132,7 +131,7 @@ public class TripIntentServiceImpl : ITripIntentService
 
         return result;
     }
-    
+
     public static TripIntent ToTripIntent(DbTripIntent dbTripIntent)
     {
         return new TripIntent(dbTripIntent.Id.ToString(), dbTripIntent.User,

@@ -1,9 +1,6 @@
-using System.Text.Json.Serialization;
+namespace Liane.Api.Chat;
 
-namespace Liane.Web.Hubs;
-
-public record ChatUser(
-    [property:JsonPropertyName("_id")]
+public sealed record ChatUser(
     string Id,
     string Name
- );
+);

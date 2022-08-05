@@ -5,7 +5,7 @@ using MongoDB.Bson;
 namespace Liane.Service.Internal.Trip;
 
 public sealed record UserRawTrip(
-    ObjectId? _id,
+    ObjectId? Id,
     string UserId,
     List<UserLocation> Locations
 );

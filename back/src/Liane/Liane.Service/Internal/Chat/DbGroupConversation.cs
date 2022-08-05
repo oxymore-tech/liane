@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Liane.Web.Hubs;
+using Liane.Api.Chat;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Service.Internal.Chat;

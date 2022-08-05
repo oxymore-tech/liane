@@ -78,7 +78,7 @@ public sealed class NotificationServiceImpl : INotificationService
         await database.HashDeleteAsync(redisKey, date);
     }
 
-    public async Task<ImmutableList<Api.Notification.Notification>> getNotifications()
+    public async Task<ImmutableList<Api.Notification.Notification>> List()
     {
         var user = currentContext.CurrentUser();
         var database = await redis.Get();

@@ -10,7 +10,6 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Util;
 using MongoDB.Bson;
 using NUnit.Framework;
 
@@ -39,13 +38,13 @@ public sealed class GroupTripIntentTest
         var r = tripIntents.Select(async t => await LinkToPoints(t));
 
         return r;
-    } 
-    
+    }
+
     // Adapted from TripIntentServiceImpl
     private async Task<DbTripIntent> LinkToPoints(TripIntent ti)
     {
-        LatLng start = ti.From.Location;
-        LatLng end = ti.To.Location;
+        var start = ti.From.Location;
+        var end = ti.To.Location;
 
         // Get the shortest path (list of coordinates) calculated with OSRM
         var route = await routingService.BasicRouteMethod(new RoutingQuery(start, end));
@@ -58,38 +57,40 @@ public sealed class GroupTripIntentTest
         {
             var (closestPoint, distance) = FindClosest(new LatLng(wp.Lat, wp.Lng));
 
-            if (distance < InterpolationRadius && !waySegments.ContainsKey(closestPoint))
+            if (!(distance < InterpolationRadius) || waySegments.ContainsKey(closestPoint))
             {
-                if (previousPoint is not null)
-                {
-                    waySegments[previousPoint] = closestPoint;
-                }
-
-                waySegments.Add(closestPoint, null!); // The last segment will have the last point as key and null as value
-                previousPoint = closestPoint;
+                continue;
             }
+
+            if (previousPoint is not null)
+            {
+                waySegments[previousPoint] = closestPoint;
+            }
+
+            waySegments.Add(closestPoint, null!); // The last segment will have the last point as key and null as value
+            previousPoint = closestPoint;
         }
-        
+
         return new DbTripIntent(
             ObjectId.Parse(ti.Id), ti.User,
             RallyingPointServiceImpl.ToDbRallyingPoint(ti.From), RallyingPointServiceImpl.ToDbRallyingPoint(ti.To),
             ti.FromTime, ti.ToTime,
             waySegments, ti.Title);
     }
-    
+
     // Adapted from TripIntentServiceImpl
     private (DbRallyingPoint point, double distance) FindClosest(LatLng loc)
     {
         var rallyingPoints = points.Values.ToList();
-        
-        int i = 0;
-        var closestPoint = rallyingPoints?[i];
-        double minDistance = closestPoint!.Location.CalculateDistance(loc);
+
+        var i = 0;
+        var closestPoint = rallyingPoints[i];
+        var minDistance = closestPoint.Location.CalculateDistance(loc);
 
         i++;
-        while (i < rallyingPoints!.Count)
+        while (i < rallyingPoints.Count)
         {
-            double currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
+            var currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
             if (currentDistance < minDistance)
             {
                 minDistance = currentDistance;
@@ -106,17 +107,17 @@ public sealed class GroupTripIntentTest
     {
         return ObjectId.GenerateNewId().ToString();
     }
-    
+
     [Test]
     public async Task SingleGroupTest()
     {
-        points.TryGetValue(TripIntentStub.CantalPoints.arpajon, out var rp1);
-        points.TryGetValue(TripIntentStub.CantalPoints.vic, out var rp2);
+        var rp1 = points[TripIntentStub.CantalPoints.Arpajon];
+        var rp2 = points[TripIntentStub.CantalPoints.Vic];
 
         var t1 = new TripIntent(CreateId(), "u1", rp1, rp2, GetTime("09:00"), null, "arpajon-vic_1");
         var t2 = new TripIntent(CreateId(), "u2", rp1, rp2, GetTime("09:00"), null, "arpajon-vic_2");
         var t3 = new TripIntent(CreateId(), "u3", rp1, rp2, GetTime("09:00"), null, "arpajon-vic_3");
-        
+
         var trips = new List<TripIntent>()
         {
             t1, t2, t3
@@ -139,17 +140,17 @@ public sealed class GroupTripIntentTest
     [Test]
     public async Task CrossRoadsGroupIntentsTest()
     {
-        points.TryGetValue(TripIntentStub.CantalPoints.arpajon, out var arpajon);
-        points.TryGetValue(TripIntentStub.CantalPoints.vic, out var vic);
-        points.TryGetValue(TripIntentStub.CantalPoints.saintpaul, out var saintpaul);
-        points.TryGetValue(TripIntentStub.CantalPoints.saintsimon, out var saintsimon);
-        points.TryGetValue(TripIntentStub.CantalPoints.sansac, out var sansac);
-        points.TryGetValue(TripIntentStub.CantalPoints.ytrac, out var ytrac);
-        points.TryGetValue(TripIntentStub.CantalPoints.laroquebrou, out var laroquebrou);
-        points.TryGetValue(TripIntentStub.CantalPoints.reilhac, out var reilhac);
-        points.TryGetValue(TripIntentStub.CantalPoints.naucelles, out var naucelles);
-        points.TryGetValue(TripIntentStub.CantalPoints.aurillac, out var aurillac);
-        
+        var arpajon = points[TripIntentStub.CantalPoints.Arpajon];
+        var vic = points[TripIntentStub.CantalPoints.Vic];
+        var saintpaul = points[TripIntentStub.CantalPoints.Saintpaul];
+        var saintsimon = points[TripIntentStub.CantalPoints.Saintsimon];
+        var sansac = points[TripIntentStub.CantalPoints.Sansac];
+        var ytrac = points[TripIntentStub.CantalPoints.Ytrac];
+        var laroquebrou = points[TripIntentStub.CantalPoints.Laroquebrou];
+        var reilhac = points[TripIntentStub.CantalPoints.Reilhac];
+        var naucelles = points[TripIntentStub.CantalPoints.Naucelles];
+        var aurillac = points[TripIntentStub.CantalPoints.Aurillac];
+
         var blanc = new TripIntent(CreateId(), "1", laroquebrou, arpajon, GetTime("09:00"), GetTime("17:00"), "blanc1");
         var vert = new TripIntent(CreateId(), "2", saintpaul, aurillac, GetTime("09:00"), GetTime("17:00"), "vert2");
         var jaune = new TripIntent(CreateId(), "3", ytrac, vic, GetTime("09:00"), GetTime("17:00"), "jaune3");
@@ -174,8 +175,9 @@ public sealed class GroupTripIntentTest
         {
             linkedTrips.Add(await t);
         }
+
         var intentGroups = (grouping.Group(linkedTrips)).ToList();
-        
+
         DisplayGroups(intentGroups);
 
         // See plan
@@ -185,8 +187,8 @@ public sealed class GroupTripIntentTest
     [Test]
     public async Task OppositeFlowGroupTest()
     {
-        points.TryGetValue(TripIntentStub.CantalPoints.arpajon, out var rp1);
-        points.TryGetValue(TripIntentStub.CantalPoints.vic, out var rp2);
+        var rp1 = points[TripIntentStub.CantalPoints.Arpajon];
+        var rp2 = points[TripIntentStub.CantalPoints.Vic];
 
         var t1 = new TripIntent(CreateId(), "u1", rp1, rp2, GetTime("09:00"), null, "arpajon-vic_1");
         var t2 = new TripIntent(CreateId(), "u2", rp2, rp1, GetTime("09:00"), null, "vic_arpajon_1");
@@ -203,8 +205,9 @@ public sealed class GroupTripIntentTest
         {
             linkedTrips.Add(await t);
         }
+
         var intentGroups = (grouping.Group(linkedTrips)).ToList();
-        
+
         DisplayGroups(intentGroups);
 
         // See plan
@@ -214,10 +217,10 @@ public sealed class GroupTripIntentTest
     [Test]
     public async Task ComposedTripGroupTest()
     {
-        points.TryGetValue(TripIntentStub.CantalPoints.mauriac, out var mauriac);
-        points.TryGetValue(TripIntentStub.CantalPoints.saintcernin, out var saintcernin);
-        points.TryGetValue(TripIntentStub.CantalPoints.naucelles, out var naucelles);
-        points.TryGetValue(TripIntentStub.CantalPoints.aurillac, out var aurillac);
+        var mauriac = points[TripIntentStub.CantalPoints.Mauriac];
+        var saintcernin = points[TripIntentStub.CantalPoints.Saintcernin];
+        var naucelles = points[TripIntentStub.CantalPoints.Naucelles];
+        var aurillac = points[TripIntentStub.CantalPoints.Aurillac];
 
 
         var t1 = new TripIntent(CreateId(), "u1", mauriac, aurillac, GetTime("09:00"), null, "mauriac-aurillac_1");
@@ -234,6 +237,7 @@ public sealed class GroupTripIntentTest
         {
             linkedTrips.Add(await t);
         }
+
         var intentGroups = (grouping.Group(linkedTrips)).ToList();
         DisplayGroups(intentGroups);
 
@@ -244,10 +248,10 @@ public sealed class GroupTripIntentTest
     [Test]
     public async Task ComposedFlowsTripGroupTest()
     {
-        points.TryGetValue(TripIntentStub.CantalPoints.mauriac, out var mauriac);
-        points.TryGetValue(TripIntentStub.CantalPoints.reilhac, out var reilhac);
-        points.TryGetValue(TripIntentStub.CantalPoints.naucelles, out var naucelles);
-        points.TryGetValue(TripIntentStub.CantalPoints.aurillac, out var aurillac);
+        var mauriac = points[TripIntentStub.CantalPoints.Mauriac];
+        var reilhac = points[TripIntentStub.CantalPoints.Reilhac];
+        var naucelles = points[TripIntentStub.CantalPoints.Naucelles];
+        var aurillac = points[TripIntentStub.CantalPoints.Aurillac];
 
         var t1 = new TripIntent(CreateId(), "u1", mauriac, aurillac, GetTime("09:00"), null, "mauriac-aurillac_1");
         var t4 = new TripIntent(CreateId(), "u4", reilhac, aurillac, GetTime("09:00"), null, "reilhac-aurillac_1");
@@ -265,8 +269,9 @@ public sealed class GroupTripIntentTest
         {
             linkedTrips.Add(await t);
         }
+
         var intentGroups = (grouping.Group(linkedTrips)).ToList();
-        
+
         DisplayGroups(intentGroups);
 
         // See plan
@@ -276,19 +281,10 @@ public sealed class GroupTripIntentTest
     [Test]
     public async Task OppositeComposedFlowsGroupTest()
     {
-        points.TryGetValue(TripIntentStub.CantalPoints.arpajon, out var arpajon);
-        points.TryGetValue(TripIntentStub.CantalPoints.vic, out var vic);
-        points.TryGetValue(TripIntentStub.CantalPoints.saintpaul, out var saintpaul);
-        points.TryGetValue(TripIntentStub.CantalPoints.saintsimon, out var saintsimon);
-        points.TryGetValue(TripIntentStub.CantalPoints.sansac, out var sansac);
-        points.TryGetValue(TripIntentStub.CantalPoints.ytrac, out var ytrac);
-        points.TryGetValue(TripIntentStub.CantalPoints.laroquebrou, out var laroquebrou);
-        points.TryGetValue(TripIntentStub.CantalPoints.reilhac, out var reilhac);
-        points.TryGetValue(TripIntentStub.CantalPoints.naucelles, out var naucelles);
-        points.TryGetValue(TripIntentStub.CantalPoints.aurillac, out var aurillac);
-        points.TryGetValue(TripIntentStub.CantalPoints.saintcernin, out var saintcernin);
+        var vic = points[TripIntentStub.CantalPoints.Vic];
+        var laroquebrou = points[TripIntentStub.CantalPoints.Laroquebrou];
+        var saintcernin = points[TripIntentStub.CantalPoints.Saintcernin];
 
-        
         var t1 = new TripIntent(CreateId(), "1", laroquebrou, vic, GetTime("09:00"), GetTime("17:00"), "laroquebrou->vic_1");
         var t2 = new TripIntent(CreateId(), "2", vic, laroquebrou, GetTime("09:00"), GetTime("17:00"), "vic->laroquebrou_1");
         var t3 = new TripIntent(CreateId(), "3", laroquebrou, saintcernin, GetTime("09:00"), GetTime("17:00"), "laroquebrou->saintcernin_1");
@@ -299,20 +295,21 @@ public sealed class GroupTripIntentTest
             t2,
             t3,
         };
-        
+
         var linkedTrips = new List<DbTripIntent>();
         foreach (var t in LinkIntents(trips))
         {
             linkedTrips.Add(await t);
         }
+
         var intentGroups = (grouping.Group(linkedTrips)).ToList();
-        
+
         DisplayGroups(intentGroups);
 
         // See plan
         Assert.AreEqual(1, intentGroups.Count);
     }
-    
+
     private static void DisplayGroups(List<List<ProcessedTripIntent>> intentGroups)
     {
         foreach (var group in intentGroups)
@@ -328,4 +325,3 @@ public sealed class GroupTripIntentTest
         return DateTime.ParseExact(timeStr, "HH:mm", null);
     }
 }
-
