@@ -120,8 +120,8 @@ const HomeScreen = ({ navigation }: HomeProps) => {
           style={tw("w-full flex-grow")}
           markers={markers}
           routes={routes}
-          scrollEnabled={false}
-          rotateEnabled={false}
+          scrollEnabled
+          rotateEnabled
         />
       </View>
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import MapView, { Marker, Polyline, LatLng } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Marker, Polyline, LatLng } from "react-native-maps";
 import { StyleProp, ViewStyle } from "react-native";
 
 const colors: string[] = ["#0B79F9", "#22278A", "#FFB545", "#FF7545", "#FF5B22"];
@@ -33,6 +33,7 @@ const Map = ({ markers, routes, style, center, rotateEnabled, scrollEnabled }: M
     style={style}
     rotateEnabled={rotateEnabled === undefined ? true : rotateEnabled}
     scrollEnabled={scrollEnabled === undefined ? true : scrollEnabled}
+    provider={PROVIDER_GOOGLE}
     region={{
       latitude: center.latitude,
       longitude: center.longitude,

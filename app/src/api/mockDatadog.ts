@@ -8,6 +8,7 @@ import {
 // To understand why this exists, see : https://github.com/DataDog/dd-sdk-reactnative/blob/develop/docs/expo_development.md
 
 if (__DEV__) {
+  console.log("Initializing DataDog mocks !");
   const emptyAsyncFunction = () => new Promise<void>((resolve) => resolve());
 
   DdLogs.debug = emptyAsyncFunction;
