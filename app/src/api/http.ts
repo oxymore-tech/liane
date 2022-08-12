@@ -5,7 +5,7 @@ import Constants from "expo-constants";
 
 const domain = Constants.manifest?.extra?.envName ?? "liane-dev";
 
-const BaseUrl = `https://${domain}.gjini.co/api`;
+export const BaseUrl = `https://${domain}.gjini.co/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;

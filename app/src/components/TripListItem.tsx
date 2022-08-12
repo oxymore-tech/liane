@@ -116,7 +116,6 @@ const TripListItem = ({ liane, toDetails } : TripListItemProps) => {
             </AppText>
           ))
       }
-
     </View>
   );
 };

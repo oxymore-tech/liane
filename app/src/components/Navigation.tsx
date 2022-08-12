@@ -7,13 +7,13 @@ import { AppContext } from "@/components/ContextProvider";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { tw } from "@/api/tailwind";
-import {LocationPermissionLevel, MatchedTripIntent, TripIntent} from "@/api";
+import { LocationPermissionLevel, MatchedTripIntent, TripIntent } from "@/api";
 import LocationWizard2 from "@/screens/LocationWizard";
 import CreateTripScreen from "@/screens/CreateTripScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import HomeNavigation from "@/components/HomeNavigation";
 import ScheduleNavigation from "@/components/ScheduleNavigation";
-import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -21,7 +21,7 @@ const Tab = createBottomTabNavigator();
 export type NavigationParamList = {
   Home: {};
   Schedule: {};
-  Chat: { tripIntent: TripIntent, matchedIntent : MatchedTripIntent | null};
+  Chat: { tripIntent: TripIntent, matchedIntent : MatchedTripIntent | null };
   Details: { tripID: string };
   TripList: { count?: number, day?: string, hour?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };
@@ -30,12 +30,7 @@ export type NavigationParamList = {
 
 const getTabBarVisibility = (route) => {
   const routeName = getFocusedRouteNameFromRoute(route);
-
-  if (routeName === 'Chat') {
-    return false;
-  }
-
-  return true;
+  return routeName !== "Chat";
 };
 
 function Navigation() {
@@ -97,7 +92,7 @@ function Navigation() {
         <Tab.Screen
           name="Schedule"
           component={ScheduleNavigation}
-          options={({route}) => ({
+          options={({ route }) => ({
             tabBarVisible: getTabBarVisibility(route)
           })}
         />

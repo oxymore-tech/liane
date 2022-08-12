@@ -13,9 +13,7 @@ import { NavigationParamList } from "@/components/Navigation";
 const logo = require("@/assets/logo_orange.png");
 
 type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
-
 type SignUpCodeNavigationProp = StackNavigationProp<NavigationParamList, "SignUpCode">;
-
 type SignUpCodeProps = {
   route: SignUpCodeRouteProp;
   navigation: SignUpCodeNavigationProp;

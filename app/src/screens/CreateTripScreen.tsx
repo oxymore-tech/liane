@@ -1,4 +1,4 @@
-import React, {useContext, useState} from "react";
+import React, { useContext, useState } from "react";
 import {
   SafeAreaView, Switch, TouchableOpacity, View, Alert
 } from "react-native";
@@ -12,7 +12,7 @@ import Autocomplete from "react-native-autocomplete-input";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
-import {AppContext} from "@/components/ContextProvider";
+import { AppContext } from "@/components/ContextProvider";
 
 const CreateTripScreen = () => {
   const { authUser } = useContext(AppContext);
@@ -95,16 +95,16 @@ const CreateTripScreen = () => {
       const location = await getLastKnownLocation();
 
       await getRallyingPoints(query, location)
-          .then((r) => {
-            const f = r.filter((point) => point.label.search(regex) >= 0);
-            setFilteredEndPoints(f);
-          });
+        .then((r) => {
+          const f = r.filter((point) => point.label.search(regex) >= 0);
+          setFilteredEndPoints(f);
+        });
 
     } else {
       setFilteredEndPoints([]);
     }
   };
-  
+
   const onPublicationPressed = async () => {
     let isValid = true;
     let message = "";
@@ -134,10 +134,10 @@ const CreateTripScreen = () => {
         user: authUser?.phone!,
         from: startPoint!,
         to: endPoint!,
-        fromTime: fromTime,
-        toTime: toTime ? toTime : undefined
+        fromTime,
+        toTime: toTime || undefined
       };
-      
+
       // Send tripIntent
       await sendTripIntent(tripIntent);
 

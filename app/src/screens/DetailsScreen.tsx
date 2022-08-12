@@ -6,9 +6,7 @@ import { tw } from "@/api/tailwind";
 import { NavigationParamList } from "@/components/Navigation";
 
 type DetailsRouteProp = RouteProp<NavigationParamList, "Details">;
-
 type DetailsNavigationProp = StackNavigationProp<NavigationParamList, "Details">;
-
 type DetailsProps = {
   route: DetailsRouteProp;
   navigation: DetailsNavigationProp;
