@@ -9,7 +9,6 @@ using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Grouping;
 using Liane.Service.Internal.Location;
 using Liane.Service.Internal.Matching;
-using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Routing;
@@ -58,9 +57,6 @@ public static class Startup
 
         services.AddSettings<MongoSettings>(context);
 
-        services.AddSettings<RedisSettings>(context);
-        services.AddService<RedisClient>();
-
         services.AddService<CurrentContextImpl>();
         services.AddSettings<TwilioSettings>(context);
         services.AddSettings<AuthSettings>(context);
@@ -69,7 +65,6 @@ public static class Startup
         services.AddService<LocationServiceImpl>();
         services.AddService<RallyingPointServiceImpl>();
         services.AddService<TripIntentServiceImpl>();
-        services.AddService<NotificationServiceImpl>();
         services.AddService<RawTripServiceImpl>();
         services.AddService<LianeTripServiceImpl>();
         services.AddService<ChatServiceImpl>();

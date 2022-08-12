@@ -1,13 +1,13 @@
-# Documentation de la partie back-end du Liane
+# Back
 
 ## Architecture générale
 
 Le projet utilise dotnet core 5, et est implémenté en C#.
 
-- `Liane.Api` : services interface ;
-- `Liane.Service` : services implementation ;
-- `Liane.Web` : controllers and services instantiation ;
-- `Liane.Test` : unit testing classes ;
+- `Liane.Api` : objets et interfaces des services de l'API liane
+- `Liane.Service` : impléméntation des services
+- `Liane.Web` : mise à disposition des services d'API via REST (controllers HTTP)
+- `Liane.Test` : tests unitaires
 
 ## Gestion des trajets (Trips). 
 

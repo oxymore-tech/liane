@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +9,7 @@ namespace Liane.Api.Util.Startup;
 
 public static class DependencyInjectionExtensions
 {
-    private static readonly Regex SettingsPattern = new Regex("(.*)Settings");
+    private static readonly Regex SettingsPattern = new("(.*)Settings");
 
     public static IServiceCollection AddService<T>(this IServiceCollection services, T t)
         where T : class
@@ -47,28 +46,29 @@ public static class DependencyInjectionExtensions
 
         var match = SettingsPattern.Match(name);
         if (!match.Success)
+        {
             throw new ArgumentException($"Settings type name {name} is malformed. Must be 'SectionSettings'");
+        }
 
         var key = match.Groups[1].Value;
         var section = context.Configuration.GetSection(key);
-        var settings = section.ToObject<T>();
-        var missingConfigurationProperties = type.GetProperties()
-            .Where(p =>
+        var constructorInfo = typeof(T)
+            .GetConstructors()[0];
+        var parameters = constructorInfo
+            .GetParameters()
+            .Select(p =>
             {
-                var value = p.GetValue(settings);
-                if (value == null)
-                    if (!p.IsNullable())
-                        return true;
+                var value = section.GetValue(p.ParameterType, p.Name, null);
+                if (value == null && !p.IsNullable())
+                {
+                    throw new ArgumentException($"Missing required configuration key '{key}.{p.Name}'. Required in settings {typeof(T)}");
+                }
 
-                return false;
+                return value;
             })
-            .Select(p => p.Name)
-            .ToImmutableHashSet();
-        if (missingConfigurationProperties.Count > 0)
-            throw new ArgumentException(
-                $"Missing configuration in section '{key}' : {string.Join(",", missingConfigurationProperties)}");
-
-        services.AddService(settings);
+            .ToArray();
+        var settings = (T)constructorInfo.Invoke(parameters);
+        services.AddSingleton(settings);
         return services;
     }
 }

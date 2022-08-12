@@ -71,7 +71,7 @@ public sealed class AuthServiceImpl : IAuthService
                     to: phoneNumber
                 );
 
-                logger.LogInformation($"SMS sent {message} to {phoneNumber} with code {code}");
+                logger.LogInformation("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
             }
         }
     }
@@ -82,14 +82,14 @@ public sealed class AuthServiceImpl : IAuthService
         {
             return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount, false), ObjectId.GenerateNewId().ToString(), false);
         }
-        
+
         var phoneNumber = ParseNumber(phone);
 
         if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string expectedCode))
         {
             throw new UnauthorizedAccessException("Invalid code");
         }
-        
+
         if (expectedCode != code)
         {
             throw new UnauthorizedAccessException("Invalid code");
@@ -137,7 +137,7 @@ public sealed class AuthServiceImpl : IAuthService
         var token = GenerateToken(authUser.Phone, authUser.IsAdmin);
         var dbUserId = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Phone == currentContext.CurrentUser().Phone))
             .FirstOrDefault().Id.ToString();
-        return authUser with { Token = token, Uid = dbUserId};
+        return authUser with { Token = token, Uid = dbUserId };
     }
 
     private static PhoneNumber ParseNumber(string number)
