@@ -1,4 +1,4 @@
-import {QuickReplies, User} from "react-native-gifted-chat";
+import { QuickReplies, User } from "react-native-gifted-chat";
 
 export interface AuthUser {
   phone: string,
@@ -86,4 +86,30 @@ export interface IMessage {
   received?: boolean
   pending?: boolean
   quickReplies?: QuickReplies
+}
+
+export interface Route {
+  readonly coordinates: LatLng[],
+  readonly duration: number,
+  readonly distance: number,
+  readonly delta?: number
+}
+
+export interface RoutedLiane {
+  from: RallyingPoint,
+  to: RallyingPoint,
+  numberOfUsages: number,
+  isPrimary: boolean,
+  route: Route
+}
+
+export interface TripFilterOptions {
+  center: LatLng,
+  from?: RallyingPoint,
+  to?: RallyingPoint,
+  dayFrom?: number,
+  dayTo?: number,
+  hourFrom?: number,
+  hourTo?: number,
+  edible?:boolean
 }
