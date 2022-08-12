@@ -31,7 +31,7 @@ export default {
       NSLocationAlwaysAndWhenInUseUsageDescription: "This app collects your GPS location to anonymously register your car travels."
     },
     bundleIdentifier: "tech.oxymore.liane",
-    buildNumber: "27",
+    buildNumber: "28",
     config: {
       googleMapsApiKey: GOOGLE_API_KEY
     }
@@ -47,7 +47,7 @@ export default {
       "android.permission.FOREGROUND_SERVICE"
     ],
     package: "tech.oxymore.liane",
-    versionCode: "27",
+    versionCode: 28,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
