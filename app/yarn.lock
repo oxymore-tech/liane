@@ -2300,10 +2300,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@microsoft/signalr@^6.0.7":
-  version "6.0.7"
-  resolved "https://registry.yarnpkg.com/@microsoft/signalr/-/signalr-6.0.7.tgz#8651d6807a0430575ce51960c254deab8d682b4c"
-  integrity sha512-CoIz8K0IpaCGbI4rr2W8RHYA8Yq0KqY8DNsJzHw3UEWTJ3KqhWqeVCE8R24czzcsoUrE28xltEQ6qNTXZDHf3g==
+"@microsoft/signalr@^6.0.8":
+  version "6.0.8"
+  resolved "https://registry.yarnpkg.com/@microsoft/signalr/-/signalr-6.0.8.tgz#e55b4488b352c580c08bab381110cdfe42d4e53c"
+  integrity sha512-TgvNf8opondnX6nqN2AvWThOMl+CjPwxonhAbBpmLveECcnTuBibJQdiCUA4iwjBz26k2HIiiJ25DYgqXIJVQw==
   dependencies:
     abort-controller "^3.0.0"
     eventsource "^1.0.7"
@@ -13894,10 +13894,8 @@ watchpack@^1.6.1:
   resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-1.7.5.tgz#1267e6c55e0b9b5be44c2023aed5437a2c26c453"
   integrity sha512-9P3MWk6SrKjHsGkLT2KHXdQ/9SNkyoJbabxnKOoJepsvJjJG8uYTR3yTPxPQvNDI3w4Nz1xnE0TLHK4RIVe/MQ==
   dependencies:
-    chokidar "^3.4.1"
     graceful-fs "^4.1.2"
     neo-async "^2.5.0"
-    watchpack-chokidar2 "^2.0.1"
   optionalDependencies:
     chokidar "^3.4.1"
     watchpack-chokidar2 "^2.0.1"
