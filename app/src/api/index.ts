@@ -1,4 +1,5 @@
 import { QuickReplies, User } from "react-native-gifted-chat";
+import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 
 export interface AuthUser {
   phone: string,
@@ -73,19 +74,8 @@ export interface MatchedTripIntent {
   members: string[]
 }
 
-export interface IMessage {
-  _id: string | number
-  text: string
-  createdAt: Date | number
-  user: User
-  image?: string
-  video?: string
-  audio?: string
-  system?: boolean
-  sent?: boolean
-  received?: boolean
-  pending?: boolean
-  quickReplies?: QuickReplies
+export interface ChatMessage extends IChatMessage {
+  messageType: "proposal"
 }
 
 export interface Route {

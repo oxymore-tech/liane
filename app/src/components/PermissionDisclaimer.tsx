@@ -1,6 +1,5 @@
 import React from "react";
 import { View } from "react-native";
-import { Icon } from "react-native-elements";
 import tailwind from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";

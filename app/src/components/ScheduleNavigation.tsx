@@ -1,9 +1,9 @@
 import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ScheduleScreen from "@/screens/ScheduleScreen";
 import TripChatScreen from "@/screens/TripChatScreen";
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 function ScheduleNavigation() {
   return (

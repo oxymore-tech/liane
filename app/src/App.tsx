@@ -1,69 +1,33 @@
-import React, { useEffect, useRef } from "react";
-import * as Notifications from "expo-notifications";
-import i18n from "i18n-js";
-import en from "@/assets/translations/en.json";
-import fr from "@/assets/translations/fr.json";
+import React, { useRef } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { locale } from "@/api/i18n";
+import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
+import { TailwindProvider } from "tailwind-rn";
 import ContextProvider from "@/components/ContextProvider";
 import Navigation from "@/components/Navigation";
-import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
-
-i18n.translations = {
-  en,
-  fr
-};
-i18n.locale = locale;
-i18n.missingBehaviour = "guess";
+import utilities from "../tailwind.json";
 
 export type Subscription = {
   remove: () => void;
 };
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false
-  })
-});
-
 function App() {
 
-  const notificationListener = useRef<Subscription>();
-  const responseListener = useRef<Subscription>();
   const navigationRef = useRef(null);
 
-  useEffect(() => {
-
-    // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current = Notifications.addNotificationReceivedListener(() => {});
-
-    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {});
-
-    return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
-    };
-
-  });
-
   return (
-    <ContextProvider>
-      <NavigationContainer
-        ref={navigationRef}
-        onReady={() => {
-          DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
-        }}
-      >
-        <Navigation />
-      </NavigationContainer>
-    </ContextProvider>
+    // @ts-ignore
+    <TailwindProvider utilities={utilities}>
+      <ContextProvider>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => {
+            DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+          }}
+        >
+          <Navigation />
+        </NavigationContainer>
+      </ContextProvider>
+    </TailwindProvider>
   );
 }
 

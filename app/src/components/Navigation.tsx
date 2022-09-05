@@ -1,21 +1,18 @@
 import React, { useContext } from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import { useTailwind } from "tailwind-rn";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
-import NotificationsScreen from "@/screens/NotificationsScreen";
-import { Ionicons } from "@expo/vector-icons";
-import { tw } from "@/api/tailwind";
-import { LocationPermissionLevel, MatchedTripIntent, TripIntent } from "@/api";
-import LocationWizard2 from "@/screens/LocationWizard";
+import { MatchedTripIntent, TripIntent } from "@/api";
 import CreateTripScreen from "@/screens/CreateTripScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import HomeNavigation from "@/components/HomeNavigation";
 import ScheduleNavigation from "@/components/ScheduleNavigation";
-import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export type NavigationParamList = {
@@ -28,33 +25,13 @@ export type NavigationParamList = {
   SignUpCode: { phoneNumber: string };
 };
 
-const getTabBarVisibility = (route) => {
-  const routeName = getFocusedRouteNameFromRoute(route);
-  return routeName !== "Chat";
-};
-
 function Navigation() {
-
-  const { locationPermissionLevel, authUser } = useContext(AppContext);
-
-  if (locationPermissionLevel === LocationPermissionLevel.NEVER) {
-    return (
-      <Stack.Navigator>
-        <Stack.Screen
-          name="LocationWizard"
-          component={LocationWizard2}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    );
-  }
+  const { authUser } = useContext(AppContext);
+  const tw = useTailwind();
 
   if (authUser) {
     return (
       <Tab.Navigator
-        tabBarOptions={{
-          style: tw("h-20")
-        }}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused }: { focused:boolean }) => {
             const icons = {
@@ -92,17 +69,10 @@ function Navigation() {
         <Tab.Screen
           name="Schedule"
           component={ScheduleNavigation}
-          options={({ route }) => ({
-            tabBarVisible: getTabBarVisibility(route)
-          })}
         />
         <Tab.Screen
           name="CreateTrip"
           component={CreateTripScreen}
-        />
-        <Tab.Screen
-          name="Notifications"
-          component={NotificationsScreen}
         />
         <Tab.Screen
           name="Settings"

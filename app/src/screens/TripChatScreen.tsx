@@ -1,12 +1,8 @@
 import React, { useCallback, useContext, useState } from "react";
 import { RouteProp, useFocusEffect } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { NavigationParamList } from "@/components/Navigation";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Bubble, GiftedChat, InputToolbar } from "react-native-gifted-chat";
-import { tw } from "@/api/tailwind";
 import { HubConnection } from "@microsoft/signalr";
-import { IMessage, MatchedTripIntent } from "@/api";
-import { getChatConnection } from "@/api/chat";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -16,15 +12,19 @@ import {
   TouchableWithoutFeedback,
   View
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import RNDateTimePicker from "@react-native-community/datetimepicker";
+import { useTailwind } from "tailwind-rn";
+import { NavigationParamList } from "@/components/Navigation";
+import { ChatMessage, MatchedTripIntent } from "@/api";
+import { getChatConnection } from "@/api/chat";
 import ProposalBubble, { Proposal } from "@/components/chat/ProposalBubble";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
-import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "@/components/base/AppButton";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
 
 type ChatRouteProp = RouteProp<NavigationParamList, "Chat">;
-type ChatNavigationProp = StackNavigationProp<NavigationParamList, "Chat">;
+type ChatNavigationProp = NativeStackNavigationProp<NavigationParamList, "Chat">;
 type ChatProps = {
   route: ChatRouteProp;
   navigation: ChatNavigationProp;
@@ -32,7 +32,8 @@ type ChatProps = {
 
 const TripChatScreen = ({ route, navigation }: ChatProps) => {
   const { authUser } = useContext(AppContext);
-  const [messages, setMessages] = useState<IMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const tw = useTailwind();
 
   let connection: HubConnection;
   let groupId;
@@ -51,7 +52,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
 
         connection = getChatConnection();
         connection.start().then(() => {
-          connection.invoke("JoinGroupChat", groupId).then((conversation: IMessage[]) => {
+          connection.invoke("JoinGroupChat", groupId).then((conversation: ChatMessage[]) => {
             setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation));
             connection.on("ReceiveMessage", (message) => {
               setMessages((previousMessages) => GiftedChat.append(previousMessages, [message]));
@@ -68,7 +69,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     }, [])
   );
 
-  const onSend = useCallback((toSendMessages: IMessage[] = []) => {
+  const onSend = useCallback((toSendMessages: ChatMessage[] = []) => {
     if (matchedIntent != null) {
       connection.invoke("SendToGroup", toSendMessages[0], groupId)
         .catch((reason) => console.log(reason));
@@ -86,22 +87,21 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     }
   }, []);
 
-  const [proposal, setProposal] = useState<Proposal | null>(null);
+  // const [proposal, setProposal] = useState<Proposal | null>(null);
   const [proposalStart, setProposalStart] = useState<string>("");
   const [proposalEnd, setProposalEnd] = useState<string>("");
   const [proposalDay, setProposalDay] = useState<Date>(new Date());
 
-  const renderBubble = (props) => {
-    const isProposal = props.currentMessage.messageType === "proposal";
+  const renderBubble = ({ currentMessage }: Bubble<ChatMessage>["props"]) => {
+    const isProposal = currentMessage?.messageType === "proposal";
     return (
       isProposal
-        ? <ProposalBubble props={props} proposal={proposal!} />
+        ? <ProposalBubble />
         : (
           <Bubble
-            {...props}
             wrapperStyle={{
-              left: tw("bg-liane-yellow"),
-              right: tw("bg-liane-orange-lighter")
+              left: tw("bg-yellow-400"),
+              right: tw("bg-orange-400-lighter")
             }}
           />
         )
@@ -123,9 +123,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
       date: proposalDay
     };
 
-    setProposal(p);
-
-    const message: IMessage = {
+    const message: ChatMessage = {
       _id: "TODO",
       text: "proposal",
       createdAt: new Date(),
@@ -140,7 +138,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     setShowProposalModal(false);
   };
 
-  const renderActions = (props) => (
+  const renderActions = () => (
     <View style={tw("flex-row items-center justify-center h-full ml-1")}>
       <Ionicons
         name={showAccessory ? "add-circle" : "add-circle-outline"}
@@ -150,7 +148,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     </View>
   );
 
-  const renderAccessory = (props) => (
+  const renderAccessory = () => (
     showAccessory && (
       <View style={tw("flex-row h-full bg-gray-200")}>
         <AppButton

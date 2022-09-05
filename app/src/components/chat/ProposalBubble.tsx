@@ -1,8 +1,9 @@
-import { Bubble, MessageText } from "react-native-gifted-chat";
-import { tw } from "@/api/tailwind";
+import { Bubble, MessageText, RenderMessageTextProps } from "react-native-gifted-chat";
 import { View } from "react-native";
-import { AppButton } from "@/components/base/AppButton";
 import React from "react";
+import { useTailwind } from "tailwind-rn";
+import { AppButton } from "@/components/base/AppButton";
+import { ChatMessage } from "@/api";
 
 export interface Proposal {
   start: string,
@@ -10,21 +11,18 @@ export interface Proposal {
   date: Date
 }
 
-const ProposalBubble = (params: { props, proposal: Proposal }) => (
-  <Bubble
-    wrapperStyle={{
-      left: tw("bg-liane-yellow w-5/6 "),
-      right: tw("bg-liane-orange-lighter w-5/6 ")
-    }}
-    timeTextStyle={{
-      right: tw("text-black"),
-      left: tw("text-black")
-    }}
-    renderMessageText={(props) => {
-      props.currentMessage.text = `${props.user.name} fera le trajet ${params.proposal.start} → ${params.proposal.end} le ${params.proposal.date.toLocaleDateString()}`;
-      return (
+const ProposalBubble = () => {
+  const tw = useTailwind();
+
+  return (
+    <Bubble
+      wrapperStyle={{
+        left: tw("bg-yellow-400 w-5/6 "),
+        right: tw("bg-orange-400-lighter w-5/6 ")
+      }}
+      renderMessageText={(props: RenderMessageTextProps<ChatMessage>) => (
         <View style={tw("flex w-full")}>
-          <MessageText {...props} customTextStyle={tw("font-inter-bold ")} />
+          <MessageText customTextStyle={tw("font-inter-bold ")} currentMessage={props.currentMessage} />
 
           <View style={tw("flex-row justify-around w-full mt-5")}>
 
@@ -42,10 +40,9 @@ const ProposalBubble = (params: { props, proposal: Proposal }) => (
           </View>
 
         </View>
-      );
-    }}
-    {...params.props}
-  />
-);
+      )}
+    />
+  );
+};
 
 export default ProposalBubble;

@@ -22,16 +22,8 @@ export default {
   ],
   ios: {
     supportsTablet: true,
-    infoPlist: {
-      UIBackgroundModes: [
-        "location",
-        "fetch"
-      ],
-      NSLocationAlwaysUsageDescription: "This app collects your GPS location to anonymously register your car travels.",
-      NSLocationAlwaysAndWhenInUseUsageDescription: "This app collects your GPS location to anonymously register your car travels."
-    },
     bundleIdentifier: "tech.oxymore.liane",
-    buildNumber: "28",
+    buildNumber: "29",
     config: {
       googleMapsApiKey: GOOGLE_API_KEY
     }
@@ -40,20 +32,16 @@ export default {
     permissions: [
       "ACCESS_COARSE_LOCATION",
       "ACCESS_FINE_LOCATION",
-      "ACCESS_BACKGROUND_LOCATION",
-      "FOREGROUND_SERVICE",
       "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
-      "android.permission.FOREGROUND_SERVICE"
+      "android.permission.ACCESS_FINE_LOCATION"
     ],
     package: "tech.oxymore.liane",
-    versionCode: 28,
+    versionCode: 29,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#FFFFFF"
     },
-    softwareKeyboardLayoutMode: "pan",
     config: {
       googleMaps: {
         apiKey: GOOGLE_API_KEY

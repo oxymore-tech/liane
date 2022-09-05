@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useState } from "react";
 import { Image, KeyboardAvoidingView, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { tw } from "@/api/tailwind";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTailwind } from "tailwind-rn";
 import { login } from "@/api/client";
 import { AppContext } from "@/components/ContextProvider";
 import { AppTextInput } from "@/components/base/AppTextInput";
@@ -13,7 +13,7 @@ import { NavigationParamList } from "@/components/Navigation";
 const logo = require("@/assets/logo_orange.png");
 
 type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
-type SignUpCodeNavigationProp = StackNavigationProp<NavigationParamList, "SignUpCode">;
+type SignUpCodeNavigationProp = NativeStackNavigationProp<NavigationParamList, "SignUpCode">;
 type SignUpCodeProps = {
   route: SignUpCodeRouteProp;
   navigation: SignUpCodeNavigationProp;
@@ -22,20 +22,21 @@ type SignUpCodeProps = {
 const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   const [phoneNumber] = useState(route.params.phoneNumber);
   const [code, setCode] = useState("");
-  const { expoPushToken, setAuthUser } = useContext(AppContext);
+  const { setAuthUser } = useContext(AppContext);
+  const tw = useTailwind();
 
   const signIn = useCallback(async () => {
     try {
-      const authUser = await login(phoneNumber, code, expoPushToken);
+      const authUser = await login(phoneNumber, code);
       setAuthUser(authUser);
     } catch (e) {
       setCode("");
       navigation.navigate("SignUp", { phoneNumber, authFailure: true });
     }
-  }, [phoneNumber, code, expoPushToken]);
+  }, [phoneNumber, code]);
 
   return (
-    <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
+    <KeyboardAvoidingView style={tw("flex h-full bg-yellow-400")}>
       <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}
@@ -61,7 +62,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
             maxLength={6}
           />
           <AppButton
-            buttonStyle={tw("rounded-r-3xl bg-liane-orange w-12 h-12")}
+            buttonStyle={tw("rounded-r-3xl bg-orange-400 w-12 h-12")}
             iconStyle={tw("text-3xl text-white font-bold")}
             disabled={code.length < 6}
             onPress={signIn}

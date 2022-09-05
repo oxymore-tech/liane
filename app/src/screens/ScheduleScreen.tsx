@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { FlatList, SafeAreaView, View } from "react-native";
-import { tw } from "@/api/tailwind";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
+import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { MatchedTripIntent, TripIntent } from "@/api";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { NavigationParamList } from "@/components/Navigation";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches, getTripIntents } from "@/api/client";
-import { useFocusEffect } from "@react-navigation/native";
 
-export type ScheduleNavigationProp = StackNavigationProp<NavigationParamList, "Schedule">;
+export type ScheduleNavigationProp = NativeStackNavigationProp<NavigationParamList, "Schedule">;
 
 type ScheduleProps = {
   navigation: ScheduleNavigationProp;
 };
 
 const ScheduleScreen = ({ navigation }: ScheduleProps) => {
+  const tw = useTailwind();
   const [tripIntentsToMatch, setTripIntentsToMatch] = useState<[TripIntent, MatchedTripIntent | null][]>([]);
 
   const refreshIntents = () => {
@@ -50,7 +51,7 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
   return (
     <SafeAreaView style={tw("flex flex-col h-full")}>
 
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-orange-400")}>
         <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
       </View>
 

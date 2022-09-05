@@ -9,121 +9,48 @@ import {
   Inter_700Bold,
   useFonts
 } from "@expo-google-fonts/inter";
-import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { me } from "@/api/client";
-import * as Location from "expo-location";
-import { startLocationTask } from "@/api/location";
-import { AuthUser, LocationPermissionLevel } from "@/api";
-import { getStoredToken } from "@/api/storage";
 import * as SplashScreen from "expo-splash-screen";
+import { me } from "@/api/client";
+import { getLastKnownLocation } from "@/api/location";
+import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
+import { getStoredToken } from "@/api/storage";
 import { registerRum, registerRumUser } from "@/api/rum";
 
-/**
- * Application context format.
- */
 interface AppContextProps {
-  appLoaded: boolean; // Whether the app. has loaded
-  expoPushToken?: string; // Notification token
-  locationPermissionLevel: LocationPermissionLevel; // Tracking permission level
-  setLocationPermissionLevel: (locationPermissionGranted: LocationPermissionLevel) => void; // Modifier for the previous
-  authUser?: AuthUser; // Authenticated user
-  setAuthUser: (authUser?: AuthUser) => void; // Modifier for the previous
+  appLoaded: boolean;
+  locationPermission: LocationPermissionLevel;
+  setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
+  position?: LatLng;
+  authUser?: AuthUser;
+  setAuthUser: (authUser?: AuthUser) => void;
 }
 
-/**
- * Create default context.
- */
 export const AppContext = createContext<AppContextProps>({
   appLoaded: false,
-  locationPermissionLevel: LocationPermissionLevel.NEVER,
-  setLocationPermissionLevel: () => { },
+  locationPermission: LocationPermissionLevel.NEVER,
+  setLocationPermission: () => { },
   setAuthUser: () => { }
 });
 
-/**
- * Ask for the permission to send push notifications and define their
- * parameters.
- */
-async function registerForPushNotificationsAsync(): Promise<string|undefined> {
-  try {
-    if (Constants.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== "granted") {
-        alert("Failed to get push token for push notification!");
-        return undefined;
-      }
-
-      const expoPushToken = await Notifications.getExpoPushTokenAsync();
-
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#FF231F7C"
-        });
-      }
-      return expoPushToken.data;
-    }
-    alert("Must use physical device for Push Notifications");
-  } catch (e) {
-    console.log("error while registering for push notifications", e);
-  }
-  return undefined;
-}
-
-/**
- * Initialise the context by getting whether the app. is
- * authorised to track the device and at which level.
- */
-async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
-  const permissionBackground = await Location.getBackgroundPermissionsAsync();
-  const permissionForeground = await Location.getForegroundPermissionsAsync();
+async function initContext(): Promise<{ authUser?:AuthUser, locationPermission:LocationPermissionLevel, position:LatLng }> {
+  await SplashScreen.preventAutoHideAsync();
   const storedToken = await getStoredToken();
   const authUser = storedToken ? await me().catch(() => undefined) : undefined;
 
-  console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
   console.log(`Authenticated user is ${JSON.stringify(authUser)}`);
-
-  // Select the right permission level
-  // with the assumption that : background => foreground
-  let permissionLevel;
-  if (permissionBackground.status === "granted") {
-    permissionLevel = LocationPermissionLevel.ALWAYS;
-  } else if (permissionForeground.status === "granted") {
-    permissionLevel = LocationPermissionLevel.ACTIVE;
-  } else if (permissionForeground.status === "denied" || permissionBackground.status === "denied") {
-    permissionLevel = LocationPermissionLevel.NEVER;
-  } else {
-    permissionLevel = LocationPermissionLevel.NEVER;
-  }
 
   await registerRum();
   if (authUser && authUser.phone && authUser.token) {
     await registerRumUser(authUser.phone, authUser.token);
   }
 
-  return { authUser, permission: permissionLevel };
+  const locationPermission = LocationPermissionLevel.NEVER;
+  const position = await getLastKnownLocation();
+  return { authUser, locationPermission, position };
 }
 
-async function waitForContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
-  await SplashScreen.preventAutoHideAsync();
-  return initContext();
-}
-
-/**
- * Define the context of the application.
- */
 function ContextProvider(props: { children: ReactNode }) {
   const [fontLoaded] = useFonts({
     Inter_ExtraLight: Inter_200ExtraLight,
@@ -133,10 +60,10 @@ function ContextProvider(props: { children: ReactNode }) {
     Inter_Bold: Inter_700Bold
   });
 
-  const [expoPushToken, setExpoPushToken] = useState<string>();
   const [appLoaded, setAppLoaded] = useState(false);
+  const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
+  const [position, setPosition] = useState<LatLng>();
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
-  const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
 
   const setAuthUser = async (a?: AuthUser) => {
     try {
@@ -153,28 +80,13 @@ function ContextProvider(props: { children: ReactNode }) {
     }
   };
 
-  // Launch the locations recuperation
-  useEffect(() => {
-    startLocationTask(locationPermissionLevel).then();
-  }, [locationPermissionLevel]);
-
   // Get the context and wait for it before showing the app
   useEffect(() => {
-    waitForContext()
+    initContext()
       .then((p) => {
-        setLocationPermissionLevel(p.permission);
+        setPosition(p.position);
+        setLocationPermission(p.locationPermission);
         setAuthUser(p.authUser).then(() => setAppLoaded(true));
-      });
-  }, []);
-
-  // Ask for push notification permission
-  useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => {
-        setExpoPushToken(token);
-      }, (result) => {
-        console.log("Impossible de récupérer de jeton d'authentification des notifications, l'application ne peut donc pas fonctionner :");
-        console.log(result);
       });
   }, []);
 
@@ -199,9 +111,9 @@ function ContextProvider(props: { children: ReactNode }) {
       <AppContext.Provider
         value={{
           appLoaded: appLoaded && fontLoaded,
-          expoPushToken,
-          locationPermissionLevel,
-          setLocationPermissionLevel,
+          locationPermission,
+          setLocationPermission,
+          position,
           authUser,
           setAuthUser
         }}

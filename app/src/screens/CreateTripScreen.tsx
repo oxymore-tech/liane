@@ -2,13 +2,12 @@ import React, { useContext, useState } from "react";
 import {
   SafeAreaView, Switch, TouchableOpacity, View, Alert
 } from "react-native";
-import { tw } from "@/api/tailwind";
-import { AppText } from "@/components/base/AppText";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
-import { ToggleButton } from "react-native-paper";
+import Autocomplete from "react-native-autocomplete-input";
+import { useTailwind } from "tailwind-rn";
+import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 import { getRallyingPoints, sendTripIntent } from "@/api/client";
-import Autocomplete from "react-native-autocomplete-input";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
@@ -16,6 +15,7 @@ import { AppContext } from "@/components/ContextProvider";
 
 const CreateTripScreen = () => {
   const { authUser } = useContext(AppContext);
+  const tw = useTailwind();
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
 
@@ -155,7 +155,7 @@ const CreateTripScreen = () => {
 
   return (
     <SafeAreaView>
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-orange-400")}>
         <AppText style={tw("absolute text-lg text-center text-white w-full")}>
           Enregistrement d&apos;un trajet
         </AppText>
@@ -344,38 +344,43 @@ const CreateTripScreen = () => {
 
         </View>
 
-        {/* Status selection */}
         <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center")}>
 
-          <ToggleButton
-            disabled
-            style={tw(`flex flex-grow h-full rounded-l-xl rounded-r-none ${status.passengerStatus ? "bg-liane-orange" : ""}`)}
-            icon={() => <View><AppText style={tw(`text-base ${status.passengerStatus ? "text-white" : "text-gray-500"}`)}>Passager</AppText></View>}
-            status={status.passengerStatus ? "checked" : "unchecked"}
-            onPress={() => onStatusButtonToggle("passenger")}
-          />
+          <View>
+            <AppText style={tw(`text-base ${status.passengerStatus ? "text-white" : "text-gray-500"}`)}>Passager</AppText>
+            <Switch
+              disabled
+              style={tw(`flex flex-grow h-full rounded-l-xl rounded-r-none ${status.passengerStatus ? "bg-orange-400" : ""}`)}
+              value={status.passengerStatus}
+              onValueChange={() => onStatusButtonToggle("passenger")}
+            />
+          </View>
 
-          <ToggleButton
-            disabled
-            style={tw(`flex flex-grow h-full rounded-none ${status.neutralStatus ? "bg-liane-orange" : ""}`)}
-            icon={() => <View><AppText style={tw(`text-base ${status.neutralStatus ? "text-white" : "text-gray-500"}`)}>Neutre</AppText></View>}
-            status={status.neutralStatus ? "checked" : "unchecked"}
-            onPress={() => onStatusButtonToggle("neutral")}
-          />
+          <View>
+            <AppText style={tw(`text-base ${status.neutralStatus ? "text-white" : "text-gray-500"}`)}>Neutre</AppText>
+            <Switch
+              disabled
+              style={tw(`flex flex-grow h-full rounded-none ${status.neutralStatus ? "bg-orange-400" : ""}`)}
+              value={status.neutralStatus}
+              onValueChange={() => onStatusButtonToggle("neutral")}
+            />
+          </View>
 
-          <ToggleButton
-            disabled
-            style={tw(`flex flex-grow h-full rounded-r-xl rounded-l-none ${status.driverStatus ? "bg-liane-orange" : ""}`)}
-            icon={() => <View><AppText style={tw(`text-base ${status.driverStatus ? "text-white" : "text-gray-500"}`)}>Conducteur</AppText></View>}
-            status={status.driverStatus ? "checked" : "unchecked"}
-            onPress={() => onStatusButtonToggle("driver")}
-          />
+          <View>
+            <AppText style={tw(`text-base ${status.driverStatus ? "text-white" : "text-gray-500"}`)}>Conducteur</AppText>
+            <Switch
+              disabled
+              style={tw(`flex flex-grow h-full rounded-r-xl rounded-l-none ${status.driverStatus ? "bg-orange-400" : ""}`)}
+              value={status.driverStatus}
+              onValueChange={() => onStatusButtonToggle("driver")}
+            />
+          </View>
 
         </View>
 
         <AppButton
           title="Publier"
-          buttonStyle={tw("bg-liane-orange rounded-full mx-10")}
+          buttonStyle={tw("bg-orange-400 rounded-full mx-10")}
           onPress={onPublicationPressed}
         />
 

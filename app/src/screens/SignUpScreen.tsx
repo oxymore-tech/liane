@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { Image, KeyboardAvoidingView, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { tw } from "@/api/tailwind";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTailwind } from "tailwind-rn";
 import { sendSms } from "@/api/client";
 import { AppButton } from "@/components/base/AppButton";
 import { AppTextInput } from "@/components/base/AppTextInput";
@@ -15,7 +15,7 @@ const logo = require("@/assets/logo_orange.png");
 const t = scopedTranslate("SignUp");
 
 type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
-type SignUpNavigationProp = StackNavigationProp<NavigationParamList, "SignUp">;
+type SignUpNavigationProp = NativeStackNavigationProp<NavigationParamList, "SignUp">;
 
 type SignUpProps = {
   route: SignUpRouteProp;
@@ -23,6 +23,8 @@ type SignUpProps = {
 };
 
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
+  const tw = useTailwind();
+
   const authFailure = route.params?.authFailure && t("Le code est invalide veuillez rééssayer");
 
   const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
@@ -41,7 +43,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   return (
     <KeyboardAvoidingView
-      style={tw("flex h-full bg-liane-yellow")}
+      style={tw("flex h-full bg-yellow-400")}
     >
       <View style={tw("h-10 items-center my-20")}>
         <Image
@@ -71,7 +73,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             maxLength={10}
           />
           <AppButton
-            buttonStyle={tw("rounded-r-3xl bg-liane-orange w-12 h-12")}
+            buttonStyle={tw("rounded-r-3xl bg-orange-400 w-12 h-12")}
             iconStyle={tw("text-3xl text-white font-bold")}
             disabled={phoneNumber.length < 10}
             onPress={signUp}

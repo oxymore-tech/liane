@@ -1,6 +1,5 @@
 import React, { ReactNode } from "react";
-import { Text } from "react-native-elements";
-import { TextProps } from "react-native";
+import { Text, TextProps } from "react-native";
 
 export interface AppTextProps extends TextProps {
   children?: ReactNode;

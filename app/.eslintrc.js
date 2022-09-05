@@ -8,10 +8,11 @@ module.exports = {
     "no-underscore-dangle": "off",
     "react/require-default-props": "off",
     "import/prefer-default-export": "off",
+    "import/extensions": "off",
     "@typescript-eslint/comma-dangle": ["error", "never"],
     "no-alert": "off",
     "object-curly-newline": ["error", {
-      "ObjectExpression": {"consistent": true},
+      "ObjectExpression": {"consistent": true} ,
       "ObjectPattern": {"consistent": true},
       "ImportDeclaration": {
         "multiline": true,

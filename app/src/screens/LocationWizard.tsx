@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
 import { Alert, Image, ScrollView, View } from "react-native";
-import { AppContext } from "@/components/ContextProvider";
 import * as Location from "expo-location";
+import { useTailwind } from "tailwind-rn";
+import { AppContext } from "@/components/ContextProvider";
 import { LocationPermissionLevel } from "@/api";
-import { tw } from "@/api/tailwind";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 
@@ -15,6 +15,7 @@ const logo = require("@/assets/logo_orange.png");
  */
 function getWizardText(step: number) {
   let view;
+  const tw = useTailwind();
 
   switch (step) {
     case 0:
@@ -85,11 +86,12 @@ function alert(message: string, callback: Function) {
  * React component.
  */
 const LocationWizard2 = () => {
-  const { setLocationPermissionLevel, authUser } = useContext(AppContext);
+  const { setLocationPermission, authUser } = useContext(AppContext);
   console.log(`AuthUser = ${authUser}`);
   const [step, setStep] = useState(authUser ? 1 : 0);
   console.log(`Current step =${step}`);
   const [optionalText, setOptionalText] = useState("");
+  const tw = useTailwind();
 
   // Go to next step
   const next = () => {
@@ -106,7 +108,7 @@ const LocationWizard2 = () => {
 
       if (permission) {
         if (permission.status === "granted") {
-          setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+          setLocationPermission(LocationPermissionLevel.ACTIVE);
         } else if (permission.canAskAgain) {
           setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
         }
@@ -127,12 +129,12 @@ const LocationWizard2 = () => {
 
           if (permissionBackground) {
             if (permissionBackground.status === "granted") {
-              setLocationPermissionLevel(LocationPermissionLevel.ALWAYS);
+              setLocationPermission(LocationPermissionLevel.ALWAYS);
             } else if (permissionBackground.canAskAgain) {
-              setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+              setLocationPermission(LocationPermissionLevel.ACTIVE);
               setOptionalText("Vous avez empêché Liane de re-demander cette permission, rendez-vous dans les paramètres pour la modifier.");
             } else {
-              setLocationPermissionLevel(LocationPermissionLevel.ACTIVE);
+              setLocationPermission(LocationPermissionLevel.ACTIVE);
             }
           }
         } else if (!permissionForeground.canAskAgain) {
@@ -144,11 +146,11 @@ const LocationWizard2 = () => {
 
   // Ask for no tracking (for now)
   const requestNoLocPerm = async () => {
-    setLocationPermissionLevel(LocationPermissionLevel.NOT_NOW);
+    setLocationPermission(LocationPermissionLevel.NOT_NOW);
   };
 
   return (
-    <View style={tw("h-full min-h-full bg-liane-yellow content-center")}>
+    <View style={tw("h-full min-h-full bg-yellow-400 content-center")}>
       <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}
@@ -159,12 +161,12 @@ const LocationWizard2 = () => {
       { getWizardText(step) }
       { optionalText !== "" && (<AppText style={tw("text-center text-sm text-red-600 m-2")}>{ optionalText }</AppText>) }
       { step === 0
-        ? (<View><AppButton buttonStyle={tw("bg-liane-orange rounded-full m-10")} onPress={next} title="Continuer" /></View>)
+        ? (<View><AppButton buttonStyle={tw("bg-orange-400 rounded-full m-10")} onPress={next} title="Continuer" /></View>)
         : (
           <View style={tw("my-10")}>
-            <AppButton buttonStyle={tw("bg-liane-orange rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
-            <AppButton buttonStyle={tw("bg-liane-orange-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
-            <AppButton buttonStyle={tw("bg-liane-orange-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
+            <AppButton buttonStyle={tw("bg-orange-400 rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
+            <AppButton buttonStyle={tw("bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
+            <AppButton buttonStyle={tw("bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
           </View>
         )}
     </View>

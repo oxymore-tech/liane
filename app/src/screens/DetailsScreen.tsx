@@ -1,18 +1,19 @@
 import React, { useEffect } from "react";
 import { SafeAreaView, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { tw } from "@/api/tailwind";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTailwind } from "tailwind-rn";
 import { NavigationParamList } from "@/components/Navigation";
 
 type DetailsRouteProp = RouteProp<NavigationParamList, "Details">;
-type DetailsNavigationProp = StackNavigationProp<NavigationParamList, "Details">;
+type DetailsNavigationProp = NativeStackNavigationProp<NavigationParamList, "Details">;
 type DetailsProps = {
   route: DetailsRouteProp;
   navigation: DetailsNavigationProp;
 };
 
 const DetailsScreen = ({ route, navigation }: DetailsProps) => {
+  const tw = useTailwind();
 
   useEffect(() => {
     navigation.setOptions({ headerTitle: `Détails du trajet [ID = ${route.params.tripID}]` });

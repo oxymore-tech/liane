@@ -1,8 +1,8 @@
-import { tw } from "@/api/tailwind";
 import { Alert, TouchableOpacity, View } from "react-native";
-import { AppText } from "@/components/base/AppText";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { useTailwind } from "tailwind-rn";
+import { AppText } from "@/components/base/AppText";
 import { ScheduleNavigationProp } from "@/screens/ScheduleScreen";
 import { MatchedTripIntent, TripIntent } from "@/api";
 import { deleteTripIntent } from "@/api/client";
@@ -15,6 +15,7 @@ interface ScheduleTripItemProps {
 }
 
 const ScheduleTripItem = ({ tripIntent, matchedIntent, toDetails, refreshList } : ScheduleTripItemProps) => {
+  const tw = useTailwind();
 
   const goToDetails = () => {
     toDetails.navigate("Chat", { tripIntent, matchedIntent });
