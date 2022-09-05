@@ -6,10 +6,6 @@ import ContextProvider from "@/components/ContextProvider";
 import Navigation from "@/components/Navigation";
 import utilities from "../tailwind.json";
 
-export type Subscription = {
-  remove: () => void;
-};
-
 function App() {
 
   const navigationRef = useRef(null);

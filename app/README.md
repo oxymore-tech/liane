@@ -13,30 +13,29 @@ Basé sur [react native](https://fr.reactjs.org/) et [expo](https://expo.io/).
 ```bash
 cd app
 nvm use            # sélectionne la bonne version de node
-corepack enable    # active yarn
 
 # Install expo and eas
-yarn global add expo-cli
-yarn global add eas-cli
+npm install --global add expo-cli
+npm install --global add eas-cli
 ```
 
-Installer Expo GO sur téléphone ou tablette
+Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
 
-## Dev
+## Lancer le projet en mode développement
 
 ```bash
 nvm use
-yarn
-yarn web
-```
 
-Puis scanner le QR code affiché à l'écran.
+npm install
+
+npm run android
+# ou si cela ne marche pas
+npm run android --tunnel
+```
 
 ## Déploiement en production
 
 ```bash
 nvm use
-eas build
-eas submit
+eas build --auto-submit
 ```
-

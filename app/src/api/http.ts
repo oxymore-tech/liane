@@ -1,7 +1,7 @@
+import Constants from "expo-constants";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
-import Constants from "expo-constants";
 
 const domain = Constants.manifest?.extra?.envName ?? "liane-dev";
 
