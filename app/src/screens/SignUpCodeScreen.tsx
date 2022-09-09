@@ -9,8 +9,11 @@ import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppButton } from "@/components/base/AppButton";
 import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
+import { scopedTranslate } from "@/api/i18n";
 
 const logo = require("@/assets/logo_orange.png");
+
+const t = scopedTranslate("SignUpCode");
 
 type SignUpCodeRouteProp = RouteProp<NavigationParamList, "SignUpCode">;
 type SignUpCodeNavigationProp = NativeStackNavigationProp<NavigationParamList, "SignUpCode">;
@@ -36,7 +39,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   }, [phoneNumber, code]);
 
   return (
-    <KeyboardAvoidingView style={tw("flex h-full bg-yellow-400")}>
+    <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
       <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}
@@ -47,7 +50,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
 
       <View>
         <AppText style={tw("text-center text-lg text-white mx-10 mb-5")}>
-          Un code vous a été envoyé par SMS.
+          {t("Un code vous a été envoyé par SMS")}
         </AppText>
         <View
           style={tw("rounded-full m-20 bg-white text-2xl flex flex-row h-12")}
@@ -62,8 +65,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
             maxLength={6}
           />
           <AppButton
-            buttonStyle={tw("rounded-r-3xl bg-orange-400 w-12 h-12")}
-            iconStyle={tw("text-3xl text-white font-bold")}
+            style={tw("rounded-r-full w-12 h-12")}
             disabled={code.length < 6}
             onPress={signIn}
             icon="checkmark-circle-outline"

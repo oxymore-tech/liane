@@ -22,7 +22,7 @@ const ProposalBubble = () => {
       }}
       renderMessageText={(props: RenderMessageTextProps<ChatMessage>) => (
         <View style={tw("flex w-full")}>
-          <MessageText customTextStyle={tw("font-inter-bold ")} currentMessage={props.currentMessage} />
+          <MessageText customTextStyle={tw("font-bold ")} currentMessage={props.currentMessage} />
 
           <View style={tw("flex-row justify-around w-full mt-5")}>
 

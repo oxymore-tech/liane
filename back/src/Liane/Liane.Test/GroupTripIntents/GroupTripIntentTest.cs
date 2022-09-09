@@ -129,7 +129,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (grouping.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -176,7 +176,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (grouping.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -206,7 +206,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (grouping.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -238,7 +238,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (grouping.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
         DisplayGroups(intentGroups);
 
         // See plan
@@ -270,7 +270,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (grouping.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -302,7 +302,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (grouping.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 

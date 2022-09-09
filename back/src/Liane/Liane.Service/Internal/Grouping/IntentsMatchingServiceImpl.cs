@@ -19,8 +19,8 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
     private readonly object groupsLock = new object();
     private static IEnumerable<List<ProcessedTripIntent>> IntentGroups { get; set; } = new List<List<ProcessedTripIntent>>();
 
-    private IMongoDatabase? mongo;
-    private ICurrentContext currentContext;
+    private readonly IMongoDatabase? mongo;
+    private readonly ICurrentContext currentContext;
 
     public IntentsMatchingServiceImpl(MongoSettings? settings, ICurrentContext currentContext)
     {
@@ -76,7 +76,7 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
         return Task.FromResult(myGroups);
     }
     
-    public IEnumerable<List<ProcessedTripIntent>> Group(List<DbTripIntent> tripsToPoints)
+    public static IEnumerable<List<ProcessedTripIntent>> Group(List<DbTripIntent> tripsToPoints)
     {
         // Select all possible pair of points for each trip
         var tripsTo2Points = new List<ProcessedTripIntent>();

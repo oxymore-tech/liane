@@ -98,11 +98,15 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
   const { body, bodyAsJson } = options;
   const url = formatUrl(uri, options);
-  console.log("URL", url);
+  const formatedBody = formatBody(body, bodyAsJson);
+  const formatedHeaders = await headers(body, bodyAsJson);
+  if (__DEV__) {
+    console.debug(`Fetch API ${method} "${url}"`, formatedBody ?? "");
+  }
   const response = await fetch(url, {
-    headers: await headers(body, bodyAsJson),
+    headers: formatedHeaders,
     method,
-    body: formatBody(body, bodyAsJson)
+    body: formatedBody
   });
   if (response.status !== 200 && response.status !== 201) {
     switch (response.status) {

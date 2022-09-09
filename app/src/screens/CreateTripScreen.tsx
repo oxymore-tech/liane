@@ -154,7 +154,7 @@ const CreateTripScreen = () => {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={tw("h-full")}>
       <View style={tw("pt-5 pb-5 flex-row items-center bg-orange-400")}>
         <AppText style={tw("absolute text-lg text-center text-white w-full")}>
           Enregistrement d&apos;un trajet
@@ -167,9 +167,9 @@ const CreateTripScreen = () => {
         <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center z-10")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-inter-extralight")}>Trajet</AppText>
+            <AppText style={tw("text-2xl font-extralight")}>Trajet</AppText>
             <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-inter-medium")}>Aller - Retour</AppText>
+              <AppText style={tw("text-sm font-medium")}>Aller - Retour</AppText>
               <Switch
                 trackColor={{ false: "#767577", true: "#FF5B22" }}
                 thumbColor="#f4f3f4"
@@ -190,15 +190,15 @@ const CreateTripScreen = () => {
           <View style={tw("flex flex-row w-full items-center")}>
 
             <View style={tw("flex flex-col items-center mr-3")}>
-              <View style={tw("h-3 w-3 bg-orange-light rounded-full -mb-1")} />
-              <View style={tw("h-24 w-3 border-solid border border-orange-light")} />
-              <View style={tw("h-3 w-3 bg-orange-light rounded-full -mt-1")} />
+              <View style={tw("h-3 w-3 bg-liane-yellow rounded-full -mb-1")} />
+              <View style={tw("h-24 w-3 border-solid border border-liane-yellow")} />
+              <View style={tw("h-3 w-3 bg-liane-yellow rounded-full -mt-1")} />
             </View>
 
             <View style={tw("flex-grow self-stretch")}>
 
-              <View style={tw("absolute min-h-1/2 -top-2 left-0 right-0 z-20")}>
-                <AppText style={tw("flex-row text-base font-inter-medium")}> Départ</AppText>
+              <View style={tw("absolute min-h-full -top-2 left-0 right-0 z-20")}>
+                <AppText style={tw("flex-row text-base font-medium")}> Départ</AppText>
                 <Autocomplete
                   inputContainerStyle={tw("border-0")}
                   renderTextInput={(props) => <AppTextInput {...props} style={tw("bg-white rounded px-1.5 py-0.5")} />}
@@ -222,8 +222,8 @@ const CreateTripScreen = () => {
                   }}
                 />
               </View>
-              <View style={tw("absolute min-h-1/2 top-1/2 left-0 right-0 z-10")}>
-                <AppText style={tw("flex-row text-base font-inter-medium")}> Arrivé</AppText>
+              <View style={tw("absolute min-h-full top-1/2 left-0 right-0 z-10")}>
+                <AppText style={tw("flex-row text-base font-medium")}> Arrivé</AppText>
                 <Autocomplete
                   inputContainerStyle={tw("border-0")}
                   renderTextInput={(props) => <AppTextInput {...props} style={tw("bg-white rounded px-1.5 py-0.5")} />}
@@ -256,9 +256,9 @@ const CreateTripScreen = () => {
         <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-inter-normal font-inter-extralight")}>Horaire</AppText>
+            <AppText style={tw("text-2xl font-normal font-extralight")}>Horaire</AppText>
             <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-inter-medium text-gray-500")}>Régulier</AppText>
+              <AppText style={tw("text-sm font-medium text-gray-500")}>Régulier</AppText>
               <Switch
                 disabled
                 trackColor={{ false: "#767577", true: "#FF5B22" }}
@@ -275,18 +275,16 @@ const CreateTripScreen = () => {
             <AppButton
               disabled
               title={day.toDateString()}
-              titleStyle={tw("text-gray-600")}
-              buttonStyle={tw("rounded-md bg-white py-2 px-4")}
+              style={tw("rounded-md bg-white py-2 px-4")}
               onPress={() => setShowDay(true)}
             />
 
             <View style={tw("flex flex-row w-full justify-around items-center mt-2")}>
               <View style={tw("flex flex-col")}>
-                <AppText style={tw("text-base font-inter-medium")}> Aller</AppText>
+                <AppText style={tw("text-base font-medium")}> Aller</AppText>
                 <AppButton
                   title={`${fromTime.getHours()}:${fromTime.getMinutes() < 10 ? "0" : ""}${fromTime.getMinutes()}`}
-                  titleStyle={tw("text-gray-600")}
-                  buttonStyle={tw("bg-gray-200")}
+                  style={tw("bg-gray-200")}
                   onPress={() => setShowFromTime(true)}
                 />
               </View>
@@ -294,11 +292,10 @@ const CreateTripScreen = () => {
                   isRoundTrip
                   && (
                   <View style={tw("flex flex-col")}>
-                    <AppText style={tw("text-base font-inter-medium")}> Retour</AppText>
+                    <AppText style={tw("text-base font-medium")}> Retour</AppText>
                     <AppButton
                       title={toTime != null ? `${toTime.getHours()}:${toTime.getMinutes() < 10 ? "0" : ""}${toTime.getMinutes()}` : ""}
-                      titleStyle={tw("text-gray-600")}
-                      buttonStyle={tw("bg-gray-200")}
+                      style={tw("bg-gray-200")}
                       onPress={() => setShowToTime(true)}
                     />
                   </View>
@@ -380,7 +377,7 @@ const CreateTripScreen = () => {
 
         <AppButton
           title="Publier"
-          buttonStyle={tw("bg-orange-400 rounded-full mx-10")}
+          style={tw("bg-orange-400 rounded-full mx-10")}
           onPress={onPublicationPressed}
         />
 

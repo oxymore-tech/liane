@@ -42,9 +42,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
   }, [phoneNumber]);
 
   return (
-    <KeyboardAvoidingView
-      style={tw("flex h-full bg-liane-yellow")}
-    >
+    <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
       <View style={tw("h-10 items-center my-20")}>
         <Image
           style={tw("flex-1 w-64")}
@@ -73,8 +71,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             maxLength={10}
           />
           <AppButton
-            style={tw("rounded-full bg-blue-500 w-12")}
-            iconStyle={tw("text-3xl text-white font-bold")}
+            style={tw("rounded-r-full w-12 h-12")}
             disabled={phoneNumber.length < 10}
             onPress={signUp}
             icon="arrow-forward-circle-outline"

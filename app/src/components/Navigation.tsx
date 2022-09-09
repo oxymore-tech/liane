@@ -9,7 +9,6 @@ import { AppContext } from "@/components/ContextProvider";
 import { MatchedTripIntent, TripIntent } from "@/api";
 import CreateTripScreen from "@/screens/CreateTripScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
-import HomeNavigation from "@/components/HomeNavigation";
 import ScheduleNavigation from "@/components/ScheduleNavigation";
 
 const Stack = createNativeStackNavigator();
@@ -57,25 +56,24 @@ function Navigation() {
               }
             };
 
-            return <Ionicons name={icons[route.name][focused]} style={tw(`text-4xl mt-4 ${focused ? "text-orange" : ""}`)} />;
+            return <Ionicons name={icons[route.name][focused]} style={tw(`text-4xl mt-4 ${focused ? "text-liane-orange" : ""}`)} />;
           },
           tabBarLabel: ""
         })}
       >
         <Tab.Screen
           name="Home"
-          component={HomeNavigation}
-        />
-        <Tab.Screen
-          name="Schedule"
+          options={{ headerShown: false }}
           component={ScheduleNavigation}
         />
         <Tab.Screen
           name="CreateTrip"
+          options={{ headerShown: false }}
           component={CreateTripScreen}
         />
         <Tab.Screen
           name="Settings"
+          options={{ headerShown: false }}
           component={SettingsScreen}
         />
 
