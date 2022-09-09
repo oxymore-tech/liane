@@ -1,4 +1,3 @@
-import { QuickReplies, User } from "react-native-gifted-chat";
 import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 
 export interface AuthUser {

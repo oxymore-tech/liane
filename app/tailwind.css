@@ -420,6 +420,16 @@
   background-color: rgb(250 204 21 / var(--tw-bg-opacity))
 }
 
+.bg-liane-pink {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 132 132 / var(--tw-bg-opacity))
+}
+
+.bg-blue-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(96 165 250 / var(--tw-bg-opacity))
+}
+
 .p-4 {
   padding: 1rem
 }

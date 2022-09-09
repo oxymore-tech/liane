@@ -42,9 +42,6 @@ async function initContext(): Promise<{ authUser?:AuthUser, locationPermission:L
   console.log(`Authenticated user is ${JSON.stringify(authUser)}`);
 
   await registerRum();
-  if (authUser && authUser.phone && authUser.token) {
-    await registerRumUser(authUser.phone, authUser.token);
-  }
 
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
@@ -71,6 +68,7 @@ function ContextProvider(props: { children: ReactNode }) {
         const token = a?.token;
         console.log("storeToken", a?.token);
         await AsyncStorage.setItem("token", token);
+        await registerRumUser(a);
       } else {
         await AsyncStorage.removeItem("token");
       }
@@ -80,7 +78,6 @@ function ContextProvider(props: { children: ReactNode }) {
     }
   };
 
-  // Get the context and wait for it before showing the app
   useEffect(() => {
     initContext()
       .then((p) => {

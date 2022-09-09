@@ -17,7 +17,9 @@ function App() {
         <NavigationContainer
           ref={navigationRef}
           onReady={() => {
-            DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+            if (!__DEV__) {
+              DdRumReactNavigationTracking.startTrackingViews(navigationRef.current);
+            }
           }}
         >
           <Navigation />
