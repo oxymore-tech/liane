@@ -97,7 +97,9 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
 
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
   const { body, bodyAsJson } = options;
-  const response = await fetch(formatUrl(uri, options), {
+  const url = formatUrl(uri, options);
+  console.log("URL", url);
+  const response = await fetch(url, {
     headers: await headers(body, bodyAsJson),
     method,
     body: formatBody(body, bodyAsJson)

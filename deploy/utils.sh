@@ -10,8 +10,9 @@ function dump {
 function start {
   create_osm_network
   docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
+  PROJECT=$(get_project)
   export PROJECT
-  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "$(get_project)" up -d --build --remove-orphans
+  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --build --remove-orphans
 }
 
 function stop {

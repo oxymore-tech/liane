@@ -10,7 +10,7 @@ import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/components/Navigation";
 import { scopedTranslate } from "@/api/i18n";
 
-const logo = require("@/assets/logo_white.png");
+const logo = require("@/assets/logo_orange.png");
 
 const t = scopedTranslate("SignUp");
 
@@ -43,7 +43,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   return (
     <KeyboardAvoidingView
-      style={tw("flex h-full bg-liane-pink")}
+      style={tw("flex h-full bg-liane-yellow")}
     >
       <View style={tw("h-10 items-center my-20")}>
         <Image
@@ -73,7 +73,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             maxLength={10}
           />
           <AppButton
-            style={tw("rounded-full bg-blue-400 w-12")}
+            style={tw("rounded-full bg-blue-500 w-12")}
             iconStyle={tw("text-3xl text-white font-bold")}
             disabled={phoneNumber.length < 10}
             onPress={signUp}

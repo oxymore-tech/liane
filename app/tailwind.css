@@ -1,3 +1,23 @@
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  
+}
+
+::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  
+}
+
 .absolute {
   position: absolute
 }
@@ -420,14 +440,9 @@
   background-color: rgb(250 204 21 / var(--tw-bg-opacity))
 }
 
-.bg-liane-pink {
+.bg-liane-yellow {
   --tw-bg-opacity: 1;
-  background-color: rgb(255 132 132 / var(--tw-bg-opacity))
-}
-
-.bg-blue-400 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(96 165 250 / var(--tw-bg-opacity))
+  background-color: rgb(255 181 69 / var(--tw-bg-opacity))
 }
 
 .p-4 {
@@ -600,6 +615,16 @@
 .text-red-600 {
   --tw-text-opacity: 1;
   color: rgb(220 38 38 / var(--tw-text-opacity))
+}
+
+.text-gray-300 {
+  --tw-text-opacity: 1;
+  color: rgb(209 213 219 / var(--tw-text-opacity))
+}
+
+.text-gray-100 {
+  --tw-text-opacity: 1;
+  color: rgb(243 244 246 / var(--tw-text-opacity))
 }
 
 .opacity-0 {
