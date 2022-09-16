@@ -39,6 +39,14 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         mongo = settings.GetDatabase();
     }
 
+    public async Task<RallyingPoint> Get(string id)
+    {
+        var dbRallyingPoint = (await mongo.GetCollection<DbRallyingPoint>()
+                .FindAsync(p => p.Id == new ObjectId(id)))
+            .Single();
+        return dbRallyingPoint.ToRallyingPoint();
+    }
+
     public async Task<RallyingPoint> Create(RallyingPoint rallyingPoint)
     {
         var newId = ObjectId.GenerateNewId();
@@ -46,11 +54,6 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         await mongo.GetCollection<DbRallyingPoint>()
             .InsertOneAsync(ToDbRallyingPoint(created));
         return created;
-    }
-
-    public static DbRallyingPoint ToDbRallyingPoint(RallyingPoint rallyingPoint)
-    {
-        return new DbRallyingPoint(ObjectId.Parse(rallyingPoint.Id), rallyingPoint.Label, rallyingPoint.Location, rallyingPoint.IsActive);
     }
 
     public async Task Delete(string id)
@@ -165,9 +168,8 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return rallyingPoints.Distinct().ToImmutableList();
     }
 
-    public static RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
+    private static DbRallyingPoint ToDbRallyingPoint(RallyingPoint rallyingPoint)
     {
-        var loc = new LatLng(rallyingPoint.Location.Coordinates.Latitude, rallyingPoint.Location.Coordinates.Longitude);
-        return new RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
+        return new DbRallyingPoint(ObjectId.Parse(rallyingPoint.Id), rallyingPoint.Label, rallyingPoint.Location, rallyingPoint.IsActive);
     }
 }

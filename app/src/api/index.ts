@@ -57,14 +57,18 @@ export interface Liane {
   usages: LianeUsage[]
 }
 
-export interface TripIntent {
-  id?: string,
-  user: string,
-  from: RallyingPoint,
-  to: RallyingPoint,
-  fromTime: Date,
-  toTime?: Date,
-}
+export type Time = Readonly<{
+  hour: number;
+  minute: number;
+}>;
+
+export type TripIntent = Readonly<{
+  id?: string;
+  from: string;
+  to: string;
+  goTime: Time;
+  returnTime?: Time;
+}>;
 
 export interface MatchedTripIntent {
   tripIntent: TripIntent,

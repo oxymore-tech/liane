@@ -68,7 +68,7 @@ public static class Startup
         services.AddService<RawTripServiceImpl>();
         services.AddService<LianeTripServiceImpl>();
         services.AddService<ChatServiceImpl>();
-        services.AddService<IntentsMatchingServiceImpl>();
+        services.AddService<IntentMatchingServiceImpl>();
     }
 
     public static void StartCurrentModule(string[] args)

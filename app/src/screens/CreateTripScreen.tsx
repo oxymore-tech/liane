@@ -19,34 +19,11 @@ const CreateTripScreen = () => {
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
 
-  const [isRegular, setIsRegular] = useState(false);
-
-  const [day, setDay] = useState(new Date());
-  const [showDay, setShowDay] = useState(false);
-
   const [showToTime, setShowToTime] = useState(false);
   const [showFromTime, setShowFromTime] = useState(false);
 
   const [fromTime, setFromTime] = useState<Date>(new Date());
   const [toTime, setToTime] = useState<Date | null>(null);
-
-  const [status, setStatus] = useState({ driverStatus: false, passengerStatus: false, neutralStatus: false });
-
-  const onStatusButtonToggle = (value: string) => {
-    const newStatus = {
-      driverStatus: false,
-      passengerStatus: false,
-      neutralStatus: false
-    };
-    newStatus[`${value}Status`] = true;
-
-    setStatus(newStatus);
-  };
-
-  const onChangeDay = (event, selectedDay) => {
-    setShowDay(false);
-    setDay(selectedDay);
-  };
 
   const onChangeFromTime = (event, selectedTime) => {
     setShowFromTime(false);
@@ -131,11 +108,10 @@ const CreateTripScreen = () => {
       );
     } else {
       const tripIntent: TripIntent = {
-        user: authUser?.phone!,
         from: startPoint!,
         to: endPoint!,
         fromTime,
-        toTime: toTime || undefined
+        toTime
       };
 
       // Send tripIntent
@@ -168,23 +144,6 @@ const CreateTripScreen = () => {
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
             <AppText style={tw("text-2xl font-extralight")}>Trajet</AppText>
-            <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-medium")}>Aller - Retour</AppText>
-              <Switch
-                trackColor={{ false: "#767577", true: "#FF5B22" }}
-                thumbColor="#f4f3f4"
-                ios_backgroundColor="#3e3e3e"
-                onValueChange={() => {
-                  setIsRoundTrip((previousState) => !previousState);
-                  if (!isRoundTrip) {
-                    const toDate = new Date(fromTime.getTime());
-                    toDate!.setHours(toDate!.getHours() + 1);
-                    setToTime(toDate);
-                  }
-                }}
-                value={isRoundTrip}
-              />
-            </View>
           </View>
 
           <View style={tw("flex flex-row w-full items-center")}>
@@ -258,26 +217,25 @@ const CreateTripScreen = () => {
           <View style={tw("flex flex-row w-full justify-between items-center")}>
             <AppText style={tw("text-2xl font-normal font-extralight")}>Horaire</AppText>
             <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-medium text-gray-500")}>Régulier</AppText>
+              <AppText style={tw("text-sm font-medium")}>Aller - Retour</AppText>
               <Switch
-                disabled
                 trackColor={{ false: "#767577", true: "#FF5B22" }}
                 thumbColor="#f4f3f4"
                 ios_backgroundColor="#3e3e3e"
-                onValueChange={() => setIsRegular((previousState) => !previousState)}
-                value={isRegular}
+                onValueChange={() => {
+                  setIsRoundTrip((previousState) => !previousState);
+                  if (!isRoundTrip) {
+                    const toDate = new Date(fromTime.getTime());
+                    toDate!.setHours(toDate!.getHours() + 1);
+                    setToTime(toDate);
+                  }
+                }}
+                value={isRoundTrip}
               />
             </View>
           </View>
 
           <View style={tw("flex flex-col w-full flex-auto")}>
-
-            <AppButton
-              disabled
-              title={day.toDateString()}
-              style={tw("rounded-md bg-white py-2 px-4")}
-              onPress={() => setShowDay(true)}
-            />
 
             <View style={tw("flex flex-row w-full justify-around items-center mt-2")}>
               <View style={tw("flex flex-col")}>
@@ -306,17 +264,6 @@ const CreateTripScreen = () => {
           </View>
 
           {
-              showDay
-              && (
-              <RNDateTimePicker
-                mode="date"
-                value={day}
-                onChange={onChangeDay}
-                style={tw("h-5 w-5")}
-              />
-              )
-          }
-          {
             showToTime
             && (
             <RNDateTimePicker
@@ -338,40 +285,6 @@ const CreateTripScreen = () => {
               />
               )
           }
-
-        </View>
-
-        <View style={tw("flex flex-row bg-gray-300 h-16 rounded-xl items-center justify-center")}>
-
-          <View>
-            <AppText style={tw(`text-base ${status.passengerStatus ? "text-white" : "text-gray-500"}`)}>Passager</AppText>
-            <Switch
-              disabled
-              style={tw(`flex flex-grow h-full rounded-l-xl rounded-r-none ${status.passengerStatus ? "bg-orange-400" : ""}`)}
-              value={status.passengerStatus}
-              onValueChange={() => onStatusButtonToggle("passenger")}
-            />
-          </View>
-
-          <View>
-            <AppText style={tw(`text-base ${status.neutralStatus ? "text-white" : "text-gray-500"}`)}>Neutre</AppText>
-            <Switch
-              disabled
-              style={tw(`flex flex-grow h-full rounded-none ${status.neutralStatus ? "bg-orange-400" : ""}`)}
-              value={status.neutralStatus}
-              onValueChange={() => onStatusButtonToggle("neutral")}
-            />
-          </View>
-
-          <View>
-            <AppText style={tw(`text-base ${status.driverStatus ? "text-white" : "text-gray-500"}`)}>Conducteur</AppText>
-            <Switch
-              disabled
-              style={tw(`flex flex-grow h-full rounded-r-xl rounded-l-none ${status.driverStatus ? "bg-orange-400" : ""}`)}
-              value={status.driverStatus}
-              onValueChange={() => onStatusButtonToggle("driver")}
-            />
-          </View>
 
         </View>
 

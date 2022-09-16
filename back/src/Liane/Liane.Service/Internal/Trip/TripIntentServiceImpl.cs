@@ -21,88 +21,28 @@ public class TripIntentServiceImpl : ITripIntentService
     private readonly IMongoDatabase mongo;
     private readonly IRoutingService routingService;
     private readonly IRallyingPointService rallyingPointService;
-    private readonly IIntentsMatchingService intentsMatchingService;
-
-    private const int InterpolationRadius = 2_000; // Adaptable
+    private readonly IIntentMatchingService intentMatchingService;
 
     public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
-        IIntentsMatchingService intentsMatchingService)
+        IIntentMatchingService intentMatchingService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
         this.rallyingPointService = rallyingPointService;
-        this.intentsMatchingService = intentsMatchingService;
+        this.intentMatchingService = intentMatchingService;
         mongo = settings.GetDatabase();
     }
 
     public async Task<TripIntent> Create(TripIntent tripIntent)
     {
-        var dbTripIntent = await LinkToPoints(tripIntent);
-        var created = tripIntent with { Id = dbTripIntent.Id.ToString() };
-        await mongo.GetCollection<DbTripIntent>().InsertOneAsync(dbTripIntent);
+        var id = ObjectId.GenerateNewId();
+        var created = tripIntent with { Id = id.ToString() };
+        var currentUser = currentContext.CurrentUser().Phone;
 
-        await intentsMatchingService.UpdateTripGroups();
+        await mongo.GetCollection<DbTripIntent>()
+            .InsertOneAsync(new DbTripIntent(id, tripIntent.Title, currentUser, tripIntent.From, tripIntent.To, tripIntent.GoTime, tripIntent.ReturnTime));
 
         return created;
-    }
-
-    private async Task<DbTripIntent> LinkToPoints(TripIntent ti)
-    {
-        LatLng start = ti.From.Location;
-        LatLng end = ti.To.Location;
-
-        // Get the shortest path (list of coordinates) calculated with OSRM
-        var route = await routingService.BasicRouteMethod(new RoutingQuery(start, end));
-
-        // Interpolate to find the RallyingPoints it passes by (< 1 km)
-        var waySegments = new Dictionary<DbRallyingPoint, DbRallyingPoint>();
-
-        DbRallyingPoint? previousPoint = null;
-        foreach (var wp in route.Coordinates)
-        {
-            var (closestPoint, distance) = await FindClosest(new LatLng(wp.Lat, wp.Lng));
-
-            if (distance < InterpolationRadius && !waySegments.ContainsKey(closestPoint))
-            {
-                if (previousPoint is not null)
-                {
-                    waySegments[previousPoint] = closestPoint;
-                }
-
-                waySegments.Add(closestPoint, null!); // The last segment will have the last point as key and null as value
-                previousPoint = closestPoint;
-            }
-        }
-
-        return new DbTripIntent(
-            ObjectId.GenerateNewId(), ti.User,
-            RallyingPointServiceImpl.ToDbRallyingPoint(ti.From), RallyingPointServiceImpl.ToDbRallyingPoint(ti.To),
-            ti.FromTime, ti.ToTime,
-            waySegments, ti.Title);
-    }
-
-    private async Task<(DbRallyingPoint point, double distance)> FindClosest(LatLng loc)
-    {
-        var rallyingPoints = (await rallyingPointService.List(loc, null));
-
-        var i = 0;
-        var closestPoint = rallyingPoints[i];
-        var minDistance = closestPoint.Location.CalculateDistance(loc);
-
-        i++;
-        while (i < rallyingPoints.Count)
-        {
-            var currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
-            if (currentDistance < minDistance)
-            {
-                minDistance = currentDistance;
-                closestPoint = rallyingPoints[i];
-            }
-
-            i++;
-        }
-
-        return (RallyingPointServiceImpl.ToDbRallyingPoint(closestPoint), minDistance);
     }
 
     public async Task Delete(string id)

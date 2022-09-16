@@ -9,4 +9,4 @@ public sealed record MatchedTripIntent(
     RallyingPoint P1,
     RallyingPoint P2,
     List<string> Members
-    );
+);

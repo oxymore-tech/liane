@@ -18,7 +18,7 @@ namespace Liane.Test.GroupTripIntents;
 [TestFixture]
 public sealed class GroupTripIntentTest
 {
-    private IntentsMatchingServiceImpl grouping;
+    private IntentMatchingServiceImpl grouping;
     private readonly RoutingServiceImpl routingService;
 
     private const int InterpolationRadius = 2_000; // Adaptable
@@ -26,7 +26,7 @@ public sealed class GroupTripIntentTest
 
     public GroupTripIntentTest()
     {
-        grouping = new IntentsMatchingServiceImpl(null, null!);
+        grouping = new IntentMatchingServiceImpl(null, null!);
 
         points = TripIntentStub.GetRallyingPoints();
         var osrmService = new OsrmServiceImpl(new OsrmSettings(new Uri("http://router.project-osrm.org")));
@@ -129,7 +129,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -176,7 +176,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -206,7 +206,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -238,7 +238,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentMatchingServiceImpl.Group(linkedTrips)).ToList();
         DisplayGroups(intentGroups);
 
         // See plan
@@ -270,7 +270,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 
@@ -302,7 +302,7 @@ public sealed class GroupTripIntentTest
             linkedTrips.Add(await t);
         }
 
-        var intentGroups = (IntentsMatchingServiceImpl.Group(linkedTrips)).ToList();
+        var intentGroups = (IntentMatchingServiceImpl.Group(linkedTrips)).ToList();
 
         DisplayGroups(intentGroups);
 

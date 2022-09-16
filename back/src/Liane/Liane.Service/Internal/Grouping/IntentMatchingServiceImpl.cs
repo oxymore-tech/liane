@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,40 +15,32 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Grouping;
 
-public class IntentsMatchingServiceImpl : IIntentsMatchingService
+public class IntentMatchingServiceImpl : IIntentMatchingService
 {
-    private readonly object groupsLock = new object();
-    private static IEnumerable<List<ProcessedTripIntent>> IntentGroups { get; set; } = new List<List<ProcessedTripIntent>>();
-
-    private readonly IMongoDatabase? mongo;
+    private readonly IMongoDatabase mongo;
     private readonly ICurrentContext currentContext;
+    private readonly IRoutingService routingService;
+    private readonly IRallyingPointService rallyingPointService;
+    private const int InterpolationRadius = 2_000; // Adaptable
 
-    public IntentsMatchingServiceImpl(MongoSettings? settings, ICurrentContext currentContext)
+    public IntentMatchingServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService)
     {
         this.currentContext = currentContext;
-        if (settings is not null) // For tests
-        {
-            mongo = settings.GetDatabase();
-        }
+        this.routingService = routingService;
+        this.rallyingPointService = rallyingPointService;
+        mongo = settings.GetDatabase();
     }
 
-    public async Task UpdateTripGroups()
-    {
-        // Get every trip intents (with the rallying points it passes by)
-        var tripsToPoints = (await mongo!.GetCollection<DbTripIntent>().FindAsync(e => true)).ToList();
-
-        lock (groupsLock)
-        { 
-            IntentGroups = Group(tripsToPoints);
-        }
-    }
-
-    public Task<List<MatchedTripIntent>> GetMatchedGroups()
+    public async Task<List<MatchedTripIntent>> GetMatchedGroups()
     {
         var myGroups = new List<MatchedTripIntent>();
         var user = currentContext.CurrentUser().Phone;
+        var tripIntents = (await mongo.GetCollection<DbTripIntent>()
+                .FindAsync(e => true))
+            .ToList();
+        var intentGroups = await Group(tripIntents.ToImmutableList());
 
-        foreach (var group in IntentGroups)
+        foreach (var group in intentGroups)
         {
             var members = new List<string>();
             TripIntent? tripIntent = null;
@@ -60,41 +53,45 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
                 if (intent.TripIntent.User == user)
                 {
                     tripIntent = TripIntentServiceImpl.ToTripIntent(intent.TripIntent);
-                    p1 = RallyingPointServiceImpl.ToRallyingPoint(intent.P1);
-                    p2 = RallyingPointServiceImpl.ToRallyingPoint(intent.P2);
+                    p1 = intent.P1;
+                    p2 = intent.P2;
                     foundGroup = true;
                 }
+
                 members.Add(intent.TripIntent.Id.ToString()!);
             }
 
             if (foundGroup)
-            { 
+            {
                 myGroups.Add(new MatchedTripIntent(tripIntent!, p1!, p2!, members));
             }
         }
 
-        return Task.FromResult(myGroups);
+        return myGroups;
     }
-    
-    public static IEnumerable<List<ProcessedTripIntent>> Group(List<DbTripIntent> tripsToPoints)
+
+    public async Task<IEnumerable<List<ProcessedTripIntent>>> Group(ImmutableList<DbTripIntent> tripIntents)
     {
         // Select all possible pair of points for each trip
-        var tripsTo2Points = new List<ProcessedTripIntent>();
-        foreach (var tripToPoint in tripsToPoints)
+        var processedTripIntents = new List<ProcessedTripIntent>();
+        foreach (var tripIntent in tripIntents)
         {
-            var wayPoints = tripToPoint.Segments.Keys;
-            var tripWith2Points =
-                from point1 in wayPoints
-                from point2 in wayPoints
-                where point1.Id != point2.Id
-                select new ProcessedTripIntent(tripToPoint, point1, point2);
+            var from = await rallyingPointService.Get(tripIntent.From);
+            var to = await rallyingPointService.Get(tripIntent.To);
 
-            tripsTo2Points.AddRange(tripWith2Points);
+            var wayPoints = await GetWayPoints(from, to);
+            var cartesianProcessedTripIntents =
+                from p1 in wayPoints
+                from p2 in wayPoints
+                where p1.Order < p2.Order
+                select new ProcessedTripIntent(tripIntent, p1, p2);
+
+            processedTripIntents.AddRange(cartesianProcessedTripIntents);
         }
 
         // Group the trips based on 2 points
         var groups =
-            from tripTo2Points in tripsTo2Points
+            from tripTo2Points in processedTripIntents
             group tripTo2Points by new { p1 = tripTo2Points.P1.Id, p2 = tripTo2Points.P2.Id }
             into tripGroup
             where tripGroup.ToList().Count > 1 // Do not match the trip with itself
@@ -113,7 +110,7 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
             foreach (var trip1 in g)
             {
                 // Check split in 2 sub-group according to flow between trips in the group
-                if (FlowsThisWay(trip1, p1, p2))
+                if (FlowsThisWay(trip1.TripSegments, p1, p2))
                 {
                     flow12.Add(trip1);
                 }
@@ -140,18 +137,10 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
 
         return finalGroups;
     }
-    
-    private static bool FlowsThisWay(ProcessedTripIntent trip, DbRallyingPoint from, DbRallyingPoint to)
-    {
-        for (var tmp = trip.TripIntent.Segments[from]; tmp != null!; tmp = trip.TripIntent.Segments[tmp])
-        {
-            if (tmp.Id == to.Id)
-            {
-                return true;
-            }
-        }
 
-        return false;
+    private static bool FlowsThisWay(ImmutableDictionary<RallyingPoint, int> wayPoints, RallyingPoint from, RallyingPoint to)
+    {
+        return wayPoints[from] < wayPoints[to];
     }
 
     private static IEnumerable<List<ProcessedTripIntent>> GetBestGroups(IEnumerable<List<ProcessedTripIntent>> matchGroups)
@@ -169,10 +158,10 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
             // Calculate distance
             var p1 = matchGroup.First().P1.Location.Coordinates;
             var coordinates1 = new LatLng(p1.Latitude, p1.Longitude);
-            
+
             var p2 = matchGroup.First().P2.Location.Coordinates;
             var coordinates2 = new LatLng(p2.Latitude, p2.Longitude);
-            
+
             var dist = coordinates1.CalculateDistance(coordinates2);
 
             // Get current max
@@ -190,5 +179,60 @@ public class IntentsMatchingServiceImpl : IIntentsMatchingService
         }
 
         return bestGroups.Select(c => c.Value.Value);
+    }
+
+    private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
+    {
+        var route = await routingService.BasicRouteMethod(new RoutingQuery(from.Location, to.Location));
+
+        var wayPoints = new HashSet<WayPoint>();
+        var rallyingPoints = new HashSet<RallyingPoint>();
+
+        RallyingPoint? previousPoint = null;
+        var order = 0;
+        foreach (var wp in route.Coordinates)
+        {
+            var (closestPoint, distance) = await FindClosest(new LatLng(wp.Lat, wp.Lng));
+
+            if (!(distance < InterpolationRadius) || rallyingPoints.Contains(closestPoint))
+            {
+                continue;
+            }
+
+            if (previousPoint is not null)
+            {
+                wayPoints.Add(new WayPoint(closestPoint, order));
+                rallyingPoints.Add(closestPoint);
+                order++;
+            }
+
+            previousPoint = closestPoint;
+        }
+
+        return wayPoints.ToImmutableSortedSet();
+    }
+
+    private async Task<(RallyingPoint point, double distance)> FindClosest(LatLng loc)
+    {
+        var rallyingPoints = await rallyingPointService.List(loc, null);
+
+        var i = 0;
+        var closestPoint = rallyingPoints[i];
+        var minDistance = closestPoint.Location.CalculateDistance(loc);
+
+        i++;
+        while (i < rallyingPoints.Count)
+        {
+            var currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
+            if (currentDistance < minDistance)
+            {
+                minDistance = currentDistance;
+                closestPoint = rallyingPoints[i];
+            }
+
+            i++;
+        }
+
+        return (closestPoint, minDistance);
     }
 }

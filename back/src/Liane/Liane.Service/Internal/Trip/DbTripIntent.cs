@@ -9,12 +9,10 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed record DbTripIntent(
     ObjectId? Id,
+    string? Title,
     string User,
-    DbRallyingPoint From,
-    DbRallyingPoint To,
-    DateTime FromTime,
-    DateTime? ToTime,
-    [property: BsonDictionaryOptions(DictionaryRepresentation.ArrayOfArrays)]
-    Dictionary<DbRallyingPoint, DbRallyingPoint> Segments,
-    string? Title
+    string From,
+    string To,
+    TimeOnly GoTime,
+    TimeOnly? ReturnTime
 );

@@ -6,6 +6,8 @@ namespace Liane.Api.RallyingPoints;
 
 public interface IRallyingPointService
 {
+    Task<RallyingPoint> Get(string id);
+
     Task<RallyingPoint> Create(RallyingPoint rallyingPoint);
 
     Task Delete(string id);

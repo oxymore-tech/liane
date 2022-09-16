@@ -1,10 +1,10 @@
-using Liane.Service.Internal.RallyingPoints;
+using Liane.Api.RallyingPoints;
 using Liane.Service.Internal.Trip;
 
 namespace Liane.Service.Internal.Grouping;
 
-public sealed record ProcessedTripIntent(
+internal sealed record ProcessedTripIntent(
     DbTripIntent TripIntent,
-    DbRallyingPoint P1,
-    DbRallyingPoint P2
+    RallyingPoint P1,
+    RallyingPoint P2
 );

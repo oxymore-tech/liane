@@ -3,8 +3,7 @@ using System.Threading.Tasks;
 
 namespace Liane.Api.Grouping;
 
-public interface IIntentsMatchingService
+public interface IIntentMatchingService
 {
-    public Task UpdateTripGroups();
     public Task<List<MatchedTripIntent>> GetMatchedGroups();
 }
