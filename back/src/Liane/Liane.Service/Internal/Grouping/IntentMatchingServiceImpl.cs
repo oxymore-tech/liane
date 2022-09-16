@@ -8,7 +8,6 @@ using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Util;
 using MongoDB.Driver;
@@ -70,7 +69,7 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
         return myGroups;
     }
 
-    public async Task<IEnumerable<List<ProcessedTripIntent>>> Group(ImmutableList<DbTripIntent> tripIntents)
+    internal async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<DbTripIntent> tripIntents)
     {
         // Select all possible pair of points for each trip
         var processedTripIntents = new List<ProcessedTripIntent>();
@@ -84,7 +83,7 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
                 from p1 in wayPoints
                 from p2 in wayPoints
                 where p1.Order < p2.Order
-                select new ProcessedTripIntent(tripIntent, p1, p2);
+                select new ProcessedTripIntent(tripIntent, p1.RallyingPoint, p2.RallyingPoint);
 
             processedTripIntents.AddRange(cartesianProcessedTripIntents);
         }
@@ -98,10 +97,10 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
             select tripGroup.ToList();
 
         // Group based on the flow direction of the trips
-        var finalGroups = new List<List<ProcessedTripIntent>>();
+        var finalGroups = new List<ImmutableList<ProcessedTripIntent>>();
         foreach (var g in groups)
         {
-            var flow12 = new List<ProcessedTripIntent>(); // Where trip is p1 -> p2
+            var flow12 = g.ToImmutableList(); // Where trip is p1 -> p2
             var flow21 = new List<ProcessedTripIntent>(); // Where trip is p2 -> p1
 
             var p1 = g[0].P1; // Supposedly "From"
@@ -110,42 +109,35 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
             foreach (var trip1 in g)
             {
                 // Check split in 2 sub-group according to flow between trips in the group
-                if (FlowsThisWay(trip1.TripSegments, p1, p2))
-                {
-                    flow12.Add(trip1);
-                }
-                else if (FlowsThisWay(trip1, p2, p1))
-                {
-                    flow21.Add(trip1 with { P1 = p2, P2 = p1 });
-                }
+                // if (FlowsThisWay(trip1.TripSegments, p1, p2))
+                // {
+                flow12.Add(trip1);
+                // }
+                // else if (FlowsThisWay(trip1, p2, p1))
+                // {
+                //     flow21.Add(trip1 with { P1 = p2, P2 = p1 });
+                // }
             }
 
             // Do not create group if only one trip intent
             if (flow12.Count > 1)
             {
-                finalGroups.Add(flow12.ToList());
+                finalGroups.Add(flow12);
             }
 
             if (flow21.Count > 1)
             {
-                finalGroups.Add(flow21.ToList());
+                // finalGroups.Add(flow21.ToList());
             }
         }
 
         // Remove duplicate groups by taking the group with the largest possible portion
-        finalGroups = GetBestGroups(finalGroups).ToList();
-
-        return finalGroups;
+        return GetBestGroups(finalGroups).ToImmutableList();
     }
 
-    private static bool FlowsThisWay(ImmutableDictionary<RallyingPoint, int> wayPoints, RallyingPoint from, RallyingPoint to)
+    private static IEnumerable<ImmutableList<ProcessedTripIntent>> GetBestGroups(IEnumerable<ImmutableList<ProcessedTripIntent>> matchGroups)
     {
-        return wayPoints[from] < wayPoints[to];
-    }
-
-    private static IEnumerable<List<ProcessedTripIntent>> GetBestGroups(IEnumerable<List<ProcessedTripIntent>> matchGroups)
-    {
-        var bestGroups = new Dictionary<string, KeyValuePair<double, List<ProcessedTripIntent>>>();
+        var bestGroups = new Dictionary<string, KeyValuePair<double, ImmutableList<ProcessedTripIntent>>>();
 
         foreach (var matchGroup in matchGroups)
         {
@@ -156,11 +148,11 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
             var key = keyBuilder.ToString();
 
             // Calculate distance
-            var p1 = matchGroup.First().P1.Location.Coordinates;
-            var coordinates1 = new LatLng(p1.Latitude, p1.Longitude);
+            var p1 = matchGroup.First().P1.Location;
+            var coordinates1 = new LatLng(p1.Lat, p1.Lng);
 
-            var p2 = matchGroup.First().P2.Location.Coordinates;
-            var coordinates2 = new LatLng(p2.Latitude, p2.Longitude);
+            var p2 = matchGroup.First().P2.Location;
+            var coordinates2 = new LatLng(p2.Lat, p2.Lng);
 
             var dist = coordinates1.CalculateDistance(coordinates2);
 
@@ -169,12 +161,12 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
             {
                 if (dist > value.Key) // dist > max
                 {
-                    bestGroups[key] = new KeyValuePair<double, List<ProcessedTripIntent>>(dist, matchGroup);
+                    bestGroups[key] = new KeyValuePair<double, ImmutableList<ProcessedTripIntent>>(dist, matchGroup);
                 }
             }
             else
             {
-                bestGroups.Add(key, new KeyValuePair<double, List<ProcessedTripIntent>>(dist, matchGroup));
+                bestGroups.Add(key, new KeyValuePair<double, ImmutableList<ProcessedTripIntent>>(dist, matchGroup));
             }
         }
 

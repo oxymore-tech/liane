@@ -57,7 +57,7 @@ export async function deleteTripIntent(id: string) {
 }
 
 export async function getMatches(): Promise<MatchedTripIntent[]> {
-  return get("/match_intents/");
+  return get("/trip_intent/match");
 }
 
 export async function snapLianes(filter: TripFilterOptions): Promise<RoutedLiane[]> {

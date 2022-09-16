@@ -1,14 +1,9 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.Grouping;
-using Liane.Api.RallyingPoints;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Util;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -19,17 +14,10 @@ public class TripIntentServiceImpl : ITripIntentService
 {
     private readonly ICurrentContext currentContext;
     private readonly IMongoDatabase mongo;
-    private readonly IRoutingService routingService;
-    private readonly IRallyingPointService rallyingPointService;
-    private readonly IIntentMatchingService intentMatchingService;
 
-    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
-        IIntentMatchingService intentMatchingService)
+    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext)
     {
         this.currentContext = currentContext;
-        this.routingService = routingService;
-        this.rallyingPointService = rallyingPointService;
-        this.intentMatchingService = intentMatchingService;
         mongo = settings.GetDatabase();
     }
 
@@ -75,7 +63,7 @@ public class TripIntentServiceImpl : ITripIntentService
     public static TripIntent ToTripIntent(DbTripIntent dbTripIntent)
     {
         return new TripIntent(dbTripIntent.Id.ToString(), dbTripIntent.User,
-            RallyingPointServiceImpl.ToRallyingPoint(dbTripIntent.From), RallyingPointServiceImpl.ToRallyingPoint(dbTripIntent.To),
-            dbTripIntent.FromTime, dbTripIntent.ToTime, null);
+            dbTripIntent.From, dbTripIntent.To,
+            dbTripIntent.GoTime, dbTripIntent.ReturnTime);
     }
 }

@@ -6,21 +6,21 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
 
-[Route("api/match_intents")]
+[Route("api/trip_intent/match")]
 [ApiController]
 [RequiresAuth]
 public class IntentsMatchingController : ControllerBase
 {
-    private readonly IIntentsMatchingService intentsMatching;
-    
-    public IntentsMatchingController(IIntentsMatchingService intentsMatching)
+    private readonly IIntentMatchingService intentMatchingService;
+
+    public IntentsMatchingController(IIntentMatchingService intentMatchingService)
     {
-        this.intentsMatching = intentsMatching;
+        this.intentMatchingService = intentMatchingService;
     }
 
     [HttpGet("")]
     public async Task<List<MatchedTripIntent>> GetMatches()
     {
-        return await intentsMatching.GetMatchedGroups();
+        return await intentMatchingService.GetMatchedGroups();
     }
 }

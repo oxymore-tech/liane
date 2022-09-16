@@ -6,6 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="Liane.Test" />
+    </ItemGroup>
+    
+    <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="MongoDB.Bson" Version="2.14.1" />
         <PackageReference Include="MongoDB.Driver" Version="2.14.1" />
