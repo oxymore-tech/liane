@@ -51,7 +51,7 @@ function init_db() {
   local mongo_password=${3}
   local db_init_dir=${4}
     
-  echo docker exec -i "${mongo_container}" mongo -u "${mongo_user}" -p "${mongo_password}" < "${db_init_dir}/mongo-init.js" 
+  docker exec -i "${mongo_container}" mongo -u "${mongo_user}" -p "${mongo_password}" < "${db_init_dir}/mongo-init.js" 
 }
 
 function init_osrm() {
