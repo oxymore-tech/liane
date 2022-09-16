@@ -1,6 +1,6 @@
 
 function init {
-  init_db "$(get_project)-mongo-1" "${MONGO_USER}" "${MONGO_PASSWORD}" "${LIANE_HOME}/deploy/db"
+  init_db "$(get_project)-mongo-1" "${MONGO_USERNAME}" "${MONGO_PASSWORD}" "${LIANE_HOME}/deploy/db"
 }
 
 function dump {
@@ -51,7 +51,7 @@ function init_db() {
   local mongo_password=${3}
   local db_init_dir=${4}
     
-  docker exec -i "${mongo_container}" mongo -u "${mongo_user}" -p "${mongo_password}" < "${db_init_dir}/mongo-init.js" 
+  echo docker exec -i "${mongo_container}" mongo -u "${mongo_user}" -p "${mongo_password}" < "${db_init_dir}/mongo-init.js" 
 }
 
 function init_osrm() {
