@@ -135,9 +135,14 @@ public sealed class AuthServiceImpl : IAuthService
     {
         var authUser = currentContext.CurrentUser();
         var token = GenerateToken(authUser.Phone, authUser.IsAdmin);
-        var dbUserId = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Phone == currentContext.CurrentUser().Phone))
-            .FirstOrDefault().Id.ToString();
-        return authUser with { Token = token, Uid = dbUserId };
+        var dbUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Phone == currentContext.CurrentUser().Phone))
+            .SingleOrDefault();
+        if (dbUser is null)
+        {
+            throw new UnauthorizedAccessException();
+        }
+
+        return authUser with { Token = token, Uid = dbUser.Phone };
     }
 
     private static PhoneNumber ParseNumber(string number)
