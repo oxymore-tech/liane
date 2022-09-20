@@ -2,8 +2,20 @@
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
+# shellcheck disable=SC2120
 function token {
-  http POST "http://localhost:8081/api/auth/login?phone=0000000000&code=000000" | jq -r .token
+  local project=${1}
+  
+  local baseUrl
+  
+  if [[ -z "${project}" ]]; then
+    baseUrl="http://localhost:8081/"
+  else
+    baseUrl="https://${project}.gjini.co"
+  fi;
+  
+  local token=$(http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333" | jq -r .token)
+  echo "Authorization:Bearer ${token}"
 }
 
 function dump_on_local {
@@ -46,12 +58,14 @@ function init {
   init_db "mongo" "mongoadmin" "secret" "${SCRIPTPATH}/../deploy/db"
 }
 
+ARGS=${*:2}
+
 case "$1" in
  stop)
   stop
   ;;
  token)
-  token
+  token "${ARGS[@]}"
   ;;
  start)
   start
