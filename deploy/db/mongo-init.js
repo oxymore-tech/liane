@@ -6,3 +6,8 @@ db.real_liane.createIndex({Location: "2dsphere"});
 db.rallying_point.createIndex({Location: "2dsphere"});
 
 db.user.createIndex({Phone: 1}, {unique: true});
+
+db.user.insert({
+    IsAdmin: true,
+    Phone: "+33628412298"
+});
