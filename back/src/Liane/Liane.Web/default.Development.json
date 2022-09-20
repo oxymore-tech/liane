@@ -17,7 +17,7 @@
   "Auth": {
     "Validity": "7.00:00:00",
     "SecretKey": "dRfUjXn2r5u8x/A?D(G+KbPeShVkYp3s",
-    "TestAccount": "0000000000",
-    "TestCode": "000000"
+    "TestAccount": "0000111111",
+    "TestCode": "333333"
   }
 }

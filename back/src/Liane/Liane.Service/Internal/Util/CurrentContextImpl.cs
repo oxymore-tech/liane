@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Security.Claims;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
@@ -30,7 +31,7 @@ public sealed class CurrentContextImpl : ICurrentContext
             throw new ForbiddenException();
         }
 
-        var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(e => e.Type.Equals("role") && e.Value == AuthServiceImpl.AdminRole);
+        var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == AuthServiceImpl.AdminRole);
 
         return new AuthUser(phone, "", "", isAdmin);
     }

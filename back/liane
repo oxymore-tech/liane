@@ -9,13 +9,14 @@ function token {
   local baseUrl
   
   if [[ -z "${project}" ]]; then
-    baseUrl="http://localhost:8081/"
+    baseUrl="http://localhost:8081"
   else
     baseUrl="https://${project}.gjini.co"
   fi;
   
-  local token=$(http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333" | jq -r .token)
-  echo "Authorization:Bearer ${token}"
+  local token
+  token=$(http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333" | jq -r .token)
+  echo "Authorization:Bearer${token}"
 }
 
 function dump_on_local {

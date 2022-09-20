@@ -79,13 +79,7 @@ public class RequiresAuthFilter : IAsyncAuthorizationFilter
         }
 
         // Added for Signalr
-        var requestAccessToken = context.HttpContext.Request.Query["access_token"];
-        if (!string.IsNullOrWhiteSpace(requestAccessToken))
-        {
-            return ParseBearer(requestAccessToken!);
-        }
-
-        return context.HttpContext.Request.Query["ApiToken"];
+        return context.HttpContext.Request.Query["access_token"];
     }
 
     private static string ParseBearer(string authorizationHeader)

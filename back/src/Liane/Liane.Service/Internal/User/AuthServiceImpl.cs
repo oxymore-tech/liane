@@ -80,7 +80,7 @@ public sealed class AuthServiceImpl : IAuthService
     {
         if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
         {
-            return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount, false), ObjectId.GenerateNewId().ToString(), false);
+            return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount, true), ObjectId.GenerateNewId().ToString(), false);
         }
 
         var phoneNumber = ParseNumber(phone);
