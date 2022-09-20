@@ -52,6 +52,7 @@ function init_db() {
   local db_init_dir=${4}
     
   docker exec -i "${mongo_container}" mongo -u "${mongo_user}" -p "${mongo_password}" < "${db_init_dir}/mongo-init.js" 
+  docker exec -i "${mongo_container}" mongoimport -u "${mongo_user}" -p "${mongo_password}" --jsonArray --db liane --collection user < "${db_init_dir}/user.json" 
 }
 
 function init_osrm() {
