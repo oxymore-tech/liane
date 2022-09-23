@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView, Switch, TouchableOpacity, View, Alert
 } from "react-native";
@@ -11,10 +11,8 @@ import { getRallyingPoints, sendTripIntent } from "@/api/client";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
-import { AppContext } from "@/components/ContextProvider";
 
 const CreateTripScreen = () => {
-  const { authUser } = useContext(AppContext);
   const tw = useTailwind();
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
@@ -108,10 +106,9 @@ const CreateTripScreen = () => {
       );
     } else {
       const tripIntent: TripIntent = {
-        from: startPoint!,
-        to: endPoint!,
-        fromTime,
-        toTime
+        from: startPoint!.id,
+        to: endPoint!.id,
+        goTime: { hour: 9, minute: 0 }
       };
 
       // Send tripIntent

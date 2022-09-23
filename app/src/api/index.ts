@@ -57,7 +57,7 @@ export interface Liane {
   usages: LianeUsage[]
 }
 
-export type Time = Readonly<{
+export type TimeOnly = Readonly<{
   hour: number;
   minute: number;
 }>;
@@ -66,8 +66,8 @@ export type TripIntent = Readonly<{
   id?: string;
   from: string;
   to: string;
-  goTime: Time;
-  returnTime?: Time;
+  goTime: TimeOnly;
+  returnTime?: TimeOnly;
 }>;
 
 export interface MatchedTripIntent {
