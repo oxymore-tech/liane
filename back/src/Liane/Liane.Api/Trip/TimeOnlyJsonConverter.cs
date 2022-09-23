@@ -18,24 +18,27 @@ public class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
 
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.PropertyName)
-            {
-                var propertyName = reader.GetString();
-                reader.Read();
+            if (reader.TokenType == JsonTokenType.EndObject)
+                return time;
 
-                switch (propertyName)
-                {
-                    case TimeParameter.Hour:
-                        time.AddHours(reader.GetInt32());
-                        break;
-                    case TimeParameter.Minutes:
-                        time.AddMinutes(reader.GetInt32());
-                        break;
-                }
+            if (reader.TokenType != JsonTokenType.PropertyName)
+                throw new JsonException("Unexpected token while deserializing TimeOnly");
+            
+            var propertyName = reader.GetString();
+            reader.Read();
+
+            switch (propertyName)
+            {
+                case TimeParameter.Hour:
+                    time.AddHours(reader.GetInt32());
+                    break;
+                case TimeParameter.Minutes:
+                    time.AddMinutes(reader.GetInt32());
+                    break;
             }
         }
         
-        return time;
+        throw new JsonException("Expected EndObject while deserializing TimeOnly");
     }
 
     public override void Write(Utf8JsonWriter writer, TimeOnly value, JsonSerializerOptions options)
