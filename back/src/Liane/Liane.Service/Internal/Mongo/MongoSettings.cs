@@ -19,7 +19,7 @@ public sealed record MongoSettings(string Host, string Username, string Password
                 cm.MapCreator(p => new TimeOnly(p.Hour, p.Minute));
             });
             BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
-            // BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
+            BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
             _init = true;
         }
 
