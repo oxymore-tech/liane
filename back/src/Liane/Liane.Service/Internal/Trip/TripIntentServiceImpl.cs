@@ -4,13 +4,13 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.Util;
+using Liane.Service.Internal.Mongo;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class TripIntentServiceImpl : ITripIntentService
+public sealed class TripIntentServiceImpl : ITripIntentService
 {
     private readonly ICurrentContext currentContext;
     private readonly IMongoDatabase mongo;

@@ -8,7 +8,7 @@ using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.Util;
+using Liane.Service.Internal.Mongo;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -160,7 +160,7 @@ public class LianeTripServiceImpl : ILianeTripService
         await mongo.GetCollection<UserLianeTrip>().DeleteManyAsync(_ => true);
 
         // Fetch raw locations
-        var rawTripCollection = mongo.GetCollection<UserRawTrip>(MongoKeys.RawTrip());
+        var rawTripCollection = mongo.GetCollection<UserRawTrip>();
         var result = (await rawTripCollection.FindAsync(_ => true)).ToList();
 
         logger.LogInformation(result.Count + " raw trips founded");

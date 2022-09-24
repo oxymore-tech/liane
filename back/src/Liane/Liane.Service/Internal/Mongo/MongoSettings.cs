@@ -1,20 +1,30 @@
 using System;
 using Liane.Api.Util;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
-namespace Liane.Service.Internal.Util;
+namespace Liane.Service.Internal.Mongo;
 
 public sealed record MongoSettings(string Host, string Username, string Password)
 {
+    private static bool _init;
+
     public IMongoDatabase GetDatabase()
     {
+        if (!_init)
+        {
+            BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
+            BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
+            _init = true;
+        }
+
         var mongo = new MongoClient(new MongoClientSettings
         {
             Server = new MongoServerAddress(Host, 27017),
             Credential = MongoCredential.CreateCredential("admin", Username, Password)
         });
 
-        return mongo.GetDatabase(MongoKeys.Database());
+        return mongo.GetDatabase("liane");
     }
 };
 

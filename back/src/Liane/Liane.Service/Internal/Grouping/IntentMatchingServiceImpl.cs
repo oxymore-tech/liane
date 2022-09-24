@@ -8,6 +8,7 @@ using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Util;
 using MongoDB.Driver;

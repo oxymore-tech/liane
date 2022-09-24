@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
