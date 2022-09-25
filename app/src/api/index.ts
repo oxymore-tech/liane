@@ -1,5 +1,11 @@
 import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 
+export interface IEntity {
+  id?: string;
+}
+
+export type Ref<T extends IEntity> = string | T;
+
 export interface AuthUser {
   phone: string,
   token: string,
@@ -64,8 +70,8 @@ export type TimeOnly = Readonly<{
 
 export type TripIntent = Readonly<{
   id?: string;
-  from: string;
-  to: string;
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
   goTime: TimeOnly;
   returnTime?: TimeOnly;
 }>;

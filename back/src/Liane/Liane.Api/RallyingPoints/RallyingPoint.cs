@@ -1,4 +1,5 @@
 using Liane.Api.Routing;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.RallyingPoints;
 
@@ -7,4 +8,4 @@ public sealed record RallyingPoint(
     string Label,
     LatLng Location,
     bool IsActive
-);
+) : IEntity;

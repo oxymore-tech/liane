@@ -14,6 +14,7 @@ export default {
     resizeMode: "contain",
     backgroundColor: "#FFFFFF"
   },
+  jsEngine: "hermes",
   updates: {
     fallbackToCacheTimeout: 0
   },

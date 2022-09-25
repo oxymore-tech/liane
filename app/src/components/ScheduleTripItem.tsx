@@ -4,21 +4,19 @@ import React from "react";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { ScheduleNavigationProp } from "@/screens/ScheduleScreen";
-import { MatchedTripIntent, TripIntent } from "@/api";
-import { deleteTripIntent } from "@/api/client";
+import { MatchedTripIntent, RallyingPoint } from "@/api";
 
 interface ScheduleTripItemProps {
-  tripIntent: TripIntent,
-  matchedIntent: MatchedTripIntent | null,
-  toDetails: ScheduleNavigationProp
-  refreshList: Function
+  matchedTripIntent: MatchedTripIntent;
+  toDetails: ScheduleNavigationProp;
+  onDelete: (tripIntentId: string) => void;
 }
 
-const ScheduleTripItem = ({ tripIntent, matchedIntent, toDetails, refreshList } : ScheduleTripItemProps) => {
+const ScheduleTripItem = ({ matchedTripIntent, toDetails, onDelete } : ScheduleTripItemProps) => {
   const tw = useTailwind();
 
   const goToDetails = () => {
-    toDetails.navigate("Chat", { tripIntent, matchedIntent });
+    toDetails.navigate("Chat", { matchedTripIntent });
   };
 
   const deleteIntent = async () => {
@@ -32,15 +30,18 @@ const ScheduleTripItem = ({ tripIntent, matchedIntent, toDetails, refreshList } 
         {
           text: "Oui",
           onPress: async () => {
-            await deleteTripIntent(tripIntent.id!);
-            refreshList();
+            onDelete(matchedTripIntent.tripIntent.id!);
           }
         }
-
       ],
       { cancelable: true }
     );
   };
+
+  const { tripIntent } = matchedTripIntent;
+
+  const from = tripIntent.from as RallyingPoint;
+  const to = tripIntent.to as RallyingPoint;
 
   return (
     <TouchableOpacity
@@ -56,10 +57,8 @@ const ScheduleTripItem = ({ tripIntent, matchedIntent, toDetails, refreshList } 
       <View style={tw("flex-col justify-around w-2/12 mr-2 ")}>
         <AppText style={tw("flex-row ml-3 text-base")}>
           {
-              `${new Date(tripIntent.fromTime).getHours().toString().padStart(2, "0")
-              }:${
-                new Date(tripIntent.fromTime).getMinutes().toString().padStart(2, "0")}`
-            }
+            `${tripIntent.goTime.hour.toString().padStart(2, "0")}:${tripIntent.goTime.minute.toString().padStart(2, "0")}`
+          }
         </AppText>
 
         <Ionicons name="chevron-down" style={tw("self-center opacity-0")} />
@@ -71,13 +70,13 @@ const ScheduleTripItem = ({ tripIntent, matchedIntent, toDetails, refreshList } 
 
       <View style={tw("flex-col justify-around items-center w-5/12")}>
         <AppText style={tw("flex-row")}>
-          {tripIntent.from.label}
+          {from.label}
         </AppText>
 
         <Ionicons name="chevron-down" style={tw("self-center")} />
 
         <AppText style={tw("flex-row")}>
-          {tripIntent.to.label}
+          {to.label}
         </AppText>
       </View>
 
