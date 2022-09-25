@@ -210,7 +210,7 @@ public static class Startup
             })
             .ConfigureServices(ConfigureServices)
             .Configure(Configure)
-            .UseUrls("https://*:8081")
+            .UseUrls("http://*:8081")
             .UseKestrel()
             .Build()
             .Run();
