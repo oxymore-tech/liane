@@ -7,8 +7,6 @@ using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Grouping;
-using Liane.Service.Internal.Location;
-using Liane.Service.Internal.Matching;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.RallyingPoints;
@@ -53,7 +51,6 @@ public static class Startup
         services.AddService<RoutingServiceImpl>();
         services.AddService<AddressServiceNominatimImpl>();
         services.AddService<UserServiceImpl>();
-        services.AddService<MatchingServiceImpl>();
         services.AddSettings<OsrmSettings>(context);
         services.AddSettings<NominatimSettings>(context);
 
@@ -64,11 +61,8 @@ public static class Startup
         services.AddSettings<AuthSettings>(context);
         services.AddService<AuthServiceImpl>();
 
-        services.AddService<LocationServiceImpl>();
         services.AddService<RallyingPointServiceImpl>();
         services.AddService<TripIntentServiceImpl>();
-        services.AddService<RawTripServiceImpl>();
-        services.AddService<LianeTripServiceImpl>();
         services.AddService<ChatServiceImpl>();
         services.AddService<IntentMatchingServiceImpl>();
     }
@@ -216,7 +210,7 @@ public static class Startup
             })
             .ConfigureServices(ConfigureServices)
             .Configure(Configure)
-            .UseUrls("http://*:8081")
+            .UseUrls("https://*:8081")
             .UseKestrel()
             .Build()
             .Run();

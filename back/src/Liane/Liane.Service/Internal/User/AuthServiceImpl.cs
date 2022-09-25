@@ -143,7 +143,7 @@ public sealed class AuthServiceImpl : IAuthService
             throw new UnauthorizedAccessException();
         }
 
-        return authUser with { Token = token, Uid = dbUser.Phone };
+        return authUser with { Token = token, Id = dbUser.Phone };
     }
 
     private static PhoneNumber ParseNumber(string number)

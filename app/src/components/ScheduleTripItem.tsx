@@ -5,6 +5,7 @@ import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { ScheduleNavigationProp } from "@/screens/ScheduleScreen";
 import { MatchedTripIntent, RallyingPoint } from "@/api";
+import { Time } from "@/components/base/Time";
 
 interface ScheduleTripItemProps {
   matchedTripIntent: MatchedTripIntent;
@@ -55,17 +56,11 @@ const ScheduleTripItem = ({ matchedTripIntent, toDetails, onDelete } : ScheduleT
       />
 
       <View style={tw("flex-col justify-around w-2/12 mr-2 ")}>
-        <AppText style={tw("flex-row ml-3 text-base")}>
-          {
-            `${tripIntent.goTime.hour.toString().padStart(2, "0")}:${tripIntent.goTime.minute.toString().padStart(2, "0")}`
-          }
-        </AppText>
+        <Time value={tripIntent.goTime} />
 
         <Ionicons name="chevron-down" style={tw("self-center opacity-0")} />
 
-        <AppText style={tw("flex-row ml-3 text-lg")}>
-          --:--
-        </AppText>
+        <Time value={tripIntent.returnTime} />
       </View>
 
       <View style={tw("flex-col justify-around items-center w-5/12")}>

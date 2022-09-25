@@ -51,7 +51,7 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
             toDetails={navigation}
           />
         )}
-        keyExtractor={(data) => data[0].id!}
+        keyExtractor={(data) => data.tripIntent.id!}
       />
     </SafeAreaView>
   );

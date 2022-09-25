@@ -2,7 +2,6 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Service.Internal.Trip;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -10,14 +9,14 @@ using Microsoft.Extensions.Logging;
 namespace Liane.Web.Hubs;
 
 [Authorize(Policy = Startup.ChatAuthorizationPolicy)]
-public class ChatHub : Hub
+public sealed class ChatHub : Hub
 {
-    private readonly ILogger<LianeTripServiceImpl> logger;
+    private readonly ILogger<ChatHub> logger;
     private readonly IChatService chatService;
 
     private const string ReceiveMessage = "ReceiveMessage";
 
-    public ChatHub(ILogger<LianeTripServiceImpl> logger, IChatService chatService)
+    public ChatHub(ILogger<ChatHub> logger, IChatService chatService)
     {
         this.logger = logger;
         this.chatService = chatService;

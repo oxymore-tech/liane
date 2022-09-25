@@ -21,13 +21,15 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
     private readonly ICurrentContext currentContext;
     private readonly IRoutingService routingService;
     private readonly IRallyingPointService rallyingPointService;
+    private readonly ITripIntentService tripIntentService;
     private const int InterpolationRadius = 2_000; // Adaptable
 
-    public IntentMatchingServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService)
+    public IntentMatchingServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService, ITripIntentService tripIntentService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
         this.rallyingPointService = rallyingPointService;
+        this.tripIntentService = tripIntentService;
         mongo = settings.GetDatabase();
     }
 
@@ -35,10 +37,8 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
     {
         var myGroups = new List<MatchedTripIntent>();
         var user = currentContext.CurrentUser().Phone;
-        var tripIntents = (await mongo.GetCollection<DbTripIntent>()
-                .FindAsync(e => true))
-            .ToList();
-        var intentGroups = await Group(tripIntents.ToImmutableList());
+        var tripIntents = await tripIntentService.List();
+        var intentGroups = await Group(tripIntents);
 
         foreach (var group in intentGroups)
         {
@@ -50,15 +50,15 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
             var foundGroup = false;
             foreach (var intent in group)
             {
-                if (intent.TripIntent.User == user)
+                if (intent.TripIntent.CreatedBy == user)
                 {
-                    tripIntent = TripIntentServiceImpl.ToTripIntent(intent.TripIntent);
+                    tripIntent = intent.TripIntent;
                     p1 = intent.P1;
                     p2 = intent.P2;
                     foundGroup = true;
                 }
 
-                members.Add(intent.TripIntent.Id.ToString()!);
+                members.Add(intent.TripIntent.Id!);
             }
 
             if (foundGroup)
@@ -70,7 +70,7 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
         return myGroups;
     }
 
-    internal async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<DbTripIntent> tripIntents)
+    internal async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<TripIntent> tripIntents)
     {
         // Select all possible pair of points for each trip
         var processedTripIntents = new List<ProcessedTripIntent>();

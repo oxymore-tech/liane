@@ -1,6 +1,9 @@
+using System;
+
 namespace Liane.Api.Util.Ref;
 
-public interface IEntity
+public interface IEntity : IIdentity
 {
-    string? Id { get; }
+    Ref<User.User> CreatedBy { get; }
+    DateTime CreatedAt { get; }
 }

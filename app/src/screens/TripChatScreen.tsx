@@ -16,9 +16,9 @@ import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
 import { NavigationParamList } from "@/components/Navigation";
-import { ChatMessage, MatchedTripIntent } from "@/api";
+import { ChatMessage, RallyingPoint } from "@/api";
 import { getChatConnection } from "@/api/chat";
-import ProposalBubble, { Proposal } from "@/components/chat/ProposalBubble";
+import ProposalBubble from "@/components/chat/ProposalBubble";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
@@ -35,42 +35,36 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const tw = useTailwind();
 
+  const { matchedTripIntent } = route.params;
+  const groupId = `${matchedTripIntent.p1.id} ${matchedTripIntent.p2.id}`;
+
   let connection: HubConnection;
-  let groupId;
   const username = "Alex";
-  let matchedIntent: MatchedTripIntent | null;
 
   useFocusEffect(
     React.useCallback(() => {
-      const { tripIntent } = route.params;
-      navigation.setOptions({ headerTitle: `${tripIntent.from.label} ➔ ${tripIntent.to.label}` });
-      matchedIntent = route.params.matchedIntent;
+      const from = matchedTripIntent.tripIntent.from as RallyingPoint;
+      const to = matchedTripIntent.tripIntent.to as RallyingPoint;
+      navigation.setOptions({ headerTitle: `${from?.label} ➔ ${to?.label}` });
 
-      // If there is a match open the chat connection
-      if (matchedIntent != null) {
-        groupId = `${matchedIntent.p1.id} ${matchedIntent.p2.id}`;
-
-        connection = getChatConnection();
-        connection.start().then(() => {
-          connection.invoke("JoinGroupChat", groupId).then((conversation: ChatMessage[]) => {
-            setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation));
-            connection.on("ReceiveMessage", (message) => {
-              setMessages((previousMessages) => GiftedChat.append(previousMessages, [message]));
-            });
+      connection = getChatConnection();
+      connection.start().then(() => {
+        connection.invoke("JoinGroupChat", groupId).then((conversation: ChatMessage[]) => {
+          setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation));
+          connection.on("ReceiveMessage", (message) => {
+            setMessages((previousMessages) => GiftedChat.append(previousMessages, [message]));
           });
         });
-      }
+      });
 
       return () => {
-        if (matchedIntent != null) {
-          connection.stop().then(() => console.log(`Connection closed on ${groupId}`));
-        }
+        connection.stop().then(() => console.info(`Connection closed on ${groupId}`));
       };
     }, [])
   );
 
   const onSend = useCallback((toSendMessages: ChatMessage[] = []) => {
-    if (matchedIntent != null) {
+    if (matchedTripIntent.members.length > 0) {
       connection.invoke("SendToGroup", toSendMessages[0], groupId)
         .catch((reason) => console.log(reason));
     } else {
@@ -117,12 +111,6 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     setProposalDay(selectedDay);
   };
   const sendProposal = () => {
-    const p: Proposal = {
-      start: proposalStart,
-      end: proposalEnd,
-      date: proposalDay
-    };
-
     const message: ChatMessage = {
       _id: "TODO",
       text: "proposal",
@@ -153,10 +141,8 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
       <View style={tw("flex-row h-full bg-gray-200")}>
         <AppButton
           icon="timer-outline"
-          iconStyle={tw("text-xl mr-2 text-white")}
-          buttonStyle={tw("flex-row items-center justify-center m-1")}
+          style={tw("flex-row items-center justify-center m-1")}
           title="Proposer un trajet"
-          titleStyle={tw("text-white text-sm")}
           onPress={() => setShowProposalModal(true)}
         />
       </View>
@@ -220,16 +206,14 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
 
                 <AppButton
                   title={proposalDay.toLocaleString()}
-                  titleStyle={tw("text-xs text-gray-600")}
-                  buttonStyle={tw("ml-3 my-2 pl-2 w-4/6 rounded-md bg-white py-2 px-4")}
+                  style={tw("ml-3 my-2 pl-2 w-4/6 rounded-md bg-white py-2 px-4")}
                   onPress={() => setShowDatePicker(true)}
                 />
               </View>
 
               <AppButton
-                buttonStyle={tw("flex-row-reverse rounded-full my-2")}
+                style={tw("flex-row-reverse rounded-full my-2")}
                 icon="paper-plane-outline"
-                iconStyle={tw("text-xl text-white ml-1")}
                 title="Envoyer la proposition"
                 onPress={sendProposal}
               />
