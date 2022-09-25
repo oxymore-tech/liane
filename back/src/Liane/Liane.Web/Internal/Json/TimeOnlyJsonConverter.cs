@@ -16,10 +16,14 @@ internal sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
+            {
                 return time;
+            }
 
             if (reader.TokenType != JsonTokenType.PropertyName)
+            {
                 throw new JsonException("Unexpected token while deserializing TimeOnly");
+            }
 
             var propertyName = reader.GetString();
             reader.Read();
@@ -41,10 +45,8 @@ internal sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
     public override void Write(Utf8JsonWriter writer, TimeOnly value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-
         writer.WriteNumber(Hour, value.Hour);
         writer.WriteNumber(Minutes, value.Minute);
-
         writer.WriteEndObject();
     }
 }

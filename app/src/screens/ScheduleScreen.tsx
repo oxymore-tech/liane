@@ -1,9 +1,8 @@
 import React, { useCallback, useState } from "react";
-import { SafeAreaView, View } from "react-native";
+import { FlatList, SafeAreaView, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTailwind } from "tailwind-rn";
-import { FlashList } from "@shopify/flash-list";
 import { AppText } from "@/components/base/AppText";
 import { MatchedTripIntent } from "@/api";
 import { NavigationParamList } from "@/components/Navigation";
@@ -38,10 +37,13 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
         <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
       </View>
 
-      <FlashList
+      <View>
+        <AppText style={tw("text-2xl text-gray-500")}>{matches.length}</AppText>
+      </View>
+
+      <FlatList
         style={tw("flex")}
         data={matches}
-        estimatedItemSize={10}
         renderItem={({ item }) => (
           <ScheduleTripItem
             matchedTripIntent={item}

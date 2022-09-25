@@ -5,7 +5,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
-internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : Ref<T>, IEntity
+internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : IEntity
 {
     public override Ref<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -19,16 +19,9 @@ internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : Ref<
 
     public override void Write(Utf8JsonWriter writer, Ref<T> value, JsonSerializerOptions options)
     {
-        switch (value)
-        {
-            case Ref<T>.Unresolved u:
-                writer.WriteStringValue(u.Id);
-                break;
-            case Ref<T>.Resolved r:
-                JsonSerializer.Serialize(r.Value);
-                break;
-        }
-
-        throw new JsonException();
+        value.Visit(
+            writer.WriteStringValue,
+            v => JsonSerializer.Serialize(writer, v, options)
+        );
     }
 }

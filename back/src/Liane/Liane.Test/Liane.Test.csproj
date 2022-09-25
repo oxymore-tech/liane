@@ -20,6 +20,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Liane.Service\Liane.Service.csproj" />
+        <ProjectReference Include="..\Liane.Web\Liane.Web.csproj" />
     </ItemGroup>
 
     <ItemGroup>
