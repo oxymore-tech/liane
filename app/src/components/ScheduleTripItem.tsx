@@ -4,11 +4,11 @@ import React from "react";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { ScheduleNavigationProp } from "@/screens/ScheduleScreen";
-import { MatchedTripIntent, RallyingPoint } from "@/api";
+import { TripIntentMatch, RallyingPoint } from "@/api";
 import { Time } from "@/components/base/Time";
 
 interface ScheduleTripItemProps {
-  matchedTripIntent: MatchedTripIntent;
+  matchedTripIntent: TripIntentMatch;
   toDetails: ScheduleNavigationProp;
   onDelete: (tripIntentId: string) => void;
 }

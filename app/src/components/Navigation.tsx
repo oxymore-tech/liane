@@ -6,7 +6,7 @@ import { useTailwind } from "tailwind-rn";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
-import { MatchedTripIntent } from "@/api";
+import { TripIntentMatch } from "@/api";
 import CreateTripScreen from "@/screens/CreateTripScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ScheduleNavigation from "@/components/ScheduleNavigation";
@@ -17,7 +17,7 @@ const Tab = createBottomTabNavigator();
 export type NavigationParamList = {
   Home: {};
   Schedule: {};
-  Chat: { matchedTripIntent: MatchedTripIntent; };
+  Chat: { matchedTripIntent: TripIntentMatch; };
   Details: { tripID: string };
   TripList: { count?: number, day?: string, hour?: number };
   SignUp: { phoneNumber?: string, authFailure?: boolean };

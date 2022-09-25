@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Grouping;
 using Liane.Web.Internal.Auth;
@@ -19,8 +19,8 @@ public class IntentsMatchingController : ControllerBase
     }
 
     [HttpGet("")]
-    public async Task<List<MatchedTripIntent>> GetMatches()
+    public async Task<ImmutableList<TripIntentMatch>> GetMatches()
     {
-        return await intentMatchingService.GetMatchedGroups();
+        return await intentMatchingService.Matches();
     }
 }

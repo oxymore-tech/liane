@@ -5,7 +5,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
-internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : IEntity
+internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : IIdentity
 {
     public override Ref<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

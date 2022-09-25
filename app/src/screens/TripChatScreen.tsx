@@ -36,7 +36,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
   const tw = useTailwind();
 
   const { matchedTripIntent } = route.params;
-  const groupId = `${matchedTripIntent.p1.id} ${matchedTripIntent.p2.id}`;
+  const groupId = `${matchedTripIntent.from.id} ${matchedTripIntent.to.id}`;
 
   let connection: HubConnection;
   const username = "Alex";
@@ -64,7 +64,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
   );
 
   const onSend = useCallback((toSendMessages: ChatMessage[] = []) => {
-    if (matchedTripIntent.members.length > 0) {
+    if (matchedTripIntent.matches.length > 0) {
       connection.invoke("SendToGroup", toSendMessages[0], groupId)
         .catch((reason) => console.log(reason));
     } else {

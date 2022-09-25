@@ -22,55 +22,21 @@ export type User = Readonly<{
   token: string;
 } & IEntity>;
 
-export interface Notification {
-  date: number;
-  message: string;
-}
-
-export interface UserLocation {
-  timestamp: number;
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  speed?: number;
-  permissionLevel?: LocationPermissionLevel;
-  isApple?: boolean;
-  isForeground?: boolean;
-}
-
 export interface LatLng {
   lat: number,
   lng: number
 }
 
-// Define the permission level regarding the recuperation of the location
-// NEVER : no tracking
-// ACTIVE : only when the app. is active
-// ALWAYS : always (even on background)
-// NOT_NOW : temp. state (will ask again later)
 export enum LocationPermissionLevel {
   NEVER = "never",
   ACTIVE = "active",
-  ALWAYS = "always",
-  NOT_NOW = "not_now"
+  ALWAYS = "always"
 }
 
 export type RallyingPoint = Readonly<{
   location: LatLng;
   label: string;
 } & IIdentity>;
-
-export interface LianeUsage {
-  timestamp: number,
-  isPrimary: boolean,
-  tripId: string
-}
-
-export interface Liane {
-  from: RallyingPoint,
-  to: RallyingPoint,
-  usages: LianeUsage[]
-}
 
 export type TimeOnly = Readonly<{
   hour: number;
@@ -84,12 +50,18 @@ export type TripIntent = Readonly<{
   returnTime?: TimeOnly;
 } & IEntity>;
 
-export interface MatchedTripIntent {
+export type Match = Readonly<{
+  user: Ref<User>;
+  from: Ref<RallyingPoint>;
+  to : Ref<RallyingPoint>;
+}>;
+
+export type TripIntentMatch = Readonly<{
   tripIntent: TripIntent,
-  p1: RallyingPoint,
-  p2: RallyingPoint,
-  members: string[]
-}
+  from: RallyingPoint,
+  to: RallyingPoint,
+  matches: Match[]
+}>;
 
 export interface ChatMessage extends IChatMessage {
   messageType: "proposal"
@@ -100,23 +72,4 @@ export interface Route {
   readonly duration: number,
   readonly distance: number,
   readonly delta?: number
-}
-
-export interface RoutedLiane {
-  from: RallyingPoint,
-  to: RallyingPoint,
-  numberOfUsages: number,
-  isPrimary: boolean,
-  route: Route
-}
-
-export interface TripFilterOptions {
-  center: LatLng,
-  from?: RallyingPoint,
-  to?: RallyingPoint,
-  dayFrom?: number,
-  dayTo?: number,
-  hourFrom?: number,
-  hourTo?: number,
-  edible?:boolean
 }

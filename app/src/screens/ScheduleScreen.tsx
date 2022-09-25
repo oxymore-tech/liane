@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
-import { MatchedTripIntent } from "@/api";
+import { TripIntentMatch } from "@/api";
 import { NavigationParamList } from "@/components/Navigation";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
@@ -17,7 +17,7 @@ type ScheduleProps = {
 
 const ScheduleScreen = ({ navigation }: ScheduleProps) => {
   const tw = useTailwind();
-  const [matches, setMatches] = useState<MatchedTripIntent[]>([]);
+  const [matches, setMatches] = useState<TripIntentMatch[]>([]);
 
   useFocusEffect(
     useCallback(() => {

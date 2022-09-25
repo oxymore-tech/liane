@@ -72,7 +72,7 @@ export async function postAs<T>(uri: string, options: QueryPostOptions<T> = {}):
   return fetchAndCheckAs<T>("POST", uri, options);
 }
 
-export async function remove(uri: string, options: QueryPostOptions<any> = {}) {
+export async function del(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("DELETE", uri, options);
 }
 

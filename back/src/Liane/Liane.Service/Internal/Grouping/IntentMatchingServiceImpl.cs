@@ -9,8 +9,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Util;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Grouping;
@@ -24,7 +22,8 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
     private readonly ITripIntentService tripIntentService;
     private const int InterpolationRadius = 2_000; // Adaptable
 
-    public IntentMatchingServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService, ITripIntentService tripIntentService)
+    public IntentMatchingServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
+        ITripIntentService tripIntentService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
@@ -33,16 +32,16 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
         mongo = settings.GetDatabase();
     }
 
-    public async Task<List<MatchedTripIntent>> GetMatchedGroups()
+    public async Task<ImmutableList<TripIntentMatch>> Matches()
     {
-        var myGroups = new List<MatchedTripIntent>();
+        var myGroups = new List<TripIntentMatch>();
         var user = currentContext.CurrentUser().Phone;
         var tripIntents = await tripIntentService.List();
         var intentGroups = await Group(tripIntents);
 
         foreach (var group in intentGroups)
         {
-            var members = new List<string>();
+            var matches = new List<Match>();
             TripIntent? tripIntent = null;
             RallyingPoint? p1 = null;
             RallyingPoint? p2 = null;
@@ -58,16 +57,16 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
                     foundGroup = true;
                 }
 
-                members.Add(intent.TripIntent.Id!);
+                matches.Add(new Match(intent.TripIntent.CreatedBy, intent.P1, intent.P2));
             }
 
             if (foundGroup)
             {
-                myGroups.Add(new MatchedTripIntent(tripIntent!, p1!, p2!, members));
+                myGroups.Add(new TripIntentMatch(tripIntent!, p1!, p2!, matches.ToImmutableList()));
             }
         }
 
-        return myGroups;
+        return myGroups.ToImmutableList();
     }
 
     internal async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<TripIntent> tripIntents)
