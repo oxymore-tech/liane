@@ -2,10 +2,8 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Location;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Osrm;
-using Microsoft.AspNetCore.Mvc;
 using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing;
@@ -19,26 +17,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         this.osrmService = osrmService;
     }
 
-    public async Task<ActionResult<Route>> Route(UserLocation[] locations)
-    {
-        if (locations.Length == 0)
-        {
-            throw new ArgumentException("Must not be empty", nameof(locations));
-        }
-
-        var coordinates = locations.OrderBy(l => l.Timestamp)
-            .Select(u => new LatLng(u.Latitude, u.Longitude))
-            .ToImmutableList();
-
-        var routeResponse = await osrmService.Route(coordinates, overview: "full");
-
-        var geojson = routeResponse.Routes[0].Geometry;
-        var duration = routeResponse.Routes[0].Duration;
-        var distance = routeResponse.Routes[0].Distance;
-        return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
-    }
-
-    public async Task<Route> BasicRouteMethod(RoutingQuery query)
+    public async Task<Route> GetRoute(RoutingQuery query)
     {
         var coordinates = ImmutableList.Create(query.Start, query.End);
         var routeResponse = await osrmService.Route(coordinates, overview: "full");

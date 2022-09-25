@@ -18,7 +18,7 @@ public class RouteController : ControllerBase
     [HttpPost("")]
     public async Task<ActionResult<Route>> BasicRouteMethod([FromBody] RoutingQuery routingQuery)
     {
-        return await routeService.BasicRouteMethod(routingQuery);
+        return await routeService.GetRoute(routingQuery);
     }
 
 }

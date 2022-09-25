@@ -1,16 +1,26 @@
 import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 
-export interface IEntity {
-  id?: string;
-}
+export type IIdentity = Readonly<{
+  id: string;
+}>;
 
-export type Ref<T extends IEntity> = string | T;
+export type IEntity = Readonly<{
+  createdBy: Ref<User>;
+  createdAt: Date;
+} & IIdentity>;
+
+export type Ref<T extends IIdentity> = string | T;
 
 export interface AuthUser {
   phone: string,
   token: string,
-  uid: string
+  id: string
 }
+
+export type User = Readonly<{
+  phone: string;
+  token: string;
+} & IEntity>;
 
 export interface Notification {
   date: number;
@@ -45,11 +55,10 @@ export enum LocationPermissionLevel {
   NOT_NOW = "not_now"
 }
 
-export interface RallyingPoint {
-  id: string,
-  location: LatLng,
-  label: string,
-}
+export type RallyingPoint = Readonly<{
+  location: LatLng;
+  label: string;
+} & IIdentity>;
 
 export interface LianeUsage {
   timestamp: number,
@@ -69,12 +78,11 @@ export type TimeOnly = Readonly<{
 }>;
 
 export type TripIntent = Readonly<{
-  id?: string;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   goTime: TimeOnly;
   returnTime?: TimeOnly;
-}>;
+} & IEntity>;
 
 export interface MatchedTripIntent {
   tripIntent: TripIntent,

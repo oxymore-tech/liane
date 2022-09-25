@@ -115,7 +115,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
       _id: "TODO",
       text: "proposal",
       createdAt: new Date(),
-      user: { _id: authUser?.uid!, name: username },
+      user: { _id: authUser?.id!, name: username },
       messageType: "proposal"
     };
     // TODO Send typed messages to all group users
@@ -158,7 +158,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
         initialText=""
         renderUsernameOnMessage
         user={{
-          _id: authUser?.uid!,
+          _id: authUser?.id!,
           name: username
         }}
         messages={messages}

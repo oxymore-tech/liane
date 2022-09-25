@@ -176,7 +176,7 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
 
     private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
     {
-        var route = await routingService.BasicRouteMethod(new RoutingQuery(from.Location, to.Location));
+        var route = await routingService.GetRoute(new RoutingQuery(from.Location, to.Location));
 
         var wayPoints = new HashSet<WayPoint>();
         var rallyingPoints = new HashSet<RallyingPoint>();
