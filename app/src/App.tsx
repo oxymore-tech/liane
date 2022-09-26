@@ -3,8 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
 import { TailwindProvider } from "tailwind-rn";
 import ContextProvider from "@/components/ContextProvider";
-import Navigation, { navigation } from "@/components/Navigation";
 import utilities from "../tailwind.json";
+import { RootNavigation } from "@/api/navigation";
+import Navigation from "@/components/Navigation";
 
 function App() {
   return (
@@ -12,10 +13,10 @@ function App() {
     <TailwindProvider utilities={utilities}>
       <ContextProvider>
         <NavigationContainer
-          ref={navigation}
+          ref={RootNavigation}
           onReady={() => {
             if (!__DEV__) {
-              DdRumReactNavigationTracking.startTrackingViews(navigation.current);
+              DdRumReactNavigationTracking.startTrackingViews(RootNavigation.current);
             }
           }}
         >

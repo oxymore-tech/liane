@@ -7,23 +7,12 @@ import { createNavigationContainerRef } from "@react-navigation/native";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
-import { TripIntentMatch } from "@/api";
 import PublishScreen from "@/screens/PublishScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import HomeScreen from "@/screens/HomeScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
-export type NavigationParamList = {
-  Home: {};
-  Publish: {};
-  Chat: { matchedTripIntent: TripIntentMatch; };
-  SignUp: { phoneNumber?: string, authFailure?: boolean };
-  SignUpCode: { phoneNumber: string };
-};
-
-export const navigation = createNavigationContainerRef<NavigationParamList>();
 
 function Navigation() {
   const { authUser } = useContext(AppContext);

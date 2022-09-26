@@ -11,7 +11,7 @@ import { getRallyingPoints, sendTripIntent } from "@/api/client";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
-import { navigation } from "@/components/Navigation";
+import { RootNavigation } from "@/api/navigation";
 
 const PublishScreen = () => {
   const tw = useTailwind();
@@ -116,7 +116,7 @@ const PublishScreen = () => {
 
       await sendTripIntent(tripIntent);
 
-      navigation.navigate("Home");
+      RootNavigation.navigate("Home");
     }
   };
 

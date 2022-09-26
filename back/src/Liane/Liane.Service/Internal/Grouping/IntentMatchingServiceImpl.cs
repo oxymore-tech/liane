@@ -97,34 +97,7 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
         foreach (var g in groups)
         {
             var flow12 = g.ToImmutableList(); // Where trip is p1 -> p2
-            var flow21 = new List<ProcessedTripIntent>(); // Where trip is p2 -> p1
-
-            var p1 = g[0].P1; // Supposedly "From"
-            var p2 = g[0].P2; // Supposedly "To"
-
-            foreach (var trip1 in g)
-            {
-                // Check split in 2 sub-group according to flow between trips in the group
-                // if (FlowsThisWay(trip1.TripSegments, p1, p2))
-                // {
-                flow12.Add(trip1);
-                // }
-                // else if (FlowsThisWay(trip1, p2, p1))
-                // {
-                //     flow21.Add(trip1 with { P1 = p2, P2 = p1 });
-                // }
-            }
-
-            // Do not create group if only one trip intent
-            if (flow12.Count > 1)
-            {
-                finalGroups.Add(flow12);
-            }
-
-            if (flow21.Count > 1)
-            {
-                // finalGroups.Add(flow21.ToList());
-            }
+            finalGroups.Add(flow12);
         }
 
         // Remove duplicate groups by taking the group with the largest possible portion

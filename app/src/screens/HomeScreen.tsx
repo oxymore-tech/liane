@@ -5,7 +5,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { TripIntentMatch } from "@/api";
-import { NavigationParamList } from "@/components/Navigation";
+import { NavigationParamList } from "@/components/RootNavigation";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
 

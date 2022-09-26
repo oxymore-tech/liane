@@ -7,7 +7,7 @@ import { sendSms } from "@/api/client";
 import { AppButton } from "@/components/base/AppButton";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppText } from "@/components/base/AppText";
-import { NavigationParamList } from "@/components/Navigation";
+import { NavigationParamList } from "@/components/RootNavigation";
 import { scopedTranslate } from "@/api/i18n";
 
 const logo = require("@/assets/logo_orange.png");

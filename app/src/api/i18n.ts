@@ -1,6 +1,6 @@
 import { I18n } from "i18n-js";
 import { locale as expoLocale } from "expo-localization";
-import { NavigationParamList } from "@/components/Navigation";
+import { NavigationParamList } from "@/components/RootNavigation";
 import en from "@/assets/translations/en.json";
 import fr from "@/assets/translations/fr.json";
 
