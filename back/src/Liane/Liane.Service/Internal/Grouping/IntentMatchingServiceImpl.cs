@@ -8,28 +8,24 @@ using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
-using Liane.Service.Internal.Mongo;
-using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Grouping;
 
 public class IntentMatchingServiceImpl : IIntentMatchingService
 {
-    private readonly IMongoDatabase mongo;
     private readonly ICurrentContext currentContext;
     private readonly IRoutingService routingService;
     private readonly IRallyingPointService rallyingPointService;
     private readonly ITripIntentService tripIntentService;
     private const int InterpolationRadius = 2_000; // Adaptable
 
-    public IntentMatchingServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
+    public IntentMatchingServiceImpl(ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
         ITripIntentService tripIntentService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
         this.rallyingPointService = rallyingPointService;
         this.tripIntentService = tripIntentService;
-        mongo = settings.GetDatabase();
     }
 
     public async Task<ImmutableList<TripIntentMatch>> Matches()
@@ -57,7 +53,7 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
                     foundGroup = true;
                 }
 
-                matches.Add(new Match(intent.TripIntent.CreatedBy, intent.P1, intent.P2));
+                matches.Add(new Match(intent.TripIntent.CreatedBy!, intent.P1, intent.P2));
             }
 
             if (foundGroup)

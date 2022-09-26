@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Util;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Chat;

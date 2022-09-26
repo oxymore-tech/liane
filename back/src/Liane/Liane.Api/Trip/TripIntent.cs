@@ -11,6 +11,6 @@ public sealed record TripIntent(
     Ref<RallyingPoint> To,
     TimeOnly GoTime,
     TimeOnly? ReturnTime,
-    Ref<User.User> CreatedBy,
-    DateTime CreatedAt
+    Ref<User.User>? CreatedBy,
+    DateTime? CreatedAt
 ) : IEntity;

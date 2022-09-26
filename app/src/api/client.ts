@@ -1,11 +1,7 @@
 import { del, get, post, postAs } from "@/api/http";
 import {
-  AuthUser, LatLng, Liane, RallyingPoint, TripIntent, TripIntentMatch
+  AuthUser, LatLng, RallyingPoint, TripIntent, TripIntentMatch
 } from "@/api";
-
-export function listTrips(): Promise<Liane[]> {
-  return get("/liane/get");
-}
 
 export function me(): Promise<AuthUser> {
   return get("/auth/me");
@@ -23,8 +19,8 @@ export async function getRallyingPoints(name: string, location?: LatLng): Promis
   return get("/rallying_point", { params: { search: name, lng: location?.lng, lat: location?.lat } });
 }
 
-export async function sendTripIntent(tripIntent: TripIntent) {
-  return post("/trip_intent", { body: tripIntent });
+export async function sendTripIntent(tripIntent: Partial<TripIntent>): Promise<TripIntent> {
+  return postAs<TripIntent>("/trip_intent", { body: tripIntent });
 }
 
 export async function getTripIntents(): Promise<TripIntent[]> {

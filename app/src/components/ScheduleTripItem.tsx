@@ -3,21 +3,20 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
-import { ScheduleNavigationProp } from "@/screens/ScheduleScreen";
 import { TripIntentMatch, RallyingPoint } from "@/api";
 import { Time } from "@/components/base/Time";
 
 interface ScheduleTripItemProps {
-  matchedTripIntent: TripIntentMatch;
-  toDetails: ScheduleNavigationProp;
+  tripIntentMatch: TripIntentMatch;
   onDelete: (tripIntentId: string) => void;
+  onChat: (matchedTripIntent: TripIntentMatch) => void;
 }
 
-const ScheduleTripItem = ({ matchedTripIntent, toDetails, onDelete } : ScheduleTripItemProps) => {
+const ScheduleTripItem = ({ tripIntentMatch, onDelete, onChat } : ScheduleTripItemProps) => {
   const tw = useTailwind();
 
   const goToDetails = () => {
-    toDetails.navigate("Chat", { matchedTripIntent });
+    onChat(tripIntentMatch);
   };
 
   const deleteIntent = async () => {
@@ -31,7 +30,7 @@ const ScheduleTripItem = ({ matchedTripIntent, toDetails, onDelete } : ScheduleT
         {
           text: "Oui",
           onPress: async () => {
-            onDelete(matchedTripIntent.tripIntent.id!);
+            onDelete(tripIntentMatch.tripIntent.id!);
           }
         }
       ],
@@ -39,7 +38,7 @@ const ScheduleTripItem = ({ matchedTripIntent, toDetails, onDelete } : ScheduleT
     );
   };
 
-  const { tripIntent } = matchedTripIntent;
+  const { tripIntent } = tripIntentMatch;
 
   const from = tripIntent.from as RallyingPoint;
   const to = tripIntent.to as RallyingPoint;

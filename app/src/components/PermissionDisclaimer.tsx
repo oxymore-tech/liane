@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import tailwind from "tailwind-rn";
+import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 
@@ -9,6 +9,7 @@ interface PermissionDisclaimerProps {
 }
 
 function PermissionDisclaimer({ onAccept }: PermissionDisclaimerProps) {
+  const tailwind = useTailwind();
   return (
     <View style={tailwind("container")}>
 
@@ -35,14 +36,7 @@ function PermissionDisclaimer({ onAccept }: PermissionDisclaimerProps) {
       <View>
         <View style={tailwind("p-8")}>
           <AppButton
-            icon={(
-              <Icon
-                name="check"
-                size={40}
-                color="white"
-                type="font-awesome"
-              />
-            )}
+            icon="checkmark"
             onPress={() => onAccept && onAccept()}
             title="Activer"
           />

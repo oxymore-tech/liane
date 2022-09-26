@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  SafeAreaView, Switch, TouchableOpacity, View, Alert
+  Alert, SafeAreaView, Switch, TouchableOpacity, View
 } from "react-native";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import Autocomplete from "react-native-autocomplete-input";
@@ -11,8 +11,9 @@ import { getRallyingPoints, sendTripIntent } from "@/api/client";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
+import { navigation } from "@/components/Navigation";
 
-const CreateTripScreen = () => {
+const PublishScreen = () => {
   const tw = useTailwind();
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
@@ -104,25 +105,18 @@ const CreateTripScreen = () => {
         ],
         { cancelable: true }
       );
-    } else {
-      const tripIntent: TripIntent = {
-        from: startPoint!.id,
-        to: endPoint!.id,
+    }
+
+    if (startPoint && endPoint) {
+      const tripIntent: Partial<TripIntent> = {
+        from: startPoint.id,
+        to: endPoint.id,
         goTime: { hour: 9, minute: 0 }
       };
 
-      // Send tripIntent
       await sendTripIntent(tripIntent);
 
-      // Reset all
-      setStartPoint(null);
-      setShownStartPoint("");
-      setEndPoint(null);
-      setShownEndPoint("");
-      const date = new Date();
-      setToTime(date);
-      date.setHours(date.getHours() + 1);
-      setFromTime(date);
+      navigation.navigate("Home");
     }
   };
 
@@ -136,7 +130,6 @@ const CreateTripScreen = () => {
 
       <View style={tw("flex flex-col h-full justify-around mx-2 -mb-20")}>
 
-        {/* Start/End locations selection */}
         <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center z-10")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
@@ -208,7 +201,6 @@ const CreateTripScreen = () => {
           </View>
         </View>
 
-        {/* Date/Time selection */}
         <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
@@ -288,6 +280,7 @@ const CreateTripScreen = () => {
         <AppButton
           title="Publier"
           style={tw("bg-orange-400 rounded-full mx-10")}
+          disabled={!startPoint || !endPoint}
           onPress={onPublicationPressed}
         />
 
@@ -297,4 +290,4 @@ const CreateTripScreen = () => {
   );
 };
 
-export default CreateTripScreen;
+export default PublishScreen;

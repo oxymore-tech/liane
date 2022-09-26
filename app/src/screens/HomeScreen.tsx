@@ -9,7 +9,7 @@ import { NavigationParamList } from "@/components/Navigation";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
 
-export type ScheduleNavigationProp = NativeStackNavigationProp<NavigationParamList, "Schedule">;
+export type ScheduleNavigationProp = NativeStackNavigationProp<NavigationParamList, "Home">;
 
 type ScheduleProps = {
   navigation: ScheduleNavigationProp;
@@ -46,9 +46,9 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
         data={matches}
         renderItem={({ item }) => (
           <ScheduleTripItem
-            matchedTripIntent={item}
+            tripIntentMatch={item}
             onDelete={onDelete}
-            toDetails={navigation}
+            navigation={navigation}
           />
         )}
         keyExtractor={(data) => data.tripIntent.id!}

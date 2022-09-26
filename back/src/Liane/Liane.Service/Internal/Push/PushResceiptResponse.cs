@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace Liane.Service.Internal.Notification.Expo;
+namespace Liane.Service.Internal.Push;
 
 internal sealed record PushResceiptResponse(ImmutableDictionary<string, PushTicketDeliveryStatus> Data, ImmutableList<PushReceiptErrorInformation> Errors);
 

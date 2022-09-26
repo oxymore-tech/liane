@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Liane.Service.Internal.Notification.Expo;
+namespace Liane.Service.Internal.Push;
 
 internal sealed record PushTicketResponse(List<PushTicketStatus> Data, List<PushTicketErrors> Errors);
 

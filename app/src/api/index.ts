@@ -1,12 +1,12 @@
 import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 
 export type IIdentity = Readonly<{
-  id: string;
+  id?: string;
 }>;
 
 export type IEntity = Readonly<{
-  createdBy: Ref<User>;
-  createdAt: Date;
+  createdBy?: Ref<User>;
+  createdAt?: Date;
 } & IIdentity>;
 
 export type Ref<T extends IIdentity> = string | T;

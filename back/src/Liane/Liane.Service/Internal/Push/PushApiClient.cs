@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Liane.Service.Internal.Notification.Expo;
+namespace Liane.Service.Internal.Push;
 
 internal sealed class PushApiClient
 {
