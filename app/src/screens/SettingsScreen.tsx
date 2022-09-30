@@ -19,12 +19,12 @@ const SettingsScreen = () => {
 
       <View style={tw("h-full justify-center")}>
         <AppButton
-          buttonStyle={tw("bg-blue-800 rounded-full m-1 mx-10")}
+          style={tw("bg-blue-800 rounded-full m-1 mx-10")}
           title="Paramètres de géolocalisation"
           onPress={() => { setLocationPermission(LocationPermissionLevel.NEVER); }}
         />
         <AppButton
-          buttonStyle={tw("bg-blue-800 rounded-full m-1 mx-10")}
+          style={tw("bg-blue-800 rounded-full m-1 mx-10")}
           title="Déconnexion"
           onPress={() => { setAuthUser(undefined); }}
         />

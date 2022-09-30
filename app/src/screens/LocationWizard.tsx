@@ -85,7 +85,7 @@ function alert(message: string, callback: Function) {
 /**
  * React component.
  */
-const LocationWizard2 = () => {
+const LocationWizard = () => {
   const { setLocationPermission, authUser } = useContext(AppContext);
   console.log(`AuthUser = ${authUser}`);
   const [step, setStep] = useState(authUser ? 1 : 0);
@@ -146,7 +146,7 @@ const LocationWizard2 = () => {
 
   // Ask for no tracking (for now)
   const requestNoLocPerm = async () => {
-    setLocationPermission(LocationPermissionLevel.NOT_NOW);
+    setLocationPermission(LocationPermissionLevel.NEVER);
   };
 
   return (
@@ -161,16 +161,16 @@ const LocationWizard2 = () => {
       { getWizardText(step) }
       { optionalText !== "" && (<AppText style={tw("text-center text-sm text-red-600 m-2")}>{ optionalText }</AppText>) }
       { step === 0
-        ? (<View><AppButton buttonStyle={tw("bg-orange-400 rounded-full m-10")} onPress={next} title="Continuer" /></View>)
+        ? (<View><AppButton style={tw("bg-orange-400 rounded-full m-10")} onPress={next} title="Continuer" /></View>)
         : (
           <View style={tw("my-10")}>
-            <AppButton buttonStyle={tw("bg-orange-400 rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
-            <AppButton buttonStyle={tw("bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
-            <AppButton buttonStyle={tw("bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
+            <AppButton style={tw("bg-orange-400 rounded-full mt-5 ml-10 mr-10")} onPress={requestBackgroundLocPerm} title="Toujours" />
+            <AppButton style={tw("bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
+            <AppButton style={tw("bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10")} onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
           </View>
         )}
     </View>
   );
 };
 
-export default LocationWizard2;
+export default LocationWizard;

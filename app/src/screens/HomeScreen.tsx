@@ -5,7 +5,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { TripIntentMatch } from "@/api";
-import { NavigationParamList } from "@/components/RootNavigation";
+import { NavigationParamList } from "@/api/navigation";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
 
@@ -48,7 +48,7 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
           <ScheduleTripItem
             tripIntentMatch={item}
             onDelete={onDelete}
-            navigation={navigation}
+            onChat={(t) => {}}
           />
         )}
         keyExtractor={(data) => data.tripIntent.id!}

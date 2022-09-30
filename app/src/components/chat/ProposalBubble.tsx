@@ -27,15 +27,15 @@ const ProposalBubble = () => {
           <View style={tw("flex-row justify-around w-full mt-5")}>
 
             <AppButton
-              buttonStyle={tw("flex-col border-2")}
+              style={tw("flex-col border-2")}
               title="Rejoindre"
-              type="outline"
+              outline
             />
 
             <AppButton
-              buttonStyle={tw("flex-col border-2")}
+              style={tw("flex-col border-2")}
               title="Non merci"
-              type="outline"
+              outline
             />
           </View>
 

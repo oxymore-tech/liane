@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
-import { NavigationParamList } from "@/components/RootNavigation";
+import { NavigationParamList } from "@/api/navigation";
 import { ChatMessage, RallyingPoint } from "@/api";
 import { getChatConnection } from "@/api/chat";
 import ProposalBubble from "@/components/chat/ProposalBubble";
