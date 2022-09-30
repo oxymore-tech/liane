@@ -12,4 +12,4 @@ public sealed record TripIntentMatch(
     ImmutableList<Match> Matches
 );
 
-public sealed record Match(Ref<User.User> User, RallyingPoint From, RallyingPoint To);
+public sealed record Match(Ref<User.User> User, Ref<RallyingPoint> From, Ref<RallyingPoint> To);

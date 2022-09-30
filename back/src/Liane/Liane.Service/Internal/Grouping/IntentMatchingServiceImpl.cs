@@ -11,7 +11,7 @@ using Liane.Api.Util.Http;
 
 namespace Liane.Service.Internal.Grouping;
 
-public class IntentMatchingServiceImpl : IIntentMatchingService
+public sealed class IntentMatchingServiceImpl : IIntentMatchingService
 {
     private readonly ICurrentContext currentContext;
     private readonly IRoutingService routingService;
@@ -65,16 +65,17 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
         return myGroups.ToImmutableList();
     }
 
-    internal async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<TripIntent> tripIntents)
+    private async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<TripIntent> tripIntents)
     {
         // Select all possible pair of points for each trip
         var processedTripIntents = new List<ProcessedTripIntent>();
         foreach (var tripIntent in tripIntents)
         {
-            var from = await rallyingPointService.Get(tripIntent.From);
-            var to = await rallyingPointService.Get(tripIntent.To);
+            var from = (RallyingPoint?) tripIntent.From;
+            var to = (RallyingPoint?) tripIntent.To;
 
-            var wayPoints = await GetWayPoints(from, to);
+            if (from == null || to == null) continue;
+            var wayPoints = await routingService.GetWayPoints(from, to);
             var cartesianProcessedTripIntents =
                 from p1 in wayPoints
                 from p2 in wayPoints
@@ -140,60 +141,5 @@ public class IntentMatchingServiceImpl : IIntentMatchingService
         }
 
         return bestGroups.Select(c => c.Value.Value);
-    }
-
-    private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
-    {
-        var route = await routingService.GetRoute(new RoutingQuery(from.Location, to.Location));
-
-        var wayPoints = new HashSet<WayPoint>();
-        var rallyingPoints = new HashSet<RallyingPoint>();
-
-        RallyingPoint? previousPoint = null;
-        var order = 0;
-        foreach (var wp in route.Coordinates)
-        {
-            var (closestPoint, distance) = await FindClosest(new LatLng(wp.Lat, wp.Lng));
-
-            if (!(distance < InterpolationRadius) || rallyingPoints.Contains(closestPoint))
-            {
-                continue;
-            }
-
-            if (previousPoint is not null)
-            {
-                wayPoints.Add(new WayPoint(closestPoint, order));
-                rallyingPoints.Add(closestPoint);
-                order++;
-            }
-
-            previousPoint = closestPoint;
-        }
-
-        return wayPoints.ToImmutableSortedSet();
-    }
-
-    private async Task<(RallyingPoint point, double distance)> FindClosest(LatLng loc)
-    {
-        var rallyingPoints = await rallyingPointService.List(loc, null);
-
-        var i = 0;
-        var closestPoint = rallyingPoints[i];
-        var minDistance = closestPoint.Location.CalculateDistance(loc);
-
-        i++;
-        while (i < rallyingPoints.Count)
-        {
-            var currentDistance = rallyingPoints[i].Location.CalculateDistance(loc);
-            if (currentDistance < minDistance)
-            {
-                minDistance = currentDistance;
-                closestPoint = rallyingPoints[i];
-            }
-
-            i++;
-        }
-
-        return (closestPoint, minDistance);
     }
 }

@@ -60,7 +60,7 @@ public sealed class TripIntentServiceImpl : ITripIntentService
         return tripIntents.ToImmutableList();
     }
 
-    public async Task<TripIntent> ToTripIntent(DbTripIntent dbTripIntent)
+    private async Task<TripIntent> ToTripIntent(DbTripIntent dbTripIntent)
     {
         var from = await rallyingPointService.Get(dbTripIntent.From);
         var to = await rallyingPointService.Get(dbTripIntent.To);

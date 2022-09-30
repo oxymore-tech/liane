@@ -2,7 +2,7 @@ using System;
 
 namespace Liane.Api.Util.Ref;
 
-public abstract record Ref<T> where T : IIdentity
+public abstract record Ref<T> where T : class, IIdentity
 {
     private Ref()
     {
@@ -20,6 +20,12 @@ public abstract record Ref<T> where T : IIdentity
     public static implicit operator Ref<T>(string id) => new Unresolved(id);
 
     public static implicit operator Ref<T>(T value) => new Resolved(value);
+    
+    public static explicit operator T?(Ref<T> @ref) => @ref switch
+    {
+        Resolved r => r.Value,
+        _ => null
+    };
 
     public sealed record Unresolved(string Id) : Ref<T>
     {

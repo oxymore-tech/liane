@@ -8,7 +8,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppButton } from "@/components/base/AppButton";
 import { AppText } from "@/components/base/AppText";
-import { NavigationParamList } from "@/components/RootNavigation";
+import { NavigationParamList } from "@/api/navigation";
 import { scopedTranslate } from "@/api/i18n";
 
 const logo = require("@/assets/logo_orange.png");

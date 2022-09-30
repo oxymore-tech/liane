@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Osrm;
 using Route = Liane.Api.Routing.Route;
@@ -11,10 +13,12 @@ namespace Liane.Service.Internal.Routing;
 public sealed class RoutingServiceImpl : IRoutingService
 {
     private readonly IOsrmService osrmService;
+    private readonly IRallyingPointService rallyingPointService;
 
-    public RoutingServiceImpl(IOsrmService osrmService)
+    public RoutingServiceImpl(IOsrmService osrmService, IRallyingPointService rallyingPointService)
     {
         this.osrmService = osrmService;
+        this.rallyingPointService = rallyingPointService;
     }
 
     public async Task<Route> GetRoute(RoutingQuery query)
@@ -187,5 +191,29 @@ public sealed class RoutingServiceImpl : IRoutingService
 
         // No solution
         return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()), duration, distance, -4);
+    }
+
+    public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
+    {
+        var route = await GetRoute(new RoutingQuery(from.Location, to.Location));
+        var wayPoints = new HashSet<WayPoint>();
+        var rallyingPoints = new HashSet<RallyingPoint>();
+
+        var order = 0;
+        foreach (var wp in route.Coordinates)
+        {
+            var closestPoint = await rallyingPointService.Snap(new LatLng(wp.Lat, wp.Lng));
+
+            if (closestPoint == null || rallyingPoints.Contains(closestPoint))
+            {
+                continue;
+            }
+            
+            wayPoints.Add(new WayPoint(closestPoint, order));
+            rallyingPoints.Add(closestPoint);
+            order++;
+        }
+
+        return wayPoints.ToImmutableSortedSet();
     }
 }

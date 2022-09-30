@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -73,36 +72,28 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
     public async Task ImportCities()
     {
-        try
+        await mongo.GetCollection<DbRallyingPoint>()
+            .DeleteManyAsync(_ => true);
+
+        var assembly = Assembly.GetEntryAssembly()!;
+
+        var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("cities.json"));
+        await using var file = assembly.GetManifestResourceStream(resourceName);
+        if (file is null)
         {
-            await mongo.GetCollection<DbRallyingPoint>()
-                .DeleteManyAsync(_ => true);
-
-            var assembly = Assembly.GetEntryAssembly()!;
-
-            var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("cities.json"));
-            await using var file = assembly.GetManifestResourceStream(resourceName);
-            if (file is null)
-            {
-                throw new ResourceNotFoundException("Unable to find cities.json");
-            }
-
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var data = await JsonSerializer.DeserializeAsync<OverpassData>(file, options);
-
-            if (data is not null)
-            {
-                // Add the data to the database
-                List<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, e.Lat, e.Lon)).ToList();
-                await mongo.GetCollection<DbRallyingPoint>()
-                    .InsertManyAsync(rallyingPoints);
-                logger.LogInformation("Rallying points re-created with " + rallyingPoints.Count + " entries.");
-            }
+            throw new ResourceNotFoundException("Unable to find cities.json");
         }
-        catch (Exception e)
+
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var data = await JsonSerializer.DeserializeAsync<OverpassData>(file, options);
+
+        if (data is not null)
         {
-            logger.LogError("An error happened during the creation of the mongo collection : " + e.Message);
-            logger.LogError(e.StackTrace);
+            // Add the data to the database
+            List<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, e.Lat, e.Lon)).ToList();
+            await mongo.GetCollection<DbRallyingPoint>()
+                .InsertManyAsync(rallyingPoints);
+            logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
         }
     }
 
@@ -147,9 +138,18 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return result;
     }
 
-    private async Task<RallyingPoint?> GetFirstClosest(LatLng? pos)
+    public async Task<RallyingPoint?> Snap(LatLng position)
     {
-        return (await ListInternal(pos, null)).First();
+        int radius = 100;
+        var builder = Builders<DbRallyingPoint>.Filter;
+        var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(position.Lng, position.Lat));
+        var filter = builder.Near(x => x.Location, point, radius);
+
+        var result = (await mongo.GetCollection<DbRallyingPoint>().FindAsync(filter))
+            .FirstOrDefault()?
+            .ToRallyingPoint();
+
+        return result;
     }
 
     public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
@@ -158,7 +158,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
         foreach (var l in locations)
         {
-            var result = await GetFirstClosest(l);
+            var result = await Snap(l);
 
             if (result is null) continue;
 

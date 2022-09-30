@@ -17,6 +17,8 @@ public interface IRallyingPointService
     Task ImportCities();
 
     Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search);
+    
+    Task<RallyingPoint?> Snap(LatLng position);
 
     Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> pos);
 }
