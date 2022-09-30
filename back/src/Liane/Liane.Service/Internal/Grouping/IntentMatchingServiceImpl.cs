@@ -15,16 +15,13 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
 {
     private readonly ICurrentContext currentContext;
     private readonly IRoutingService routingService;
-    private readonly IRallyingPointService rallyingPointService;
     private readonly ITripIntentService tripIntentService;
-    private const int InterpolationRadius = 2_000; // Adaptable
 
-    public IntentMatchingServiceImpl(ICurrentContext currentContext, IRoutingService routingService, IRallyingPointService rallyingPointService,
+    public IntentMatchingServiceImpl(ICurrentContext currentContext, IRoutingService routingService,
         ITripIntentService tripIntentService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
-        this.rallyingPointService = rallyingPointService;
         this.tripIntentService = tripIntentService;
     }
 
@@ -90,19 +87,11 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
             from tripTo2Points in processedTripIntents
             group tripTo2Points by new { p1 = tripTo2Points.P1.Id, p2 = tripTo2Points.P2.Id }
             into tripGroup
-            where tripGroup.ToList().Count > 1 // Do not match the trip with itself
-            select tripGroup.ToList();
-
-        // Group based on the flow direction of the trips
-        var finalGroups = new List<ImmutableList<ProcessedTripIntent>>();
-        foreach (var g in groups)
-        {
-            var flow12 = g.ToImmutableList(); // Where trip is p1 -> p2
-            finalGroups.Add(flow12);
-        }
+            where tripGroup.Count() > 1 // Do not match the trip with itself
+            select tripGroup.ToImmutableList();
 
         // Remove duplicate groups by taking the group with the largest possible portion
-        return GetBestGroups(finalGroups).ToImmutableList();
+        return GetBestGroups(groups.ToList()).ToImmutableList();
     }
 
     private static IEnumerable<ImmutableList<ProcessedTripIntent>> GetBestGroups(IEnumerable<ImmutableList<ProcessedTripIntent>> matchGroups)
