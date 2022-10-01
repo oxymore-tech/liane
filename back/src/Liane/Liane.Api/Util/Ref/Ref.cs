@@ -33,6 +33,11 @@ public abstract record Ref<T> where T : class, IIdentity
         {
             unresolvedVisitor(Id);
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(T)} {{ {nameof(Id)} = {Id} }}";
+        }
     }
 
     public sealed record Resolved(T Value) : Ref<T>
@@ -40,6 +45,11 @@ public abstract record Ref<T> where T : class, IIdentity
         public override void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor)
         {
             resolvedVisitor(Value);
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString()!;
         }
     }
 }

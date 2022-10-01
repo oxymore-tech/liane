@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Service.Internal.Grouping;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.RallyingPoints;
 using Liane.Service.Internal.Routing;

@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Liane.Api.Grouping;
+using Liane.Api.Match;
 using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -24,41 +24,26 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
         this.tripIntentService = tripIntentService;
     }
 
-    public async Task<ImmutableList<TripIntentMatch>> Matches()
+    public async Task<ImmutableList<TripIntentMatch>> Match()
     {
-        var myGroups = new List<TripIntentMatch>();
-        var user = currentContext.CurrentUser().Phone;
+        var user = currentContext.CurrentUser().Id;
         var tripIntents = await tripIntentService.List();
         var intentGroups = await Group(tripIntents);
 
-        foreach (var group in intentGroups)
-        {
-            var matches = new List<Match>();
-            TripIntent? tripIntent = null;
-            RallyingPoint? p1 = null;
-            RallyingPoint? p2 = null;
-
-            var foundGroup = false;
-            foreach (var intent in group)
+        return intentGroups.Select(g =>
             {
-                if (intent.TripIntent.CreatedBy == user)
-                {
-                    tripIntent = intent.TripIntent;
-                    p1 = intent.P1;
-                    p2 = intent.P2;
-                    foundGroup = true;
-                }
-
-                matches.Add(new Match(intent.TripIntent.CreatedBy!, intent.P1, intent.P2));
-            }
-
-            if (foundGroup)
+                var userTripIntent = g.FirstOrDefault(gg => gg.TripIntent.CreatedBy == user);
+                return (TripIntent: userTripIntent, Group: g);
+            })
+            .Where(t => t.TripIntent is not null)
+            .Select(t =>
             {
-                myGroups.Add(new TripIntentMatch(tripIntent!, p1!, p2!, matches.ToImmutableList()));
-            }
-        }
-
-        return myGroups.ToImmutableList();
+                var matches = t.Group.Where(gg => gg.TripIntent.CreatedBy != user)
+                    .Select(gg => new Api.Match.Match(gg.TripIntent.CreatedBy!, gg.P1, gg.P2))
+                    .ToImmutableList();
+                return new TripIntentMatch(t.TripIntent!.TripIntent, t.TripIntent.P1, t.TripIntent.P2, matches);
+            })
+            .ToImmutableList();
     }
 
     private async Task<ImmutableList<ImmutableList<ProcessedTripIntent>>> Group(ImmutableList<TripIntent> tripIntents)

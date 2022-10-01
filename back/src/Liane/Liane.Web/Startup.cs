@@ -6,7 +6,7 @@ using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Grouping;
+using Liane.Service.Internal.Match;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.RallyingPoints;

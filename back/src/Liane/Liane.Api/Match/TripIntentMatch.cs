@@ -3,12 +3,12 @@ using Liane.Api.RallyingPoints;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
-namespace Liane.Api.Grouping;
+namespace Liane.Api.Match;
 
 public sealed record TripIntentMatch(
     TripIntent TripIntent,
-    RallyingPoint From,
-    RallyingPoint To,
+    Ref<RallyingPoint> From,
+    Ref<RallyingPoint> To,
     ImmutableList<Match> Matches
 );
 

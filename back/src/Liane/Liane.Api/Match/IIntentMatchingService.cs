@@ -1,9 +1,9 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace Liane.Api.Grouping;
+namespace Liane.Api.Match;
 
 public interface IIntentMatchingService
 {
-    public Task<ImmutableList<TripIntentMatch>> Matches();
+    public Task<ImmutableList<TripIntentMatch>> Match();
 }

@@ -1,7 +1,7 @@
 using Liane.Api.RallyingPoints;
 using Liane.Api.Trip;
 
-namespace Liane.Service.Internal.Grouping;
+namespace Liane.Service.Internal.Match;
 
 internal sealed record ProcessedTripIntent(
     TripIntent TripIntent,

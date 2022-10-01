@@ -10,9 +10,9 @@ public sealed record LatLng(double Lat, double Lng)
         return $"{Lng.ToString(CultureInfo.InvariantCulture)},{Lat.ToString(CultureInfo.InvariantCulture)}";
     }
 
-    public double CalculateDistance(LatLng other) => CalculateDistance(other.Lat, other.Lng);
+    public double Distance(LatLng other) => Distance(other.Lat, other.Lng);
 
-    public double CalculateDistance(double lat, double lng)
+    public double Distance(double lat, double lng)
     {
         var d1 = Lat * (Math.PI / 180.0);
         var num1 = Lng * (Math.PI / 180.0);
@@ -25,6 +25,6 @@ public sealed record LatLng(double Lat, double Lng)
 
     public LngLatTuple ToLngLatTuple()
     {
-        return new(Lng, Lat);
+        return new LngLatTuple(Lng, Lat);
     }
 }
