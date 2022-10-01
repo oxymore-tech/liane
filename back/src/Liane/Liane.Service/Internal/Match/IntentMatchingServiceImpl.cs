@@ -9,7 +9,7 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 
-namespace Liane.Service.Internal.Grouping;
+namespace Liane.Service.Internal.Match;
 
 public sealed class IntentMatchingServiceImpl : IIntentMatchingService
 {
@@ -17,8 +17,7 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
     private readonly IRoutingService routingService;
     private readonly ITripIntentService tripIntentService;
 
-    public IntentMatchingServiceImpl(ICurrentContext currentContext, IRoutingService routingService,
-        ITripIntentService tripIntentService)
+    public IntentMatchingServiceImpl(ICurrentContext currentContext, IRoutingService routingService, ITripIntentService tripIntentService)
     {
         this.currentContext = currentContext;
         this.routingService = routingService;
@@ -68,10 +67,14 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
         var processedTripIntents = new List<ProcessedTripIntent>();
         foreach (var tripIntent in tripIntents)
         {
-            var from = (RallyingPoint?) tripIntent.From;
-            var to = (RallyingPoint?) tripIntent.To;
+            var from = (RallyingPoint?)tripIntent.From;
+            var to = (RallyingPoint?)tripIntent.To;
 
-            if (from == null || to == null) continue;
+            if (from == null || to == null)
+            {
+                continue;
+            }
+
             var wayPoints = await routingService.GetWayPoints(from, to);
             var cartesianProcessedTripIntents =
                 from p1 in wayPoints
@@ -113,7 +116,7 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
             var p2 = matchGroup.First().P2.Location;
             var coordinates2 = new LatLng(p2.Lat, p2.Lng);
 
-            var dist = coordinates1.CalculateDistance(coordinates2);
+            var dist = coordinates1.Distance(coordinates2);
 
             // Get current max
             if (bestGroups.TryGetValue(key, out var value))
