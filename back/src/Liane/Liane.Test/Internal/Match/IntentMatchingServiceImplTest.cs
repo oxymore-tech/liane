@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Match;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Http;
@@ -33,18 +32,18 @@ public sealed class IntentMatchingServiceImplTest
 
         var currentContext = new Mock<ICurrentContext>();
         currentContext.Setup(c => c.CurrentUser())
-            .Returns(new AuthUser("0000000000", "Augustin", false));
+            .Returns(new AuthUser("Augustin", "00000000", false));
 
         var tested = new IntentMatchingServiceImpl(currentContext.Object, RoutingServiceMock.Object(), tripIntentService.Object);
 
         var actual = await tested.Match();
 
+        Assert.AreEqual(1, actual.Count);
+
         CollectionAssert.AreEquivalent(ImmutableList.Create(
-            new TripIntentMatch(blanc, blanc.From, blanc.To, ImmutableList.Create(
-                new Api.Match.Match("Béatrice", CantalPoints.Saintpaul, CantalPoints.Aurillac),
-                new Api.Match.Match("Jean-Baptiste", CantalPoints.Aurillac, CantalPoints.Arpajon)
-            ))
-        ), actual);
+            new Api.Match.Match("Béatrice", CantalPoints.Saintpaul, CantalPoints.Aurillac),
+            new Api.Match.Match("Jean-Baptiste", CantalPoints.Aurillac, CantalPoints.Arpajon)
+        ), actual[0].Matches);
     }
 
     private static TimeOnly GetTime(string timeStr)

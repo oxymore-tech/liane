@@ -41,8 +41,10 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
                 var matches = t.Group.Where(gg => gg.TripIntent.CreatedBy != user)
                     .Select(gg => new Api.Match.Match(gg.TripIntent.CreatedBy!, gg.P1, gg.P2))
                     .ToImmutableList();
-                return new TripIntentMatch(t.TripIntent!.TripIntent, t.TripIntent.P1, t.TripIntent.P2, matches);
+                return (t.TripIntent!.TripIntent, matches);
             })
+            .GroupBy(t => t.TripIntent)
+            .Select(g => new TripIntentMatch(g.Key, g.Key.From, g.Key.To, g.SelectMany(gg => gg.matches).ToImmutableList()))
             .ToImmutableList();
     }
 
