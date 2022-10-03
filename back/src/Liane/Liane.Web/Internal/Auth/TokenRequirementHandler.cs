@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Auth;
 
-public class TokenRequirementHandler : AuthorizationHandler<TokenRequirement>
+public sealed class TokenRequirementHandler : AuthorizationHandler<TokenRequirement>
 {
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IAuthService authService;

@@ -80,7 +80,7 @@ public sealed class AuthServiceImpl : IAuthService
     {
         if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
         {
-            var user = new AuthUser(authSettings.TestAccount, ObjectId.GenerateNewId().ToString(), false);
+            var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, false);
             return GenerateAuthResponse(user);
         }
 
@@ -109,7 +109,7 @@ public sealed class AuthServiceImpl : IAuthService
             await mongoCollection.InsertOneAsync(dbUser);
         }
 
-        var authUser = new AuthUser(number, dbUser.Id.ToString(), dbUser.IsAdmin);
+        var authUser = new AuthUser(dbUser.Id.ToString(),number, dbUser.IsAdmin);
         return GenerateAuthResponse(authUser);
     }
 
@@ -135,8 +135,14 @@ public sealed class AuthServiceImpl : IAuthService
     public async Task<AuthResponse> Me()
     {
         var authUser = currentContext.CurrentUser();
-        var dbUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Id == new ObjectId(currentContext.CurrentUser().Id)))
-            .SingleOrDefault();
+        
+        if (authUser.Phone.Equals(authSettings.TestAccount))
+        {
+            return GenerateAuthResponse(authUser);
+        }
+        
+        var dbUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Id == new ObjectId(authUser.Id)))
+            .FirstOrDefault();
         if (dbUser is null)
         {
             throw new UnauthorizedAccessException();

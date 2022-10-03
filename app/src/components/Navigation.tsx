@@ -23,7 +23,7 @@ function Navigation() {
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused }: { focused: boolean }) => {
             const icons = {
-              Home: {
+              HomeRoot: {
                 true: "time",
                 false: "time-outline"
               },
