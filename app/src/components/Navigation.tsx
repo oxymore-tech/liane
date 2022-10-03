@@ -8,7 +8,7 @@ import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
 import PublishScreen from "@/screens/PublishScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
-import HomeScreen from "@/screens/HomeScreen";
+import HomeNavigation from "@/components/HomeNavigation";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,7 +54,7 @@ function Navigation() {
         <Tab.Screen
           name="Home"
           options={{ headerShown: false }}
-          component={HomeScreen}
+          component={HomeNavigation}
         />
         <Tab.Screen
           name="Publish"

@@ -10,6 +10,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppText } from "@/components/base/AppText";
 import { NavigationParamList } from "@/api/navigation";
 import { scopedTranslate } from "@/api/i18n";
+import { setStoredToken } from "@/api/storage";
 
 const logo = require("@/assets/logo_orange.png");
 
@@ -30,11 +31,12 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
 
   const signIn = useCallback(async () => {
     try {
-      const authUser = await login(phoneNumber, code);
-      setAuthUser(authUser);
+      const authResponse = await login(phoneNumber, code);
+      await setStoredToken(authResponse.token);
+      await setAuthUser(authResponse.user);
     } catch (e) {
-      setCode("");
-      navigation.navigate("SignUp", { phoneNumber, authFailure: true });
+      await setCode("");
+      await navigation.navigate("SignUp", { phoneNumber, authFailure: true });
     }
   }, [phoneNumber, code]);
 

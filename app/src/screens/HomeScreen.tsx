@@ -1,21 +1,14 @@
 import React, { useCallback, useState } from "react";
 import { FlatList, SafeAreaView, View } from "react-native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { TripIntentMatch } from "@/api";
-import { NavigationParamList } from "@/api/navigation";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
+import { RootNavigation } from "@/api/navigation";
 
-export type ScheduleNavigationProp = NativeStackNavigationProp<NavigationParamList, "Home">;
-
-type ScheduleProps = {
-  navigation: ScheduleNavigationProp;
-};
-
-const ScheduleScreen = ({ navigation }: ScheduleProps) => {
+const ScheduleScreen = () => {
   const tw = useTailwind();
   const [matches, setMatches] = useState<TripIntentMatch[]>([]);
 
@@ -28,6 +21,10 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
 
   const onDelete = useCallback(() => {
 
+  }, []);
+
+  const onChat = useCallback((matchedTripIntent) => {
+    RootNavigation.navigate("Chat", { matchedTripIntent });
   }, []);
 
   return (
@@ -48,7 +45,7 @@ const ScheduleScreen = ({ navigation }: ScheduleProps) => {
           <ScheduleTripItem
             tripIntentMatch={item}
             onDelete={onDelete}
-            onChat={(t) => {}}
+            onChat={onChat}
           />
         )}
         keyExtractor={(data) => data.tripIntent.id!}

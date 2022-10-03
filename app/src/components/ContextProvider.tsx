@@ -37,8 +37,13 @@ async function initContext(): Promise<{ authResponse?: AuthResponse, locationPer
   await SplashScreen.preventAutoHideAsync();
   const storedToken = await getStoredToken();
   const authResponse = storedToken ? await me().catch(() => undefined) : undefined;
-
-  console.log(`Authenticated user is ${JSON.stringify(authResponse?.user)}`);
+  if (storedToken) {
+    if (authResponse) {
+      console.info(`Token found in asyncstorage, user is ${JSON.stringify(authResponse)}`);
+    } else {
+      console.info("Token found in asyncstorage, but it is no longer valid");
+    }
+  }
 
   await registerRum();
 
