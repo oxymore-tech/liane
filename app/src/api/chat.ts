@@ -4,7 +4,7 @@ import { BaseUrl } from "@/api/http";
 import { getStoredToken } from "@/api/storage";
 import { ChatMessage, Ref, User } from "@/api/index";
 
-export function getChatConnection() : HubConnection {
+export function createChatConnection() : HubConnection {
   return new HubConnectionBuilder()
     .withUrl(`${BaseUrl}/hub`, {
       accessTokenFactory: async () => (await getStoredToken())!

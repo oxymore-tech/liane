@@ -2,6 +2,8 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Util.Http;
+using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -24,8 +26,8 @@ public sealed class ChatHub : Hub
 
     public async Task SendToGroup(ChatMessage message, string groupId)
     {
-        await chatService.SaveMessageInGroup(message, groupId);
-        await Clients.Group(groupId).SendAsync(ReceiveMessage, message);
+        var sent = await chatService.SaveMessageInGroup(message, groupId);
+        await Clients.Group(groupId).SendAsync(ReceiveMessage, sent);
     }
 
     public async Task<ImmutableList<ChatMessage>> JoinGroupChat(string groupId)

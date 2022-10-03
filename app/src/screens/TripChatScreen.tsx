@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Bubble, GiftedChat, InputToolbar } from "react-native-gifted-chat";
 import { HubConnection } from "@microsoft/signalr";
 import {
+  FlatList,
   KeyboardAvoidingView, Modal, TextInput, TouchableOpacity, TouchableWithoutFeedback, View
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,12 +13,15 @@ import { useTailwind } from "tailwind-rn";
 import { NavigationParamList } from "@/api/navigation";
 import { ChatMessage, RallyingPoint } from "@/api";
 import {
+  createChatConnection,
   fromSignalr, getChatConnection, SignalrMessage, toSignalr, TypedSignalrMessage
 } from "@/api/chat";
 import ProposalBubble from "@/components/chat/ProposalBubble";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
+import { AppTextInput } from "@/components/base/AppTextInput";
+import ScheduleTripItem from "@/components/ScheduleTripItem";
 
 type ChatRouteProp = RouteProp<NavigationParamList, "Chat">;
 type ChatNavigationProp = NativeStackNavigationProp<NavigationParamList, "Chat">;
@@ -26,31 +30,30 @@ type ChatProps = {
   navigation: ChatNavigationProp;
 };
 
+const connection = createChatConnection();
+
 const TripChatScreen = ({ route, navigation }: ChatProps) => {
   const { authUser } = useContext(AppContext);
-  const [messages, setMessages] = useState<SignalrMessage[]>([]);
+
+  const [sendText, setSendText] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const tw = useTailwind();
 
   const { matchedTripIntent } = route.params;
   const groupId = `${matchedTripIntent.from.id} ${matchedTripIntent.to.id}`;
-
-  let connection: HubConnection;
 
   useFocusEffect(
     React.useCallback(() => {
       const from = matchedTripIntent.tripIntent.from as RallyingPoint;
       const to = matchedTripIntent.tripIntent.to as RallyingPoint;
       navigation.setOptions({ headerTitle: `${from?.label} ➔ ${to?.label}` });
-
-      connection = getChatConnection();
       connection.start().then(() => {
         connection.invoke("JoinGroupChat", groupId)
           .then((conversation: ChatMessage[]) => {
-            console.log("JoinGroupChat", conversation);
-            setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation.map(toSignalr)));
+            setMessages((previousMessages) => [...previousMessages, ...conversation]);
           });
         connection.on("ReceiveMessage", (message) => {
-          setMessages((previousMessages) => GiftedChat.append(previousMessages, [toSignalr(message)]));
+          setMessages((previousMessages) => [...previousMessages, message]);
         });
       });
 
@@ -60,11 +63,10 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     }, [])
   );
 
-  const onSend = useCallback(async (toSendMessages?: SignalrMessage[]) => {
-    if (toSendMessages) {
-      await connection.invoke("SendToGroup", toSendMessages.map(fromSignalr), groupId);
-    }
-  }, []);
+  const onSend = useCallback(async () => {
+    const message :ChatMessage = { text: sendText };
+    await connection.invoke("SendToGroup", message, groupId);
+  }, [sendText]);
 
   const [proposalStart, setProposalStart] = useState<string>("");
   const [proposalEnd, setProposalEnd] = useState<string>("");
@@ -106,7 +108,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     // TODO Send typed messages to all group users
     // onSend([m]);
 
-    setMessages((previousMessages) => GiftedChat.append(previousMessages, [message]));
+    setMessages((previousMessages) => [...previousMessages, message]);
 
     setShowProposalModal(false);
   };
@@ -138,21 +140,34 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     <KeyboardAvoidingView
       style={tw("flex-1")}
     >
-      <GiftedChat
-        alignTop={false}
-        initialText=""
-        renderUsernameOnMessage
-        user={{
-          _id: authUser!.id!,
-          name: authUser!.phone
-        }}
-        messages={messages}
-        onSend={onSend}
-        renderBubble={renderBubble}
-        renderActions={renderActions}
-        renderAccessory={renderAccessory}
-        renderInputToolbar={(props) => <InputToolbar {...props} accessoryStyle={tw(showAccessory ? "h-12" : "h-0")} />}
-      />
+      <View style={tw("h-full")}>
+        <FlatList
+          style={tw("flex-1 bg-liane-orange")}
+          data={messages}
+          renderItem={({ item }) => (
+            <View>
+              <AppText>{item.text}</AppText>
+            </View>
+          )}
+          keyExtractor={(item) => item.id!}
+          // refreshing={refreshing}
+          // onRefresh={refresh}
+          inverted
+        />
+        <View style={tw("flex flex-row items-center bg-liane-orange")}>
+          <AppButton icon="add-circle" style={tw("")} color="orange" />
+          <AppTextInput
+            style={tw("flex-1 h-12 bg-liane-yellow")}
+            value={sendText}
+            onChangeText={setSendText}
+          />
+          <AppButton
+            style={tw("bg-transparent")}
+            title="Envoyer"
+            onPress={onSend}
+          />
+        </View>
+      </View>
 
       <Modal
         animationType="fade"
