@@ -32,7 +32,7 @@ public sealed class ChatServiceImpl : IChatService
 
     public async Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId)
     {
-        var sort = Builders<DbChatMessage>.Sort.Descending(m => m.CreatedAt);
+        var sort = Builders<DbChatMessage>.Sort.Ascending(m => m.CreatedAt);
         var collection = mongo.GetCollection<DbChatMessage>();
         return (await collection.FindAsync(g => g.GroupId == groupId, new FindOptions<DbChatMessage>() { Sort = sort }))
             .ToEnumerable()
