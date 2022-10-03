@@ -1,30 +1,29 @@
 import React, { useCallback, useContext, useState } from "react";
 import { RouteProp, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Bubble, GiftedChat, InputToolbar } from "react-native-gifted-chat";
-import { HubConnection } from "@microsoft/signalr";
 import {
   FlatList,
-  KeyboardAvoidingView, Modal, TextInput, TouchableOpacity, TouchableWithoutFeedback, View
+  KeyboardAvoidingView,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
 import { NavigationParamList } from "@/api/navigation";
 import { ChatMessage, RallyingPoint } from "@/api";
-import {
-  createChatConnection,
-  fromSignalr, getChatConnection, SignalrMessage, toSignalr, TypedSignalrMessage
-} from "@/api/chat";
-import ProposalBubble from "@/components/chat/ProposalBubble";
+import { createChatConnection, TypedSignalrMessage } from "@/api/chat";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import ScheduleTripItem from "@/components/ScheduleTripItem";
 
 type ChatRouteProp = RouteProp<NavigationParamList, "Chat">;
 type ChatNavigationProp = NativeStackNavigationProp<NavigationParamList, "Chat">;
+
 type ChatProps = {
   route: ChatRouteProp;
   navigation: ChatNavigationProp;
@@ -50,7 +49,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
       connection.start().then(() => {
         connection.invoke("JoinGroupChat", groupId)
           .then((conversation: ChatMessage[]) => {
-            setMessages((previousMessages) => [...previousMessages, ...conversation]);
+            setMessages(conversation);
           });
         connection.on("ReceiveMessage", (message) => {
           setMessages((previousMessages) => [...previousMessages, message]);
@@ -64,30 +63,14 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
   );
 
   const onSend = useCallback(async () => {
-    const message :ChatMessage = { text: sendText };
+    const message : ChatMessage = { text: sendText };
     await connection.invoke("SendToGroup", message, groupId);
+    setSendText("");
   }, [sendText]);
 
   const [proposalStart, setProposalStart] = useState<string>("");
   const [proposalEnd, setProposalEnd] = useState<string>("");
   const [proposalDay, setProposalDay] = useState<Date>(new Date());
-
-  const renderBubble = ({ currentMessage }: Bubble<TypedSignalrMessage>["props"]) => {
-    const isProposal = currentMessage?.messageType === "proposal";
-    return (
-      isProposal
-        ? <ProposalBubble />
-        : (
-          <Bubble
-            wrapperStyle={{
-              left: tw("bg-yellow-400"),
-              right: tw("bg-orange-400")
-            }}
-            {...currentMessage}
-          />
-        )
-    );
-  };
 
   const [showAccessory, setShowAccessory] = useState<boolean>(false);
   const [showProposalModal, setShowProposalModal] = useState<boolean>(false);
@@ -142,7 +125,7 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     >
       <View style={tw("h-full")}>
         <FlatList
-          style={tw("flex-1 bg-liane-orange")}
+          style={tw("flex-1")}
           data={messages}
           renderItem={({ item }) => (
             <View>
@@ -154,8 +137,8 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
           // onRefresh={refresh}
           inverted
         />
-        <View style={tw("flex flex-row items-center bg-liane-orange")}>
-          <AppButton icon="add-circle" style={tw("")} color="orange" />
+        <View style={tw("flex flex-row items-center bg-liane-yellow")}>
+          <AppButton icon="add-circle" style={tw("")} color="yellow" />
           <AppTextInput
             style={tw("flex-1 h-12 bg-liane-yellow")}
             value={sendText}
