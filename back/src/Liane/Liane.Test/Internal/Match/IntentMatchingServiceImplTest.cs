@@ -33,7 +33,7 @@ public sealed class IntentMatchingServiceImplTest
 
         var currentContext = new Mock<ICurrentContext>();
         currentContext.Setup(c => c.CurrentUser())
-            .Returns(new AuthUser("", "", "Augustin", false));
+            .Returns(new AuthUser("0000000000", "Augustin", false));
 
         var tested = new IntentMatchingServiceImpl(currentContext.Object, RoutingServiceMock.Object(), tripIntentService.Object);
 

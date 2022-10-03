@@ -1,14 +1,14 @@
 import { del, get, post, postAs } from "@/api/http";
 import {
-  AuthUser, LatLng, RallyingPoint, TripIntent, TripIntentMatch
+  AuthResponse, LatLng, RallyingPoint, TripIntent, TripIntentMatch
 } from "@/api";
 
-export function me(): Promise<AuthUser> {
+export function me(): Promise<AuthResponse> {
   return get("/auth/me");
 }
 
-export async function login(phone: string, code: string, token?: string): Promise<AuthUser> {
-  return postAs("/auth/login", { params: { phone, code, token } });
+export async function login(phone: string, code: string): Promise<AuthResponse> {
+  return postAs("/auth/login", { params: { phone, code } });
 }
 
 export async function sendSms(phone: string) {

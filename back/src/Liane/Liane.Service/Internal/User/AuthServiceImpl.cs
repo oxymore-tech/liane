@@ -76,11 +76,12 @@ public sealed class AuthServiceImpl : IAuthService
         }
     }
 
-    public async Task<AuthUser> Login(string phone, string code, string? token)
+    public async Task<AuthResponse> Login(string phone, string code)
     {
         if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
         {
-            return new AuthUser(authSettings.TestAccount, GenerateToken(authSettings.TestAccount, true), ObjectId.GenerateNewId().ToString(), false);
+            var user = new AuthUser(authSettings.TestAccount, ObjectId.GenerateNewId().ToString(), false);
+            return GenerateAuthResponse(user);
         }
 
         var phoneNumber = ParseNumber(phone);
@@ -102,14 +103,14 @@ public sealed class AuthServiceImpl : IAuthService
         var dbUser = (await mongoCollection.FindAsync(u => u.Phone == number))
             .FirstOrDefault();
 
-        var isAdmin = dbUser?.IsAdmin ?? false;
-        var userId = ObjectId.GenerateNewId();
         if (dbUser is null)
         {
-            await mongoCollection.InsertOneAsync(new DbUser(userId, isAdmin, number));
+            dbUser = new DbUser(ObjectId.GenerateNewId(), false, number);
+            await mongoCollection.InsertOneAsync(dbUser);
         }
 
-        return new AuthUser(number, GenerateToken(number, isAdmin), userId.ToString(), isAdmin);
+        var authUser = new AuthUser(number, dbUser.Id.ToString(), dbUser.IsAdmin);
+        return GenerateAuthResponse(authUser);
     }
 
     public ClaimsPrincipal IsTokenValid(string token)
@@ -131,10 +132,9 @@ public sealed class AuthServiceImpl : IAuthService
         }
     }
 
-    public async Task<AuthUser> Me()
+    public async Task<AuthResponse> Me()
     {
         var authUser = currentContext.CurrentUser();
-        var token = GenerateToken(authUser.Phone, authUser.IsAdmin);
         var dbUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Phone == currentContext.CurrentUser().Phone))
             .SingleOrDefault();
         if (dbUser is null)
@@ -142,7 +142,7 @@ public sealed class AuthServiceImpl : IAuthService
             throw new UnauthorizedAccessException();
         }
 
-        return authUser with { Token = token, Id = dbUser.Phone };
+        return GenerateAuthResponse(authUser);
     }
 
     private static PhoneNumber ParseNumber(string number)
@@ -157,12 +157,18 @@ public sealed class AuthServiceImpl : IAuthService
         return new PhoneNumber(trim);
     }
 
-    private string GenerateToken(string phoneNumber, bool isAdmin)
+    private AuthResponse GenerateAuthResponse(AuthUser user)
+    {
+        return new AuthResponse(user, GenerateToken(user));
+    }
+
+    private string GenerateToken(AuthUser user)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, phoneNumber),
-            new(ClaimTypes.Role, isAdmin ? AdminRole : UserRole)
+            new(ClaimTypes.Name, user.Id),
+            new(ClaimTypes.MobilePhone, user.Phone),
+            new(ClaimTypes.Role, user.IsAdmin ? AdminRole : UserRole)
         };
 
         var now = DateTime.UtcNow;

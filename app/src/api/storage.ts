@@ -7,3 +7,14 @@ export async function getStoredToken() {
     return null;
   }
 }
+
+export async function setStoredToken(token?: string) {
+  try {
+    if (token) {
+      return await AsyncStorage.setItem("token", token);
+    }
+    return await AsyncStorage.removeItem("token");
+  } catch (e) {
+    return null;
+  }
+}

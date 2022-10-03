@@ -10,12 +10,11 @@ import {
   useFonts
 } from "@expo-google-fonts/inter";
 import { View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SplashScreen from "expo-splash-screen";
 import { me } from "@/api/client";
 import { getLastKnownLocation } from "@/api/location";
-import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
-import { getStoredToken } from "@/api/storage";
+import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
+import { getStoredToken, setStoredToken } from "@/api/storage";
 import { registerRum, registerRumUser } from "@/api/rum";
 
 interface AppContextProps {
@@ -34,18 +33,18 @@ export const AppContext = createContext<AppContextProps>({
   setAuthUser: () => { }
 });
 
-async function initContext(): Promise<{ authUser?:AuthUser, locationPermission:LocationPermissionLevel, position:LatLng }> {
+async function initContext(): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
   await SplashScreen.preventAutoHideAsync();
   const storedToken = await getStoredToken();
-  const authUser = storedToken ? await me().catch(() => undefined) : undefined;
+  const authResponse = storedToken ? await me().catch(() => undefined) : undefined;
 
-  console.log(`Authenticated user is ${JSON.stringify(authUser)}`);
+  console.log(`Authenticated user is ${JSON.stringify(authResponse?.user)}`);
 
   await registerRum();
 
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
-  return { authUser, locationPermission, position };
+  return { authResponse, locationPermission, position };
 }
 
 function ContextProvider(props: { children: ReactNode }) {
@@ -65,12 +64,7 @@ function ContextProvider(props: { children: ReactNode }) {
   const setAuthUser = async (a?: AuthUser) => {
     try {
       if (a) {
-        const token = a?.token;
-        console.log("storeToken", a?.token);
-        await AsyncStorage.setItem("token", token);
         await registerRumUser(a);
-      } else {
-        await AsyncStorage.removeItem("token");
       }
       setInternalAuthUser(a);
     } catch (e) {
@@ -80,11 +74,13 @@ function ContextProvider(props: { children: ReactNode }) {
 
   useEffect(() => {
     initContext()
-      .then((p) => {
-        setPosition(p.position);
-        setLocationPermission(p.locationPermission);
-        setAuthUser(p.authUser).then(() => setAppLoaded(true));
-      });
+      .then(async (p) => {
+        await setPosition(p.position);
+        await setLocationPermission(p.locationPermission);
+        await setStoredToken(p.authResponse?.token);
+        await setAuthUser(p.authResponse?.user);
+      })
+      .then(() => setAppLoaded(true));
   }, []);
 
   const { children } = props;

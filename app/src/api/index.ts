@@ -11,21 +11,26 @@ export type IEntity = Readonly<{
 
 export type Ref<T extends IIdentity> = string | T;
 
-export interface AuthUser {
-  phone: string,
-  token: string,
-  id: string
-}
+export type AuthUser = Readonly<{
+  id: string;
+  phone: string;
+  isAdmin: boolean;
+}>;
+
+export type AuthResponse = Readonly<{
+  user: AuthUser;
+  token: string;
+}>;
 
 export type User = Readonly<{
   phone: string;
   token: string;
 } & IEntity>;
 
-export interface LatLng {
-  lat: number,
-  lng: number
-}
+export type LatLng = Readonly<{
+  lat: number;
+  lng: number;
+} & IEntity>;
 
 export enum LocationPermissionLevel {
   NEVER = "never",

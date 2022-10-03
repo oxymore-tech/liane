@@ -26,13 +26,13 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("login")]
     [DisableAuth]
-    public Task<AuthUser> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string? token)
+    public Task<AuthResponse> Login([FromQuery] string phone, [FromQuery] string code)
     {
-        return authService.Login(phone, code, token);
+        return authService.Login(phone, code);
     }
 
     [HttpGet("me")]
-    public Task<AuthUser> Me()
+    public Task<AuthResponse> Me()
     {
         return authService.Me();
     }
