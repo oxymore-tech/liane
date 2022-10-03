@@ -77,7 +77,6 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
             from tripTo2Points in processedTripIntents
             group tripTo2Points by new { p1 = tripTo2Points.P1.Id, p2 = tripTo2Points.P2.Id }
             into tripGroup
-            where tripGroup.Count() > 1 // Do not match the trip with itself
             select tripGroup.ToImmutableList();
 
         // Remove duplicate groups by taking the group with the largest possible portion

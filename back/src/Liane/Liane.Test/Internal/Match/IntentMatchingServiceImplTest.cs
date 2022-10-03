@@ -13,6 +13,31 @@ namespace Liane.Test.Internal.Match;
 [TestFixture]
 public sealed class IntentMatchingServiceImplTest
 {
+    
+    [Test]
+    public async Task ShouldMatchEmptyMatches()
+    {
+        var createdAt = DateTime.Parse("2010-08-20T15:00:00Z");
+
+        var blanc = new TripIntent("blanc1", "blanc1", CantalPoints.Laroquebrou, CantalPoints.Arpajon, GetTime("09:00"), GetTime("17:00"), "Augustin", createdAt);
+
+        var tripIntentService = new Mock<ITripIntentService>();
+        tripIntentService.Setup(s => s.List())
+            .ReturnsAsync(ImmutableList.Create(blanc));
+
+        var currentContext = new Mock<ICurrentContext>();
+        currentContext.Setup(c => c.CurrentUser())
+            .Returns(new AuthUser("Augustin", "00000000", false));
+
+        var tested = new IntentMatchingServiceImpl(currentContext.Object, RoutingServiceMock.Object(), tripIntentService.Object);
+
+        var actual = await tested.Match();
+
+        Assert.AreEqual(1, actual.Count);
+
+        CollectionAssert.IsEmpty(actual[0].Matches);
+    }
+    
     [Test]
     public async Task CrossRoadsGroupIntentsTest()
     {

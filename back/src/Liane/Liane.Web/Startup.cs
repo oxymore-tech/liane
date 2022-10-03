@@ -244,7 +244,7 @@ public static class Startup
 
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapHub<ChatHub>("/hub");
+            endpoints.MapHub<ChatHub>("/api/hub");
             endpoints.MapControllers();
         });
 
