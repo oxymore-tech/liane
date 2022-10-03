@@ -1,11 +1,6 @@
-using System.Collections.Generic;
-using Liane.Api.Chat;
-using MongoDB.Bson.Serialization.Attributes;
+using System;
+using MongoDB.Bson;
 
 namespace Liane.Service.Internal.Chat;
 
-[BsonIgnoreExtraElements]
-public record DbGroupConversation(
-    string GroupId,
-    List<ChatMessage> Messages
-);
+public sealed record DbChatMessage(ObjectId Id, string GroupId, string CreatedBy, DateTime CreatedAt, string Text);

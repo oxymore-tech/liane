@@ -1,14 +1,15 @@
-using System.Collections.Generic;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Service.Internal.Mongo;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Chat;
 
-public class ChatServiceImpl : IChatService
+public sealed class ChatServiceImpl : IChatService
 {
     private readonly IMongoDatabase mongo;
 
@@ -19,28 +20,17 @@ public class ChatServiceImpl : IChatService
 
     public Task SaveMessageInGroup(ChatMessage message, string groupId)
     {
-        var update = Builders<DbGroupConversation>.Update.AddToSet(g => g.Messages, message);
-        var filter = Builders<DbGroupConversation>.Filter.Eq(g => g.GroupId, groupId);
-
-        var result = mongo.GetCollection<DbGroupConversation>().FindOneAndUpdateAsync(filter, update);
-        
+        var result = mongo.GetCollection<DbChatMessage>()
+            .InsertOneAsync(new DbChatMessage(ObjectId.GenerateNewId(), groupId, message.CreatedBy!, DateTime.UtcNow, message.Text));
         return result;
     }
 
     public async Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId)
     {
-        var result = (await mongo.GetCollection<DbGroupConversation>().FindAsync(g => g.GroupId == groupId)).ToList();
-
-        if (result.Any())
-        {
-            var r = result.Select(g => g.Messages).First();
-            r.Reverse();
-            return r.ToImmutableList();
-        }
-
-        var list = new List<ChatMessage>();
-        await mongo.GetCollection<DbGroupConversation>().InsertOneAsync(new DbGroupConversation(groupId, list));
-        
-        return list.ToImmutableList();
+        var collection = mongo.GetCollection<DbChatMessage>();
+        return (await collection.FindAsync(g => g.GroupId == groupId))
+            .ToEnumerable()
+            .Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
+            .ToImmutableList();
     }
 }

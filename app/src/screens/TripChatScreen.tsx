@@ -4,20 +4,15 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Bubble, GiftedChat, InputToolbar } from "react-native-gifted-chat";
 import { HubConnection } from "@microsoft/signalr";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View
+  KeyboardAvoidingView, Modal, TextInput, TouchableOpacity, TouchableWithoutFeedback, View
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
+import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 import { NavigationParamList } from "@/api/navigation";
 import { ChatMessage, RallyingPoint } from "@/api";
-import { getChatConnection } from "@/api/chat";
+import { getChatConnection, toSignalrChatMessage, TypedSignalrMessage } from "@/api/chat";
 import ProposalBubble from "@/components/chat/ProposalBubble";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
@@ -32,14 +27,13 @@ type ChatProps = {
 
 const TripChatScreen = ({ route, navigation }: ChatProps) => {
   const { authUser } = useContext(AppContext);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<IChatMessage[]>([]);
   const tw = useTailwind();
 
   const { matchedTripIntent } = route.params;
   const groupId = `${matchedTripIntent.from.id} ${matchedTripIntent.to.id}`;
 
   let connection: HubConnection;
-  const username = "Alex";
 
   useFocusEffect(
     React.useCallback(() => {
@@ -49,11 +43,13 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
 
       connection = getChatConnection();
       connection.start().then(() => {
-        connection.invoke("JoinGroupChat", groupId).then((conversation: ChatMessage[]) => {
-          setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation));
-          connection.on("ReceiveMessage", (message) => {
-            setMessages((previousMessages) => GiftedChat.append(previousMessages, [message]));
+        connection.invoke("JoinGroupChat", groupId)
+          .then((conversation: ChatMessage[]) => {
+            console.log("JoinGroupChat", conversation);
+            setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation.map(toSignalrChatMessage)));
           });
+        connection.on("ReceiveMessage", (message) => {
+          setMessages((previousMessages) => GiftedChat.append(previousMessages, [toSignalrChatMessage(message)]));
         });
       });
 
@@ -63,30 +59,17 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     }, [])
   );
 
-  const onSend = useCallback((toSendMessages: ChatMessage[] = []) => {
-    if (matchedTripIntent.matches.length > 0) {
-      connection.invoke("SendToGroup", toSendMessages[0], groupId)
-        .catch((reason) => console.log(reason));
-    } else {
-      Alert.alert(
-        "Vous êtes le seul membre de ce groupe de trajet",
-        "",
-        [
-          {
-            text: "OK"
-          }
-        ],
-        { cancelable: true }
-      );
+  const onSend = useCallback(async (toSendMessages?: IChatMessage[]) => {
+    if (toSendMessages) {
+      await connection.invoke("SendToGroup", toSendMessages, groupId);
     }
   }, []);
 
-  // const [proposal, setProposal] = useState<Proposal | null>(null);
   const [proposalStart, setProposalStart] = useState<string>("");
   const [proposalEnd, setProposalEnd] = useState<string>("");
   const [proposalDay, setProposalDay] = useState<Date>(new Date());
 
-  const renderBubble = ({ currentMessage }: Bubble<ChatMessage>["props"]) => {
+  const renderBubble = ({ currentMessage }: Bubble<TypedSignalrMessage>["props"]) => {
     const isProposal = currentMessage?.messageType === "proposal";
     return (
       isProposal
@@ -95,8 +78,9 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
           <Bubble
             wrapperStyle={{
               left: tw("bg-yellow-400"),
-              right: tw("bg-orange-400-lighter")
+              right: tw("bg-orange-400")
             }}
+            {...currentMessage}
           />
         )
     );
@@ -111,11 +95,11 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     setProposalDay(selectedDay);
   };
   const sendProposal = () => {
-    const message: ChatMessage = {
+    const message: TypedSignalrMessage = {
       _id: "TODO",
       text: "proposal",
       createdAt: new Date(),
-      user: { _id: authUser?.id!, name: username },
+      user: { _id: authUser?.id!, name: authUser!.phone },
       messageType: "proposal"
     };
     // TODO Send typed messages to all group users
@@ -158,8 +142,8 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
         initialText=""
         renderUsernameOnMessage
         user={{
-          _id: authUser?.id!,
-          name: username
+          _id: authUser!.id!,
+          name: authUser!.phone
         }}
         messages={messages}
         onSend={onSend}

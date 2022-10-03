@@ -68,9 +68,9 @@ export type TripIntentMatch = Readonly<{
   matches: Match[]
 }>;
 
-export interface ChatMessage extends IChatMessage {
-  messageType: "proposal"
-}
+export type ChatMessage = Readonly<{
+  text:string;
+} & IEntity>;
 
 export interface Route {
   readonly coordinates: LatLng[],

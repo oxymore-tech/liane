@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export async function getStoredToken() {
+export async function getStoredToken(): Promise<string | null> {
   try {
-    return await AsyncStorage.getItem("token");
+    return await AsyncStorage.getItem("token") as string;
   } catch (e) {
     return null;
   }
