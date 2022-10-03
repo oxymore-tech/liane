@@ -9,10 +9,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
-import { IChatMessage } from "react-native-gifted-chat/lib/Models";
 import { NavigationParamList } from "@/api/navigation";
 import { ChatMessage, RallyingPoint } from "@/api";
-import { getChatConnection, toSignalrChatMessage, TypedSignalrMessage } from "@/api/chat";
+import {
+  fromSignalr, getChatConnection, SignalrMessage, toSignalr, TypedSignalrMessage
+} from "@/api/chat";
 import ProposalBubble from "@/components/chat/ProposalBubble";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
@@ -27,7 +28,7 @@ type ChatProps = {
 
 const TripChatScreen = ({ route, navigation }: ChatProps) => {
   const { authUser } = useContext(AppContext);
-  const [messages, setMessages] = useState<IChatMessage[]>([]);
+  const [messages, setMessages] = useState<SignalrMessage[]>([]);
   const tw = useTailwind();
 
   const { matchedTripIntent } = route.params;
@@ -46,10 +47,10 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
         connection.invoke("JoinGroupChat", groupId)
           .then((conversation: ChatMessage[]) => {
             console.log("JoinGroupChat", conversation);
-            setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation.map(toSignalrChatMessage)));
+            setMessages((previousMessages) => GiftedChat.append(previousMessages, conversation.map(toSignalr)));
           });
         connection.on("ReceiveMessage", (message) => {
-          setMessages((previousMessages) => GiftedChat.append(previousMessages, [toSignalrChatMessage(message)]));
+          setMessages((previousMessages) => GiftedChat.append(previousMessages, [toSignalr(message)]));
         });
       });
 
@@ -59,9 +60,9 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     }, [])
   );
 
-  const onSend = useCallback(async (toSendMessages?: IChatMessage[]) => {
+  const onSend = useCallback(async (toSendMessages?: SignalrMessage[]) => {
     if (toSendMessages) {
-      await connection.invoke("SendToGroup", toSendMessages, groupId);
+      await connection.invoke("SendToGroup", toSendMessages.map(fromSignalr), groupId);
     }
   }, []);
 

@@ -69,7 +69,7 @@ export type TripIntentMatch = Readonly<{
 }>;
 
 export type ChatMessage = Readonly<{
-  text:string;
+  text: string;
 } & IEntity>;
 
 export interface Route {
