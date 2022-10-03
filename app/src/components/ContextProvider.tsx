@@ -41,7 +41,7 @@ async function initContext(): Promise<{ authResponse?: AuthResponse, locationPer
     if (authResponse) {
       console.info(`Token found in asyncstorage, user is ${JSON.stringify(authResponse)}`);
     } else {
-      console.info("Token found in asyncstorage, but it is no longer valid");
+      console.info("Token found in asyncstorage, but it is no longer valid", storedToken);
     }
   }
 

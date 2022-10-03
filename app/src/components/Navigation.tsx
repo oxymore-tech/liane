@@ -52,7 +52,7 @@ function Navigation() {
         })}
       >
         <Tab.Screen
-          name="Home"
+          name="HomeRoot"
           options={{ headerShown: false }}
           component={HomeNavigation}
         />

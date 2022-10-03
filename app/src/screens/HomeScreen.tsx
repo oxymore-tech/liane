@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from "react";
 import { FlatList, SafeAreaView, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 import { TripIntentMatch } from "@/api";
@@ -11,13 +10,23 @@ import { RootNavigation } from "@/api/navigation";
 const ScheduleScreen = () => {
   const tw = useTailwind();
   const [matches, setMatches] = useState<TripIntentMatch[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      getMatches()
-        .then((m) => setMatches(m));
-    }, [])
-  );
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const tripIntentMatches = await getMatches();
+      setMatches(tripIntentMatches);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+  //
+  // useFocusEffect(
+  //   () => {
+  //     refresh().then();
+  //   }
+  // );
 
   const onDelete = useCallback(() => {
 
@@ -34,10 +43,6 @@ const ScheduleScreen = () => {
         <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
       </View>
 
-      <View>
-        <AppText style={tw("text-2xl text-gray-500")}>{matches.length}</AppText>
-      </View>
-
       <FlatList
         style={tw("flex")}
         data={matches}
@@ -49,6 +54,8 @@ const ScheduleScreen = () => {
           />
         )}
         keyExtractor={(data) => data.tripIntent.id!}
+        refreshing={refreshing}
+        onRefresh={refresh}
       />
     </SafeAreaView>
   );

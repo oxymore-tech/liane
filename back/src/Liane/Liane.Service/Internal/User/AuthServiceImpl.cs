@@ -135,7 +135,7 @@ public sealed class AuthServiceImpl : IAuthService
     public async Task<AuthResponse> Me()
     {
         var authUser = currentContext.CurrentUser();
-        var dbUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Phone == currentContext.CurrentUser().Phone))
+        var dbUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Id == new ObjectId(currentContext.CurrentUser().Id)))
             .SingleOrDefault();
         if (dbUser is null)
         {
