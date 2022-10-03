@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
 import { NavigationParamList } from "@/api/navigation";
-import { ChatMessage, RallyingPoint } from "@/api";
+import { ChatMessage, RallyingPoint, TypedMessage } from "@/api";
 import { createChatConnection, TypedSignalrMessage } from "@/api/chat";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
@@ -81,12 +81,9 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
     setProposalDay(selectedDay);
   };
   const sendProposal = () => {
-    const message: TypedSignalrMessage = {
-      _id: "TODO",
+    const message: TypedMessage = {
       text: "proposal",
-      createdAt: new Date(),
-      user: { _id: authUser?.id!, name: authUser!.phone },
-      messageType: "proposal"
+      type: "proposal"
     };
     // TODO Send typed messages to all group users
     // onSend([m]);
@@ -135,7 +132,6 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
           keyExtractor={(item) => item.id!}
           // refreshing={refreshing}
           // onRefresh={refresh}
-          inverted
         />
         <View style={tw("flex flex-row items-center bg-liane-yellow")}>
           <AppButton icon="add-circle" style={tw("")} color="yellow" />

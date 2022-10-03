@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { FlatList, SafeAreaView, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
+import { useFocusEffect } from "@react-navigation/native";
 import { AppText } from "@/components/base/AppText";
-import { TripIntentMatch } from "@/api";
+import { ChatMessage, RallyingPoint, TripIntentMatch } from "@/api";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
 import { RootNavigation } from "@/api/navigation";
@@ -21,12 +22,12 @@ const ScheduleScreen = () => {
       setRefreshing(false);
     }
   }, []);
-  //
-  // useFocusEffect(
-  //   () => {
-  //     refresh().then();
-  //   }
-  // );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refresh().then();
+    }, [])
+  );
 
   const onDelete = useCallback(() => {
 

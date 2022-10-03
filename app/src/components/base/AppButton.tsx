@@ -29,7 +29,15 @@ function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
   if (!outline) {
     return "text-white";
   }
-  return `text-liane-${color}-30`;
+
+  switch (color) {
+    case "yellow":
+      return "text-liane-yellow-30";
+    case "orange":
+      return "text-liane-orange-30";
+    default:
+      return "text-liane-blue-30";
+  }
 }
 
 function getBorder(color: Colors, outline: boolean, disabled: boolean) {
@@ -39,7 +47,15 @@ function getBorder(color: Colors, outline: boolean, disabled: boolean) {
   if (!outline) {
     return "";
   }
-  return `border-2 border-liane-${color}-30`;
+
+  switch (color) {
+    case "yellow":
+      return "border-2 border-liane-yellow-30";
+    case "orange":
+      return "border-2 border-liane-orange-30";
+    default:
+      return "border-2 border-liane-blue-30";
+  }
 }
 
 function getBackgroundColor(color: Colors, outline: boolean, disabled: boolean) {
@@ -49,7 +65,15 @@ function getBackgroundColor(color: Colors, outline: boolean, disabled: boolean) 
   if (outline) {
     return "";
   }
-  return (color === "blue" ? "bg-liane-blue-30" : "bg-liane-orange");
+
+  switch (color) {
+    case "yellow":
+      return "bg-liane-yellow";
+    case "orange":
+      return "bg-liane-orange";
+    default:
+      return "bg-liane-blue-30";
+  }
 }
 
 export function AppButton({ color = "blue", disabled = false, title, outline = false, icon, style, ...props }: LianeButtonProps) {

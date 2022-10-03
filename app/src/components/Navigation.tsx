@@ -44,7 +44,7 @@ function Navigation() {
             return (
               <Ionicons
                 name={icons[route.name][focused]}
-                style={tw(`text-4xl mt-4 ${focused ? "text-liane-orange" : ""}`)}
+                style={tw(`text-4xl mt-4 h-10 ${focused ? "text-liane-orange" : ""}`)}
               />
             );
           },

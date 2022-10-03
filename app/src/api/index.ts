@@ -1,5 +1,3 @@
-import { IChatMessage } from "react-native-gifted-chat/lib/Models";
-
 export type IIdentity = Readonly<{
   id?: string;
 }>;
@@ -72,9 +70,13 @@ export type ChatMessage = Readonly<{
   text: string;
 } & IEntity>;
 
-export interface Route {
-  readonly coordinates: LatLng[],
-  readonly duration: number,
-  readonly distance: number,
-  readonly delta?: number
-}
+export type TypedMessage = Readonly<{
+  type: "proposal";
+} & ChatMessage>;
+
+export type Route = Readonly<{
+  coordinates: LatLng[],
+  duration: number,
+  distance: number,
+  delta?: number
+}>;
