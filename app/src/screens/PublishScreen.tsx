@@ -122,21 +122,21 @@ const PublishScreen = () => {
 
   return (
     <SafeAreaView style={tw("h-full")}>
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-orange-400")}>
-        <AppText style={tw("absolute text-lg text-center text-white w-full")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
+        <AppText style={tw("absolute text-2xl text-center text-white w-full")}>
           Enregistrement d&apos;un trajet
         </AppText>
       </View>
 
       <View style={tw("flex flex-col h-full justify-around mx-2 -mb-20")}>
 
-        <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center z-10")}>
+        <View style={tw("flex flex-col rounded-xl bg-gray-200 py-2 px-3 items-center z-10")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
             <AppText style={tw("text-2xl font-extralight")}>Trajet</AppText>
           </View>
 
-          <View style={tw("flex flex-row w-full items-center")}>
+          <View style={tw("flex flex-row w-full m-3 items-center")}>
 
             <View style={tw("flex flex-col items-center mr-3")}>
               <View style={tw("h-3 w-3 bg-liane-yellow rounded-full -mb-1")} />
@@ -147,7 +147,7 @@ const PublishScreen = () => {
             <View style={tw("flex-grow self-stretch")}>
 
               <View style={tw("absolute min-h-full -top-2 left-0 right-0 z-20")}>
-                <AppText style={tw("flex-row text-base font-medium")}> Départ</AppText>
+                <AppText style={tw("flex-row text-base font-bold")}>Départ</AppText>
                 <Autocomplete
                   inputContainerStyle={tw("border-0")}
                   renderTextInput={(props) => <AppTextInput {...props} style={tw("bg-white rounded px-1.5 py-0.5")} />}
@@ -172,7 +172,7 @@ const PublishScreen = () => {
                 />
               </View>
               <View style={tw("absolute min-h-full top-1/2 left-0 right-0 z-10")}>
-                <AppText style={tw("flex-row text-base font-medium")}> Arrivé</AppText>
+                <AppText style={tw("flex-row text-base font-bold")}> Arrivé</AppText>
                 <Autocomplete
                   inputContainerStyle={tw("border-0")}
                   renderTextInput={(props) => <AppTextInput {...props} style={tw("bg-white rounded px-1.5 py-0.5")} />}
@@ -201,10 +201,10 @@ const PublishScreen = () => {
           </View>
         </View>
 
-        <View style={tw("flex flex-col rounded-xl bg-gray-300 p-3 items-center")}>
+        <View style={tw("flex flex-col rounded-xl bg-gray-200 p-3 items-center")}>
 
           <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-normal font-extralight")}>Horaire</AppText>
+            <AppText style={tw("text-2xl font-extralight")}>Horaire</AppText>
             <View style={tw("flex flex-row items-center")}>
               <AppText style={tw("text-sm font-medium")}>Aller - Retour</AppText>
               <Switch
@@ -228,10 +228,10 @@ const PublishScreen = () => {
 
             <View style={tw("flex flex-row w-full justify-around items-center mt-2")}>
               <View style={tw("flex flex-col")}>
-                <AppText style={tw("text-base font-medium")}> Aller</AppText>
+                <AppText style={tw("text-base text-center font-bold")}>Aller</AppText>
                 <AppButton
                   title={`${fromTime.getHours()}:${fromTime.getMinutes() < 10 ? "0" : ""}${fromTime.getMinutes()}`}
-                  style={tw("bg-gray-200")}
+                  style={tw("bg-gray-500 rounded-xl m-1 p-2 ")}
                   onPress={() => setShowFromTime(true)}
                 />
               </View>
@@ -239,10 +239,10 @@ const PublishScreen = () => {
                   isRoundTrip
                   && (
                   <View style={tw("flex flex-col")}>
-                    <AppText style={tw("text-base font-medium")}> Retour</AppText>
+                    <AppText style={tw("text-base text-center font-bold")}>Retour</AppText>
                     <AppButton
                       title={toTime != null ? `${toTime.getHours()}:${toTime.getMinutes() < 10 ? "0" : ""}${toTime.getMinutes()}` : ""}
-                      style={tw("bg-gray-200")}
+                      style={tw("bg-gray-500 rounded-xl m-1 p-2")}
                       onPress={() => setShowToTime(true)}
                     />
                   </View>
@@ -279,7 +279,7 @@ const PublishScreen = () => {
 
         <AppButton
           title="Publier"
-          style={tw("bg-orange-400 rounded-full mx-10")}
+          style={tw("bg-blue-800 rounded-full m-1 p-1 mx-10")}
           disabled={!startPoint || !endPoint}
           onPress={onPublicationPressed}
         />

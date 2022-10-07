@@ -15,7 +15,7 @@ import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { useTailwind } from "tailwind-rn";
 import { NavigationParamList } from "@/api/navigation";
 import { ChatMessage, RallyingPoint, TypedMessage } from "@/api";
-import { createChatConnection, TypedSignalrMessage } from "@/api/chat";
+import { createChatConnection } from "@/api/chat";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";

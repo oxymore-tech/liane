@@ -13,18 +13,18 @@ const SettingsScreen = () => {
   return (
     <SafeAreaView style={tw("flex h-full")}>
 
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-orange-400")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
         <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Paramètres</AppText>
       </View>
 
       <View style={tw("h-full justify-center")}>
         <AppButton
-          style={tw("bg-blue-800 rounded-full m-1 mx-10")}
+          style={tw("bg-blue-800 rounded-full m-1 p-1 mx-10")}
           title="Paramètres de géolocalisation"
           onPress={() => { setLocationPermission(LocationPermissionLevel.NEVER); }}
         />
         <AppButton
-          style={tw("bg-blue-800 rounded-full m-1 mx-10")}
+          style={tw("bg-blue-800 rounded-full m-1 p-3 mx-10")}
           title="Déconnexion"
           onPress={() => { setAuthUser(undefined); }}
         />

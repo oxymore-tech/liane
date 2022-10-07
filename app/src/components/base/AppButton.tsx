@@ -24,7 +24,7 @@ export interface LianeButtonProps extends PressableProps {
 
 function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
   if (disabled) {
-    return "text-gray-500";
+    return "text-gray-200";
   }
   if (!outline) {
     return "text-white";

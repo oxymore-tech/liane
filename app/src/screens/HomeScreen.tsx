@@ -40,7 +40,7 @@ const ScheduleScreen = () => {
   return (
     <SafeAreaView style={tw("flex flex-col h-full")}>
 
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-orange-400")}>
+      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
         <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
       </View>
 
