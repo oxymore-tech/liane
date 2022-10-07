@@ -45,7 +45,6 @@ function mongo_purge {
 
 function stop {
   mongo_stop
-  redis_stop
 }
 
 function start {
