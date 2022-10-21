@@ -5,9 +5,6 @@ jobs:
   update:
     name: EAS Update
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: 'app'
     steps:
       - name: Check for EXPO_TOKEN
         run: |
@@ -34,7 +31,9 @@ jobs:
 
       - name: Find npm cache
         id: npm-cache-path
-        run: echo "::set-output name=dir::$(npm config get cache)"
+        run: 
+          shell: echo "::set-output name=dir::$(npm config get cache)"
+          working-directory: 'app'
 
       - name: Restore cache
         uses: actions/cache@v2
@@ -44,7 +43,11 @@ jobs:
           restore-keys: ${{ runner.os }}-npm-
         
       - name: Install dependencies
-        run: npm install --immutable
+        run:
+          shell: npm install --immutable
+          working-directory: 'app'
 
       - name: Publish update
-        run: eas update --auto
+        run: 
+          shell: eas update --auto
+          working-directory: 'app'
