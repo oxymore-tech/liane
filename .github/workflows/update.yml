@@ -5,6 +5,9 @@ jobs:
   update:
     name: EAS Update
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'app'
     steps:
       - name: Check for EXPO_TOKEN
         run: |
@@ -21,7 +24,6 @@ jobs:
         with:
           node-version: 16.x
           cache: npm
-        working-directory: app
 
       - name: Setup Expo
         uses: expo/expo-github-action@v7
@@ -33,7 +35,6 @@ jobs:
       - name: Find npm cache
         id: npm-cache-path
         run: echo "::set-output name=dir::$(npm config get cache)"
-        working-directory: app
 
       - name: Restore cache
         uses: actions/cache@v2
@@ -44,8 +45,6 @@ jobs:
         
       - name: Install dependencies
         run: npm install --immutable
-        working-directory: app
 
       - name: Publish update
         run: eas update --auto
-        working-directory: app
