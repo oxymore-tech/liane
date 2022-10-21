@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: 16.x
           cache: npm
+          cache-dependency-path: "./app/package-lock.json"
 
       - name: Setup Expo
         uses: expo/expo-github-action@v7
