@@ -41,8 +41,7 @@ jobs:
           path: ${{ steps.npm-cache-path.outputs.dir }}
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-npm-
-        working-directory: app
-
+        
       - name: Install dependencies
         run: npm install --immutable
         working-directory: app
