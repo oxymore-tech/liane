@@ -31,9 +31,8 @@ jobs:
 
       - name: Find npm cache
         id: npm-cache-path
-        run: 
-          shell: echo "::set-output name=dir::$(npm config get cache)"
-          working-directory: 'app'
+        run: echo "::set-output name=dir::$(npm config get cache)"
+        working-directory: ./app
 
       - name: Restore cache
         uses: actions/cache@v2
@@ -43,11 +42,9 @@ jobs:
           restore-keys: ${{ runner.os }}-npm-
         
       - name: Install dependencies
-        run:
-          shell: npm install --immutable
-          working-directory: 'app'
+        run: npm install --immutable
+        working-directory: ./app
 
       - name: Publish update
-        run: 
-          shell: eas update --auto
-          working-directory: 'app'
+        run: eas update --auto
+        working-directory: ./app
