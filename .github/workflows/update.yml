@@ -18,10 +18,10 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v2
+        working-directory: ./app
         with:
           node-version: 16.x
           cache: npm
-          working-directory: ./app
 
       - name: Setup Expo
         uses: expo/expo-github-action@v7
