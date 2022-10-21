@@ -29,8 +29,6 @@ nvm use
 npm install
 
 npm run android
-# ou si cela ne marche pas
-npm run android -- --tunnel
 
 # et en parallèle pour générer les styles avec tailwind de manière dynamique (JIT)
 npm run tailwind
