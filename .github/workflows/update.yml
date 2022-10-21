@@ -23,7 +23,6 @@ jobs:
           cache: npm
 
       - name: Setup Expo
-        working-directory: ./app
         uses: expo/expo-github-action@v7
         with:
           expo-version: latest
@@ -31,12 +30,10 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Find npm cache
-        working-directory: ./app
         id: npm-cache-path
         run: echo "::set-output name=dir::~/.npm"
 
       - name: Restore cache
-        working-directory: ./app
         uses: actions/cache@v2
         with:
           path: ${{ steps.npm-cache-path.outputs.dir }}
@@ -44,9 +41,9 @@ jobs:
           restore-keys: ${{ runner.os }}-npm-
 
       - name: Install dependencies
-        working-directory: ./app
         run: npm install --immutable
+        working-directory: ./app
 
       - name: Publish update
-        working-directory: ./app
         run: eas update --auto
+        working-directory: ./app
