@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: 16.x
           cache: npm
+        working-directory: app
 
       - name: Setup Expo
         uses: expo/expo-github-action@v7
@@ -28,10 +29,12 @@ jobs:
           expo-version: latest
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+        working-directory: app
 
       - name: Find npm cache
         id: npm-cache-path
-        run: echo "::set-output name=dir::~/.npm"
+        run: echo "::set-output name=dir::$(npm config get cache)"
+        working-directory: app
 
       - name: Restore cache
         uses: actions/cache@v2
@@ -39,11 +42,12 @@ jobs:
           path: ${{ steps.npm-cache-path.outputs.dir }}
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-npm-
+        working-directory: app
 
       - name: Install dependencies
         run: npm install --immutable
-        working-directory: ./app
+        working-directory: app
 
       - name: Publish update
         run: eas update --auto
-        working-directory: ./app
+        working-directory: app
