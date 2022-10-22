@@ -15,8 +15,12 @@ export default {
     backgroundColor: "#FFFFFF"
   },
   jsEngine: "hermes",
+  runtimeVersion: {
+    policy: "sdkVersion"
+  },
   updates: {
-    fallbackToCacheTimeout: 0
+    fallbackToCacheTimeout: 0,
+    url: "https://u.expo.dev/7b7be910-6283-46fb-a28c-e2503a089ea6"
   },
   assetBundlePatterns: [
     "**/*"
@@ -50,6 +54,9 @@ export default {
     }
   },
   extra: {
+    eas: {
+      projectId: "7b7be910-6283-46fb-a28c-e2503a089ea6"
+    },
     envName: ENV_NAME,
     datadogClientToken: DD_CLIENT_TOKEN,
     datadogAppId: DD_APP_ID

@@ -31,9 +31,9 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Find npm cache
+        working-directory: ./app
         id: npm-cache-path
         run: echo "::set-output name=dir::$(npm config get cache)"
-        working-directory: ./app
 
       - name: Restore cache
         uses: actions/cache@v2
@@ -43,9 +43,9 @@ jobs:
           restore-keys: ${{ runner.os }}-npm-
         
       - name: Install dependencies
-        run: npm install --immutable
         working-directory: ./app
+        run: npm install
 
       - name: Publish update
-        run: eas update --auto
         working-directory: ./app
+        run: eas update --auto
