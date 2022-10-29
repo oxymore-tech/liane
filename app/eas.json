@@ -11,12 +11,17 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "env": {
+        "ENV_NAME": "liane-dev"
+      },
+      "distribution": "internal",
+      "channel": "develop"
     },
     "production": {
       "env": {
         "ENV_NAME": "liane-dev"
-      }
+      },
+      "channel": "develop"
     }
   },
   "submit": {

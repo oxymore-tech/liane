@@ -18,17 +18,13 @@ export default {
   runtimeVersion: {
     policy: "sdkVersion"
   },
-  updates: {
-    fallbackToCacheTimeout: 0,
-    url: "https://u.expo.dev/7b7be910-6283-46fb-a28c-e2503a089ea6"
-  },
   assetBundlePatterns: [
     "**/*"
   ],
   ios: {
     supportsTablet: true,
     bundleIdentifier: "tech.oxymore.liane",
-    buildNumber: "29",
+    buildNumber: "30",
     config: {
       googleMapsApiKey: GOOGLE_API_KEY
     }
@@ -41,7 +37,7 @@ export default {
       "android.permission.ACCESS_FINE_LOCATION"
     ],
     package: "tech.oxymore.liane",
-    versionCode: 29,
+    versionCode: 30,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
