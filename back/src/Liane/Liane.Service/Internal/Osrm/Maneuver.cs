@@ -1,4 +1,4 @@
-﻿using Liane.Api.Routing;
+﻿using LngLatTuple = System.Tuple<double, double>;
 
 namespace Liane.Service.Internal.Osrm;
 

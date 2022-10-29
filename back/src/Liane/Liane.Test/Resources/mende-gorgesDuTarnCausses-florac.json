@@ -1,58 +1,58 @@
 {
-  "Code": "Ok",
-  "Waypoints": [
+  "code": "Ok",
+  "waypoints": [
     {
-      "Name": "Rue de la Libert\u00E9",
-      "Location": [
+      "name": "Rue de la Libert\u00E9",
+      "location": [
         3.499084,
-        44.518149
+        3.499084
       ],
-      "Distance": 13.990154,
-      "Hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
-      "Nodes": null
+      "distance": 13.990154,
+      "hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
+      "nodes": null
     },
     {
-      "Name": "Route de Florac",
-      "Location": [
+      "name": "Route de Florac",
+      "location": [
         3.414941,
-        44.366035
+        3.414941
       ],
-      "Distance": 101.209946,
-      "Hint": "HhbPgEsWz4AOAAAACgAAAC4CAAAFAAAAPMt_QVIDLkE8LjNE7j3DQA4AAAAKAAAALgIAAAUAAACVHgAAnRs0ANP4pAI5GzQAR_WkAh4ALxEEBMYt",
-      "Nodes": null
+      "distance": 101.209946,
+      "hint": "HhbPgEsWz4AOAAAACgAAAC4CAAAFAAAAPMt_QVIDLkE8LjNE7j3DQA4AAAAKAAAALgIAAAUAAACVHgAAnRs0ANP4pAI5GzQAR_WkAh4ALxEEBMYt",
+      "nodes": null
     },
     {
-      "Name": "",
-      "Location": [
+      "name": "",
+      "location": [
         3.582862,
-        44.32323
+        3.582862
       ],
-      "Distance": 607.20026,
-      "Hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
-      "Nodes": null
+      "distance": 607.20026,
+      "hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
+      "nodes": null
     }
   ],
-  "Routes": [
+  "routes": [
     {
-      "Distance": 55818.1,
-      "Duration": 3661.1,
-      "Weight": 3661.1,
-      "WeightName": null,
-      "Geometry": null,
-      "Legs": [
+      "distance": 55818.1,
+      "duration": 3661.1,
+      "weight": 3661.1,
+      "weight_name": "routability",
+      "geometry": null,
+      "legs": [
         {
-          "Distance": 27364.9,
-          "Duration": 1717.3,
-          "Steps": [],
-          "Weight": 1717.3,
-          "Annotation": null
+          "distance": 27364.9,
+          "duration": 1717.3,
+          "steps": [],
+          "weight": 1717.3,
+          "annotation": null
         },
         {
-          "Distance": 28453.2,
-          "Duration": 1943.8,
-          "Steps": [],
-          "Weight": 1943.8,
-          "Annotation": null
+          "distance": 28453.2,
+          "duration": 1943.8,
+          "steps": [],
+          "weight": 1943.8,
+          "annotation": null
         }
       ]
     }

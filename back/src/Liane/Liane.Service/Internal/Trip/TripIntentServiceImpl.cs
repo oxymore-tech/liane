@@ -26,44 +26,46 @@ public sealed class TripIntentServiceImpl : ITripIntentService
 
     public async Task<TripIntent> Create(TripIntent tripIntent)
     {
-        var id = ObjectId.GenerateNewId();
-
         var from = await rallyingPointService.Get(tripIntent.From);
         var to = await rallyingPointService.Get(tripIntent.To);
 
+        var id = ObjectId.GenerateNewId()
+            .ToString();
         var createdBy = currentContext.CurrentUser().Id;
         var createdAt = DateTime.UtcNow;
-        var created = tripIntent with { Id = id.ToString(), From = from, To = to, CreatedBy = createdBy, CreatedAt = createdAt };
+        var created = tripIntent with { Id = id, From = from, To = to, CreatedBy = createdBy, CreatedAt = createdAt };
 
-        await mongo.GetCollection<DbTripIntent>()
-            .InsertOneAsync(new DbTripIntent(id, tripIntent.Title, tripIntent.From, tripIntent.To, tripIntent.GoTime, tripIntent.ReturnTime, createdBy, createdAt));
+        await mongo.GetCollection<TripIntent>()
+            .InsertOneAsync(created);
 
         return created;
     }
 
     public async Task Delete(string id)
     {
-        await mongo.GetCollection<DbTripIntent>().DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
+        await mongo.GetCollection<TripIntent>()
+            .DeleteOneAsync(ti => ti.Id == id);
     }
 
     public async Task<ImmutableList<TripIntent>> List()
     {
+        var cursorAsync = await mongo.GetCollection<TripIntent>()
+            .Find(i => true)
+            .ToCursorAsync();
         var tripIntents = new List<TripIntent>();
-
-        foreach (var dbTripIntent in (await mongo.GetCollection<DbTripIntent>()
-                     .FindAsync(i => true))
-                 .ToEnumerable())
+        foreach (var tripIntent in cursorAsync.ToEnumerable())
         {
-            tripIntents.Add(await ToTripIntent(dbTripIntent));
+            tripIntents.Add(await ResolveRallyingPoints(tripIntent));
         }
 
-        return tripIntents.ToImmutableList();
+        return tripIntents
+            .ToImmutableList();
     }
 
-    private async Task<TripIntent> ToTripIntent(DbTripIntent dbTripIntent)
+    private async Task<TripIntent> ResolveRallyingPoints(TripIntent tripIntent)
     {
-        var from = await rallyingPointService.Get(dbTripIntent.From);
-        var to = await rallyingPointService.Get(dbTripIntent.To);
-        return new TripIntent(dbTripIntent.Id.ToString(), null, from, to, dbTripIntent.GoTime, dbTripIntent.ReturnTime, dbTripIntent.CreatedBy, dbTripIntent.CreatedAt);
+        var from = await rallyingPointService.Get(tripIntent.From);
+        var to = await rallyingPointService.Get(tripIntent.To);
+        return tripIntent with { From = from, To = to };
     }
 }

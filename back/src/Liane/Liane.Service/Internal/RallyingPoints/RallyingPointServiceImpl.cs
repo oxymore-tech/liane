@@ -18,12 +18,23 @@ namespace Liane.Service.Internal.RallyingPoints;
 
 internal sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
 
-internal sealed record OverpassElement(double Lat, double Lon, OverpassTag Tags);
+internal sealed record OverpassElement(long Id, double Lat, double Lon, OverpassTag Tags);
 
 internal sealed record OverpassTag(string Name);
 
 public sealed class RallyingPointServiceImpl : IRallyingPointService
 {
+    internal static readonly string[] AccentedChars =
+    {
+        "[aáÁàÀâÂäÄãÃåÅæÆ]",
+        "[cçÇ]",
+        "[eéÉèÈêÊëË]",
+        "[iíÍìÌîÎïÏ]",
+        "[nñÑ]",
+        "[oóÓòÒôÔöÖõÕøØœŒß]",
+        "[uúÚùÙûÛüÜ]"
+    };
+
     private const int SelectionRadius = 25_000;
     private const int MaxRadius = 400_000;
     private const int MaxRallyingPoint = 10;
@@ -40,39 +51,44 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
     public async Task<RallyingPoint> Get(string id)
     {
-        var dbRallyingPoint = (await mongo.GetCollection<DbRallyingPoint>()
-                .FindAsync(p => p.Id == new ObjectId(id)))
-            .Single();
-        return dbRallyingPoint.ToRallyingPoint();
+        var rallyingPoint = await mongo.GetCollection<RallyingPoint>()
+            .Find(p => p.Id == id)
+            .FirstOrDefaultAsync();
+        if (rallyingPoint is null)
+        {
+            throw new ResourceNotFoundException($"RallyingPoint '{id}' not found");
+        }
+
+        return rallyingPoint;
     }
 
     public async Task<RallyingPoint> Create(RallyingPoint rallyingPoint)
     {
         var newId = ObjectId.GenerateNewId();
         var created = rallyingPoint with { Id = newId.ToString() };
-        await mongo.GetCollection<DbRallyingPoint>()
-            .InsertOneAsync(ToDbRallyingPoint(created));
+        await mongo.GetCollection<RallyingPoint>()
+            .InsertOneAsync(created);
         return created;
     }
 
     public async Task Delete(string id)
     {
-        await mongo.GetCollection<DbRallyingPoint>()
-            .DeleteOneAsync(rp => rp.Id == ObjectId.Parse(id));
+        await mongo.GetCollection<RallyingPoint>()
+            .DeleteOneAsync(rp => rp.Id == id);
     }
 
     public async Task Update(string id, RallyingPoint rallyingPoint)
     {
-        await mongo.GetCollection<DbRallyingPoint>()
+        await mongo.GetCollection<RallyingPoint>()
             .ReplaceOneAsync(
-                rp => rp.Id == ObjectId.Parse(id),
-                ToDbRallyingPoint(rallyingPoint)
+                rp => rp.Id == id,
+                rallyingPoint
             );
     }
 
     public async Task ImportCities()
     {
-        await mongo.GetCollection<DbRallyingPoint>()
+        await mongo.GetCollection<RallyingPoint>()
             .DeleteManyAsync(_ => true);
 
         var assembly = Assembly.GetEntryAssembly()!;
@@ -90,8 +106,8 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         if (data is not null)
         {
             // Add the data to the database
-            List<DbRallyingPoint> rallyingPoints = data.Elements.Select(e => new DbRallyingPoint(ObjectId.GenerateNewId(), e.Tags.Name, e.Lat, e.Lon)).ToList();
-            await mongo.GetCollection<DbRallyingPoint>()
+            var rallyingPoints = data.Elements.Select(e => new RallyingPoint($"city:{e.Id}", e.Tags.Name, new LatLng(e.Lat, e.Lon), true)).ToList();
+            await mongo.GetCollection<RallyingPoint>()
                 .InsertManyAsync(rallyingPoints);
             logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
         }
@@ -99,37 +115,31 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
     public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
     {
-        return await ListInternal(pos, search);
-    }
-
-    private async Task<ImmutableList<RallyingPoint>> ListInternal(LatLng? pos, string? search)
-    {
-        var builder = Builders<DbRallyingPoint>.Filter;
+        var builder = Builders<RallyingPoint>.Filter;
         var result = ImmutableList.Create<RallyingPoint>();
         var searchRadius = SelectionRadius;
 
         // Keep looking for matching rallying points (name and location) by doubling the selection radius around the location
         while (result.IsEmpty && searchRadius < MaxRadius)
         {
-            var filter = FilterDefinition<DbRallyingPoint>.Empty;
-            if (pos != null)
+            var filter = FilterDefinition<RallyingPoint>.Empty;
+            if (pos.HasValue)
             {
-                var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat));
+                var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
                 filter &= builder.Near(x => x.Location, point, searchRadius);
             }
 
             if (search != null)
             {
-                var cleanedSearch = Regex.Replace(search, "\\s+", " ");
-                var regex = new Regex(".*" + cleanedSearch + ".*", RegexOptions.IgnoreCase);
+                var regex = new Regex($".*{ToSearchPattern(search)}.*", RegexOptions.IgnoreCase);
                 filter &= builder.Regex(x => x.Label, new BsonRegularExpression(regex));
             }
 
-            result = (await mongo.GetCollection<DbRallyingPoint>()
-                    .FindAsync(filter))
+            result = (await mongo.GetCollection<RallyingPoint>()
+                    .Find(filter)
+                    .Limit(MaxRallyingPoint)
+                    .ToCursorAsync())
                 .ToEnumerable()
-                .Select(rp => rp.ToRallyingPoint())
-                .Take(MaxRallyingPoint)
                 .ToImmutableList();
 
             searchRadius *= 2;
@@ -140,16 +150,14 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
     public async Task<RallyingPoint?> Snap(LatLng position)
     {
-        int radius = 100;
-        var builder = Builders<DbRallyingPoint>.Filter;
+        const int radius = 100;
+        var builder = Builders<RallyingPoint>.Filter;
         var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(position.Lng, position.Lat));
         var filter = builder.Near(x => x.Location, point, radius);
 
-        var result = (await mongo.GetCollection<DbRallyingPoint>().FindAsync(filter))
-            .FirstOrDefault()?
-            .ToRallyingPoint();
-
-        return result;
+        return await mongo.GetCollection<RallyingPoint>()
+            .Find(filter)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
@@ -168,8 +176,9 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         return rallyingPoints.Distinct().ToImmutableList();
     }
 
-    private static DbRallyingPoint ToDbRallyingPoint(RallyingPoint rallyingPoint)
+    private static string ToSearchPattern(string search)
     {
-        return new DbRallyingPoint(ObjectId.Parse(rallyingPoint.Id), rallyingPoint.Label, rallyingPoint.Location, rallyingPoint.IsActive);
+        search = Regex.Escape(search);
+        return AccentedChars.Aggregate(search, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
     }
 }

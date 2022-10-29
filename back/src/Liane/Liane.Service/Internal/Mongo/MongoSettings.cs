@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Immutable;
 using Liane.Api.Util;
+using Liane.Api.Util.Ref;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
@@ -13,13 +15,11 @@ public sealed record MongoSettings(string Host, string Username, string Password
     {
         if (!_init)
         {
-            BsonClassMap.RegisterClassMap<TimeOnly>(cm =>
-            {
-                cm.AutoMap();
-                cm.MapCreator(p => new TimeOnly(p.Hour, p.Minute));
-            });
             BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
             BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
+            BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
+            BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));
+            BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
             _init = true;
         }
 

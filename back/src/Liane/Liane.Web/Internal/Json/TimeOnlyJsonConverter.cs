@@ -7,17 +7,17 @@ namespace Liane.Web.Internal.Json;
 internal sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
 {
     private const string Hour = "hour";
-    private const string Minutes = "minutes";
+    private const string Minute = "minute";
 
     public override TimeOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var time = new TimeOnly(0, 0);
-
+        var hour = 0;
+        var minute = 0;
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
             {
-                return time;
+                return new TimeOnly(hour, minute);
             }
 
             if (reader.TokenType != JsonTokenType.PropertyName)
@@ -31,10 +31,10 @@ internal sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
             switch (propertyName)
             {
                 case Hour:
-                    time.AddHours(reader.GetInt32());
+                    hour = reader.GetInt32();
                     break;
-                case Minutes:
-                    time.AddMinutes(reader.GetInt32());
+                case Minute:
+                    minute = reader.GetInt32();
                     break;
             }
         }
@@ -46,7 +46,7 @@ internal sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
     {
         writer.WriteStartObject();
         writer.WriteNumber(Hour, value.Hour);
-        writer.WriteNumber(Minutes, value.Minute);
+        writer.WriteNumber(Minute, value.Minute);
         writer.WriteEndObject();
     }
 }

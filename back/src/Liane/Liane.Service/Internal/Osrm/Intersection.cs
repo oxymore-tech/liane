@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
-using Liane.Api.Routing;
 using Liane.Api.Util;
+
+using LngLatTuple = System.Tuple<double, double>;
 
 namespace Liane.Service.Internal.Osrm;
 

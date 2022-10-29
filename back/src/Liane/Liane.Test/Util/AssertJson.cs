@@ -3,20 +3,24 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Util;
 using NUnit.Framework;
 
 namespace Liane.Test.Util;
 
 public static class AssertJson
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+        { WriteIndented = true, PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new LngLatTupleJsonConverter() } };
+
     public static void AreEqual(string expectedJsonFile, object actual)
     {
         var assembly = Assembly.GetCallingAssembly();
         using var stream = AssertExtensions.ReadTestResource(expectedJsonFile, assembly);
 
         var expectedJson = new StreamReader(stream, Encoding.UTF8).ReadToEnd();
-        var options = new JsonSerializerOptions {WriteIndented = true};
-        var serializeObject = JsonSerializer.Serialize(actual, options);
+        var serializeObject = JsonSerializer.Serialize(actual, JsonOptions);
         try
         {
             Assert.AreEqual(expectedJson, serializeObject);
@@ -32,6 +36,6 @@ public static class AssertJson
         var assembly = Assembly.GetCallingAssembly();
         using var stream = AssertExtensions.ReadTestResource(jsonFile, assembly);
         var expectedJson = new StreamReader(stream, Encoding.UTF8).ReadToEnd();
-        return JsonSerializer.Deserialize<T>(expectedJson)!;
+        return JsonSerializer.Deserialize<T>(expectedJson, JsonOptions)!;
     }
 }

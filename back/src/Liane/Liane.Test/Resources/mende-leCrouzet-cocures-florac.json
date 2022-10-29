@@ -1,75 +1,75 @@
 {
-  "Code": "Ok",
-  "Waypoints": [
+  "code": "Ok",
+  "waypoints": [
     {
-      "Name": "Rue de la Libert\u00E9",
-      "Location": [
+      "name": "Rue de la Libert\u00E9",
+      "location": [
         3.499084,
-        44.518149
+        3.499084
       ],
-      "Distance": 13.990154,
-      "Hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
-      "Nodes": null
+      "distance": 13.990154,
+      "hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
+      "nodes": null
     },
     {
-      "Name": "",
-      "Location": [
+      "name": "",
+      "location": [
         3.623187,
-        44.377737
+        3.623187
       ],
-      "Distance": 8.579707,
-      "Hint": "A3cegHF3HoANAAAAAgAAANcKAAAhAQAAfAV2QThz0D9pXUBFuV6gQw0AAAACAAAA1woAACEBAACVHgAAE0k3AIkmpQImSTcA1SalAogAjxEEBMYt",
-      "Nodes": null
+      "distance": 8.579707,
+      "hint": "A3cegHF3HoANAAAAAgAAANcKAAAhAQAAfAV2QThz0D9pXUBFuV6gQw0AAAACAAAA1woAACEBAACVHgAAE0k3AIkmpQImSTcA1SalAogAjxEEBMYt",
+      "nodes": null
     },
     {
-      "Name": "",
-      "Location": [
+      "name": "",
+      "location": [
         3.618852,
-        44.347197
+        3.618852
       ],
-      "Distance": 1.464217,
-      "Hint": "qXsegKx7HoBbAAAACwAAAAAAAAAbAAAAUoEYQiMOk0AAAAAAc6s0QVsAAAALAAAAAAAAABsAAACVHgAAJDg3AD2vpAInODcAMK-kAgAADwUEBMYt",
-      "Nodes": null
+      "distance": 1.464217,
+      "hint": "qXsegKx7HoBbAAAACwAAAAAAAAAbAAAAUoEYQiMOk0AAAAAAc6s0QVsAAAALAAAAAAAAABsAAACVHgAAJDg3AD2vpAInODcAMK-kAgAADwUEBMYt",
+      "nodes": null
     },
     {
-      "Name": "",
-      "Location": [
+      "name": "",
+      "location": [
         3.582862,
-        44.32323
+        3.582862
       ],
-      "Distance": 607.20026,
-      "Hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
-      "Nodes": null
+      "distance": 607.20026,
+      "hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
+      "nodes": null
     }
   ],
-  "Routes": [
+  "routes": [
     {
-      "Distance": 46322.4,
-      "Duration": 3515.1,
-      "Weight": 3515.1,
-      "WeightName": null,
-      "Geometry": null,
-      "Legs": [
+      "distance": 46322.4,
+      "duration": 3515.1,
+      "weight": 3515.1,
+      "weight_name": "routability",
+      "geometry": null,
+      "legs": [
         {
-          "Distance": 34456.2,
-          "Duration": 2459.1,
-          "Steps": [],
-          "Weight": 2459.1,
-          "Annotation": null
+          "distance": 34456.2,
+          "duration": 2459.1,
+          "steps": [],
+          "weight": 2459.1,
+          "annotation": null
         },
         {
-          "Distance": 4785.7,
-          "Duration": 504.9,
-          "Steps": [],
-          "Weight": 504.9,
-          "Annotation": null
+          "distance": 4785.7,
+          "duration": 504.9,
+          "steps": [],
+          "weight": 504.9,
+          "annotation": null
         },
         {
-          "Distance": 7080.5,
-          "Duration": 551.1,
-          "Steps": [],
-          "Weight": 551.1,
-          "Annotation": null
+          "distance": 7080.5,
+          "duration": 551.1,
+          "steps": [],
+          "weight": 551.1,
+          "annotation": null
         }
       ]
     }

@@ -178,7 +178,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         } while (search);
 
         // Then generate the final route which is not crossing detourPoint
-        var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()));
+        var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location, endIntersections[0].Location));
 
         if (alternatives.Count > 1)
         {
@@ -190,7 +190,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         }
 
         // No solution
-        return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()), duration, distance, -4);
+        return new DeltaRoute(ImmutableList.Create<LatLng>(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
     }
 
     public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
@@ -208,7 +208,7 @@ public sealed class RoutingServiceImpl : IRoutingService
             {
                 continue;
             }
-            
+
             wayPoints.Add(new WayPoint(closestPoint, order));
             rallyingPoints.Add(closestPoint);
             order++;

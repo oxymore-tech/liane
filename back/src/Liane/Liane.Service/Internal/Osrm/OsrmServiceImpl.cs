@@ -2,22 +2,27 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Liane.Service.Internal.Osrm;
 
 public sealed class OsrmServiceImpl : IOsrmService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+        { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new LngLatTupleJsonConverter() } };
+
     private readonly MemoryCache routeCache = new(new MemoryCacheOptions());
     private readonly HttpClient client;
 
     public OsrmServiceImpl(OsrmSettings settings)
     {
-        client = new HttpClient {BaseAddress = settings.Url};
+        client = new HttpClient { BaseAddress = settings.Url };
     }
 
     public Task<Response.Routing> Route(LatLng start, LatLng end)
@@ -44,7 +49,7 @@ public sealed class OsrmServiceImpl : IOsrmService
             overview,
             annotations,
             continue_straight = continueStraight
-        }));
+        }), JsonOptions);
 
         if (result == null)
         {
@@ -56,6 +61,6 @@ public sealed class OsrmServiceImpl : IOsrmService
 
     private static string Format(ImmutableList<LatLng> coordinates)
     {
-        return string.Join(";", coordinates.Select(c => c.ToLngLatString()));
+        return string.Join(";", coordinates.Select(c => c.ToString()));
     }
 }

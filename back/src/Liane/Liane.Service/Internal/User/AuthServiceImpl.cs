@@ -80,7 +80,7 @@ public sealed class AuthServiceImpl : IAuthService
     {
         if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
         {
-            var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, false);
+            var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, true);
             return GenerateAuthResponse(user);
         }
 

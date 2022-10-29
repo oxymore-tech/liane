@@ -5,7 +5,7 @@ using MongoDB.Bson.Serialization.Serializers;
 
 namespace Liane.Service.Internal.Mongo;
 
-internal class TimeOnlyBsonSerializer : StructSerializerBase<TimeOnly>
+internal sealed class TimeOnlyBsonSerializer : StructSerializerBase<TimeOnly>
 {
     public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, TimeOnly value)
     {
@@ -20,9 +20,10 @@ internal class TimeOnlyBsonSerializer : StructSerializerBase<TimeOnly>
     public override TimeOnly Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
     {
         var serializer = BsonSerializer.LookupSerializer(typeof(BsonDocument));
-        var document = serializer.Deserialize(context, args);
-        var hour = document.ToBsonDocument()[nameof(TimeOnly.Hour)].AsInt32;
-        var minute = document.ToBsonDocument()[nameof(TimeOnly.Minute)].AsInt32;
+        var document = serializer.Deserialize(context, args)
+            .ToBsonDocument();
+        var hour = document[nameof(TimeOnly.Hour)].AsInt32;
+        var minute = document[nameof(TimeOnly.Minute)].AsInt32;
         return new TimeOnly(hour, minute);
     }
 }
