@@ -29,8 +29,6 @@ nvm use
 npm i # install
 
 npm run android
-# et en parallèle pour générer les styles avec tailwind de manière dynamique (JIT)
-npm run tailwind
 ```
 
 ## Déploiement en production

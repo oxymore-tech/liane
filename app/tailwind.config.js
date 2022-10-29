@@ -27,7 +27,5 @@ module.exports = {
         }
       }, ...colors
     }
-  },
-  plugins: [],
-  corePlugins: require('tailwind-rn/unsupported-core-plugins'),
+  }
 }
