@@ -18,6 +18,10 @@ export default {
   runtimeVersion: {
     policy: "sdkVersion"
   },
+  updates: {
+    fallbackToCacheTimeout: 0,
+    url: "https://u.expo.dev/7b7be910-6283-46fb-a28c-e2503a089ea6"
+  },
   assetBundlePatterns: [
     "**/*"
   ],
