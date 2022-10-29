@@ -7,7 +7,8 @@ export interface AppTextInputProps extends TextInputProps {
 export function AppTextInput({ style, ...props }: AppTextInputProps) {
   return (
     <TextInput
-      style={{ fontFamily: "Inter", ...(style as object) }}
+      className="font-sans"
+      style={style}
       {...props}
     />
   );

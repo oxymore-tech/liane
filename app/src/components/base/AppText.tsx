@@ -8,7 +8,8 @@ export interface AppTextProps extends TextProps {
 export function AppText({ style, children, ...props }: AppTextProps) {
   return (
     <Text
-      style={{ fontFamily: "Inter", ...(style as object) }}
+      className="font-sans"
+      style={style}
       {...props}
     >
       {children}

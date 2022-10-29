@@ -1,37 +1,34 @@
-import React, { useState } from "react";
-import {
-  Alert, SafeAreaView, Switch, TouchableOpacity, View
-} from "react-native";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
-import Autocomplete from "react-native-autocomplete-input";
-import { useTailwind } from "tailwind-rn";
+import React, { useCallback, useState } from "react";
+import { Alert, SafeAreaView, TouchableOpacity, View } from "react-native";
+import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { AppText } from "@/components/base/AppText";
-import { AppButton } from "@/components/base/AppButton";
 import { getRallyingPoints, sendTripIntent } from "@/api/client";
-import { AppTextInput } from "@/components/base/AppTextInput";
 import { RallyingPoint, TripIntent } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { RootNavigation } from "@/api/navigation";
+import { AppTextInput } from "@/components/base/AppTextInput";
+import { AppButton } from "@/components/base/AppButton";
+import { AppSwitch } from "@/components/base/AppSwitch";
+import { AppAutocomplete } from "@/components/base/AppAutocomplete";
 
 const PublishScreen = () => {
-  const tw = useTailwind();
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
 
-  const [showToTime, setShowToTime] = useState(false);
-  const [showFromTime, setShowFromTime] = useState(false);
+  const [showReturnTime, setShowReturnTime] = useState(false);
+  const [showGoTime, setShowGoTime] = useState(false);
 
-  const [fromTime, setFromTime] = useState<Date>(new Date());
-  const [toTime, setToTime] = useState<Date | null>(null);
+  const [goTime, setGoTime] = useState<Date | undefined>(new Date());
+  const [returnTime, setReturnTime] = useState<Date>();
 
-  const onChangeFromTime = (event, selectedTime) => {
-    setShowFromTime(false);
-    setFromTime(selectedTime);
+  const onChangeGoTime = (event:DateTimePickerEvent, selectedTime?:Date) => {
+    setShowGoTime(false);
+    setGoTime(selectedTime);
   };
 
-  const onChangeToTime = (event, selectedTime) => {
-    setShowToTime(false);
-    setToTime(selectedTime);
+  const onChangeReturnTime = (event:DateTimePickerEvent, selectedTime?:Date) => {
+    setShowReturnTime(false);
+    setReturnTime(selectedTime);
   };
 
   const [filteredStartPoints, setFilteredStartPoints] = useState<RallyingPoint[]>([]);
@@ -43,7 +40,7 @@ const PublishScreen = () => {
   const [endPoint, setEndPoint] = useState<RallyingPoint | null>(null);
   const [shownEndPoint, setShownEndPoint] = useState("");
 
-  const findStartPoint = async (query) => {
+  const findStartPoint = useCallback(async (query:string) => {
     setShownStartPoint(query);
     setStartPoint(null);
 
@@ -51,18 +48,16 @@ const PublishScreen = () => {
       const regex = new RegExp(`${query.trim()}`, "i");
       const location = await getLastKnownLocation();
 
-      await getRallyingPoints(query, location)
-        .then((r) => {
-          const f = r.filter((point) => point.label.search(regex) >= 0);
-          setFilteredStartPoints(f);
-        });
+      const rallyingPoints = await getRallyingPoints(query, location);
+      const f = rallyingPoints.filter((P) => P.label.search(regex) >= 0);
+      setFilteredStartPoints(f);
 
     } else {
       setFilteredStartPoints([]);
     }
-  };
+  }, []);
 
-  const findEndPoint = async (query) => {
+  const findEndPoint = useCallback(async (query:string) => {
     setShownEndPoint(query);
     setEndPoint(null);
 
@@ -70,16 +65,14 @@ const PublishScreen = () => {
       const regex = new RegExp(`${query.trim()}`, "i");
       const location = await getLastKnownLocation();
 
-      await getRallyingPoints(query, location)
-        .then((r) => {
-          const f = r.filter((point) => point.label.search(regex) >= 0);
-          setFilteredEndPoints(f);
-        });
+      const rallyingPoints = await getRallyingPoints(query, location);
+      const f = rallyingPoints.filter((P) => P.label.search(regex) >= 0);
+      setFilteredStartPoints(f);
 
     } else {
-      setFilteredEndPoints([]);
+      setFilteredStartPoints([]);
     }
-  };
+  }, []);
 
   const onPublicationPressed = async () => {
     let isValid = true;
@@ -89,7 +82,7 @@ const PublishScreen = () => {
       message += "Point de départ et/ou d'arrivé invalides\n";
       isValid = false;
     }
-    if (isRoundTrip && fromTime.getTime() >= toTime!.getTime()) {
+    if (isRoundTrip && goTime && returnTime && goTime.getTime() >= returnTime!.getTime()) {
       message += "Horaires invalides\n";
       isValid = false;
     }
@@ -121,61 +114,61 @@ const PublishScreen = () => {
   };
 
   return (
-    <SafeAreaView style={tw("h-full")}>
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
-        <AppText style={tw("absolute text-2xl text-center text-white w-full")}>
+    <SafeAreaView className="h-full">
+      <View className="pt-5 pb-5 flex-row items-center bg-liane-orange">
+        <AppText className="absolute text-2xl text-center text-white w-full">
           Enregistrement d&apos;un trajet
         </AppText>
       </View>
 
-      <View style={tw("flex flex-col h-full justify-around mx-2 -mb-20")}>
+      <View className="flex flex-col h-full justify-around mx-2 -mb-20">
 
-        <View style={tw("flex flex-col rounded-xl bg-gray-200 py-2 px-3 items-center z-10")}>
+        <View className="flex flex-col rounded-xl bg-gray-200 py-2 px-3 items-center z-10">
 
-          <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-extralight")}>Trajet</AppText>
+          <View className="flex flex-row w-full justify-between items-center">
+            <AppText className="text-2xl font-extralight">Trajet</AppText>
           </View>
 
-          <View style={tw("flex flex-row w-full m-3 items-center")}>
+          <View className="flex flex-row w-full m-3 items-center">
 
-            <View style={tw("flex flex-col items-center mr-3")}>
-              <View style={tw("h-3 w-3 bg-liane-yellow rounded-full -mb-1")} />
-              <View style={tw("h-24 w-3 border-solid border border-liane-yellow")} />
-              <View style={tw("h-3 w-3 bg-liane-yellow rounded-full -mt-1")} />
+            <View className="flex flex-col items-center mr-3">
+              <View className="h-3 w-3 bg-liane-yellow rounded-full -mb-1" />
+              <View className="h-24 w-3 border-solid border border-liane-yellow" />
+              <View className="h-3 w-3 bg-liane-yellow rounded-full -mt-1" />
             </View>
 
-            <View style={tw("flex-grow self-stretch")}>
+            <View className="flex-grow self-stretch">
 
-              <View style={tw("absolute min-h-full -top-2 left-0 right-0 z-20")}>
-                <AppText style={tw("flex-row text-base font-bold")}>Départ</AppText>
-                <Autocomplete
-                  inputContainerStyle={tw("border-0")}
-                  renderTextInput={(props) => <AppTextInput {...props} style={tw("bg-white rounded px-1.5 py-0.5")} />}
+              <View className="absolute min-h-full -top-2 left-0 right-0 z-20">
+                <AppText className="flex-row text-base font-bold">Départ</AppText>
+                <AppAutocomplete
+                  className="border-0"
+                  renderTextInput={(props) => <AppTextInput {...props} className="border-0 bg-white rounded px-1.5 py-0.5" />}
                   data={filteredStartPoints}
                   value={shownStartPoint}
                   placeholder="Point de départ"
-                  onChangeText={(text) => findStartPoint(text)}
+                  onChangeText={findStartPoint}
                   flatListProps={{
                     renderItem: ({ item }: { item:RallyingPoint }) => (
                       <TouchableOpacity
-                        style={tw("bg-gray-100")}
+                        className="bg-gray-100"
                         onPress={() => {
                           setStartPoint(item);
                           setShownStartPoint(item.label);
                           setFilteredStartPoints([]);
                         }}
                       >
-                        <AppText style={tw("flex-row py-2.5 pl-2")}>{item.label}</AppText>
+                        <AppText className="flex-row py-2.5 pl-2">{item.label}</AppText>
                       </TouchableOpacity>
                     )
                   }}
                 />
               </View>
-              <View style={tw("absolute min-h-full top-1/2 left-0 right-0 z-10")}>
-                <AppText style={tw("flex-row text-base font-bold")}> Arrivé</AppText>
-                <Autocomplete
-                  inputContainerStyle={tw("border-0")}
-                  renderTextInput={(props) => <AppTextInput {...props} style={tw("bg-white rounded px-1.5 py-0.5")} />}
+              <View className="absolute min-h-full top-1/2 left-0 right-0 z-10">
+                <AppText className="flex-row text-base font-bold"> Arrivé</AppText>
+                <AppAutocomplete
+                  className="border-0"
+                  renderTextInput={(props) => <AppTextInput {...props} className="bg-white rounded px-1.5 py-0.5" />}
                   data={filteredEndPoints}
                   value={shownEndPoint}
                   placeholder="Point d'arrivé"
@@ -183,14 +176,14 @@ const PublishScreen = () => {
                   flatListProps={{
                     renderItem: ({ item }: { item:RallyingPoint }) => (
                       <TouchableOpacity
-                        style={tw("bg-gray-100")}
+                        className="bg-gray-100"
                         onPress={() => {
                           setEndPoint(item);
                           setShownEndPoint(item.label);
                           setFilteredEndPoints([]);
                         }}
                       >
-                        <AppText style={tw("flex-row py-2.5 pl-2")}>{item.label}</AppText>
+                        <AppText className="flex-row py-2.5 pl-2">{item.label}</AppText>
                       </TouchableOpacity>
                     )
                   }}
@@ -201,22 +194,19 @@ const PublishScreen = () => {
           </View>
         </View>
 
-        <View style={tw("flex flex-col rounded-xl bg-gray-200 p-3 items-center")}>
+        <View className="flex flex-col rounded-xl bg-gray-200 p-3 items-center">
 
-          <View style={tw("flex flex-row w-full justify-between items-center")}>
-            <AppText style={tw("text-2xl font-extralight")}>Horaire</AppText>
-            <View style={tw("flex flex-row items-center")}>
-              <AppText style={tw("text-sm font-medium")}>Aller - Retour</AppText>
-              <Switch
-                trackColor={{ false: "#767577", true: "#FF5B22" }}
-                thumbColor="#f4f3f4"
-                ios_backgroundColor="#3e3e3e"
+          <View className="flex flex-row w-full justify-between items-center">
+            <AppText className="text-2xl font-extralight">Horaire</AppText>
+            <View className="flex flex-row items-center">
+              <AppText className="text-gray-600">Aller - Retour</AppText>
+              <AppSwitch
                 onValueChange={() => {
                   setIsRoundTrip((previousState) => !previousState);
-                  if (!isRoundTrip) {
-                    const toDate = new Date(fromTime.getTime());
+                  if (!isRoundTrip && goTime) {
+                    const toDate = new Date(goTime.getTime());
                     toDate!.setHours(toDate!.getHours() + 1);
-                    setToTime(toDate);
+                    setReturnTime(toDate);
                   }
                 }}
                 value={isRoundTrip}
@@ -224,26 +214,26 @@ const PublishScreen = () => {
             </View>
           </View>
 
-          <View style={tw("flex flex-col w-full flex-auto")}>
+          <View className="flex flex-col w-full flex-auto">
 
-            <View style={tw("flex flex-row w-full justify-around items-center mt-2")}>
-              <View style={tw("flex flex-col")}>
-                <AppText style={tw("text-base text-center font-bold")}>Aller</AppText>
+            <View className="flex flex-row w-full justify-around items-center mt-2">
+              <View className="flex flex-col">
+                <AppText className="text-base text-center font-bold">Aller</AppText>
                 <AppButton
-                  title={`${fromTime.getHours()}:${fromTime.getMinutes() < 10 ? "0" : ""}${fromTime.getMinutes()}`}
-                  style={tw("bg-gray-500 rounded-xl m-1 p-2 ")}
-                  onPress={() => setShowFromTime(true)}
+                  title={goTime != null ? `${goTime.getHours()}:${goTime.getMinutes() < 10 ? "0" : ""}${goTime.getMinutes()}` : ""}
+                  className="bg-gray-500 rounded-xl m-1 p-2 "
+                  onPress={() => setShowGoTime(true)}
                 />
               </View>
               {
                   isRoundTrip
                   && (
-                  <View style={tw("flex flex-col")}>
-                    <AppText style={tw("text-base text-center font-bold")}>Retour</AppText>
+                  <View className="flex flex-col">
+                    <AppText className="text-base text-center font-bold">Retour</AppText>
                     <AppButton
-                      title={toTime != null ? `${toTime.getHours()}:${toTime.getMinutes() < 10 ? "0" : ""}${toTime.getMinutes()}` : ""}
-                      style={tw("bg-gray-500 rounded-xl m-1 p-2")}
-                      onPress={() => setShowToTime(true)}
+                      title={returnTime != null ? `${returnTime.getHours()}:${returnTime.getMinutes() < 10 ? "0" : ""}${returnTime.getMinutes()}` : ""}
+                      className="bg-gray-500 rounded-xl m-1 p-2"
+                      onPress={() => setShowReturnTime(true)}
                     />
                   </View>
                   )
@@ -253,24 +243,24 @@ const PublishScreen = () => {
           </View>
 
           {
-            showToTime
+            showReturnTime
             && (
             <RNDateTimePicker
               mode="time"
-              value={toTime!}
-              onChange={onChangeToTime}
-              style={tw("h-5 w-5")}
+              value={returnTime!}
+              onChange={onChangeReturnTime}
+              className="h-5 w-5"
             />
             )
           }
           {
-              showFromTime
+              showGoTime
               && (
               <RNDateTimePicker
                 mode="time"
-                value={fromTime}
-                onChange={onChangeFromTime}
-                style={tw("h-5 w-5")}
+                value={goTime!}
+                onChange={onChangeGoTime}
+                className="h-5 w-5"
               />
               )
           }
@@ -279,7 +269,7 @@ const PublishScreen = () => {
 
         <AppButton
           title="Publier"
-          style={tw("bg-blue-800 rounded-full m-1 p-1 mx-10")}
+          className="bg-blue-600 rounded-full m-1 p-1 mx-10"
           disabled={!startPoint || !endPoint}
           onPress={onPublicationPressed}
         />

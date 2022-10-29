@@ -20,7 +20,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "strict": false,
-    "strictNullChecks": true
+    "strict": true,
+    "strictNullChecks": true,
+    
   }
 }

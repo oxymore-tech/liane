@@ -1,21 +1,19 @@
 import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-import { useTailwind } from "tailwind-rn";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
 import PublishScreen from "@/screens/PublishScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import HomeNavigation from "@/components/HomeNavigation";
+import { AppIcon } from "@/components/base/AppIcon";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Navigation() {
   const { authUser } = useContext(AppContext);
-  const tw = useTailwind();
 
   if (authUser) {
     return (
@@ -42,9 +40,9 @@ function Navigation() {
             };
 
             return (
-              <Ionicons
+              <AppIcon
                 name={icons[route.name][focused]}
-                style={tw(`text-4xl mt-4 h-10 ${focused ? "text-liane-orange" : ""}`)}
+                tw={`text-4xl mt-4 h-10 ${focused ? "text-liane-orange" : ""}`}
               />
             );
           },

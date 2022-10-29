@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { Image, KeyboardAvoidingView, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useTailwind } from "tailwind-rn";
 import { sendSms } from "@/api/client";
 import { AppButton } from "@/components/base/AppButton";
 import { AppTextInput } from "@/components/base/AppTextInput";
@@ -23,8 +22,6 @@ type SignUpProps = {
 };
 
 const SignUpScreen = ({ route, navigation }: SignUpProps) => {
-  const tw = useTailwind();
-
   const authFailure = route.params?.authFailure && t("Le code est invalide veuillez rééssayer");
 
   const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
@@ -42,24 +39,24 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
   }, [phoneNumber]);
 
   return (
-    <KeyboardAvoidingView style={tw("flex h-full bg-liane-yellow")}>
-      <View style={tw("h-10 items-center my-20")}>
+    <KeyboardAvoidingView className="flex h-full bg-liane-yellow">
+      <View className="h-10 items-center my-20">
         <Image
-          style={tw("flex-1 w-64")}
+          className="flex-1 w-64"
           source={logo}
           resizeMode="contain"
         />
       </View>
 
       <View>
-        <AppText style={tw("text-center text-lg text-white mx-10 mb-5")}>
+        <AppText className="text-center text-lg text-white mx-10 mb-5">
           {t("Veuillez entrer votre numéro de téléphone")}
         </AppText>
         <View
-          style={tw("rounded-full m-20 bg-white text-2xl flex flex-row h-12")}
+          className="rounded-full m-20 bg-white text-2xl flex flex-row h-12"
         >
           <AppTextInput
-            style={tw("text-gray-800 text-2xl text-center flex-1")}
+            className="text-gray-800 text-2xl text-center flex-1"
             placeholder=""
             autoFocus
             returnKeyLabel="next"
@@ -71,13 +68,13 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             maxLength={10}
           />
           <AppButton
-            style={tw("rounded-r-full w-12 h-12")}
+            className="rounded-r-full w-12 h-12"
             disabled={phoneNumber.length < 10}
             onPress={signUp}
             icon="arrow-forward-circle-outline"
           />
         </View>
-        <AppText style={tw("text-center text-lg text-red-600 m-5")}>
+        <AppText className="text-center text-lg text-red-600 m-5">
           {internalError || authFailure || " "}
         </AppText>
       </View>

@@ -1,15 +1,13 @@
 import React, { useCallback, useState } from "react";
 import { FlatList, SafeAreaView, View } from "react-native";
-import { useTailwind } from "tailwind-rn";
 import { useFocusEffect } from "@react-navigation/native";
 import { AppText } from "@/components/base/AppText";
-import { ChatMessage, RallyingPoint, TripIntentMatch } from "@/api";
+import { TripIntentMatch } from "@/api";
 import ScheduleTripItem from "@/components/ScheduleTripItem";
 import { getMatches } from "@/api/client";
 import { RootNavigation } from "@/api/navigation";
 
 const ScheduleScreen = () => {
-  const tw = useTailwind();
   const [matches, setMatches] = useState<TripIntentMatch[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -33,19 +31,19 @@ const ScheduleScreen = () => {
 
   }, []);
 
-  const onChat = useCallback((matchedTripIntent) => {
+  const onChat = useCallback((matchedTripIntent: TripIntentMatch) => {
     RootNavigation.navigate("Chat", { matchedTripIntent });
   }, []);
 
   return (
-    <SafeAreaView style={tw("flex flex-col h-full")}>
+    <SafeAreaView className="flex flex-col h-full">
 
-      <View style={tw("pt-5 pb-5 flex-row items-center bg-liane-orange")}>
-        <AppText style={tw("absolute text-2xl text-center text-white w-full")}>Trajets prévus</AppText>
+      <View className="pt-5 pb-5 flex-row items-center bg-liane-orange">
+        <AppText className="absolute text-2xl text-center text-white w-full">Trajets prévus</AppText>
       </View>
 
       <FlatList
-        style={tw("flex")}
+        className="flex"
         data={matches}
         renderItem={({ item }) => (
           <ScheduleTripItem

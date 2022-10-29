@@ -1,10 +1,6 @@
 import React from "react";
-import {
-  View,
-  PressableProps, ViewStyle, Pressable
-} from "react-native";
+import { Pressable, PressableProps, View, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTailwind } from "tailwind-rn";
 import { AppText } from "@/components/base/AppText";
 
 // eslint-disable-next-line max-len
@@ -77,23 +73,22 @@ function getBackgroundColor(color: Colors, outline: boolean, disabled: boolean) 
 }
 
 export function AppButton({ color = "blue", disabled = false, title, outline = false, icon, style, ...props }: LianeButtonProps) {
-  const tailwind = useTailwind();
   const bgColor = getBackgroundColor(color, outline, disabled);
   const border = getBorder(color, outline, disabled);
   const textColor = getTextColor(color, outline, disabled);
   return (
     <Pressable {...props} disabled={disabled}>
-      <View style={{ ...tailwind(`flex flex-row justify-center items-center ${bgColor} ${border}`), ...(style as object) }}>
+      <View className={`flex flex-row justify-center items-center ${bgColor} ${border}`} style={style}>
         {
           icon && (
             <Ionicons
               name={icon}
-              style={tailwind(`text-white text-3xl font-bold ${textColor}`)}
+              className={`text-white text-3xl font-bold ${textColor}`}
               disabled
             />
           )
       }
-        <AppText style={tailwind(`text-white text-2xl font-bold ${textColor}`)}>{title}</AppText>
+        <AppText className={`text-white text-2xl font-bold ${textColor}`}>{title}</AppText>
       </View>
     </Pressable>
   );
