@@ -15,8 +15,8 @@ cd app
 nvm use            # sélectionne la bonne version de node
 
 # Install expo and eas
-npm install --global add expo-cli
-npm install --global add eas-cli
+npm install -g expo-cli
+npm install -g eas-cli
 ```
 
 Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
