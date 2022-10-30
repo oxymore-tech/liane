@@ -269,7 +269,7 @@ const PublishScreen = () => {
 
         <AppButton
           title="Publier"
-          className="bg-blue-600 rounded-full m-1 p-1 mx-10"
+          className="bg-yellow-600 rounded-full m-1 p-1 mx-10"
           disabled={!startPoint || !endPoint}
           onPress={onPublicationPressed}
         />
