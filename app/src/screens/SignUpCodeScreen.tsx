@@ -65,7 +65,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
             maxLength={6}
           />
           <AppButton
-            className="rounded-r-full w-12 h-12"
+            className="rounded-r-full"
             disabled={code.length < 6}
             onPress={signIn}
             icon="checkmark-circle-outline"

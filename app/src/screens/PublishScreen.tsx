@@ -1,17 +1,18 @@
-import React, { useCallback, useState } from "react";
-import { Alert, SafeAreaView, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Alert, SafeAreaView, View } from "react-native";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { AppText } from "@/components/base/AppText";
-import { getRallyingPoints, sendTripIntent } from "@/api/client";
+import { sendTripIntent } from "@/api/client";
 import { RallyingPoint, TripIntent } from "@/api";
-import { getLastKnownLocation } from "@/api/location";
 import { RootNavigation } from "@/api/navigation";
-import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppButton } from "@/components/base/AppButton";
 import { AppSwitch } from "@/components/base/AppSwitch";
-import { AppAutocomplete } from "@/components/base/AppAutocomplete";
+import { RallyingPointInput } from "@/components/base/RallyingPointInput";
 
 const PublishScreen = () => {
+
+  const [from, setFrom] = useState<RallyingPoint>();
+  const [to, setTo] = useState<RallyingPoint>();
 
   const [isRoundTrip, setIsRoundTrip] = useState(false);
 
@@ -31,54 +32,11 @@ const PublishScreen = () => {
     setReturnTime(selectedTime);
   };
 
-  const [filteredStartPoints, setFilteredStartPoints] = useState<RallyingPoint[]>([]);
-  const [filteredEndPoints, setFilteredEndPoints] = useState<RallyingPoint[]>([]);
-
-  const [startPoint, setStartPoint] = useState<RallyingPoint | null>(null);
-  const [shownStartPoint, setShownStartPoint] = useState("");
-
-  const [endPoint, setEndPoint] = useState<RallyingPoint | null>(null);
-  const [shownEndPoint, setShownEndPoint] = useState("");
-
-  const findStartPoint = useCallback(async (query:string) => {
-    setShownStartPoint(query);
-    setStartPoint(null);
-
-    if (query) {
-      const regex = new RegExp(`${query.trim()}`, "i");
-      const location = await getLastKnownLocation();
-
-      const rallyingPoints = await getRallyingPoints(query, location);
-      const f = rallyingPoints.filter((P) => P.label.search(regex) >= 0);
-      setFilteredStartPoints(f);
-
-    } else {
-      setFilteredStartPoints([]);
-    }
-  }, []);
-
-  const findEndPoint = useCallback(async (query:string) => {
-    setShownEndPoint(query);
-    setEndPoint(null);
-
-    if (query) {
-      const regex = new RegExp(`${query.trim()}`, "i");
-      const location = await getLastKnownLocation();
-
-      const rallyingPoints = await getRallyingPoints(query, location);
-      const f = rallyingPoints.filter((P) => P.label.search(regex) >= 0);
-      setFilteredStartPoints(f);
-
-    } else {
-      setFilteredStartPoints([]);
-    }
-  }, []);
-
   const onPublicationPressed = async () => {
     let isValid = true;
     let message = "";
 
-    if (startPoint == null || endPoint == null) {
+    if (from == null || to == null) {
       message += "Point de départ et/ou d'arrivé invalides\n";
       isValid = false;
     }
@@ -100,10 +58,10 @@ const PublishScreen = () => {
       );
     }
 
-    if (startPoint && endPoint) {
+    if (from && to) {
       const tripIntent: Partial<TripIntent> = {
-        from: startPoint.id,
-        to: endPoint.id,
+        from: from.id,
+        to: to.id,
         goTime: { hour: 9, minute: 0 }
       };
 
@@ -114,85 +72,27 @@ const PublishScreen = () => {
   };
 
   return (
-    <SafeAreaView className="h-full">
-      <View className="pt-5 pb-5 flex-row items-center bg-liane-orange">
-        <AppText className="absolute text-2xl text-center text-white w-full">
+    <SafeAreaView className="h-full bg-gray-800">
+      <View className="pt-5 pb-5 flex-row items-center">
+        <AppText className="text-2xl text-center text-white w-full">
           Enregistrement d&apos;un trajet
         </AppText>
       </View>
 
-      <View className="flex flex-col h-full justify-around mx-2 -mb-20">
+      <View className="flex">
 
-        <View className="flex flex-col rounded-xl bg-gray-200 py-2 px-3 items-center z-10">
-
-          <View className="flex flex-row w-full justify-between items-center">
-            <AppText className="text-2xl font-extralight">Trajet</AppText>
-          </View>
-
-          <View className="flex flex-row w-full m-3 items-center">
-
-            <View className="flex flex-col items-center mr-3">
-              <View className="h-3 w-3 bg-liane-yellow rounded-full -mb-1" />
-              <View className="h-24 w-3 border-solid border border-liane-yellow" />
-              <View className="h-3 w-3 bg-liane-yellow rounded-full -mt-1" />
-            </View>
-
-            <View className="flex-grow self-stretch">
-
-              <View className="absolute min-h-full -top-2 left-0 right-0 z-20">
-                <AppText className="flex-row text-base font-bold">Départ</AppText>
-                <AppAutocomplete
-                  className="border-0"
-                  renderTextInput={(props) => <AppTextInput {...props} className="border-0 bg-white rounded px-1.5 py-0.5" />}
-                  data={filteredStartPoints}
-                  value={shownStartPoint}
-                  placeholder="Point de départ"
-                  onChangeText={findStartPoint}
-                  flatListProps={{
-                    renderItem: ({ item }: { item:RallyingPoint }) => (
-                      <TouchableOpacity
-                        className="bg-gray-100"
-                        onPress={() => {
-                          setStartPoint(item);
-                          setShownStartPoint(item.label);
-                          setFilteredStartPoints([]);
-                        }}
-                      >
-                        <AppText className="flex-row py-2.5 pl-2">{item.label}</AppText>
-                      </TouchableOpacity>
-                    )
-                  }}
-                />
-              </View>
-              <View className="absolute min-h-full top-1/2 left-0 right-0 z-10">
-                <AppText className="flex-row text-base font-bold"> Arrivé</AppText>
-                <AppAutocomplete
-                  className="border-0"
-                  renderTextInput={(props) => <AppTextInput {...props} className="bg-white rounded px-1.5 py-0.5" />}
-                  data={filteredEndPoints}
-                  value={shownEndPoint}
-                  placeholder="Point d'arrivé"
-                  onChangeText={(text) => findEndPoint(text)}
-                  flatListProps={{
-                    renderItem: ({ item }: { item:RallyingPoint }) => (
-                      <TouchableOpacity
-                        className="bg-gray-100"
-                        onPress={() => {
-                          setEndPoint(item);
-                          setShownEndPoint(item.label);
-                          setFilteredEndPoints([]);
-                        }}
-                      >
-                        <AppText className="flex-row py-2.5 pl-2">{item.label}</AppText>
-                      </TouchableOpacity>
-                    )
-                  }}
-                />
-              </View>
-
-            </View>
-          </View>
-        </View>
+        <RallyingPointInput
+          zIndex={20}
+          placeholder="Départ"
+          value={from}
+          onChange={setFrom}
+        />
+        <RallyingPointInput
+          zIndex={10}
+          placeholder="Arrivé"
+          value={to}
+          onChange={setTo}
+        />
 
         <View className="flex flex-col rounded-xl bg-gray-200 p-3 items-center">
 
@@ -220,8 +120,8 @@ const PublishScreen = () => {
               <View className="flex flex-col">
                 <AppText className="text-base text-center font-bold">Aller</AppText>
                 <AppButton
+                  color="blue"
                   title={goTime != null ? `${goTime.getHours()}:${goTime.getMinutes() < 10 ? "0" : ""}${goTime.getMinutes()}` : ""}
-                  className="bg-gray-500 rounded-xl m-1 p-2 "
                   onPress={() => setShowGoTime(true)}
                 />
               </View>
@@ -232,7 +132,6 @@ const PublishScreen = () => {
                     <AppText className="text-base text-center font-bold">Retour</AppText>
                     <AppButton
                       title={returnTime != null ? `${returnTime.getHours()}:${returnTime.getMinutes() < 10 ? "0" : ""}${returnTime.getMinutes()}` : ""}
-                      className="bg-gray-500 rounded-xl m-1 p-2"
                       onPress={() => setShowReturnTime(true)}
                     />
                   </View>
@@ -269,8 +168,8 @@ const PublishScreen = () => {
 
         <AppButton
           title="Publier"
-          className="bg-yellow-600 rounded-full m-1 p-1 mx-10"
-          disabled={!startPoint || !endPoint}
+          color="yellow"
+          disabled={!from || !to}
           onPress={onPublicationPressed}
         />
 

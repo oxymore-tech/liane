@@ -68,7 +68,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             maxLength={10}
           />
           <AppButton
-            className="rounded-r-full w-12 h-12"
+            className="rounded-r-full"
             disabled={phoneNumber.length < 10}
             onPress={signUp}
             icon="arrow-forward-circle-outline"

@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, PressableProps, View, ViewStyle } from "react-native";
+import { Pressable, PressableProps, ViewStyle } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { AppIcon } from "@/components/base/AppIcon";
 
@@ -23,7 +23,14 @@ function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
     return "text-gray-200";
   }
   if (!outline) {
-    return "text-white";
+    switch (color) {
+      case "yellow":
+        return "text-liane-orange";
+      case "orange":
+        return "text-liane-yellow";
+      default:
+        return "text-white";
+    }
   }
 
   switch (color) {
@@ -77,9 +84,13 @@ export function AppButton({ color = "blue", disabled = false, title, outline = f
   const border = getBorder(color, outline, disabled);
   const textColor = getTextColor(color, outline, disabled);
   return (
-    <Pressable {...props} disabled={disabled}>
-      <View className={`flex flex-row justify-center items-center ${bgColor} ${border}`} style={style}>
-        {
+    <Pressable
+      {...props}
+      style={style}
+      className={`flex flex-row justify-center items-center rounded-xl py-1 px-2 ${bgColor} ${border}`}
+      disabled={disabled}
+    >
+      {
           icon && (
             <AppIcon
               name={icon}
@@ -87,8 +98,7 @@ export function AppButton({ color = "blue", disabled = false, title, outline = f
             />
           )
       }
-        <AppText className={`text-white text-2xl font-bold ${textColor}`}>{title}</AppText>
-      </View>
+      <AppText className={`text-white text-2xl font-bold ${textColor}`}>{title}</AppText>
     </Pressable>
   );
 }

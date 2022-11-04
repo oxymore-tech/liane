@@ -15,8 +15,12 @@ export async function sendSms(phone: string) {
   return post("/auth/sms", { params: { phone } });
 }
 
-export async function getRallyingPoints(name: string, location?: LatLng): Promise<RallyingPoint[]> {
-  return get("/rallying_point", { params: { search: name, lng: location?.lng, lat: location?.lat } });
+export async function getRallyingPoint(id: string): Promise<RallyingPoint> {
+  return get(`/rallying_point/${id}`);
+}
+
+export async function getRallyingPoints(search: string, location?: LatLng): Promise<RallyingPoint[]> {
+  return get("/rallying_point", { params: { search, lng: location?.lng, lat: location?.lat } });
 }
 
 export async function sendTripIntent(tripIntent: Partial<TripIntent>): Promise<TripIntent> {

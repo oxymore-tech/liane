@@ -158,12 +158,12 @@ const LocationWizard = () => {
       { getWizardText(step) }
       { optionalText !== "" && (<AppText className="text-center text-sm text-red-600 m-2">{ optionalText }</AppText>) }
       { step === 0
-        ? (<View><AppButton className="bg-orange-400 rounded-full m-10" onPress={next} title="Continuer" /></View>)
+        ? (<View><AppButton color="orange" onPress={next} title="Continuer" /></View>)
         : (
           <View className="my-10">
-            <AppButton className="bg-orange-400 rounded-full mt-5 ml-10 mr-10" onPress={requestBackgroundLocPerm} title="Toujours" />
-            <AppButton className="bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10" onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
-            <AppButton className="bg-orange-400-lighter rounded-full mt-5 ml-10 mr-10" onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
+            <AppButton color="orange" onPress={requestBackgroundLocPerm} title="Toujours" />
+            <AppButton color="yellow" onPress={requestForegroundLocPerm} title="Pendant l'utilisation" />
+            <AppButton color="yellow" onPress={requestNoLocPerm} title="Jamais (pour le moment)" />
           </View>
         )}
     </View>
