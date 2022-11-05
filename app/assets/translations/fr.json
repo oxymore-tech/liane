@@ -1,14 +1,14 @@
 {
   "SignUp": {
-    "Veuillez entrer votre numéro de téléphone": "Veuillez indiquer votre numéro de téléphone.",
-    "Impossible d'effectuer la demande": "Echec de l'authentification."
+    "Veuillez entrer votre numéro de téléphone": "Veuillez indiquer votre numéro de téléphone",
+    "Impossible d'effectuer la demande": "Echec de l'authentification"
   },
   "Home": {
     "Mes trajets": "Mes trajets",
     "trajets partagés": {
-      "one": "Vous avez partagé un trajet.",
-      "other": "Vous avez partagé %{formatted_number} trajets.",
-      "zero": "Pas de trajet partagé."
+      "one": "Vous avez partagé un trajet",
+      "other": "Vous avez partagé %{formatted_number} trajets",
+      "zero": "Pas de trajet partagé"
     }
   },
   "TripList": {
@@ -16,7 +16,7 @@
     "supprimer": "Supprimer",
     "détail": "Détails",
     "suppressionTitle": "Attention !",
-    "suppressionText": "L'application étant encore en cours de développement, il n'est pas encore possible de supprimer un trajet.",
+    "suppressionText": "L'application étant encore en cours de développement, il n'est pas encore possible de supprimer un trajet",
     "suppressionOui": "Confirmer",
     "suppressionNon": "Annuler",
     "jourheureformat": "%{count} fois le %{day} à %{hour}h",
@@ -30,6 +30,6 @@
   },
   "LocationTaskNotification": {
     "Titre": "Localisation",
-    "Description": "Service de suivi de trajet."
+    "Description": "Service de suivi de trajet"
   }
 }

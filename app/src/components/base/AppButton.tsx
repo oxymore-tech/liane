@@ -25,9 +25,9 @@ function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
   if (!outline) {
     switch (color) {
       case "yellow":
-        return "text-liane-orange";
+        return "text-orange-400";
       case "orange":
-        return "text-liane-yellow";
+        return "text-amber-400";
       default:
         return "text-white";
     }
@@ -35,11 +35,11 @@ function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
 
   switch (color) {
     case "yellow":
-      return "text-liane-yellow-30";
+      return "text-amber-400";
     case "orange":
-      return "text-liane-orange-30";
+      return "text-orange-400";
     default:
-      return "text-liane-blue-30";
+      return "text-blue-500";
   }
 }
 
@@ -53,11 +53,11 @@ function getBorder(color: Colors, outline: boolean, disabled: boolean) {
 
   switch (color) {
     case "yellow":
-      return "border-2 border-liane-yellow-30";
+      return "border-2 border-amber-400";
     case "orange":
-      return "border-2 border-liane-orange-30";
+      return "border-2 border-orange-400";
     default:
-      return "border-2 border-liane-blue-30";
+      return "border-2 border-blue-500";
   }
 }
 
@@ -71,11 +71,11 @@ function getBackgroundColor(color: Colors, outline: boolean, disabled: boolean) 
 
   switch (color) {
     case "yellow":
-      return "bg-liane-yellow";
+      return "bg-amber-400";
     case "orange":
-      return "bg-liane-orange";
+      return "bg-orange-400";
     default:
-      return "bg-liane-blue-30";
+      return "bg-blue-500";
   }
 }
 

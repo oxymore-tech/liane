@@ -2,10 +2,10 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
 import { StatusBar } from "react-native";
+import colors from "tailwindcss/colors";
 import ContextProvider from "@/components/ContextProvider";
 import { RootNavigation } from "@/api/navigation";
 import Navigation from "@/components/Navigation";
-import colors from "@/api/colors";
 
 function App() {
   return (

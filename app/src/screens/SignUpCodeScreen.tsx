@@ -11,7 +11,7 @@ import { NavigationParamList } from "@/api/navigation";
 import { scopedTranslate } from "@/api/i18n";
 import { setStoredToken } from "@/api/storage";
 
-const logo = require("@/assets/logo_orange.png");
+const logo = require("@/assets/logo_white.png");
 
 const t = scopedTranslate("SignUpCode");
 
@@ -39,7 +39,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   }, [phoneNumber, code]);
 
   return (
-    <KeyboardAvoidingView className="flex h-full bg-liane-yellow">
+    <KeyboardAvoidingView className="flex h-full bg-gray-700">
       <View className="h-10 items-center my-20">
         <Image
           className="flex-1 w-64"

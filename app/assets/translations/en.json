@@ -16,7 +16,7 @@
     "supprimer": "Delete",
     "détail": "Details",
     "suppressionTitle": "Warning",
-    "suppressionText": "The application being still in development you can't delete trips yet.",
+    "suppressionText": "The application being still in development you can't delete trips yet",
     "suppressionOui": "Confirm",
     "suppressionNon": "Cancel",
     "jourheureformat": "%{count} times on %{day} at %{hour}",
@@ -30,6 +30,6 @@
   },
   "LocationTaskNotification": {
     "Titre": "Localisation",
-    "Description": "Routing service."
+    "Description": "Routing service"
   }
 }

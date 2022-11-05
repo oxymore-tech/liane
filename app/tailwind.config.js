@@ -1,5 +1,3 @@
-const colors = require('./src/api/colors');
-
 module.exports = {
   content: [
     "./src/**/*.tsx"
@@ -8,6 +6,5 @@ module.exports = {
     fontFamily: {
       "sans": ["Inter"]
     }
-  },
-  colors
+  }
 }

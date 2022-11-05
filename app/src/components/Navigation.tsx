@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import colors from "tailwindcss/colors";
 import SignUpScreen from "@/screens/SignUpScreen";
 import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
 import { AppContext } from "@/components/ContextProvider";
@@ -19,30 +20,32 @@ function Navigation() {
     return (
       <Tab.Navigator
         screenOptions={({ route }) => ({
+          tabBarStyle: { position: "absolute", backgroundColor: colors.gray["600"], borderTopWidth: 0 },
+          tabBarActiveBackgroundColor: colors.yellow["400"],
           tabBarIcon: ({ focused }: { focused: boolean }) => {
             const icons = {
               HomeRoot: {
                 true: "time",
-                false: "time-outline"
+                false: "time"
               },
               Publish: {
                 true: "add-circle",
-                false: "add-circle-outline"
+                false: "add-circle"
               },
               Notifications: {
                 true: "chatbox-ellipses",
-                false: "chatbox-ellipses-outline"
+                false: "chatbox-ellipses"
               },
               Settings: {
                 true: "settings",
-                false: "settings-outline"
+                false: "settings"
               }
             };
 
             return (
               <AppIcon
                 name={icons[route.name][focused]}
-                tw={`text-4xl mt-4 h-10 ${focused ? "text-liane-orange" : ""}`}
+                tw={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
               />
             );
           },

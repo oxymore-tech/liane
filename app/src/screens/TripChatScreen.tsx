@@ -101,10 +101,10 @@ const TripChatScreen = ({ route, navigation }: ChatProps) => {
           )}
           keyExtractor={(item) => item.id!}
         />
-        <View className="flex flex-row items-center bg-liane-yellow">
+        <View className="flex flex-row items-center">
           <AppButton icon="add-circle" color="yellow" />
           <AppTextInput
-            className="flex-1 h-12 bg-liane-yellow"
+            className="flex-1 h-12"
             value={sendText}
             onChangeText={setSendText}
           />

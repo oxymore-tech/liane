@@ -36,10 +36,10 @@ const ScheduleScreen = () => {
   }, []);
 
   return (
-    <SafeAreaView className="flex flex-col h-full">
+    <SafeAreaView className="flex flex-col h-full bg-gray-700">
 
-      <View className="pt-5 pb-5 flex-row items-center bg-liane-orange">
-        <AppText className="absolute text-2xl text-center text-white w-full">Trajets prévus</AppText>
+      <View className="pt-5 pb-5 flex-row items-center">
+        <AppText className="absolute text-2xl text-center text-white w-full">Mes trajets</AppText>
       </View>
 
       <FlatList
