@@ -28,7 +28,7 @@ export default {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "tech.oxymore.liane",
-    buildNumber: "30",
+    buildNumber: "31",
     config: {
       googleMapsApiKey: GOOGLE_API_KEY
     }
@@ -41,7 +41,7 @@ export default {
       "android.permission.ACCESS_FINE_LOCATION"
     ],
     package: "tech.oxymore.liane",
-    versionCode: 30,
+    versionCode: 31,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
