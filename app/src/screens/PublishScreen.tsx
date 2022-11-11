@@ -82,7 +82,7 @@ const PublishScreen = () => {
       <View className="">
 
         <RallyingPointInput
-          zIndex={100}
+          zIndex={1000}
           placeholder="Départ"
           value={from}
           onChange={setFrom}
