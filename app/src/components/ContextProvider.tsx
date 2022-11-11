@@ -91,16 +91,16 @@ function ContextProvider(props: { children: ReactNode }) {
   const { children } = props;
 
   const onLayoutRootView = useCallback(async () => {
-    if (appLoaded) {
+    if (appLoaded && fontLoaded) {
       // If called after `setAppLoaded`, we may see a blank screen while the app is
       // loading its initial state and rendering its first pixels.
       // So instead, we hide the splash screen once we know the root view has already
       // performed layout.
       await SplashScreen.hideAsync();
     }
-  }, [appLoaded]);
+  }, [appLoaded, fontLoaded]);
 
-  if (!appLoaded) {
+  if (!(appLoaded && fontLoaded)) {
     return null;
   }
 

@@ -19,52 +19,49 @@ function Navigation() {
   if (authUser) {
     return (
       <Tab.Navigator
-        screenOptions={({ route }) => ({
+        screenOptions={() => ({
           tabBarStyle: { position: "absolute", backgroundColor: colors.gray["600"], borderTopWidth: 0 },
           tabBarActiveBackgroundColor: colors.yellow["400"],
-          tabBarIcon: ({ focused }: { focused: boolean }) => {
-            const icons = {
-              HomeRoot: {
-                true: "time",
-                false: "time"
-              },
-              Publish: {
-                true: "add-circle",
-                false: "add-circle"
-              },
-              Notifications: {
-                true: "chatbox-ellipses",
-                false: "chatbox-ellipses"
-              },
-              Settings: {
-                true: "settings",
-                false: "settings"
-              }
-            };
-
-            return (
-              <AppIcon
-                name={icons[route.name][focused]}
-                tw={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
-              />
-            );
-          },
           tabBarLabel: ""
         })}
       >
         <Tab.Screen
           name="HomeRoot"
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <AppIcon
+                name="book-outline"
+                className={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
+              />
+            )
+          }}
           component={HomeNavigation}
         />
         <Tab.Screen
           name="Publish"
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <AppIcon
+                name="navigate-circle-outline"
+                className={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
+              />
+            )
+          }}
           component={PublishScreen}
         />
         <Tab.Screen
           name="Settings"
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <AppIcon
+                name="options-outline"
+                className={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
+              />
+            )
+          }}
           component={SettingsScreen}
         />
 

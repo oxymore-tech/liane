@@ -75,23 +75,17 @@ const PublishScreen = () => {
     <SafeAreaView className="h-full bg-gray-800">
       <View className="pt-5 pb-5 flex-row items-center">
         <AppText className="text-2xl text-center text-white w-full">
-          Enregistrement d&apos;un trajet
+          Je m&apos;intérresse
         </AppText>
       </View>
 
-      <View className="flex">
+      <View className="">
 
         <RallyingPointInput
-          zIndex={20}
+          zIndex={100}
           placeholder="Départ"
           value={from}
           onChange={setFrom}
-        />
-        <RallyingPointInput
-          zIndex={10}
-          placeholder="Arrivé"
-          value={to}
-          onChange={setTo}
         />
 
         <View className="flex flex-col rounded-xl bg-gray-200 p-3 items-center">
