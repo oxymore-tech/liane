@@ -102,6 +102,6 @@ type AutocompleteItemProps = Readonly<{
 
 const AutocompleteItem = ({ item, onPress }: AutocompleteItemProps) => (
   <TouchableOpacity onPress={onPress}>
-    <AppText className="text-gray-700 p-2">{item.label}</AppText>
+    <AppText className="text-2xl text-gray-700 p-2">{item.label}</AppText>
   </TouchableOpacity>
 );
