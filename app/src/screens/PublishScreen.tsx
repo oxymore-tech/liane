@@ -79,13 +79,20 @@ const PublishScreen = () => {
         </AppText>
       </View>
 
-      <View className="">
+      <View>
 
         <RallyingPointInput
           zIndex={1000}
           placeholder="Départ"
           value={from}
           onChange={setFrom}
+        />
+
+        <RallyingPointInput
+          zIndex={2000}
+          placeholder="Arrivé"
+          value={to}
+          onChange={setTo}
         />
 
         <View className="flex flex-col rounded-xl bg-gray-200 p-3 items-center">

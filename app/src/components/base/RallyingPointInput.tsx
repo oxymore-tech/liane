@@ -38,6 +38,7 @@ export function RallyingPointInput({ zIndex = 100, placeholder, value, onChange 
         items={results}
         zIndex={zIndex}
         loading={loading}
+        icon="md:location-pin"
       />
     </View>
   );

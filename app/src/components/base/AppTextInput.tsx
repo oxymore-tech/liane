@@ -1,15 +1,25 @@
 import React from "react";
-import { TextInput, TextInputProps } from "react-native";
+import { TextInput, TextInputProps, View } from "react-native";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
 
 export interface AppTextInputProps extends TextInputProps {
+  icon?: IconName;
 }
 
-export function AppTextInput({ style, ...props }: AppTextInputProps) {
+export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
   return (
-    <TextInput
-      className="bg-gray-100 font-sans rounded-md p-2"
-      style={style}
-      {...props}
-    />
+    <View className="bg-gray-100 font-sans rounded-md p-2 flex flex-row">
+      {icon && (
+      <AppIcon
+        name={icon}
+        className="text-xl text-gray-400 pl-1 pr-2"
+      />
+      )}
+      <TextInput
+        className="flex-1"
+        style={style}
+        {...props}
+      />
+    </View>
   );
 }

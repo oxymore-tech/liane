@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList, Keyboard, TouchableOpacity, TouchableWithoutFeedback, View
+  FlatList, Keyboard, TouchableOpacity, View
 } from "react-native";
 import { AppTextInput, AppTextInputProps } from "@/components/base/AppTextInput";
 import { AppText } from "@/components/base/AppText";
@@ -18,7 +18,7 @@ export interface AppAutocompleteProps<T> extends Omit<Omit<AppTextInputProps, "o
 
 export type BasicItem = Readonly<{ id?: string, label: string }>;
 
-export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, onChange, zIndex = 100, loading }: AppAutocompleteProps<T>) {
+export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, onChange, zIndex = 100, loading, ...props }: AppAutocompleteProps<T>) {
 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>();
@@ -47,11 +47,20 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
         value={search ?? value?.label ?? ""}
         onChangeText={setSearch}
         onFocus={() => setSearch("")}
+        onBlur={() => setOpen(false)}
+        onTouchCancel={() => setOpen(false)}
+        {...props}
       />
-      <View className={`relative z-[${zIndex}] -top-2 pl-2 pt-4 w-full`}>
+      <View
+        className="relative pt-4 w-full"
+        style={{ zIndex }}
+      >
         {open
               && (
-              <View className="absolute bg-gray-100 rounded-b-md w-full h-32">
+              <View
+                className="absolute bg-gray-100 rounded-md w-full max-h-72 shadow"
+                style={{ shadowColor: "black", shadowOpacity: 1 }}
+              >
                 <ItemList items={items} loading={loading} onSelect={onSelect} />
               </View>
               )}
@@ -69,11 +78,11 @@ type ItemListProps<T> = Readonly<{
 function ItemList<T extends BasicItem>({ items, loading, onSelect }: ItemListProps<T>) {
 
   if (loading) {
-    return <ActivityIndicator />;
+    return <ActivityIndicator className="text-gray-600 p-2" />;
   }
 
   if (items.length === 0) {
-    return <AppText className="text-gray-600">Aucun résultat</AppText>;
+    return <AppText className="text-gray-600 p-2">Aucun résultat</AppText>;
   }
 
   return (
