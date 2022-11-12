@@ -16,7 +16,7 @@ export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
       />
       )}
       <TextInput
-        className="flex-1 text-2xl"
+        className="flex-1 text-xl text-gray-600"
         style={style}
         {...props}
       />

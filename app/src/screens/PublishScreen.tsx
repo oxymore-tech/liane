@@ -75,11 +75,11 @@ const PublishScreen = () => {
     <SafeAreaView className="h-full bg-gray-800">
       <View className="pt-5 pb-5 flex-row items-center">
         <AppText className="text-2xl text-center text-white w-full">
-          Je m&apos;intérresse
+          Recherche
         </AppText>
       </View>
 
-      <View>
+      <View className="m-2 h-full">
 
         <RallyingPointInput
           zIndex={1000}
@@ -168,6 +168,7 @@ const PublishScreen = () => {
         </View>
 
         <AppButton
+          className="my-auto mx-16"
           title="Publier"
           color="yellow"
           disabled={!from || !to}

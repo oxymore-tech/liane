@@ -25,9 +25,9 @@ function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
   if (!outline) {
     switch (color) {
       case "yellow":
-        return "text-orange-400";
+        return "text-orange-800";
       case "orange":
-        return "text-amber-400";
+        return "text-amber-800";
       default:
         return "text-white";
     }
@@ -35,9 +35,9 @@ function getTextColor(color: Colors, outline: boolean, disabled: boolean) {
 
   switch (color) {
     case "yellow":
-      return "text-amber-400";
+      return "text-amber-800";
     case "orange":
-      return "text-orange-400";
+      return "text-orange-800";
     default:
       return "text-blue-500";
   }
@@ -87,7 +87,7 @@ export function AppButton({ color = "blue", disabled = false, title, outline = f
     <Pressable
       {...props}
       style={style}
-      className={`flex flex-row justify-center items-center rounded-xl py-1 px-2 ${bgColor} ${border}`}
+      className={`flex flex-row justify-center items-center rounded-md py-1 px-2 ${bgColor} ${border}`}
       disabled={disabled}
     >
       {
