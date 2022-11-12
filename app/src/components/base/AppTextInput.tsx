@@ -12,11 +12,11 @@ export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
       {icon && (
       <AppIcon
         name={icon}
-        className="text-xl text-gray-400 pl-1 pr-2"
+        className="text-2xl text-gray-400 pl-1 pr-2"
       />
       )}
       <TextInput
-        className="flex-1"
+        className="flex-1 text-2xl"
         style={style}
         {...props}
       />
