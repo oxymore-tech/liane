@@ -43,7 +43,6 @@ const ScheduleScreen = () => {
       </View>
 
       <FlatList
-        className="flex"
         data={matches}
         renderItem={({ item }) => (
           <ScheduleTripItem
