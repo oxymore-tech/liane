@@ -29,17 +29,15 @@ export function RallyingPointInput({ zIndex = 100, placeholder, value, onChange 
   }, []);
 
   return (
-    <View>
-      <AppAutocomplete
-        value={value}
-        placeholder={placeholder}
-        onSearch={onSearch}
-        onChange={onChange}
-        items={results}
-        zIndex={zIndex}
-        loading={loading}
-        icon="md:location-pin"
-      />
-    </View>
+    <AppAutocomplete
+      value={value}
+      placeholder={placeholder}
+      onSearch={onSearch}
+      onChange={onChange}
+      items={results}
+      zIndex={zIndex}
+      loading={loading}
+      icon="md:location-pin"
+    />
   );
 }

@@ -35,7 +35,6 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
         "[uúÚùÙûÛüÜ]"
     };
 
-    private const int SelectionRadius = 25_000;
     private const int MaxRadius = 400_000;
     private const int MaxRallyingPoint = 10;
 
@@ -116,36 +115,26 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
     {
         var builder = Builders<RallyingPoint>.Filter;
-        var result = ImmutableList.Create<RallyingPoint>();
-        var searchRadius = SelectionRadius;
 
-        // Keep looking for matching rallying points (name and location) by doubling the selection radius around the location
-        while (result.IsEmpty && searchRadius < MaxRadius)
+        var filter = FilterDefinition<RallyingPoint>.Empty;
+        if (pos.HasValue)
         {
-            var filter = FilterDefinition<RallyingPoint>.Empty;
-            if (pos.HasValue)
-            {
-                var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
-                filter &= builder.Near(x => x.Location, point, searchRadius);
-            }
-
-            if (search != null)
-            {
-                var regex = new Regex($".*{ToSearchPattern(search)}.*", RegexOptions.IgnoreCase);
-                filter &= builder.Regex(x => x.Label, new BsonRegularExpression(regex));
-            }
-
-            result = (await mongo.GetCollection<RallyingPoint>()
-                    .Find(filter)
-                    .Limit(MaxRallyingPoint)
-                    .ToCursorAsync())
-                .ToEnumerable()
-                .ToImmutableList();
-
-            searchRadius *= 2;
+            var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
+            filter &= builder.Near(x => x.Location, point, MaxRadius);
         }
 
-        return result;
+        if (search != null)
+        {
+            var regex = new Regex($".*{ToSearchPattern(search)}.*", RegexOptions.IgnoreCase);
+            filter &= builder.Regex(x => x.Label, new BsonRegularExpression(regex));
+        }
+
+        return (await mongo.GetCollection<RallyingPoint>()
+                .Find(filter)
+                .Limit(MaxRallyingPoint)
+                .ToCursorAsync())
+            .ToEnumerable()
+            .ToImmutableList();
     }
 
     public async Task<RallyingPoint?> Snap(LatLng position)
