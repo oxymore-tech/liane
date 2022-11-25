@@ -8,7 +8,7 @@ export interface AppTextInputProps extends TextInputProps {
 
 export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
   return (
-    <View className="bg-gray-100 font-sans rounded-md p-2 flex flex-row">
+    <View className="bg-gray-100 font-sans rounded-md p-2 flex flex-row" style={style}>
       {icon && (
       <AppIcon
         name={icon}
@@ -16,8 +16,7 @@ export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
       />
       )}
       <TextInput
-        className="flex-1 text-xl text-gray-600"
-        style={style}
+        className="flex-1 text-2xl text-gray-600"
         {...props}
       />
     </View>

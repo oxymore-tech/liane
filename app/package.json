@@ -22,7 +22,7 @@
     "expo-localization": "~14.0.0",
     "expo-location": "~15.0.1",
     "expo-status-bar": "~1.4.2",
-    "expo-updates": "~0.15.4",
+    "expo-updates": "~0.15.6",
     "i18n-js": "^4.1.1",
     "nativewind": "^2.0.11",
     "react": "18.1.0",

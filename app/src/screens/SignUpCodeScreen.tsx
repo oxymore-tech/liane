@@ -56,7 +56,7 @@ const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
           className="rounded-full m-20 bg-white text-2xl flex flex-row h-12"
         >
           <AppTextInput
-            className="text-gray-800 text-2xl text-center flex-1"
+            className="text-gray-800 text-center flex-1 rounded-l-full pl-12"
             autoFocus
             returnKeyLabel="next"
             onChangeText={setCode}
