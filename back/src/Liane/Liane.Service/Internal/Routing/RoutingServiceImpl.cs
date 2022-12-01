@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoints;
+using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Osrm;
 using Route = Liane.Api.Routing.Route;
@@ -193,11 +193,11 @@ public sealed class RoutingServiceImpl : IRoutingService
         return new DeltaRoute(ImmutableList.Create<LatLng>(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
     }
 
-    public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
+    public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Api.RallyingPoint.RallyingPoint from, Api.RallyingPoint.RallyingPoint to)
     {
         var route = await GetRoute(new RoutingQuery(from.Location, to.Location));
         var wayPoints = new HashSet<WayPoint>();
-        var rallyingPoints = new HashSet<RallyingPoint>();
+        var rallyingPoints = new HashSet<Api.RallyingPoint.RallyingPoint>();
 
         var order = 0;
         foreach (var wp in route.Coordinates)

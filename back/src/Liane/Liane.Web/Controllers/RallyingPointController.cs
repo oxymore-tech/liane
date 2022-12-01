@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoints;
+using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;

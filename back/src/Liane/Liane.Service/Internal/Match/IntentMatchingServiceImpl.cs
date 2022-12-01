@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Liane.Api.Match;
-using Liane.Api.RallyingPoints;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
@@ -54,8 +53,8 @@ public sealed class IntentMatchingServiceImpl : IIntentMatchingService
         var processedTripIntents = new List<ProcessedTripIntent>();
         foreach (var tripIntent in tripIntents)
         {
-            var from = (RallyingPoint?)tripIntent.From;
-            var to = (RallyingPoint?)tripIntent.To;
+            var from = (Api.RallyingPoint.RallyingPoint?)tripIntent.From;
+            var to = (Api.RallyingPoint.RallyingPoint?)tripIntent.To;
 
             if (from == null || to == null)
             {

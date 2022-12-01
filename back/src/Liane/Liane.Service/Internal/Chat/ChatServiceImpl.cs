@@ -34,7 +34,7 @@ public sealed class ChatServiceImpl : IChatService
     {
         var sort = Builders<DbChatMessage>.Sort.Ascending(m => m.CreatedAt);
         var collection = mongo.GetCollection<DbChatMessage>();
-        return (await collection.FindAsync(g => g.GroupId == groupId, new FindOptions<DbChatMessage>() { Sort = sort }))
+        return (await collection.FindAsync(g => g.GroupId == groupId, new FindOptions<DbChatMessage> { Sort = sort }))
             .ToEnumerable()
             .Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
             .ToImmutableList();

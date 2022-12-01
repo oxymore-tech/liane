@@ -1,4 +1,4 @@
-using Liane.Api.RallyingPoints;
+using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
 
 namespace Liane.Test.Internal.Match;

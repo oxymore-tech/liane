@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Dijkstra.NET.Graph.Simple;
 using Dijkstra.NET.ShortestPath;
-using Liane.Api.RallyingPoints;
+using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
 using Moq;
 
@@ -64,7 +64,7 @@ public static class RoutingServiceMock
                 var p2 = reverse[to];
                 var r = graph.Dijkstra(p1, p2);
                 return r.GetPath()
-                    .Select(((n, i) => new WayPoint(indexes[n], i)))
+                    .Select((n, i) => new WayPoint(indexes[n], i))
                     .ToImmutableSortedSet();
             });
 

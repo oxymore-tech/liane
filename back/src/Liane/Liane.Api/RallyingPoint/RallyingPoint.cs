@@ -1,7 +1,7 @@
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 
-namespace Liane.Api.RallyingPoints;
+namespace Liane.Api.RallyingPoint;
 
 public sealed record RallyingPoint(
     string? Id,

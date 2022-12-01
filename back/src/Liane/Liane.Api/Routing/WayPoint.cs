@@ -1,9 +1,8 @@
 using System;
-using Liane.Api.RallyingPoints;
 
 namespace Liane.Api.Routing;
 
-public sealed record WayPoint(RallyingPoint RallyingPoint, int Order) : IComparable<WayPoint>
+public sealed record WayPoint(RallyingPoint.RallyingPoint RallyingPoint, int Order) : IComparable<WayPoint>
 {
     public int CompareTo(WayPoint? other)
     {

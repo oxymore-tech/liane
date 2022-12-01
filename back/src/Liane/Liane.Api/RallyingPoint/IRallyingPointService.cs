@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 
-namespace Liane.Api.RallyingPoints;
+namespace Liane.Api.RallyingPoint;
 
 public interface IRallyingPointService
 {

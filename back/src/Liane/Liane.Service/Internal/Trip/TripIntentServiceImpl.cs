@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoints;
+using Liane.Api.RallyingPoint;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Mongo;

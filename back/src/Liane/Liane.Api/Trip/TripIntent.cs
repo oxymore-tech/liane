@@ -1,5 +1,4 @@
 using System;
-using Liane.Api.RallyingPoints;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
@@ -7,8 +6,8 @@ namespace Liane.Api.Trip;
 public sealed record TripIntent(
     string? Id,
     string? Title,
-    Ref<RallyingPoint> From,
-    Ref<RallyingPoint> To,
+    Ref<RallyingPoint.RallyingPoint> From,
+    Ref<RallyingPoint.RallyingPoint> To,
     TimeOnly GoTime,
     TimeOnly? ReturnTime,
     Ref<User.User>? CreatedBy,

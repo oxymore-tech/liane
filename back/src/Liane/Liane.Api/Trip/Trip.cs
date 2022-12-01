@@ -5,7 +5,7 @@ using System.Linq;
 namespace Liane.Api.Trip;
 
 public sealed record Trip(
-    ImmutableList<RallyingPoints.RallyingPoint> Coordinates,
+    ImmutableList<RallyingPoint.RallyingPoint> Coordinates,
     string? User = null,
     int? Time = null
 )

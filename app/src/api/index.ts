@@ -1,13 +1,13 @@
-export type IIdentity = Readonly<{
+export type Identity = Readonly<{
   id?: string;
 }>;
 
-export type IEntity = Readonly<{
+export type Entity = Readonly<{
   createdBy?: Ref<User>;
   createdAt?: Date;
-} & IIdentity>;
+} & Identity>;
 
-export type Ref<T extends IIdentity> = string | T;
+export type Ref<T extends Identity> = string | T;
 
 export type AuthUser = Readonly<{
   id: string;
@@ -23,12 +23,12 @@ export type AuthResponse = Readonly<{
 export type User = Readonly<{
   phone: string;
   token: string;
-} & IEntity>;
+} & Entity>;
 
 export type LatLng = Readonly<{
   lat: number;
   lng: number;
-} & IEntity>;
+} & Entity>;
 
 export enum LocationPermissionLevel {
   NEVER = "never",
@@ -39,7 +39,7 @@ export enum LocationPermissionLevel {
 export type RallyingPoint = Readonly<{
   location: LatLng;
   label: string;
-} & IIdentity>;
+} & Identity>;
 
 export type TimeOnly = Readonly<{
   hour: number;
@@ -51,7 +51,7 @@ export type TripIntent = Readonly<{
   to: Ref<RallyingPoint>;
   goTime: TimeOnly;
   returnTime?: TimeOnly;
-} & IEntity>;
+} & Entity>;
 
 export type Match = Readonly<{
   user: Ref<User>;
@@ -68,7 +68,7 @@ export type TripIntentMatch = Readonly<{
 
 export type ChatMessage = Readonly<{
   text: string;
-} & IEntity>;
+} & Entity>;
 
 export type TypedMessage = Readonly<{
   type: "proposal";

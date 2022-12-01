@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using Liane.Api.RallyingPoints;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
@@ -7,9 +6,13 @@ namespace Liane.Api.Match;
 
 public sealed record TripIntentMatch(
     TripIntent TripIntent,
-    Ref<RallyingPoint> From,
-    Ref<RallyingPoint> To,
+    Ref<RallyingPoint.RallyingPoint> From,
+    Ref<RallyingPoint.RallyingPoint> To,
     ImmutableList<Match> Matches
 );
 
-public sealed record Match(Ref<User.User> User, Ref<RallyingPoint> From, Ref<RallyingPoint> To);
+public sealed record Match(
+    Ref<User.User> User, 
+    Ref<RallyingPoint.RallyingPoint> From, 
+    Ref<RallyingPoint.RallyingPoint> To
+);

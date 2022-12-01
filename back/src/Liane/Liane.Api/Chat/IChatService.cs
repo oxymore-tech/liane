@@ -5,7 +5,6 @@ namespace Liane.Api.Chat;
 
 public interface IChatService
 {
-    public Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId);
-    
-    public Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId);
+    Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId);
+    Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId);
 }

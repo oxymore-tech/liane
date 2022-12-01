@@ -32,7 +32,7 @@ function Navigation() {
             tabBarIcon: ({ focused }) => (
               <AppIcon
                 name="book-outline"
-                className={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
+                className={`text-xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
               />
             )
           }}
