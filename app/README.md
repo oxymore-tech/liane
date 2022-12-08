@@ -26,3 +26,5 @@ npx react-native run-android # ou run-ios selon la platforme
 
 ```
 
+Note: pour activer la nouvelle architecture React Native sur Android, définir la propriété `newArchEnabled` à `true`. 
+
