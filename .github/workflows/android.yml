@@ -1,4 +1,4 @@
-name: Android Build ## name of the workflow
+name: Android Build
 
 on: push
 
@@ -14,7 +14,7 @@ jobs:
       - name: Set up our JDK environment
         uses: actions/setup-java@v1.4.3
         with:
-          java-version: 1.8
+          java-version: 11
 
       - name: Setup Node
         uses: actions/setup-node@v2
