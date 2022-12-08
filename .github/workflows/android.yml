@@ -37,7 +37,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: npm install
+        run: npm ci --legacy-peer-deps
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
