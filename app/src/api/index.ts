@@ -28,7 +28,7 @@ export type User = Readonly<{
 export type LatLng = Readonly<{
   lat: number;
   lng: number;
-} & Entity>;
+}>;
 
 export enum LocationPermissionLevel {
   NEVER = "never",

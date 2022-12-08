@@ -11,6 +11,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
+import { AppButton } from "@/components/base/AppButton";
 
 const logo = require("@/assets/logo_white.png");
 
@@ -42,7 +43,7 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
   }, [phoneNumber]);
 
   return (
-    <KeyboardAvoidingView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
           style={styles.image}
@@ -76,14 +77,13 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
             onPress={signUp}
           >
             <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
-
           </Pressable>
         </View>
         <AppText style={styles.errorText}>
           {internalError || authFailure || " "}
         </AppText>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

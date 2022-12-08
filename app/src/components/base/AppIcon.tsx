@@ -1,11 +1,9 @@
-/* eslint-disable max-len */
-// noinspection JSMissingSwitchBranches
-
 import React from "react";
 import { Icon } from "react-native-eva-icons";
 import { AppColors, AppTheme } from "@/theme/colors";
 
 export type IconName = `${typeof EvaIconsNames[number]}-outline`;
+
 interface AppIconProps {
   name: IconName;
   color?: AppColors;
