@@ -1,10 +1,9 @@
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "@datadog/mobile-react-native";
-import Constants from "expo-constants";
+import { ENV_NAME as envName, DD_APP_ID as datadogAppId, DD_CLIENT_TOKEN as datadogClientToken } from "@env";
 import { AuthUser } from "@/api/index";
 
 export async function registerRum() {
-  if (!__DEV__ && Constants.manifest?.extra) {
-    const { envName, datadogClientToken, datadogAppId } = Constants.manifest.extra;
+  if (!__DEV__) {
     if (envName && datadogClientToken && datadogAppId) {
       const config = new DdSdkReactNativeConfiguration(datadogClientToken, envName, datadogAppId, true, true, true);
 

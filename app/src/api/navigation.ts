@@ -1,5 +1,5 @@
 import { createNavigationContainerRef } from "@react-navigation/native";
-import { TripIntentMatch } from "@/api/index";
+import { TripIntentMatch } from "./index";
 
 export type NavigationParamList = {
   Home: undefined;

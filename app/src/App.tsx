@@ -1,28 +1,27 @@
-import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
-import { StatusBar } from "react-native";
-import colors from "tailwindcss/colors";
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * Generated with the TypeScript template
+ * https://github.com/react-native-community/react-native-template-typescript
+ *
+ * @format
+ */
+
+import {StatusBar} from "react-native";
+
+import {NavigationContainer} from "@react-navigation/native";
+import {AppColors} from "@/theme/colors";
 import ContextProvider from "@/components/ContextProvider";
-import { RootNavigation } from "@/api/navigation";
+import {RootNavigation} from "@/api/navigation";
 import Navigation from "@/components/Navigation";
 
-function App() {
-  return (
+const App = () => (
     <ContextProvider>
-      <StatusBar backgroundColor={colors.gray["800"]} />
-      <NavigationContainer
-        ref={RootNavigation}
-        onReady={() => {
-          if (!__DEV__) {
-            DdRumReactNavigationTracking.startTrackingViews(RootNavigation.current);
-          }
-        }}
-      >
-        <Navigation />
-      </NavigationContainer>
+        <StatusBar backgroundColor={AppColors.gray800}/>
+        <NavigationContainer ref={RootNavigation}>
+            <Navigation/>
+        </NavigationContainer>
     </ContextProvider>
-  );
-}
-
+);
 export default App;

@@ -1,5 +1,6 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  /* Recommended React Native TSConfig base */
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
@@ -18,10 +19,10 @@
     ],
     "moduleResolution": "node",
     "noEmit": true,
-    "skipLibCheck": true,
     "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
-    
+    "skipLibCheck": true
+    /* Skip type checking all .d.ts files. */
   }
 }

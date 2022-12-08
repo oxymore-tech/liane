@@ -1,8 +1,8 @@
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { BaseUrl } from "@/api/http";
-import { getStoredToken } from "@/api/storage";
+import { BaseUrl } from "./http";
+import { getStoredToken } from "./storage";
 
-export function createChatConnection() : HubConnection {
+export function createChatConnection(): HubConnection {
   return new HubConnectionBuilder()
     .withUrl(`${BaseUrl}/hub`, {
       accessTokenFactory: async () => (await getStoredToken())!

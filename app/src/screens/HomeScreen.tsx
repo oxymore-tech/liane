@@ -1,62 +1,85 @@
-import React, { useCallback, useState } from "react";
-import { FlatList, SafeAreaView, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet } from "react-native";
+import MapboxGL from "@rnmapbox/maps";
+import { getLastKnownLocation } from "@/api/location";
 import { AppText } from "@/components/base/AppText";
-import { TripIntentMatch } from "@/api";
-import ScheduleTripItem from "@/components/ScheduleTripItem";
-import { getMatches } from "@/api/client";
-import { RootNavigation } from "@/api/navigation";
 
-const ScheduleScreen = () => {
-  const [matches, setMatches] = useState<TripIntentMatch[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+const mapStyle = JSON.stringify(require("../../map-style-osm.json"));
 
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const tripIntentMatches = await getMatches();
-      setMatches(tripIntentMatches);
-    } finally {
-      setRefreshing(false);
+const HomeScreen = () => {
+
+  MapboxGL.setWellKnownTileServer(MapboxGL.TileServers.MapLibre);
+  MapboxGL.setAccessToken("pk.eyJ1IjoiY2xhdmUiLCJhIjoiY2xiZHZicW4xMDRqZDN4bXN6OWZ2eWhvYyJ9.TZi6_5LlNg15NsKUT6sV7A");
+
+  const [location, setLocation] = useState(null);
+  useEffect(() => {
+    async function getLocation() {
+      const loc = await getLastKnownLocation();
+      setLocation(loc);
     }
+    getLocation();
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      refresh().then();
-    }, [])
-  );
+  if (location) {
+    const coordinatesA = [location.lng, location.lat];
+    const coordinatesB = [location.lng, location.lat - 0.25];
 
-  const onDelete = useCallback(() => {
+    return (
+      <View style={styles.page}>
+        <View style={styles.container}>
 
-  }, []);
+          <MapboxGL.MapView style={styles.map} styleJSON={mapStyle}>
 
-  const onChat = useCallback((matchedTripIntent: TripIntentMatch) => {
-    RootNavigation.navigate("Chat", { matchedTripIntent });
-  }, []);
+            <MapboxGL.Camera
+              maxZoomLevel={15}
+              minZoomLevel={5}
+              zoomLevel={8}
+              centerCoordinate={coordinatesA}
+            />
 
-  return (
-    <SafeAreaView className="flex flex-col h-full bg-gray-700">
+            <View>
+              <MapboxGL.MarkerView
+                id="A"
+                coordinate={coordinatesA}
+              >
+                <View style={{ height: 10, width: 10, backgroundColor: "red" }} />
+              </MapboxGL.MarkerView>
+            </View>
+            <View>
+              <MapboxGL.MarkerView
+                id="B"
+                coordinate={coordinatesB}
+              >
+                <View style={{ height: 10, width: 10, backgroundColor: "red" }} />
+              </MapboxGL.MarkerView>
+            </View>
 
-      <View className="pt-5 pb-5 flex-row items-center">
-        <AppText className="absolute text-2xl text-center text-white w-full">Mes trajets</AppText>
+          </MapboxGL.MapView>
+        </View>
       </View>
-
-      <FlatList
-        data={matches}
-        renderItem={({ item }) => (
-          <ScheduleTripItem
-            tripIntentMatch={item}
-            onDelete={onDelete}
-            onChat={onChat}
-          />
-        )}
-        keyExtractor={(data) => data.tripIntent.id!}
-        refreshing={refreshing}
-        onRefresh={refresh}
-      />
-    </SafeAreaView>
+    );
+  }
+  // TODO else
+  return (
+    <View>
+      <AppText>No map.</AppText>
+    </View>
   );
+
 };
 
-export default ScheduleScreen;
+export default HomeScreen;
+const styles = StyleSheet.create({
+  page: {
+    flex: 1
+  },
+  container: {
+    height: "100%",
+    width: "100%",
+    marginBottom: 48,
+    flex: 1
+  },
+  map: {
+    flex: 1
+  }
+});

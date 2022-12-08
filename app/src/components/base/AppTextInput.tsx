@@ -1,6 +1,8 @@
 import React from "react";
-import { TextInput, TextInputProps, View } from "react-native";
-import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
+import { AppIcon, IconName } from "./AppIcon";
+import { AppColors } from "@/theme/colors";
+import { AppDimensions } from "@/theme/dimensions";
 
 export interface AppTextInputProps extends TextInputProps {
   icon?: IconName;
@@ -8,17 +10,33 @@ export interface AppTextInputProps extends TextInputProps {
 
 export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
   return (
-    <View className="bg-gray-100 font-sans rounded-md p-2 flex flex-row" style={style}>
+    <View style={[style]}>
       {icon && (
-      <AppIcon
-        name={icon}
-        className="text-2xl text-gray-400 pl-1 pr-2"
-      />
+        <AppIcon
+          name={icon}
+        />
       )}
       <TextInput
-        className="flex-1 text-2xl text-gray-600"
+        style={[styles.input, style]}
         {...props}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  input: {
+    flex: 1,
+    color: AppColors.black
+  },
+  container: {
+    backgroundColor: AppColors.gray100,
+    borderRadius: AppDimensions.borderRadius,
+    height: 48,
+    padding: 12
+  },
+  icon: {
+    color: AppColors.blue500,
+    paddingLeft: 12
+  }
+});

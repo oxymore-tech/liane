@@ -56,7 +56,7 @@ export type TripIntent = Readonly<{
 export type Match = Readonly<{
   user: Ref<User>;
   from: Ref<RallyingPoint>;
-  to : Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
 }>;
 
 export type TripIntentMatch = Readonly<{
