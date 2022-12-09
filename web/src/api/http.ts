@@ -2,7 +2,8 @@ import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-const BaseUrl = process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_APP_URL : "http://192.168.1.16:8081";
+// const BaseUrl = process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_APP_URL : "http://localhost:8081";
+const BaseUrl = "https://liane-dev.gjini.co/";
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
