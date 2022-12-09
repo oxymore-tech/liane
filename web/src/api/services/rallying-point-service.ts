@@ -2,7 +2,7 @@ import { get, post, put, remove } from "@/api/http";
 import { RallyingPoint } from "@/api/";
 
 /**
- * Class to manages rallying points.
+ * Class to manage rallying points.
  */
 export class RallyingPointService {
 

@@ -1,48 +1,34 @@
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { getStoredToken, setStoredToken } from "@/api/storage";
-import { AuthUser } from "@/api";
+import { AuthResponse, AuthUser } from "@/api";
 import { AuthService } from "@/api/services/auth-service";
 
-/**
- * Application context format.
- */
 interface AppContextProps {
-  authUser?: AuthUser; // Authenticated user
-  setAuthUser: (authUser?: AuthUser) => void; // Modifier for the previous
+  user?: AuthUser;
+  setUser: (authUser?: AuthUser) => void;
 }
 
-/**
- * Create default context.
- */
 export const AppContext = createContext<AppContextProps>({
-  setAuthUser: () => { }
+  setUser: () => {}
 });
 
-/**
- * Initialise the context by getting whether the app. is
- * authorised to track the device and at which level.
- */
-async function init() : Promise<{ authUser?:AuthUser }> {
+async function init() : Promise<{ authResponse?: AuthResponse }> {
   const storedToken = await getStoredToken();
-  const authUser = storedToken ? await AuthService.me().catch(() => undefined) : undefined;
+  const authResponse = storedToken ? await AuthService.me().catch(() => undefined) : undefined;
 
-  return { authUser };
+  return { authResponse };
 }
 
-/**
- * Define the context of the application.
- */
 export function ContextProvider(props: { children: ReactNode }) {
-  const [authUser, setInternalAuthUser] = useState<AuthUser>();
+  const [user, setInternalUser] = useState<AuthUser>();
 
-  const setAuthUser = async (a?: AuthUser) => {
+  const setUser = async (a?: AuthResponse) => {
     await setStoredToken(a?.token);
-    setInternalAuthUser(a);
+    setInternalUser(a?.user);
   };
-
-  // Check for an user
+  
   useEffect(() => {
-    init().then((r) => setAuthUser(r.authUser));
+    init().then((r) => setUser(r.authResponse));
   }, []);
 
   const { children } = props;
@@ -50,9 +36,9 @@ export function ContextProvider(props: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        authUser,
-        setAuthUser
-      }}
+        user,
+        setUser
+      } as AppContextProps}
     >
       {children}
     </AppContext.Provider>
