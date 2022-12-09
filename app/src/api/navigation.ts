@@ -6,8 +6,7 @@ export type NavigationParamList = {
   Home: undefined;
   Publish: undefined;
   Chat: { matchedTripIntent: TripIntentMatch; };
-  SignUp: { phoneNumber?: string, authFailure?: boolean };
-  SignUpCode: { phoneNumber: string };
+  SignUp: { signUpStep: SignUpStep, phoneNumber?: string, authFailure?: boolean };
 };
 
 export const RootNavigation = createNavigationContainerRef<NavigationParamList>();

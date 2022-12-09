@@ -6,8 +6,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { gestureHandlerRootHOC } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
-import SignUpScreen from "@/screens/signUp/SignUpScreen";
-import SignUpCodeScreen from "@/screens/signUp/SignUpCodeScreen";
+import SignUpScreen, { SignUpStep } from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import EmptyScreen from "@/screens/EmptyScreen";
 import { AppColors } from "@/theme/colors";
@@ -53,8 +52,13 @@ function Navigation() {
 
   return (
     <Stack.Navigator>
-      <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="SignUpCode" component={SignUpCodeScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="SignUp"
+        component={SignUpScreen}
+        options={{ headerShown: false }}
+        initialParams={{ signUpStep: SignUpStep.SetPhoneNumber }}
+        getId={({ params }) => params.signUpStep}
+      />
     </Stack.Navigator>
   );
 }
