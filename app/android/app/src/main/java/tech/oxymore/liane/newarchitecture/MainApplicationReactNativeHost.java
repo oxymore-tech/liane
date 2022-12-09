@@ -1,4 +1,4 @@
-package com.liane.newarchitecture;
+package tech.oxymore.liane.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.liane.BuildConfig;
-import com.liane.newarchitecture.components.MainComponentsRegistry;
-import com.liane.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import tech.oxymore.liane.BuildConfig;
+import tech.oxymore.liane.newarchitecture.components.MainComponentsRegistry;
+import tech.oxymore.liane.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

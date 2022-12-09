@@ -1,4 +1,4 @@
-package com.liane.newarchitecture.modules;
+package tech.oxymore.liane.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;

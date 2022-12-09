@@ -1,4 +1,4 @@
-package com.liane;
+package tech.oxymore.liane;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.liane">
+          package="tech.oxymore.liane">
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
