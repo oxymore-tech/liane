@@ -14,6 +14,8 @@ Basé sur [React Native](https://fr.reactjs.org/).
 ```bash
 cd app
 npm i --legacy-peer-deps
+# Pour IOS
+cd ios && pod install
 ```
 
 Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
