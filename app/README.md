@@ -13,7 +13,7 @@ Basé sur [React Native](https://fr.reactjs.org/).
 
 ```bash
 cd app
-npm i
+npm i --legacy-peer-deps
 ```
 
 Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
@@ -21,9 +21,8 @@ Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-em
 ## Lancer le projet en mode développement
 
 ```bash
-# Lancer l'application
-npx react-native run-android # ou run-ios selon la platforme
-
+npm run start
+npm run android # ou run ios selon la platforme
 ```
 
 Note: pour activer la nouvelle architecture React Native sur Android, définir la propriété `newArchEnabled` à `true`. 
