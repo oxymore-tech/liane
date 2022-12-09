@@ -17,7 +17,7 @@ import { RallyingPointService } from "@/api/services/rallying-point-service";
 import { AdminFilter, FilterOptions } from "@/components/AdminFilter";
 import { LianeStatistics } from "@/components/LianeStatistics";
 import { TripService } from "@/api/services/trip-service";
-import CenterHandler from "@/components/map/CenterHandler";
+import MoveHandler from "@/components/map/MoveHandler";
 import { Switch } from "@/components/base/Switch";
 import { Button } from "@/components/base/Button";
 import ZoomHandler from "@/components/map/ZoomHandler";
@@ -261,7 +261,7 @@ function LianeMapAdmin({ className, center }: MapProps) {
         style={{ zIndex: 0, position: "relative" }}
       >
         <ZoomHandler callback={handleZoom} />
-        <CenterHandler callback={handleCenter} />
+        <MoveHandler callback={handleCenter} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           zIndex={2}
