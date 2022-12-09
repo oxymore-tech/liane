@@ -77,19 +77,13 @@ export function post(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("POST", uri, options);
 }
 
+export function put(uri: string, options: QueryPostOptions<any> = {}) {
+  return fetchAndCheck("PUT", uri, options);
+}
+
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
   const response = await fetchAndCheck(method, uri, options);
   return response.json();
-}
-
-function formatBody(body?: any, bodyAsJson: boolean = true) {
-  if (!body) {
-    return null;
-  }
-  if (bodyAsJson) {
-    return JSON.stringify(body);
-  }
-  return body;
 }
 
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
@@ -114,6 +108,16 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
     }
   }
   return response;
+}
+
+function formatBody(body?: any, bodyAsJson: boolean = true) {
+  if (!body) {
+    return null;
+  }
+  if (bodyAsJson) {
+    return JSON.stringify(body);
+  }
+  return body;
 }
 
 async function headers(body?: any, bodyAsJson: boolean = true) {

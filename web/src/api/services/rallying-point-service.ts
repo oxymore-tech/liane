@@ -1,53 +1,29 @@
-import { get, post } from "@/api/http";
+import { get, post, put, remove } from "@/api/http";
 import { RallyingPoint } from "@/api/";
 
 /**
- * Class that manages rallying points.
+ * Class to manages rallying points.
  */
 export class RallyingPointService {
 
-  /**
-   * Adds a rallying point.
-   */
-  static async add(lat: number, lng: number, name: string) {
-    await post("/api/rp/add", { params: { lat, lng, name } });
+  static async create(label: string, lat: number, lng: number, isActive: boolean = true) {
+    await post("/api/rallying_point", { params: { location: { lat, lng }, label, isActive } as RallyingPoint });
   }
-
-  /**
-   * Deletes a rallying point.
-   */
+  
   static async delete(id: string) {
-    await post("/api/rp/delete", { params: { id } });
+    await remove(`/api/rallying_point/${id}`);
   }
-
-  /**
-   * Moves a rallying point to specific coordinates.
-   */
-  static async move(id: string, lat: number, lng: number) {
-    console.log(lat, lng);
-    await post("/api/rp/move", { params: { lat, lng, id } });
+  
+  static async list(lat?: number, lng?: number, search?: string): Promise<RallyingPoint[]> {
+    return get("/api/rallying_point", { params: { lat, lng, search } });
   }
-
-  /**
-   * Changes the state of a rallying point.
-   */
-  static async state(id: string, isActive: boolean) {
-    await post("/api/rp/state", { params: { id, isActive } });
+  
+  static async update(id: string, label: string, lat: number, lng: number, isActive: boolean) {
+    return put(`/api/rallying_point/${id}`, { params: { location: { lat, lng }, label, isActive } as RallyingPoint });
   }
-
-  /**
-   * Re-creates every rallying points from exported file.
-   * All modifications will be lost.
-   */
+  
   static async generate() {
-    await post("/api/rp/generate");
-  }
-
-  /**
-   * Lists all close rallying points.
-   */
-  static async list(lat: number, lng: number): Promise<RallyingPoint[]> {
-    return get("/api/rp/list", { params: { lat, lng } });
+    await post("/api/rallying_point/generate");
   }
 
 }
