@@ -2,6 +2,8 @@ import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet } from "react-native";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { gestureHandlerRootHOC } from "react-native-gesture-handler";
 import { AppContext } from "@/components/ContextProvider";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import SignUpCodeScreen from "@/screens/signUp/SignUpCodeScreen";
@@ -20,24 +22,26 @@ function Navigation() {
 
   if (authUser) {
     return (
-      <Tab.Navigator screenOptions={{
-        tabBarStyle: styles.bottomBarStyle
-      }}
-      >
+      <BottomSheetModalProvider>
+        <Tab.Navigator screenOptions={{
+          tabBarStyle: styles.bottomBarStyle
+        }}
+        >
 
-        { makeTab("Accueil", "home-outline", HomeScreen)}
-        { makeTab("Mes trajets", "flag-outline", EmptyScreen)}
-        <Tab.Screen
-          name="Liane"
-          component={LianeModalScreen}
-          options={{
-            tabBarButton: () => (<LianeModalScreen />)
-          }}
-        />
-        { makeTab("Conversations", "message-circle-outline", EmptyScreen)}
-        { makeTab("Demandes", "bell-outline", EmptyScreen)}
+          { makeTab("Accueil", "home-outline", HomeScreen)}
+          { makeTab("Mes trajets", "flag-outline", EmptyScreen)}
+          <Tab.Screen
+            name="Liane"
+            component={LianeModalScreen}
+            options={{
+              tabBarButton: () => (<LianeModalScreen />)
+            }}
+          />
+          { makeTab("Conversations", "message-circle-outline", EmptyScreen)}
+          { makeTab("Demandes", "bell-outline", EmptyScreen)}
 
-      </Tab.Navigator>
+        </Tab.Navigator>
+      </BottomSheetModalProvider>
     );
   }
 
@@ -77,4 +81,6 @@ const styles = StyleSheet.create({
   }
 
 });
-export default Navigation;
+
+// Wrap Component to allow bottom sheets scrolling on Android
+export default gestureHandlerRootHOC(Navigation);

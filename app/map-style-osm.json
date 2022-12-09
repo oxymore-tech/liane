@@ -7,7 +7,7 @@
         "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
       ],
       "tileSize": 256,
-      "attribution": "© OpenStreetMap Contributors",
+      "attribution": "<a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>",
       "maxzoom": 19
     }
   },
