@@ -4,7 +4,6 @@ import { LatLng, RallyingPoint } from "@/api";
 import { icon } from "leaflet";
 import { PopupMenuItem } from "@/components/PopupMenuItem";
 import { Label } from "@/components/base/Label";
-import { RallyingPointService } from "@/api/services/rallying-point-service";
 
 export const IconBlue = icon({
   iconUrl: "/images/leaflet/marker-icon.png",
@@ -40,14 +39,12 @@ export function RallyingPointMarker({ value, from, to, editMode, onSelect }: Ral
   const isFrom = from?.id === value.id;
   const isTo = to?.id === value.id;
 
-  const [pos, setPos] = useState<LatLng>(value.coordinates);
+  const [pos, setPos] = useState<LatLng>(value.location);
   const [newPos, setNewPos] = useState<LatLng>();
   const [isActive, setIsActive] = useState(value.isActive);
 
-  // Rallying point update functions
-
   const toggleIsActive = async () => {
-    await RallyingPointService.state(value.id, !isActive);
+    // await RallyingPointService.state(value.id, !isActive);
     setIsActive(!isActive);
     map.closePopup();
   };
@@ -60,7 +57,7 @@ export function RallyingPointMarker({ value, from, to, editMode, onSelect }: Ral
 
   const confirmPos = async () => {
     if (newPos) {
-      await RallyingPointService.move(value.id, newPos.lat, newPos.lng);
+      // await RallyingPointService.move(value.id, newPos.lat, newPos.lng);
       setPos(newPos);
       setNewPos(undefined);
     }
