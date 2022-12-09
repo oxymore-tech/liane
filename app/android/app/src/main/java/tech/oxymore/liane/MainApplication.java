@@ -9,6 +9,8 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.config.ReactFeatureFlags;
 import com.facebook.soloader.SoLoader;
 import tech.oxymore.liane.newarchitecture.MainApplicationReactNativeHost;
+import com.liane.newarchitecture.MainApplicationReactNativeHost;
+import com.facebook.react.views.text.ReactFontManager;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -57,6 +59,7 @@ public class MainApplication extends Application implements ReactApplication {
     ReactFeatureFlags.useTurboModules = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     SoLoader.init(this, /* native exopackage */ false);
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+    ReactFontManager.getInstance().addCustomFont(this, "Inter", R.font.inter);
   }
 
   /**
