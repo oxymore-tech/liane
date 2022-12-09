@@ -60,16 +60,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-caches-
 
-      - name: Generate App APK
+      - name: Generate App Bundle
         working-directory: ./app
         run: |
           cd android && ./gradlew -PversCode=${{ github.run_number }} -PversName=${{steps.tagger.outputs.tag}} bundleRelease --no-daemon
 
-      - name: Sign APK
+      - name: Sign Bundle
         id: sign_app
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: app/android/app/build/outputs/bundle/release
+          releaseDirectory: app/android/app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
           alias: ${{ secrets.ANDROID_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
