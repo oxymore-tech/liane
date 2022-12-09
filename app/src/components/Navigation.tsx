@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet } from "react-native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { gestureHandlerRootHOC } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import SignUpCodeScreen from "@/screens/signUp/SignUpCodeScreen";
@@ -18,13 +19,17 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Navigation() {
+
+  const insets = useSafeAreaInsets();
   const { authUser } = useContext(AppContext);
 
   if (authUser) {
     return (
+
       <BottomSheetModalProvider>
         <Tab.Navigator screenOptions={{
-          tabBarStyle: styles.bottomBarStyle
+          tabBarStyle: [styles.bottomBarStyle, { height: AppDimensions.bottomBarHeight + insets.bottom, paddingBottom: 8 + insets.bottom }],
+          tabBarLabelStyle: styles.labelStyle
         }}
         >
 
@@ -78,6 +83,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: AppDimensions.borderRadius,
     borderTopRightRadius: AppDimensions.borderRadius,
     overflow: "hidden"
+  },
+  labelStyle: { // TODO fonts
+    fontFamily: "Inter"
   }
 
 });

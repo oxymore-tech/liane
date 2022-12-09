@@ -1,62 +1,85 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import Modal from "react-native-modal";
-import { AppText } from "@/components/base/AppText";
-import { AppIcon } from "@/components/base/AppIcon";
-import { AppColors, AppTheme } from "@/theme/colors";
+import { BottomSheetBackdropProps, BottomSheetModal } from "@gorhom/bottom-sheet";
 
-export const LianeModalScreen = () => { // TODO liane logo
-  const [modalVisible, setModalVisible] = useState(false);
+import Animated, { useAnimatedStyle, interpolate, Extrapolate } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppColors } from "@/theme/colors";
+import LianeIcon from "@/assets/icon.svg";
+import { LianeHouseVector } from "@/components/LianeHouseVector";
+
+export const LianeModalScreen = () => {
+
+  const renderLianeBackdrop = ({ animatedIndex, style }: BottomSheetBackdropProps) => {
+    // TODO translate LianeHouseVector
+    const containerAnimatedStyle = useAnimatedStyle(() => ({
+      opacity: interpolate(
+        animatedIndex.value,
+        [-1, -1, 0],
+        [0, 0, 1],
+        Extrapolate.CLAMP
+      )
+
+    }));
+    // styles
+    const containerStyle = useMemo(
+      () => [
+        style,
+        {
+          backgroundColor: AppColors.white
+        },
+        containerAnimatedStyle
+      ],
+      [style, containerAnimatedStyle]
+    );
+
+    const insets = useSafeAreaInsets();
+
+    return (
+      <Animated.View style={[containerStyle, { marginTop: insets.top }]}>
+        <LianeHouseVector />
+      </Animated.View>
+    );
+  };
+
+  // ref
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const openModal = () => {
+    bottomSheetRef.current?.present();
+  };
+
+  // variables
+  const snapPoints = useMemo(() => ["75%"], []);
+
   return (
     <>
 
-      <Pressable style={styles.iconContainer} onPress={() => setModalVisible(true)}>
-        <AppIcon
-          name="plus-circle-outline"
-          color={AppTheme.primary}
-        />
+      <Pressable style={styles.iconContainer} onPress={() => openModal()}>
+        <LianeIcon width={40} height={40} color={AppColors.blue700} />
       </Pressable>
-      <View style={styles.contentView}>
-        <Modal
-          backdropOpacity={0.3}
-          isVisible={modalVisible}
-          onBackdropPress={() => setModalVisible(false)}
-        >
-          <View style={styles.container}>
-            <AppText style={styles.contentTitle}>Hi 👋!</AppText>
 
-            <AppText>Hello from Overlay!</AppText>
-          </View>
-        </Modal>
-      </View>
+      <BottomSheetModal
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        backgroundStyle={styles.modalBackground}
+        backdropComponent={renderLianeBackdrop}
+      >
+        <View />
+      </BottomSheetModal>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "white",
-    padding: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopRightRadius: 17,
-    borderTopLeftRadius: 17,
-    height: "75%"
-
-  },
-  contentTitle: {
-    fontSize: 20,
-    marginBottom: 12
-  },
-  contentView: {
-    // justifyContent: "flex-end",
-    margin: 0
-  },
   iconContainer: {
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
-    backgroundColor: AppColors.yellow500
+    paddingHorizontal: 16
+  },
+  modalBackground: {
+    backgroundColor: AppColors.blue700
   }
 });
