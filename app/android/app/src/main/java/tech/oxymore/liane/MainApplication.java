@@ -9,7 +9,6 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.config.ReactFeatureFlags;
 import com.facebook.soloader.SoLoader;
 import tech.oxymore.liane.newarchitecture.MainApplicationReactNativeHost;
-import com.liane.newarchitecture.MainApplicationReactNativeHost;
 import com.facebook.react.views.text.ReactFontManager;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
