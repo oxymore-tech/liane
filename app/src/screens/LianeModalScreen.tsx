@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { BottomSheetBackdropProps, BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppColors } from "@/theme/colors";
 import LianeIcon from "@/assets/icon.svg";
 import { LianeHouseVector } from "@/components/LianeHouseVector";
+import { AppText } from "@/components/base/AppText";
+import { AppDimensions } from "@/theme/dimensions";
 
 export const LianeModalScreen = () => {
 
@@ -56,8 +58,12 @@ export const LianeModalScreen = () => {
   return (
     <>
 
-      <Pressable style={styles.iconContainer} onPress={() => openModal()}>
+      <Pressable style={styles.container} onPress={() => openModal()}>
         <LianeIcon width={40} height={40} color={AppColors.blue700} />
+        <View style={styles.space} />
+        <AppText style={styles.label}>
+          Lianes
+        </AppText>
       </Pressable>
 
       <BottomSheetModal
@@ -74,12 +80,21 @@ export const LianeModalScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  iconContainer: {
+  container: {
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16
+    display: "flex",
+    paddingHorizontal: AppDimensions.bottomBar.itemSpacing
+  },
+  label: {
+    fontSize: AppDimensions.textSize.small,
+    fontWeight: "400",
+    color: AppColors.blue700
   },
   modalBackground: {
     backgroundColor: AppColors.blue700
+  },
+  space: {
+    height: 1
   }
 });

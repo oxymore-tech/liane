@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import AppMapView from "@/components/AppMapView";
-import {AppDimensions} from "@/theme/dimensions";
+import { AppDimensions } from "@/theme/dimensions";
 
 const HomeScreen = () => (
   <View style={styles.page}>
@@ -16,7 +16,7 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    marginBottom: 64
+    marginBottom: AppDimensions.bottomBar.height
   },
   container: {
     height: "100%",

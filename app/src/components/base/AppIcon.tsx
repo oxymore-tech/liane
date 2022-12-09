@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon } from "react-native-eva-icons";
 import { AppColors, AppTheme } from "@/theme/colors";
+import { AppDimensions } from "@/theme/dimensions";
 
 export type IconName = `${typeof EvaIconsNames[number]}-outline`;
 
@@ -9,11 +10,9 @@ interface AppIconProps {
   color?: AppColors;
   size?: number;
 }
-export function AppIcon({ name, color = AppTheme.defaultTextColor, size = defaultIconSize }: AppIconProps) {
+export function AppIcon({ name, color = AppTheme.defaultTextColor, size = AppDimensions.iconSize }: AppIconProps) {
   return <Icon name={name} width={size} height={size} fill={color} />;
 }
-
-const defaultIconSize = 24;
 
 const EvaIconsNames = ["activity",
   "alert-circle",

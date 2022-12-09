@@ -14,6 +14,7 @@ import { AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import { LianeModalScreen } from "@/screens/LianeModalScreen";
 import HomeScreen from "@/screens/HomeScreen";
+import { AppText } from "@/components/base/AppText";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -28,8 +29,8 @@ function Navigation() {
 
       <BottomSheetModalProvider>
         <Tab.Navigator screenOptions={{
-          tabBarStyle: [styles.bottomBarStyle, { height: AppDimensions.bottomBarHeight + insets.bottom, paddingBottom: 8 + insets.bottom }],
-          tabBarLabelStyle: styles.labelStyle
+          tabBarStyle: [styles.bottomBarStyle, { height: AppDimensions.bottomBar.height + insets.bottom, paddingBottom: 8 + insets.bottom }]
+
         }}
         >
 
@@ -66,6 +67,14 @@ const makeTab = (label: string,
       component={screen}
       options={
           {
+
+            tabBarLabel: ({ focused }) => (
+              <AppText
+                style={[styles.labelStyle, { color: focused ? AppColors.blue500 : AppColors.blue700 }]}
+              >
+                {label}
+              </AppText>
+            ),
             tabBarIcon: ({ focused }) => (
               <AppIcon
                 name={iconName}
@@ -84,8 +93,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: AppDimensions.borderRadius,
     overflow: "hidden"
   },
-  labelStyle: { // TODO fonts
-    fontFamily: "Inter"
+  labelStyle: {
+    fontSize: AppDimensions.textSize.small,
+    fontWeight: "400"
   }
 
 });

@@ -34,12 +34,12 @@ export function AppButton({ color = AppColors.orange500, disabled = false, title
 const styles = StyleSheet.create({
   container: {
     borderRadius: AppDimensions.borderRadius,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: AppDimensions.button.paddingVertical,
+    paddingHorizontal: AppDimensions.button.paddingHorizontal,
     alignContent: "center"
   },
   text: {
-    fontSize: 20,
+    fontSize: AppDimensions.textSize.medium,
     fontWeight: "600"
   }
 

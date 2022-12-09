@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, TextProps } from "react-native";
+import { AppDimensions } from "@/theme/dimensions";
 
 export interface AppTextProps extends TextProps {
   children?: ReactNode;
@@ -20,7 +21,7 @@ const styles = StyleSheet.create(
   {
     text: {
       fontFamily: "Inter",
-      fontSize: 12
+      fontSize: AppDimensions.textSize.default
     }
   }
 );
