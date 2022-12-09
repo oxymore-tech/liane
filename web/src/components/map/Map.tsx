@@ -5,7 +5,7 @@ import MoveHandler from "@/components/map/MoveHandler";
 import React from "react";
 
 interface MapProps extends MapContainerProps {
-  onZoomEnd?: (zoomLevel: number) => void;
+  onZoomEnd?: (zoom: number) => void;
   onMoveEnd?: (center: LatLng) => void;
   tileServer: string;
 }

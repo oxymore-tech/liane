@@ -2,21 +2,22 @@ import React, { useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { LatLng, RallyingPoint } from "@/api";
 import Map from "@/components/map/Map";
-import dynamic from "next/dynamic";
+import { RallyingPointMarker } from "@/components/map/RallyingPointMarker";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 
-const Mapi = dynamic(() => import("@/components/map/Map"), { ssr: false });
-
-interface MapProps {
+interface MapManagerProps {
   className?: string;
   defaultCenter: LatLng;
 }
 
-function MapManager({ className, defaultCenter }: MapProps) {
+function MapManager({ className, defaultCenter }: MapManagerProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
-  const [center, setCenter] = useState<LatLng>(center);
   
   const handleCenter = (c: LatLng) => {
-    console.log(c);
+    RallyingPointService.list(c.lat, c.lng).then((r) => {
+      setRallyingPoints(r);
+      console.log(r);
+    });
   };
   
   const handleZoom = (z: number) => {
@@ -25,9 +26,9 @@ function MapManager({ className, defaultCenter }: MapProps) {
 
   return (
     <div className="relative">
-      <Mapi
+      <Map
         className={className}
-        center={center}
+        center={defaultCenter}
         zoom={12}
         scrollWheelZoom
         dragging
@@ -37,17 +38,13 @@ function MapManager({ className, defaultCenter }: MapProps) {
         onZoomEnd={handleZoom}
         onMoveEnd={handleCenter}
       >
-        { showRallyingPoints
-          && rallyingPoints.map((point: RallyingPoint) => (
+        { rallyingPoints.map((rp: RallyingPoint) => (
             <RallyingPointMarker
-              from={from}
-              to={to}
-              key={`rl_${point.id}`}
-              value={point}
-              onSelect={(isFrom: boolean) => { handleRp(point, isFrom); }}
+              key={rp.id}
+              value={rp}
             />
-          ))}
-      </Mapi>
+        ))}
+      </Map>
     </div>
   );
 }
