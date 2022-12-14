@@ -35,7 +35,7 @@ const AppMapView = () => {
 
     return (
 
-      <MapboxGL.MapView style={styles.map} styleJSON={mapStyle}>
+      <MapboxGL.MapView style={styles.map} styleJSON={mapStyle} logoEnabled={false} attributionEnabled={false}>
 
         <MapboxGL.Camera
           maxZoomLevel={15}
