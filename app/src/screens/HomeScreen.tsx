@@ -1,4 +1,5 @@
 import { View, StyleSheet } from "react-native";
+import React from "react";
 import AppMapView from "@/components/AppMapView";
 import { AppDimensions } from "@/theme/dimensions";
 
@@ -16,7 +17,7 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    marginBottom: AppDimensions.bottomBar.height
+    marginBottom: AppDimensions.bottomBar.height - AppDimensions.borderRadius
   },
   container: {
     height: "100%",
