@@ -1,6 +1,9 @@
 name: IOS Build
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - app/no_expo
 
 jobs:
   android-build:
@@ -58,17 +61,23 @@ jobs:
       - name: Install Pods
         run: cd app/ios && pod install --repo-update && cd ../..
 
+      - name: Update build number
+        run: |
+          cd app/ios
+          agvtool new-marketing-version ${{steps.tagger.outputs.tag}}
+          agvtool new-version -all ${{github.run_number}}
+
       - name: Build IOS App
         uses: yukiarrr/ios-build-action@v1.4.0
         with:
-          project-path: ios/MyApp.xcodeproj
+          project-path: app/ios/Liane.xcodeproj
           p12-base64: ${{ secrets.IOS_P12_BASE64 }}
           mobileprovision-base64: ${{ secrets.IOS_MOBILE_PROVISION_BASE64 }}
           code-signing-identity: 'iPhone Distribution'
           team-id: ${{ secrets.IOS_TEAM_ID }}
           certificate-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          workspace-path: ios/MyApp.xcworkspace
-          scheme: MyApp
+          workspace-path: app/ios/Liane.xcworkspace
+          scheme: Liane
 
       - name: 'Upload app to TestFlight'
         uses: apple-actions/upload-testflight-build@v1
