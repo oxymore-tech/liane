@@ -65,13 +65,18 @@ jobs:
         uses: timheuer/base64-to-file@v1
         with:
           fileName: 'release.keystore'
-          fileDir: '.app/android/app/'
           encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
             
       - name: Generate App Bundle
         working-directory: ./app
         run: |
           cd android && ./gradlew -PversCode=${{ github.run_number }} -PversName=${{steps.tagger.outputs.tag}} bundleRelease --no-daemon
+        env:
+          ANDROID_KEY_STORE_FILE: ${{ steps.decode_keystore.outputs.filePath }}
+          ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          
 #
 #      - name: Sign Bundle
 #        id: sign_app
