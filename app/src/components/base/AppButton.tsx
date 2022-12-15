@@ -1,46 +1,57 @@
 import React from "react";
-import { Pressable, PressableProps, StyleSheet } from "react-native";
+import { PressableProps, StyleSheet, View } from "react-native";
 import { AppColors, AppTheme } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { AppPressable } from "@/components/base/AppPressable";
 
 // @ts-ignore
-export interface LianeButtonProps extends PressableProps {
+export interface AppButtonProps extends PressableProps {
   title?: string;
   color?: AppColors;
   disabled?: boolean;
+  icon? : IconName;
+  kind?: "circular" | "rounded";
+  foregroundColor?: AppColors;
 }
 
-export function AppButton({ color = AppColors.orange500, disabled = false, title, ...props }: LianeButtonProps) {
+export function AppButton({ color = AppColors.orange500, disabled = false, title, icon, kind = "rounded", foregroundColor, ...props }: AppButtonProps) {
 
   const backgroundColor = disabled ? AppColors.gray400 : color;
-  const textColor = disabled ? AppTheme.defaultTextColor : AppTheme.buttonTextColor;
-  return (
-    <Pressable
-      {...props}
-      style={[{ backgroundColor }, styles.container]}
-      disabled={disabled}
-    >
 
+  const textColor = foregroundColor || ((color === AppColors.white) ? AppTheme.defaultTextColor : AppColors.white);
+  const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 1 : 2);
+
+  return (
+    <AppPressable {...props} backgroundStyle={{ backgroundColor, borderRadius }} style={styles.contentContainer} disabled={disabled}>
+      {icon && (<View style={styles.iconContainer}><AppIcon name={icon} color={textColor} /></View>)}
+
+      {title && (
       <AppText
         style={[{ color: textColor }, styles.text]}
       >
         {title}
       </AppText>
-    </Pressable>
+      )}
+    </AppPressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: AppDimensions.borderRadius,
-    paddingVertical: AppDimensions.button.paddingVertical,
-    paddingHorizontal: AppDimensions.button.paddingHorizontal,
-    alignContent: "center"
+  iconContainer: {
+    paddingVertical: AppDimensions.button.paddingVertical
+  },
+  contentContainer: {
+    flexDirection: "row",
+    paddingHorizontal: AppDimensions.button.paddingHorizontal / 2
+
   },
   text: {
     fontSize: AppDimensions.textSize.medium,
-    fontWeight: "600"
+    fontWeight: "600",
+    marginVertical: AppDimensions.button.paddingVertical,
+    marginHorizontal: AppDimensions.button.paddingHorizontal / 2
   }
 
 });

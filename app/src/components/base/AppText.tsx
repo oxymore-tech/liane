@@ -21,7 +21,8 @@ const styles = StyleSheet.create(
   {
     text: {
       fontFamily: "Inter",
-      fontSize: AppDimensions.textSize.default
+      fontSize: AppDimensions.textSize.default,
+      textAlignVertical: "center"
     }
   }
 );
