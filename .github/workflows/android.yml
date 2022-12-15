@@ -59,21 +59,28 @@ jobs:
           key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-caches-
-
+    
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'release.keystore'
+          encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
+            
       - name: Generate App Bundle
         working-directory: ./app
         run: |
           cd android && ./gradlew -PversCode=${{ github.run_number }} -PversName=${{steps.tagger.outputs.tag}} bundleRelease --no-daemon
-
-      - name: Sign Bundle
-        id: sign_app
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/android/app/build/outputs/bundle/release
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+#
+#      - name: Sign Bundle
+#        id: sign_app
+#        uses: r0adkll/sign-android-release@v1
+#        with:
+#          releaseDirectory: app/android/app/build/outputs/bundle/release
+#          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+#          alias: ${{ secrets.ANDROID_ALIAS }}
+#          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+#          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       ## Distribute app to Firebase App Distribution for testing / use google play internal track if you have a google play account
 #      - name: upload artifact to Firebase App Distribution
