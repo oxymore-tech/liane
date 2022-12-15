@@ -5,7 +5,7 @@ on: workflow_dispatch
 jobs:
   android-build:
     name: IOS Build
-    runs-on: macos-latest
+    runs-on: macOS-latest
 
     steps:
       - name: Check out Git repository
@@ -14,11 +14,6 @@ jobs:
       - name: Find Tag
         id: tagger
         uses: jimschubert/query-tag-action@v1
-
-      - name: Set up our JDK environment
-        uses: actions/setup-java@v1.4.3
-        with:
-          java-version: 11
 
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -43,57 +38,42 @@ jobs:
         working-directory: ./app
         run: npm ci --legacy-peer-deps
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
+      - name: Setup Ruby (bundle)
+        uses: ruby/setup-ruby@v1
         with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          ruby-version: 2.6
+          bundler-cache: true
 
-      - name: Cache Gradle Dependencies
+      - name: Restore Pods cache
         uses: actions/cache@v2
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          path: |
+            app/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('app/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-caches-
-    
-      - name: Decode Keystore
-        id: decode_keystore
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'app/android/app/release.keystore'
-          encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
-            
-      - name: Generate App Bundle
-        working-directory: ./app
-        run: |
-          cd android && ./gradlew -PversCode=${{ github.run_number }} -PversName=${{steps.tagger.outputs.tag}} bundleRelease --no-daemon
-#
-#      - name: Sign Bundle
-#        id: sign_app
-#        uses: r0adkll/sign-android-release@v1
-#        with:
-#          releaseDirectory: app/android/app/build/outputs/bundle/release
-#          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-#          alias: ${{ secrets.ANDROID_ALIAS }}
-#          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
-#          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+            ${{ runner.os }}-pods-
 
-      ## Distribute app to Firebase App Distribution for testing / use google play internal track if you have a google play account
-#      - name: upload artifact to Firebase App Distribution
-#        uses: wzieba/Firebase-Distribution-Github-Action@v1
-#        with:
-#          appId: ${{secrets.ANDROID_FIREBASE_APP_ID}}
-#          token: ${{secrets.ANDROID_FIREBASE_TOKEN}}
-#          groups: testers
-#          file: ${{steps.sign_app.outputs.signedReleaseFile}}
-  
-      - name: Upload App to Google Play
-        uses: r0adkll/upload-google-play@v1
+      - name: Install Pods
+        run: cd app/ios && pod install --repo-update && cd ../..
+
+      - name: Build IOS App
+        uses: yukiarrr/ios-build-action@v1.4.0
         with:
-          serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON_TEXT }}
-          packageName: tech.oxymore.liane
-          releaseFiles: app/android/app/build/outputs/bundle/release/*.aab
-          track: alpha
-          status: completed
-          inAppUpdatePriority: 5
+          project-path: ios/MyApp.xcodeproj
+          p12-base64: ${{ secrets.IOS_P12_BASE64 }}
+          mobileprovision-base64: ${{ secrets.IOS_MOBILE_PROVISION_BASE64 }}
+          code-signing-identity: 'iPhone Distribution'
+          team-id: ${{ secrets.IOS_TEAM_ID }}
+          certificate-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          workspace-path: ios/MyApp.xcworkspace
+          scheme: MyApp
+
+      - name: 'Upload app to TestFlight'
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: 'output.ipa'
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
