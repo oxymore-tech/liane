@@ -1,14 +1,11 @@
-name: Android Build
+name: IOS Build
 
-on:
-  push:
-    branches:
-      - app/no_expo
+on: workflow_dispatch
 
 jobs:
   android-build:
-    name: Android Build
-    runs-on: ubuntu-latest
+    name: IOS Build
+    runs-on: macos-latest
 
     steps:
       - name: Check out Git repository
@@ -97,6 +94,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON_TEXT }}
           packageName: tech.oxymore.liane
           releaseFiles: app/android/app/build/outputs/bundle/release/*.aab
-          track: beta
+          track: alpha
           status: completed
           inAppUpdatePriority: 5
