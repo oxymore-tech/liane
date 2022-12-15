@@ -64,7 +64,7 @@ jobs:
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
         with:
-          fileName: 'release.keystore'
+          fileName: 'app/android/app/release.keystore'
           encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
             
       - name: Generate App Bundle
