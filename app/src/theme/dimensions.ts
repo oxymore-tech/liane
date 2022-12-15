@@ -5,7 +5,8 @@ export const AppDimensions = {
   textSize: {
     small: 10,
     default: 12,
-    medium: 20
+    medium: 20,
+    big: 28
   },
 
   button: {
