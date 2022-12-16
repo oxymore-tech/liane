@@ -16,12 +16,12 @@ function MapManager({ className, defaultCenter }: MapManagerProps) {
   const handleCenter = (c: LatLng) => {
     RallyingPointService.list(c.lat, c.lng).then((r) => {
       setRallyingPoints(r);
-      console.log(r);
     });
   };
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleZoom = (z: number) => {
-    console.log(z);
+    // Nothing yet
   };
 
   return (
@@ -37,14 +37,13 @@ function MapManager({ className, defaultCenter }: MapManagerProps) {
         tileServer="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         onZoomEnd={handleZoom}
         onMoveEnd={handleCenter}
-      >
-        { rallyingPoints.map((rp: RallyingPoint) => (
-            <RallyingPointMarker
-              key={rp.id}
-              value={rp}
-            />
+        points={rallyingPoints.map((rp: RallyingPoint) => (
+          <RallyingPointMarker
+            key={rp.id}
+            rallyingPoint={rp}
+          />
         ))}
-      </Map>
+      />
     </div>
   );
 }

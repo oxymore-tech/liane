@@ -7,7 +7,7 @@ export default function Admin() {
   const center = { lat: 44.33718916852679, lng: 3.483382165431976 };
   return (
     <div>
-      <LianeMapAdmin className="w-full h-screen" center={center} />
+      <LianeMapAdmin className="w-full h-screen" defaultCenter={center} />
     </div>
   );
 }
