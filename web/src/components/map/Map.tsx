@@ -8,9 +8,11 @@ interface MapProps extends MapContainerProps {
   onZoomEnd?: (zoom: number) => void;
   onMoveEnd?: (center: LatLng) => void;
   tileServer: string;
+  points?: JSX.Element[];
+  routes?: JSX.Element[];
 }
 
-function Map({ onZoomEnd, onMoveEnd, tileServer, ...props }: MapProps) {
+function Map({ onZoomEnd, onMoveEnd, tileServer, points, routes, ...props }: MapProps) {
   return <MapContainer {...props}>
     <TileLayer
       url={tileServer}
@@ -18,6 +20,8 @@ function Map({ onZoomEnd, onMoveEnd, tileServer, ...props }: MapProps) {
     />
     { onZoomEnd && <ZoomHandler callback={onZoomEnd}></ZoomHandler>}
     { onMoveEnd && <MoveHandler callback={onMoveEnd}></MoveHandler>}
+    { points }
+    { routes }
   </MapContainer>;
 }
 
