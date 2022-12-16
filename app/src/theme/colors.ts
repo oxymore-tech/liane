@@ -11,7 +11,9 @@ export enum AppColors {
   blue700 = "#23278A",
   orange500 = "#e7492e", // "#EA6D2E",
   yellow500 = "#FFB545",
-  pink500 = "#ff8c8c"
+  pink500 = "#ff8c8c",
+
+  blue400 = "#75B5F7"
   // pink600 = "#FF5C5C",
   //  orange600 = "#FF5C22"
 

@@ -16,6 +16,9 @@ export const AppDimensions = {
 
   bottomBar: {
     height: 64,
-    itemSpacing: 16
+    itemSpacing: 16,
+    borderRadius: 32,
+    marginHorizontal: 24,
+    marginVertical: 16
   }
 };
