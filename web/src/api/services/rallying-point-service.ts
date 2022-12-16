@@ -19,7 +19,7 @@ export class RallyingPointService {
   }
   
   static async update(id: string, label: string, lat: number, lng: number, isActive: boolean) {
-    return put(`/api/rallying_point/${id}`, { params: { location: { lat, lng }, label, isActive } as RallyingPoint });
+    return put(`/api/rallying_point/${id}`, { body: { params: { location: { lat, lng }, label, isActive } as RallyingPoint, bodyAsJson: true } });
   }
   
   static async generate() {
