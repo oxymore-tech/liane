@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Marker, Popup, useMap } from "react-leaflet";
-import { LatLng, RallyingPoint } from "@/api";
+import { RallyingPoint } from "@/api";
 import { icon } from "leaflet";
 import { PopupMenuItem } from "@/components/PopupMenuItem";
 import { Label } from "@/components/base/Label";
+import { RallyingPointService } from "@/api/services/rallying-point-service";
 
 export const IconBlue = icon({
   iconUrl: "/images/leaflet/marker-icon.png",
@@ -26,90 +27,59 @@ export const IconRed = icon({
   iconAnchor: [12, 41]
 });
 
+const getIcon = (isActive: boolean) => {
+  if (!isActive) return IconRed;
+  return IconGray;
+};
+
 export interface RallyingPointMarkerProps {
-  value: RallyingPoint;
-  from?: RallyingPoint;
-  to?: RallyingPoint;
-  onSelect?: (fromVsTo: boolean) => void;
+  rallyingPoint: RallyingPoint;
   editMode?: boolean;
 }
 
-export function RallyingPointMarker({ value, from, to, editMode, onSelect }: RallyingPointMarkerProps) {
+export function RallyingPointMarker({ rallyingPoint, editMode }: RallyingPointMarkerProps) {
   const map = useMap();
-  const isFrom = from?.id === value.id;
-  const isTo = to?.id === value.id;
+  const id = rallyingPoint.id;
+  const label = rallyingPoint.label;
+  const [lat, setLat] = useState(rallyingPoint.location.lat);
+  const [lng, setLng] = useState(rallyingPoint.location.lng);
+  const [isActive, setIsActive] = useState(rallyingPoint.isActive);
+    
+  useEffect(() => {
+    RallyingPointService.update(id!, label, lat, lng, isActive).then(r => console.log("Updated! " + r));
+  }, [id, label, lat, lng, isActive]);
 
-  const [pos, setPos] = useState<LatLng>(value.location);
-  const [newPos, setNewPos] = useState<LatLng>();
-  const [isActive, setIsActive] = useState(value.isActive);
-
-  const toggleIsActive = async () => {
-    // await RallyingPointService.state(value.id, !isActive);
+  const toggleIsActive = () => {
     setIsActive(!isActive);
     map.closePopup();
   };
-
-  const cancelPos = async () => {
-    setPos({ lat: pos.lat, lng: pos.lng + 0.000001 } as LatLng); // Trick the component to re-render
-    setNewPos(undefined);
-    map.closePopup();
-  };
-
-  const confirmPos = async () => {
-    if (newPos) {
-      // await RallyingPointService.move(value.id, newPos.lat, newPos.lng);
-      setPos(newPos);
-      setNewPos(undefined);
-    }
-    map.closePopup();
-  };
-
-  // Marker display functions
-
-  const select = useCallback((fromVsTo: boolean) => {
-    if (onSelect) onSelect(fromVsTo);
-    map.closePopup();
-  }, [map]);
-
-  const iconLookup = () => {
-    if (isFrom) return IconBlue;
-    if (isTo) return IconRed;
-    return IconGray;
+  
+  const setPos = (p) => {
+    setLat(p.lat);
+    setLng(p.lng);
   };
 
   return (
     <Marker
-      position={pos}
+      position={{ lat, lng }}
       draggable={editMode}
-      icon={iconLookup()}
+      icon={getIcon(isActive)}
       eventHandlers={
-        { dragend: (e) => { setNewPos(e.target.getLatLng()); } }
+        { dragend: (e) => { setPos(e.target.getLatLng()); } }
       }
     >
       <Popup closeButton={false}>
         <Label className="text-center border-b">
-          {value.label}
+          {label}
         </Label>
-        { editMode
-          ? (
+        { editMode && (
             <div className="w-31 flex flex-col">
               { isActive
                 ? <PopupMenuItem text="Désactiver" onSelect={toggleIsActive} />
-                : <PopupMenuItem text="Activer" onSelect={toggleIsActive} />}
-              { newPos
-                ? (
-                  <div>
-                    <PopupMenuItem text="Annuler le déplacement" onSelect={cancelPos} />
-                    <PopupMenuItem text="Enregistrer le déplacement" onSelect={confirmPos} />
-                  </div>
-                ) : null}
+                : <PopupMenuItem text="Activer" onSelect={toggleIsActive} />
+              }
             </div>
-          ) : (
-            <div className="w-28 flex flex-col">
-              <PopupMenuItem text="Départ" selected={isFrom} onSelect={() => select(true)} img="/images/leaflet/marker-icon.png" />
-              <PopupMenuItem text="Arrivée" selected={isTo} onSelect={() => select(false)} img="/images/leaflet/marker-icon-red.png" />
-            </div>
-          )}
+        )}
       </Popup>
     </Marker>
   );
