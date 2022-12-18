@@ -66,7 +66,7 @@ jobs:
       - name: Generate App Bundle
         working-directory: ./app
         run: |
-          cd android && ./gradlew -PversionCode=${{ github.run_number }} -PversionName=${{steps.tagger.outputs.tag}} bundleRelease --no-daemon
+          cd android && ./gradlew -PversCode=${{ github.run_number }} -PversName=${{steps.tagger.outputs.tag}} bundleRelease --no-daemon
         env:
           ANDROID_KEY_STORE_FILE: ${{ steps.decode_keystore.outputs.filePath }}
           ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
