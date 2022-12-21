@@ -1,9 +1,7 @@
-import { ENV_NAME as domain } from "@env";
+import { BASE_URL as BaseUrl } from "@env";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
-
-export const BaseUrl = `https://${domain}.gjini.co/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;

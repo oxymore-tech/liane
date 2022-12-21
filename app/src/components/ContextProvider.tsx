@@ -3,7 +3,7 @@ import React, {
 } from "react";
 import { View } from "react-native";
 import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
-import { me } from "@/api/client";
+import { me } from "@/api/repository/auth";
 import { registerRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
 import { getStoredToken, setStoredToken } from "@/api/storage";

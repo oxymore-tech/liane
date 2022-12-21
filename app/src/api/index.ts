@@ -41,10 +41,18 @@ export type RallyingPoint = Readonly<{
   label: string;
 } & Identity>;
 
-export type TimeOnly = Readonly<{
-  hour: number;
-  minute: number;
-}>;
+// Current user's trip
+export type Liane = Readonly<{
+  date: DateOnly;
+  wayPoints: { point: Ref<RallyingPoint>; time: TimeOnly }[];
+  driver: Ref<User>;
+} & Identity>;
+
+// Seconds since 00:00:00, 0 <= value < 86400
+export type TimeOnly = number;
+
+// A date represented by a string in the ISO format : "YYYY-MM-DD"
+export type DateOnly = string;
 
 export type TripIntent = Readonly<{
   from: Ref<RallyingPoint>;

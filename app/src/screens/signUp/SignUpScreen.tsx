@@ -6,12 +6,11 @@ import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavigationParamList } from "@/api/navigation";
 import { scopedTranslate } from "@/api/i18n";
-import { sendSms } from "@/api/client";
+import { sendSms } from "@/api/repository/auth";
 import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppButton } from "@/components/base/AppButton";
 
 const logo = require("@/assets/logo_white.png");
 
