@@ -19,3 +19,10 @@ const i18n = new I18n({
 const translate = (scope: keyof NavigationParamList, key: string, options: any = {}) => i18n.translate(`${scope}.${key}`, options);
 
 export const scopedTranslate = (scope: keyof NavigationParamList) => (key: string, options: any = {}) => translate(scope, key, options);
+
+// Load date formatter
+const monthDayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short",
+  month: "long",
+  day: "2-digit" });
+
+export const formatMonthDay = monthDayFormatter.format;
