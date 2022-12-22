@@ -40,9 +40,9 @@ export type QuerySelector<T> = {
   $not?: T extends string ? QuerySelector<T> | RegExp : QuerySelector<T>;
   // Element
   /**
-   * When `true`, `$exists` matches the documents that contain the field,
-   * including documents where the field value is null.
-   */
+     * When `true`, `$exists` matches the documents that contain the field,
+     * including documents where the field value is null.
+     */
   $exists?: boolean;
   $regex?: T extends string ? RegExp | string : never;
 };

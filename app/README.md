@@ -2,9 +2,10 @@
 
 Language : [typescript](https://typescript.org)
 
-Basé sur [react native](https://fr.reactjs.org/) et [expo](https://expo.io/).
+Basé sur [React Native](https://fr.reactjs.org/).
 
-- `src/api` : `objets` et `services` d'API, la plupart sont des clients HTTP qui accèdent aux API HTTP du [`back`](../back/README.md)
+- `src/api` : `objets` et `services` d'API, la plupart sont des clients HTTP qui accèdent aux API HTTP
+  du [`back`](../back/README.md)
 - `src/screens` les différents écrans de l'app mobile. Ils correspondent aux composants UX de premier niveau.
 - `src/components` : les différents composants sous-jacents de l'application
 
@@ -12,11 +13,9 @@ Basé sur [react native](https://fr.reactjs.org/) et [expo](https://expo.io/).
 
 ```bash
 cd app
-nvm use            # sélectionne la bonne version de node
-
-# Install expo and eas
-npm install -g expo-cli
-npm install -g eas-cli
+npm i --legacy-peer-deps
+# Pour IOS
+cd ios && pod install
 ```
 
 Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
@@ -24,16 +23,9 @@ Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-em
 ## Lancer le projet en mode développement
 
 ```bash
-nvm use
-
-npm i # install
-
-npm run android
+npm run start
+npm run android # ou run ios selon la platforme
 ```
 
-## Déploiement en production
+Note: pour activer la nouvelle architecture React Native sur Android, définir la propriété `newArchEnabled` à `true`. 
 
-```bash
-nvm use
-eas build --auto-submit
-```

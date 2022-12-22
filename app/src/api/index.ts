@@ -28,7 +28,7 @@ export type User = Readonly<{
 export type LatLng = Readonly<{
   lat: number;
   lng: number;
-} & Entity>;
+}>;
 
 export enum LocationPermissionLevel {
   NEVER = "never",
@@ -56,7 +56,7 @@ export type TripIntent = Readonly<{
 export type Match = Readonly<{
   user: Ref<User>;
   from: Ref<RallyingPoint>;
-  to : Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
 }>;
 
 export type TripIntentMatch = Readonly<{

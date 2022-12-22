@@ -1,4 +1,3 @@
-import * as Location from "expo-location";
 import { LatLng } from "@/api/index";
 
 const DEFAULT_BLAJOUX = {
@@ -7,16 +6,17 @@ const DEFAULT_BLAJOUX = {
 };
 
 export async function getLastKnownLocation(): Promise<LatLng> {
-  try {
-    const lastKnown = await Location.getLastKnownPositionAsync();
-    if (!lastKnown) {
-      return DEFAULT_BLAJOUX;
-    }
-    return {
-      lat: lastKnown.coords.latitude,
-      lng: lastKnown.coords.longitude
-    };
-  } catch (_) {
-    return DEFAULT_BLAJOUX;
-  }
+  /* try {
+       const lastKnown = await Location.getLastKnownPositionAsync();
+       if (!lastKnown) {
+         return DEFAULT_BLAJOUX;
+       }
+       return {
+         lat: lastKnown.coords.latitude,
+         lng: lastKnown.coords.longitude
+       };
+     } catch (_) {
+       return DEFAULT_BLAJOUX;
+     } */
+  return DEFAULT_BLAJOUX;
 }

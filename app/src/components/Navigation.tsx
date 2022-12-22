@@ -1,71 +1,53 @@
 import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import colors from "tailwindcss/colors";
-import SignUpScreen from "@/screens/SignUpScreen";
-import SignUpCodeScreen from "@/screens/SignUpCodeScreen";
+import { StyleSheet } from "react-native";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { gestureHandlerRootHOC } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
-import PublishScreen from "@/screens/PublishScreen";
-import SettingsScreen from "@/screens/SettingsScreen";
-import HomeNavigation from "@/components/HomeNavigation";
-import { AppIcon } from "@/components/base/AppIcon";
+import SignUpScreen from "@/screens/signUp/SignUpScreen";
+import SignUpCodeScreen from "@/screens/signUp/SignUpCodeScreen";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
+import EmptyScreen from "@/screens/EmptyScreen";
+import { AppColors } from "@/theme/colors";
+import { AppDimensions } from "@/theme/dimensions";
+import { LianeModalScreen } from "@/screens/LianeModalScreen";
+import HomeScreen from "@/screens/HomeScreen";
+import { AppText } from "@/components/base/AppText";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Navigation() {
+
+  const insets = useSafeAreaInsets();
   const { authUser } = useContext(AppContext);
 
   if (authUser) {
     return (
-      <Tab.Navigator
-        screenOptions={() => ({
-          tabBarStyle: { position: "absolute", backgroundColor: colors.gray["600"], borderTopWidth: 0 },
-          tabBarActiveBackgroundColor: colors.yellow["400"],
-          tabBarLabel: ""
-        })}
-      >
-        <Tab.Screen
-          name="HomeRoot"
-          options={{
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <AppIcon
-                name="book-outline"
-                className={`text-xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
-              />
-            )
-          }}
-          component={HomeNavigation}
-        />
-        <Tab.Screen
-          name="Publish"
-          options={{
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <AppIcon
-                name="navigate-circle-outline"
-                className={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
-              />
-            )
-          }}
-          component={PublishScreen}
-        />
-        <Tab.Screen
-          name="Settings"
-          options={{
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <AppIcon
-                name="options-outline"
-                className={`text-4xl mt-4 h-10 ${focused ? "text-gray-700" : "text-yellow-300"}`}
-              />
-            )
-          }}
-          component={SettingsScreen}
-        />
 
-      </Tab.Navigator>
+      <BottomSheetModalProvider>
+        <Tab.Navigator screenOptions={{
+          tabBarStyle: [styles.bottomBarStyle, { height: AppDimensions.bottomBar.height + insets.bottom, paddingBottom: 8 + insets.bottom }]
+
+        }}
+        >
+
+          { makeTab("Accueil", "home-outline", HomeScreen)}
+          { makeTab("Mes trajets", "flag-outline", EmptyScreen)}
+          <Tab.Screen
+            name="Liane"
+            component={LianeModalScreen}
+            options={{
+              tabBarButton: () => (<LianeModalScreen />)
+            }}
+          />
+          { makeTab("Conversations", "message-circle-outline", EmptyScreen)}
+          { makeTab("Demandes", "bell-outline", EmptyScreen)}
+
+        </Tab.Navigator>
+      </BottomSheetModalProvider>
     );
   }
 
@@ -77,4 +59,46 @@ function Navigation() {
   );
 }
 
-export default Navigation;
+const makeTab = (label: string,
+  iconName: IconName,
+  screen: any) => (
+    <Tab.Screen
+      name={label}
+      component={screen}
+      options={
+          {
+
+            tabBarLabel: ({ focused }) => (
+              <AppText
+                style={[styles.labelStyle, { color: focused ? AppColors.blue500 : AppColors.blue700 }]}
+              >
+                {label}
+              </AppText>
+            ),
+            tabBarIcon: ({ focused }) => (
+              <AppIcon
+                name={iconName}
+                color={focused ? AppColors.blue500 : AppColors.blue700}
+              />
+            )
+          }
+      }
+    />
+);
+
+const styles = StyleSheet.create({
+  bottomBarStyle: {
+    position: "absolute",
+    borderTopLeftRadius: AppDimensions.borderRadius,
+    borderTopRightRadius: AppDimensions.borderRadius,
+    overflow: "hidden"
+  },
+  labelStyle: {
+    fontSize: AppDimensions.textSize.small,
+    fontWeight: "400"
+  }
+
+});
+
+// Wrap Component to allow bottom sheets scrolling on Android
+export default gestureHandlerRootHOC(Navigation);

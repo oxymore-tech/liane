@@ -1,5 +1,6 @@
 import { createNavigationContainerRef } from "@react-navigation/native";
-import { TripIntentMatch } from "@/api/index";
+import { TripIntentMatch } from "./index";
+import { SignUpStep } from "@/screens/signUp/SignUpScreen";
 
 export type NavigationParamList = {
   Home: undefined;

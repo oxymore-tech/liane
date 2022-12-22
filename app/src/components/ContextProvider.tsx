@@ -1,21 +1,12 @@
 import React, {
   createContext, ReactNode, useCallback, useEffect, useState
 } from "react";
-import {
-  Inter_200ExtraLight,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts
-} from "@expo-google-fonts/inter";
 import { View } from "react-native";
-import * as SplashScreen from "expo-splash-screen";
-import { me } from "@/api/client";
-import { getLastKnownLocation } from "@/api/location";
 import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
-import { getStoredToken, setStoredToken } from "@/api/storage";
+import { me } from "@/api/client";
 import { registerRum, registerRumUser } from "@/api/rum";
+import { getLastKnownLocation } from "@/api/location";
+import { getStoredToken, setStoredToken } from "@/api/storage";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -29,14 +20,17 @@ interface AppContextProps {
 export const AppContext = createContext<AppContextProps>({
   appLoaded: false,
   locationPermission: LocationPermissionLevel.NEVER,
-  setLocationPermission: () => { },
-  setAuthUser: () => { }
+  setLocationPermission: () => {
+  },
+  setAuthUser: () => {
+  }
 });
 
 async function initContext(): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
-  await SplashScreen.preventAutoHideAsync();
+  // await SplashScreen.preventAutoHideAsync();
   const storedToken = await getStoredToken();
-  const authResponse = storedToken ? await me().catch(() => undefined) : undefined;
+
+  const authResponse = storedToken ? await me().catch((e) => console.log(e)) : undefined;
   if (storedToken) {
     if (authResponse) {
       console.info(`Token found in asyncstorage, user is ${JSON.stringify(authResponse)}`);
@@ -53,13 +47,7 @@ async function initContext(): Promise<{ authResponse?: AuthResponse, locationPer
 }
 
 function ContextProvider(props: { children: ReactNode }) {
-  const [fontLoaded] = useFonts({
-    Inter_ExtraLight: Inter_200ExtraLight,
-    Inter: Inter_400Regular,
-    Inter_Medium: Inter_500Medium,
-    Inter_SemiBold: Inter_600SemiBold,
-    Inter_Bold: Inter_700Bold
-  });
+//  const [fontLoaded] = useFonts();
 
   const [appLoaded, setAppLoaded] = useState(false);
   const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
@@ -91,16 +79,16 @@ function ContextProvider(props: { children: ReactNode }) {
   const { children } = props;
 
   const onLayoutRootView = useCallback(async () => {
-    if (appLoaded && fontLoaded) {
+    if (appLoaded) { // && fontLoaded) {
       // If called after `setAppLoaded`, we may see a blank screen while the app is
       // loading its initial state and rendering its first pixels.
       // So instead, we hide the splash screen once we know the root view has already
       // performed layout.
-      await SplashScreen.hideAsync();
+      // TODO await SplashScreen.hideAsync();
     }
-  }, [appLoaded, fontLoaded]);
+  }, [appLoaded, undefined]);
 
-  if (!(appLoaded && fontLoaded)) {
+  if (!(appLoaded)) { // &&fontLoaded)) {
     return null;
   }
 
@@ -108,7 +96,7 @@ function ContextProvider(props: { children: ReactNode }) {
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <AppContext.Provider
         value={{
-          appLoaded: appLoaded && fontLoaded,
+          appLoaded, // && fontLoaded,
           locationPermission,
           setLocationPermission,
           position,

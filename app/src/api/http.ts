@@ -1,9 +1,7 @@
-import Constants from "expo-constants";
+import { ENV_NAME as domain } from "@env";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
-
-const domain = Constants.manifest?.extra?.envName ?? "liane-dev";
 
 export const BaseUrl = `https://${domain}.gjini.co/api`;
 
@@ -112,11 +110,11 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
     switch (response.status) {
       case 400:
         /*
-        const message400 = await response.text();
-        console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
-        throw new Error(message400); */
+                const message400 = await response.text();
+                console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
+                throw new Error(message400); */
         if ((response.headers.get("content-type") === "application/json")
-          || (response.headers.get("content-type") === ("application/problem+json"))) {
+                    || (response.headers.get("content-type") === ("application/problem+json"))) {
           const json = await response.json();
           throw new ValidationError(json?.errors);
         }

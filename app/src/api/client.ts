@@ -1,4 +1,4 @@
-import { del, get, post, postAs } from "@/api/http";
+import { del, get, post, postAs } from "./http";
 import {
   AuthResponse, LatLng, RallyingPoint, TripIntent, TripIntentMatch
 } from "@/api";
