@@ -3,7 +3,7 @@ name: Android Build
 on:
   push:
     branches:
-      - app/no_expo
+      - develop
 
 jobs:
   npm-build:
