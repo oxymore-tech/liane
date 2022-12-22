@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Liane.Api.RallyingPoint;
+using Liane.Api.Trip;
 
 namespace Liane.Test;
 

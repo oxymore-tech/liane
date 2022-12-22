@@ -1,5 +1,4 @@
 using System;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
@@ -9,21 +8,13 @@ internal sealed class TimeOnlyBsonSerializer : StructSerializerBase<TimeOnly>
 {
     public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, TimeOnly value)
     {
-        context.Writer.WriteStartDocument();
-        context.Writer.WriteName(nameof(value.Hour));
-        context.Writer.WriteInt32(value.Hour);
-        context.Writer.WriteName(nameof(value.Minute));
-        context.Writer.WriteInt32(value.Minute);
-        context.Writer.WriteEndDocument();
+        // Store as total number of seconds
+        context.Writer.WriteInt32(value.Hour*3600 + value.Minute*60 + value.Second);
     }
 
     public override TimeOnly Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
     {
-        var serializer = BsonSerializer.LookupSerializer(typeof(BsonDocument));
-        var document = serializer.Deserialize(context, args)
-            .ToBsonDocument();
-        var hour = document[nameof(TimeOnly.Hour)].AsInt32;
-        var minute = document[nameof(TimeOnly.Minute)].AsInt32;
-        return new TimeOnly(hour, minute);
+        var minutesOfDay = context.Reader.ReadInt32() / 60;
+        return new TimeOnly(minutesOfDay / 60, minutesOfDay % 60);
     }
 }

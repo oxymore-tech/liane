@@ -7,15 +7,16 @@ public abstract record Ref<T> where T : class, IIdentity
     private Ref()
     {
     }
-
-    public abstract void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor);
-
-    public static implicit operator string(Ref<T> @ref) => @ref switch
+    public string Id => this switch
     {
         Unresolved u => u.Id,
         Resolved r => r.Value.Id!,
-        _ => throw new ArgumentOutOfRangeException(nameof(@ref), @ref, null)
+        _ => throw new ArgumentOutOfRangeException()
     };
+
+    public abstract void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor);
+
+    public static implicit operator string(Ref<T> @ref) => @ref.Id;
 
     public static implicit operator Ref<T>(string id) => new Unresolved(id);
 

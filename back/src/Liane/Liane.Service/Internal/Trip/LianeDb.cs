@@ -1,22 +1,23 @@
 using System;
 using System.Collections.Immutable;
 using Liane.Api.Trip;
-using Liane.Api.User;
 using Liane.Api.Util.Ref;
 
-namespace Liane.Service.Models;
+namespace Liane.Service.Internal.Trip;
 
-public sealed record LianeMember(
-    Ref<User> User,
-    Ref<RallyingPoint> From, 
-    Ref<RallyingPoint> To
+
+public sealed record DriverData
+(
+    Ref<Api.User.User> User,
+    int Capacity
 );
+
 public sealed record LianeDb(
     string Id,
-    Ref<User>? CreatedBy,
+    Ref<Api.User.User>? CreatedBy,
     DateTime? CreatedAt,
     DateTime DepartureTime,
     DateTime? ReturnTime,
     ImmutableList<LianeMember> Members,
-    Ref<User> Driver //TODO capacity
+    DriverData DriverData 
 ): IEntity;

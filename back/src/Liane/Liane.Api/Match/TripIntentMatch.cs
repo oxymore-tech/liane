@@ -6,13 +6,13 @@ namespace Liane.Api.Match;
 
 public sealed record TripIntentMatch(
     TripIntent TripIntent,
-    Ref<RallyingPoint.RallyingPoint> From,
-    Ref<RallyingPoint.RallyingPoint> To,
+    Ref<RallyingPoint> From,
+    Ref<RallyingPoint> To,
     ImmutableList<Match> Matches
 );
 
 public sealed record Match(
     Ref<User.User> User, 
-    Ref<RallyingPoint.RallyingPoint> From, 
-    Ref<RallyingPoint.RallyingPoint> To
+    Ref<RallyingPoint> From, 
+    Ref<RallyingPoint> To
 );

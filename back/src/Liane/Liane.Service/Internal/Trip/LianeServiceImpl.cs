@@ -1,41 +1,37 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Liane;
-using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Osrm;
-using Liane.Service.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace Liane.Service.Internal.Liane;
+namespace Liane.Service.Internal.Trip;
 
 public class LianeServiceImpl: ILianeService
 {
     
     private readonly ICurrentContext currentContext;
     private readonly IMongoDatabase mongo;
-    private readonly IRallyingPointService rallyingPointService;
     private readonly IRoutingService routingService;
 
-    public LianeServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRallyingPointService rallyingPointService, IRoutingService routingService)
+    public LianeServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService)
     {
         this.currentContext = currentContext;
-        this.rallyingPointService = rallyingPointService;
         this.routingService = routingService;
         mongo = settings.GetDatabase();
     }
 
-    ImmutableSortedSet<Api.RallyingPoint.RallyingPoint> GetWayPointsSet(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
+    async Task<ImmutableSortedSet<WayPoint>> GetWayPointsSet(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
     {
-        var set = new SortedSet<Api.RallyingPoint.RallyingPoint>();
-        Ref<Api.RallyingPoint.RallyingPoint> from;
-        Ref<Api.RallyingPoint.RallyingPoint> to;
-        var wayPoints = new HashSet< Ref<Api.RallyingPoint.RallyingPoint>>();
+        var set = new SortedSet<RallyingPoint>();
+        Ref<RallyingPoint>? from = null;
+        Ref<RallyingPoint>? to = null;
+        var wayPoints = new HashSet< Ref<RallyingPoint>>();
 
         foreach (var member in lianeMembers)
         {
@@ -51,35 +47,66 @@ public class LianeServiceImpl: ILianeService
             }
         }
 
+        if (from == null || to == null)
+        {
+            throw new ArgumentException();
+        }
+
+        return await routingService.GetTrip(from, to, wayPoints.ToImmutableHashSet());
+
+    }
+
+    async Task<Api.Trip.Liane> DbToApi(LianeDb liane)
+    {
+        var wayPoints = await GetWayPointsSet(liane.DriverData.User, liane.Members);
+        return new Api.Trip.Liane(Id: liane.Id, Members: liane.Members, CreatedBy: liane.CreatedBy, CreatedAt: liane.CreatedAt, DepartureTime: liane.DepartureTime, ReturnTime: liane.ReturnTime, Driver: liane.DriverData.User, WayPoints: wayPoints);
+
+    }
+
+    public async Task<Api.Trip.Liane> Get(string id)
+    {
+        var lianeDb = await mongo.GetCollection<LianeDb>().Find(i => i.Id == id).FirstOrDefaultAsync();
+        return await DbToApi(lianeDb);
     }
     
-    public async Task<ImmutableList<Api.Liane.UserLianeResponse>> List()
+    public async Task<ImmutableList<Api.Trip.Liane>> List()
     {
         // Get Lianes for current user
         var userId = currentContext.CurrentUser().Id;
-        var cursorAsync = await mongo.GetCollection<Models.Liane>()
+        var cursorAsync = await mongo.GetCollection<LianeDb>()
             .Find(i => i.Members.Exists(m => (string)m.User == userId))
             .ToCursorAsync();
        
         // Get calculated Route across wayPoints
-
-        var lianes = cursorAsync.ToEnumerable().Select(liane =>
+        var lianes = new List<Api.Trip.Liane>();
+        foreach (var liane in cursorAsync.ToEnumerable())
         {
-            // Fetch route from RouteService
-            
-            var wayPoints = new List<LianeWayPoint>().ToImmutableList();
+            lianes.Add(await DbToApi(liane));
+        }
 
-            return new Api.Liane.UserLianeResponse(Id: liane.Id, DepartureTime: liane.DepartureTime, ReturnTime: liane.ReturnTime, Driver: liane.Driver, WayPoints: wayPoints);
-        });
-       
         return lianes.ToImmutableList();
     }
 
-    public Task<Api.Liane.UserLianeResponse> Create(LianeRequest lianeRequest)
+    public async Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
     {
         // Add new Liane
+        var id = ObjectId.GenerateNewId()
+            .ToString();
+        var createdBy = currentContext.CurrentUser().Id;
+        var createdAt = DateTime.UtcNow;
+        var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To) };
+        var driverData = new DriverData(createdBy, lianeRequest.DriverCapacity);
+        var created = new LianeDb(id, createdBy, createdAt, lianeRequest.DepartureTime,
+            lianeRequest.ReturnTime, members.ToImmutableList(), driverData );
+
+        await mongo.GetCollection<LianeDb>()
+            .InsertOneAsync(created);
+        
         
         // Handle Share with contacts 
-        throw new System.NotImplementedException();
+        // TODO
+
+        return await DbToApi(created);
+        
     }
 }

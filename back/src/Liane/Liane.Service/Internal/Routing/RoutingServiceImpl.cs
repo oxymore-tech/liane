@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
 using Route = Liane.Api.Routing.Route;
 
@@ -192,12 +193,13 @@ public sealed class RoutingServiceImpl : IRoutingService
         // No solution
         return new DeltaRoute(ImmutableList.Create<LatLng>(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
     }
-
-    public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Api.RallyingPoint.RallyingPoint from, Api.RallyingPoint.RallyingPoint to)
+    
+   
+    public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
     {
         var route = await GetRoute(new RoutingQuery(from.Location, to.Location));
         var wayPoints = new HashSet<WayPoint>();
-        var rallyingPoints = new HashSet<Api.RallyingPoint.RallyingPoint>();
+        var rallyingPoints = new HashSet<RallyingPoint>();
 
         var order = 0;
         foreach (var wp in route.Coordinates)
@@ -209,11 +211,39 @@ public sealed class RoutingServiceImpl : IRoutingService
                 continue;
             }
 
-            wayPoints.Add(new WayPoint(closestPoint, order));
+            wayPoints.Add(new WayPoint(closestPoint, order, 0));
             rallyingPoints.Add(closestPoint);
             order++;
         }
 
         return wayPoints.ToImmutableSortedSet();
+    }
+
+    
+    public async Task<ImmutableSortedSet<WayPoint>> GetTrip(Ref<RallyingPoint> from, Ref<RallyingPoint> to, ImmutableHashSet<Ref<RallyingPoint>> wayPoints)
+    {
+        // Get a list of coordinates from RallyingPoint references
+        var coordinates = new List<RallyingPoint> { await rallyingPointService.Get(from) };
+
+        foreach (var wayPoint in wayPoints)
+        {
+            coordinates.Add(await rallyingPointService.Get(wayPoint));
+        }
+        coordinates.Add(await rallyingPointService.Get(to));
+        
+        // Get trip from coordinates 
+        var rawTrip = await osrmService.Trip(coordinates.Select(rp => rp.Location));
+        
+        // Get sorted WayPoints (map osrm waypoints to our rallying points)
+        var waypoints = coordinates.Select((rallyingPoint, i) =>
+        {
+            var waypoint = rawTrip.Waypoints[i];
+            if (waypoint.TripsIndex != 0) throw new ArgumentException(); //TODO(improve) we should only have 1 trip in Trips array
+            var routeLeg = rawTrip.Trips[0].Legs[i];
+
+            return new WayPoint(rallyingPoint, waypoint.WaypointIndex, (int)Math.Ceiling(routeLeg.Duration));
+        }).ToImmutableSortedSet();
+
+        return waypoints;
     }
 }

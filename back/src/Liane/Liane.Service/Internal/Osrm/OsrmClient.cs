@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Liane.Service.Internal.Osrm;
 
-public sealed class OsrmServiceImpl : IOsrmService
+public sealed class OsrmClient : IOsrmService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
         { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new LngLatTupleJsonConverter() } };
@@ -20,23 +20,25 @@ public sealed class OsrmServiceImpl : IOsrmService
     private readonly MemoryCache routeCache = new(new MemoryCacheOptions());
     private readonly HttpClient client;
 
-    public OsrmServiceImpl(OsrmSettings settings)
+    public OsrmClient(OsrmSettings settings)
     {
         client = new HttpClient { BaseAddress = settings.Url };
     }
 
+    /*
     public Task<Response.Routing> Route(LatLng start, LatLng end)
     {
         var key = ImmutableList.Create(start, end);
         return routeCache.GetOrCreateAsync(key, _ => Route(key, overview: "full"));
     }
+*/
 
-    public async Task<Response.Routing> Route(ImmutableList<LatLng> coordinates,
-        string alternatives = "false",
-        string steps = "false",
-        string geometries = "geojson",
-        string overview = "simplified",
-        string annotations = "false",
+    private static string Format(IEnumerable<LatLng> coordinates)
+    {
+        return string.Join(";", coordinates.Select(c => c.ToString()));
+    }
+
+    public async Task<Response.Routing> Route(IEnumerable<LatLng> coordinates, string alternatives = "false", string steps = "false", string geometries = "geojson", string overview = "simplified", string annotations = "false",
         string continueStraight = "default")
     {
         var uri = $"/route/v1/driving/{Format(coordinates)}";
@@ -59,8 +61,27 @@ public sealed class OsrmServiceImpl : IOsrmService
         return result;
     }
 
-    private static string Format(ImmutableList<LatLng> coordinates)
+    public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, string roundtrip = "false", string source = "first", string destination = "last", string geometries = "geojson", string overview = "false",
+        string annotations = "false", string steps = "false")
     {
-        return string.Join(";", coordinates.Select(c => c.ToString()));
+        var uri = $"/trip/v1/driving/{Format(coordinates)}";
+
+        var result = await client.GetFromJsonAsync<Response.Trip>(uri.WithParams(new
+        {
+            roundtrip,
+            source,
+            destination,
+            steps,
+            geometries,
+            overview,
+            annotations
+        }), JsonOptions);
+
+        if (result == null)
+        {
+            throw new ResourceNotFoundException("Osrm response");
+        }
+
+        return result;
     }
 }

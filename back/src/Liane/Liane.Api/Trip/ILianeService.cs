@@ -1,13 +1,15 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace Liane.Api.Liane;
+namespace Liane.Api.Trip;
 
 public interface ILianeService
 {
-    Task<ImmutableList<UserLianeResponse>> List();
+    Task<Liane> Get(string id);
     
-    Task<UserLianeResponse> Create(LianeRequest lianeRequest);
+    Task<ImmutableList<Liane>> List();
+    
+    Task<Liane> Create(LianeRequest lianeRequest);
     
 
 }
