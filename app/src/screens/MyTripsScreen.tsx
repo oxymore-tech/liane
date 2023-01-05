@@ -9,7 +9,6 @@ import { AppColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
 import { Liane, DateOnly } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
-import { getLianes } from "@/api/repository/liane";
 
 interface TripSection extends SectionBase<Liane> {
   date: string;
@@ -99,4 +98,4 @@ const convertToDateSections = (data: Liane[]): TripSection[] => Object.entries(d
   return tmp;
 }, {} as { [key: DateOnly]: Liane[]; })).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
-export default WithFetchResource(MyTripsScreen, getLianes, "getLianes");
+export default WithFetchResource(MyTripsScreen, (repository) => repository.liane.get, "getLianes");

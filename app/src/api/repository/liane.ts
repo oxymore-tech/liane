@@ -1,7 +1,12 @@
 import { Liane } from "@/api";
+import { get } from "@/api/http";
 
-export const getLianes = async (): Promise<Liane[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  // throw new Error("eeeee");
-  return [];
-};
+export interface ILianeRepository {
+  get(): Promise<Liane[]>;
+}
+
+export class APILianeRepository implements ILianeRepository {
+
+    get = async (): Promise<Liane[]> => get("/liane/");
+
+}

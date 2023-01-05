@@ -1,14 +1,24 @@
-import { del, get, post, postAs } from "@/api/http";
+import { get, post, postAs } from "@/api/http";
 import { AuthResponse } from "@/api";
 
-export function me(): Promise<AuthResponse> {
-  return get("/auth/me");
+export interface IAuthRepository {
+  login(phone: string, code: string): Promise<AuthResponse>;
+  me(): Promise<AuthResponse>;
+  sendSms(phone: string): Promise<void>;
 }
 
-export async function login(phone: string, code: string): Promise<AuthResponse> {
-  return postAs("/auth/login", { params: { phone, code } });
-}
+export class APIAuthRepository implements IAuthRepository {
 
-export async function sendSms(phone: string) {
-  return post("/auth/sms", { params: { phone } });
+  me(): Promise<AuthResponse> {
+    return get("/auth/me");
+  }
+
+  async login(phone: string, code: string): Promise<AuthResponse> {
+    return postAs("/auth/login", { params: { phone, code } });
+  }
+
+  async sendSms(phone: string): Promise<any> { // TODO
+    return post("/auth/sms", { params: { phone } });
+  }
+
 }

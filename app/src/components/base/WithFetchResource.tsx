@@ -1,6 +1,9 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
+import React, { useContext } from "react";
 import { AppText } from "@/components/base/AppText";
+import { AppContext } from "@/components/ContextProvider";
+import { IAppRepository } from "@/App";
 
 export interface WithFetchResourceProps<T> {
   data: T
@@ -13,9 +16,10 @@ export interface WithFetchResourceProps<T> {
  * @param queryKey a key used for caching
  */
 // eslint-disable-next-line @typescript-eslint/comma-dangle
-export const WithFetchResource = <T,>(WrappedComponent, loadData: () => Promise<T>, queryKey: string) => (props: any) => {
-
-  const { isLoading, error, data } = useQuery(queryKey, () => loadData());
+export const WithFetchResource = <T,>(WrappedComponent, loadData: (repository: IAppRepository) => () => Promise<T>, queryKey: string) => (props: any) => {
+  const { repository } = useContext(AppContext);
+  const resolvedDataLoader = loadData(repository);
+  const { isLoading, error, data } = useQuery<T>(queryKey, () => resolvedDataLoader());
   if (isLoading) {
     return (
       <View style={styles.container}>

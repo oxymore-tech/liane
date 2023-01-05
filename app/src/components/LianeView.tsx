@@ -43,7 +43,7 @@ const extractData = (liane: Liane) => {
   const to = liane.wayPoints[liane.wayPoints.length - 1];
   const steps = liane.wayPoints.slice(1, -1);
   const fromDate = new Date(liane.departureTime);
-  const fromTime = fromDate.getHours() + fromDate.getMinutes() + fromDate.getSeconds();
+  const fromTime = fromDate.getHours() * 3600 + fromDate.getMinutes() * 60 + fromDate.getSeconds();
   const stepsTimes = steps.map(((acc) => (val) => acc + val.duration)(fromTime));
   const toTime = (steps.length > 0 ? stepsTimes[steps.length - 1] : fromTime) + to.duration;
 
