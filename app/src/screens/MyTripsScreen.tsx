@@ -30,7 +30,7 @@ const MyTripsScreen = ({ data }: WithFetchResourceProps<Liane[]>) => {
   // Render section header using date as key
   const renderSectionHeader = ({ section: { date } } : { section: SectionListData<Liane, TripSection> }) => (
     <View style={[styles.header, styles.grayBorder]}>
-      <AppText style={styles.headerTitle}>{formatMonthDay(Date.parse((date)))}</AppText>
+      <AppText style={styles.headerTitle}>{date}</AppText>
     </View>
   );
   return (
@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
 });
 
 const convertToDateSections = (data: Liane[]): TripSection[] => Object.entries(data.reduce((tmp, item) => {
-  const group = item.date;
-
+  // Get formatted date for local timezone
+  const group = formatMonthDay(new Date(item.departureTime));
   // Add item to this group (or create the group)
   // eslint-disable-next-line no-param-reassign
   if (!tmp[group]) tmp[group] = [item];
@@ -99,4 +99,4 @@ const convertToDateSections = (data: Liane[]): TripSection[] => Object.entries(d
   return tmp;
 }, {} as { [key: DateOnly]: Liane[]; })).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
-export default WithFetchResource(MyTripsScreen, getLianes);
+export default WithFetchResource(MyTripsScreen, getLianes, "getLianes");

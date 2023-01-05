@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
-import { Liane } from "@/api";
+import { Liane, WayPoint } from "@/api";
 
 export interface LianeViewProps {
   liane : Liane;
@@ -22,20 +22,46 @@ const LianeSymbol = ({ color }: { color: AppColors }) => (
   </View>
 );
 
-const IntermediateWayPoint = ({ wayPoint }) => (
+const IntermediateWayPoint = ({ wayPoint }: { wayPoint: TimedWayPoint }) => (
   <AppText style={[{ paddingVertical: 7 }, styles.intermediateWayPointLabel]}>
     <TimeView style={styles.intermediateWayPointLabel} value={wayPoint.time} />
     {" "}
     -
     {" "}
-    Muret
+    {wayPoint.wayPoint.rallyingPoint.label}
   </AppText>
 );
 
-export const LianeView = ({ liane }: LianeViewProps) => {
+type TimedWayPoint = {
+  wayPoint: WayPoint,
+  time: number
+};
+
+// TODO share state with detail view
+const extractData = (liane: Liane) => {
   const from = liane.wayPoints[0];
   const to = liane.wayPoints[liane.wayPoints.length - 1];
   const steps = liane.wayPoints.slice(1, -1);
+  const fromDate = new Date(liane.departureTime);
+  const fromTime = fromDate.getHours() + fromDate.getMinutes() + fromDate.getSeconds();
+  const stepsTimes = steps.map(((acc) => (val) => acc + val.duration)(fromTime));
+  const toTime = (steps.length > 0 ? stepsTimes[steps.length - 1] : fromTime) + to.duration;
+
+  return {
+    from: {
+      wayPoint: from,
+      time: fromTime
+    },
+    to: {
+      wayPoint: to,
+      time: toTime
+    },
+    steps: steps.map((v, index) => ({ wayPoint: v, time: stepsTimes[index] }))
+  };
+};
+
+export const LianeView = ({ liane }: LianeViewProps) => {
+  const { to, from, steps } = useMemo(() => extractData(liane), [liane]);
 
   const lianeSymbolView = () => (<LianeSymbol color={AppColors.gray500} />);
 
@@ -49,19 +75,21 @@ export const LianeView = ({ liane }: LianeViewProps) => {
       </Column>
 
       <Column style={styles.column}>
-        <AppText style={[styles.mainWayPointLabel, styles.fromLabel]}>Luchon</AppText>
+        <AppText style={[styles.mainWayPointLabel, styles.fromLabel]}>{from.wayPoint.rallyingPoint.label}</AppText>
 
         {steps.length <= 3 && steps.map((p) => (<IntermediateWayPoint wayPoint={p} />))}
         {steps.length > 3 && [
           (<IntermediateWayPoint wayPoint={steps[0]} />),
-          (<AppText>
-            {steps.length - 2}
-            {" "}
-            étapes
-           </AppText>),
+          (
+            <AppText>
+              {steps.length - 2}
+              {" "}
+              étapes
+            </AppText>
+          ),
           (<IntermediateWayPoint wayPoint={steps[steps.length - 1]} />)]}
 
-        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>Toulouse</AppText>
+        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>{to.wayPoint.rallyingPoint.label}</AppText>
       </Column>
     </Row>
 

@@ -25,4 +25,10 @@ const monthDayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short",
   month: "long",
   day: "2-digit" });
 
+// Load time formatter
+const timeFormatter = new Intl.DateTimeFormat(locale, { weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit" });
+
 export const formatMonthDay = monthDayFormatter.format;
+export const formatTime = timeFormatter.format;
