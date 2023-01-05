@@ -15,7 +15,9 @@ jobs:
         
       - name: Find Tag
         id: tagger
-        uses: jimschubert/query-tag-action@v1
+        uses: jimschubert/query-tag-action@v2
+        with:
+          abbrev: 1
         
       - name: Version number
         run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.tagger.outputs.tag}}'
