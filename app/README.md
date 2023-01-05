@@ -27,5 +27,4 @@ npm run start
 npm run android # ou run ios selon la platforme
 ```
 
-Note: pour activer la nouvelle architecture React Native sur Android, définir la propriété `newArchEnabled` à `true`. 
-
+Note: pour activer la nouvelle architecture React Native sur Android, définir la propriété `newArchEnabled` à `true`.
