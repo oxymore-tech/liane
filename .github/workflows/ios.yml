@@ -17,6 +17,9 @@ jobs:
         id: tagger
         uses: jimschubert/query-tag-action@v1
 
+      - name: Version number
+        run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.tagger.outputs.tag}}'
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -29,7 +32,8 @@ jobs:
         working-directory: ./app
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
-      - uses: actions/cache@v3
+      - name: Restore npm cache
+        uses: actions/cache@v3
         id: npm-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
