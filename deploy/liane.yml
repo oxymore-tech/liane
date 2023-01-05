@@ -54,7 +54,7 @@ services:
     build:
       context: ../web
       args:
-        PROJECT: ${PROJECT}
+        DOMAIN: ${DOMAIN}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
