@@ -4,15 +4,12 @@ import { Button } from "@/components/base/Button";
 import { AuthService } from "@/api/services/auth-service";
 import { AppContext } from "@/components/ContextProvider";
 
-/**
- * Authentication form.
- */
 export function AuthForm() {
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [text, setText] = useState("");
-  const { authUser, setAuthUser } = useContext(AppContext);
+  const { user, setUser } = useContext(AppContext);
 
   async function sendSms() {
     try {
@@ -30,21 +27,23 @@ export function AuthForm() {
   async function login() {
     try {
       if (code) {
-        const user = await AuthService.login(phone, code);
-        setAuthUser(user);
+        const authResponse = await AuthService.login(phone, code);
+        setUser(authResponse.user);
+        setText("Vous êtes maintenant authentifié.");
       }
     } catch (e) {
+      console.log(e);
       setText("Impossible de vous enregistrer.");
     }
   }
 
   return (
     <div className="flex items-center h-screen font-sans">
-      { !(authUser)
+      { !(user)
         ? (
           <div className="m-auto p-4">
             <img className="m-auto w-[3.23rem]" src="/images/logo.png" alt="Liane logo" />
-            <div className="p-6 grid">
+            <div className="grid p-2">
               <TextInput
                 type="text"
                 iconLeft="cellphone"
@@ -52,7 +51,7 @@ export function AuthForm() {
                 onChange={setPhone}
               />
               <Button
-                className="ml-10 mr-10"
+                className="ml-4 mr-4"
                 label="Recevoir le code"
                 color="orange"
                 onClick={() => sendSms()}
@@ -60,7 +59,7 @@ export function AuthForm() {
             </div>
             {step > 0
             && (
-            <div className="p-6 grid">
+            <div className="grid p-2">
               <TextInput
                 type="text"
                 iconLeft="key-variant"
@@ -68,7 +67,7 @@ export function AuthForm() {
                 onChange={setCode}
               />
               <Button
-                className="ml-10 mr-10"
+                className="ml-4 mr-4"
                 label="Valider"
                 color="orange"
                 onClick={() => login()}
@@ -82,7 +81,7 @@ export function AuthForm() {
           <div className="m-auto p-4 rounded-lg grid">
             Vous êtes connecté avec :
             {" "}
-            {authUser.phone}
+            {user.phone}
             .
             <br />
             <Button

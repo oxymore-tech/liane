@@ -1,11 +1,11 @@
 import React from "react";
 import { useMapEvent } from "react-leaflet";
 
-interface ZoomHandlerProps {
+interface MoveHandlerProps {
   callback: (LatLng) => void;
 }
 
-function CenterHandler({ callback } : ZoomHandlerProps) {
+function MoveHandler({ callback } : MoveHandlerProps) {
   const map = useMapEvent("moveend", () => {
     callback(map.getCenter());
   });
@@ -13,4 +13,4 @@ function CenterHandler({ callback } : ZoomHandlerProps) {
   return (<></>);
 }
 
-export default CenterHandler;
+export default MoveHandler;

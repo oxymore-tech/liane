@@ -1,28 +1,19 @@
 import { get, post, postAs } from "@/api/http";
-import { AuthUser } from "@/api";
+import { AuthResponse } from "@/api";
 
 /**
- * Class that manages authentication.
+ * Class to manage authentication.
  */
 export class AuthService {
-
-  /**
-   * Authenticates.
-   */
-  static me(): Promise<AuthUser> {
+  
+  static me(): Promise<AuthResponse> {
     return get("/api/auth/me");
   }
-
-  /**
-   * Tries to log in.
-   */
-  static async login(phone: string, code: string, token?: string): Promise<AuthUser> {
-    return postAs("/api/auth/login", { params: { phone, code, token } });
+  
+  static async login(phone: string, code: string): Promise<AuthResponse> {
+    return postAs("/api/auth/login", { params: { phone, code } });
   }
-
-  /**
-   * Triggers the emission of an SMS.
-   */
+  
   static async sendSms(phone: string) {
     return post("/api/auth/sms", { params: { phone } });
   }
