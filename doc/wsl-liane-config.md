@@ -40,7 +40,7 @@ Modifier **app/api/http.ts** en ajoutant :
 
 ```typescript
 const myServerAddr = "your.ip.adress.here";
-const BaseUrl = __DEV__ ? `http://${myServerAddr}:8081` : "https://liane.gjini.co";
+const BaseUrl = __DEV__ ? `http://${myServerAddr}:8081` : "https://liane.app";
 const BasePath = "/api";
 
 [...]

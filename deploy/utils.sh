@@ -11,12 +11,25 @@ function start {
   create_osm_network
   docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
   PROJECT=$(get_project)
+  DOMAIN=$(get_domain)
   export PROJECT
+  export DOMAIN
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --build --remove-orphans
 }
 
 function stop {
   docker compose -p "$(get_project)" down
+}
+
+function get_domain() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "liane.app"
+  else
+    echo "dev.liane.app"
+  fi
 }
 
 function get_project() {
