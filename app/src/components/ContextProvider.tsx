@@ -1,6 +1,4 @@
-import React, {
-  createContext, ReactNode, useCallback, useEffect, useState
-} from "react";
+import React, { createContext, ReactNode, useCallback, useState } from "react";
 import { View } from "react-native";
 import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
 import { me } from "@/api/repository/auth";
