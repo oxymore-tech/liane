@@ -7,8 +7,8 @@ declare module "*.svg" {
 }
 
 declare module "@env" {
-  export const DD_CLIENT_TOKEN: string;
-  export const DD_APP_ID: string;
+  export const DD_CLIENT_TOKEN: string | null;
+  export const DD_APP_ID: string | null;
   export const API_URL: string;
   export const APP_ENV: string;
 }
