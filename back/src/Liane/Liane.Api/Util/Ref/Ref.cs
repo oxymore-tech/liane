@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Liane.Api.Util.Ref;
 
@@ -13,6 +14,8 @@ public abstract record Ref<T> where T : class, IIdentity
         Resolved r => r.Value.Id!,
         _ => throw new ArgumentOutOfRangeException()
     };
+
+    public abstract Task<T> Resolve(Func<string, Task<T>> resolver);
 
     public abstract void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor);
 
@@ -30,6 +33,11 @@ public abstract record Ref<T> where T : class, IIdentity
 
     public sealed record Unresolved(string Id) : Ref<T>
     {
+        public override async Task<T> Resolve(Func<string, Task<T>> resolver)
+        {
+            return await resolver(Id);
+        }
+
         public override void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor)
         {
             unresolvedVisitor(Id);
@@ -43,6 +51,11 @@ public abstract record Ref<T> where T : class, IIdentity
 
     public sealed record Resolved(T Value) : Ref<T>
     {
+        public override Task<T> Resolve(Func<string, Task<T>> resolver)
+        {
+            return Task.FromResult(Value);
+        }
+
         public override void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor)
         {
             resolvedVisitor(Value);
