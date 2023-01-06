@@ -239,9 +239,15 @@ public sealed class RoutingServiceImpl : IRoutingService
         {
             var waypoint = rawTrip.Waypoints[i];
             if (waypoint.TripsIndex != 0) throw new ArgumentException(); //TODO(improve) we should only have 1 trip in Trips array
-            var routeLeg = rawTrip.Trips[0].Legs[i];
+            int duration = 0;
+            if (i > 0)
+            {
+                var routeLeg = rawTrip.Trips[0].Legs[i-1];
+                duration = (int)Math.Ceiling(routeLeg.Duration);
+            }
 
-            return new WayPoint(rallyingPoint, waypoint.WaypointIndex, (int)Math.Ceiling(routeLeg.Duration));
+            return new WayPoint(rallyingPoint, waypoint.WaypointIndex, duration);
+
         }).ToImmutableSortedSet();
 
         return waypoints;
