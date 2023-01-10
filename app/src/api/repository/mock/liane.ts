@@ -1,4 +1,4 @@
-import { Liane } from "@/api";
+import { Liane, LianeRequest } from "@/api";
 import { ILianeRepository } from "@/api/repository/liane";
 
 export class MockLianeRepository implements ILianeRepository {
@@ -47,5 +47,9 @@ export class MockLianeRepository implements ILianeRepository {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return this.mockLianes;
     };
+
+    post(liane: LianeRequest): Promise<Liane> {
+      throw new Error("Not implemented");
+    }
 
 }

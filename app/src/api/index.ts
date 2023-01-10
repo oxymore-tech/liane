@@ -41,6 +41,18 @@ export type RallyingPoint = Readonly<{
   label: string;
 } & Identity>;
 
+export type LianeRequest = Readonly<{
+  "id"?: string,
+  "departureTime": string,
+  "returnTime"?: string,
+  "driverCapacity": number,
+  "from": string,
+  "to": string,
+  "shareWith":{
+    "id": string
+  }[]
+}>;
+
 export type Liane = Readonly<{
   id?: string;
   createdBy?: Ref<User>;
