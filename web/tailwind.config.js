@@ -4,7 +4,7 @@ module.exports = {
   content: [
     "./src/**/*.tsx"
   ],
-  darkMode: false,
+  darkMode: "media",
   theme: {
     fontFamily: {
       "sans": ["Inter"]
@@ -19,7 +19,7 @@ module.exports = {
       },
       black: colors.black,
       white: colors.white,
-      gray: colors.coolGray,
+      gray: colors.gray,
       red: colors.red,
       yellow: colors.amber,
       blue: colors.blue

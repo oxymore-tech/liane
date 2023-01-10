@@ -24,7 +24,7 @@ internal sealed record OverpassTag(string Name);
 
 public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
 {
-    internal static readonly string[] AccentedChars =
+    private static readonly string[] AccentedChars =
     {
         "[aáÁàÀâÂäÄãÃåÅæÆ]",
         "[cçÇ]",

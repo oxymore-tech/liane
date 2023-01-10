@@ -1,11 +1,11 @@
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "@datadog/mobile-react-native";
-import { ENV_NAME as envName, DD_APP_ID as datadogAppId, DD_CLIENT_TOKEN as datadogClientToken } from "@env";
+import { APP_ENV, DD_APP_ID, DD_CLIENT_TOKEN } from "@env";
 import { AuthUser } from "@/api/index";
 
 export async function registerRum() {
   if (!__DEV__) {
-    if (envName && datadogClientToken && datadogAppId) {
-      const config = new DdSdkReactNativeConfiguration(datadogClientToken, envName, datadogAppId, true, true, true);
+    if (APP_ENV && DD_CLIENT_TOKEN && DD_APP_ID) {
+      const config = new DdSdkReactNativeConfiguration(DD_CLIENT_TOKEN, APP_ENV, DD_APP_ID, true, true, true);
 
       config.site = "EU";
       config.nativeCrashReportEnabled = true;

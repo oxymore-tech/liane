@@ -9,10 +9,10 @@
     "Password": "secret"
   },
   "Nominatim": {
-    "Url": "http://liane.gjini.co:7070"
+    "Url": "https://liane.app:7070"
   },
   "Osrm": {
-    "Url": "http://liane.gjini.co:5000"
+    "Url": "https://liane.app:5000"
   },
   "Auth": {
     "Validity": "7.00:00:00",

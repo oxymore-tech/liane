@@ -21,8 +21,11 @@ services:
       - "/data/osm/nominatim:/var/lib/postgresql/12/main"
     restart: unless-stopped
     networks:
+      - gateway
       - osm
 
 networks:
+  gateway:
+    external: true
   osm:
     external: true
