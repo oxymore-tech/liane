@@ -73,8 +73,9 @@ public class LianeServiceImpl: ILianeService
     {
         // Get Lianes for current user
         var userId = currentContext.CurrentUser().Id;
+        var filter = Builders<LianeDb>.Filter.Eq("Members", userId);
         var cursorAsync = await mongo.GetCollection<LianeDb>()
-            .Find(i => i.Members.Exists(m => (string)m.User == userId))
+            .Find(filter)
             .ToCursorAsync();
        
         // Get calculated Route across wayPoints
