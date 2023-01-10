@@ -73,7 +73,8 @@ public class LianeServiceImpl: ILianeService
     {
         // Get Lianes for current user
         var userId = currentContext.CurrentUser().Id;
-        var filter = Builders<LianeDb>.Filter.Eq("Members", userId);
+        var mFilter = Builders<LianeMember>.Filter.Eq(m => (string)m.User, userId);
+        var filter = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, mFilter);
         var cursorAsync = await mongo.GetCollection<LianeDb>()
             .Find(filter)
             .ToCursorAsync();
