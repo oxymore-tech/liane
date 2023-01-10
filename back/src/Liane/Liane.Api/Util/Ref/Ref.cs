@@ -10,7 +10,7 @@ public abstract record Ref<T> where T : class, IIdentity
     }
     public string Id => this switch
     {
-        Unresolved u => u.Id,
+        Unresolved u => u.RefId,
         Resolved r => r.Value.Id!,
         _ => throw new ArgumentOutOfRangeException()
     };
@@ -31,7 +31,7 @@ public abstract record Ref<T> where T : class, IIdentity
         _ => null
     };
 
-    public sealed record Unresolved(string Id) : Ref<T>
+    public sealed record Unresolved(string RefId) : Ref<T>
     {
         public override async Task<T> Resolve(Func<string, Task<T>> resolver)
         {
