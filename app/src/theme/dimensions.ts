@@ -5,7 +5,8 @@ export const AppDimensions = {
   textSize: {
     small: 10,
     default: 12,
-    medium: 20
+    medium: 20,
+    big: 28
   },
 
   button: {
@@ -15,6 +16,9 @@ export const AppDimensions = {
 
   bottomBar: {
     height: 64,
-    itemSpacing: 16
+    itemSpacing: 16,
+    borderRadius: 32,
+    marginHorizontal: 24,
+    marginVertical: 16
   }
 };

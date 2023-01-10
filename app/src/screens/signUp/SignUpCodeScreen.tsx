@@ -5,7 +5,6 @@ import {
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppContext } from "@/components/ContextProvider";
-import { login } from "@/api/client";
 import { setStoredToken } from "@/api/storage";
 import { NavigationParamList } from "@/api/navigation";
 import { AppTextInput } from "@/components/base/AppTextInput";
@@ -28,11 +27,11 @@ type SignUpCodeProps = {
 const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   const [phoneNumber] = useState(route.params.phoneNumber);
   const [code, setCode] = useState("");
-  const { setAuthUser } = useContext(AppContext);
+  const { setAuthUser, repository } = useContext(AppContext);
 
   const signIn = useCallback(async () => {
     try {
-      const authResponse = await login(phoneNumber, code);
+      const authResponse = await repository.auth.login(phoneNumber, code);
       await setStoredToken(authResponse.token);
       await setAuthUser(authResponse.user);
     } catch (e) {

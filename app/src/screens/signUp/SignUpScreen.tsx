@@ -1,17 +1,14 @@
-import React, { useCallback, useState } from "react";
-import {
-  Image, KeyboardAvoidingView, Pressable, StyleSheet, View
-} from "react-native";
+import React, { useCallback, useContext, useState } from "react";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavigationParamList } from "@/api/navigation";
 import { scopedTranslate } from "@/api/i18n";
-import { sendSms } from "@/api/client";
 import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppButton } from "@/components/base/AppButton";
+import { AppContext } from "@/components/ContextProvider";
 
 const logo = require("@/assets/logo_white.png");
 
@@ -30,11 +27,12 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
   const [internalError, setInternalError] = useState<string>();
+  const { repository } = useContext(AppContext);
 
   const signUp = useCallback(async () => {
     try {
       setInternalError(undefined);
-      await sendSms(phoneNumber);
+      await repository.auth.sendSms(phoneNumber);
       navigation.navigate("SignUpCode", { phoneNumber });
     } catch (e) {
       console.log("sign up error ", e);
