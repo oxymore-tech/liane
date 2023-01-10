@@ -394,7 +394,7 @@ PODS:
   - rnmapbox-maps/DynamicLibrary (10.0.0-beta.59):
     - React
     - React-Core
-  - RNReanimated (3.0.0-rc.8):
+  - RNReanimated (3.0.0-rc.9):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -662,7 +662,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 8616bd5a58af409453ea4e1b246521bb76578d60
   RNGestureHandler: 62232ba8f562f7dea5ba1b3383494eb5bf97a4d3
   rnmapbox-maps: 073b5930979d7a80262aa0a2098ba3a56310d220
-  RNReanimated: e6c9dc235b60a291ad6f2f6c029bc4333fdc7dd7
+  RNReanimated: 26051acc62d07b6d9d7374cd5e682ef2515bd04c
   RNScreens: 34cc502acf1b916c582c60003dc3089fa01dc66d
   RNSVG: 3a79c0c4992213e4f06c08e62730c5e7b9e4dc17
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
