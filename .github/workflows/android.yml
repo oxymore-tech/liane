@@ -32,7 +32,7 @@ jobs:
           fi
         
       - name: Version number
-        run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.version.outputs.tag}} Version = ${{steps.exact-version.outputs.tag}} AppEnv=${{app_env}}'
+        run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.version.outputs.tag}} Version = ${{steps.exact-version.outputs.tag}} AppEnv=${{env.app_env}}'
     
       - uses: iamsauravsharma/create-dotenv@v1.2.2
         with:
