@@ -1,19 +1,12 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
+using Liane.Api.Util.Ref;
 
-namespace Liane.Api.RallyingPoint;
+namespace Liane.Api.Trip;
 
-public interface IRallyingPointService
+public interface IRallyingPointService : ICrudService<RallyingPoint>
 {
-    Task<RallyingPoint> Get(string id);
-
-    Task<RallyingPoint> Create(RallyingPoint rallyingPoint);
-
-    Task Delete(string id);
-
-    Task Update(string id, RallyingPoint rallyingPoint);
-
     Task ImportCities();
 
     Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search);

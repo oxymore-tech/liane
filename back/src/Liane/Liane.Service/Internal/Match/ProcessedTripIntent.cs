@@ -4,6 +4,6 @@ namespace Liane.Service.Internal.Match;
 
 internal sealed record ProcessedTripIntent(
     TripIntent TripIntent,
-    Api.RallyingPoint.RallyingPoint P1,
-    Api.RallyingPoint.RallyingPoint P2
+    RallyingPoint P1,
+    RallyingPoint P2
 );

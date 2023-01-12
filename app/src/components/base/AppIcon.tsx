@@ -3,7 +3,7 @@ import { Icon } from "react-native-eva-icons";
 import { AppColors, AppTheme } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 
-export type IconName = `${typeof EvaIconsNames[number]}-outline`;
+export type IconName = `${typeof EvaIconsNames[number]}-outline` | typeof EvaIconsNames[number];
 
 interface AppIconProps {
   name: IconName;

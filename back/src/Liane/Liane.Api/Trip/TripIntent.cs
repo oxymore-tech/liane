@@ -6,8 +6,8 @@ namespace Liane.Api.Trip;
 public sealed record TripIntent(
     string? Id,
     string? Title,
-    Ref<RallyingPoint.RallyingPoint> From,
-    Ref<RallyingPoint.RallyingPoint> To,
+    Ref<RallyingPoint> From,
+    Ref<RallyingPoint> To,
     TimeOnly GoTime,
     TimeOnly? ReturnTime,
     Ref<User.User>? CreatedBy,

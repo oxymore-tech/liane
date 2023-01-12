@@ -41,10 +41,48 @@ export type RallyingPoint = Readonly<{
   label: string;
 } & Identity>;
 
-export type TimeOnly = Readonly<{
-  hour: number;
-  minute: number;
+export type LianeRequest = Readonly<{
+  "id"?: string,
+  "departureTime": string,
+  "returnTime"?: string,
+  "driverCapacity": number,
+  "from": string,
+  "to": string,
+  "shareWith":{
+    "id": string
+  }[]
 }>;
+
+export type Liane = Readonly<{
+  id?: string;
+  createdBy?: Ref<User>;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  departureTime: string;
+  /** @format date-time */
+  returnTime?: string;
+  wayPoints: WayPoint[];
+  members: LianeMember[];
+  driver?: Ref<User>;
+}>;
+
+export type WayPoint = Readonly<{
+  rallyingPoint: RallyingPoint;
+  duration: number;
+}>;
+
+export type LianeMember = Readonly<{
+  user: Ref<User>;
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
+}>;
+
+// Seconds since 00:00:00, 0 <= value < 86400 (UTC)
+export type TimeOnly = number;
+
+// A date represented by a string in the ISO format : "YYYY-MM-DD"
+export type DateOnly = string;
 
 export type TripIntent = Readonly<{
   from: Ref<RallyingPoint>;

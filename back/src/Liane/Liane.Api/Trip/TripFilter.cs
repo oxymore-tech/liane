@@ -4,8 +4,8 @@ namespace Liane.Api.Trip;
 
 public sealed record TripFilter(
     LatLng Center,
-    RallyingPoint.RallyingPoint? From,
-    RallyingPoint.RallyingPoint? To,
+    RallyingPoint? From,
+    RallyingPoint? To,
     int? DayFrom,
     int? DayTo,
     int? HourFrom,

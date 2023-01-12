@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Liane.Api.RallyingPoint;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Json;

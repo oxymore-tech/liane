@@ -9,7 +9,6 @@ using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Match;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.RallyingPoint;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -47,7 +46,7 @@ public static class Startup
 
     private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
     {
-        services.AddService<OsrmServiceImpl>();
+        services.AddService<OsrmClient>();
         services.AddService<RoutingServiceImpl>();
         services.AddService<AddressServiceNominatimImpl>();
         services.AddService<UserServiceImpl>();
@@ -65,6 +64,7 @@ public static class Startup
         services.AddService<TripIntentServiceImpl>();
         services.AddService<ChatServiceImpl>();
         services.AddService<IntentMatchingServiceImpl>();
+        services.AddService<LianeServiceImpl>();
     }
 
     public static void StartCurrentModule(string[] args)

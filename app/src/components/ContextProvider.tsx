@@ -1,12 +1,12 @@
-import React, {
-  createContext, ReactNode, useCallback, useEffect, useState
-} from "react";
+import React, { createContext, ReactNode, useCallback, useState } from "react";
 import { View } from "react-native";
+import { useQuery } from "react-query";
 import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
-import { me } from "@/api/client";
 import { registerRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
 import { getStoredToken, setStoredToken } from "@/api/storage";
+import { AppServices } from "@/App";
+import { CreateAppServices } from "@/api/service";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -15,7 +15,10 @@ interface AppContextProps {
   position?: LatLng;
   authUser?: AuthUser;
   setAuthUser: (authUser?: AuthUser) => void;
+  services: AppServices;
 }
+
+const SERVICES = CreateAppServices();
 
 export const AppContext = createContext<AppContextProps>({
   appLoaded: false,
@@ -23,14 +26,15 @@ export const AppContext = createContext<AppContextProps>({
   setLocationPermission: () => {
   },
   setAuthUser: () => {
-  }
+  },
+  services: SERVICES
 });
 
-async function initContext(): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
+async function initContext(services: AppServices): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
   // await SplashScreen.preventAutoHideAsync();
   const storedToken = await getStoredToken();
 
-  const authResponse = storedToken ? await me().catch((e) => console.log(e)) : undefined;
+  const authResponse = storedToken ? await services.auth.me().catch((e) => console.log(e)) : undefined;
   if (storedToken) {
     if (authResponse) {
       console.info(`Token found in asyncstorage, user is ${JSON.stringify(authResponse)}`);
@@ -47,8 +51,10 @@ async function initContext(): Promise<{ authResponse?: AuthResponse, locationPer
 }
 
 function ContextProvider(props: { children: ReactNode }) {
-//  const [fontLoaded] = useFonts();
 
+  const { children } = props;
+
+  //  const [fontLoaded] = useFonts();
   const [appLoaded, setAppLoaded] = useState(false);
   const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
   const [position, setPosition] = useState<LatLng>();
@@ -65,18 +71,14 @@ function ContextProvider(props: { children: ReactNode }) {
     }
   };
 
-  useEffect(() => {
-    initContext()
-      .then(async (p) => {
-        await setPosition(p.position);
-        await setLocationPermission(p.locationPermission);
-        await setStoredToken(p.authResponse?.token);
-        await setAuthUser(p.authResponse?.user);
-      })
-      .then(() => setAppLoaded(true));
-  }, []);
-
-  const { children } = props;
+  const { isLoading, error, data } = useQuery("init", () => initContext(SERVICES)
+    .then(async (p) => {
+      await setPosition(p.position);
+      await setLocationPermission(p.locationPermission);
+      await setStoredToken(p.authResponse?.token);
+      await setAuthUser(p.authResponse?.user);
+    })
+    .then(() => setAppLoaded(true)));
 
   const onLayoutRootView = useCallback(async () => {
     if (appLoaded) { // && fontLoaded) {
@@ -101,7 +103,8 @@ function ContextProvider(props: { children: ReactNode }) {
           setLocationPermission,
           position,
           authUser,
-          setAuthUser
+          setAuthUser,
+          services: SERVICES
         }}
       >
         {children}
