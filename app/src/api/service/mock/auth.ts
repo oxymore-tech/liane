@@ -1,7 +1,7 @@
 import { AuthResponse } from "@/api";
-import { IAuthRepository } from "@/api/repository/auth";
+import { AuthService } from "@/api/service/auth";
 
-export class MockAuthRepository implements IAuthRepository {
+export class AuthServiceMock implements AuthService {
 
   readonly mockUser = {
     user: {

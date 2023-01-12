@@ -27,11 +27,11 @@ type SignUpCodeProps = {
 const SignUpCodeScreen = ({ route, navigation }: SignUpCodeProps) => {
   const [phoneNumber] = useState(route.params.phoneNumber);
   const [code, setCode] = useState("");
-  const { setAuthUser, repository } = useContext(AppContext);
+  const { setAuthUser, services } = useContext(AppContext);
 
   const signIn = useCallback(async () => {
     try {
-      const authResponse = await repository.auth.login(phoneNumber, code);
+      const authResponse = await services.auth.login(phoneNumber, code);
       await setStoredToken(authResponse.token);
       await setAuthUser(authResponse.user);
     } catch (e) {

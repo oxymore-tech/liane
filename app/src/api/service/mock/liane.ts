@@ -1,7 +1,7 @@
 import { Liane, LianeRequest } from "@/api";
-import { ILianeRepository } from "@/api/repository/liane";
+import { LianeService } from "@/api/service/liane";
 
-export class MockLianeRepository implements ILianeRepository {
+export class LianeServiceMock implements LianeService {
 
     readonly mockLianes : Liane[] = [
       {

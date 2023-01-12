@@ -5,8 +5,8 @@ import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
 import { registerRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
 import { getStoredToken, setStoredToken } from "@/api/storage";
-import { IAppRepository } from "@/App";
-import { AppRepository } from "@/api/repository/AppRepository";
+import { AppServices } from "@/App";
+import { CreateAppServices } from "@/api/service";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -15,10 +15,10 @@ interface AppContextProps {
   position?: LatLng;
   authUser?: AuthUser;
   setAuthUser: (authUser?: AuthUser) => void;
-  repository: IAppRepository;
+  services: AppServices;
 }
 
-const REPOSITORY = AppRepository();
+const SERVICES = CreateAppServices();
 
 export const AppContext = createContext<AppContextProps>({
   appLoaded: false,
@@ -27,14 +27,14 @@ export const AppContext = createContext<AppContextProps>({
   },
   setAuthUser: () => {
   },
-  repository: REPOSITORY
+  services: SERVICES
 });
 
-async function initContext(repository: IAppRepository): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
+async function initContext(services: AppServices): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
   // await SplashScreen.preventAutoHideAsync();
   const storedToken = await getStoredToken();
 
-  const authResponse = storedToken ? await repository.auth.me().catch((e) => console.log(e)) : undefined;
+  const authResponse = storedToken ? await services.auth.me().catch((e) => console.log(e)) : undefined;
   if (storedToken) {
     if (authResponse) {
       console.info(`Token found in asyncstorage, user is ${JSON.stringify(authResponse)}`);
@@ -59,7 +59,6 @@ function ContextProvider(props: { children: ReactNode }) {
   const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
   const [position, setPosition] = useState<LatLng>();
   const [authUser, setInternalAuthUser] = useState<AuthUser>();
-  const repository = REPOSITORY;
 
   const setAuthUser = async (a?: AuthUser) => {
     try {
@@ -72,7 +71,7 @@ function ContextProvider(props: { children: ReactNode }) {
     }
   };
 
-  const { isLoading, error, data } = useQuery("init", () => initContext(repository)
+  const { isLoading, error, data } = useQuery("init", () => initContext(SERVICES)
     .then(async (p) => {
       await setPosition(p.position);
       await setLocationPermission(p.locationPermission);
@@ -105,7 +104,7 @@ function ContextProvider(props: { children: ReactNode }) {
           position,
           authUser,
           setAuthUser,
-          repository
+          services: SERVICES
         }}
       >
         {children}

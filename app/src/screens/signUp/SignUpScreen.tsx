@@ -27,12 +27,12 @@ const SignUpScreen = ({ route, navigation }: SignUpProps) => {
 
   const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
   const [internalError, setInternalError] = useState<string>();
-  const { repository } = useContext(AppContext);
+  const { services } = useContext(AppContext);
 
   const signUp = useCallback(async () => {
     try {
       setInternalError(undefined);
-      await repository.auth.sendSms(phoneNumber);
+      await services.auth.sendSms(phoneNumber);
       navigation.navigate("SignUpCode", { phoneNumber });
     } catch (e) {
       console.log("sign up error ", e);

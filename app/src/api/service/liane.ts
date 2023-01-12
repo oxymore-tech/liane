@@ -1,12 +1,12 @@
 import { Liane, LianeRequest } from "@/api";
 import { get, postAs } from "@/api/http";
 
-export interface ILianeRepository {
+export interface LianeService {
   get(): Promise<Liane[]>;
   post(liane: LianeRequest): Promise<Liane>;
 }
 
-export class APILianeRepository implements ILianeRepository {
+export class LianeServiceClient implements LianeService {
 
     get = async (): Promise<Liane[]> => get("/liane/");
 

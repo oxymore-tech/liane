@@ -1,13 +1,13 @@
 import { get, post, postAs } from "@/api/http";
 import { AuthResponse } from "@/api";
 
-export interface IAuthRepository {
+export interface AuthService {
   login(phone: string, code: string): Promise<AuthResponse>;
   me(): Promise<AuthResponse>;
   sendSms(phone: string): Promise<void>;
 }
 
-export class APIAuthRepository implements IAuthRepository {
+export class AuthServiceClient implements AuthService {
 
   me(): Promise<AuthResponse> {
     return get("/auth/me");

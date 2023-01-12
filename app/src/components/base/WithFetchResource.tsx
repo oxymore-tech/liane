@@ -3,7 +3,7 @@ import { useQuery } from "react-query";
 import React, { useContext } from "react";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
-import { IAppRepository } from "@/App";
+import { AppServices } from "@/App";
 
 export interface WithFetchResourceProps<T> {
   data: T
@@ -16,9 +16,9 @@ export interface WithFetchResourceProps<T> {
  * @param queryKey a key used for caching
  */
 // eslint-disable-next-line @typescript-eslint/comma-dangle
-export const WithFetchResource = <T,>(WrappedComponent, loadData: (repository: IAppRepository) => () => Promise<T>, queryKey: string) => (props: any) => {
-  const { repository } = useContext(AppContext);
-  const resolvedDataLoader = loadData(repository);
+export const WithFetchResource = <T,>(WrappedComponent, loadData: (repository: AppServices) => () => Promise<T>, queryKey: string) => (props: any) => {
+  const { services } = useContext(AppContext);
+  const resolvedDataLoader = loadData(services);
   const { isLoading, error, data } = useQuery<T>(queryKey, () => resolvedDataLoader());
   if (isLoading) {
     return (

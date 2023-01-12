@@ -8,15 +8,10 @@ import { AppColors } from "@/theme/colors";
 import ContextProvider from "@/components/ContextProvider";
 import { RootNavigation } from "@/api/navigation";
 import Navigation from "@/components/Navigation";
-import { IAuthRepository } from "@/api/repository/auth";
-import { ILianeRepository } from "@/api/repository/liane";
+import { AuthService } from "@/api/service/auth";
+import { LianeService } from "@/api/service/liane";
 
 const queryClient = new QueryClient();
-
-export type IAppRepository = {
-  auth: IAuthRepository;
-  liane: ILianeRepository;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
