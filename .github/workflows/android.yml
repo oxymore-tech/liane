@@ -22,6 +22,7 @@ jobs:
         uses: jimschubert/query-tag-action@v2
         with:
           abbrev: 1
+          skip-unshallow: true
           
       - name: Set variables
         run: |
