@@ -8,6 +8,8 @@ import { LatLng } from "@/api";
 const mapStyle = JSON.stringify(require("../../map-style-osm.json"));
 
 MapboxGL.setWellKnownTileServer(MapboxGL.TileServers.MapLibre!);
+MapboxGL.setAccessToken(null)
+  .then();
 
 Logger.setLogCallback((log) => {
   const { message } = log;

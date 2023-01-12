@@ -138,8 +138,8 @@ android {
         applicationId "tech.oxymore.liane"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode versCode as Integer
-        versionName versName
+        versionCode project.hasProperty('versCode') ? versCode as Integer : 1
+        versionName project.hasProperty('versName') ? versName : "0.0.1"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
 
         if (isNewArchitectureEnabled()) {
@@ -218,7 +218,7 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file(System.getenv("ANDROID_KEY_STORE_FILE"))
+            storeFile System.getenv("ANDROID_KEY_STORE_FILE") ? file(System.getenv("ANDROID_KEY_STORE_FILE")) : null
             storePassword System.getenv("ANDROID_KEY_STORE_PASSWORD")
             keyAlias System.getenv("ANDROID_KEY_ALIAS")
             keyPassword System.getenv("ANDROID_KEY_PASSWORD")
