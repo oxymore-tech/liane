@@ -13,12 +13,36 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Find Tag
-        id: tagger
+      - name: Find Version
+        id: version
         uses: jimschubert/query-tag-action@v2
 
+      - name: Find Exact Version
+        id: exact-version
+        uses: jimschubert/query-tag-action@v2
+        with:
+          abbrev: 1
+
+      - name: Set variables
+        run: |
+          if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
+            echo "app_env=production" >> $GITHUB_ENV
+          else
+            echo "app_env=dev" >> $GITHUB_ENV
+          fi
+
       - name: Version number
-        run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.tagger.outputs.tag}}'
+        run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.version.outputs.tag}} Version = ${{steps.exact-version.outputs.tag}} AppEnv=${{app_env}}'
+
+      - uses: iamsauravsharma/create-dotenv@v1.2.2
+        with:
+          env-prefix: 'ENV_'
+          directory: " ./app"
+        env:
+          ENV_DD_CLIENT_TOKEN: ${{ secrets.DD_CLIENT_TOKEN }}
+          ENV_DD_APP_ID: ${{ secrets.DD_APP_ID }}
+          ENV_APP_ENV: ${{ env.app_env }}
+          ENV_APP_VERSION: ${{steps.exact-version.outputs.tag}}
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -68,7 +92,7 @@ jobs:
       - name: Update build number
         run: |
           cd app/ios
-          agvtool new-marketing-version ${{steps.tagger.outputs.tag}}
+          agvtool new-marketing-version ${{steps.version.outputs.tag}}
           agvtool new-version -all ${{github.run_number}}
 
       - name: Build IOS App

@@ -8,8 +8,6 @@ import { AppColors } from "@/theme/colors";
 import ContextProvider from "@/components/ContextProvider";
 import { RootNavigation } from "@/api/navigation";
 import Navigation from "@/components/Navigation";
-import { AuthService } from "@/api/service/auth";
-import { LianeService } from "@/api/service/liane";
 
 const queryClient = new QueryClient();
 

@@ -1,9 +1,11 @@
-import { API_URL } from "@env";
+import { APP_ENV } from "@env";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { getStoredToken } from "@/api/storage";
 
-export const BaseUrl = `${API_URL}/api`;
+const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
+
+export const BaseUrl = `https://${domain}/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;

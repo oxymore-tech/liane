@@ -1,5 +1,5 @@
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "@datadog/mobile-react-native";
-import { APP_ENV, DD_APP_ID, DD_CLIENT_TOKEN } from "@env";
+import { APP_ENV, APP_VERSION, DD_APP_ID, DD_CLIENT_TOKEN } from "@env";
 import { AuthUser } from "@/api/index";
 
 export async function registerRum() {
@@ -9,6 +9,7 @@ export async function registerRum() {
 
       config.site = "EU";
       config.nativeCrashReportEnabled = true;
+      config.version = APP_VERSION;
 
       await DdSdkReactNative.initialize(config);
     }
@@ -16,7 +17,5 @@ export async function registerRum() {
 }
 
 export async function registerRumUser(user: AuthUser) {
-  if (!__DEV__) {
-    await DdSdkReactNative.setUser(user);
-  }
+  await DdSdkReactNative.setUser(user);
 }
