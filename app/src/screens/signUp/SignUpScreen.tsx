@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, TextInputProps, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavigationParamList } from "@/api/navigation";
@@ -8,77 +8,143 @@ import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
+import LianeLogo from "@/assets/logo.svg";
 import { AppContext } from "@/components/ContextProvider";
 
-const logo = require("@/assets/logo_white.png");
+/* Sign up process steps */
+export enum SignUpStep {
+  SetPhoneNumber,
+  EnterCode
+}
 
 const t = scopedTranslate("SignUp");
 
 type SignUpRouteProp = RouteProp<NavigationParamList, "SignUp">;
 type SignUpNavigationProp = NativeStackNavigationProp<NavigationParamList, "SignUp">;
 
-type SignUpProps = {
+export type SignUpProps = {
   route: SignUpRouteProp;
   navigation: SignUpNavigationProp;
 };
 
-const SignUpScreen = ({ route, navigation }: SignUpProps) => {
-  const authFailure = route.params?.authFailure && t("Le code est invalide veuillez rééssayer");
+/* Function to build a page of the sign-up process */
+type SignUpPageBuilder = (navigation: SignUpNavigationProp, initialPhoneNumber: string, setInternalError: any) => PageData;
 
-  const [phoneNumber, setPhoneNumber] = useState(route.params?.phoneNumber || "");
-  const [internalError, setInternalError] = useState<string>();
+/* Data necessary to build a page of the sign-up process */
+type PageData = {
+  onValidate: any;
+  canValidate: any;
+  textInputProps: TextInputProps;
+  helperText: string;
+};
+
+/* Builder for the first step of the sign-up */
+const SetPhoneNumberPageBuilder : SignUpPageBuilder = (navigation: SignUpNavigationProp, initialPhoneNumber: string, setInternalError) => {
+  const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber || "");
   const { services } = useContext(AppContext);
-
   const signUp = useCallback(async () => {
     try {
       setInternalError(undefined);
       await services.auth.sendSms(phoneNumber);
-      navigation.navigate("SignUpCode", { phoneNumber });
+      navigation.navigate("SignUp", { signUpStep: SignUpStep.EnterCode, phoneNumber });
     } catch (e) {
       console.log("sign up error ", e);
       setInternalError("Impossible d'effectuer la demande");
     }
   }, [phoneNumber]);
+  return {
+    onValidate: signUp,
+    textInputProps: { placeholder: "",
+      autoFocus: true,
+      returnKeyLabel: "next",
+      onChangeText: setPhoneNumber,
+      keyboardType: "phone-pad",
+      autoComplete: "tel",
+      textContentType: "telephoneNumber",
+      onSubmitEditing: signUp,
+      maxLength: 10 },
+    canValidate: () => (phoneNumber.length === 10),
+    helperText: t("Veuillez entrer votre numéro de téléphone")
+  };
+};
+
+/* Builder for the second step of the sign-up */
+const SetCodePageBuilder : SignUpPageBuilder = (navigation: SignUpNavigationProp, phoneNumber: string) => {
+  const [code, setCode] = useState("");
+  const { setAuthUser, services } = useContext(AppContext);
+  const signIn = useCallback(async () => {
+    try {
+      await services.auth.login(phoneNumber, code);
+      await setAuthUser();
+    } catch (e) {
+      await setCode("");
+      await navigation.navigate("SignUp", { signUpStep: SignUpStep.SetPhoneNumber, phoneNumber, authFailure: true });
+    }
+  }, [phoneNumber, code]);
+  return {
+    onValidate: signIn,
+    textInputProps: { placeholder: "",
+      autoFocus: true,
+      returnKeyLabel: "next",
+      onChangeText: setCode,
+      keyboardType: "numeric",
+      onSubmitEditing: signIn,
+      maxLength: 6 },
+    canValidate: () => (code.length === 6),
+    helperText: t("Un code vous a été envoyé par SMS")
+  };
+};
+
+const SignUpScreen = ({ route, navigation }: SignUpProps) => {
+
+  const step = route.params?.signUpStep;
+  const phoneNumber = route.params?.phoneNumber || "";
+  const [internalError, setInternalError] = useState<string>();
+
+  if (route.params?.authFailure) {
+    setInternalError(t("Le code est invalide veuillez rééssayer"));
+  }
+  let pageBuilder: SignUpPageBuilder;
+  switch (step) {
+    case SignUpStep.EnterCode:
+      pageBuilder = SetCodePageBuilder;
+      break;
+    case SignUpStep.SetPhoneNumber:
+    default:
+      pageBuilder = SetPhoneNumberPageBuilder;
+      break;
+  }
+
+  const { onValidate, canValidate, textInputProps, helperText } = pageBuilder(navigation, phoneNumber, setInternalError);
 
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <Image
-          style={styles.image}
-          source={logo}
-          resizeMode="contain"
-        />
+        <LianeLogo width="75%" />
+
       </View>
 
       <View>
         <AppText style={styles.helperText}>
-          {t("Veuillez entrer votre numéro de téléphone")}
+          {t(helperText)}
         </AppText>
         <View
           style={styles.inputContainer}
         >
           <AppTextInput
             style={styles.input}
-            placeholder=""
-            autoFocus
-            returnKeyLabel="next"
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-            autoComplete="tel"
-            textContentType="telephoneNumber"
-            onSubmitEditing={signUp}
-            maxLength={10}
+            {...textInputProps}
           />
           <Pressable
             style={styles.button}
-            disabled={phoneNumber.length < 10}
-            onPress={signUp}
+            disabled={!canValidate()}
+            onPress={onValidate}
           >
             <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
           </Pressable>
         </View>
         <AppText style={styles.errorText}>
-          {internalError || authFailure || " "}
+          {internalError || " "}
         </AppText>
       </View>
     </View>
