@@ -5,6 +5,7 @@ import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
 import { registerRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
+import { Observable } from "@/util/observer";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -12,7 +13,6 @@ interface AppContextProps {
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
   authUser?: AuthUser;
-  setAuthUser: (authUser?: AuthUser) => void;
   services: AppServices;
 }
 
@@ -23,20 +23,18 @@ export const AppContext = createContext<AppContextProps>({
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {
   },
-  setAuthUser: () => {
-  },
   services: SERVICES
 });
 
-async function initContext(service: AppServices): Promise<{ authUser?: AuthUser, locationPermission: LocationPermissionLevel, position: LatLng }> {
+async function initContext(service: AppServices): Promise<{ authUserObservable: Observable<AuthUser | undefined>, locationPermission: LocationPermissionLevel, position: LatLng }> {
   // await SplashScreen.preventAutoHideAsync();
 
-  const authUser = await service.auth.me();
+  const authUserObservable = await service.auth.me();
 
   await registerRum();
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
-  return { authUser, locationPermission, position };
+  return { authUserObservable, locationPermission, position };
 }
 
 function ContextProvider(props: { children: ReactNode }) {
@@ -64,7 +62,7 @@ function ContextProvider(props: { children: ReactNode }) {
     .then(async (p) => {
       await setPosition(p.position);
       await setLocationPermission(p.locationPermission);
-      await setAuthUser(p.authUser);
+      await p.authUserObservable.subscribe(setAuthUser);
     })
     .then(() => setAppLoaded(true)));
 
@@ -91,7 +89,6 @@ function ContextProvider(props: { children: ReactNode }) {
           setLocationPermission,
           position,
           authUser,
-          setAuthUser,
           services: service
         }}
       >

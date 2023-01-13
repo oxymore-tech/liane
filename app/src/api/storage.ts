@@ -1,21 +1,24 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import EncryptedStorage from "react-native-encrypted-storage";
 import { Mutex } from "async-mutex";
-import { AuthUser } from "@/api/index";
+import { AuthResponse, AuthUser } from "@/api/index";
+import { Subject } from "@/util/observer";
+
+export const StoredUser = new Subject<AuthUser | undefined>(undefined);
 
 export async function setStoredUser(authUser?: AuthUser) {
   try {
     if (authUser) {
-      return await AsyncStorage.setItem(
+      await AsyncStorage.setItem(
         "user_session",
         JSON.stringify(authUser)
       );
-    }
-    return await AsyncStorage.removeItem("user_session");
+    } else { await AsyncStorage.removeItem("user_session"); }
+    StoredUser.update(authUser);
   } catch (error) {
     // TODO
   }
-  return undefined;
+
 }
 
 export async function getStoredUser() : Promise<AuthUser | undefined> {
@@ -69,4 +72,10 @@ export async function getStoredRefreshToken(): Promise<string | undefined> {
 
 export async function setStoredRefreshToken(token?: string | undefined) {
   return storeEncryptedString("refresh_token", token);
+}
+export async function processAuthResponse(authResponse: AuthResponse) : Promise<AuthUser> {
+  await setStoredToken(authResponse.token.accessToken);
+  await setStoredRefreshToken(authResponse.token.refreshToken);
+  await setStoredUser(authResponse.user);
+  return authResponse.user;
 }

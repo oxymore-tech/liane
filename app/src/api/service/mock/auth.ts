@@ -1,5 +1,5 @@
 import { AuthResponse, AuthUser } from "@/api";
-import { AuthService } from "@/api/service/auth";
+import { AuthService } from "@/api/service/auth"; import { setStoredRefreshToken, setStoredToken, setStoredUser, StoredUser } from "@/api/storage"; import { Observable } from "@/util/observer";
 
 export class AuthServiceMock implements AuthService {
 
@@ -9,9 +9,10 @@ export class AuthServiceMock implements AuthService {
     isAdmin: false
   };
 
-  async me(): Promise<AuthUser | undefined> {
+  async me(): Promise<Observable<AuthUser | undefined>> {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return this.mockUser;
+    StoredUser.update(this.mockUser);
+    return StoredUser;
   }
 
   async login(phone: string, code: string): Promise<AuthResponse> {
@@ -21,6 +22,12 @@ export class AuthServiceMock implements AuthService {
 
   async sendSms(phone: string): Promise<any> { // TODO
 
+  }
+
+  async logout(): Promise<void> {
+    await setStoredToken(undefined);
+    await setStoredRefreshToken(undefined);
+    await setStoredUser(undefined);
   }
 
 }

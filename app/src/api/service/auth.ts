@@ -1,16 +1,21 @@
-import { get, post, postAs, processAuthResponse } from "@/api/http";
-import { AuthResponse, AuthUser } from "@/api"; import { getStoredUser } from "@/api/storage";
+import { post, postAs } from "@/api/http";
+import { AuthResponse, AuthUser } from "@/api"; import {
+  getStoredUser, processAuthResponse, setStoredRefreshToken, setStoredToken, setStoredUser, StoredUser
+} from "@/api/storage"; import { Observable } from "@/util/observer";
 
 export interface AuthService {
   login(phone: string, code: string): Promise<AuthResponse>;
-  me(): Promise<AuthUser | undefined>;
+  me(): Promise<Observable<AuthUser | undefined>>;
   sendSms(phone: string): Promise<void>;
+  logout(): Promise<void>;
 }
 
 export class AuthServiceClient implements AuthService {
 
-  async me(): Promise<AuthUser | undefined> {
-    return getStoredUser();
+  async me(): Promise<Observable<AuthUser | undefined>> {
+    const user = await getStoredUser();
+    StoredUser.update(user);
+    return StoredUser;
   }
 
   async login(phone: string, code: string): Promise<AuthResponse> {
@@ -21,6 +26,13 @@ export class AuthServiceClient implements AuthService {
 
   async sendSms(phone: string): Promise<any> { // TODO
     return post("/auth/sms", { params: { phone } });
+  }
+
+  async logout(): Promise<void> {
+    await post("/auth/logout");
+    await setStoredToken(undefined);
+    await setStoredRefreshToken(undefined);
+    await setStoredUser(undefined);
   }
 
 }

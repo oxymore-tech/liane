@@ -1,15 +1,12 @@
-import { APP_ENV } from "@env";
+import { API_URL, APP_ENV } from "@env";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import {
-  getStoredRefreshToken, getStoredUser, setStoredRefreshToken, setStoredToken, setStoredUser,
-  getStoredToken
-} from "@/api/storage";
-import { AuthResponse, AuthUser } from "@/api/index";
+import { getStoredRefreshToken, getStoredToken, getStoredUser, processAuthResponse } from "@/api/storage";
+import { AuthResponse } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
 
-export const BaseUrl = `https://${domain}/api`;
+export const BaseUrl = `${API_URL || `https://${domain}`}/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -131,11 +128,12 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
         // Try refreshing token
         const refreshToken = await getStoredRefreshToken();
         const user = await getStoredUser();
-        console.log(refreshToken, user);
         if (refreshToken && user) {
+          if (__DEV__) {
+            console.debug("Refresh token");
+          }
           // Call refresh token endpoint
           const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
-          console.log(res);
           await processAuthResponse(res);
           // Retry query
           return fetchAndCheck(method, uri, options);
@@ -151,13 +149,6 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
     }
   }
   return response;
-}
-
-export async function processAuthResponse(authResponse: AuthResponse) : Promise<AuthUser> {
-  await setStoredToken(authResponse.token.accessToken);
-  await setStoredRefreshToken(authResponse.token.refreshToken);
-  await setStoredUser(authResponse.user);
-  return authResponse.user;
 }
 
 async function headers(body?: any, bodyAsJson: boolean = true) {
