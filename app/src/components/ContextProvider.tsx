@@ -2,11 +2,10 @@ import React, { createContext, ReactNode, useCallback, useState } from "react";
 import { View } from "react-native";
 import { useQuery } from "react-query";
 import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
-import { registerRum, registerRumUser } from "@/api/rum";
+import { initializeRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
 import { getStoredToken, setStoredToken } from "@/api/storage";
-import { AppServices } from "@/App";
-import { CreateAppServices } from "@/api/service";
+import { AppServices, CreateAppServices } from "@/api/service";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -32,8 +31,9 @@ export const AppContext = createContext<AppContextProps>({
 
 async function initContext(services: AppServices): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
   // await SplashScreen.preventAutoHideAsync();
-  const storedToken = await getStoredToken();
+  await initializeRum();
 
+  const storedToken = await getStoredToken();
   const authResponse = storedToken ? await services.auth.me().catch((e) => console.log(e)) : undefined;
   if (storedToken) {
     if (authResponse) {
@@ -42,8 +42,6 @@ async function initContext(services: AppServices): Promise<{ authResponse?: Auth
       console.info("Token found in asyncstorage, but it is no longer valid", storedToken);
     }
   }
-
-  await registerRum();
 
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();

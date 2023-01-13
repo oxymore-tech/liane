@@ -15,8 +15,8 @@
     "url": "git+https://github.com/oxymore-tech/liane.git"
   },
   "dependencies": {
-    "@datadog/mobile-react-native": "^1.1.4",
-    "@datadog/mobile-react-navigation": "^1.1.4",
+    "@datadog/mobile-react-native": "^1.2.0",
+    "@datadog/mobile-react-navigation": "^1.2.0",
     "@gorhom/bottom-sheet": "^4.4.5",
     "@microsoft/signalr": "^6.0.8",
     "@react-native-async-storage/async-storage": "~1.17.3",
