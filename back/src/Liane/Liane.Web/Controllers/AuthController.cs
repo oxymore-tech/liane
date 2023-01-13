@@ -31,9 +31,17 @@ public sealed class AuthController : ControllerBase
         return authService.Login(phone, code);
     }
 
-    [HttpGet("me")]
-    public Task<AuthResponse> Me()
+    [HttpPost("token")]
+    [DisableAuth]
+    public Task<AuthResponse> RefreshToken([FromQuery] string userId, [FromBody] string refreshToken)
     {
-        return authService.Me();
+        return authService.RefreshToken(userId, refreshToken);
+    }
+    
+    
+    [HttpPost("logout")]
+    public Task Logout()
+    {
+        return authService.Logout();
     }
 }
