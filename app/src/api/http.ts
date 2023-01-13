@@ -1,7 +1,9 @@
 import { API_URL, APP_ENV } from "@env";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import { getStoredRefreshToken, getStoredToken, getStoredUser, processAuthResponse } from "@/api/storage";
+import {
+  clearStorage, getStoredRefreshToken, getStoredToken, getStoredUser, processAuthResponse
+} from "@/api/storage";
 import { AuthResponse } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
@@ -133,10 +135,15 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
             console.debug("Refresh token");
           }
           // Call refresh token endpoint
-          const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
-          await processAuthResponse(res);
-          // Retry query
-          return fetchAndCheck(method, uri, options);
+          try {
+            const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
+            await processAuthResponse(res);
+            // Retry query
+            return fetchAndCheck(method, uri, options);
+          } catch (e) {
+            // Logout if unauthorized
+            if (e instanceof UnauthorizedError) await clearStorage();
+          }
         }
 
         throw new UnauthorizedError();

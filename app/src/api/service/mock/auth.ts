@@ -1,5 +1,5 @@
 import { AuthResponse, AuthUser } from "@/api";
-import { AuthService } from "@/api/service/auth"; import { setStoredRefreshToken, setStoredToken, setStoredUser, StoredUser } from "@/api/storage"; import { Observable } from "@/util/observer";
+import { AuthService } from "@/api/service/auth"; import { clearStorage, StoredUser } from "@/api/storage"; import { Observable } from "@/util/observer";
 
 export class AuthServiceMock implements AuthService {
 
@@ -25,9 +25,7 @@ export class AuthServiceMock implements AuthService {
   }
 
   async logout(): Promise<void> {
-    await setStoredToken(undefined);
-    await setStoredRefreshToken(undefined);
-    await setStoredUser(undefined);
+    await clearStorage();
   }
 
 }

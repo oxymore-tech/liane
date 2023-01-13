@@ -73,6 +73,12 @@ export async function getStoredRefreshToken(): Promise<string | undefined> {
 export async function setStoredRefreshToken(token?: string | undefined) {
   return storeEncryptedString("refresh_token", token);
 }
+
+export async function clearStorage() {
+  await setStoredToken(undefined);
+  await setStoredRefreshToken(undefined);
+  await setStoredUser(undefined);
+}
 export async function processAuthResponse(authResponse: AuthResponse) : Promise<AuthUser> {
   await setStoredToken(authResponse.token.accessToken);
   await setStoredRefreshToken(authResponse.token.refreshToken);

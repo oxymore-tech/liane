@@ -1,5 +1,6 @@
 import { post, postAs } from "@/api/http";
 import { AuthResponse, AuthUser } from "@/api"; import {
+  clearStorage,
   getStoredUser, processAuthResponse, setStoredRefreshToken, setStoredToken, setStoredUser, StoredUser
 } from "@/api/storage"; import { Observable } from "@/util/observer";
 
@@ -30,9 +31,7 @@ export class AuthServiceClient implements AuthService {
 
   async logout(): Promise<void> {
     await post("/auth/logout");
-    await setStoredToken(undefined);
-    await setStoredRefreshToken(undefined);
-    await setStoredUser(undefined);
+    await clearStorage();
   }
 
 }
