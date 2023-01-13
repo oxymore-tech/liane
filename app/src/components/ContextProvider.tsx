@@ -2,7 +2,7 @@ import React, { createContext, ReactNode, useCallback, useState } from "react";
 import { View } from "react-native";
 import { useQuery } from "react-query";
 import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
-import { registerRum, registerRumUser } from "@/api/rum";
+import { initializeRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { Observable } from "@/util/observer";
@@ -31,7 +31,7 @@ async function initContext(service: AppServices): Promise<{ authUserObservable: 
 
   const authUserObservable = await service.auth.me();
 
-  await registerRum();
+  await initializeRum();
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
   return { authUserObservable, locationPermission, position };
