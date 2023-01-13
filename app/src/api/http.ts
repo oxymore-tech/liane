@@ -1,7 +1,11 @@
 import { APP_ENV } from "@env";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import { getStoredToken } from "@/api/storage";
+import {
+  getStoredRefreshToken, getStoredUser, setStoredRefreshToken, setStoredToken, setStoredUser,
+  getStoredToken
+} from "@/api/storage";
+import { AuthResponse, AuthUser } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
 
@@ -124,6 +128,20 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
+        // Try refreshing token
+        const refreshToken = await getStoredRefreshToken();
+        const user = await getStoredUser();
+        console.log(refreshToken, user);
+        if (refreshToken && user) {
+          // Call refresh token endpoint
+          const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
+          console.log(res);
+          await processAuthResponse(res);
+          // Retry query
+          return fetchAndCheck(method, uri, options);
+        }
+
+        throw new UnauthorizedError();
       case 403:
         throw new UnauthorizedError();
       default:
@@ -133,6 +151,13 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
     }
   }
   return response;
+}
+
+export async function processAuthResponse(authResponse: AuthResponse) : Promise<AuthUser> {
+  await setStoredToken(authResponse.token.accessToken);
+  await setStoredRefreshToken(authResponse.token.refreshToken);
+  await setStoredUser(authResponse.user);
+  return authResponse.user;
 }
 
 async function headers(body?: any, bodyAsJson: boolean = true) {
