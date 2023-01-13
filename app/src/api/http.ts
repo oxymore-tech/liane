@@ -1,4 +1,5 @@
 import { API_URL, APP_ENV } from "@env";
+import { Mutex } from "async-mutex";
 import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import {
@@ -98,6 +99,8 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
   return body;
 }
 
+const refreshTokenMutex = new Mutex();
+
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
   const { body, bodyAsJson } = options;
   const url = formatUrl(uri, options);
@@ -130,20 +133,23 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
         // Try refreshing token
         const refreshToken = await getStoredRefreshToken();
         const user = await getStoredUser();
-        if (refreshToken && user) {
-          if (__DEV__) {
-            console.debug("Refresh token");
-          }
-          // Call refresh token endpoint
-          try {
-            const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
-            await processAuthResponse(res);
-            // Retry query
-            return fetchAndCheck(method, uri, options);
-          } catch (e) {
+        if (refreshToken && user && !refreshTokenMutex.isLocked()) {
+          return refreshTokenMutex.runExclusive(async () => {
+            if (__DEV__) {
+              console.debug("Refresh token");
+            }
+            // Call refresh token endpoint
+            try {
+              const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
+              await processAuthResponse(res);
+              // Retry query
+              return fetchAndCheck(method, uri, options);
+            } catch (e) {
             // Logout if unauthorized
-            if (e instanceof UnauthorizedError) await clearStorage();
-          }
+              if (e instanceof UnauthorizedError) await clearStorage();
+            }
+            throw new UnauthorizedError();
+          });
         }
 
         throw new UnauthorizedError();

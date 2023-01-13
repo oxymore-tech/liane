@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import EncryptedStorage from "react-native-encrypted-storage";
-import { Mutex } from "async-mutex";
 import { AuthResponse, AuthUser } from "@/api/index";
 import { Subject } from "@/util/observer";
 
@@ -60,14 +59,8 @@ export async function setStoredToken(token?: string | undefined) {
   return storeEncryptedString("token", token);
 }
 
-const refreshTokenMutex = new Mutex();
 export async function getStoredRefreshToken(): Promise<string | undefined> {
-  if (refreshTokenMutex.isLocked()) return undefined;
-  return refreshTokenMutex.runExclusive(async () => {
-    const token = getEncryptedString("refresh_token");
-    await setStoredRefreshToken(undefined);
-    return token;
-  });
+  return getEncryptedString("refresh_token");
 }
 
 export async function setStoredRefreshToken(token?: string | undefined) {

@@ -1,7 +1,7 @@
 import { post, postAs } from "@/api/http";
 import { AuthResponse, AuthUser } from "@/api"; import {
   clearStorage,
-  getStoredUser, processAuthResponse, setStoredRefreshToken, setStoredToken, setStoredUser, StoredUser
+  getStoredUser, processAuthResponse, StoredUser
 } from "@/api/storage"; import { Observable } from "@/util/observer";
 
 export interface AuthService {
