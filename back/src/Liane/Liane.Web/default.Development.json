@@ -15,7 +15,7 @@
     "Url": "https://liane.app:5000"
   },
   "Auth": {
-    "Validity": "7.00:00:00",
+    "Validity": "0.08:00:00",
     "SecretKey": "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M",
     "TestAccount": "0000111111",
     "TestCode": "333333"

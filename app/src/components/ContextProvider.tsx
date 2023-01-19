@@ -1,11 +1,10 @@
-import React, { createContext, ReactNode, useCallback, useState } from "react";
+import React, { Component, createContext, ReactNode } from "react";
 import { View } from "react-native";
-import { useQuery } from "react-query";
-import { AuthResponse, AuthUser, LatLng, LocationPermissionLevel } from "@/api";
+import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
 import { initializeRum, registerRumUser } from "@/api/rum";
 import { getLastKnownLocation } from "@/api/location";
-import { getStoredToken, setStoredToken } from "@/api/storage";
 import { AppServices, CreateAppServices } from "@/api/service";
+import { UnauthorizedError } from "@/api/exception";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -24,91 +23,96 @@ export const AppContext = createContext<AppContextProps>({
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {
   },
-  setAuthUser: () => {
-  },
+  setAuthUser: () => {},
   services: SERVICES
 });
 
-async function initContext(services: AppServices): Promise<{ authResponse?: AuthResponse, locationPermission: LocationPermissionLevel, position: LatLng }> {
+async function initContext(service: AppServices): Promise<{ authUser: AuthUser | undefined, locationPermission: LocationPermissionLevel, position: LatLng }> {
   // await SplashScreen.preventAutoHideAsync();
+
+  const authUser = await service.auth.me();
+
   await initializeRum();
-
-  const storedToken = await getStoredToken();
-  const authResponse = storedToken ? await services.auth.me().catch((e) => console.log(e)) : undefined;
-  if (storedToken) {
-    if (authResponse) {
-      console.info(`Token found in asyncstorage, user is ${JSON.stringify(authResponse)}`);
-    } else {
-      console.info("Token found in asyncstorage, but it is no longer valid", storedToken);
-    }
-  }
-
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
-  return { authResponse, locationPermission, position };
+  return { authUser, locationPermission, position };
 }
 
-function ContextProvider(props: { children: ReactNode }) {
+interface ContextProviderProps {
+  children: ReactNode;
+}
 
-  const { children } = props;
+interface ContextProviderState {
+  appLoaded: boolean;
+  locationPermission :LocationPermissionLevel;
+  position?: LatLng;
+  authUser? : AuthUser;
+}
 
-  //  const [fontLoaded] = useFonts();
-  const [appLoaded, setAppLoaded] = useState(false);
-  const [locationPermission, setLocationPermission] = useState(LocationPermissionLevel.NEVER);
-  const [position, setPosition] = useState<LatLng>();
-  const [authUser, setInternalAuthUser] = useState<AuthUser>();
+class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
 
-  const setAuthUser = async (a?: AuthUser) => {
-    try {
-      if (a) {
-        await registerRumUser(a);
-      }
-      setInternalAuthUser(a);
-    } catch (e) {
-      console.log("Problem while setting auth user : ", e);
-    }
-  };
-
-  const { isLoading, error, data } = useQuery("init", () => initContext(SERVICES)
-    .then(async (p) => {
-      await setPosition(p.position);
-      await setLocationPermission(p.locationPermission);
-      await setStoredToken(p.authResponse?.token);
-      await setAuthUser(p.authResponse?.user);
-    })
-    .then(() => setAppLoaded(true)));
-
-  const onLayoutRootView = useCallback(async () => {
-    if (appLoaded) { // && fontLoaded) {
-      // If called after `setAppLoaded`, we may see a blank screen while the app is
-      // loading its initial state and rendering its first pixels.
-      // So instead, we hide the splash screen once we know the root view has already
-      // performed layout.
-      // TODO await SplashScreen.hideAsync();
-    }
-  }, [appLoaded, undefined]);
-
-  if (!(appLoaded)) { // &&fontLoaded)) {
-    return null;
+  constructor(props: ContextProviderProps) {
+    super(props);
+    this.state = { locationPermission: LocationPermissionLevel.NEVER, appLoaded: false, position: undefined, authUser: undefined };
   }
 
-  return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <AppContext.Provider
-        value={{
-          appLoaded, // && fontLoaded,
-          locationPermission,
-          setLocationPermission,
-          position,
-          authUser,
-          setAuthUser,
-          services: SERVICES
-        }}
-      >
-        {children}
-      </AppContext.Provider>
-    </View>
-  );
+  componentDidCatch(error: any, info: any) {
+    if (error instanceof UnauthorizedError) {
+      this.setState((prev) => ({
+        ...prev, authUser: undefined
+      }));
+    }
+  }
+
+  setLocationPermission = (locationPermissionGranted: LocationPermissionLevel) => {
+    this.setState((prev) => ({
+      ...prev, locationPermission: locationPermissionGranted
+    }));
+  }
+
+   setAuthUser = async (a?: AuthUser) => {
+     try {
+       if (a) {
+         await registerRumUser(a);
+       }
+       this.setState((prev) => ({
+         ...prev, authUser: a
+       }));
+     } catch (e) {
+       console.log("Problem while setting auth user : ", e);
+     }
+   };
+
+   render() {
+     const { children } = this.props;
+     const { appLoaded, locationPermission, position, authUser } = this.state;
+     const { setLocationPermission, setAuthUser } = this;
+     const service = SERVICES;
+
+     initContext(service)
+       .then(async (p) => this.setState((prev) => ({
+         ...prev, locationPermission: p.locationPermission, position: p.position, appLoaded: true
+       })));
+
+     return (
+       <View style={{ flex: 1 }}>
+         <AppContext.Provider
+           value={{
+             appLoaded,
+             locationPermission,
+             setLocationPermission,
+             setAuthUser,
+             position,
+             authUser,
+             services: service
+           }}
+         >
+           {children}
+         </AppContext.Provider>
+       </View>
+     );
+   }
+
 }
 
 export default ContextProvider;

@@ -1,11 +1,15 @@
-import { APP_ENV } from "@env";
-import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
+import { API_URL, APP_ENV } from "@env";
+import { Mutex } from "async-mutex";
+import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import { getStoredToken } from "@/api/storage";
+import {
+  clearStorage, getStoredRefreshToken, getStoredAccessToken, getStoredUser, processAuthResponse
+} from "@/api/storage";
+import { AuthResponse } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
 
-export const BaseUrl = `https://${domain}/api`;
+export const BaseUrl = `${API_URL || `https://${domain}`}/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -95,6 +99,8 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
   return body;
 }
 
+const refreshTokenMutex = new Mutex();
+
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
   const { body, bodyAsJson } = options;
   const url = formatUrl(uri, options);
@@ -124,8 +130,9 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
+        return tryRefreshToken(method, uri, options);
       case 403:
-        throw new UnauthorizedError();
+        throw new ForbiddenError();
       default:
         const message = await response.text();
         console.log(`Unexpected error on ${method} ${uri}`, response.status, message);
@@ -135,9 +142,35 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   return response;
 }
 
+async function tryRefreshToken(method: MethodType, uri: string, options: QueryPostOptions<any>): Promise<Response> {
+  const refreshToken = await getStoredRefreshToken();
+  const user = await getStoredUser();
+  if (refreshToken && user && !refreshTokenMutex.isLocked()) {
+    return refreshTokenMutex.runExclusive(async () => {
+      if (__DEV__) {
+        console.debug("Refresh token");
+      }
+      // Call refresh token endpoint
+      try {
+        const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
+        await processAuthResponse(res);
+        // Retry query
+        return await fetchAndCheck(method, uri, options);
+      } catch (e) {
+        // Logout if unauthorized
+        if (e instanceof UnauthorizedError) {
+          await clearStorage();
+        }
+      }
+      throw new UnauthorizedError();
+    });
+  }
+  throw new UnauthorizedError();
+}
+
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
-  const token = await getStoredToken();
+  const token = await getStoredAccessToken();
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }

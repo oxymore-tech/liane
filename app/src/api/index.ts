@@ -17,7 +17,10 @@ export type AuthUser = Readonly<{
 
 export type AuthResponse = Readonly<{
   user: AuthUser;
-  token: string;
+  token: {
+    accessToken: string,
+    refreshToken: string
+  };
 }>;
 
 export type User = Readonly<{

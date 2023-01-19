@@ -3,7 +3,8 @@ import { useQuery } from "react-query";
 import React, { useContext } from "react";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
-import { AppServices } from "@/App";
+import { UnauthorizedError } from "@/api/exception";
+import { AppServices } from "@/api/service";
 
 export interface WithFetchResourceProps<T> {
   data: T
@@ -16,10 +17,10 @@ export interface WithFetchResourceProps<T> {
  * @param queryKey a key used for caching
  */
 // eslint-disable-next-line @typescript-eslint/comma-dangle
-export const WithFetchResource = <T,>(WrappedComponent, loadData: (repository: AppServices) => () => Promise<T>, queryKey: string) => (props: any) => {
+export const WithFetchResource = <T,>(WrappedComponent: React.ComponentType<WithFetchResourceProps<T>>, loadData: (repository: AppServices) => () => Promise<T>, queryKey: string) => (props: any) => {
   const { services } = useContext(AppContext);
   const resolvedDataLoader = loadData(services);
-  const { isLoading, error, data } = useQuery<T>(queryKey, () => resolvedDataLoader());
+  const { isLoading, error, data } = useQuery<T, Error>(queryKey, () => resolvedDataLoader());
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -28,14 +29,18 @@ export const WithFetchResource = <T,>(WrappedComponent, loadData: (repository: A
     );
   }
   if (error) {
-    return (
-      <View style={styles.container}>
-        <AppText style={{ textAlign: "center" }}>
-          Error:
-          {error.message}
-        </AppText>
-      </View>
-    );
+    // Show content depending on the error or propagate it
+    if (error instanceof UnauthorizedError) throw (error);
+    else {
+      return (
+        <View style={styles.container}>
+          <AppText style={{ textAlign: "center" }}>
+            Error:
+            {error.message}
+          </AppText>
+        </View>
+      );
+    }
   }
   return (<WrappedComponent {...props} data={data} />);
 

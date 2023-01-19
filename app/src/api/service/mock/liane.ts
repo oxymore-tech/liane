@@ -1,5 +1,5 @@
 import { Liane, LianeRequest } from "@/api";
-import { LianeService } from "@/api/service/liane";
+import { LianeService } from "@/api/service/liane"; import { UnauthorizedError } from "@/api/exception";
 
 export class LianeServiceMock implements LianeService {
 

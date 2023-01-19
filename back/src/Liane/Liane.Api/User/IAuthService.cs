@@ -9,7 +9,11 @@ public interface IAuthService
 
     Task<AuthResponse> Login(string phone, string code);
 
-    Task<AuthResponse> Me();
+    //Task<AuthUser> Me();
+    
+    Task Logout();
+    
+    Task<AuthResponse> RefreshToken(string userId, string refreshToken);
 
     ClaimsPrincipal IsTokenValid(string token);
 }
