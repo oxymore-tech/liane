@@ -71,10 +71,11 @@ const SetPhoneNumberPageBuilder : SignUpPageBuilder = (navigation: SignUpNavigat
 /* Builder for the second step of the sign-up */
 const SetCodePageBuilder : SignUpPageBuilder = (navigation: SignUpNavigationProp, phoneNumber: string) => {
   const [code, setCode] = useState("");
-  const { services } = useContext(AppContext);
+  const { services, setAuthUser } = useContext(AppContext);
   const signIn = useCallback(async () => {
     try {
-      await services.auth.login(phoneNumber, code);
+      const authUser = await services.auth.login(phoneNumber, code);
+      await setAuthUser(authUser);
     } catch (e) {
       await setCode("");
       await navigation.navigate("SignUp", { signUpStep: SignUpStep.SetPhoneNumber, phoneNumber, authFailure: true });

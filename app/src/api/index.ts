@@ -19,7 +19,6 @@ export type AuthResponse = Readonly<{
   user: AuthUser;
   token: {
     accessToken: string,
-    expiresInMilli: number,
     refreshToken: string
   };
 }>;

@@ -1,9 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import EncryptedStorage from "react-native-encrypted-storage";
 import { AuthResponse, AuthUser } from "@/api/index";
-import { Subject } from "@/util/observer";
-
-export const StoredUser = new Subject<AuthUser | undefined>(undefined);
 
 export async function setStoredUser(authUser?: AuthUser) {
   try {
@@ -15,7 +12,6 @@ export async function setStoredUser(authUser?: AuthUser) {
     } else {
       await AsyncStorage.removeItem("user_session");
     }
-    StoredUser.update(authUser);
   } catch (e) {
     console.warn("Unable to store user_session", e);
   }

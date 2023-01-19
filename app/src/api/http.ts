@@ -1,6 +1,6 @@
 import { API_URL, APP_ENV } from "@env";
 import { Mutex } from "async-mutex";
-import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
+import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import {
   clearStorage, getStoredRefreshToken, getStoredAccessToken, getStoredUser, processAuthResponse
@@ -132,7 +132,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
       case 401:
         return tryRefreshToken(method, uri, options);
       case 403:
-        throw new UnauthorizedError();
+        throw new ForbiddenError();
       default:
         const message = await response.text();
         console.log(`Unexpected error on ${method} ${uri}`, response.status, message);

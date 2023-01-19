@@ -7,13 +7,13 @@ import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
 
 const EmptyScreen = () => {
-  const { services } = useContext(AppContext);
+  const { services, setAuthUser } = useContext(AppContext);
   return (
     <View>
       <AppButton
         title="Déconnecter"
         color={AppColors.blue500}
-        onPress={() => services.auth.logout()}
+        onPress={() => services.auth.logout().then(() => setAuthUser(undefined))}
       />
       <View style={{ display: "flex", flexDirection: "row" }}>
         <AppText style={{ marginRight: 32 }}>

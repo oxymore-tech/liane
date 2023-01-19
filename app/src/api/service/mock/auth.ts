@@ -1,5 +1,6 @@
-import { AuthResponse, AuthUser } from "@/api";
-import { AuthService } from "@/api/service/auth"; import { clearStorage, StoredUser } from "@/api/storage"; import { Observable } from "@/util/observer";
+import { AuthUser } from "@/api";
+import { AuthService } from "@/api/service/auth";
+import { clearStorage, processAuthResponse } from "@/api/storage";
 
 export class AuthServiceMock implements AuthService {
 
@@ -9,15 +10,15 @@ export class AuthServiceMock implements AuthService {
     isAdmin: false
   };
 
-  async me(): Promise<Observable<AuthUser | undefined>> {
+  async me(): Promise<AuthUser | undefined> {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    StoredUser.update(this.mockUser);
-    return StoredUser;
+    return this.mockUser;
   }
 
-  async login(phone: string, code: string): Promise<AuthResponse> {
+  async login(phone: string, code: string): Promise<AuthUser> {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return { user: this.mockUser, token: { refreshToken: "", accessToken: "", expiresInMilli: 9999 } };
+    await processAuthResponse({ user: this.mockUser, token: { refreshToken: "TOKEN", accessToken: "TOKEN" } });
+    return this.mockUser;
   }
 
   async sendSms(phone: string): Promise<any> { // TODO
