@@ -22,7 +22,10 @@ namespace Liane.Service.Internal.User;
 public sealed class AuthServiceImpl : IAuthService
 {
     public const string AdminRole = "admin";
+
     private const string UserRole = "user";
+    private const int KeySize = 64;
+
     private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
     private readonly ILogger<AuthServiceImpl> logger;
     private readonly TwilioSettings twilioSettings;
@@ -58,7 +61,7 @@ public sealed class AuthServiceImpl : IAuthService
 
             smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
 
-            if (twilioSettings.Account != null && twilioSettings.Token != null)
+            if (twilioSettings is { Account: { }, Token: { } })
             {
                 TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
                 var generator = new Random();
@@ -82,9 +85,7 @@ public sealed class AuthServiceImpl : IAuthService
         if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
         {
             var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, true);
-            
-            // Auth with empty refresh token
-            return GenerateAuthResponse(user, ""); 
+            return GenerateAuthResponse(user, null);
         }
 
         var phoneNumber = ParseNumber(phone);
@@ -112,7 +113,7 @@ public sealed class AuthServiceImpl : IAuthService
             await mongoCollection.InsertOneAsync(dbUser);
         }
 
-        var authUser = new AuthUser(dbUser.Id.ToString(),number, dbUser.IsAdmin);
+        var authUser = new AuthUser(dbUser.Id.ToString(), number, dbUser.IsAdmin);
         var refreshToken = await GenerateRefreshToken(dbUser);
         return GenerateAuthResponse(authUser, refreshToken);
     }
@@ -120,14 +121,20 @@ public sealed class AuthServiceImpl : IAuthService
     public async Task<AuthResponse> RefreshToken(string userId, string refreshToken)
     {
         var foundUser = (await mongo.GetCollection<DbUser>().FindAsync(u => u.Id == new ObjectId(userId))).FirstOrDefault();
-        if (foundUser.RefreshToken != HashString(refreshToken, Convert.FromBase64String(foundUser.Salt!))) 
+        
+        if (foundUser.RefreshToken is null)
         {
-            // Revoke user token 
+            throw new UnauthorizedAccessException();
+        }
+        
+        if (foundUser.RefreshToken != HashString(refreshToken, Convert.FromBase64String(foundUser.Salt!)))
+        {
             await RevokeRefreshToken(userId);
             throw new UnauthorizedAccessException();
         }
-        var authUser = new AuthUser(foundUser.Id.ToString(),foundUser.Phone, foundUser.IsAdmin);
-        return GenerateAuthResponse(authUser, await GenerateRefreshToken(foundUser)); 
+
+        var authUser = new AuthUser(foundUser.Id.ToString(), foundUser.Phone, foundUser.IsAdmin);
+        return GenerateAuthResponse(authUser, await GenerateRefreshToken(foundUser));
     }
 
     public ClaimsPrincipal IsTokenValid(string token)
@@ -164,7 +171,7 @@ public sealed class AuthServiceImpl : IAuthService
 
     public async Task Logout()
     {
-        await RevokeRefreshToken( currentContext.CurrentUser().Id);
+        await RevokeRefreshToken(currentContext.CurrentUser().Id);
     }
 
     private static PhoneNumber ParseNumber(string number)
@@ -179,14 +186,13 @@ public sealed class AuthServiceImpl : IAuthService
         return new PhoneNumber(trim);
     }
 
-    private AuthResponse GenerateAuthResponse(AuthUser user, string refreshToken)
+    private AuthResponse GenerateAuthResponse(AuthUser user, string? refreshToken)
     {
         var token = new AuthToken(GenerateToken(user), (long)authSettings.Validity.TotalMilliseconds, refreshToken);
         return new AuthResponse(user, token);
     }
 
-    private const int KeySize = 64;
-    private string HashString(string secret, byte[] salt)
+    private static string HashString(string secret, byte[] salt)
     {
         var hash = Rfc2898DeriveBytes.Pbkdf2(
             Encoding.UTF8.GetBytes(secret),
@@ -196,24 +202,20 @@ public sealed class AuthServiceImpl : IAuthService
             KeySize);
         return Convert.ToBase64String(hash);
     }
+
     private async Task<string> GenerateRefreshToken(DbUser user)
     {
         // Generate token & salt
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(KeySize));
         var salt = RandomNumberGenerator.GetBytes(KeySize);
         var encryptedToken = HashString(token, salt);
-        
+
         // Store encrypted token and salt for this user
-        var filter = Builders<DbUser>.Filter.Eq(u => u.Id, user.Id);
         var updateToken = Builders<DbUser>.Update.Set(u => u.RefreshToken, encryptedToken);
         var updateSalt = Builders<DbUser>.Update.Set(u => u.Salt, Convert.ToBase64String(salt));
-        var upsert = new UpdateOptions()
-        {
-            IsUpsert = false
-        };
-        await mongo.GetCollection<DbUser>().UpdateOneAsync(filter, Builders<DbUser>.Update.Combine(updateToken, updateSalt), upsert);
+        await mongo.GetCollection<DbUser>()
+            .UpdateOneAsync(u => u.Id == user.Id, Builders<DbUser>.Update.Combine(updateToken, updateSalt));
 
-        // Return token 
         return token;
     }
 

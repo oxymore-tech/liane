@@ -12,12 +12,13 @@ export async function setStoredUser(authUser?: AuthUser) {
         "user_session",
         JSON.stringify(authUser)
       );
-    } else { await AsyncStorage.removeItem("user_session"); }
+    } else {
+      await AsyncStorage.removeItem("user_session");
+    }
     StoredUser.update(authUser);
-  } catch (error) {
-    // TODO
+  } catch (e) {
+    console.warn("Unable to store user_session", e);
   }
-
 }
 
 export async function getStoredUser() : Promise<AuthUser | undefined> {
@@ -26,8 +27,8 @@ export async function getStoredUser() : Promise<AuthUser | undefined> {
     if (stored) {
       return JSON.parse(stored);
     }
-  } catch (error) {
-    // TODO
+  } catch (e) {
+    console.warn("Unable to get user_session", e);
   }
   return undefined;
 }
@@ -35,11 +36,11 @@ export async function getStoredUser() : Promise<AuthUser | undefined> {
 async function storeEncryptedString(key: string, value?: string | undefined) {
   try {
     if (value) {
-      return await EncryptedStorage.setItem(key, value);
+      await EncryptedStorage.setItem(key, value);
     }
-    return await EncryptedStorage.removeItem(key);
+    await EncryptedStorage.removeItem(key);
   } catch (e) {
-    return null;
+    console.warn("Unable to store encrypted string", key, e);
   }
 }
 
@@ -51,12 +52,12 @@ async function getEncryptedString(key: string): Promise<string | undefined> {
   }
 }
 
-export async function getStoredToken(): Promise<string | undefined> {
-  return getEncryptedString("token");
+export async function getStoredAccessToken(): Promise<string | undefined> {
+  return getEncryptedString("access_token");
 }
 
-export async function setStoredToken(token?: string | undefined) {
-  return storeEncryptedString("token", token);
+export async function setStoredAccessToken(token?: string | undefined) {
+  return storeEncryptedString("access_token", token);
 }
 
 export async function getStoredRefreshToken(): Promise<string | undefined> {
@@ -68,12 +69,13 @@ export async function setStoredRefreshToken(token?: string | undefined) {
 }
 
 export async function clearStorage() {
-  await setStoredToken(undefined);
+  await setStoredAccessToken(undefined);
   await setStoredRefreshToken(undefined);
   await setStoredUser(undefined);
 }
+
 export async function processAuthResponse(authResponse: AuthResponse) : Promise<AuthUser> {
-  await setStoredToken(authResponse.token.accessToken);
+  await setStoredAccessToken(authResponse.token.accessToken);
   await setStoredRefreshToken(authResponse.token.refreshToken);
   await setStoredUser(authResponse.user);
   return authResponse.user;
