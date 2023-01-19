@@ -11,5 +11,5 @@ declare module "@env" {
   export const DD_APP_ID: string | null;
   export const APP_ENV: string;
   export const APP_VERSION: string;
-  export const API_URL: string;
+  export const API_URL: string | null;
 }
