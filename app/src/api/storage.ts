@@ -1,16 +1,15 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import EncryptedStorage from "react-native-encrypted-storage";
 import { AuthResponse, AuthUser } from "@/api/index";
 
 export async function setStoredUser(authUser?: AuthUser) {
   try {
     if (authUser) {
-      await AsyncStorage.setItem(
+      await storeEncryptedString(
         "user_session",
         JSON.stringify(authUser)
       );
     } else {
-      await AsyncStorage.removeItem("user_session");
+      await storeEncryptedString("user_session");
     }
   } catch (e) {
     console.warn("Unable to store user_session", e);
@@ -19,7 +18,7 @@ export async function setStoredUser(authUser?: AuthUser) {
 
 export async function getStoredUser() : Promise<AuthUser | undefined> {
   try {
-    const stored = await AsyncStorage.getItem("user_session");
+    const stored = await getEncryptedString("user_session");
     if (stored) {
       return JSON.parse(stored);
     }
