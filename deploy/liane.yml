@@ -29,7 +29,7 @@ services:
       - "traefik.http.routers.${PROJECT}-back-secure.entrypoints=web-secure"
       - "traefik.http.routers.${PROJECT}-back-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-back-secure.tls.certResolver=gjinico"
-      - "traefik.http.services.${PROJECT}-back.loadbalancer.server.port=8081"
+      - "traefik.http.services.${PROJECT}-back.loadbalancer.server.port=5000"
     depends_on:
       - mongo
       - redis

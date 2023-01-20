@@ -26,7 +26,7 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("login")]
     [DisableAuth]
-    public Task<AuthResponse> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string pushToken)
+    public Task<AuthResponse> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string? pushToken)
     {
         return authService.Login(phone, code, pushToken);
     }

@@ -4,18 +4,21 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
 # shellcheck disable=SC2120
 function token {
-  local project=${1}
+  local environment=${1:-local}
   
   local baseUrl
   
-  if [[ -z "${project}" ]]; then
-    baseUrl="http://localhost:8081"
-  else
-    baseUrl="https://${project}.gjini.co"
+  if [[ "${environment}" = "local" ]]; then
+    baseUrl="http://localhost:5000"
+  elif [[ "${environment}" = "dev" ]]; then
+     baseUrl="https://dev.liane.app"
+  elif [[ "${environment}" = "prod" ]]; then
+    baseUrl="https://liane.app"
   fi;
   
   local token
-  token=$(http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333" | jq -r .token)
+  echo http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333"
+  token=$(http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333" | jq -r .token.accessToken)
   echo "Authorization:Bearer${token}"
 }
 

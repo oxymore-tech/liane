@@ -10,7 +10,7 @@ RUN dotnet restore && dotnet test --filter Category\!=Integration && dotnet publ
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
-EXPOSE 8081
+EXPOSE 5000
 
 WORKDIR /app
 
