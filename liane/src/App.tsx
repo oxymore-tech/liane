@@ -8,7 +8,7 @@ import { AppColors } from "@/theme/colors";
 import ContextProvider from "@/components/ContextProvider";
 import { RootNavigation } from "@/api/navigation";
 import Navigation from "@/components/Navigation";
-  
+
 const queryClient = new QueryClient();
 
 const App = () => (

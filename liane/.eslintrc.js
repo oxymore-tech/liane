@@ -5,6 +5,7 @@ module.exports = {
   },
   rules: {
     "@typescript-eslint/quotes": ["error", "double"],
+    "no-trailing-spaces": "error",
     "no-underscore-dangle": "off",
     "react/require-default-props": "off",
     "import/prefer-default-export": "off",
@@ -44,6 +45,12 @@ module.exports = {
     "react/jsx-props-no-spreading": "off",
     "eol-last": "off",
     "max-classes-per-file": ["warn", 5],
-    "react/jsx-filename-extension": [1, { "extensions": [".jsx"] }],
+    "react/jsx-filename-extension": [1,
+      {
+        "extensions": [
+          ".tsx"
+        ]
+      }
+    ]
   }
 };
