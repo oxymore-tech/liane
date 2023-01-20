@@ -88,7 +88,7 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Install Pods
-        run: cd app/ios && pod install --repo-update && cd ../..
+        run: cd app/ios && NO_FLIPPER=1 pod install --repo-update && cd ../..
 
       - name: Update build number
         run: |
