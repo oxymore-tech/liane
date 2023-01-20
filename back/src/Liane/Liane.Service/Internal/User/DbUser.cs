@@ -1,4 +1,3 @@
-using System;
 using MongoDB.Bson;
 
 namespace Liane.Service.Internal.User;
@@ -8,5 +7,6 @@ public sealed record DbUser(
     bool IsAdmin,
     string Phone,
     string? RefreshToken,
-    string? Salt
+    string? Salt,
+    string? PushToken
 );

@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useState } from "react";
 import { Pressable, StyleSheet, TextInputProps, View } from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import messaging from "@react-native-firebase/messaging";
 import { NavigationParamList } from "@/api/navigation";
 import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
@@ -74,7 +75,9 @@ const SetCodePageBuilder : SignUpPageBuilder = (navigation: SignUpNavigationProp
   const { services, setAuthUser } = useContext(AppContext);
   const signIn = useCallback(async () => {
     try {
-      const authUser = await services.auth.login(phoneNumber, code);
+      await messaging().registerDeviceForRemoteMessages();
+      const pushToken = await messaging().getToken();
+      const authUser = await services.auth.login(phoneNumber, code, pushToken);
       await setAuthUser(authUser);
     } catch (e) {
       await setCode("");

@@ -7,7 +7,7 @@ public interface IAuthService
 {
     Task SendSms(string phone);
 
-    Task<AuthResponse> Login(string phone, string code);
+    Task<AuthResponse> Login(string phone, string code, string? pushToken);
 
     //Task<AuthUser> Me();
     
