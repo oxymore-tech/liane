@@ -197,7 +197,7 @@ public sealed class AuthServiceImpl : IAuthService
 
     private AuthResponse GenerateAuthResponse(AuthUser user, string? refreshToken)
     {
-        var token = new AuthToken(GenerateToken(user), (long)authSettings.Validity.TotalMilliseconds, refreshToken);
+        var token = new AuthToken(GenerateToken(user), refreshToken);
         return new AuthResponse(user, token);
     }
 
