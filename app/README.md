@@ -1,15 +1,4 @@
-## Architecture générale
-
-Language : [typescript](https://typescript.org)
-
-Basé sur [React Native](https://fr.reactjs.org/).
-
-- `src/api` : `objets` et `services` d'API, la plupart sont des clients HTTP qui accèdent aux API HTTP
-  du [`back`](../back/README.md)
-- `src/screens` les différents écrans de l'app mobile. Ils correspondent aux composants UX de premier niveau.
-- `src/components` : les différents composants sous-jacents de l'application
-
-## Prerequis (première fois)
+# Getting started
 
 ```bash
 cd app
@@ -18,13 +7,87 @@ npm i --legacy-peer-deps
 cd ios && pod install
 ```
 
-Puis installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
+Installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
 
-## Lancer le projet en mode développement
+Run the project
 
 ```bash
 npm run start
-npm run android # ou run ios selon la platforme
+# puis 'a' pour android 
+# ou 'i' pour ios
 ```
 
-Note: pour activer la nouvelle architecture React Native sur Android, définir la propriété `newArchEnabled` à `true`.
+# Upgrade react native version
+
+Create a new empty project
+
+```bash
+npx react-native init liane
+remove yarn.lock
+```
+
+- Configure prettier
+- Copy .svgrc
+
+### Android changes
+- Move package com.liane to tech.oxymore.liane in android in src dir (dir and .java files)
+- Edit android/app/build.gradle
+  - package
+  - versCode and Name
+  - signing.release
+- Copy resources (fonts and icons) and manifest
+- Copy google-services.json
+- Add onCreate to MainActivity
+
+```java
+  /**
+   * Required by react navigation to handle wake up
+   */
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(null);
+  }
+```
+- Copy debug.keystore
+  
+### Apply IOS changes
+
+- folder ios/liane
+  - (Images.xcassets)
+  - edit Info.plist
+
+- folder liane.xcodeproj
+  - edit project.pbxproj (add resources and mapbox entries) 
+
+### Install npm deps
+
+```bash
+npm install --save-dev          \
+  react-native-dotenv           \
+  babel-plugin-module-resolver  \
+  react-native-svg-transformer
+                
+npm install                                             \
+  react-native-reanimated@next                          \
+  @react-navigation/native                              \
+  @react-navigation/native-stack                        \
+  @datadog/mobile-react-navigation                      \
+  @datadog/mobile-react-native                          \
+  rnmapbox/maps#main                                    \
+  @gorhom/bottom-sheet                                  \
+  @microsoft/signalr                                    \
+  @notifee/react-native                                 \
+  @react-native-firebase/app                            \
+  @react-native-firebase/messaging                      \
+  @react-navigation/bottom-tabs                         \
+  async-mutex                                           \
+  i18n-js                                               \
+  react-native-encrypted-storage                        \
+  react-native-eva-icons                                \
+  react-native-gesture-handler                          \
+  react-native-modal                                    \
+  react-native-safe-area-context                        \
+  react-native-screens                                  \
+  react-native-svg                                      \
+  react-query
+```

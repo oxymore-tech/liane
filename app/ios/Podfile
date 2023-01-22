@@ -21,7 +21,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'Liane' do
+target 'liane' do
   config = use_native_modules!
 
   # Flags change depending on the env values.
@@ -43,17 +43,12 @@ target 'Liane' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'LianeTests' do
+  target 'lianeTests' do
     inherit! :complete
     # Pods for testing
   end
 
-   pre_install do |installer|
-      $RNMapboxMaps.pre_install(installer)
-   end
-
   post_install do |installer|
-    $RNMapboxMaps.post_install(installer)
     react_native_post_install(
       installer,
       # Set `mac_catalyst_enabled` to `true` in order to apply patches
@@ -62,5 +57,4 @@ target 'Liane' do
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
-
 end

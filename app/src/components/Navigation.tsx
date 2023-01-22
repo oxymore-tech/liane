@@ -20,25 +20,21 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Navigation() {
-
   const insets = useSafeAreaInsets();
   const { authUser } = useContext(AppContext);
   const iconSize = 24;
 
   if (authUser) {
     return (
-
       <BottomSheetModalProvider>
-        <Tab.Navigator screenOptions={{
-          tabBarStyle: [styles.bottomBar, { marginBottom: insets.bottom + AppDimensions.bottomBar.marginVertical }],
-          tabBarShowLabel: false
-        }}
-        >
-
-          { makeTab("Rechercher", "search-outline", HomeScreen, iconSize, { headerShown: false })}
-          { makeTab("Mes trajets", LianeIcon, MyTripsScreen, (iconSize * 4) / 3)}
-          { makeTab("Notifications", "bell-outline", EmptyScreen, iconSize)}
-
+        <Tab.Navigator
+          screenOptions={{
+            tabBarStyle: [styles.bottomBar, { marginBottom: insets.bottom + AppDimensions.bottomBar.marginVertical }],
+            tabBarShowLabel: false
+          }}>
+          {makeTab("Rechercher", "search-outline", HomeScreen, iconSize, { headerShown: false })}
+          {makeTab("Mes trajets", LianeIcon, MyTripsScreen, (iconSize * 4) / 3)}
+          {makeTab("Notifications", "bell-outline", EmptyScreen, iconSize)}
         </Tab.Navigator>
       </BottomSheetModalProvider>
     );
@@ -57,38 +53,23 @@ function Navigation() {
   );
 }
 
-const makeTab = (label: string,
-  iconName: IconName | React.FunctionComponent,
-  screen: any, iconSize: number = 24, { headerShown = true } = {}) => (
-    <Tab.Screen
-      name={label}
-      component={screen}
-      options={
-                {
-
-                  headerShown,
-                  headerStyle: { backgroundColor: "#00000000" },
-                  headerShadowVisible: false,
-                  tabBarLabel: ({ focused }) => (
-                    <AppText
-                      style={[styles.tabLabel, { color: focused ? AppColors.white : AppColors.blue400 }]}
-                    >
-                      {label}
-                    </AppText>
-                  ),
-                  tabBarIcon: ({ focused }) => (typeof iconName === "string"
-                    ? (
-                      <AppIcon
-                        size={iconSize}
-                        name={iconName}
-                        color={focused ? AppColors.white : AppColors.blue400}
-                      />
-                    )
-                    : iconName({ color: focused ? AppColors.white : AppColors.blue400, height: iconSize, width: iconSize }) // TODO resize svg file directly
-                  )
-                }
-            }
-    />
+const makeTab = (label: string, iconName: IconName | React.FunctionComponent, screen: any, iconSize: number = 24, { headerShown = true } = {}) => (
+  <Tab.Screen
+    name={label}
+    component={screen}
+    options={{
+      headerShown,
+      headerStyle: { backgroundColor: "#00000000" },
+      headerShadowVisible: false,
+      tabBarLabel: ({ focused }) => <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColors.blue400 }]}>{label}</AppText>,
+      tabBarIcon: ({ focused }) =>
+        typeof iconName === "string" ? (
+          <AppIcon size={iconSize} name={iconName} color={focused ? AppColors.white : AppColors.blue400} />
+        ) : (
+          iconName({ color: focused ? AppColors.white : AppColors.blue400, height: iconSize, width: iconSize })
+        ) // TODO resize svg file directly
+    }}
+  />
 );
 
 const styles = StyleSheet.create({
@@ -101,14 +82,12 @@ const styles = StyleSheet.create({
     marginHorizontal: AppDimensions.bottomBar.marginHorizontal,
     borderRadius: AppDimensions.bottomBar.borderRadius,
     paddingBottom: 0 // ios layout
-
   },
   tabLabel: {
     fontSize: AppDimensions.textSize.small,
     fontWeight: "400",
     marginBottom: 8
   }
-
 });
 
 // Wrap Component to allow bottom sheets scrolling on Android
