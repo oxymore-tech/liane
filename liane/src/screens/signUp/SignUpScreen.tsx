@@ -16,6 +16,14 @@ export enum SignUpStep {
 
 const t = scopedTranslate("SignUp");
 
+async function getPushToken() {
+  if (__DEV__) {
+    return;
+  }
+  await messaging().registerDeviceForRemoteMessages();
+  return await messaging().getToken();
+}
+
 const SignUpScreen = () => {
   const [step, setStep] = useState(SignUpStep.SetPhoneNumber);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
@@ -36,12 +44,11 @@ const SignUpScreen = () => {
 
   const signIn = useCallback(async () => {
     try {
-      await messaging().registerDeviceForRemoteMessages();
-      const pushToken = await messaging().getToken();
+      const pushToken = await getPushToken();
       const authUser = await services.auth.login(phoneNumber, code, pushToken);
       await setAuthUser(authUser);
     } catch (e) {
-      console.warn("SignIn error", e);
+      console.warn("Login error", e);
       await setError("Le code est incorrect");
     }
   }, [services.auth, phoneNumber, code, setAuthUser]);
