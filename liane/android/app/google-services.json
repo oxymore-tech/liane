@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "862371778549",
+    "project_id": "liane-65471",
+    "storage_bucket": "liane-65471.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862371778549:android:3e5f5efd40f6f638e8dabc",
+        "android_client_info": {
+          "package_name": "tech.oxymore.liane"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "862371778549-2f9ogtvfh2oabqh044um24fk9rh4b6fj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tech.oxymore.liane",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "862371778549-o53o8e85sm8emem9310ilvn7pmjmsm19.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy4KvCMZuuDDhPSasXh11-vUcDknSIEKI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "862371778549-o53o8e85sm8emem9310ilvn7pmjmsm19.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "862371778549-54oedcqsih64ea37m8ipkn94g7pib74p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "tech.oxymore.liane",
+                "app_store_id": "1565309946"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

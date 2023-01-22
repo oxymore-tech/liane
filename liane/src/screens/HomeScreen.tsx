@@ -5,9 +5,7 @@ import AppMapView from "@/components/AppMapView";
 const HomeScreen = () => (
   <View style={styles.page}>
     <View style={styles.container}>
-
       <AppMapView />
-
     </View>
   </View>
 );

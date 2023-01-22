@@ -1,6 +1,6 @@
 import { post, postAs } from "@/api/http";
 import { AuthResponse, AuthUser } from "@/api";
-import { clearStorage, getStoredUser, processAuthResponse } from "@/api/storage";
+import { clearStorage, getUserSession, processAuthResponse } from "@/api/storage";
 
 export interface AuthService {
   login(phone: string, code: string, pushToken?: string): Promise<AuthUser>;
@@ -10,18 +10,17 @@ export interface AuthService {
 }
 
 export class AuthServiceClient implements AuthService {
-
   async me(): Promise<AuthUser | undefined> {
-    return getStoredUser();
+    return getUserSession();
   }
 
   async login(phone: string, code: string, pushToken?: string): Promise<AuthUser> {
     const authResponse = await postAs<AuthResponse>("/auth/login", { params: { phone, code, pushToken } });
-    if (authResponse) await processAuthResponse(authResponse);
+    await processAuthResponse(authResponse);
     return authResponse.user;
   }
 
-  async sendSms(phone: string): Promise<any> { // TODO
+  async sendSms(phone: string): Promise<any> {
     return post("/auth/sms", { params: { phone } });
   }
 
@@ -29,5 +28,4 @@ export class AuthServiceClient implements AuthService {
     await post("/auth/logout");
     await clearStorage();
   }
-
 }

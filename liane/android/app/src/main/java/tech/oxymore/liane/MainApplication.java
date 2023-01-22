@@ -1,4 +1,4 @@
-package com.liane;
+package tech.oxymore.liane;
 
 import android.app.Application;
 import com.facebook.react.PackageList;
