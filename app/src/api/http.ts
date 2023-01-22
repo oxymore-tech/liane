@@ -2,9 +2,7 @@ import { API_URL, APP_ENV } from "@env";
 import { Mutex } from "async-mutex";
 import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import {
-  clearStorage, getStoredRefreshToken, getStoredAccessToken, getStoredUser, processAuthResponse
-} from "@/api/storage";
+import { clearStorage, getStoredRefreshToken, getStoredAccessToken, getUserSession, processAuthResponse } from "@/api/storage";
 import { AuthResponse } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
@@ -121,8 +119,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
                 const message400 = await response.text();
                 console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
                 throw new Error(message400); */
-        if ((response.headers.get("content-type") === "application/json")
-                    || (response.headers.get("content-type") === ("application/problem+json"))) {
+        if (response.headers.get("content-type") === "application/json" || response.headers.get("content-type") === "application/problem+json") {
           const json = await response.json();
           throw new ValidationError(json?.errors);
         }
@@ -144,7 +141,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
 
 async function tryRefreshToken(method: MethodType, uri: string, options: QueryPostOptions<any>): Promise<Response> {
   const refreshToken = await getStoredRefreshToken();
-  const user = await getStoredUser();
+  const user = await getUserSession();
   if (refreshToken && user && !refreshTokenMutex.isLocked()) {
     return refreshTokenMutex.runExclusive(async () => {
       if (__DEV__) {

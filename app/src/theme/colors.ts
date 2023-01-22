@@ -19,7 +19,6 @@ export enum AppColors {
   blue400 = "#75B5F7"
   // pink600 = "#FF5C5C",
   //  orange600 = "#FF5C22"
-
 }
 
 export const AppTheme = {

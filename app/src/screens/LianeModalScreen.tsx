@@ -1,7 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import {
-  BackHandler, Pressable, StyleSheet, useWindowDimensions, View
-} from "react-native";
+import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 import { BottomSheetBackdropProps, BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -21,17 +19,16 @@ const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
 
 const ReturnTrip = () => {
-
   const [returnTrip, setReturnTrip] = useState(undefined);
   return (
     <Row style={styles.singleCardRow}>
-
-      {returnTrip
-        ? (<CardButton label="Départ à" value="16:00" color={AppColors.blue500} onCancel={() => setReturnTrip(undefined)} />)
-        : (<AppButton icon="plus-outline" color={AppColors.blue500} onPress={() => setReturnTrip(true)} />)}
+      {returnTrip ? (
+        <CardButton label="Départ à" value="16:00" color={AppColors.blue500} onCancel={() => setReturnTrip(undefined)} />
+      ) : (
+        <AppButton icon="plus-outline" color={AppColors.blue500} onPress={() => setReturnTrip(true)} />
+      )}
     </Row>
   );
-
 };
 
 const ShareList = ({ onItemAdded }) => {
@@ -47,22 +44,15 @@ const ShareList = ({ onItemAdded }) => {
   };
 
   return (
-
-    <Column
-      spacing={8}
-      style={{ alignItems: "flex-start" }}
-    >
+    <Column spacing={8} style={{ alignItems: "flex-start" }}>
       {shareList.map((v, i) => (
         <CardButton value={v} key={i} onCancel={() => removeItem(i)} color={AppColors.blue500} />
       ))}
       <AppButton icon="plus-outline" color={AppColors.blue500} onPress={addContact} />
-
     </Column>
-
   );
 };
 export const LianeModalScreen = () => {
-
   // variables
   const snapPoints = useMemo(() => ["75%"], []);
   const insets = useSafeAreaInsets();
@@ -80,25 +70,16 @@ export const LianeModalScreen = () => {
     bottomSheetRef.current?.close();
   };
 
-  const backHandler = BackHandler.addEventListener(
-    "hardwareBackPress",
-    () => {
-      closeModal();
-      backHandler.remove();
-      return true;
-    }
-  );
+  const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+    closeModal();
+    backHandler.remove();
+    return true;
+  });
 
   const renderLianeBackdrop = ({ animatedIndex, style }: BottomSheetBackdropProps) => {
     // TODO translate LianeHouseVector
     const containerAnimatedStyle = useAnimatedStyle(() => ({
-      opacity: interpolate(
-        animatedIndex.value,
-        [-1, -1, 0],
-        [0, 0, 1],
-        Extrapolate.CLAMP
-      )
-
+      opacity: interpolate(animatedIndex.value, [-1, -1, 0], [0, 0, 1], Extrapolate.CLAMP)
     }));
     // styles
     const containerStyle = useMemo(
@@ -124,7 +105,6 @@ export const LianeModalScreen = () => {
 
   return (
     <>
-
       <AppButton icon="plus-outline" title="Nouvelle Liane" onPress={() => openModal()} />
 
       <BottomSheetModal
@@ -134,23 +114,15 @@ export const LianeModalScreen = () => {
         handleComponent={null}
         backgroundStyle={styles.modalBackground}
         backdropComponent={renderLianeBackdrop}
-        enablePanDownToClose={false}
-      >
+        enablePanDownToClose={false}>
         <View style={[styles.contentContainer, { marginBottom: insets.bottom + 40 }]}>
           <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <AppText style={styles.title}>
-              Lancer une liane
-            </AppText>
+            <AppText style={styles.title}>Lancer une liane</AppText>
             <Pressable style={{ alignSelf: "center", paddingTop: 8, paddingHorizontal: 8 }} onPress={closeModal}>
               <AppButton icon="arrow-right" color={AppColors.white} kind="circular" foregroundColor={AppColors.orange500} />
             </Pressable>
           </Row>
-          <ScrollView
-            ref={scrollViewRef}
-            style={{ marginTop: 12 }}
-            overScrollMode="never"
-            fadingEdgeLength={24}
-          >
+          <ScrollView ref={scrollViewRef} style={{ marginTop: 12 }} overScrollMode="never" fadingEdgeLength={24}>
             <View style={styles.mainSectionContainer}>
               <Column spacing={verticalCardSpacing}>
                 <Row spacing={horizontalCardSpacing}>
@@ -169,9 +141,7 @@ export const LianeModalScreen = () => {
 
             <Row spacing={horizontalCardSpacing}>
               <AppIcon name="swap-outline" color={AppColors.white} />
-              <AppText style={styles.sectionTitle}>
-                Ajouter un retour
-              </AppText>
+              <AppText style={styles.sectionTitle}>Ajouter un retour</AppText>
             </Row>
             <View style={styles.smallSectionContainer}>
               <ReturnTrip />
@@ -179,20 +149,14 @@ export const LianeModalScreen = () => {
 
             <Row spacing={horizontalCardSpacing} style={{ alignItems: "center" }}>
               <AppIcon name="share-outline" color={AppColors.white} />
-              <AppText style={styles.sectionTitle}>
-                Partager avec
-              </AppText>
+              <AppText style={styles.sectionTitle}>Partager avec</AppText>
             </Row>
             <View style={styles.smallSectionContainer}>
               <ShareList onItemAdded={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: false }))} />
             </View>
-
           </ScrollView>
-
         </View>
-
       </BottomSheetModal>
-
     </>
   );
 };
@@ -235,5 +199,4 @@ const styles = StyleSheet.create({
     width: "50%",
     paddingRight: horizontalCardSpacing / 2
   }
-
 });
