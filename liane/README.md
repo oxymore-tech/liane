@@ -29,7 +29,7 @@ remove yarn.lock
 - Configure prettier
 - Copy .svgrc
 
-- Android changes
+### Android changes
 - Move package com.liane to tech.oxymore.liane in android in src dir (dir and .java files)
 - Edit android/app/build.gradle
   - package
@@ -50,7 +50,16 @@ remove yarn.lock
 ```
 - Copy debug.keystore
   
-- Install npm deps
+### Apply IOS changes
+
+- folder ios/liane
+  - (Images.xcassets)
+  - edit Info.plist
+
+- folder liane.xcodeproj
+  - edit project.pbxproj (add resources and mapbox entries) 
+
+### Install npm deps
 
 ```bash
 npm install --save-dev          \
