@@ -94,8 +94,7 @@ jobs:
           
       - name: Write Google Services File
         run: |
-          echo "$MY_SECRET" >> ./app/android/app
-          cat google-services.json
+          echo "$MY_SECRET" >> ./app/android/app/google-services.json
         env:
           MY_SECRET: ${{ secrets.GOOGLE_SERVICES_JSON }}
             
