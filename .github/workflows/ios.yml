@@ -96,6 +96,13 @@ jobs:
           agvtool new-marketing-version ${{steps.version.outputs.tag}}
           agvtool new-version -all ${{github.run_number}}
 
+      - name: Write Google Services File
+        run: |
+          echo "$MY_SECRET" >> ./app/ios
+          cat GoogleService-Info.plist
+        env:
+          MY_SECRET: ${{ secrets.GOOGLE_SERVICES_PLIST }}
+      
       - name: Build IOS App
         uses: yukiarrr/ios-build-action@v1.4.0
         with:
