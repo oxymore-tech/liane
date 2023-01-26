@@ -27,6 +27,11 @@ target 'liane' do
   # Flags change depending on the env values.
   flags = get_default_flags()
 
+   pod 'Firebase', :modular_headers => true
+   pod 'FirebaseCore', :modular_headers => true
+   pod 'GoogleUtilities', :modular_headers => true
+   $RNFirebaseAsStaticFramework = true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # Hermes is now enabled by default. Disable by setting this flag to false.
@@ -48,7 +53,12 @@ target 'liane' do
     # Pods for testing
   end
 
+  pre_install do |installer|
+      $RNMapboxMaps.pre_install(installer)
+   end
+
   post_install do |installer|
+    $RNMapboxMaps.post_install(installer)
     react_native_post_install(
       installer,
       # Set `mac_catalyst_enabled` to `true` in order to apply patches
