@@ -96,11 +96,12 @@ jobs:
           agvtool new-marketing-version ${{steps.version.outputs.tag}}
           agvtool new-version -all ${{github.run_number}}
 
-      - name: Write Google Services File
-        run: |
-          echo "$MY_SECRET" >> ./app/ios/GoogleService-Info.plist
+      - name: Update Google Services File
+        uses: falnyr/replace-env-vars-action@master
         env:
-          MY_SECRET: ${{ secrets.GOOGLE_SERVICES_PLIST }}
+          API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY_IOS }}
+        with:
+          filename: ./app/ios/GoogleService-Info.plist
       
       - name: Build IOS App
         uses: yukiarrr/ios-build-action@v1.4.0

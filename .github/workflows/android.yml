@@ -92,13 +92,13 @@ jobs:
           fileName: 'release.keystore'
           encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
           
-      - name: Write Google Services File
-        run: |
-          echo "$MY_SECRET" >> ./app/android/app/google-services.json
-          cat ./app/android/app/google-services.json
+      - name: Update Google Services File
+        uses: falnyr/replace-env-vars-action@master
         env:
-          MY_SECRET: ${{ secrets.GOOGLE_SERVICES_JSON }}
-            
+          API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
+        with:
+          filename: ./app/android/app/google-services.json
+        
       - name: Generate App Bundle
         working-directory: ./app
         run: |
@@ -132,7 +132,7 @@ jobs:
       - name: Upload App to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          serviceAccountJson: app/android/app/google-services.json
           packageName: tech.oxymore.liane
           releaseFiles: app/android/app/build/outputs/bundle/release/*.aab
           track: beta
