@@ -6,7 +6,7 @@ export const AppDimensions = {
     small: 10,
     default: 12,
     medium: 20,
-    big: 28
+    large: 28
   },
 
   button: {

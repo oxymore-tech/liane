@@ -8,6 +8,7 @@ import LianeLogo from "@/assets/logo.svg";
 import { AppContext } from "@/components/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
+import { AppDimensions } from "@/theme/dimensions";
 
 export enum SignUpStep {
   SetPhoneNumber,
@@ -37,7 +38,7 @@ const SignUpScreen = () => {
       await services.auth.sendSms(phoneNumber);
       setStep(SignUpStep.EnterCode);
     } catch (e) {
-      console.log("sign up error ", e);
+      console.error("Sign up error ", e);
       setError("Impossible d'effectuer la demande");
     }
   }, [phoneNumber, services.auth]);
@@ -56,12 +57,12 @@ const SignUpScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <LianeLogo width="75%" />
+        <LianeLogo style={styles.image} width="75%" />
       </View>
 
       <View>
         <AppText style={styles.helperText}>
-          {step === SignUpStep.SetPhoneNumber ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code")}
+          {step === SignUpStep.SetPhoneNumber ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
         </AppText>
         {step === SignUpStep.SetPhoneNumber ? (
           <PhoneNumberInput phoneNumber={phoneNumber} onChange={setPhoneNumber} onValidate={signUp} />
@@ -77,13 +78,14 @@ const SignUpScreen = () => {
 const styles = StyleSheet.create({
   container: {
     height: "100%",
-    backgroundColor: AppColors.gray700
+    backgroundColor: AppColors.blue700
   },
   helperText: {
     marginHorizontal: 16,
     marginVertical: 4,
     textAlign: "center",
-    color: AppColors.white
+    color: AppColors.pink500,
+    fontSize: AppDimensions.textSize.medium
   },
   imageContainer: {
     alignItems: "center",
@@ -91,7 +93,8 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   image: {
-    width: "64%"
+    width: "64%",
+    color: AppColors.yellow500
   },
   errorText: {
     color: "red", // TODO red 600,

@@ -3,6 +3,7 @@ import { AppTextInput } from "@/components/base/AppTextInput";
 import { Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
+import { AppDimensions } from "@/theme/dimensions";
 
 type PhoneNumberInputProps = {
   onValidate: () => void;
@@ -11,40 +12,53 @@ type PhoneNumberInputProps = {
 };
 
 export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNumberInputProps) => {
+  const disabled = phoneNumber.length < 10;
+
+  const buttonColor = {
+    backgroundColor: disabled ? AppColors.gray400 : AppColors.blue500
+  };
+
   return (
-    <View style={styles.inputContainer}>
-      <AppTextInput
-        style={styles.input}
-        placeholder=""
-        autoFocus={true}
-        returnKeyLabel={"next"}
-        onChangeText={onChange}
-        keyboardType={"phone-pad"}
-        autoComplete={"tel"}
-        textContentType={"telephoneNumber"}
-        onSubmitEditing={onValidate}
-        maxLength={10}
-      />
-      <Pressable style={styles.button} disabled={phoneNumber.length < 10} onPress={onValidate}>
-        <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
-      </Pressable>
+    <View style={styles.container}>
+      <View style={styles.inputContainer}>
+        <AppTextInput
+          style={styles.input}
+          placeholder=""
+          autoFocus={true}
+          returnKeyLabel={"next"}
+          onChangeText={onChange}
+          keyboardType={"phone-pad"}
+          autoComplete={"tel"}
+          textContentType={"telephoneNumber"}
+          onSubmitEditing={onValidate}
+          maxLength={10}
+        />
+        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={onValidate}>
+          <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
+        </Pressable>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    display: "flex",
+    alignItems: "center"
+  },
   inputContainer: {
     marginVertical: 16,
-    marginHorizontal: 32,
     height: 52,
+    width: 250,
     backgroundColor: AppColors.white,
+    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     borderRadius: 52,
     paddingLeft: 20
   },
   input: {
-    fontSize: 24,
+    fontSize: AppDimensions.textSize.large,
     color: AppColors.gray800
   },
   button: {
@@ -52,7 +66,6 @@ const styles = StyleSheet.create({
     width: 52,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: AppColors.gray400,
     borderTopRightRadius: 52,
     borderBottomRightRadius: 52
   }

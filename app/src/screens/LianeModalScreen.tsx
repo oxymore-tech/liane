@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.blue700
   },
   title: {
-    fontSize: AppDimensions.textSize.big,
+    fontSize: AppDimensions.textSize.large,
     color: AppColors.white,
     paddingTop: 8,
     paddingHorizontal: 8

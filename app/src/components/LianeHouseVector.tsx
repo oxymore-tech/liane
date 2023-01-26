@@ -1,7 +1,5 @@
 import React from "react";
-import Svg, {
-  ClipPath, Defs, G, Path, Rect
-} from "react-native-svg";
+import Svg, { ClipPath, Defs, G, Path, Rect } from "react-native-svg";
 import { View } from "react-native";
 
 export type LianeHouseVectorProps = {
@@ -13,8 +11,9 @@ export type LianeHouseVectorProps = {
  * SVG component for future animation
  */
 export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176 }: LianeHouseVectorProps) => {
-  let width; let height; let
-    style;
+  let width;
+  let height;
+  let style;
 
   // Place the SVG in the given bounding box
   if (maxWidth - 333 > maxHeight - 176) {
@@ -32,10 +31,8 @@ export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176 }: LianeHouse
   return (
     <View style={style}>
       <Svg width={width} height={height} viewBox="0 0 333 176" fill="none">
-
-        {/* eslint-disable max-len */}
+        {}
         <G clip-path="url(#clip0_0_1)">
-
           <Path
             d="M70.552 44.896C70.8728 37.3474 72.1538 29.422 76.9123 23.5547C81.6708 17.6874 90.8487 14.8519 97.0331 19.1822C102.08 22.7159 103.566 29.7028 102.664 35.8005C101.762 41.8982 98.9523 47.5193 97.0353 53.3732C91.6244 69.8943 93.614 88.6778 102.365 103.695C104.855 107.967 107.892 112.012 109.341 116.74C110.182 119.485 111.115 127.991 107.255 129.299C104.244 130.322 99.9758 124.026 98.1982 122.019C91.9092 114.914 86.5641 106.985 82.2954 98.5096C73.9964 82.0015 69.7623 63.3858 70.552 44.896Z"
             fill="#0B79F7"
@@ -85,12 +82,7 @@ export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176 }: LianeHouse
         <Path d="M310.507 131.734H299.555V142.686H310.507V131.734Z" fill="#1B1265" />
         <Defs>
           <ClipPath id="clip0_0_1">
-            <Rect
-              width="140.444"
-              height="132.608"
-              fill="white"
-              transform="translate(0 51.3018) rotate(-21.425)"
-            />
+            <Rect width="140.444" height="132.608" fill="white" transform="translate(0 51.3018) rotate(-21.425)" />
           </ClipPath>
         </Defs>
       </Svg>
