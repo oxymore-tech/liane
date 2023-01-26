@@ -93,11 +93,13 @@ jobs:
           encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
           
       - name: Update Google Services File
-        uses: falnyr/replace-env-vars-action@master
+        uses: franzbischoff/replace_envs@v1
         env:
           API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
         with:
-          filename: ./app/android/app/google-services.json
+          from_file: ./app/android/app/google-services.json
+          to_file: ./app/android/app/google-services.json
+          commit: false
         
       - name: Generate App Bundle
         working-directory: ./app
@@ -132,7 +134,7 @@ jobs:
       - name: Upload App to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJson: app/android/app/google-services.json
+          serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON_TEXT }}
           packageName: tech.oxymore.liane
           releaseFiles: app/android/app/build/outputs/bundle/release/*.aab
           track: beta

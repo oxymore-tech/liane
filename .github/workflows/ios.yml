@@ -97,11 +97,13 @@ jobs:
           agvtool new-version -all ${{github.run_number}}
 
       - name: Update Google Services File
-        uses: falnyr/replace-env-vars-action@master
+        uses: franzbischoff/replace_envs@v1
         env:
-          API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY_IOS }}
+          API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
         with:
-          filename: ./app/ios/GoogleService-Info.plist
+          from_file: ./app/ios/GoogleService-Info.plist
+          to_file: ./app/ios/GoogleService-Info.plist
+          commit: false
       
       - name: Build IOS App
         uses: yukiarrr/ios-build-action@v1.4.0
