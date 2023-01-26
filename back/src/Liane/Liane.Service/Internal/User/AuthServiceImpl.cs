@@ -80,22 +80,22 @@ public sealed class AuthServiceImpl : IAuthService
         }
     }
 
-    public async Task<AuthResponse> Login(string phone, string code, string? pushToken)
+    public async Task<AuthResponse> Login(AuthRequest request)
     {
-        if (phone.Equals(authSettings.TestAccount) && code.Equals(authSettings.TestCode))
+        if (request.Phone.Equals(authSettings.TestAccount) && request.Code.Equals(authSettings.TestCode))
         {
             var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, true);
             return GenerateAuthResponse(user, null);
         }
 
-        var phoneNumber = ParseNumber(phone);
+        var phoneNumber = ParseNumber(request.Phone);
 
         if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string expectedCode))
         {
             throw new UnauthorizedAccessException("Invalid code");
         }
 
-        if (expectedCode != code)
+        if (expectedCode != request.Code)
         {
             throw new UnauthorizedAccessException("Invalid code");
         }
@@ -116,17 +116,17 @@ public sealed class AuthServiceImpl : IAuthService
             .SetOnInsert(p => p.IsAdmin, false)
             .Set(p => p.RefreshToken, encryptedToken)
             .Set(p => p.Salt, salt)
-            .Set(p => p.PushToken, pushToken);
+            .Set(p => p.PushToken, request.PushToken);
         await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
         var authUser = new AuthUser(userId.ToString(), number, dbUser?.IsAdmin ?? false);
         return GenerateAuthResponse(authUser, refreshToken);
     }
 
-    public async Task<AuthResponse> RefreshToken(string userId, string refreshToken)
+    public async Task<AuthResponse> RefreshToken(RefreshTokenRequest request)
     {
         var dbUser = await mongo.GetCollection<DbUser>()
-            .Find(u => u.Id == new ObjectId(userId))
+            .Find(u => u.Id == new ObjectId(request.UserId))
             .FirstOrDefaultAsync();
 
         if (dbUser.RefreshToken is null)
@@ -134,19 +134,19 @@ public sealed class AuthServiceImpl : IAuthService
             throw new UnauthorizedAccessException();
         }
 
-        if (dbUser.RefreshToken != HashString(refreshToken, Convert.FromBase64String(dbUser.Salt!)))
+        if (dbUser.RefreshToken != HashString(request.RefreshToken, Convert.FromBase64String(dbUser.Salt!)))
         {
-            await RevokeRefreshToken(userId);
+            await RevokeRefreshToken(request.UserId);
             throw new UnauthorizedAccessException();
         }
 
         var (newRefreshToken, encryptedToken, salt) = GenerateRefreshToken();
         await mongo.GetCollection<DbUser>()
-            .UpdateOneAsync(u => u.Id == new ObjectId(userId), Builders<DbUser>.Update
+            .UpdateOneAsync(u => u.Id == new ObjectId(request.UserId), Builders<DbUser>.Update
                 .Set(p => p.RefreshToken, encryptedToken)
                 .Set(p => p.Salt, salt));
 
-        var authUser = new AuthUser(userId, dbUser.Phone, dbUser.IsAdmin);
+        var authUser = new AuthUser(request.UserId, dbUser.Phone, dbUser.IsAdmin);
         return GenerateAuthResponse(authUser, newRefreshToken);
     }
 

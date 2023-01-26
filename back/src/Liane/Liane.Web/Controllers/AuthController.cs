@@ -26,18 +26,17 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("login")]
     [DisableAuth]
-    public Task<AuthResponse> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string? pushToken)
+    public Task<AuthResponse> Login([FromBody] AuthRequest request)
     {
-        return authService.Login(phone, code, pushToken);
+        return authService.Login(request);
     }
 
     [HttpPost("token")]
     [DisableAuth]
-    public Task<AuthResponse> RefreshToken([FromQuery] string userId, [FromBody] string refreshToken)
+    public Task<AuthResponse> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        return authService.RefreshToken(userId, refreshToken);
+        return authService.RefreshToken(request);
     }
-    
     
     [HttpPost("logout")]
     public Task Logout()

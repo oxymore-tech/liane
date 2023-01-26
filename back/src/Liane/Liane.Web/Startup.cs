@@ -8,6 +8,7 @@ using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Match;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -65,6 +66,8 @@ public static class Startup
         services.AddService<ChatServiceImpl>();
         services.AddService<IntentMatchingServiceImpl>();
         services.AddService<LianeServiceImpl>();
+        
+        services.AddService<NotificationServiceImpl>();
     }
 
     public static void StartCurrentModule(string[] args)

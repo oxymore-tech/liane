@@ -2,7 +2,7 @@ import { API_URL, APP_ENV } from "@env";
 import { Mutex } from "async-mutex";
 import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import { clearStorage, getStoredRefreshToken, getStoredAccessToken, getUserSession, processAuthResponse } from "@/api/storage";
+import { clearStorage, getRefreshToken, getAccessToken, getUserSession, processAuthResponse } from "@/api/storage";
 import { AuthResponse } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
@@ -140,7 +140,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
 }
 
 async function tryRefreshToken(method: MethodType, uri: string, options: QueryPostOptions<any>): Promise<Response> {
-  const refreshToken = await getStoredRefreshToken();
+  const refreshToken = await getRefreshToken();
   const user = await getUserSession();
   if (refreshToken && user && !refreshTokenMutex.isLocked()) {
     return refreshTokenMutex.runExclusive(async () => {
@@ -149,7 +149,7 @@ async function tryRefreshToken(method: MethodType, uri: string, options: QueryPo
       }
       // Call refresh token endpoint
       try {
-        const res = await postAs<AuthResponse>("/auth/token", { body: refreshToken, params: { userId: user.id } });
+        const res = await postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } });
         await processAuthResponse(res);
         // Retry query
         return await fetchAndCheck(method, uri, options);
@@ -167,7 +167,7 @@ async function tryRefreshToken(method: MethodType, uri: string, options: QueryPo
 
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
-  const token = await getStoredAccessToken();
+  const token = await getAccessToken();
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }

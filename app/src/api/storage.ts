@@ -48,7 +48,7 @@ async function getEncryptedString(key: string): Promise<string | undefined> {
   }
 }
 
-export async function getStoredAccessToken(): Promise<string | undefined> {
+export async function getAccessToken(): Promise<string | undefined> {
   return getEncryptedString("access_token");
 }
 
@@ -56,7 +56,7 @@ export async function storeAccessToken(token?: string | undefined) {
   return storeEncryptedString("access_token", token);
 }
 
-export async function getStoredRefreshToken(): Promise<string | undefined> {
+export async function getRefreshToken(): Promise<string | undefined> {
   return getEncryptedString("refresh_token");
 }
 

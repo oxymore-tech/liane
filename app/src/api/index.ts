@@ -2,10 +2,12 @@ export type Identity = Readonly<{
   id?: string;
 }>;
 
-export type Entity = Readonly<{
-  createdBy?: Ref<User>;
-  createdAt?: Date;
-} & Identity>;
+export type Entity = Readonly<
+  {
+    createdBy?: Ref<User>;
+    createdAt?: Date;
+  } & Identity
+>;
 
 export type Ref<T extends Identity> = string | T;
 
@@ -18,15 +20,23 @@ export type AuthUser = Readonly<{
 export type AuthResponse = Readonly<{
   user: AuthUser;
   token: {
-    accessToken: string,
-    refreshToken: string
+    accessToken: string;
+    refreshToken: string;
   };
 }>;
 
-export type User = Readonly<{
+export type AuthRequest = Readonly<{
   phone: string;
-  token: string;
-} & Entity>;
+  code: string;
+  pushToken?: string;
+}>;
+
+export type User = Readonly<
+  {
+    phone: string;
+    token: string;
+  } & Entity
+>;
 
 export type LatLng = Readonly<{
   lat: number;
@@ -39,21 +49,23 @@ export enum LocationPermissionLevel {
   ALWAYS = "always"
 }
 
-export type RallyingPoint = Readonly<{
-  location: LatLng;
-  label: string;
-} & Identity>;
+export type RallyingPoint = Readonly<
+  {
+    location: LatLng;
+    label: string;
+  } & Identity
+>;
 
 export type LianeRequest = Readonly<{
-  "id"?: string,
-  "departureTime": string,
-  "returnTime"?: string,
-  "driverCapacity": number,
-  "from": string,
-  "to": string,
-  "shareWith":{
-    "id": string
-  }[]
+  id?: string;
+  departureTime: string;
+  returnTime?: string;
+  driverCapacity: number;
+  from: string;
+  to: string;
+  shareWith: {
+    id: string;
+  }[];
 }>;
 
 export type Liane = Readonly<{
@@ -87,12 +99,14 @@ export type TimeOnly = number;
 // A date represented by a string in the ISO format : "YYYY-MM-DD"
 export type DateOnly = string;
 
-export type TripIntent = Readonly<{
-  from: Ref<RallyingPoint>;
-  to: Ref<RallyingPoint>;
-  goTime: TimeOnly;
-  returnTime?: TimeOnly;
-} & Entity>;
+export type TripIntent = Readonly<
+  {
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    goTime: TimeOnly;
+    returnTime?: TimeOnly;
+  } & Entity
+>;
 
 export type Match = Readonly<{
   user: Ref<User>;
@@ -101,23 +115,27 @@ export type Match = Readonly<{
 }>;
 
 export type TripIntentMatch = Readonly<{
-  tripIntent: TripIntent,
-  from: RallyingPoint,
-  to: RallyingPoint,
-  matches: Match[]
+  tripIntent: TripIntent;
+  from: RallyingPoint;
+  to: RallyingPoint;
+  matches: Match[];
 }>;
 
-export type ChatMessage = Readonly<{
-  text: string;
-} & Entity>;
+export type ChatMessage = Readonly<
+  {
+    text: string;
+  } & Entity
+>;
 
-export type TypedMessage = Readonly<{
-  type: "proposal";
-} & ChatMessage>;
+export type TypedMessage = Readonly<
+  {
+    type: "proposal";
+  } & ChatMessage
+>;
 
 export type Route = Readonly<{
-  coordinates: LatLng[],
-  duration: number,
-  distance: number,
-  delta?: number
+  coordinates: LatLng[];
+  duration: number;
+  distance: number;
+  delta?: number;
 }>;

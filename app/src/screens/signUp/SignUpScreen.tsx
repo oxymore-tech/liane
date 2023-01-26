@@ -9,6 +9,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
+import { UnauthorizedError } from "@/api/exception";
 
 export enum SignUpStep {
   SetPhoneNumber,
@@ -46,11 +47,15 @@ const SignUpScreen = () => {
   const signIn = useCallback(async () => {
     try {
       const pushToken = await getPushToken();
-      const authUser = await services.auth.login(phoneNumber, code, pushToken);
-      await setAuthUser(authUser);
-    } catch (e) {
-      console.warn("Login error", e);
-      await setError("Le code est incorrect");
+      const authUser = await services.auth.login({ phone: phoneNumber, code, pushToken });
+      setAuthUser(authUser);
+    } catch (e: any) {
+      if (e instanceof UnauthorizedError) {
+        setError("Le code est incorrect");
+      } else {
+        console.warn("Error during login", e);
+        setError(e.toString());
+      }
     }
   }, [services.auth, phoneNumber, code, setAuthUser]);
 
