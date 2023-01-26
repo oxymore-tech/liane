@@ -28,7 +28,7 @@
       ],
       "api_key": [
         {
-          "current_key": "__API_KEY__"
+          "current_key": "${API_KEY}"
         }
       ],
       "services": {
