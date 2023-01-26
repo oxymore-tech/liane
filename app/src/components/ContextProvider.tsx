@@ -1,9 +1,9 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { View } from "react-native";
 import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { UnauthorizedError } from "@/api/exception";
+import { initializeRum, registerRumUser } from "@/api/rum";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -32,7 +32,7 @@ async function initContext(service: AppServices): Promise<{
 }> {
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.me();
-  // await initializeRum();
+  await initializeRum();
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
   return { authUser, locationPermission, position };
@@ -95,9 +95,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   setAuthUser = async (a?: AuthUser) => {
     try {
-      // if (a) {
-      //   await registerRumUser(a);
-      // }
+      if (a) {
+        await registerRumUser(a);
+      }
       this.setState(prev => ({
         ...prev,
         authUser: a
@@ -113,20 +113,18 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     const { setLocationPermission, setAuthUser } = this;
 
     return (
-      <View style={{ flex: 1 }}>
-        <AppContext.Provider
-          value={{
-            appLoaded,
-            locationPermission,
-            setLocationPermission,
-            setAuthUser,
-            position,
-            authUser,
-            services: SERVICES
-          }}>
-          {children}
-        </AppContext.Provider>
-      </View>
+      <AppContext.Provider
+        value={{
+          appLoaded,
+          locationPermission,
+          setLocationPermission,
+          setAuthUser,
+          position,
+          authUser,
+          services: SERVICES
+        }}>
+        {children}
+      </AppContext.Provider>
     );
   }
 }
