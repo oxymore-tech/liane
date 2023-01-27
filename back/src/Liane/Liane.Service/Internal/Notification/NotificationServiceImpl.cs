@@ -9,7 +9,7 @@ public sealed class NotificationServiceImpl : INotificationService
 {
   public NotificationServiceImpl(FirebaseSettings firebaseSettings)
   {
-    FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromAccessToken(firebaseSettings.AccessToken) });
+    FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromFile(firebaseSettings.ServiceAccountFile) });
   }
 
   public Task<string> SendAsync(string deviceToken, string title, string message)

@@ -33,6 +33,8 @@ services:
     depends_on:
       - mongo
       - redis
+    volumes:
+      - "./service-account.json:/app/service-account.json:ro"
     environment:
       LIANE_Mongo__Username: ${MONGO_USERNAME}
       LIANE_Mongo__Password: ${MONGO_PASSWORD}
@@ -44,7 +46,6 @@ services:
       LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
       LIANE_Auth__TestAccount: ${AUTH_TEST_ACCOUNT}
       LIANE_Auth__TestCode: ${AUTH_TEST_CODE}
-      LIANE_Firebase__AccessToken: ${FIREBASE_ACCESS_TOKEN}
     restart: unless-stopped
     networks:
       - gateway

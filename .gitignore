@@ -19,6 +19,7 @@ venv/
 .DS_Store
 
 deploy/.env
+deploy/service-account.json
 dump.rdb
 .env.local
 deploy/db/user.json

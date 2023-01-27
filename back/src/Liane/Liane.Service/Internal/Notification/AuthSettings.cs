@@ -1,3 +1,3 @@
 namespace Liane.Service.Internal.Notification;
 
-public sealed record FirebaseSettings(string AccessToken);
+public sealed record FirebaseSettings(string ServiceAccountFile);
