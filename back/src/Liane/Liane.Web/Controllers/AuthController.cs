@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Liane.Api.User;
+using Liane.Service.Internal.Notification;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,37 +11,45 @@ namespace Liane.Web.Controllers;
 [RequiresAuth]
 public sealed class AuthController : ControllerBase
 {
-    private readonly IAuthService authService;
+  private readonly IAuthService authService;
+  private readonly INotificationService notificationService;
 
-    public AuthController(IAuthService authService)
-    {
-        this.authService = authService;
-    }
+  public AuthController(IAuthService authService, INotificationService notificationService)
+  {
+    this.authService = authService;
+    this.notificationService = notificationService;
+  }
 
-    [HttpPost("sms")]
-    [DisableAuth]
-    public Task SendSms([FromQuery] string phone)
-    {
-        return authService.SendSms(phone);
-    }
+  [HttpPost("sms")]
+  [DisableAuth]
+  public Task SendSms([FromQuery] string phone)
+  {
+    return authService.SendSms(phone);
+  }
 
-    [HttpPost("login")]
-    [DisableAuth]
-    public Task<AuthResponse> Login([FromBody] AuthRequest request)
-    {
-        return authService.Login(request);
-    }
+  [HttpPost("login")]
+  [DisableAuth]
+  public Task<AuthResponse> Login([FromBody] AuthRequest request)
+  {
+    return authService.Login(request);
+  }
 
-    [HttpPost("token")]
-    [DisableAuth]
-    public Task<AuthResponse> RefreshToken([FromBody] RefreshTokenRequest request)
-    {
-        return authService.RefreshToken(request);
-    }
-    
-    [HttpPost("logout")]
-    public Task Logout()
-    {
-        return authService.Logout();
-    }
+  [HttpPost("token")]
+  [DisableAuth]
+  public Task<AuthResponse> RefreshToken([FromBody] RefreshTokenRequest request)
+  {
+    return authService.RefreshToken(request);
+  }
+
+  [HttpPost("logout")]
+  public Task Logout()
+  {
+    return authService.Logout();
+  }
+
+  [HttpPost("notify")]
+  public Task<string> Notify([FromQuery] string phone, [FromQuery] string title, [FromQuery] string message)
+  {
+    return notificationService.SendTo(phone, title, message);
+  }
 }

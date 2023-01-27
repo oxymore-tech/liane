@@ -52,7 +52,7 @@ public sealed class AuthServiceImpl : IAuthService
 
         if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
         {
-            var phoneNumber = ParseNumber(phone);
+            var phoneNumber = phone.ToPhoneNumber();
 
             if (smsCodeCache.TryGetValue($"attempt:{phoneNumber}", out _))
             {
@@ -88,7 +88,7 @@ public sealed class AuthServiceImpl : IAuthService
             return GenerateAuthResponse(user, null);
         }
 
-        var phoneNumber = ParseNumber(request.Phone);
+        var phoneNumber = request.Phone.ToPhoneNumber();
 
         if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string expectedCode))
         {
@@ -104,16 +104,18 @@ public sealed class AuthServiceImpl : IAuthService
 
         var collection = mongo.GetCollection<DbUser>();
 
-        var dbUser = (await collection.FindAsync(u => u.Phone == number))
-            .FirstOrDefault();
+        var dbUser = await collection.Find(u => u.Phone == number)
+            .FirstOrDefaultAsync();
 
         var (refreshToken, encryptedToken, salt) = GenerateRefreshToken();
 
         var userId = dbUser?.Id ?? ObjectId.GenerateNewId();
 
+        var createdAt = DateTime.UtcNow;
         var update = Builders<DbUser>.Update
             .SetOnInsert(p => p.Phone, number)
             .SetOnInsert(p => p.IsAdmin, false)
+            .SetOnInsert(p => p.CreatedAt, createdAt)
             .Set(p => p.RefreshToken, encryptedToken)
             .Set(p => p.Salt, salt)
             .Set(p => p.PushToken, request.PushToken);
@@ -181,18 +183,6 @@ public sealed class AuthServiceImpl : IAuthService
     public async Task Logout()
     {
         await RevokeRefreshToken(currentContext.CurrentUser().Id);
-    }
-
-    private static PhoneNumber ParseNumber(string number)
-    {
-        var trim = number.Trim();
-
-        if (trim.StartsWith("0"))
-        {
-            trim = $"+33{trim[1..]}";
-        }
-
-        return new PhoneNumber(trim);
     }
 
     private AuthResponse GenerateAuthResponse(AuthUser user, string? refreshToken)

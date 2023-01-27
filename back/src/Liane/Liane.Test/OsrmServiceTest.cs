@@ -16,7 +16,7 @@ public sealed class OsrmServiceTest
 
     public OsrmServiceTest()
     {
-        tested = new OsrmClient(new OsrmSettings(new Uri("https://liane.app:5000")));
+        tested = new OsrmClient(new OsrmSettings(new Uri("http://liane.app:5000")));
         coordinates = ImmutableList.Create(Positions.Mende, Positions.Florac);
     }
 

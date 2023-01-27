@@ -50,7 +50,6 @@ public static class Startup
         services.AddService<OsrmClient>();
         services.AddService<RoutingServiceImpl>();
         services.AddService<AddressServiceNominatimImpl>();
-        services.AddService<UserServiceImpl>();
         services.AddSettings<OsrmSettings>(context);
         services.AddSettings<NominatimSettings>(context);
 
@@ -60,6 +59,7 @@ public static class Startup
         services.AddSettings<TwilioSettings>(context);
         services.AddSettings<AuthSettings>(context);
         services.AddService<AuthServiceImpl>();
+        services.AddService<UserServiceImpl>();
 
         services.AddService<RallyingPointServiceImpl>();
         services.AddService<TripIntentServiceImpl>();
