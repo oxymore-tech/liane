@@ -23,7 +23,7 @@ export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNum
       <View style={styles.inputContainer}>
         <AppTextInput
           style={styles.input}
-          placeholder=""
+          placeholder="0XXXXXXXXX"
           autoFocus={true}
           returnKeyLabel={"next"}
           onChangeText={onChange}
@@ -49,7 +49,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginVertical: 16,
     height: 52,
-    width: 250,
+    width: "75%",
+    minWidth: 250,
     backgroundColor: AppColors.white,
     display: "flex",
     flexDirection: "row",

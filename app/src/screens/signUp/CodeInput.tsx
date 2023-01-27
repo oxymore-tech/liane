@@ -46,7 +46,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginVertical: 16,
     height: 52,
-    width: 250,
+    width: "75%",
+    minWidth: 250,
     backgroundColor: AppColors.white,
     display: "flex",
     flexDirection: "row",

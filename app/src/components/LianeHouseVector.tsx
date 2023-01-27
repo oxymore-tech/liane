@@ -1,16 +1,17 @@
 import React from "react";
 import Svg, { ClipPath, Defs, G, Path, Rect } from "react-native-svg";
-import { View } from "react-native";
+import { ColorValue, View } from "react-native";
 
 export type LianeHouseVectorProps = {
   maxWidth?: number;
   maxHeight?: number;
+  frontColor?: ColorValue;
 };
 
 /**
  * SVG component for future animation
  */
-export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176 }: LianeHouseVectorProps) => {
+export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176, frontColor = "#C6E1FC" }: LianeHouseVectorProps) => {
   let width;
   let height;
   let style;
@@ -67,7 +68,7 @@ export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176 }: LianeHouse
           d="M261.222 56.8938L234.754 12.1722C234.754 12.1722 200.985 13.0849 200.072 12.1722C199.159 11.2595 226.54 56.8938 226.54 56.8938H261.222Z"
           fill="#1B1265"
         />
-        <Path d="M173.604 56.894V175.543H226.54V56.894L200.072 12.1724L173.604 56.894Z" fill="#C6E1FC" />
+        <Path d="M173.604 56.894V175.543H226.54V56.894L200.072 12.1724L173.604 56.894Z" fill={frontColor} />
         <Path
           d="M199.159 85.1871C194.623 85.1871 190.945 81.509 190.945 76.973C190.945 72.4369 194.623 68.7588 199.159 68.7588C203.695 68.7588 207.373 72.4369 207.373 76.973C207.373 81.5181 203.695 85.1871 199.159 85.1871Z"
           fill="#1B1265"
@@ -77,7 +78,7 @@ export const LianeHouseVector = ({ maxWidth = 333, maxHeight = 176 }: LianeHouse
           d="M332.412 111.655L305.944 85.1869C305.944 85.1869 253.921 86.0996 253.008 85.1869C252.095 84.2742 279.476 111.655 279.476 111.655H332.412Z"
           fill="#1B1265"
         />
-        <Path d="M226.54 111.655V175.543H279.476V111.655L253.008 85.187L226.54 111.655Z" fill="#C6E1FC" />
+        <Path d="M226.54 111.655V175.543H279.476V111.655L253.008 85.187L226.54 111.655Z" fill={frontColor} />
         <Path d="M260.309 131.734H249.357V142.686H260.309V131.734Z" fill="#1B1265" />
         <Path d="M310.507 131.734H299.555V142.686H310.507V131.734Z" fill="#1B1265" />
         <Defs>

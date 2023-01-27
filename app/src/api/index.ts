@@ -56,31 +56,28 @@ export type RallyingPoint = Readonly<
   } & Identity
 >;
 
-export type LianeRequest = Readonly<{
-  id?: string;
-  departureTime: string;
-  returnTime?: string;
-  driverCapacity: number;
-  from: string;
-  to: string;
-  shareWith: {
-    id: string;
-  }[];
-}>;
+export type LianeRequest = Readonly<
+  {
+    departureTime: UTCDateTime;
+    returnTime?: UTCDateTime;
+    driverCapacity: number;
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    shareWith: Ref<User>[];
+  } & Identity
+>;
 
-export type Liane = Readonly<{
-  id?: string;
-  createdBy?: Ref<User>;
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  departureTime: string;
-  /** @format date-time */
-  returnTime?: string;
-  wayPoints: WayPoint[];
-  members: LianeMember[];
-  driver?: Ref<User>;
-}>;
+export type Liane = Readonly<
+  {
+    createdBy?: Ref<User>;
+    createdAt?: UTCDateTime;
+    departureTime: UTCDateTime;
+    returnTime?: UTCDateTime;
+    wayPoints: WayPoint[];
+    members: LianeMember[];
+    driver?: Ref<User>;
+  } & Identity
+>;
 
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
@@ -93,18 +90,18 @@ export type LianeMember = Readonly<{
   to: Ref<RallyingPoint>;
 }>;
 
-// Seconds since 00:00:00, 0 <= value < 86400 (UTC)
-export type TimeOnly = number;
+// A date time in ISO 8601 format
+export type UTCDateTime = string;
 
-// A date represented by a string in the ISO format : "YYYY-MM-DD"
-export type DateOnly = string;
+// A time in ISO 8601 format
+export type UTCTimeOnly = string;
 
 export type TripIntent = Readonly<
   {
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
-    goTime: TimeOnly;
-    returnTime?: TimeOnly;
+    goTime: UTCTimeOnly;
+    returnTime?: UTCTimeOnly;
   } & Entity
 >;
 

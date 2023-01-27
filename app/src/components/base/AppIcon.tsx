@@ -3,18 +3,20 @@ import { Icon } from "react-native-eva-icons";
 import { AppColors, AppTheme } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 
-export type IconName = `${typeof EvaIconsNames[number]}-outline` | typeof EvaIconsNames[number];
+export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
 interface AppIconProps {
   name: IconName;
   color?: AppColors;
   size?: number;
 }
+
 export function AppIcon({ name, color = AppTheme.defaultTextColor, size = AppDimensions.iconSize }: AppIconProps) {
   return <Icon name={name} width={size} height={size} fill={color} />;
 }
 
-const EvaIconsNames = ["activity",
+const EvaIconsNames = [
+  "activity",
   "alert-circle",
   "alert-triangle",
   "archive",
@@ -257,4 +259,5 @@ const EvaIconsNames = ["activity",
   "volume-off",
   "volume-up",
   "wifi-off",
-  "wifi"] as const;
+  "wifi"
+] as const;
