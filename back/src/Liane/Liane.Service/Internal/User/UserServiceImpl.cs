@@ -11,9 +11,9 @@ public sealed class UserServiceImpl : IUserService
 {
   private readonly IMongoDatabase mongo;
 
-  public UserServiceImpl(IMongoDatabase mongo)
+  public UserServiceImpl(MongoSettings mongoSettings)
   {
-    this.mongo = mongo;
+    mongo = mongoSettings.GetDatabase();
   }
 
   public async Task<Api.User.User> Get(string id)
