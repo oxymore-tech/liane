@@ -4,9 +4,10 @@ import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
-import { CreateMockServices } from "@/api/service/mock";
+import { initializeNotification } from "@/api/service/notification";
 
 interface AppContextProps {
+  appLoaded: boolean;
   locationPermission: LocationPermissionLevel;
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
@@ -15,9 +16,10 @@ interface AppContextProps {
   services: AppServices;
 }
 
-const SERVICES = CreateMockServices();
+const SERVICES = CreateAppServices();
 
 export const AppContext = createContext<AppContextProps>({
+  appLoaded: false,
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {},
   setAuthUser: () => {},
@@ -31,7 +33,9 @@ async function initContext(service: AppServices): Promise<{
 }> {
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.me();
+
   await initializeRum();
+  await initializeNotification();
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
   return { authUser, locationPermission, position };
@@ -111,10 +115,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     const { appLoaded, locationPermission, position, authUser } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
-    // TODO handle loading view
-    return appLoaded ? (
+    return (
       <AppContext.Provider
         value={{
+          appLoaded,
           locationPermission,
           setLocationPermission,
           setAuthUser,
@@ -124,7 +128,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         }}>
         {children}
       </AppContext.Provider>
-    ) : null;
+    );
   }
 }
 
