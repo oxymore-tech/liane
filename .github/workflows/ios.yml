@@ -101,8 +101,8 @@ jobs:
         env:
           API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
         with:
-          from_file: ./app/ios/GoogleService-Info.plist
-          to_file: ./app/ios/GoogleService-Info.plist
+          from_file: ./app/ios/liane/GoogleService-Info.plist
+          to_file: ./app/ios/liane/GoogleService-Info.plist
           commit: false
       
       - name: Build IOS App
