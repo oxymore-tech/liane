@@ -89,17 +89,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 4,
     textAlign: "center",
-    color: AppColors.pink500,
+    color: AppColors.white,
     fontSize: AppDimensions.textSize.medium
   },
   imageContainer: {
     alignItems: "center",
-    marginVertical: "20%",
+    marginVertical: "25%",
     width: "100%"
   },
   image: {
     width: "64%",
-    color: AppColors.yellow500
+    color: AppColors.pink500
   },
   errorText: {
     color: "red", // TODO red 600,
