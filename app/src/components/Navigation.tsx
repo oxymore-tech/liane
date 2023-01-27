@@ -46,7 +46,7 @@ function Navigation() {
         name="SignUp"
         component={SignUpScreen}
         options={{ headerShown: false }}
-        initialParams={{ signUpStep: SignUpStep.SetPhoneNumber }}
+        initialParams={{ signUpStep: SignUpStep.EnterPhoneNumber }}
         getId={({ params }) => params.signUpStep}
       />
     </Stack.Navigator>

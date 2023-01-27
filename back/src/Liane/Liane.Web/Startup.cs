@@ -67,6 +67,7 @@ public static class Startup
         services.AddService<IntentMatchingServiceImpl>();
         services.AddService<LianeServiceImpl>();
         
+        services.AddSettings<FirebaseSettings>(context);
         services.AddService<NotificationServiceImpl>();
     }
 

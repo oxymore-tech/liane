@@ -4,6 +4,7 @@ import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
+import { initializeNotification } from "@/api/service/notification";
 
 interface AppContextProps {
   appLoaded: boolean;
@@ -32,7 +33,9 @@ async function initContext(service: AppServices): Promise<{
 }> {
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.me();
+
   await initializeRum();
+  await initializeNotification();
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
   return { authUser, locationPermission, position };

@@ -12,7 +12,7 @@ import { AppDimensions } from "@/theme/dimensions";
 import { UnauthorizedError } from "@/api/exception";
 
 export enum SignUpStep {
-  SetPhoneNumber,
+  EnterPhoneNumber,
   EnterCode
 }
 
@@ -27,7 +27,7 @@ async function getPushToken() {
 }
 
 const SignUpScreen = () => {
-  const [step, setStep] = useState(SignUpStep.SetPhoneNumber);
+  const [step, setStep] = useState(SignUpStep.EnterPhoneNumber);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -51,6 +51,7 @@ const SignUpScreen = () => {
       setAuthUser(authUser);
     } catch (e: any) {
       if (e instanceof UnauthorizedError) {
+        setStep(SignUpStep.EnterPhoneNumber);
         setError("Le code est incorrect");
       } else {
         console.warn("Error during login", e);
@@ -67,9 +68,9 @@ const SignUpScreen = () => {
 
       <View>
         <AppText style={styles.helperText}>
-          {step === SignUpStep.SetPhoneNumber ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+          {step === SignUpStep.EnterPhoneNumber ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
         </AppText>
-        {step === SignUpStep.SetPhoneNumber ? (
+        {step === SignUpStep.EnterPhoneNumber ? (
           <PhoneNumberInput phoneNumber={phoneNumber} onChange={setPhoneNumber} onValidate={signUp} />
         ) : (
           <CodeInput code={code} onChange={setCode} onValidate={signIn} />
