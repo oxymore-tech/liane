@@ -17,8 +17,7 @@ function token {
   fi;
   
   local token
-  echo http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333"
-  token=$(http POST "${baseUrl}/api/auth/login?phone=0000111111&code=333333" | jq -r .token.accessToken)
+  token=$(http POST "${baseUrl}/api/auth/login" phone=0000111111 code=333333 | jq -r .token.accessToken)
   echo "Authorization:Bearer${token}"
 }
 
