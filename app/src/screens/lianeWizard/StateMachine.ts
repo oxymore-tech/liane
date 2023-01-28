@@ -1,4 +1,4 @@
-import { assign, createMachine, EventObject } from "xstate";
+import { assign, createMachine, StateMachine } from "xstate";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 
 export type WizardStepsKeys = "to" | "from" | "time" | "date" | "vehicle";
@@ -28,44 +28,54 @@ const createState = <T extends unknown>(nextTarget: T, previousTarget?: T) => ({
   }
 });
 
-export interface WizardEvent extends EventObject {
-  data: Partial<LianeWizardFormData>;
-}
+type Schema = {
+  states: {
+    [name in StatesKeys]: {};
+  };
+};
 
-export const CreateLianeContextMachine = (initialValue?: LianeWizardFormData) => {
-  const states: { [name in StatesKeys]: any } = {
-    ...createStateSequence<StatesKeys>(WizardStateSequence, "overview"),
+export type WizardDataEvent = { type: "NEXT"; data: { data: LianeWizardFormData } } | { type: "UPDATE"; data: { data: LianeWizardFormData } };
 
-    overview: {
-      on: {
-        UPDATE: {
-          actions: ["set"]
-        },
-        SUBMIT: {
-          target: "submitted"
-        }
-      }
-    },
-    submitted: {
-      type: "final",
-      onDone: {
-        actions: "submit"
+type Event = WizardDataEvent | { type: "PREV" } | { type: "SUBMIT" };
+
+export type WizardStateMachine = StateMachine<LianeWizardFormData, Schema, Event>;
+
+const states: { [name in StatesKeys]: any } = {
+  ...createStateSequence<StatesKeys>(WizardStateSequence, "overview"),
+
+  overview: {
+    on: {
+      UPDATE: {
+        actions: ["set"]
+      },
+      SUBMIT: {
+        target: "submitted"
       }
     }
-  };
+  },
+  submitted: {
+    type: "final",
+    onDone: {
+      actions: "submit"
+    }
+  }
+};
 
-  return createMachine<LianeWizardFormData>(
+// @ts-ignore
+const defaultContext: LianeWizardFormData = {};
+
+export const CreateLianeContextMachine = (initialValue?: LianeWizardFormData): WizardStateMachine => {
+  return createMachine(
     {
       predictableActionArguments: true,
-      context: initialValue || {},
+      context: initialValue || defaultContext,
       initial: (initialValue ? "overview" : "to") as StatesKeys,
       states
     },
     {
       actions: {
-        submit: (context, event) => console.log("SUBMITTED", context),
-        set: assign<LianeWizardFormData, WizardEvent>((context, event) => {
-          console.log(event);
+        submit: (context, _) => console.log("SUBMITTED", context),
+        set: assign<LianeWizardFormData, WizardDataEvent>((context, event) => {
           return {
             ...context,
             ...event.data

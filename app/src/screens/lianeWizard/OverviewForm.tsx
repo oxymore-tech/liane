@@ -14,6 +14,7 @@ import { formatShortMonthDay, formatTime } from "@/api/i18n";
 import { LianeWizardFormData, LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { useSelector } from "@xstate/react";
 import { Interpreter } from "xstate";
+import { WizardStateMachine } from "@/screens/lianeWizard/StateMachine";
 
 const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
@@ -93,16 +94,16 @@ const WithForms = (key: WizardFormDataKey) => {
   );
 };
 
-type FormCardButtonProps<T> = {
-  fieldName: LianeWizardFormKey;
+type FormCardButtonProps<FieldName extends LianeWizardFormKey> = {
+  fieldName: FieldName;
   wizardFormName: WizardFormDataKey;
   label: string;
-  valueFormatter?: (value: T) => string;
-  onReset: (oldValue: T) => void;
+  valueFormatter?: (value: LianeWizardFormData[FieldName]) => string;
+  onReset: (oldValue: LianeWizardFormData[FieldName]) => void;
   onSubmit: () => void;
-  actor: Interpreter<unknown>;
+  actor: Interpreter<WizardStateMachine>;
 };
-const FormCardButton = <T extends unknown>({
+const FormCardButton = <FieldName extends LianeWizardFormKey>({
   fieldName,
   wizardFormName,
   label,
@@ -110,7 +111,7 @@ const FormCardButton = <T extends unknown>({
   onReset,
   onSubmit,
   actor
-}: FormCardButtonProps<T>) => {
+}: FormCardButtonProps<FieldName>) => {
   const form = WithForms(wizardFormName);
   const color = WizardFormData[wizardFormName].color;
   const value = useSelector(actor, state => state.context[fieldName]);
@@ -137,7 +138,7 @@ export const OverviewForm = () => {
   const machineContext = useContext(WizardContext);
   const { send } = machineContext;
 
-  const { handleSubmit, getValues, resetField } = useFormContext<LianeWizardFormData>();
+  const { handleSubmit, resetField } = useFormContext<LianeWizardFormData>();
 
   const onSubmit = handleSubmit(
     data => {
