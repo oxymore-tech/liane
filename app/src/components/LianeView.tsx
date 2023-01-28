@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { ColorValue, StyleSheet, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes } from "@/theme/colors";
 import { Liane, WayPoint } from "@/api";
 import { toTimeInSeconds } from "@/util/datetime";
 
@@ -12,7 +12,7 @@ export interface LianeViewProps {
   liane: Liane;
 }
 
-const LianeSymbol = ({ color }: { color: AppColors }) => (
+const LianeSymbol = ({ color }: { color: ColorValue }) => (
   <View style={{ marginTop: 4 }}>
     <Svg height={20} width="100%" viewBox="-32 0 71 27" fill="none">
       {}
@@ -69,7 +69,7 @@ const extractData = (liane: Liane) => {
 export const LianeView = ({ liane }: LianeViewProps) => {
   const { to, from, steps } = useMemo(() => extractData(liane), [liane]);
 
-  const lianeSymbolView = () => <LianeSymbol color={AppColors.gray500} />;
+  const lianeSymbolView = () => <LianeSymbol color={AppColorPalettes.gray[500]} />;
 
   return (
     <Row spacing={12}>
@@ -105,10 +105,10 @@ export const LianeView = ({ liane }: LianeViewProps) => {
 
 const styles = StyleSheet.create({
   toLabel: {
-    color: AppColors.pink500
+    color: AppColorPalettes.pink[500]
   },
   fromLabel: {
-    color: AppColors.orange500
+    color: AppColorPalettes.orange[500]
   },
   mainWayPointLabel: {
     fontSize: 20,
@@ -119,12 +119,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     alignSelf: "center",
     paddingTop: 2,
-    color: AppColors.gray700
+    color: AppColorPalettes.gray[700]
   },
   intermediateWayPointLabel: {
     fontSize: 16,
     fontWeight: "500",
-    color: AppColors.gray700
+    color: AppColorPalettes.gray[700]
   },
   alignCenter: {
     alignSelf: "center",
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   waypointLine: {
-    borderLeftColor: AppColors.gray400,
+    borderLeftColor: AppColorPalettes.gray[400],
     borderLeftWidth: 1,
     minHeight: 12,
     alignSelf: "center",
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
 
   line: {
-    borderLeftColor: AppColors.gray400,
+    borderLeftColor: AppColorPalettes.gray[400],
     borderLeftWidth: 1,
     minHeight: 18,
     alignSelf: "center"

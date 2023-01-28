@@ -1,55 +1,49 @@
-import {ColorValue} from "react-native";
+import { ColorValue } from "react-native";
+
+export type AppColorSwatch = Readonly<{ [name in 500]: ColorValue }> &
+  Readonly<Partial<{ [name in 100 | 200 | 300 | 400 | 600 | 700 | 800 | 900]: ColorValue }>>;
 
 export enum AppColors {
   white = "#FFFFFF",
   black = "#000000",
-  gray100 = "#F3F4F6",
-  gray200 = "#D0D0D0",
-  gray400 = "#9CA3AF",
-  gray500 = "#6B7280",
-
-  gray600 = "#586477",
-  gray700 = "#374151",
-  gray800 = "#2E2E2E",
-  blue500 = "#0B79F9",
-  blue300 = "#CEE4FE",
-  blue700 = "#23278A",
-  orange500 = "#e7492e", // "#EA6D2E",
-  orange100 = "#FFBBA4",
-  yellow500 = "#FFB545",
-
-  yellow100 = "#FFE4C7",
-  pink500 = "#ff8c8c",
-
-  pink100 = "#FFD6D7",
-
-  blue400 = "#75B5F7",
-  // pink600 = "#FF5C5C",
-  //  orange600 = "#FF5C22"
+  blue = "#0B79F9",
+  darkBlue = "#23278A",
+  yellow = "#FFB545",
+  pink = "#ff8c8c",
+  orange = "#e7492e"
 }
+export const AppColorPalettes = {
+  gray: {
+    100: "#F3F4F6",
+    200: "#D0D0D0",
+    400: "#9CA3AF",
+    500: "#6B7280",
 
-export const defaultTextColor = (color: AppColors) => {
+    600: "#586477",
+    700: "#374151",
+    800: "#2E2E2E"
+  },
+  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#CEE4FE", 700: AppColors.darkBlue },
+  pink: {
+    500: AppColors.pink,
+    100: "#FFD6D7"
+  },
+  yellow: {
+    500: AppColors.yellow,
+
+    100: "#FFE4C7"
+  },
+  orange: { 500: AppColors.orange, 100: "#FFBBA4" }
+} as const;
+
+export const defaultTextColor = (color: ColorValue) => {
   switch (color) {
-    case AppColors.blue500:
-    case AppColors.orange500:
+    case AppColors.blue:
+    case AppColors.orange:
       return AppColors.white;
     default:
-      return AppColors.gray700;
+      return AppColorPalettes.gray[700];
   }
 };
 
-export const HouseColor: ColorValue[] = [
-  "#C6E1FC",
-  /* "#FFD7AA", */ "#FFBE76",
-  "#FFAA4B",
-  "#FF8459",
-  "#FFADAF",
-];
-
-export const AppTheme = {
-  primary: AppColors.blue700,
-  secondary: AppColors.blue500,
-  accent: AppColors.orange500,
-  defaultTextColor: AppColors.gray800,
-  buttonTextColor: AppColors.white,
-};
+export const HouseColor: ColorValue[] = ["#C6E1FC", /* "#FFD7AA", */ "#FFBE76", "#FFAA4B", "#FF8459", "#FFADAF"];

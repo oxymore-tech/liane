@@ -1,18 +1,18 @@
+import { AppColors } from "@/theme/colors";
 import React, { useState } from "react";
 
-import { Text, TouchableOpacity, View } from "react-native";
-import { AppColors } from "@/theme/colors";
+import { ColorValue, Text, TouchableOpacity, View } from "react-native";
 
 export interface AppOptionToggleProps<T> {
   options: T[];
   onSelectValue?: (option: T) => void;
-  selectionColor: AppColors;
+  selectionColor?: ColorValue;
   defaultSelectedValue?: T;
 }
 
 export const CreateAppOptionToggle =
   <T extends unknown>(formatter: (option: T) => string) =>
-  ({ options, onSelectValue, defaultSelectedValue, selectionColor }: AppOptionToggleProps<T>) => {
+  ({ options, onSelectValue, defaultSelectedValue, selectionColor = AppColors.blue }: AppOptionToggleProps<T>) => {
     if (options.length < 2) {
       throw new Error("AppOptionToggle requires at least two options.");
     }

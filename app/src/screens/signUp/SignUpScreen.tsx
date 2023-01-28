@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import LianeLogo from "@/assets/logo.svg";
 import { AppContext } from "@/components/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
@@ -11,10 +11,7 @@ import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
 import { UnauthorizedError } from "@/api/exception";
 
-export enum SignUpStep {
-  SetPhoneNumber,
-  EnterCode
-}
+type SignUpStep = "SetPhoneNumber" | "EnterCode";
 
 const t = scopedTranslate("SignUp");
 
@@ -27,7 +24,7 @@ async function getPushToken() {
 }
 
 const SignUpScreen = () => {
-  const [step, setStep] = useState(SignUpStep.SetPhoneNumber);
+  const [step, setStep] = useState<SignUpStep>("SetPhoneNumber");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -37,7 +34,7 @@ const SignUpScreen = () => {
     try {
       setError("");
       await services.auth.sendSms(phoneNumber);
-      setStep(SignUpStep.EnterCode);
+      setStep("EnterCode");
     } catch (e) {
       console.error("Sign up error ", e);
       setError("Impossible d'effectuer la demande");
@@ -67,9 +64,9 @@ const SignUpScreen = () => {
 
       <View>
         <AppText style={styles.helperText}>
-          {step === SignUpStep.SetPhoneNumber ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+          {step === "SetPhoneNumber" ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
         </AppText>
-        {step === SignUpStep.SetPhoneNumber ? (
+        {step === "SetPhoneNumber" ? (
           <PhoneNumberInput phoneNumber={phoneNumber} onChange={setPhoneNumber} onValidate={signUp} />
         ) : (
           <CodeInput code={code} onChange={setCode} onValidate={signIn} />
@@ -83,7 +80,7 @@ const SignUpScreen = () => {
 const styles = StyleSheet.create({
   container: {
     height: "100%",
-    backgroundColor: AppColors.blue700
+    backgroundColor: AppColorPalettes.blue[700]
   },
   helperText: {
     marginHorizontal: 16,
@@ -99,7 +96,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "64%",
-    color: AppColors.pink500
+    color: AppColorPalettes.pink[500]
   },
   errorText: {
     color: "red", // TODO red 600,

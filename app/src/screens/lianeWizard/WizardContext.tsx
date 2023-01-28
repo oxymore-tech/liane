@@ -8,7 +8,7 @@ import { useInterpret } from "@xstate/react";
 export interface WizardStepData {
   forms: (() => JSX.Element)[];
   title: string;
-  mainColor: AppColors;
+  color: AppColors;
 }
 
 const WithName =
@@ -22,27 +22,27 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
   returnTrip: {
     forms: [WithName(TimeForm, "returnTime")],
     title: "A quelle heure repartez-vous ?",
-    mainColor: AppColors.blue500
+    color: AppColors.blue
   },
   to: {
     forms: [WithName(LocationForm, "to")],
     title: "Où allez-vous ?",
-    mainColor: AppColors.pink500
+    color: AppColors.pink
   },
   from: {
     forms: [WithName(LocationForm, "from")],
     title: "D'où partez-vous ?",
-    mainColor: AppColors.orange500
+    color: AppColors.orange
   },
   date: {
     forms: [WithName(DateForm, "departureDate")],
     title: "Quand partez-vous?",
-    mainColor: AppColors.yellow500
+    color: AppColors.yellow
   },
   time: {
     forms: [WithName(TimeForm, "departureTime")],
     title: "A quelle heure partez-vous?",
-    mainColor: AppColors.blue500
+    color: AppColors.blue
   },
   vehicle: {
     forms: [
@@ -52,7 +52,7 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
       })
     ],
     title: "Avez-vous un véhicule ?",
-    mainColor: AppColors.white
+    color: AppColors.white
   }
 };
 

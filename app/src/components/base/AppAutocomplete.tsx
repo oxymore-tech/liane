@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Keyboard, StyleSheet, TouchableOpacity, Vi
 import { AppTextInput, AppTextInputProps } from "@/components/base/AppTextInput";
 import { AppText } from "@/components/base/AppText";
 import useDebounce from "@/api/hook";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 export interface AppAutocompleteProps<T> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;
@@ -24,7 +24,7 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
       setOpen(true);
       onSearch(debouncedSearch);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, onSearch]);
 
   const onSelect = useCallback(
     (item?: T) => {
@@ -75,7 +75,7 @@ function ItemList<T extends BasicItem>({ items, loading, onSelect }: ItemListPro
   }
 
   if (items.length === 0) {
-    return <AppText style={[styles.item, { color: AppColors.gray600 }]}>Aucun résultat</AppText>;
+    return <AppText style={[styles.item, { color: AppColorPalettes.gray[600] }]}>Aucun résultat</AppText>;
   }
 
   return (
@@ -102,7 +102,7 @@ const AutocompleteItem = ({ item, onPress }: AutocompleteItemProps) => (
 const styles = StyleSheet.create({
   input: {
     fontSize: 20,
-    color: AppColors.gray800
+    color: AppColorPalettes.gray[800]
   },
   item: {
     fontSize: 16,
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
   itemsContainer: {
     width: "100%",
     maxHeight: 108,
-    backgroundColor: AppColors.gray100,
+    backgroundColor: AppColorPalettes.gray[100],
     borderRadius: 8,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     borderTopWidth: 1,
-    borderTopColor: AppColors.gray400
+    borderTopColor: AppColorPalettes.gray[400]
   },
   inputContainer: {
     height: 40,

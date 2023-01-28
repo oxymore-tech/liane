@@ -2,7 +2,7 @@ import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes } from "@/theme/colors";
 
 type CodeInputProps = {
   onValidate: () => void;
@@ -14,7 +14,7 @@ export const CodeInput = ({ code, onChange, onValidate }: CodeInputProps) => {
   const disabled = code.length < 6;
 
   const buttonColor = {
-    backgroundColor: disabled ? AppColors.gray400 : AppColors.blue500
+    backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
   };
 
   return (
@@ -31,7 +31,7 @@ export const CodeInput = ({ code, onChange, onValidate }: CodeInputProps) => {
           maxLength={6}
         />
         <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={onValidate}>
-          <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
+          <AppIcon name="arrow-circle-right-outline" color={AppColors.white.white} />
         </Pressable>
       </View>
     </View>
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     height: 52,
     width: "75%",
     minWidth: 250,
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.white.white,
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 24,
-    color: AppColors.gray800
+    color: AppColorPalettes.gray[800]
   },
   button: {
     height: 52,

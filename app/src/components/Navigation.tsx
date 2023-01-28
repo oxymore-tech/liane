@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import EmptyScreen from "@/screens/EmptyScreen";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import HomeScreen from "@/screens/HomeScreen";
 import { AppText } from "@/components/base/AppText";
@@ -71,13 +71,15 @@ const makeTab = (label: string, iconName: IconName | React.FunctionComponent, sc
       headerShown,
       headerStyle: { backgroundColor: "#00000000" },
       headerShadowVisible: false,
-      tabBarLabel: ({ focused }) => <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColors.blue400 }]}>{label}</AppText>,
+      tabBarLabel: ({ focused }) => (
+        <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>
+      ),
       tabBarIcon: ({ focused }) =>
         typeof iconName === "string" ? (
-          <AppIcon size={iconSize} name={iconName} color={focused ? AppColors.white : AppColors.blue400} />
+          <AppIcon size={iconSize} name={iconName} color={focused ? AppColors.white : AppColorPalettes.blue[400]} />
         ) : (
           iconName({
-            color: focused ? AppColors.white : AppColors.blue400,
+            color: focused ? AppColors.white : AppColorPalettes.blue[400],
             height: iconSize,
             width: iconSize
           })
@@ -88,7 +90,7 @@ const makeTab = (label: string, iconName: IconName | React.FunctionComponent, sc
 
 const styles = StyleSheet.create({
   bottomBar: {
-    backgroundColor: AppColors.blue700,
+    backgroundColor: AppColorPalettes.blue[700],
     position: "absolute",
     overflow: "hidden",
     alignItems: "stretch",

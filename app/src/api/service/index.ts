@@ -3,9 +3,9 @@ import { LianeService, LianeServiceClient } from "@/api/service/liane";
 import { RallyingPointClient } from "@/api/service/rallyingPoints";
 
 export type AppServices = {
-  auth: AuthService;
-  liane: LianeService;
-  rallyingPoint: RallyingPointClient;
+  readonly auth: AuthService;
+  readonly liane: LianeService;
+  readonly rallyingPoint: RallyingPointClient;
 };
 
 export const CreateAppServices = (): AppServices => ({

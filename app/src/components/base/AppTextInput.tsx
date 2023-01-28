@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, TextInput, TextInputProps } from "react-native";
 import { AppIcon, IconName } from "./AppIcon";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 
 export interface AppTextInputProps extends TextInputProps {
@@ -11,7 +11,7 @@ export interface AppTextInputProps extends TextInputProps {
 export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
   return (
     <Row style={styles.container} spacing={8}>
-      {icon && <AppIcon name={icon} color={AppColors.blue500} />}
+      {icon && <AppIcon name={icon} color={AppColorPalettes.blue[500]} />}
       <TextInput style={[styles.input, style]} {...props} />
     </Row>
   );

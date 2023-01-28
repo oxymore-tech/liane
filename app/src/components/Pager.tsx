@@ -1,22 +1,22 @@
 import React, { PropsWithChildren } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import Animated, { Easing, FadeIn, FadeOut, SlideOutDown } from "react-native-reanimated";
 
 export interface WizardPageProps extends PropsWithChildren {
   backgroundColor: AppColors;
 }
 
 export interface WizardPagerProps {
-  dotsColor: AppColors;
+  color: AppColors;
   onPageChange: (next: number | null) => void;
   currentPage: number;
   children: (index: number) => JSX.Element;
   pageCount: number;
 }
 
+/* TODO restore anims
 const animatePage = (component, currentPage, pageCount) => {
   return (
     <Animated.View
@@ -29,14 +29,14 @@ const animatePage = (component, currentPage, pageCount) => {
       {component}
     </Animated.View>
   );
-};
+};*/
 export const WizardPage = ({ backgroundColor, children }: WizardPageProps) => {
   return (
     <View
       style={{
         flex: 1,
         margin: 8,
-        paddingBottom: 32,
+        marginBottom: 72, // 52 + 24
         backgroundColor,
         borderRadius: 16
       }}>
@@ -45,22 +45,30 @@ export const WizardPage = ({ backgroundColor, children }: WizardPageProps) => {
   );
 };
 
-const PagerButton = ({ color, text, onPress, opacity = 1 }) => (
+//TODO component
+const PagerButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => (
   <Pressable onPress={onPress}>
-    <AppText
+    <View
       style={{
-        fontWeight: "600",
-        fontSize: 14,
-        color,
+        backgroundColor,
         opacity,
-        textAlign: "center"
+        borderRadius: 24
       }}>
-      {text}
-    </AppText>
+      <AppText
+        style={{
+          fontWeight: "600",
+          fontSize: 14,
+          color,
+          textAlign: "center",
+          paddingVertical: 12
+        }}>
+        {text}
+      </AppText>
+    </View>
   </Pressable>
 );
 
-export const WizardPager = <T extends unknown>({ children, pageCount, dotsColor, onPageChange, currentPage }: WizardPagerProps) => {
+export const WizardPager = ({ children, pageCount, color, onPageChange, currentPage }: WizardPagerProps) => {
   const currentPageChild = children(currentPage);
   const { backgroundColor } = currentPageChild.props as WizardPageProps;
   const grayColor = defaultTextColor(backgroundColor);
@@ -71,7 +79,7 @@ export const WizardPager = <T extends unknown>({ children, pageCount, dotsColor,
       style={[
         styles.dot,
         {
-          backgroundColor: index === currentPage ? dotsColor : grayColor,
+          backgroundColor: index === currentPage ? color : AppColors.white,
           opacity: index === currentPage ? 1 : 0.5
         }
       ]}
@@ -84,14 +92,26 @@ export const WizardPager = <T extends unknown>({ children, pageCount, dotsColor,
       {currentPageChild}
       <Row style={styles.bottomContainer}>
         <View style={{ flexBasis: 100 }}>
-          {currentPage > 0 && <PagerButton color={grayColor} opacity={0.9} text="Précédent" onPress={() => onPageChange(currentPage - 1)} />}
+          {currentPage > 0 && (
+            <PagerButton
+              backgroundColor={AppColors.white}
+              color={AppColorPalettes.gray[800]}
+              opacity={0.75}
+              text="Précédent"
+              onPress={() => onPageChange(currentPage - 1)}
+            />
+          )}
         </View>
         <Row spacing={4} style={{ flexGrow: 1, justifyContent: "center" }}>
           {dots}
         </Row>
         <View style={{ flexBasis: 100 }}>
-          {currentPage < pageCount - 1 && <PagerButton color={AppColors.blue700} text="Suivant" onPress={() => onPageChange(currentPage + 1)} />}
-          {currentPage === pageCount - 1 && <PagerButton color={AppColors.blue700} text="Terminer" onPress={() => onPageChange(null)} />}
+          {currentPage < pageCount - 1 && (
+            <PagerButton color={grayColor} backgroundColor={color} text="Suivant" onPress={() => onPageChange(currentPage + 1)} />
+          )}
+          {currentPage === pageCount - 1 && (
+            <PagerButton color={grayColor} backgroundColor={color} text="Terminer" onPress={() => onPageChange(null)} />
+          )}
         </View>
       </Row>
     </View>
@@ -104,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 4,
     marginBottom: 8,
     left: 0,
     right: 0,

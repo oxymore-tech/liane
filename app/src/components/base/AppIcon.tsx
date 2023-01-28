@@ -1,17 +1,18 @@
 import React from "react";
 import { Icon } from "react-native-eva-icons";
-import { AppColors, AppTheme } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
+import { ColorValue } from "react-native";
+import { AppColorPalettes } from "@/theme/colors";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
 interface AppIconProps {
   name: IconName;
-  color?: AppColors;
+  color?: ColorValue;
   size?: number;
 }
 
-export function AppIcon({ name, color = AppTheme.defaultTextColor, size = AppDimensions.iconSize }: AppIconProps) {
+export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize }: AppIconProps) {
   return <Icon name={name} width={size} height={size} fill={color} />;
 }
 

@@ -12,5 +12,3 @@ export type LianeWizardFormData = {
   from: RallyingPoint;
   to: RallyingPoint;
 };
-
-export get

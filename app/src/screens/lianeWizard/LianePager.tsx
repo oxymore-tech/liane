@@ -1,10 +1,9 @@
 import { WizardStateSequence, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
-import { WizardContext, WizardFormData } from "@/screens/lianeWizard/WizardContext";
-import { StyleSheet, View } from "react-native";
+import { WizardFormData } from "@/screens/lianeWizard/WizardContext";
+import { StyleSheet } from "react-native";
 import { WizardPage, WizardPager } from "@/components/Pager";
-import { AppColors } from "@/theme/colors";
-import React, { useContext } from "react";
-import { useActor } from "@xstate/react";
+import { AppColorPalettes } from "@/theme/colors";
+import React from "react";
 import { Column } from "@/components/base/AppLayout";
 
 export interface LianePagerProps {
@@ -28,12 +27,12 @@ export const LianePager = ({ onNext, onPrev, step }: LianePagerProps) => {
 
   // TODO fix exiting here as well
   return (
-    <WizardPager dotsColor={AppColors.blue700} currentPage={currentPageIndex} pageCount={WizardStateSequence.length} onPageChange={onPageChange}>
+    <WizardPager color={WizardFormData[step].color} currentPage={currentPageIndex} pageCount={WizardStateSequence.length} onPageChange={onPageChange}>
       {pageIndex => {
         const key = WizardStateSequence[pageIndex];
         const stepData = WizardFormData[key];
         return (
-          <WizardPage key={key} backgroundColor={stepData.mainColor}>
+          <WizardPage key={key} backgroundColor={stepData.color}>
             <Column style={styles.pagerContentContainer} spacing={16}>
               {stepData.forms.map((Form, index) => (
                 <Form key={`${key}.field${index}`} />

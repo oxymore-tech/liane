@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { GestureResponderEvent, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ColorValue, GestureResponderEvent, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
   Extrapolation,
@@ -12,7 +12,7 @@ import Animated, {
   withTiming
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -24,8 +24,8 @@ export interface LianeCardProps extends PressableProps {
   label?: string;
   value: string;
   onCancel?: () => void;
-  color?: AppColors.white | AppColors.blue500 | AppColors.yellow500 | AppColors.orange500 | AppColors.pink500 | AppColors.blue300;
-  textColor?: AppColors;
+  color?: ColorValue;
+  textColor?: ColorValue;
   extendedView?: JSX.Element;
   useOkButton?: boolean;
   onCloseExtendedView?: (isOk: boolean) => void;
@@ -33,8 +33,8 @@ export interface LianeCardProps extends PressableProps {
 }
 
 const CancelButton = ({ color, label, onCancel }) => {
-  const cancelColor = color === AppColors.white ? AppColors.blue500 : AppColors.white;
-  const cancelIconColor = cancelColor === AppColors.white ? AppColors.gray800 : AppColors.white;
+  const cancelColor = color === AppColors.white ? AppColorPalettes.blue[500] : AppColors.white;
+  const cancelIconColor = cancelColor === AppColors.white ? AppColorPalettes.gray[800] : AppColors.white;
   const positionStyleOverride = label ? {} : { right: -12 };
 
   return (
@@ -164,24 +164,25 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
                 spacing={8}
                 style={{
                   paddingHorizontal: 16,
+                  paddingVertical: 8,
                   position: "absolute",
                   bottom: 0,
                   right: 0
                 }}>
-                <Pressable onPress={() => closeModal(false)} style={{ paddingVertical: 16, paddingHorizontal: 8 }}>
-                  <AppText style={{ fontWeight: "600", fontSize: 14, color: textColor }}>{useOkButton ? "Annuler" : "Fermer"}</AppText>
-                </Pressable>
+                <ModalButton
+                  color={AppColors.white}
+                  backgroundColor={`rgba(0 0 0 / ${textColor === AppColors.white ? "0.25" : "0.4"})`}
+                  text={useOkButton ? "Annuler" : "Fermer"}
+                  onPress={() => closeModal(false)}
+                />
+
                 {useOkButton && (
-                  <Pressable onPress={() => closeModal(true)} style={{ paddingVertical: 16, paddingHorizontal: 8 }}>
-                    <AppText
-                      style={{
-                        fontWeight: "600",
-                        fontSize: 14,
-                        color: AppColors.blue700
-                      }}>
-                      OK
-                    </AppText>
-                  </Pressable>
+                  <ModalButton
+                    color={color === AppColors.white ? AppColors.white : AppColors.darkBlue}
+                    backgroundColor={color === AppColors.white ? AppColorPalettes.blue[500] : AppColors.white}
+                    text="Ok"
+                    onPress={() => closeModal(true)}
+                  />
                 )}
               </Row>
             </View>
@@ -192,8 +193,32 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
   );
 };
 
+const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => (
+  <Pressable onPress={onPress}>
+    <View
+      style={{
+        backgroundColor,
+        opacity,
+        minWidth: 60,
+        paddingHorizontal: 12,
+        borderRadius: 24
+      }}>
+      <AppText
+        style={{
+          fontWeight: "600",
+          fontSize: 14,
+          color,
+          textAlign: "center",
+          paddingVertical: 12
+        }}>
+        {text}
+      </AppText>
+    </View>
+  </Pressable>
+);
+
 export function CardButton({
-  color = AppColors.orange500,
+  color = AppColorPalettes.orange[500],
   textColor,
   label,
   value,
@@ -227,7 +252,7 @@ export function CardButton({
         this.ref = ref;
       }}
       style={styles.baseContainer}>
-      {extendedView && modalSpecs.x != 0 && modalSpecs.y != 0 && (
+      {extendedView && modalSpecs.x !== 0 && modalSpecs.y !== 0 && (
         <CardModal
           color={color}
           x={modalSpecs.x}

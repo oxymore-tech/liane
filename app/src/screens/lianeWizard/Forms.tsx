@@ -1,8 +1,8 @@
 import { Switch } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import DatePicker from "react-native-date-picker";
 import { ControllerFieldState, useController } from "react-hook-form";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RallyingPointInput } from "@/components/RallyingPointInput";
 import { RallyingPoint } from "@/api";
@@ -43,19 +43,31 @@ const WithFormContext =
     return <WrappedForm value={field.value} onChange={field.onChange} fieldState={fieldState} />;
   };
 
-export const DateForm: FormComponent<Date> = WithFormContext(({ value, onChange }: InternalBaseFormProps<Date>) => (
-  <DatePicker mode="date" date={value || new Date()} onDateChange={onChange} fadeToColor="none" textColor={AppColors.black} />
-));
+export const DateForm: FormComponent<Date> = WithFormContext(({ value, onChange }: InternalBaseFormProps<Date>) => {
+  if (!value) {
+    useEffect(() => {
+      onChange(new Date());
+    });
+  }
+  return <DatePicker mode="date" date={value || new Date()} onDateChange={onChange} fadeToColor="none" textColor={AppColors.black} />;
+});
 
-export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, onChange }: InternalBaseFormProps<TimeInSeconds>) => (
-  <DatePicker
-    mode="time"
-    date={new Date((value || 1) * 1000)}
-    onDateChange={date => onChange(toTimeInSeconds(date))}
-    fadeToColor="none"
-    textColor={AppColors.black}
-  />
-));
+export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, onChange }: InternalBaseFormProps<TimeInSeconds>) => {
+  if (!value) {
+    useEffect(() => {
+      onChange(toTimeInSeconds(new Date()));
+    });
+  }
+  return (
+    <DatePicker
+      mode="time"
+      date={value ? new Date(value * 1000) : new Date()}
+      onDateChange={date => onChange(toTimeInSeconds(date))}
+      fadeToColor="none"
+      textColor={AppColors.black}
+    />
+  );
+});
 
 /*
 
@@ -83,7 +95,7 @@ export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, 
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: AppColors.gray200,
+                  backgroundColor: AppColors.gray[200],
                   justifyContent: "center",
                   alignItems: "center",
                 }}>
@@ -102,9 +114,9 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
 export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ value, onChange }: InternalBaseFormProps<boolean>) => (
   <Row style={{ alignItems: "center" }} spacing={8}>
     <Switch
-      trackColor={{ false: AppColors.gray400, true: AppColors.blue700 }}
-      thumbColor={value ? AppColors.blue400 : AppColors.gray100}
-      ios_backgroundColor={AppColors.gray500}
+      trackColor={{ false: AppColorPalettes.gray[400], true: AppColorPalettes.blue[700] }}
+      thumbColor={value ? AppColorPalettes.blue[400] : AppColorPalettes.gray[100]}
+      ios_backgroundColor={AppColorPalettes.gray[500]}
       onValueChange={onChange}
       value={value}
     />
@@ -118,7 +130,7 @@ export const CarForm: FormComponent<number> = WithFormContext(({ value, onChange
       <AppSwitchToggle
         defaultSelectedValue={value > 0}
         options={[true, false]}
-        selectionColor={AppColors.blue700}
+        selectionColor={AppColorPalettes.blue[700]}
         onSelectValue={selection => {
           onChange(selection ? 1 : 0);
         }}
@@ -128,10 +140,10 @@ export const CarForm: FormComponent<number> = WithFormContext(({ value, onChange
         <Column style={{ alignItems: "center" }} spacing={8}>
           <AppText>Places disponibles</AppText>
           <Row style={{ alignItems: "center" }}>
-            <AppButton kind="circular" color={AppColors.blue500} icon="minus-outline" onPress={() => onChange(Math.max(1, value - 1))} />
+            <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="minus-outline" onPress={() => onChange(Math.max(1, value - 1))} />
             <AppText style={{ fontSize: 40 }}>{value}</AppText>
             <AppIcon name="people-outline" size={40} />
-            <AppButton kind="circular" color={AppColors.blue500} icon="plus-outline" onPress={() => onChange(value + 1)} />
+            <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="plus-outline" onPress={() => onChange(value + 1)} />
           </Row>
         </Column>
       )}

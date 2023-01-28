@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { LianeView } from "@/components/LianeView";
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
 import { Liane, UTCDateTime } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
@@ -57,10 +57,10 @@ const styles = StyleSheet.create({
     height: "100%"
   },
   grayBorder: {
-    borderColor: AppColors.gray200
+    borderColor: AppColorPalettes.gray[200]
   },
   header: {
-    backgroundColor: AppColors.yellow500,
+    backgroundColor: AppColorPalettes.yellow[500],
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderTopRightRadius: 16,

@@ -2,12 +2,12 @@ import React, { useContext, useMemo } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useActor, useInterpret } from "@xstate/react";
-import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
+import Animated, { SlideInDown } from "react-native-reanimated";
 import { LianeHouseVector } from "@/components/LianeHouseVector";
 import { WizardContext, WizardFormData } from "@/screens/lianeWizard/WizardContext";
 
 import { AppDimensions } from "@/theme/dimensions";
-import { AppColors, HouseColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, HouseColor } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { OverviewForm } from "@/screens/lianeWizard/OverviewForm";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -25,14 +25,21 @@ export interface LianeModalScreenParams extends ParamListBase {
 }
 
 //TODO animated component
-const DynamicHouseVector = () => {
+// const AnimatedLianeHouseVector = Animated.createAnimatedComponent(LianeHouseVector);
+const DynamicHouseVector = ({ snapPoint }) => {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const machineContext = useContext(WizardContext);
   const [state] = useActor(machineContext);
   const index = WizardStateSequence.indexOf(state.value);
-  return <LianeHouseVector maxHeight={height * 0.25 - insets.top} maxWidth={width * 0.65} frontColor={HouseColor[index % HouseColor.length]} />;
+  return (
+    <LianeHouseVector maxHeight={height * (1 - snapPoint) - insets.top} maxWidth={width * 0.65} frontColor={HouseColor[index % HouseColor.length]} />
+  );
 };
+
+const maxSnapPoint = 0.8;
+const defaultSnapPoint = 0.75;
+const minHeight = 550;
 
 export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<LianeModalScreenParams, "LianeWizard">) => {
   const lianeRequest = route.params?.lianeRequest;
@@ -40,6 +47,10 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
   const machine = CreateLianeContextMachine(lianeRequest);
   const lianeWizardMachine = useInterpret(machine);
 
+  const { height } = useWindowDimensions();
+  const snapPoint = Math.min(Math.max(defaultSnapPoint, minHeight / height), maxSnapPoint);
+
+  console.log(snapPoint, height);
   const closeWizard = () => {
     navigation.goBack();
   };
@@ -51,13 +62,11 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
         paddingRight: 24,
         alignItems: "flex-end"
       }}>
-      <DynamicHouseVector />
+      <DynamicHouseVector snapPoint={snapPoint} />
     </View>
   );
 
-  const snapPoint = 0.75;
   const animDuration = 300;
-  const { height } = useWindowDimensions();
   //  <LianeWizard />
   return (
     <WizardContext.Provider value={lianeWizardMachine}>
@@ -72,6 +81,7 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
           <AppIcon name="close-outline" size={32} />
         </Pressable>
       </View>
+
       <Animated.View
         entering={SlideInDown.duration(animDuration)}
         style={{
@@ -80,7 +90,7 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: AppColors.blue700,
+          backgroundColor: AppColorPalettes.blue[700],
           borderTopRightRadius: AppDimensions.borderRadius,
           borderTopLeftRadius: AppDimensions.borderRadius
         }}>
@@ -162,7 +172,7 @@ const LianeWizard = ({ closeModal }) => {
                 icon="arrow-right"
                 color={AppColors.white}
                 kind="circular"
-                foregroundColor={AppColors.orange500}
+                foregroundColor={AppColorPalettes.orange[500]}
               />
             </View>
           )}

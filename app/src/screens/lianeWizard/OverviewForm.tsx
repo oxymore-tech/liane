@@ -1,18 +1,17 @@
 import { StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import React, { useContext, useMemo, useRef, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { CardButton } from "@/components/CardButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppDimensions } from "@/theme/dimensions";
 import { WizardContext, WizardFormData, WizardFormDataKey } from "@/screens/lianeWizard/WizardContext";
 import { formatShortMonthDay, formatTime } from "@/api/i18n";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
-import { useActor } from "@xstate/react";
 
 const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
@@ -38,11 +37,11 @@ const ReturnTrip = ({ value, setValue, onClosePopup }) => {
           }}
           label="Départ à"
           value={formatTime(new Date(value * 1000))}
-          color={AppColors.blue500}
+          color={AppColorPalettes.blue[500]}
           onCancel={() => setValue(undefined)}
         />
       ) : (
-        <AppButton icon="plus-outline" color={AppColors.blue500} onPress={() => setShowPopup(true)} />
+        <AppButton icon="plus-outline" color={AppColorPalettes.blue[500]} onPress={() => setShowPopup(true)} />
       )}
     </Row>
   );
@@ -63,9 +62,9 @@ const ShareList = ({ onItemAdded }) => {
   return (
     <Column spacing={8} style={{ alignItems: "flex-start" }}>
       {shareList.map((v, i) => (
-        <CardButton value={v} key={i} onCancel={() => removeItem(i)} color={AppColors.blue500} />
+        <CardButton value={v} key={i} onCancel={() => removeItem(i)} color={AppColorPalettes.blue[500]} />
       ))}
-      <AppButton icon="plus-outline" color={AppColors.blue500} onPress={addContact} />
+      <AppButton icon="plus-outline" color={AppColorPalettes.blue[500]} onPress={addContact} />
     </Column>
   );
 };
@@ -87,13 +86,12 @@ const WithForms = (key: WizardFormDataKey) => {
 export const OverviewForm = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const machineContext = useContext(WizardContext);
-  const [state] = useActor(machineContext);
   const { send } = machineContext;
 
-  const { handleSubmit, watch, reset, getValues, setValue } = useFormContext<LianeWizardFormData>();
+  const { handleSubmit, watch, getValues, setValue } = useFormContext<LianeWizardFormData>();
 
   //TODO optimize ?
-  const formData = watch();
+  const formData = useWatch();
 
   const onSubmit = data => {
     console.log("UPDATE", { data });
@@ -109,7 +107,7 @@ export const OverviewForm = () => {
     if (validate) {
       handleSubmit(onSubmit, onError); // TODO use () ?
     } else {
-      //TODO
+      //TODO reset !
       //reset(state.context);
     }
   };
@@ -126,14 +124,14 @@ export const OverviewForm = () => {
   const CarDataForm = useMemo(() => WithForms("vehicle"), []);
 
   return (
-    <ScrollView ref={scrollViewRef} style={{ marginTop: 12, marginBottom: 2 }} overScrollMode="never" fadingEdgeLength={24}>
+    <ScrollView ref={scrollViewRef} style={{ marginTop: 12, marginBottom: 16 }} overScrollMode="never" fadingEdgeLength={24}>
       <View style={styles.mainSectionContainer}>
         <Column spacing={verticalCardSpacing}>
           <Row spacing={horizontalCardSpacing}>
             <CardButton
               label="Départ de"
               value={formData.from.label}
-              color={AppColors.orange500}
+              color={AppColorPalettes.orange[500]}
               extendedView={DepartureForm}
               useOkButton={true}
               onCloseExtendedView={onClosePopup}
@@ -141,7 +139,7 @@ export const OverviewForm = () => {
             <CardButton
               label="Arrivée à"
               value={formData.to.label}
-              color={AppColors.pink500}
+              color={AppColorPalettes.pink[500]}
               extendedView={DestinationForm}
               useOkButton={true}
               onCloseExtendedView={onClosePopup}
@@ -151,7 +149,7 @@ export const OverviewForm = () => {
             <CardButton
               label="Date"
               value={formatShortMonthDay(formData.departureDate)}
-              color={AppColors.yellow500}
+              color={AppColorPalettes.yellow[500]}
               extendedView={DateForm}
               useOkButton={true}
               onCloseExtendedView={onClosePopup}
@@ -159,7 +157,7 @@ export const OverviewForm = () => {
             <CardButton
               label="Départ à"
               value={formatTime(formData.departureTime * 1000)}
-              color={AppColors.blue500}
+              color={AppColorPalettes.blue[500]}
               extendedView={TimeForm}
               useOkButton={true}
               onCloseExtendedView={onClosePopup}
@@ -225,7 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: AppDimensions.bottomBar.itemSpacing
   },
   modalBackground: {
-    backgroundColor: AppColors.blue700
+    backgroundColor: AppColorPalettes.blue[700]
   },
   title: {
     fontSize: AppDimensions.textSize.large,

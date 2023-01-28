@@ -4,9 +4,9 @@ import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
+import { CreateMockServices } from "@/api/service/mock";
 
 interface AppContextProps {
-  appLoaded: boolean;
   locationPermission: LocationPermissionLevel;
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
@@ -15,10 +15,9 @@ interface AppContextProps {
   services: AppServices;
 }
 
-const SERVICES = CreateAppServices();
+const SERVICES = CreateMockServices();
 
 export const AppContext = createContext<AppContextProps>({
-  appLoaded: false,
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {},
   setAuthUser: () => {},
@@ -112,10 +111,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     const { appLoaded, locationPermission, position, authUser } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
-    return (
+    // TODO handle loading view
+    return appLoaded ? (
       <AppContext.Provider
         value={{
-          appLoaded,
           locationPermission,
           setLocationPermission,
           setAuthUser,
@@ -125,7 +124,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         }}>
         {children}
       </AppContext.Provider>
-    );
+    ) : null;
   }
 }
 
