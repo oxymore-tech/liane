@@ -6,7 +6,7 @@ export type LianeWizardFormKey = keyof LianeWizardFormData;
 export type LianeWizardFormData = {
   departureDate: Date;
   departureTime: TimeInSeconds;
-  returnTime?: TimeInSeconds;
+  returnTime: TimeInSeconds | null;
   driverCapacity: number;
   rememberVehicleChoice: boolean;
   from: RallyingPoint;

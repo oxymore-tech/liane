@@ -106,16 +106,16 @@ const LianeWizard = ({ closeModal }) => {
   const [state] = useActor(machineContext);
   const { send } = machineContext;
 
-  const isWizardStep = !state.matches("final");
+  const isWizardStep = !state.matches("overview");
 
   const formContext = useForm<LianeWizardFormData>({
     defaultValues: state.context
   });
 
-  const { getValues, handleSubmit, formState } = formContext;
+  const { handleSubmit } = formContext;
   const submit = useMemo(() => {
     const onSubmit = data => {
-      send("NEXT", { data: getValues() });
+      send("NEXT", { data });
     };
 
     const onError = (errors, e) => {
@@ -165,7 +165,7 @@ const LianeWizard = ({ closeModal }) => {
               <AppButton
                 onPress={() => {
                   // send liane request
-
+                  send("SUBMIT");
                   // close modal
                   closeModal();
                 }}

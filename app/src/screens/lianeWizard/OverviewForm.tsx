@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import React, { useContext, useMemo, useRef, useState } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
+import React, { useContext, useRef, useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
@@ -11,13 +11,18 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppDimensions } from "@/theme/dimensions";
 import { WizardContext, WizardFormData, WizardFormDataKey } from "@/screens/lianeWizard/WizardContext";
 import { formatShortMonthDay, formatTime } from "@/api/i18n";
-import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
+import { LianeWizardFormData, LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
+import { useSelector } from "@xstate/react";
+import { Interpreter } from "xstate";
 
 const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
 
-const ReturnTrip = ({ value, setValue, onClosePopup }) => {
+const ReturnTrip = ({ actor, onSubmit, onReset }) => {
   const [showPopup, setShowPopup] = useState(false);
+
+  const value = useSelector(actor, state => state.context.returnTime);
+
   return (
     <Row style={styles.singleCardRow}>
       {value || showPopup ? (
@@ -29,16 +34,20 @@ const ReturnTrip = ({ value, setValue, onClosePopup }) => {
             if (showPopup) {
               setShowPopup(false);
             }
-            if (isOk && !value) {
-              // Prevent OK clicked but going back to undefined value state
-              setValue(1);
+
+            if (isOk) {
+              onSubmit();
+            } else {
+              onReset(value);
             }
-            onClosePopup();
           }}
           label="Départ à"
-          value={formatTime(new Date(value * 1000))}
+          value={value ? formatTime(new Date(value * 1000)) : "--:--"}
           color={AppColorPalettes.blue[500]}
-          onCancel={() => setValue(undefined)}
+          onCancel={() => {
+            onReset(null);
+            onSubmit();
+          }}
         />
       ) : (
         <AppButton icon="plus-outline" color={AppColorPalettes.blue[500]} onPress={() => setShowPopup(true)} />
@@ -83,94 +92,115 @@ const WithForms = (key: WizardFormDataKey) => {
     </Column>
   );
 };
+
+type FormCardButtonProps<T> = {
+  fieldName: LianeWizardFormKey;
+  wizardFormName: WizardFormDataKey;
+  label: string;
+  valueFormatter?: (value: T) => string;
+  onReset: (oldValue: T) => void;
+  onSubmit: () => void;
+  actor: Interpreter<unknown>;
+};
+const FormCardButton = <T extends unknown>({
+  fieldName,
+  wizardFormName,
+  label,
+  valueFormatter,
+  onReset,
+  onSubmit,
+  actor
+}: FormCardButtonProps<T>) => {
+  const form = WithForms(wizardFormName);
+  const color = WizardFormData[wizardFormName].color;
+  const value = useSelector(actor, state => state.context[fieldName]);
+  const onClosePopup = (validate: boolean) => {
+    if (validate) {
+      onSubmit();
+    } else {
+      onReset(value);
+    }
+  };
+  return (
+    <CardButton
+      label={label}
+      value={valueFormatter ? valueFormatter(value) : value}
+      color={color}
+      extendedView={form}
+      useOkButton={true}
+      onCloseExtendedView={onClosePopup}
+    />
+  );
+};
 export const OverviewForm = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const machineContext = useContext(WizardContext);
   const { send } = machineContext;
 
-  const { handleSubmit, watch, getValues, setValue } = useFormContext<LianeWizardFormData>();
+  const { handleSubmit, getValues, resetField } = useFormContext<LianeWizardFormData>();
 
-  //TODO optimize ?
-  const formData = useWatch();
-
-  const onSubmit = data => {
-    console.log("UPDATE", { data });
-    send("UPDATE", { data: formData });
-  };
-
-  const onError = (errors, e) => {
-    return console.log(errors);
-  };
-
-  const onClosePopup = (validate: boolean) => {
-    console.log("dismiss popup", validate, getValues());
-    if (validate) {
-      handleSubmit(onSubmit, onError); // TODO use () ?
-    } else {
-      //TODO reset !
-      //reset(state.context);
+  const onSubmit = handleSubmit(
+    data => {
+      console.log("UPDATE", { data });
+      send("UPDATE", { data });
+    },
+    (errors, e) => {
+      return console.log(errors);
     }
-  };
-
-  //TODO voir si renvoyer un composant ou une instance
-  const TimeForm = useMemo(() => WithForms("time"), []);
-
-  const DateForm = useMemo(() => WithForms("date"), []);
-
-  const DestinationForm = useMemo(() => WithForms("to"), []);
-
-  const DepartureForm = useMemo(() => WithForms("from"), []);
-
-  const CarDataForm = useMemo(() => WithForms("vehicle"), []);
-
+  );
   return (
     <ScrollView ref={scrollViewRef} style={{ marginTop: 12, marginBottom: 16 }} overScrollMode="never" fadingEdgeLength={24}>
       <View style={styles.mainSectionContainer}>
         <Column spacing={verticalCardSpacing}>
           <Row spacing={horizontalCardSpacing}>
-            <CardButton
-              label="Départ de"
-              value={formData.from.label}
-              color={AppColorPalettes.orange[500]}
-              extendedView={DepartureForm}
-              useOkButton={true}
-              onCloseExtendedView={onClosePopup}
+            <FormCardButton
+              wizardFormName={"from"}
+              fieldName={"from"}
+              label={"Départ de"}
+              actor={machineContext}
+              valueFormatter={value => value.label}
+              onSubmit={onSubmit}
+              onReset={oldValue => resetField("from", { defaultValue: oldValue })}
             />
-            <CardButton
-              label="Arrivée à"
-              value={formData.to.label}
-              color={AppColorPalettes.pink[500]}
-              extendedView={DestinationForm}
-              useOkButton={true}
-              onCloseExtendedView={onClosePopup}
+            <FormCardButton
+              wizardFormName={"to"}
+              fieldName={"to"}
+              label={"Arrivée à"}
+              actor={machineContext}
+              valueFormatter={value => value.label}
+              onSubmit={onSubmit}
+              onReset={oldValue => resetField("to", { defaultValue: oldValue })}
             />
           </Row>
           <Row spacing={horizontalCardSpacing}>
-            <CardButton
-              label="Date"
-              value={formatShortMonthDay(formData.departureDate)}
-              color={AppColorPalettes.yellow[500]}
-              extendedView={DateForm}
-              useOkButton={true}
-              onCloseExtendedView={onClosePopup}
+            <FormCardButton
+              wizardFormName={"date"}
+              fieldName={"departureDate"}
+              label={"Date"}
+              actor={machineContext}
+              valueFormatter={value => formatShortMonthDay(value)}
+              onSubmit={onSubmit}
+              onReset={oldValue => resetField("departureDate", { defaultValue: oldValue })}
             />
-            <CardButton
-              label="Départ à"
-              value={formatTime(formData.departureTime * 1000)}
-              color={AppColorPalettes.blue[500]}
-              extendedView={TimeForm}
-              useOkButton={true}
-              onCloseExtendedView={onClosePopup}
+            <FormCardButton
+              wizardFormName={"time"}
+              fieldName={"departureTime"}
+              label={"Départ à"}
+              actor={machineContext}
+              valueFormatter={value => formatTime(value * 1000)}
+              onSubmit={onSubmit}
+              onReset={oldValue => resetField("departureTime", { defaultValue: oldValue })}
             />
           </Row>
           <Row style={styles.singleCardRow}>
-            <CardButton
-              label="Véhicule"
-              value={formData.driverCapacity > 0 ? "Oui" : "Non"}
-              color={AppColors.white}
-              useOkButton={true}
-              extendedView={CarDataForm}
-              onCloseExtendedView={onClosePopup}
+            <FormCardButton
+              wizardFormName={"vehicle"}
+              fieldName={"driverCapacity"}
+              label={"Véhicule"}
+              actor={machineContext}
+              valueFormatter={value => (value > 0 ? "Oui" : "Non")}
+              onSubmit={onSubmit}
+              onReset={oldValue => resetField("driverCapacity", { defaultValue: oldValue })}
             />
           </Row>
         </Column>
@@ -181,7 +211,7 @@ export const OverviewForm = () => {
         <AppText style={styles.sectionTitle}>Ajouter un retour</AppText>
       </Row>
       <View style={styles.smallSectionContainer}>
-        <ReturnTrip value={formData.returnTime} setValue={v => setValue("returnTime", v)} onClosePopup={onClosePopup} />
+        <ReturnTrip actor={machineContext} onSubmit={onSubmit} onReset={oldValue => resetField("returnTime", { defaultValue: oldValue })} />
       </View>
 
       <Row spacing={horizontalCardSpacing} style={{ alignItems: "center" }}>
