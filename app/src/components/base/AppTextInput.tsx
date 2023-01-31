@@ -1,21 +1,22 @@
-import React from "react";
+import React, { ForwardedRef, forwardRef } from "react";
 import { StyleSheet, TextInput, TextInputProps } from "react-native";
-import { AppIcon, IconName } from "./AppIcon";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 
 export interface AppTextInputProps extends TextInputProps {
-  icon?: IconName;
+  leading?: JSX.Element;
+  trailing?: JSX.Element;
 }
 
-export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
+export const AppTextInput = forwardRef(({ leading, trailing, style, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
   return (
     <Row style={styles.container} spacing={8}>
-      {icon && <AppIcon name={icon} color={AppColorPalettes.blue[500]} />}
-      <TextInput style={[styles.input, style]} {...props} />
+      {leading}
+      <TextInput ref={ref} style={[styles.input, style]} {...props} />
+      {trailing}
     </Row>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -26,6 +27,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     padding: 0,
-    color: AppColors.black
+    fontFamily: "Inter",
+    color: AppColorPalettes.gray[800]
   }
 });

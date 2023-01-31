@@ -1,5 +1,5 @@
-import { assign, createMachine, StateMachine } from "xstate";
-import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
+import { assign, createMachine, Interpreter, StateMachine } from "xstate";
+import { LianeWizardFormData, LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 
 export type WizardStepsKeys = "to" | "from" | "time" | "date" | "vehicle";
 
@@ -40,6 +40,8 @@ type Event = WizardDataEvent | { type: "PREV" } | { type: "SUBMIT" };
 
 export type WizardStateMachine = StateMachine<LianeWizardFormData, Schema, Event>;
 
+export type WizardStateMachineInterpreter = Interpreter<LianeWizardFormData, Schema, Event>;
+
 const states: { [name in StatesKeys]: any } = {
   ...createStateSequence<StatesKeys>(WizardStateSequence, "overview"),
 
@@ -74,7 +76,9 @@ export const CreateLianeContextMachine = (initialValue?: LianeWizardFormData): W
     },
     {
       actions: {
-        submit: (context, _) => console.log("SUBMITTED", context),
+        submit: (context, _) => {
+          console.log("SUBMITTED", context);
+        },
         set: assign<LianeWizardFormData, WizardDataEvent>((context, event) => {
           return {
             ...context,

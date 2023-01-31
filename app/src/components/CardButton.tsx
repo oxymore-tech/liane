@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ColorValue, GestureResponderEvent, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ColorValue, GestureResponderEvent, Modal, Pressable, PressableProps, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
   Extrapolation,
@@ -12,7 +12,7 @@ import Animated, {
   withTiming
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -24,7 +24,7 @@ export interface LianeCardProps extends PressableProps {
   label?: string;
   value: string;
   onCancel?: () => void;
-  color?: ColorValue;
+  color: ColorValue;
   textColor?: ColorValue;
   extendedView?: JSX.Element;
   useOkButton?: boolean;
@@ -171,7 +171,7 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
                 }}>
                 <ModalButton
                   color={AppColors.white}
-                  backgroundColor={`rgba(0 0 0 / ${textColor === AppColors.white ? "0.25" : "0.4"})`}
+                  backgroundColor={WithAlpha(AppColors.white, textColor === AppColors.white ? 0.25 : 0.2)}
                   text={useOkButton ? "Annuler" : "Fermer"}
                   onPress={() => closeModal(false)}
                 />
@@ -217,8 +217,8 @@ const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => 
   </Pressable>
 );
 
-export function CardButton({
-  color = AppColorPalettes.orange[500],
+export const CardButton = ({
+  color,
   textColor,
   label,
   value,
@@ -227,7 +227,7 @@ export function CardButton({
   useOkButton = false,
   showPopup = false,
   onCloseExtendedView
-}: LianeCardProps) {
+}: LianeCardProps) => {
   let finalTextColor = textColor;
   if (!textColor) {
     finalTextColor = defaultTextColor(color);
@@ -235,7 +235,7 @@ export function CardButton({
 
   if (showPopup) {
     // Open popup automatically
-    this.ref.measureInWindow((x, y) => {
+    this.ref?.measureInWindow((x, y) => {
       setModalSpecs({ x, y });
     });
   }
@@ -278,7 +278,7 @@ export function CardButton({
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   baseContainer: {

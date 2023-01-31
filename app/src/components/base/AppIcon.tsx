@@ -1,19 +1,27 @@
-import React from "react";
-import { Icon } from "react-native-eva-icons";
+import React, { useEffect } from "react";
+import { Icon, IconProps } from "react-native-eva-icons";
 import { AppDimensions } from "@/theme/dimensions";
 import { ColorValue } from "react-native";
 import { AppColorPalettes } from "@/theme/colors";
+import { IconAnimationRegistry } from "react-native-eva-icons/animation";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
-interface AppIconProps {
+export type AppIconProps = {
   name: IconName;
   color?: ColorValue;
   size?: number;
-}
+  animation?: keyof IconAnimationRegistry;
+};
 
-export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize }: AppIconProps) {
-  return <Icon name={name} width={size} height={size} fill={color} />;
+export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, animation }: AppIconProps) {
+  const iconRef = React.useRef();
+  useEffect(() => {
+    if (animation) {
+      iconRef.current?.startAnimation();
+    }
+  });
+  return <Icon name={name} width={size} height={size} fill={color} animation={animation} ref={iconRef} />;
 }
 
 const EvaIconsNames = [

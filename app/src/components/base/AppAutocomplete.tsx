@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Keyboard, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Keyboard, Pressable, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { AppTextInput, AppTextInputProps } from "@/components/base/AppTextInput";
 import { AppText } from "@/components/base/AppText";
 import useDebounce from "@/api/hook";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppIcon } from "@/components/base/AppIcon";
 
 export interface AppAutocompleteProps<T> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;
@@ -14,10 +15,22 @@ export interface AppAutocompleteProps<T> extends Omit<Omit<AppTextInputProps, "o
 
 export type BasicItem = Readonly<{ id?: string; label: string }>;
 
+const borderRadius = 24;
 export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, onChange, ...props }: AppAutocompleteProps<T>) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>();
   const debouncedSearch = useDebounce(search);
+  const [focused, setFocused] = useState(false);
+
+  const inputRef = useRef<TextInput>(null);
+  const onFocus = () => {
+    setFocused(true);
+  };
+
+  const onBlur = () => {
+    setFocused(false);
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (debouncedSearch && onSearch) {
@@ -38,22 +51,40 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
     [onChange]
   );
 
+  const reset = () => {
+    inputRef.current?.clear();
+    if (value && onChange) {
+      onChange(undefined);
+    }
+    inputRef.current?.focus();
+  };
+
+  const leading = <AppIcon name={"search-outline"} color={focused ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]} />;
+  const trailing =
+    value || (search && search.length > 0) ? (
+      <Pressable onPress={reset}>
+        <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+      </Pressable>
+    ) : undefined;
+
   return (
-    <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : 8, borderBottomLeftRadius: open ? 0 : 8 }]}>
+    <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : borderRadius, borderBottomLeftRadius: open ? 0 : borderRadius }]}>
       <AppTextInput
+        ref={inputRef}
         style={styles.input}
-        icon="map"
+        leading={leading}
+        trailing={trailing}
         blurOnSubmit={false}
         value={search ?? value?.label ?? undefined}
         onChangeText={setSearch}
-        onFocus={() => setSearch("")}
-        onBlur={() => setOpen(false)}
-        onTouchCancel={() => setOpen(false)}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onTouchCancel={onBlur}
         {...props}
       />
 
       {open && (
-        <View style={{ zIndex: 100, position: "absolute", left: 0, right: 0, top: 40 }}>
+        <View style={{ zIndex: 100, position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
           <View style={styles.itemsContainer}>
             <ItemList items={items} loading={false} onSelect={onSelect} />
           </View>
@@ -105,27 +136,28 @@ const styles = StyleSheet.create({
     color: AppColorPalettes.gray[800]
   },
   item: {
-    fontSize: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8
+    fontSize: 18,
+    paddingHorizontal: borderRadius,
+    paddingVertical: 12
   },
   itemsContainer: {
     width: "100%",
     maxHeight: 108,
     backgroundColor: AppColorPalettes.gray[100],
-    borderRadius: 8,
+    borderRadius,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     borderTopWidth: 1,
     borderTopColor: AppColorPalettes.gray[400]
   },
   inputContainer: {
-    height: 40,
+    height: 2 * borderRadius,
     paddingVertical: 8,
     backgroundColor: AppColors.white,
     alignContent: "center",
     alignItems: "center",
-    borderRadius: 8,
-    paddingLeft: 20
+    borderRadius,
+    paddingLeft: 20,
+    paddingRight: 8
   }
 });

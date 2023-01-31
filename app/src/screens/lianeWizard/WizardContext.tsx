@@ -1,9 +1,8 @@
 import React from "react";
 import { BaseFormProps, CarForm, DateForm, FormComponent, LocationForm, RememberChoiceForm, TimeForm } from "@/screens/lianeWizard/Forms";
 import { AppColors } from "@/theme/colors";
-import { WizardStateMachine, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
+import { WizardStateMachineInterpreter, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
-import { Interpreter } from "xstate";
 
 export interface WizardStepData {
   forms: (() => JSX.Element)[];
@@ -57,4 +56,4 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
 };
 
 // @ts-ignore
-export const WizardContext = React.createContext<Interpreter<WizardStateMachine>>();
+export const WizardContext = React.createContext<WizardStateMachineInterpreter>();

@@ -47,9 +47,9 @@ export const LianePager = ({ onNext, onPrev, step }: LianePagerProps) => {
 
 const styles = StyleSheet.create({
   pagerContentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 40,
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingBottom: 8,
     alignItems: "center",
     flex: 1,
     justifyContent: "space-between"

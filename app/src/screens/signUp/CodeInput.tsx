@@ -2,7 +2,7 @@ import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppColorPalettes } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 type CodeInputProps = {
   onValidate: () => void;
@@ -31,7 +31,7 @@ export const CodeInput = ({ code, onChange, onValidate }: CodeInputProps) => {
           maxLength={6}
         />
         <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={onValidate}>
-          <AppIcon name="arrow-circle-right-outline" color={AppColors.white.white} />
+          <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
         </Pressable>
       </View>
     </View>
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     height: 52,
     width: "75%",
     minWidth: 250,
-    backgroundColor: AppColors.white.white,
+    backgroundColor: AppColors.white,
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",

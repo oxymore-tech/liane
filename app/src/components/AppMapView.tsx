@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { StyleSheet, View } from "react-native";
 import MapboxGL, { Logger } from "@rnmapbox/maps";
-import { getLastKnownLocation, MapStyle } from "@/api/location";
+import { MapStyle } from "@/api/location";
 import { AppText } from "@/components/base/AppText";
-import { LatLng } from "@/api";
+import { AppContext } from "@/components/ContextProvider";
 
 MapboxGL.setWellKnownTileServer(MapboxGL.TileServers.MapLibre!);
 MapboxGL.setAccessToken(null).then();
@@ -19,13 +19,10 @@ Logger.setLogCallback(log => {
 });
 
 const AppMapView = () => {
-  const [location, setLocation] = useState<LatLng>();
-  useEffect(() => {
-    getLastKnownLocation().then(setLocation);
-  }, []);
+  const { position } = useContext(AppContext);
 
-  if (location) {
-    const coordinatesA = [location.lng, location.lat];
+  if (position) {
+    const coordinatesA = [position.lng, position.lat];
 
     return (
       <MapboxGL.MapView style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>

@@ -1,8 +1,8 @@
-import { Switch } from "react-native";
-import React, { useEffect } from "react";
+import { Switch, View } from "react-native";
+import React, { useContext, useEffect } from "react";
 import DatePicker from "react-native-date-picker";
 import { ControllerFieldState, useController } from "react-hook-form";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RallyingPointInput } from "@/components/RallyingPointInput";
 import { RallyingPoint } from "@/api";
@@ -12,11 +12,16 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { TimeInSeconds, toTimeInSeconds } from "@/util/datetime";
+import MapboxGL from "@rnmapbox/maps";
+import { MapStyle } from "@/api/location";
+import LocationPin from "@/assets/location_pin.svg";
+import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
+import { AppContext } from "@/components/ContextProvider";
 
 export interface BaseFormProps<T> {
   name: LianeWizardFormKey;
   defaultValue?: T;
-  rules?: { required?: boolean; validate?: (value: T, formValues) => boolean };
+  rules?: { required?: boolean; validate?: (value: T, formValues: unknown) => boolean };
 }
 
 interface InternalBaseFormProps<T> {
@@ -39,7 +44,9 @@ const WithFormContext =
       rules: rulesWithDefaults,
       ...props
     });
-
+    if (fieldState.invalid) {
+      console.log("INVALID", field.name, fieldState.error);
+    }
     return <WrappedForm value={field.value} onChange={field.onChange} fieldState={fieldState} />;
   };
 
@@ -49,7 +56,18 @@ export const DateForm: FormComponent<Date> = WithFormContext(({ value, onChange 
       onChange(new Date());
     });
   }
-  return <DatePicker mode="date" date={value || new Date()} onDateChange={onChange} fadeToColor="none" textColor={AppColors.black} />;
+  return (
+    <View style={{ backgroundColor: WithAlpha(AppColors.white, 0.4), borderRadius: 16, marginVertical: 16 }}>
+      <DatePicker
+        mode="date"
+        date={value || new Date()}
+        onDateChange={onChange}
+        fadeToColor="none"
+        textColor={AppColors.black}
+        minimumDate={new Date()}
+      />
+    </View>
+  );
 });
 
 export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, onChange }: InternalBaseFormProps<TimeInSeconds>) => {
@@ -59,55 +77,93 @@ export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, 
     });
   }
   return (
-    <DatePicker
-      mode="time"
-      date={value ? new Date(value * 1000) : new Date()}
-      onDateChange={date => onChange(toTimeInSeconds(date))}
-      fadeToColor="none"
-      textColor={AppColors.black}
-    />
+    <View style={{ backgroundColor: WithAlpha(AppColors.white, 0.4), borderRadius: 16, marginVertical: 16 }}>
+      <DatePicker
+        mode="time"
+        date={value ? new Date(value * 1000) : new Date()}
+        onDateChange={date => onChange(toTimeInSeconds(date))}
+        fadeToColor="none"
+        textColor={AppColors.black}
+      />
+    </View>
   );
 });
 
-/*
-
-          <View
-            style={{
-              width: 300,
-              maxHeight: 200,
-              display: "flex",
-            }}>
-            {value && (
-              <MapLibreGL.MapView
-                style={{flex: 1}}
-                styleJSON={MapStyle}
-                logoEnabled={false}
-                attributionEnabled={false}>
-                <MapLibreGL.Camera
-                  maxZoomLevel={15}
-                  minZoomLevel={5}
-                  zoomLevel={8}
-                  centerCoordinate={[value.location.lng, value.location.lat]}
-                />
-              </MapLibreGL.MapView>
-            )}
-            {(!value || error) && (
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: AppColors.gray[200],
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}>
-                <AppText>{error?.message}</AppText>
-              </View>
-            )}
-          </View>
- */
 export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormContext(
   ({ value, onChange, fieldState: { error, invalid } }: InternalBaseFormProps<RallyingPoint | undefined>) => {
-    //console.log(value, error, invalid);
-    return <RallyingPointInput placeholder="Chercher un lieu" onChange={onChange} value={value} />;
+    const { position } = useContext(AppContext);
+    const center = value ? [value.location.lng, value.location.lat] : undefined;
+    return (
+      <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
+        <MapboxGL.MapView
+          style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
+          styleJSON={MapStyle}
+          logoEnabled={false}
+          attributionEnabled={false}>
+          <MapboxGL.Camera
+            maxZoomLevel={15}
+            minZoomLevel={5}
+            zoomLevel={8}
+            animationMode={"none"}
+            centerCoordinate={center || (position && [position.lng, position.lat])}
+            padding={{ paddingBottom: value ? 100 : 0 }}
+          />
+          {value && (
+            <MapboxGL.MarkerView coordinate={center}>
+              <LocationPin fill={AppColorPalettes.orange[700]} />
+            </MapboxGL.MarkerView>
+          )}
+        </MapboxGL.MapView>
+        <View style={{ position: "absolute", top: 24, left: 24, right: 24 }}>
+          <RallyingPointInput placeholder="Chercher une adresse" onChange={onChange} value={value} />
+        </View>
+        {invalid && (
+          <Row
+            spacing={16}
+            style={{
+              position: "absolute",
+              bottom: 16,
+              left: 24,
+              right: 24,
+              backgroundColor: AppColors.white,
+              borderRadius: 16,
+              alignItems: "center",
+              paddingHorizontal: 16,
+              paddingVertical: 8
+            }}>
+            <AppIcon name="alert-triangle" animation="shake" color="darkred" size={40} />
+            <AppText numberOfLines={2} style={{ color: "darkred", flex: 1 }}>
+              Veuillez sélectionner un point de ralliement.
+            </AppText>
+          </Row>
+        )}
+        {value && (
+          <Row
+            spacing={16}
+            style={{
+              position: "absolute",
+              bottom: 16,
+              left: 24,
+              right: 24,
+              backgroundColor: AppColors.white,
+              borderRadius: 16,
+              height: 80,
+              alignItems: "center",
+              padding: 16
+            }}>
+            <LocationPin fill={AppColorPalettes.orange[700]} />
+            <Column>
+              <AppText style={{ fontWeight: "600" }}>{value.label}</AppText>
+              <AppText>1 rue de Adresse</AppText>
+              <AppText>Ville</AppText>
+            </Column>
+            <View style={{ position: "relative", top: -52, flexGrow: 1, alignItems: "flex-end", paddingRight: 16 }}>
+              <MonkeySmilingVector maxWidth={80} />
+            </View>
+          </Row>
+        )}
+      </View>
+    );
   }
 );
 

@@ -33,8 +33,13 @@ export const AppColorPalettes = {
 
     100: "#FFE4C7"
   },
-  orange: { 500: AppColors.orange, 100: "#FFBBA4" }
+  orange: { 500: AppColors.orange, 100: "#FFBBA4", 700: "#AA2900" }
 } as const;
+
+export const WithAlpha = (color: AppColors.white | AppColors.black, alpha: number) => {
+  const rgbValue = color === AppColors.white ? "255" : "0";
+  return `rgba(${rgbValue} ${rgbValue} ${rgbValue} / ${alpha})`;
+};
 
 export const defaultTextColor = (color: ColorValue) => {
   switch (color) {

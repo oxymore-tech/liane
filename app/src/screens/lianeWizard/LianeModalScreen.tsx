@@ -1,9 +1,9 @@
 import React, { useContext, useMemo } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useActor, useInterpret } from "@xstate/react";
+import { useActor, useInterpret, useSelector } from "@xstate/react";
 import Animated, { SlideInDown } from "react-native-reanimated";
-import { LianeHouseVector } from "@/components/LianeHouseVector";
+import { LianeHouseVector } from "@/components/vectors/LianeHouseVector";
 import { WizardContext, WizardFormData } from "@/screens/lianeWizard/WizardContext";
 
 import { AppDimensions } from "@/theme/dimensions";
@@ -30,11 +30,9 @@ const DynamicHouseVector = ({ snapPoint }) => {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const machineContext = useContext(WizardContext);
-  const [state] = useActor(machineContext);
-  const index = WizardStateSequence.indexOf(state.value);
-  return (
-    <LianeHouseVector maxHeight={height * (1 - snapPoint) - insets.top} maxWidth={width * 0.65} frontColor={HouseColor[index % HouseColor.length]} />
-  );
+  const stateValue = useSelector(machineContext, state => state.value);
+  const frontColor = HouseColor[WizardStateSequence.indexOf(stateValue) % HouseColor.length];
+  return <LianeHouseVector maxHeight={height * (1 - snapPoint) - insets.top} maxWidth={width * 0.65} frontColor={frontColor} />;
 };
 
 const maxSnapPoint = 0.8;
@@ -42,15 +40,16 @@ const defaultSnapPoint = 0.75;
 const minHeight = 550;
 
 export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<LianeModalScreenParams, "LianeWizard">) => {
-  const lianeRequest = route.params?.lianeRequest;
+  // TODO read route param const liane = route.params?.liane;
   const insets = useSafeAreaInsets();
-  const machine = CreateLianeContextMachine(lianeRequest);
+  const machine = CreateLianeContextMachine();
   const lianeWizardMachine = useInterpret(machine);
+
+  lianeWizardMachine.onDone(event => console.log("done", event, event.data)); //TODO
 
   const { height } = useWindowDimensions();
   const snapPoint = Math.min(Math.max(defaultSnapPoint, minHeight / height), maxSnapPoint);
 
-  console.log(snapPoint, height);
   const closeWizard = () => {
     navigation.goBack();
   };
@@ -58,8 +57,9 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
   const backdropDecoration = (
     <View
       style={{
-        paddingTop: insets.top + 1,
-        paddingRight: 24,
+        position: "absolute",
+        bottom: snapPoint * height - 1,
+        right: 32,
         alignItems: "flex-end"
       }}>
       <DynamicHouseVector snapPoint={snapPoint} />
@@ -94,13 +94,13 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
           borderTopRightRadius: AppDimensions.borderRadius,
           borderTopLeftRadius: AppDimensions.borderRadius
         }}>
-        <LianeWizard closeModal={closeWizard} />
+        <LianeWizard />
       </Animated.View>
     </WizardContext.Provider>
   );
 };
 
-const LianeWizard = ({ closeModal }) => {
+const LianeWizard = () => {
   const insets = useSafeAreaInsets();
   const machineContext = useContext(WizardContext);
   const [state] = useActor(machineContext);
@@ -167,7 +167,7 @@ const LianeWizard = ({ closeModal }) => {
                   // send liane request
                   send("SUBMIT");
                   // close modal
-                  closeModal();
+                  // TODO
                 }}
                 icon="arrow-right"
                 color={AppColors.white}

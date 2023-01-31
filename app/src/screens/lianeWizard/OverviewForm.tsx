@@ -1,11 +1,11 @@
 import { StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { CardButton } from "@/components/CardButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppDimensions } from "@/theme/dimensions";
@@ -13,21 +13,20 @@ import { WizardContext, WizardFormData, WizardFormDataKey } from "@/screens/lian
 import { formatShortMonthDay, formatTime } from "@/api/i18n";
 import { LianeWizardFormData, LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { useSelector } from "@xstate/react";
-import { Interpreter } from "xstate";
-import { WizardStateMachine } from "@/screens/lianeWizard/StateMachine";
 
 const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
 
-const ReturnTrip = ({ actor, onSubmit, onReset }) => {
+const ReturnTrip = ({ onSubmit, onReset }: FormComponentProps<"returnTime">) => {
   const [showPopup, setShowPopup] = useState(false);
-
-  const value = useSelector(actor, state => state.context.returnTime);
+  const machine = useContext(WizardContext);
+  const value: LianeWizardFormData["returnTime"] = useSelector(machine, state => state.context.returnTime);
 
   return (
     <Row style={styles.singleCardRow}>
       {value || showPopup ? (
         <CardButton
+          key="returnTrip"
           showPopup={showPopup}
           useOkButton
           extendedView={WithForms("returnTrip")}
@@ -57,7 +56,7 @@ const ReturnTrip = ({ actor, onSubmit, onReset }) => {
   );
 };
 
-const ShareList = ({ onItemAdded }) => {
+const ShareList = ({ onItemAdded }: { onItemAdded: Function }) => {
   const [shareList, setShareList] = useState<string[]>([]);
   const removeItem = (index: number) => {
     shareList.splice(index, 1);
@@ -80,11 +79,11 @@ const ShareList = ({ onItemAdded }) => {
 };
 
 const WithForms = (key: WizardFormDataKey) => {
-  const { title, forms } = WizardFormData[key];
+  const { title, forms, color } = WizardFormData[key];
 
   return (
     <Column style={styles.containerModal} spacing={16}>
-      <AppText style={styles.titleModal}>{title}</AppText>
+      <AppText style={[styles.titleModal, { color: defaultTextColor(color) }]}>{title}</AppText>
       <Column style={styles.formContainer} spacing={16}>
         {forms.map((Form, index) => (
           <Form key={`${key}.field${index}`} />
@@ -94,27 +93,29 @@ const WithForms = (key: WizardFormDataKey) => {
   );
 };
 
+type FormComponentProps<FieldName extends LianeWizardFormKey> = {
+  onReset: (oldValue: LianeWizardFormData[FieldName]) => void;
+  onSubmit: () => void;
+};
+
 type FormCardButtonProps<FieldName extends LianeWizardFormKey> = {
   fieldName: FieldName;
   wizardFormName: WizardFormDataKey;
   label: string;
-  valueFormatter?: (value: LianeWizardFormData[FieldName]) => string;
-  onReset: (oldValue: LianeWizardFormData[FieldName]) => void;
-  onSubmit: () => void;
-  actor: Interpreter<WizardStateMachine>;
-};
+  valueFormatter: (value: LianeWizardFormData[FieldName]) => string;
+} & FormComponentProps<FieldName>;
 const FormCardButton = <FieldName extends LianeWizardFormKey>({
   fieldName,
   wizardFormName,
   label,
   valueFormatter,
   onReset,
-  onSubmit,
-  actor
+  onSubmit
 }: FormCardButtonProps<FieldName>) => {
   const form = WithForms(wizardFormName);
   const color = WizardFormData[wizardFormName].color;
-  const value = useSelector(actor, state => state.context[fieldName]);
+  const machine = useContext(WizardContext);
+  const value: LianeWizardFormData[FieldName] = useSelector(machine, state => state.context[fieldName]);
   const onClosePopup = (validate: boolean) => {
     if (validate) {
       onSubmit();
@@ -123,29 +124,20 @@ const FormCardButton = <FieldName extends LianeWizardFormKey>({
     }
   };
   return (
-    <CardButton
-      label={label}
-      value={valueFormatter ? valueFormatter(value) : value}
-      color={color}
-      extendedView={form}
-      useOkButton={true}
-      onCloseExtendedView={onClosePopup}
-    />
+    <CardButton label={label} value={valueFormatter(value)} color={color} extendedView={form} useOkButton={true} onCloseExtendedView={onClosePopup} />
   );
 };
 export const OverviewForm = () => {
   const scrollViewRef = useRef<ScrollView>(null);
-  const machineContext = useContext(WizardContext);
-  const { send } = machineContext;
+  const { send } = useContext(WizardContext);
 
   const { handleSubmit, resetField } = useFormContext<LianeWizardFormData>();
 
   const onSubmit = handleSubmit(
     data => {
-      console.log("UPDATE", { data });
       send("UPDATE", { data });
     },
-    (errors, e) => {
+    (errors, _) => {
       return console.log(errors);
     }
   );
@@ -158,7 +150,6 @@ export const OverviewForm = () => {
               wizardFormName={"from"}
               fieldName={"from"}
               label={"Départ de"}
-              actor={machineContext}
               valueFormatter={value => value.label}
               onSubmit={onSubmit}
               onReset={oldValue => resetField("from", { defaultValue: oldValue })}
@@ -167,7 +158,6 @@ export const OverviewForm = () => {
               wizardFormName={"to"}
               fieldName={"to"}
               label={"Arrivée à"}
-              actor={machineContext}
               valueFormatter={value => value.label}
               onSubmit={onSubmit}
               onReset={oldValue => resetField("to", { defaultValue: oldValue })}
@@ -178,7 +168,6 @@ export const OverviewForm = () => {
               wizardFormName={"date"}
               fieldName={"departureDate"}
               label={"Date"}
-              actor={machineContext}
               valueFormatter={value => formatShortMonthDay(value)}
               onSubmit={onSubmit}
               onReset={oldValue => resetField("departureDate", { defaultValue: oldValue })}
@@ -187,7 +176,6 @@ export const OverviewForm = () => {
               wizardFormName={"time"}
               fieldName={"departureTime"}
               label={"Départ à"}
-              actor={machineContext}
               valueFormatter={value => formatTime(value * 1000)}
               onSubmit={onSubmit}
               onReset={oldValue => resetField("departureTime", { defaultValue: oldValue })}
@@ -198,7 +186,6 @@ export const OverviewForm = () => {
               wizardFormName={"vehicle"}
               fieldName={"driverCapacity"}
               label={"Véhicule"}
-              actor={machineContext}
               valueFormatter={value => (value > 0 ? "Oui" : "Non")}
               onSubmit={onSubmit}
               onReset={oldValue => resetField("driverCapacity", { defaultValue: oldValue })}
@@ -212,7 +199,7 @@ export const OverviewForm = () => {
         <AppText style={styles.sectionTitle}>Ajouter un retour</AppText>
       </Row>
       <View style={styles.smallSectionContainer}>
-        <ReturnTrip actor={machineContext} onSubmit={onSubmit} onReset={oldValue => resetField("returnTime", { defaultValue: oldValue })} />
+        <ReturnTrip onSubmit={onSubmit} onReset={oldValue => resetField("returnTime", { defaultValue: oldValue })} />
       </View>
 
       <Row spacing={horizontalCardSpacing} style={{ alignItems: "center" }}>
@@ -235,6 +222,7 @@ const styles = StyleSheet.create({
   formContainer: {
     alignItems: "center",
     flex: 1,
+    width: "100%",
     marginTop: 16,
     marginBottom: 40,
     justifyContent: "space-between"
