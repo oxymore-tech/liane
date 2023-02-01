@@ -48,7 +48,6 @@ const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane
           params: { liane: item }
         });
       }}
-      key={item.id}
       style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <LianeView liane={item} />
     </Pressable>
@@ -76,8 +75,9 @@ const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane
       <SectionList
         sections={sections}
         renderItem={renderItem}
+        keyExtractor={item => item.id}
         renderSectionHeader={renderSectionHeader}
-        renderSectionFooter={() => <View style={styles.sectionSeparator} />}
+        renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 : 24 }} />}
       />
     </Column>
   );
@@ -113,9 +113,6 @@ const styles = StyleSheet.create({
   itemLast: {
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16
-  },
-  sectionSeparator: {
-    height: 24
   }
 });
 

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useActor, useInterpret, useSelector } from "@xstate/react";
@@ -60,21 +60,25 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
   // Listen to keyboard state to hide backdrop when keyboard is visible
   const keyboardIsOpen = useKeyboardState();
 
-  lianeWizardMachine.onDone(async event => {
-    // Post liane request
-    const request = toLianeRequest(event.data);
-    const lianeResponse = await services.liane.post(request);
-    // Pass response
-    if (route.params?.origin) {
-      navigation.navigate({
-        name: route.params?.origin,
-        params: { lianeResponse },
-        merge: true
-      });
-    } else {
-      navigation.goBack();
-    }
-  });
+  useEffect(() => {
+    const onDoneListener = async event => {
+      // Post liane request
+      const request = toLianeRequest(event.data);
+      const lianeResponse = await services.liane.post(request);
+      // Pass response
+      if (route.params?.origin) {
+        navigation.navigate({
+          name: route.params?.origin,
+          params: { lianeResponse },
+          merge: true
+        });
+      } else {
+        navigation.goBack();
+      }
+    };
+    lianeWizardMachine.onDone(onDoneListener);
+    return () => lianeWizardMachine.off(onDoneListener);
+  }, [lianeWizardMachine]);
 
   const snapPoint = Math.min(Math.max(defaultSnapPoint, minHeight / height), maxSnapPoint);
   const modalMargin = 8;

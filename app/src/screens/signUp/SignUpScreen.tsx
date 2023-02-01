@@ -51,7 +51,7 @@ const SignUpScreen = () => {
       setAuthUser(authUser);
     } catch (e: any) {
       if (e instanceof UnauthorizedError) {
-        setStep(SignUpStep.EnterPhoneNumber);
+        setStep("EnterPhoneNumber");
         setError("Le code est incorrect");
       } else {
         console.warn("Error during login", e);

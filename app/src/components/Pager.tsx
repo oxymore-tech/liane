@@ -4,6 +4,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
+import { useNavigation } from "@react-navigation/native";
 
 export interface WizardPageProps extends PropsWithChildren {
   backgroundColor: AppColors;
@@ -15,6 +16,7 @@ export interface WizardPagerProps {
   currentPage: number;
   children: (index: number) => JSX.Element;
   pageCount: number;
+  previousPageOnGoBack: boolean;
 }
 
 /* TODO restore anims
@@ -70,11 +72,26 @@ const PagerButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => 
   </Pressable>
 );
 
-export const WizardPager = ({ children, pageCount, color, onPageChange, currentPage }: WizardPagerProps) => {
+export const WizardPager = ({ children, pageCount, color, onPageChange, currentPage, previousPageOnGoBack = true }: WizardPagerProps) => {
   const currentPageChild = children(currentPage);
   const { backgroundColor } = currentPageChild.props as WizardPageProps;
   const grayColor = defaultTextColor(backgroundColor);
   const keyboardIsVisible = useKeyboardState();
+  const navigation = useNavigation();
+
+  React.useEffect(() => {
+    const onGoBackListener = e => {
+      if (!previousPageOnGoBack || currentPage === 0) {
+        // Ignore this
+        return;
+      }
+      // Prevent default behavior of leaving the screen
+      e.preventDefault();
+      onPageChange(currentPage - 1);
+    };
+    navigation.addListener("beforeRemove", onGoBackListener);
+    return () => navigation.removeListener("beforeRemove", onGoBackListener);
+  });
 
   const dots = [...Array(pageCount)].map((_, index) => (
     <View
