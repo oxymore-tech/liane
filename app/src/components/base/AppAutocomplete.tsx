@@ -56,6 +56,8 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
     if (value && onChange) {
       onChange(undefined);
     }
+    setOpen(false);
+    setSearch(undefined);
     inputRef.current?.focus();
   };
 
@@ -73,7 +75,7 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
         ref={inputRef}
         style={styles.input}
         leading={leading}
-        trailing={trailing}
+        trailing={(search && search.length > 0) || value ? trailing : undefined}
         blurOnSubmit={false}
         value={search ?? value?.label ?? undefined}
         onChangeText={setSearch}
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     borderRadius,
-    paddingLeft: 20,
-    paddingRight: 8
+    paddingLeft: 12,
+    paddingRight: 12
   }
 });

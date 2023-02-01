@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
+import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
 
 export interface WizardPageProps extends PropsWithChildren {
   backgroundColor: AppColors;
@@ -31,12 +32,13 @@ const animatePage = (component, currentPage, pageCount) => {
   );
 };*/
 export const WizardPage = ({ backgroundColor, children }: WizardPageProps) => {
+  const keyboardIsVisible = useKeyboardState();
   return (
     <View
       style={{
         flex: 1,
         margin: 8,
-        marginBottom: 72, // 52 + 24
+        marginBottom: keyboardIsVisible ? 8 : 72, // 52 + 24
         backgroundColor,
         borderRadius: 16
       }}>
@@ -72,6 +74,7 @@ export const WizardPager = ({ children, pageCount, color, onPageChange, currentP
   const currentPageChild = children(currentPage);
   const { backgroundColor } = currentPageChild.props as WizardPageProps;
   const grayColor = defaultTextColor(backgroundColor);
+  const keyboardIsVisible = useKeyboardState();
 
   const dots = [...Array(pageCount)].map((_, index) => (
     <View
@@ -90,30 +93,32 @@ export const WizardPager = ({ children, pageCount, color, onPageChange, currentP
   return (
     <View style={{ flexGrow: 1 }}>
       {currentPageChild}
-      <Row style={styles.bottomContainer}>
-        <View style={{ flexBasis: 100 }}>
-          {currentPage > 0 && (
-            <PagerButton
-              backgroundColor={AppColors.white}
-              color={AppColorPalettes.gray[800]}
-              opacity={0.75}
-              text="Précédent"
-              onPress={() => onPageChange(currentPage - 1)}
-            />
-          )}
-        </View>
-        <Row spacing={4} style={{ flexGrow: 1, justifyContent: "center" }}>
-          {dots}
+      {!keyboardIsVisible && (
+        <Row style={styles.bottomContainer}>
+          <View style={{ flexBasis: 100 }}>
+            {currentPage > 0 && (
+              <PagerButton
+                backgroundColor={AppColors.white}
+                color={AppColorPalettes.gray[800]}
+                opacity={0.75}
+                text="Précédent"
+                onPress={() => onPageChange(currentPage - 1)}
+              />
+            )}
+          </View>
+          <Row spacing={4} style={{ flexGrow: 1, justifyContent: "center" }}>
+            {dots}
+          </Row>
+          <View style={{ flexBasis: 100 }}>
+            {currentPage < pageCount - 1 && (
+              <PagerButton color={grayColor} backgroundColor={color} text="Suivant" onPress={() => onPageChange(currentPage + 1)} />
+            )}
+            {currentPage === pageCount - 1 && (
+              <PagerButton color={grayColor} backgroundColor={color} text="Terminer" onPress={() => onPageChange(null)} />
+            )}
+          </View>
         </Row>
-        <View style={{ flexBasis: 100 }}>
-          {currentPage < pageCount - 1 && (
-            <PagerButton color={grayColor} backgroundColor={color} text="Suivant" onPress={() => onPageChange(currentPage + 1)} />
-          )}
-          {currentPage === pageCount - 1 && (
-            <PagerButton color={grayColor} backgroundColor={color} text="Terminer" onPress={() => onPageChange(null)} />
-          )}
-        </View>
-      </Row>
+      )}
     </View>
   );
 };

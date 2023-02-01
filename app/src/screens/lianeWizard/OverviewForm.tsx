@@ -18,26 +18,34 @@ const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
 
 const ReturnTrip = ({ onSubmit, onReset }: FormComponentProps<"returnTime">) => {
-  const [showPopup, setShowPopup] = useState(false);
+  const state = useState(null);
+  const [showPopup, setShowPopup] = state;
   const machine = useContext(WizardContext);
   const value: LianeWizardFormData["returnTime"] = useSelector(machine, state => state.context.returnTime);
+
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (state[0]) {
+      ref.current?.showModal(showPopup.pageX, showPopup.pageY);
+      state[0] = null;
+    }
+  });
 
   return (
     <Row style={styles.singleCardRow}>
       {value || showPopup ? (
         <CardButton
           key="returnTrip"
-          showPopup={showPopup}
+          ref={ref}
           useOkButton
           extendedView={WithForms("returnTrip")}
           onCloseExtendedView={isOk => {
-            if (showPopup) {
-              setShowPopup(false);
-            }
-
             if (isOk) {
               onSubmit();
             } else {
+              // TODO : Fix no animation if we rerender component here + freeze on android if set to null to early ...
+              setTimeout(() => setShowPopup(null), 800);
               onReset(value);
             }
           }}
@@ -45,17 +53,25 @@ const ReturnTrip = ({ onSubmit, onReset }: FormComponentProps<"returnTime">) => 
           value={value ? formatTime(new Date(value * 1000)) : "--:--"}
           color={AppColorPalettes.blue[500]}
           onCancel={() => {
+            setShowPopup(null);
             onReset(null);
             onSubmit();
           }}
         />
       ) : (
-        <AppButton icon="plus-outline" color={AppColorPalettes.blue[500]} onPress={() => setShowPopup(true)} />
+        <AppButton
+          icon="plus-outline"
+          color={AppColorPalettes.blue[500]}
+          onPress={event => {
+            console.log("click", event.nativeEvent);
+            setShowPopup(event.nativeEvent);
+          }}
+        />
       )}
     </Row>
   );
 };
-
+/*
 const ShareList = ({ onItemAdded }: { onItemAdded: Function }) => {
   const [shareList, setShareList] = useState<string[]>([]);
   const removeItem = (index: number) => {
@@ -77,7 +93,7 @@ const ShareList = ({ onItemAdded }: { onItemAdded: Function }) => {
     </Column>
   );
 };
-
+*/
 const WithForms = (key: WizardFormDataKey) => {
   const { title, forms, color } = WizardFormData[key];
 
@@ -131,7 +147,7 @@ export const OverviewForm = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const { send } = useContext(WizardContext);
 
-  const { handleSubmit, resetField } = useFormContext<LianeWizardFormData>();
+  const { handleSubmit, setValue } = useFormContext<LianeWizardFormData>();
 
   const onSubmit = handleSubmit(
     data => {
@@ -152,7 +168,7 @@ export const OverviewForm = () => {
               label={"Départ de"}
               valueFormatter={value => value.label}
               onSubmit={onSubmit}
-              onReset={oldValue => resetField("from", { defaultValue: oldValue })}
+              onReset={oldValue => setValue("from", oldValue)}
             />
             <FormCardButton
               wizardFormName={"to"}
@@ -160,7 +176,7 @@ export const OverviewForm = () => {
               label={"Arrivée à"}
               valueFormatter={value => value.label}
               onSubmit={onSubmit}
-              onReset={oldValue => resetField("to", { defaultValue: oldValue })}
+              onReset={oldValue => setValue("to", oldValue)}
             />
           </Row>
           <Row spacing={horizontalCardSpacing}>
@@ -170,7 +186,7 @@ export const OverviewForm = () => {
               label={"Date"}
               valueFormatter={value => formatShortMonthDay(value)}
               onSubmit={onSubmit}
-              onReset={oldValue => resetField("departureDate", { defaultValue: oldValue })}
+              onReset={oldValue => setValue("departureDate", oldValue)}
             />
             <FormCardButton
               wizardFormName={"time"}
@@ -178,7 +194,7 @@ export const OverviewForm = () => {
               label={"Départ à"}
               valueFormatter={value => formatTime(value * 1000)}
               onSubmit={onSubmit}
-              onReset={oldValue => resetField("departureTime", { defaultValue: oldValue })}
+              onReset={oldValue => setValue("departureTime", oldValue)}
             />
           </Row>
           <Row style={styles.singleCardRow}>
@@ -188,7 +204,7 @@ export const OverviewForm = () => {
               label={"Véhicule"}
               valueFormatter={value => (value > 0 ? "Oui" : "Non")}
               onSubmit={onSubmit}
-              onReset={oldValue => resetField("driverCapacity", { defaultValue: oldValue })}
+              onReset={oldValue => setValue("driverCapacity", oldValue)}
             />
           </Row>
         </Column>
@@ -199,15 +215,7 @@ export const OverviewForm = () => {
         <AppText style={styles.sectionTitle}>Ajouter un retour</AppText>
       </Row>
       <View style={styles.smallSectionContainer}>
-        <ReturnTrip onSubmit={onSubmit} onReset={oldValue => resetField("returnTime", { defaultValue: oldValue })} />
-      </View>
-
-      <Row spacing={horizontalCardSpacing} style={{ alignItems: "center" }}>
-        <AppIcon name="share-outline" color={AppColors.white} />
-        <AppText style={styles.sectionTitle}>Partager avec</AppText>
-      </Row>
-      <View style={styles.smallSectionContainer}>
-        <ShareList onItemAdded={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: false }))} />
+        <ReturnTrip onSubmit={onSubmit} onReset={oldValue => setValue("returnTime", oldValue)} />
       </View>
     </ScrollView>
   );
@@ -215,7 +223,7 @@ export const OverviewForm = () => {
 
 const styles = StyleSheet.create({
   containerModal: {
-    padding: 16,
+    padding: 4,
     alignItems: "center",
     flex: 1
   },
@@ -223,14 +231,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     width: "100%",
-    marginTop: 16,
-    marginBottom: 40,
+    marginBottom: 60,
     justifyContent: "space-between"
   },
   titleModal: {
     fontSize: AppDimensions.textSize.medium,
     paddingTop: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     alignSelf: "flex-start"
   },
   container: {

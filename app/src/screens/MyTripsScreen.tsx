@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import { Pressable, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { LianeView } from "@/components/LianeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -8,20 +8,43 @@ import { Liane, UTCDateTime } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
 import { AppButton } from "@/components/base/AppButton";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useQueryClient } from "react-query";
+import { Column } from "@/components/base/AppLayout";
+import { AppPressable } from "@/components/base/AppPressable";
 
 interface TripSection extends SectionBase<Liane> {
   date: string;
 }
 
-const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<{}>) => {
+const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<{}>) => {
+  const queryClient = useQueryClient();
+  React.useEffect(() => {
+    if (route.params?.liane) {
+      // Update react query cache
+      const liane = route.params?.liane;
+      if (__DEV__) {
+        console.log("Update cache with liane", liane);
+      }
+      queryClient.setQueryData(LianeQueryKey, oldData => [liane, ...oldData]);
+    }
+  }, [queryClient, route.params?.liane]);
+
   // Create section list from a list of Liane objects
   const sections = useMemo(() => convertToDateSections(data), [data]);
 
   // Render individual Liane items
   const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => (
-    <View key={item.id} style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+    <Pressable
+      onPress={() => {
+        navigation.navigate({
+          name: "LianeDetail",
+          params: { liane: item }
+        });
+      }}
+      key={item.id}
+      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <LianeView liane={item} />
-    </View>
+    </Pressable>
   );
 
   // Render section header using date as key
@@ -32,12 +55,14 @@ const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<Liane[]> & N
   );
 
   return (
-    <View style={styles.container}>
+    <Column spacing={16} style={styles.container}>
       <AppButton
         icon="plus-outline"
         title="Nouvelle Liane"
         onPress={() => {
-          navigation.navigate("LianeWizard");
+          navigation.navigate("LianeWizard", {
+            origin: route.name
+          });
         }}
       />
 
@@ -47,7 +72,7 @@ const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<Liane[]> & N
         renderSectionHeader={renderSectionHeader}
         renderSectionFooter={() => <View style={styles.sectionSeparator} />}
       />
-    </View>
+    </Column>
   );
 };
 
@@ -105,4 +130,5 @@ const convertToDateSections = (data: Liane[]): TripSection[] =>
     }, {} as { [key: UTCDateTime]: Liane[] })
   ).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
-export default WithFetchResource(MyTripsScreen, repository => repository.liane.get, "getLianes");
+export const LianeQueryKey = "getLianes";
+export default WithFetchResource(MyTripsScreen, repository => repository.liane.get, LianeQueryKey);

@@ -1,5 +1,5 @@
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
-import { LianeWizardFormData, LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
+import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 
 export type WizardStepsKeys = "to" | "from" | "time" | "date" | "vehicle";
 
@@ -13,7 +13,7 @@ const createStateSequence = <T extends unknown>(stateKeys: readonly Partial<T>[]
     ...stateKeys.slice(1, stateKeys.length - 1).map((key, shiftedIndex) => [key, createState(stateKeys[shiftedIndex + 2], stateKeys[shiftedIndex])]),
     [stateKeys[stateKeys.length - 1], createState(nextState, stateKeys[stateKeys.length - 2])]
   ];
-  console.log(JSON.stringify(states));
+
   return Object.fromEntries(states);
 };
 
@@ -57,9 +57,7 @@ const states: { [name in StatesKeys]: any } = {
   },
   submitted: {
     type: "final",
-    onDone: {
-      actions: "submit"
-    }
+    data: (context, event) => context
   }
 };
 
@@ -76,9 +74,6 @@ export const CreateLianeContextMachine = (initialValue?: LianeWizardFormData): W
     },
     {
       actions: {
-        submit: (context, _) => {
-          console.log("SUBMITTED", context);
-        },
         set: assign<LianeWizardFormData, WizardDataEvent>((context, event) => {
           return {
             ...context,

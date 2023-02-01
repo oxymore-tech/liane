@@ -23,7 +23,7 @@ export const AppColorPalettes = {
     700: "#374151",
     800: "#2E2E2E"
   },
-  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#CEE4FE", 700: AppColors.darkBlue },
+  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#9FCEFF", 100: "#CEE4FE", 700: AppColors.darkBlue },
   pink: {
     500: AppColors.pink,
     100: "#FFD6D7"
@@ -33,7 +33,7 @@ export const AppColorPalettes = {
 
     100: "#FFE4C7"
   },
-  orange: { 500: AppColors.orange, 100: "#FFBBA4", 700: "#AA2900" }
+  orange: { 500: AppColors.orange, 100: "#FFB186", 700: "#AA2900" }
 } as const;
 
 export const WithAlpha = (color: AppColors.white | AppColors.black, alpha: number) => {

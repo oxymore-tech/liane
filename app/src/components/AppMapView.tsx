@@ -1,12 +1,11 @@
 import React, { useContext } from "react";
 import { StyleSheet, View } from "react-native";
-import MapboxGL, { Logger } from "@rnmapbox/maps";
+import MapLibreGL, { Logger } from "@maplibre/maplibre-react-native";
 import { MapStyle } from "@/api/location";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
 
-MapboxGL.setWellKnownTileServer(MapboxGL.TileServers.MapLibre!);
-MapboxGL.setAccessToken(null).then();
+MapLibreGL.setAccessToken(null);
 
 Logger.setLogCallback(log => {
   const { message } = log;
@@ -25,9 +24,9 @@ const AppMapView = () => {
     const coordinatesA = [position.lng, position.lat];
 
     return (
-      <MapboxGL.MapView style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
-        <MapboxGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={coordinatesA} />
-      </MapboxGL.MapView>
+      <MapLibreGL.MapView style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
+        <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={coordinatesA} />
+      </MapLibreGL.MapView>
     );
   }
   // TODO else

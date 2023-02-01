@@ -47,7 +47,8 @@ export class LianeServiceMock implements LianeService {
     return this.mockLianes;
   };
 
-  post(liane: LianeRequest): Promise<Liane> {
-    throw new Error("Not implemented");
-  }
+  post = async (liane: LianeRequest): Promise<Liane> => {
+    console.log("FAKE POST", liane);
+    return this.mockLianes[0];
+  };
 }

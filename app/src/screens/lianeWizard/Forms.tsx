@@ -1,5 +1,5 @@
-import { Switch, View } from "react-native";
-import React, { useContext, useEffect } from "react";
+import { Pressable, Switch, View } from "react-native";
+import React, { useContext, useEffect, useRef } from "react";
 import DatePicker from "react-native-date-picker";
 import { ControllerFieldState, useController } from "react-hook-form";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
@@ -12,11 +12,12 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { TimeInSeconds, toTimeInSeconds } from "@/util/datetime";
-import MapboxGL from "@rnmapbox/maps";
+import MapLibreGL from "@maplibre/maplibre-react-native";
 import { MapStyle } from "@/api/location";
 import LocationPin from "@/assets/location_pin.svg";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { AppContext } from "@/components/ContextProvider";
+import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
 
 export interface BaseFormProps<T> {
   name: LianeWizardFormKey;
@@ -93,31 +94,36 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
   ({ value, onChange, fieldState: { error, invalid } }: InternalBaseFormProps<RallyingPoint | undefined>) => {
     const { position } = useContext(AppContext);
     const center = value ? [value.location.lng, value.location.lat] : undefined;
+    const cameraRef = useRef<MapLibreGL.Camera>(null);
+    // Listen to keyboard state to hide backdrop when keyboard is visible
+    const keyboardsIsVisible = useKeyboardState();
+
     return (
       <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
-        <MapboxGL.MapView
+        <MapLibreGL.MapView
           style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
           styleJSON={MapStyle}
           logoEnabled={false}
           attributionEnabled={false}>
-          <MapboxGL.Camera
+          <MapLibreGL.Camera
+            ref={cameraRef}
             maxZoomLevel={15}
             minZoomLevel={5}
             zoomLevel={8}
-            animationMode={"none"}
+            animationMode={"moveTo"}
             centerCoordinate={center || (position && [position.lng, position.lat])}
             padding={{ paddingBottom: value ? 100 : 0 }}
           />
           {value && (
-            <MapboxGL.MarkerView coordinate={center}>
+            <MapLibreGL.MarkerView coordinate={center}>
               <LocationPin fill={AppColorPalettes.orange[700]} />
-            </MapboxGL.MarkerView>
+            </MapLibreGL.MarkerView>
           )}
-        </MapboxGL.MapView>
-        <View style={{ position: "absolute", top: 24, left: 24, right: 24 }}>
+        </MapLibreGL.MapView>
+        <View style={{ position: "absolute", top: 16, left: 24, right: 24 }}>
           <RallyingPointInput placeholder="Chercher une adresse" onChange={onChange} value={value} />
         </View>
-        {invalid && (
+        {!keyboardsIsVisible && invalid && (
           <Row
             spacing={16}
             style={{
@@ -137,7 +143,7 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
             </AppText>
           </Row>
         )}
-        {value && (
+        {!keyboardsIsVisible && value && (
           <Row
             spacing={16}
             style={{
@@ -151,7 +157,12 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
               alignItems: "center",
               padding: 16
             }}>
-            <LocationPin fill={AppColorPalettes.orange[700]} />
+            <Pressable
+              onPress={() => {
+                cameraRef.current?.flyTo(center);
+              }}>
+              <LocationPin fill={AppColorPalettes.orange[700]} />
+            </Pressable>
             <Column>
               <AppText style={{ fontWeight: "600" }}>{value.label}</AppText>
               <AppText>1 rue de Adresse</AppText>
@@ -171,7 +182,7 @@ export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ val
   <Row style={{ alignItems: "center" }} spacing={8}>
     <Switch
       trackColor={{ false: AppColorPalettes.gray[400], true: AppColorPalettes.blue[700] }}
-      thumbColor={value ? AppColorPalettes.blue[400] : AppColorPalettes.gray[100]}
+      thumbColor={AppColorPalettes.gray[100]}
       ios_backgroundColor={AppColorPalettes.gray[500]}
       onValueChange={onChange}
       value={value}
@@ -182,17 +193,17 @@ export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ val
 
 export const CarForm: FormComponent<number> = WithFormContext(({ value, onChange }: InternalBaseFormProps<number>) => {
   return (
-    <Column spacing={64} style={{ justifyItems: "space-between" }}>
+    <Column spacing={32} style={{ justifyItems: "space-between", alignItems: "center", paddingVertical: 16 }}>
       <AppSwitchToggle
         defaultSelectedValue={value > 0}
-        options={[true, false]}
-        selectionColor={AppColorPalettes.blue[700]}
+        options={[false, true]}
+        selectionColor={AppColorPalettes.blue[500]}
         onSelectValue={selection => {
           onChange(selection ? 1 : 0);
         }}
       />
 
-      {value > 0 && (
+      {value > 0 /*(
         <Column style={{ alignItems: "center" }} spacing={8}>
           <AppText>Places disponibles</AppText>
           <Row style={{ alignItems: "center" }}>
@@ -201,6 +212,35 @@ export const CarForm: FormComponent<number> = WithFormContext(({ value, onChange
             <AppIcon name="people-outline" size={40} />
             <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="plus-outline" onPress={() => onChange(value + 1)} />
           </Row>
+        </Column>
+      )*/ && (
+        <Column>
+          <View style={{ position: "relative", top: 10, left: 32, alignItems: "stretch" }}>
+            <MonkeySmilingVector maxWidth={80} bodyColor={AppColorPalettes.blue[100]} />
+          </View>
+          <Column
+            spacing={8}
+            style={{
+              backgroundColor: AppColorPalettes.blue[100],
+              borderRadius: 16,
+              maxHeight: 110,
+              alignItems: "center",
+              padding: 16,
+              marginHorizontal: 16,
+              flex: 1
+            }}>
+            <AppText style={{ fontSize: 16 }}>Combien de personnes voyagent ?</AppText>
+            <Row style={{ alignItems: "center" }} spacing={16}>
+              <AppButton kind="circular" color={AppColorPalettes.blue[400]} icon="minus-outline" onPress={() => onChange(Math.max(1, value - 1))} />
+              <Row
+                spacing={4}
+                style={{ backgroundColor: WithAlpha(AppColors.black, 0.1), paddingVertical: 8, paddingHorizontal: 16, borderRadius: 24 }}>
+                <AppText style={{ fontSize: 24, minWidth: 20 }}>{value}</AppText>
+                <AppIcon name="people-outline" size={24} />
+              </Row>
+              <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="plus-outline" onPress={() => onChange(value + 1)} />
+            </Row>
+          </Column>
         </Column>
       )}
     </Column>

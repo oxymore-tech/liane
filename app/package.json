@@ -16,6 +16,7 @@
   "dependencies": {
     "@datadog/mobile-react-native": "^1.2.1",
     "@datadog/mobile-react-navigation": "^1.2.1",
+    "@maplibre/maplibre-react-native": "^9.0.0",
     "@microsoft/signalr": "^7.0.2",
     "@notifee/react-native": "^7.4.0",
     "@react-native-firebase/app": "^16.5.1",
@@ -23,7 +24,6 @@
     "@react-navigation/bottom-tabs": "^6.5.3",
     "@react-navigation/native": "^6.1.2",
     "@react-navigation/native-stack": "^6.9.8",
-    "@rnmapbox/maps": "github:rnmapbox/maps#main",
     "@xstate/react": "^3.0.2",
     "async-mutex": "^0.4.0",
     "i18n-js": "^4.2.2",

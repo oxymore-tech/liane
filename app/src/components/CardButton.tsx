@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useContext, useEffect, useImperativeHandle, useState } from "react";
 import { ColorValue, GestureResponderEvent, Modal, Pressable, PressableProps, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
@@ -11,7 +11,6 @@ import Animated, {
   useSharedValue,
   withTiming
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
@@ -47,6 +46,9 @@ const CancelButton = ({ color, label, onCancel }) => {
   );
 };
 
+export const ModalSizeContext = React.createContext<Rect>({ bottom: 8, left: 8, right: 8, top: 8 });
+type Rect = { left: number; top: number; right: number; bottom: number };
+
 const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) => {
   const { height, width } = useWindowDimensions();
 
@@ -56,13 +58,12 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
 
   const duration = 320;
 
-  const margin = 8;
-  const insets = useSafeAreaInsets();
-
   const textColor = defaultTextColor(color);
 
   const [showContent, setShowContent] = useState(false);
   const [closing, setClosing] = useState(false);
+
+  const modalRect = useContext(ModalSizeContext);
 
   const closeModal = (validate: boolean) => {
     setClosing(true);
@@ -72,12 +73,14 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
   };
 
   const animStyle = useAnimatedStyle(() => {
-    const interpolatedTop = interpolate(animState.value, [0, 1], [centerY.value, 0.25 * height + margin], { extrapolateRight: Extrapolation.CLAMP });
-    const interpolatedBottom = interpolate(animState.value, [0, 1], [height - centerY.value, margin + insets.bottom], {
+    const interpolatedTop = interpolate(animState.value, [0, 1], [centerY.value, modalRect.top], { extrapolateRight: Extrapolation.CLAMP });
+    const interpolatedBottom = interpolate(animState.value, [0, 1], [height - centerY.value, modalRect.bottom], {
       extrapolateRight: Extrapolation.CLAMP
     });
-    const interpolatedLeft = interpolate(animState.value, [0, 1], [centerX.value, margin], { extrapolateRight: Extrapolation.CLAMP });
-    const interpolatedRight = interpolate(animState.value, [0, 1], [width - centerX.value, margin], { extrapolateRight: Extrapolation.CLAMP });
+    const interpolatedLeft = interpolate(animState.value, [0, 1], [centerX.value, modalRect.left], { extrapolateRight: Extrapolation.CLAMP });
+    const interpolatedRight = interpolate(animState.value, [0, 1], [width - centerX.value, modalRect.right], {
+      extrapolateRight: Extrapolation.CLAMP
+    });
     const interpolatedBorderRadius = interpolate(animState.value, [0, 1], [width / 2, AppDimensions.borderRadius], {
       extrapolateRight: Extrapolation.CLAMP
     });
@@ -120,7 +123,7 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
     };
   });
 
-  const DelayedFadeIn = FadeIn.delay(0.85 * duration).duration(0.35 * duration);
+  const DelayedFadeIn = FadeIn.duration(0.35 * duration);
   const FastFadeOut = FadeOut.duration(0.15 * duration);
 
   const backdropStyle = useAnimatedStyle(() => {
@@ -138,13 +141,14 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
 
   useEffect(() => {
     if (!closing) {
-      setShowContent(true);
       animState.value = 1;
+      // Delay here to avoid laggy animations
+      setTimeout(() => setShowContent(true), duration);
     } else {
-      setShowContent(false);
       animState.value = 0;
+      setShowContent(false);
     }
-  });
+  }, [closing, animState]);
 
   return (
     <Modal transparent visible onRequestClose={() => closeModal(false)}>
@@ -154,7 +158,7 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
           <Animated.View
             style={{
               display: "flex",
-              maxHeight: height * 0.75 - margin * 2 - insets.bottom
+              maxHeight: height - modalRect.bottom - modalRect.top
             }}
             entering={DelayedFadeIn}
             exiting={FastFadeOut}>
@@ -171,7 +175,10 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
                 }}>
                 <ModalButton
                   color={AppColors.white}
-                  backgroundColor={WithAlpha(AppColors.white, textColor === AppColors.white ? 0.25 : 0.2)}
+                  backgroundColor={WithAlpha(
+                    textColor === AppColors.white ? AppColors.white : AppColors.black,
+                    textColor === AppColors.white ? 0.25 : 0.3
+                  )}
                   text={useOkButton ? "Annuler" : "Fermer"}
                   onPress={() => closeModal(false)}
                 />
@@ -217,68 +224,55 @@ const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => 
   </Pressable>
 );
 
-export const CardButton = ({
-  color,
-  textColor,
-  label,
-  value,
-  onCancel,
-  extendedView,
-  useOkButton = false,
-  showPopup = false,
-  onCloseExtendedView
-}: LianeCardProps) => {
-  let finalTextColor = textColor;
-  if (!textColor) {
-    finalTextColor = defaultTextColor(color);
-  }
+export const CardButton = forwardRef(
+  ({ color, textColor, label, value, onCancel, extendedView, useOkButton = false, onCloseExtendedView }: LianeCardProps, ref) => {
+    let finalTextColor = textColor;
+    if (!textColor) {
+      finalTextColor = defaultTextColor(color);
+    }
 
-  if (showPopup) {
-    // Open popup automatically
-    this.ref?.measureInWindow((x, y) => {
-      setModalSpecs({ x, y });
-    });
-  }
-  const [modalSpecs, setModalSpecs] = useState({ x: 0, y: 0 });
+    const [modalSpecs, setModalSpecs] = useState({ x: 0, y: 0 });
 
-  const onTapped = ({ nativeEvent }: GestureResponderEvent) => {
-    const { pageX, pageY } = nativeEvent;
-    setModalSpecs({ y: pageY, x: pageX });
-  };
+    useImperativeHandle(ref, () => ({
+      showModal: (fromX, fromY) => {
+        setModalSpecs({ x: fromX, y: fromY });
+      }
+    }));
 
-  return (
-    <View
-      ref={ref => {
-        this.ref = ref;
-      }}
-      style={styles.baseContainer}>
-      {extendedView && modalSpecs.x !== 0 && modalSpecs.y !== 0 && (
-        <CardModal
-          color={color}
-          x={modalSpecs.x}
-          y={modalSpecs.y}
-          useOkButton={useOkButton}
-          onClose={onCloseExtendedView}
-          onClosed={() => {
-            setModalSpecs({ x: 0, y: 0 });
-          }}>
-          {extendedView}
-        </CardModal>
-      )}
-      <View onTouchEnd={onTapped}>
-        <AppPressable backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
-          {label && <AppText style={[{ color: finalTextColor }, styles.label]}>{label}</AppText>}
+    const onTapped = ({ nativeEvent }: GestureResponderEvent) => {
+      const { pageX, pageY } = nativeEvent;
+      setModalSpecs({ y: pageY, x: pageX });
+    };
 
-          <AppText numberOfLines={1} style={[{ color: finalTextColor }, styles.value]}>
-            {value}
-          </AppText>
-        </AppPressable>
+    return (
+      <View style={styles.baseContainer}>
+        {extendedView && modalSpecs.x !== 0 && modalSpecs.y !== 0 && (
+          <CardModal
+            color={color}
+            x={modalSpecs.x}
+            y={modalSpecs.y}
+            useOkButton={useOkButton}
+            onClose={onCloseExtendedView}
+            onClosed={() => {
+              setModalSpecs({ x: 0, y: 0 });
+            }}>
+            {extendedView}
+          </CardModal>
+        )}
+        <View onTouchEnd={onTapped}>
+          <AppPressable backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
+            {label && <AppText style={[{ color: finalTextColor }, styles.label]}>{label}</AppText>}
 
+            <AppText numberOfLines={1} style={[{ color: finalTextColor }, styles.value]}>
+              {value}
+            </AppText>
+          </AppPressable>
+        </View>
         {onCancel && <CancelButton color={color} label={label} onCancel={onCancel} />}
       </View>
-    </View>
-  );
-};
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   baseContainer: {
