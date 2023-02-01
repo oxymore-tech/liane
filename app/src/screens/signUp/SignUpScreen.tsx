@@ -11,6 +11,7 @@ import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
 import { UnauthorizedError } from "@/api/exception";
 
+
 type SignUpStep = "EnterPhoneNumber" | "EnterCode";
 
 const t = scopedTranslate("SignUp");

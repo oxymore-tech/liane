@@ -32,7 +32,6 @@ async function initContext(service: AppServices): Promise<{
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.me();
 
-  await initializeRum();
   if (!__DEV__) {
     await initializeNotification();
     await initializeRum();
