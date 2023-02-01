@@ -35,7 +35,9 @@ async function initContext(service: AppServices): Promise<{
   const authUser = await service.auth.me();
 
   await initializeRum();
-  await initializeNotification();
+  if (!__DEV__) {
+    await initializeNotification();
+  }
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
   return { authUser, locationPermission, position };

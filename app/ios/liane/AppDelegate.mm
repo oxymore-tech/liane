@@ -12,7 +12,10 @@
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
 
+// Only configure Firebase if Release mode
+  #if !DEBUG
   [FIRApp configure];
+  #endif
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
