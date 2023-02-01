@@ -36,10 +36,10 @@ export const LianeDetailScreen = ({ route, navigation }: NativeStackScreenProps<
   const liane: Liane = route.params!.liane;
   const insets = useSafeAreaInsets();
   const messages = [
-    { message: "Alors d'accord.", sender: true },
-    { message: "Ok, je vais voir ce que je peux faire", sender: false },
-    { message: "Je peux passer vers 17h ?", sender: true },
-    { message: "Ca risque d'être compliqué finalement...", sender: true }
+    { message: "Merci", sender: true },
+    { message: "Ok, je vais voir ce que je peux faire.", sender: false },
+    { message: "Ou même plus tard ?", sender: true },
+    { message: "Bonjour, peut-on décaler le départ à 10h20 ?", sender: true }
   ];
 
   const sendButton = (
@@ -79,7 +79,7 @@ export const LianeDetailScreen = ({ route, navigation }: NativeStackScreenProps<
           paddingBottom: 16
         }}>
         <Pressable style={{ padding: 8 }} onPress={() => navigation.goBack()}>
-          <AppIcon name={"arrow-back"} />
+          <AppIcon name={"arrow-ios-back-outline"} />
         </Pressable>
         <View
           style={{

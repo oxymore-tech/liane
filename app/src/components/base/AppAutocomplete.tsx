@@ -134,7 +134,7 @@ const AutocompleteItem = ({ item, onPress }: AutocompleteItemProps) => (
 
 const styles = StyleSheet.create({
   input: {
-    fontSize: 20,
+    fontSize: 18,
     color: AppColorPalettes.gray[800]
   },
   item: {

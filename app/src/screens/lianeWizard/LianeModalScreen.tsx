@@ -25,6 +25,12 @@ import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
 
 export interface LianeModalScreenParams extends ParamListBase {
   lianeRequest?: LianeWizardFormData;
+  // Name of the route to return to and pass LianeModalScreenResponseParams
+  origin?: string;
+}
+
+export interface LianeModalScreenResponseParams extends ParamListBase {
+  lianeResponse?: LianeWizardFormData;
 }
 
 //TODO animated component
@@ -62,11 +68,11 @@ export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<L
     if (route.params?.origin) {
       navigation.navigate({
         name: route.params?.origin,
-        params: { liane: lianeResponse },
+        params: { lianeResponse },
         merge: true
       });
     } else {
-      //  navigation.goBack();
+      navigation.goBack();
     }
   });
 

@@ -10,24 +10,31 @@ import { AppButton } from "@/components/base/AppButton";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useQueryClient } from "react-query";
 import { Column } from "@/components/base/AppLayout";
-import { AppPressable } from "@/components/base/AppPressable";
+import { LianeModalScreenResponseParams } from "@/screens/lianeWizard/LianeModalScreen";
 
 interface TripSection extends SectionBase<Liane> {
   date: string;
 }
 
-const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<{}>) => {
+const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<LianeModalScreenResponseParams>) => {
   const queryClient = useQueryClient();
+
   React.useEffect(() => {
-    if (route.params?.liane) {
-      // Update react query cache
-      const liane = route.params?.liane;
+    // Update react query cache
+    if (route.params?.lianeResponse) {
+      const liane = route.params?.lianeResponse;
       if (__DEV__) {
         console.log("Update cache with liane", liane);
       }
-      queryClient.setQueryData(LianeQueryKey, oldData => [liane, ...oldData]);
+      queryClient.setQueryData<Liane[]>(LianeQueryKey, oldData => {
+        if (oldData) {
+          return [liane, ...oldData];
+        } else {
+          return [liane];
+        }
+      });
     }
-  }, [queryClient, route.params?.liane]);
+  }, [queryClient, route.params?.lianeResponse]);
 
   // Create section list from a list of Liane objects
   const sections = useMemo(() => convertToDateSections(data), [data]);

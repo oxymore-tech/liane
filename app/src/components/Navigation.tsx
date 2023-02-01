@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -15,6 +15,10 @@ import LianeIcon from "@/assets/icon.svg";
 import { LianeModalScreen } from "@/screens/lianeWizard/LianeModalScreen";
 import { LianeDetailScreen } from "@/screens/LianeDetailScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
+import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
+import { Row } from "@/components/base/AppLayout";
+import Avatar from "@/assets/avatar.svg";
+import { ProfileScreen } from "@/screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -51,7 +55,9 @@ function Navigation() {
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="LianeWizard" component={LianeModalScreen} options={{ headerShown: false, animation: "fade" }} />
-        <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false, animation: "fade" }} />
+        <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>
     );
   }
@@ -63,14 +69,37 @@ function Navigation() {
   );
 }
 
+const HomeScreenHeader = ({ label, navigation }) => {
+  const insets = useSafeAreaInsets();
+  return (
+    <Row
+      style={{
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 24,
+        paddingTop: 8,
+        paddingBottom: 32,
+        minHeight: 60,
+        marginTop: insets.top
+      }}>
+      <AppText style={{ fontSize: 22, fontWeight: 500, color: AppColors.darkBlue }}>{label}</AppText>
+      <Pressable
+        onPress={() => {
+          navigation.navigate("Profile");
+        }}>
+        <Avatar height={36} />
+      </Pressable>
+    </Row>
+  );
+};
+
 const makeTab = (label: string, iconName: IconName | React.FunctionComponent, screen: any, iconSize: number = 24, { headerShown = true } = {}) => (
   <Tab.Screen
     name={label}
     component={screen}
-    options={{
+    options={({ navigation }) => ({
       headerShown,
-      headerStyle: { backgroundColor: "#00000000" },
-      headerShadowVisible: false,
+      header: () => <HomeScreenHeader label={label} navigation={navigation} />,
       tabBarLabel: ({ focused }) => (
         <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>
       ),
@@ -84,7 +113,7 @@ const makeTab = (label: string, iconName: IconName | React.FunctionComponent, sc
             width: iconSize
           })
         ) // TODO resize svg file directly
-    }}
+    })}
   />
 );
 

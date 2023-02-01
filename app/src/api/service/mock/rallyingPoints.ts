@@ -29,7 +29,7 @@ export class RallyingPointMock implements RallyingPointService {
     }
   ];
 
-  async search(search: string, location: LatLng): Promise<RallyingPoint[]> {
-    return this.mockRP.filter(rp => rp.label.startsWith(search));
+  async search(search: string, location?: LatLng): Promise<RallyingPoint[]> {
+    return this.mockRP.filter(rp => rp.label.toLowerCase().startsWith(search.toLowerCase()));
   }
 }
