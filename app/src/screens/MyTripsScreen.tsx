@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useQueryClient } from "react-query";
 import { Column } from "@/components/base/AppLayout";
 import { LianeModalScreenResponseParams } from "@/screens/lianeWizard/LianeModalScreen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface TripSection extends SectionBase<Liane> {
   date: string;
@@ -18,6 +19,7 @@ interface TripSection extends SectionBase<Liane> {
 
 const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<LianeModalScreenResponseParams>) => {
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
     // Update react query cache
@@ -77,7 +79,7 @@ const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane
         renderItem={renderItem}
         keyExtractor={item => item.id}
         renderSectionHeader={renderSectionHeader}
-        renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 : 24 }} />}
+        renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 + insets.bottom : 24 }} />}
       />
     </Column>
   );
