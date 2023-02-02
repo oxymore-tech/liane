@@ -2,10 +2,14 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
   <item
+    android:gravity="fill"
     android:drawable="@color/splashscreen_bg"/>
 
   <item
+    android:left="95dp"
+    android:right="95dp"
+    android:gravity="center|clip_horizontal"
     android:drawable="@drawable/splash_logo"
-    android:gravity="center" />
+    />
 
 </layer-list>
