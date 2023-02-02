@@ -38,7 +38,7 @@ jobs:
       - uses: iamsauravsharma/create-dotenv@v1.2.2
         with:
           env-prefix: 'ENV_'
-          directory: " ./app"
+          directory: ./app
         env:
           ENV_DD_CLIENT_TOKEN: ${{ secrets.DD_CLIENT_TOKEN }}
           ENV_DD_APP_ID: ${{ secrets.DD_APP_ID }}
@@ -54,7 +54,7 @@ jobs:
 
       - uses: c-hive/gha-yarn-cache@v2
         with:
-        directory: app
+          directory: ./app
 
       - name: Install dependencies
         working-directory: ./app
