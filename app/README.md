@@ -2,7 +2,7 @@
 
 ```bash
 cd app
-npm i --legacy-peer-deps
+yarn
 # Pour IOS
 cd ios && pod install
 ```
@@ -12,7 +12,7 @@ Installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulato
 Run the project
 
 ```bash
-npm run start
+yarn start
 # puis 'a' pour android 
 # ou 'i' pour ios
 ```
@@ -23,7 +23,6 @@ Create a new empty project
 
 ```bash
 npx react-native init liane
-remove yarn.lock
 ```
 
 - Configure prettier
@@ -62,12 +61,12 @@ remove yarn.lock
 ### Install npm deps
 
 ```bash
-npm install --save-dev          \
+yarn add --dev                  \
   react-native-dotenv           \
   babel-plugin-module-resolver  \
   react-native-svg-transformer
                 
-npm install                                             \
+yarn add                                                \
   react-native-reanimated@next                          \
   @react-navigation/native                              \
   @react-navigation/native-stack                        \
