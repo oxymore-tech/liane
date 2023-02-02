@@ -1,16 +1,16 @@
 import { View } from "react-native";
 import React, { useContext } from "react";
-import { APP_VERSION } from "@env";
-import { AppButton } from "@/components/base/AppButton";
-import { AppColors } from "@/theme/colors";
 import { AppContext } from "@/components/ContextProvider";
+import { AppButton } from "@/components/base/AppButton";
+import { AppColorPalettes } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
+import { APP_VERSION } from "@env";
 
-const EmptyScreen = () => {
+export const ProfileScreen = () => {
   const { services, setAuthUser } = useContext(AppContext);
   return (
     <View>
-      <AppButton title="Déconnecter" color={AppColors.blue500} onPress={() => services.auth.logout().then(() => setAuthUser(undefined))} />
+      <AppButton title="Déconnecter" color={AppColorPalettes.blue[500]} onPress={() => services.auth.logout().then(() => setAuthUser(undefined))} />
       <View style={{ display: "flex", flexDirection: "row" }}>
         <AppText style={{ marginRight: 32 }}>Version :</AppText>
         <AppText>{APP_VERSION}</AppText>
@@ -18,5 +18,3 @@ const EmptyScreen = () => {
     </View>
   );
 };
-
-export default EmptyScreen;

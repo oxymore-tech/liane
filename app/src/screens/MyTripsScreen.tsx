@@ -1,52 +1,87 @@
 import React, { useMemo } from "react";
-import {
-  SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View
-} from "react-native";
-import { LianeModalScreen } from "@/screens/LianeModalScreen";
+import { Pressable, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { LianeView } from "@/components/LianeView";
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
-import { Liane, DateOnly } from "@/api";
+import { Liane, UTCDateTime } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
+import { AppButton } from "@/components/base/AppButton";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useQueryClient } from "react-query";
+import { Column } from "@/components/base/AppLayout";
+import { LianeModalScreenResponseParams } from "@/screens/lianeWizard/LianeModalScreen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface TripSection extends SectionBase<Liane> {
   date: string;
 }
 
-const MyTripsScreen = ({ data }: WithFetchResourceProps<Liane[]>) => {
+const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<LianeModalScreenResponseParams>) => {
+  const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+
+  React.useEffect(() => {
+    // Update react query cache
+    if (route.params?.lianeResponse) {
+      const liane = route.params?.lianeResponse;
+      if (__DEV__) {
+        console.log("Update cache with liane", liane);
+      }
+      queryClient.setQueryData<Liane[]>(LianeQueryKey, oldData => {
+        if (oldData) {
+          return [liane, ...oldData];
+        } else {
+          return [liane];
+        }
+      });
+    }
+  }, [queryClient, route.params?.lianeResponse]);
 
   // Create section list from a list of Liane objects
   const sections = useMemo(() => convertToDateSections(data), [data]);
 
   // Render individual Liane items
   const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => (
-    <View style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+    <Pressable
+      onPress={() => {
+        navigation.navigate({
+          name: "LianeDetail",
+          params: { liane: item }
+        });
+      }}
+      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <LianeView liane={item} />
-    </View>
+    </Pressable>
   );
 
   // Render section header using date as key
-  const renderSectionHeader = ({ section: { date } } : { section: SectionListData<Liane, TripSection> }) => (
+  const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane, TripSection> }) => (
     <View style={[styles.header, styles.grayBorder]}>
       <AppText style={styles.headerTitle}>{date}</AppText>
     </View>
   );
-  return (
 
-    <View style={styles.container}>
-      <LianeModalScreen />
+  return (
+    <Column spacing={16} style={styles.container}>
+      <AppButton
+        icon="plus-outline"
+        title="Nouvelle Liane"
+        onPress={() => {
+          navigation.navigate("LianeWizard", {
+            origin: route.name
+          });
+        }}
+      />
+
       <SectionList
         sections={sections}
         renderItem={renderItem}
+        keyExtractor={item => item.id}
         renderSectionHeader={renderSectionHeader}
-        renderSectionFooter={() => (
-          <View style={styles.sectionSeparator} />
-        )}
+        renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 + insets.bottom : 24 }} />}
       />
-
-    </View>
-
+    </Column>
   );
 };
 
@@ -56,10 +91,10 @@ const styles = StyleSheet.create({
     height: "100%"
   },
   grayBorder: {
-    borderColor: AppColors.gray200
+    borderColor: AppColorPalettes.gray[200]
   },
   header: {
-    backgroundColor: AppColors.yellow500,
+    backgroundColor: AppColorPalettes.yellow[500],
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderTopRightRadius: 16,
@@ -80,22 +115,26 @@ const styles = StyleSheet.create({
   itemLast: {
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16
-  },
-  sectionSeparator: {
-    height: 24
   }
 });
 
-const convertToDateSections = (data: Liane[]): TripSection[] => Object.entries(data.reduce((tmp, item) => {
-  // Get formatted date for local timezone
-  const group = formatMonthDay(new Date(item.departureTime));
-  // Add item to this group (or create the group)
-  // eslint-disable-next-line no-param-reassign
-  if (!tmp[group]) tmp[group] = [item];
-  else tmp[group].push(item);
-  // add this item to its group
+const convertToDateSections = (data: Liane[]): TripSection[] =>
+  Object.entries(
+    data.reduce((tmp, item) => {
+      // Get formatted date for local timezone
+      const group = formatMonthDay(new Date(item.departureTime));
+      // Add item to this group (or create the group)
 
-  return tmp;
-}, {} as { [key: DateOnly]: Liane[]; })).map(([group, items]) => ({ date: group, data: items } as TripSection));
+      if (!tmp[group]) {
+        tmp[group] = [item];
+      } else {
+        tmp[group].push(item);
+      }
+      // add this item to its group
 
-export default WithFetchResource(MyTripsScreen, (repository) => repository.liane.get, "getLianes");
+      return tmp;
+    }, {} as { [key: UTCDateTime]: Liane[] })
+  ).map(([group, items]) => ({ date: group, data: items } as TripSection));
+
+export const LianeQueryKey = "getLianes";
+export default WithFetchResource(MyTripsScreen, repository => repository.liane.get, LianeQueryKey);

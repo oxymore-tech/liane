@@ -1,32 +1,33 @@
-import React from "react";
-import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
-import { AppIcon, IconName } from "./AppIcon";
-import { AppColors } from "@/theme/colors";
+import React, { ForwardedRef, forwardRef } from "react";
+import { StyleSheet, TextInput, TextInputProps } from "react-native";
+import { AppColorPalettes } from "@/theme/colors";
+import { Row } from "@/components/base/AppLayout";
 
 export interface AppTextInputProps extends TextInputProps {
-  icon?: IconName;
+  leading?: JSX.Element;
+  trailing?: JSX.Element;
 }
 
-export function AppTextInput({ icon, style, ...props }: AppTextInputProps) {
+export const AppTextInput = forwardRef(({ leading, trailing, style, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
   return (
-    <View style={[style]}>
-      {icon && (
-        <AppIcon
-          name={icon}
-          color={AppColors.blue500}
-        />
-      )}
-      <TextInput
-        style={[styles.input, style]}
-        {...props}
-      />
-    </View>
+    <Row style={styles.container} spacing={8}>
+      {leading}
+      <TextInput ref={ref} style={[styles.input, style]} {...props} />
+      {trailing}
+    </Row>
   );
-}
+});
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1
+  },
   input: {
     flex: 1,
-    color: AppColors.black
+    padding: 0,
+    fontFamily: "Inter",
+    color: AppColorPalettes.gray[800]
   }
 });

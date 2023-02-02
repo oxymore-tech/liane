@@ -2,7 +2,7 @@ import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 
 type PhoneNumberInputProps = {
@@ -15,7 +15,7 @@ export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNum
   const disabled = phoneNumber.length < 10;
 
   const buttonColor = {
-    backgroundColor: disabled ? AppColors.gray400 : AppColors.blue500
+    backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
   };
 
   return (
@@ -23,7 +23,7 @@ export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNum
       <View style={styles.inputContainer}>
         <AppTextInput
           style={styles.input}
-          placeholder=""
+          placeholder="0XXXXXXXXX"
           autoFocus={true}
           returnKeyLabel={"next"}
           onChangeText={onChange}
@@ -49,7 +49,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginVertical: 16,
     height: 52,
-    width: 250,
+    width: "75%",
+    minWidth: 250,
     backgroundColor: AppColors.white,
     display: "flex",
     flexDirection: "row",
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: AppDimensions.textSize.large,
-    color: AppColors.gray800
+    color: AppColorPalettes.gray[800]
   },
   button: {
     height: 52,

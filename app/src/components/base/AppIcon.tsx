@@ -1,20 +1,31 @@
-import React from "react";
-import { Icon } from "react-native-eva-icons";
-import { AppColors, AppTheme } from "@/theme/colors";
+import React, { useEffect } from "react";
+import { Icon, IconProps } from "react-native-eva-icons";
 import { AppDimensions } from "@/theme/dimensions";
+import { ColorValue } from "react-native";
+import { AppColorPalettes } from "@/theme/colors";
+import { IconAnimationRegistry } from "react-native-eva-icons/animation";
 
-export type IconName = `${typeof EvaIconsNames[number]}-outline` | typeof EvaIconsNames[number];
+export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
-interface AppIconProps {
+export type AppIconProps = {
   name: IconName;
-  color?: AppColors;
+  color?: ColorValue;
   size?: number;
-}
-export function AppIcon({ name, color = AppTheme.defaultTextColor, size = AppDimensions.iconSize }: AppIconProps) {
-  return <Icon name={name} width={size} height={size} fill={color} />;
+  animation?: keyof IconAnimationRegistry;
+};
+
+export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, animation }: AppIconProps) {
+  const iconRef = React.useRef();
+  useEffect(() => {
+    if (animation) {
+      iconRef.current?.startAnimation();
+    }
+  });
+  return <Icon name={name} width={size} height={size} fill={color} animation={animation} ref={iconRef} />;
 }
 
-const EvaIconsNames = ["activity",
+const EvaIconsNames = [
+  "activity",
   "alert-circle",
   "alert-triangle",
   "archive",
@@ -257,4 +268,5 @@ const EvaIconsNames = ["activity",
   "volume-off",
   "volume-up",
   "wifi-off",
-  "wifi"] as const;
+  "wifi"
+] as const;

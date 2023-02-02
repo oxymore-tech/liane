@@ -7,7 +7,6 @@ import { initializeRum, registerRumUser } from "@/api/rum";
 import { initializeNotification } from "@/api/service/notification";
 
 interface AppContextProps {
-  appLoaded: boolean;
   locationPermission: LocationPermissionLevel;
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
@@ -19,7 +18,6 @@ interface AppContextProps {
 const SERVICES = CreateAppServices();
 
 export const AppContext = createContext<AppContextProps>({
-  appLoaded: false,
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {},
   setAuthUser: () => {},
@@ -34,8 +32,10 @@ async function initContext(service: AppServices): Promise<{
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.me();
 
-  await initializeRum();
-  await initializeNotification();
+  if (!__DEV__) {
+    await initializeNotification();
+    await initializeRum();
+  }
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
   return { authUser, locationPermission, position };
@@ -115,10 +115,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     const { appLoaded, locationPermission, position, authUser } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
-    return (
+    // TODO handle loading view
+    return appLoaded ? (
       <AppContext.Provider
         value={{
-          appLoaded,
           locationPermission,
           setLocationPermission,
           setAuthUser,
@@ -128,7 +128,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         }}>
         {children}
       </AppContext.Provider>
-    );
+    ) : null;
   }
 }
 

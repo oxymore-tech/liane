@@ -8,21 +8,16 @@ export interface AppTextProps extends TextProps {
 
 export function AppText({ style, children, ...props }: AppTextProps) {
   return (
-    <Text
-      style={[styles.text, style]}
-      {...props}
-    >
+    <Text style={[styles.text, style]} {...props}>
       {children}
     </Text>
   );
 }
 
-const styles = StyleSheet.create(
-  {
-    text: {
-      fontFamily: "Inter",
-      fontSize: AppDimensions.textSize.default,
-      textAlignVertical: "center"
-    }
+const styles = StyleSheet.create({
+  text: {
+    fontFamily: "Inter",
+    fontSize: AppDimensions.textSize.default,
+    textAlignVertical: "center"
   }
-);
+});

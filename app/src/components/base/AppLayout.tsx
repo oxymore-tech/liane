@@ -6,7 +6,7 @@ export type LinearLayoutProps = {
 
   children: ReactNode;
 
-  style? : any;
+  style?: any;
 };
 export const Row = ({ spacing = 0, children, style }: LinearLayoutProps) => (
   <LinearLayout direction="row" spacing={spacing} style={style}>
@@ -30,25 +30,20 @@ type _LinearLayoutProps = {
   style?: any;
 };
 const LinearLayout = ({ spacing = 0, children, direction = "row", style }: _LinearLayoutProps) => {
-
   let lineChildren;
 
   // Insert spaces between items if necessary
-  if (spacing > 0) {
-    const spacingStyle = (direction === "row") ? { width: spacing } : { height: spacing };
+  if (spacing > 0 && children && React.Children.count(children) > 0) {
+    const spacingStyle = direction === "row" ? { width: spacing } : { height: spacing };
     const items = React.Children.toArray(children);
     lineChildren = Array(2 * items.length - 1);
     // Set even indexes as actual children and odd indexes as spaces
     for (let i = 0; i < lineChildren.length; i++) {
-      lineChildren[i] = (i % 2 === 0) ? (
-        items[i / 2]
-      ) : (<View key={i} style={spacingStyle} />);
+      lineChildren[i] = i % 2 === 0 ? items[i / 2] : <View key={i} style={spacingStyle} />;
     }
   } else {
     lineChildren = children;
   }
 
-  return (
-    <View style={[style, { flexDirection: direction }]}>{lineChildren}</View>
-  );
+  return <View style={[style, { flexDirection: direction }]}>{lineChildren}</View>;
 };

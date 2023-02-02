@@ -35,10 +35,30 @@ export const scopedTranslate =
     translate(scope, key, options);
 
 // Load date formatter
-const monthDayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short", month: "long", day: "2-digit" });
+const monthDayFormatter = new Intl.DateTimeFormat(locale, {
+  weekday: "short",
+  month: "long",
+  day: "2-digit"
+});
+
+const shortMonthDayFormatter = new Intl.DateTimeFormat(locale, {
+  weekday: "short",
+  month: "short",
+  day: "2-digit"
+});
 
 // Load time formatter
-const timeFormatter = new Intl.DateTimeFormat(locale, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+const timeFormatter = new Intl.DateTimeFormat(locale, {
+  hour: "2-digit",
+  minute: "2-digit"
+});
 
 export const formatMonthDay = monthDayFormatter.format;
-export const formatTime = timeFormatter.format;
+export const formatShortMonthDay = shortMonthDayFormatter.format;
+export const formatTime = (date?: number | Date | undefined) => {
+  try {
+    return timeFormatter.format(date);
+  } catch (e) {
+    return "--:--";
+  }
+};
