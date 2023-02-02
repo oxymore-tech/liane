@@ -4,5 +4,10 @@
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:dev.liane.app</string>
+		<string>applinks:liane.app</string>
+	</array>
 </dict>
 </plist>
