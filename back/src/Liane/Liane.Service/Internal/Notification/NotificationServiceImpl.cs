@@ -44,9 +44,9 @@ public sealed class NotificationServiceImpl : INotificationService
     TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
 
     await MessageResource.CreateAsync(
-      body: $"Vous êtes invité à rejoindre une liane https://dev.liane.app",
+      body: message,
       from: twilioSettings.From.ToPhoneNumber(),
-      to: phone.ToPhoneNumber()
+      to: user.Phone.ToPhoneNumber()
     );
     return await Send(user.PushToken, title, message);
   }
