@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Liane.Test" />
+        <InternalsVisibleTo Include="Liane.Web" />
     </ItemGroup>
     
     <ItemGroup>
@@ -19,11 +20,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Liane.Api\Liane.Api.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Internal\Grouping\TripIntentsGrouping.cs" />
-      <Compile Remove="Internal\Grouping\TripToPoints.cs" />
     </ItemGroup>
 
 </Project>
