@@ -4,10 +4,22 @@
       "delegate_permission/common.handle_all_urls"
     ],
     "target": {
-      "namespace": "tech.oxymore.liane",
+      "namespace": "android_app",
       "package_name": "tech.oxymore.liane",
       "sha256_cert_fingerprints": [
         "05:36:22:7E:BB:24:DC:DB:57:54:CF:24:4B:F3:DF:5F:50:02:C7:E2:7B:B9:87:05:63:BB:2C:B3:89:C2:6C:4E"
+      ]
+    }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "tech.oxymore.liane",
+      "sha256_cert_fingerprints": [
+        "59:0F:C9:D2:1C:30:CD:FB:75:22:DE:FF:3E:F3:FF:33:A5:C4:A3:6E:2E:3A:7F:F6:50:75:E5:65:D6:5C:8A:C5"
       ]
     }
   }
