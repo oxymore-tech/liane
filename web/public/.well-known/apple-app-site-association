@@ -2,12 +2,7 @@
   "details": [
     {
       "appIDs": [ "tech.oxymore.liane" ],
-      "components": [
-        {
-          "/": "/*",
-          "comment": "Matches any liane URL"
-        }
-      ]
+      "paths": ["*"]
     }
   ]
 }
