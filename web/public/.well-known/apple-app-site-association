@@ -1,8 +1,10 @@
-"applinks": {
-  "details": [
-    {
-      "appIDs": [ "tech.oxymore.liane" ],
-      "paths": ["*"]
-    }
-  ]
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [ "tech.oxymore.liane" ],
+        "paths": ["*"]
+      }
+    ]
+  }
 }
