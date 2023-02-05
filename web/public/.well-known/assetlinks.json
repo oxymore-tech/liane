@@ -4,8 +4,8 @@
       "delegate_permission/common.handle_all_urls"
     ],
     "target": {
-      "namespace": "liane",
-      "package_name": "tech.oxymore",
+      "namespace": "tech.oxymore.liane",
+      "package_name": "tech.oxymore.liane",
       "sha256_cert_fingerprints": [
         "05:36:22:7E:BB:24:DC:DB:57:54:CF:24:4B:F3:DF:5F:50:02:C7:E2:7B:B9:87:05:63:BB:2C:B3:89:C2:6C:4E"
       ]
