@@ -11,6 +11,4 @@ public sealed class RequiresAccessLevelAttribute : TypeFilterAttribute
   {
     Arguments = new object[] { accessLevel, resourceType, resourceIdentifier };
   }
-  
-
 }

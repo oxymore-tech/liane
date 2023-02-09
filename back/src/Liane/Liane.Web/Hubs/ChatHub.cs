@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Liane.Web.Hubs;
 
-[Authorize(Policy = Startup.ChatAuthorizationPolicy)]
+[Authorize(Policy = Startup.RequireAuthPolicy)]
 public sealed class ChatHub : Hub
 {
   private readonly ILogger<ChatHub> logger;
