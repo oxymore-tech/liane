@@ -2,19 +2,20 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
 public interface IRallyingPointService : ICrudService<RallyingPoint>
 {
-    Task ImportCities();
+  Task Generate();
 
-    Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search);
+  Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search);
 
-    Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto);
-    
-    Task<RallyingPoint?> Snap(LatLng position);
+  Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto);
 
-    Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> pos);
+  Task<RallyingPoint?> Snap(LatLng position);
+
+  Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> pos);
 }

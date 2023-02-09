@@ -8,7 +8,7 @@ namespace Liane.Api.Util.Pagination;
 /// </summary>
 /// <param name="Timestamp"></param> First index of the cursor
 /// <param name="Id"></param> Second optional index 
-public record DatetimeCursor(DateTime Timestamp, string? Id = null) : IIdentity
+public sealed record DatetimeCursor(DateTime Timestamp, string? Id = null) : IIdentity
 {
   /// <summary>
   /// Converts to format "{UnixTimestamp}[_{Id}]".

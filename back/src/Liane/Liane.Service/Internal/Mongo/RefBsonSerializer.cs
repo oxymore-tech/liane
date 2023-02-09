@@ -2,7 +2,7 @@ using Liane.Api.Util.Ref;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace Liane.Service.Internal.Mongo.Serialization;
+namespace Liane.Service.Internal.Mongo;
 
 internal sealed class RefBsonSerializer<T> : SerializerBase<Ref<T>> where T : class, IIdentity
 {

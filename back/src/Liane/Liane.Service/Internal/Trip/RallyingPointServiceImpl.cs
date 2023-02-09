@@ -1,30 +1,25 @@
-using System.Collections.Generic;
+using System;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Trip.Import;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
-
-internal sealed record OverpassData(double Version, string Generator, List<OverpassElement> Elements);
-
-internal sealed record OverpassElement(long Id, double Lat, double Lon, OverpassTag Tags);
-
-internal sealed record OverpassTag(string Name);
 
 public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
 {
@@ -50,14 +45,16 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     this.logger = logger;
   }
 
-  public async Task ImportCities()
+  public async Task Generate()
   {
     await Mongo.GetCollection<RallyingPoint>()
       .DeleteManyAsync(_ => true);
 
     var assembly = typeof(RallyingPointServiceImpl).Assembly;
 
-    var rallyingPoints = await LoadCities(assembly);
+    var rallyingPoints = (await LoadCarpoolArea(assembly))
+      .Concat(await LoadTownHall(assembly))
+      .ToImmutableList();
     await Mongo.GetCollection<RallyingPoint>()
       .InsertManyAsync(rallyingPoints);
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
@@ -65,19 +62,21 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
   public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
   {
-    var builder = Builders<RallyingPoint>.Filter;
-
     var filter = FilterDefinition<RallyingPoint>.Empty;
     if (pos.HasValue)
     {
       var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
-      filter &= builder.Near(x => x.Location, point, MaxRadius);
+      filter &= Builders<RallyingPoint>.Filter.Near(x => x.Location, point, MaxRadius);
     }
 
     if (search != null)
     {
-      var regex = new Regex($".*{ToSearchPattern(search)}.*", RegexOptions.IgnoreCase);
-      filter &= builder.Regex(x => x.Label, new BsonRegularExpression(regex));
+      // var regex = new Regex($".*{ToSearchPattern(search)}.*", RegexOptions.IgnoreCase);
+      // filter &= (builder.Regex(x => x.Label, new BsonRegularExpression(regex))
+      //            | builder.Regex(x => x.Address, new BsonRegularExpression(regex))
+      //            | builder.Regex(x => x.ZipCode, new BsonRegularExpression(regex))
+      //            | builder.Regex(x => x.City, new BsonRegularExpression(regex)));
+      filter &= Builders<RallyingPoint>.Filter.Text(search, new TextSearchOptions { CaseSensitive = false, DiacriticSensitive = false });
     }
 
     return (await Mongo.GetCollection<RallyingPoint>()
@@ -137,42 +136,60 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     return inputDto with { Id = id };
   }
 
-  private static async Task<ImmutableList<RallyingPoint>> LoadCities(Assembly assembly)
-  {
-    var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("cities.json"));
-    await using var file = assembly.GetManifestResourceStream(resourceName);
-    if (file is null)
-    {
-      throw new ResourceNotFoundException("Unable to find cities.json");
-    }
-
-    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-    var data = await JsonSerializer.DeserializeAsync<OverpassData>(file, options);
-
-    if (data is not null)
-    {
-      return data.Elements.Select(e => new RallyingPoint($"city:{e.Id}", e.Tags.Name, new LatLng(e.Lat, e.Lon), true))
-        .ToImmutableList();
-    }
-
-    return ImmutableList<RallyingPoint>.Empty;
-  }
-
   private static async Task<ImmutableList<RallyingPoint>> LoadCarpoolArea(Assembly assembly)
   {
-    var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("bnlc.csv"));
-    await using var stream = assembly.GetManifestResourceStream(resourceName);
+    await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.bnlc.csv");
     if (stream is null)
     {
-      throw new ResourceNotFoundException("Unable to find cities.json");
+      throw new ResourceNotFoundException("Unable to find bnlc.csv");
     }
 
     using var reader = new StreamReader(stream);
-    using var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
+    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = (args) => args.Header.NormalizeToCamelCase() };
+    using var csvReader = new CsvReader(reader, configuration);
 
     var entries = csvReader.GetRecords<BnlcEntry>();
 
-    return entries.Select(e => new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, new LatLng(e.YLat, e.XLong), true))
+    return entries.Select(e =>
+      {
+        var locationType = e.Type.ToLower() switch
+        {
+          "aire de covoiturage" => LocationType.CarpoolArea,
+          "sortie d'autoroute" => LocationType.HighwayExit,
+          "parking" => LocationType.Parking,
+          "supermarché" => LocationType.Supermarket,
+          "parking relais" => LocationType.RelayParking,
+          "délaissé routier" => LocationType.AbandonedRoad,
+          "auto-stop" => LocationType.AutoStop,
+          _ => throw new ArgumentOutOfRangeException($"Location type {e.Type} unexpected")
+        };
+        return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, new LatLng(e.YLat, e.XLong), locationType, e.AdLieu, e.Insee, e.ComLieu, e.NbrePl, true);
+      })
+      .ToImmutableList();
+  }
+
+  private static async Task<ImmutableList<RallyingPoint>> LoadTownHall(Assembly assembly)
+  {
+    await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.mairies.csv");
+    if (stream is null)
+    {
+      throw new ResourceNotFoundException("Unable to find mairies.csv");
+    }
+
+    using var reader = new StreamReader(stream);
+    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = (args) => args.Header.NormalizeToCamelCase() };
+    using var csvReader = new CsvReader(reader, configuration);
+
+    var entries = csvReader.GetRecords<MairieEntry>();
+
+    return entries
+      .Where(e => e.Latitude is not null && e.Longitude is not null)
+      .Select(e =>
+      {
+        var location = new LatLng((double)e.Latitude!, (double)e.Longitude!);
+        return new RallyingPoint($"mairie:{e.CodeInsee}", e.NomOrganisme, location, LocationType.TownHall, e.Adresse, e.CodePostal, e.NomCommune, null, true);
+      })
+      .DistinctBy(e => e.Id)
       .ToImmutableList();
   }
 }

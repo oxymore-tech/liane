@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
@@ -39,6 +40,7 @@ using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using NSwag;
+using JsonAttribute = NLog.Layouts.JsonAttribute;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web;
@@ -161,6 +163,7 @@ public static class Startup
                 options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new RefJsonConverterFactory());
                 options.JsonSerializerOptions.Converters.Add(new DatetimeCursorConverter());
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
         services.AddCors(options =>
             {

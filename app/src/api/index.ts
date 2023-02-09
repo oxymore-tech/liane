@@ -2,12 +2,11 @@ export type Identity = Readonly<{
   id?: string;
 }>;
 
-export type Entity = Readonly<
-  {
+export type Entity = Identity &
+  Readonly<{
     createdBy?: Ref<User>;
     createdAt?: UTCDateTime;
-  } & Identity
->;
+  }>;
 
 export type Ref<T extends Identity> = string; // | T;
 
@@ -49,26 +48,41 @@ export enum LocationPermissionLevel {
   ALWAYS = "always"
 }
 
-export type RallyingPoint = Readonly<
-  {
+export enum LocationType {
+  Parking = "Parking",
+  CarpoolArea = "CarpoolArea",
+  Supermarket = "Supermarket",
+  HighwayExit = "HighwayExit",
+  RelayParking = "RelayParking",
+  AbandonedRoad = "AbandonedRoad",
+  AutoStop = "AutoStop",
+  TownHall = "TownHall"
+}
+
+export type RallyingPoint = Identity &
+  Readonly<{
     location: LatLng;
     label: string;
-  } & Identity
->;
+    type: LocationType;
+    address: string;
+    zipCode: string;
+    city: string;
+    placeCount?: number;
+    isActive: boolean;
+  }>;
 
-export type LianeRequest = Readonly<
-  {
+export type LianeRequest = Identity &
+  Readonly<{
     departureTime: UTCDateTime;
     returnTime?: UTCDateTime;
     driverCapacity: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     shareWith: Ref<User>[];
-  } & Identity
->;
+  }>;
 
-export type Liane = Readonly<
-  {
+export type Liane = Identity &
+  Readonly<{
     createdBy?: Ref<User>;
     createdAt?: UTCDateTime;
     departureTime: UTCDateTime;
@@ -76,8 +90,7 @@ export type Liane = Readonly<
     wayPoints: WayPoint[];
     members: LianeMember[];
     driver?: Ref<User>;
-  } & Identity
->;
+  }>;
 
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
