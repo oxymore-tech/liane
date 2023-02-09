@@ -4,7 +4,7 @@ import { LianeView } from "@/components/LianeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
-import { Liane, UTCDateTime } from "@/api";
+import { Liane, PaginatedResponse, UTCDateTime } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
 import { AppButton } from "@/components/base/AppButton";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -17,7 +17,11 @@ interface TripSection extends SectionBase<Liane> {
   date: string;
 }
 
-const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane[]> & NativeStackScreenProps<LianeModalScreenResponseParams>) => {
+const MyTripsScreen = ({
+  data,
+  navigation,
+  route
+}: WithFetchResourceProps<PaginatedResponse<Liane>> & NativeStackScreenProps<LianeModalScreenResponseParams>) => {
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
 
@@ -39,7 +43,7 @@ const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Liane
   }, [queryClient, route.params?.lianeResponse]);
 
   // Create section list from a list of Liane objects
-  const sections = useMemo(() => convertToDateSections(data), [data]);
+  const sections = useMemo(() => convertToDateSections(data.data), [data]);
 
   // Render individual Liane items
   const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => (
@@ -137,4 +141,4 @@ const convertToDateSections = (data: Liane[]): TripSection[] =>
   ).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
 export const LianeQueryKey = "getLianes";
-export default WithFetchResource(MyTripsScreen, repository => repository.liane.get, LianeQueryKey);
+export default WithFetchResource(MyTripsScreen, repository => repository.liane.list, LianeQueryKey);

@@ -1,4 +1,4 @@
-import { Liane, LianeRequest } from "@/api";
+import { Liane, LianeRequest, PaginatedResponse } from "@/api";
 import { LianeService } from "@/api/service/liane";
 
 export class LianeServiceMock implements LianeService {
@@ -42,9 +42,9 @@ export class LianeServiceMock implements LianeService {
     }
   ];
 
-  get = async (): Promise<Liane[]> => {
+  list = async (): Promise<PaginatedResponse<Liane>> => {
     await new Promise(resolve => setTimeout(resolve, 500));
-    return this.mockLianes;
+    return { data: this.mockLianes, hasNext: false, pageSize: this.mockLianes.length };
   };
 
   post = async (liane: LianeRequest): Promise<Liane> => {
