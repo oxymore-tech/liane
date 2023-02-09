@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Liane.Api.Chat;
 using Liane.Service.Internal.User;
 using MongoDB.Driver;
 using NUnit.Framework;

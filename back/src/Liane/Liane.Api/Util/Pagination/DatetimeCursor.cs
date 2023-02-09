@@ -16,13 +16,14 @@ public record DatetimeCursor(DateTime Timestamp, string? Id = null) : IIdentity
   /// <returns></returns>
   public override string ToString()
   {
-    return ((DateTimeOffset)Timestamp.ToUniversalTime()).ToUnixTimeMilliseconds() + (Id != null ? "_"+Id : "");
+    return ((DateTimeOffset)Timestamp.ToUniversalTime()).ToUnixTimeMilliseconds() + (Id != null ? "_" + Id : "");
   }
 
   public static implicit operator string(DatetimeCursor @cursor)
   {
     return cursor.ToString();
   }
+
   public static implicit operator DatetimeCursor?(string? @raw)
   {
     if (raw == null) return null;
@@ -44,5 +45,3 @@ public record DatetimeCursor(DateTime Timestamp, string? Id = null) : IIdentity
     return new DatetimeCursor(DateTime.Now);
   }
 }
-  
-

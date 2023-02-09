@@ -19,13 +19,11 @@ public sealed class NotificationServiceImpl : INotificationService
     {
       logger.LogWarning("Unable to init firebase because service account file is missing");
     }
-
     else
     {
       FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromFile(firebaseSettings.ServiceAccountFile) });
     }
-  
-}
+  }
 
   public async Task<string> SendTo(string phone, string title, string message)
   {

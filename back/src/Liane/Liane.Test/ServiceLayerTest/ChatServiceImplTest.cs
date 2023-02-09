@@ -11,8 +11,8 @@ using NUnit.Framework;
 
 namespace Liane.Test.ServiceLayerTest;
 
-[TestFixture]
-public class ChatServiceImplTest : BaseServiceLayerTest
+[TestFixture(Category = "Integration")]
+public sealed class ChatServiceImplTest : BaseServiceLayerTest
 {
   private IChatService testedService;
 
@@ -20,7 +20,6 @@ public class ChatServiceImplTest : BaseServiceLayerTest
   {
     testedService = new ChatServiceImpl(db);
   }
-
 
   [Test]
   public async Task TestPagination()
@@ -37,18 +36,18 @@ public class ChatServiceImplTest : BaseServiceLayerTest
 
     const int limit = 8;
     var firstPage = await testedService.GetGroupMessages(
-      new PaginatedRequestParams<DatetimeCursor>(DatetimeCursor.Now(), limit), 
+      new PaginatedRequestParams<DatetimeCursor>(DatetimeCursor.Now(), limit),
       conversation.Id);
-    
+
     Assert.AreEqual(limit, firstPage.Data.Count);
-    Assert.True(firstPage.HasNext);
-    
+    Assert.NotNull(firstPage.NextCursor);
+
     var secondPage = await testedService.GetGroupMessages(
-      new PaginatedRequestParams<DatetimeCursor>(firstPage.NextCursor, limit), 
+      new PaginatedRequestParams<DatetimeCursor>(firstPage.NextCursor, limit),
       conversation.Id);
-    
+
     Assert.AreEqual(messageCount - limit, secondPage.Data.Count);
-    Assert.False(secondPage.HasNext);
+    Assert.IsNull(secondPage.NextCursor);
   }
 
   [TearDown]
@@ -57,5 +56,4 @@ public class ChatServiceImplTest : BaseServiceLayerTest
     DropTestedCollection<ConversationGroup>();
     DropTestedCollection<ChatMessage>();
   }
-  
 }

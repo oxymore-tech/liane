@@ -25,6 +25,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
 
     return obj;
   }
+  
   public BaseMongoCrudService(IMongoDatabase mongo)
   {
     Mongo = mongo;

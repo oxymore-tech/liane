@@ -9,22 +9,21 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
 
-[Route("api/conversations")]
+[Route("api/conversation")]
 [ApiController]
 [RequiresAuth]
-public class ConversationsController : ControllerBase
+public sealed class ConversationsController : ControllerBase
 {
-  
   private readonly IChatService chatService;
 
   public ConversationsController(IChatService chatService)
   {
     this.chatService = chatService;
   }
-  
-  [HttpGet("{id}/messages")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetPaginatedMessages( [FromRoute] string id, [FromQuery] int? limit, [FromQuery] string? cursor)
+
+  [HttpGet("{id}/message")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(ConversationGroup))]
+  public Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetPaginatedMessages([FromRoute] string id, [FromQuery] int? limit, [FromQuery] string? cursor)
   {
     return chatService.GetGroupMessages(new PaginatedRequestParams<DatetimeCursor>(cursor ?? new DatetimeCursor(DateTime.Now), limit ?? 25), id);
   }
