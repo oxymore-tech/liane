@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -41,19 +42,10 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     private readonly ILogger<RallyingPointServiceImpl> logger;
 
 
-    public RallyingPointServiceImpl(MongoSettings settings, ILogger<RallyingPointServiceImpl> logger)
-    : base(settings)
+    public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger)
+      : base(mongo)
     {
-        this.logger = logger;
-    }
-
-    public override async Task<RallyingPoint> Create(RallyingPoint rallyingPoint)
-    {
-        var newId = ObjectId.GenerateNewId();
-        var created = rallyingPoint with { Id = newId.ToString() };
-        await Mongo.GetCollection<RallyingPoint>()
-            .InsertOneAsync(created);
-        return created;
+      this.logger = logger;
     }
 
     public async Task ImportCities()
@@ -108,6 +100,16 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
             .ToImmutableList();
     }
 
+    public async Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto)
+    {
+       var res = await Mongo.GetCollection<RallyingPoint>()
+         .ReplaceOneAsync(
+              rp => rp.Id == reference.Id,
+              ToDb(inputDto, reference.Id)
+            );
+          return res.IsAcknowledged;
+    }
+
     public async Task<RallyingPoint?> Snap(LatLng position)
     {
         const int radius = 100;
@@ -140,5 +142,10 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     {
         search = Regex.Escape(search);
         return AccentedChars.Aggregate(search, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
+    }
+
+    protected override RallyingPoint ToDb(RallyingPoint inputDto, string id)
+    {
+      return inputDto with { Id = id };
     }
 }

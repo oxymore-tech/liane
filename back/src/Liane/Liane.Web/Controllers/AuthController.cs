@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,13 @@ public sealed class AuthController : ControllerBase
 {
   private readonly IAuthService authService;
   private readonly INotificationService notificationService;
+  private readonly ICurrentContext currentContext;
 
-  public AuthController(IAuthService authService, INotificationService notificationService)
+  public AuthController(IAuthService authService, INotificationService notificationService, ICurrentContext currentContext)
   {
     this.authService = authService;
     this.notificationService = notificationService;
+    this.currentContext = currentContext;
   }
 
   [HttpPost("sms")]
@@ -44,7 +47,7 @@ public sealed class AuthController : ControllerBase
   [HttpPost("logout")]
   public Task Logout()
   {
-    return authService.Logout();
+    return authService.Logout(currentContext.CurrentUser().Id);
   }
 
   [HttpPost("notify")]

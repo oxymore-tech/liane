@@ -2,35 +2,32 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Exception;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Test.Mock;
 
-public class RallyingPointServiceMockImpl : CrudServiceMockImpl<RallyingPoint>, IRallyingPointService
+public class RallyingPointServiceMock 
 {
-
-
-    public Task ImportCities()
+  public static IRallyingPointService CreateMockRallyingPointService()
+  {
+    var mock = new Moq.Mock<IRallyingPointService>
     {
-        throw new System.NotImplementedException();
-    }
+      CallBase = true
+    };
+    mock.Setup(m => m.Get(Moq.It.IsAny<Ref<RallyingPoint>>()))
+      .Returns<Ref<RallyingPoint>>(reference =>
+      {
+        var value = (RallyingPoint?)reference;
+        if (value is null)
+        {
+          throw new ResourceNotFoundException($"Ref<RallyingPoint> '{reference.Id}' has no value");
+        }
 
-    public Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
-    {
-        throw new System.NotImplementedException();
-    }
+        return Task.FromResult(value);
+      });
+    return mock.Object;
 
-    public Task<RallyingPoint?> Snap(LatLng position)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> pos)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public override Task<RallyingPoint> Create(RallyingPoint obj)
-    {
-        throw new System.NotImplementedException();
-    }
+  }
+  
 }

@@ -1,12 +1,13 @@
 using System;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Internal.Auth;
 
-[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class RequiresAuthAttribute : TypeFilterAttribute
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple=true, Inherited=false)]
+public sealed class RequiresAuthAttribute : AuthorizeAttribute
 {
-    public RequiresAuthAttribute() : base(typeof(RequiresAuthFilter))
+    public RequiresAuthAttribute() : base(Startup.RequireAuthPolicy)
     {
     }
 }

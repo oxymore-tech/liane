@@ -20,6 +20,7 @@ using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using NLog;
 using NLog.Config;
 using NLog.Layouts;
@@ -44,6 +46,7 @@ namespace Liane.Web;
 public static class Startup
 {
     public const string ChatAuthorizationPolicy = nameof(ChatAuthorizationPolicy);
+    public const string RequireAuthPolicy = nameof(RequireAuthPolicy);
 
     private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
     {
@@ -69,6 +72,11 @@ public static class Startup
         
         services.AddSettings<FirebaseSettings>(context);
         services.AddService<NotificationServiceImpl>();
+        
+        services.AddSingleton<IMongoDatabase>(sp => {
+          var settings = sp.GetRequiredService<MongoSettings>();
+          return settings.GetDatabase();
+        });
     }
 
     public static void StartCurrentModule(string[] args)
@@ -145,7 +153,7 @@ public static class Startup
 
     private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
     {
-        ConfigureLianeServices(context, services);
+      ConfigureLianeServices(context, services);
         services.AddService<FileStreamResultExecutor>();
         services.AddControllers()
             .AddJsonOptions(options =>
@@ -163,7 +171,7 @@ public static class Startup
             }
         );
 
-        services.AddMvcCore(options => { options.Filters.Add<ExceptionFilter>(); });
+        services.AddControllers(options => { options.Filters.Add<ExceptionFilter>(); });
         services.AddService<HttpContextAccessor>();
         services.AddSwaggerDocument(settings =>
         {
@@ -178,11 +186,27 @@ public static class Startup
                 Type = OpenApiSecuritySchemeType.ApiKey
             });
         });
-
-        // For chat
+        
         services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
-        services.AddAuthorization(x => { x.AddPolicy(ChatAuthorizationPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); }); });
+
+        services.AddAuthentication(options =>
+        {
+          options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+          options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+          options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer();
+        
+        services.AddAuthorization(x =>
+        {
+          x.AddPolicy(ChatAuthorizationPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
+          x.AddPolicy(RequireAuthPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
+        });
         services.AddSignalR();
+        
+           
+        // For Resource Access
+        services.AddSingleton<IAccessLevelContextFactory, MongoAccessLevelContextFactory>();
+    
     }
 
     private static void StartCurrentModuleWeb(string[] args)

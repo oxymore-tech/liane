@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Liane.Api.User;
-using Liane.Api.Util.Http;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -31,11 +31,10 @@ public sealed class AuthServiceImpl : IAuthService
     private readonly TwilioSettings twilioSettings;
     private readonly AuthSettings authSettings;
     private readonly SymmetricSecurityKey signinKey;
-    private readonly ICurrentContext currentContext;
     private readonly MemoryCache smsCodeCache = new(new MemoryCacheOptions());
     private readonly IMongoDatabase mongo;
 
-    public AuthServiceImpl(ILogger<AuthServiceImpl> logger, TwilioSettings twilioSettings, AuthSettings authSettings, ICurrentContext currentContext, MongoSettings mongoSettings)
+    public AuthServiceImpl(ILogger<AuthServiceImpl> logger, TwilioSettings twilioSettings, AuthSettings authSettings, MongoSettings mongoSettings)
     {
         mongo = mongoSettings.GetDatabase();
         this.logger = logger;
@@ -43,7 +42,6 @@ public sealed class AuthServiceImpl : IAuthService
         this.authSettings = authSettings;
         var keyByteArray = Encoding.ASCII.GetBytes(authSettings.SecretKey);
         signinKey = new SymmetricSecurityKey(keyByteArray);
-        this.currentContext = currentContext;
     }
 
     public async Task SendSms(string phone)
@@ -180,9 +178,9 @@ public sealed class AuthServiceImpl : IAuthService
                 .Unset(u => u.RefreshToken));
     }
 
-    public async Task Logout()
+    public async Task Logout(Ref<Api.User.User> user)
     {
-        await RevokeRefreshToken(currentContext.CurrentUser().Id);
+        await RevokeRefreshToken(user.Id);
     }
 
     private AuthResponse GenerateAuthResponse(AuthUser user, string? refreshToken)

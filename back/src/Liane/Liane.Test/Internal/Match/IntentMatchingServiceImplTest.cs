@@ -5,6 +5,7 @@ using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Http;
 using Liane.Service.Internal.Match;
+using Liane.Service.Internal.Util;
 using Moq;
 using NUnit.Framework;
 

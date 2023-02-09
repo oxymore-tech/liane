@@ -1,8 +1,8 @@
+using System;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Mongo;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
@@ -16,10 +16,20 @@ public sealed class UserServiceImpl : IUserService
     mongo = mongoSettings.GetDatabase();
   }
 
+  public async Task<Api.User.User> UpdateLastConnection(string id, DateTime timestamp)
+  {
+    var user = await mongo.GetCollection<DbUser>()
+      .FindOneAndUpdateAsync(
+        u => u.Id.ToString() == id,
+        Builders<DbUser>.Update.Set(u => u.LastConnection, timestamp)
+      );
+    return MapUser(user);
+  }
+
   public async Task<Api.User.User> Get(string id)
   {
     var dbUser = await mongo.GetCollection<DbUser>()
-      .Find(u => u.Id == new ObjectId(id))
+      .Find(u => u.Id.ToString() == id)
       .FirstOrDefaultAsync();
 
     if (dbUser is null)

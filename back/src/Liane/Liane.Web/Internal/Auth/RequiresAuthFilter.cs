@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Auth;
 
+//TODO remove
 public sealed class RequiresAuthFilter : IAsyncAuthorizationFilter
 {
     private readonly ILogger<RequiresAuthFilter> logger;

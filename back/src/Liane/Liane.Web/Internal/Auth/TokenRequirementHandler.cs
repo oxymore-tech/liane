@@ -32,10 +32,14 @@ public sealed class TokenRequirementHandler : AuthorizationHandler<TokenRequirem
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                throw new UnauthorizedAccessException();
+              context.Fail();
+            }
+            else
+            {
+              httpContext.User = authService.IsTokenValid(token);
+              context.Succeed(requirement);
             }
 
-            httpContext.User = authService.IsTokenValid(token);
         }
         catch (System.Exception e)
         {
@@ -53,7 +57,6 @@ public sealed class TokenRequirementHandler : AuthorizationHandler<TokenRequirem
             context.Fail();
         }
         
-        context.Succeed(requirement);
         return Task.CompletedTask;
     }
     

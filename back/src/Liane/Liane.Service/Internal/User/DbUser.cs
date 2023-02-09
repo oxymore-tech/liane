@@ -11,5 +11,6 @@ public sealed record DbUser(
     string? RefreshToken,
     string? Salt,
     string? PushToken,
-    DateTime? CreatedAt
+    DateTime? CreatedAt,
+    DateTime? LastConnection
 );
