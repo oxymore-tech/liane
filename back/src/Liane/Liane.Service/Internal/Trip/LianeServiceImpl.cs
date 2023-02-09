@@ -4,31 +4,25 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Http;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using MongoDB.Bson;
+using Liane.Web.Internal.AccessLevel;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class LianeServiceImpl: ILianeService
+public class LianeServiceImpl: MongoCrudEntityService<LianeRequest, LianeDb, Api.Trip.Liane>, ILianeService
 {
-    
-    private readonly ICurrentContext currentContext;
-    private readonly IMongoDatabase mongo;
-    private readonly IRoutingService routingService;
+  private readonly IRoutingService routingService;
 
-    public LianeServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRoutingService routingService)
+    public LianeServiceImpl(IMongoDatabase mongo, IRoutingService routingService): base(mongo)
     {
-        this.currentContext = currentContext;
-        this.routingService = routingService;
-        mongo = settings.GetDatabase();
+      this.routingService = routingService;
     }
 
-    async Task<ImmutableSortedSet<WayPoint>> GetWayPointsSet(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
+    private async Task<ImmutableSortedSet<WayPoint>> GetWayPointsSet(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
     {
-        var set = new SortedSet<RallyingPoint>();
         Ref<RallyingPoint>? from = null;
         Ref<RallyingPoint>? to = null;
         var wayPoints = new HashSet< Ref<RallyingPoint>>();
@@ -56,59 +50,28 @@ public class LianeServiceImpl: ILianeService
 
     }
 
-    async Task<Api.Trip.Liane> DbToApi(LianeDb liane)
+    protected override async Task<Api.Trip.Liane> ToOutputDto(LianeDb liane)
     {
         var wayPoints = await GetWayPointsSet(liane.DriverData.User, liane.Members);
-        return new Api.Trip.Liane(Id: liane.Id, Members: liane.Members, CreatedBy: liane.CreatedBy, CreatedAt: liane.CreatedAt, DepartureTime: liane.DepartureTime, ReturnTime: liane.ReturnTime, Driver: liane.DriverData.User, WayPoints: wayPoints);
+        return new Api.Trip.Liane(Id: liane.Id, Members: liane.Members, CreatedBy: liane.CreatedBy!, CreatedAt: liane.CreatedAt, DepartureTime: liane.DepartureTime, ReturnTime: liane.ReturnTime, Driver: liane.DriverData.User, WayPoints: wayPoints);
 
     }
 
-    public async Task<Api.Trip.Liane> Get(string id)
+    protected override LianeDb ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
     {
-        var lianeDb = await mongo.GetCollection<LianeDb>().Find(i => i.Id == id).FirstOrDefaultAsync();
-        return await DbToApi(lianeDb);
+          var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To) };
+           var driverData = new DriverData(createdBy, lianeRequest.DriverCapacity);
+           return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime,
+             lianeRequest.ReturnTime, members.ToImmutableList(), driverData );
     }
-    
-    public async Task<ImmutableList<Api.Trip.Liane>> List()
+
+    public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> ListForMemberUser(Ref<Api.User.User> user, PaginatedRequestParams<DatetimeCursor> pagination)
     {
-        // Get Lianes for current user
-        var userId = currentContext.CurrentUser().Id;
-        var mFilter = Builders<LianeMember>.Filter.Eq(m => (string)m.User, userId);
-        var filter = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, mFilter);
-        var cursorAsync = await mongo.GetCollection<LianeDb>()
-            .Find(filter)
-            .ToCursorAsync();
-       
-        // Get calculated Route across wayPoints
-        var lianes = new List<Api.Trip.Liane>();
-        foreach (var liane in cursorAsync.ToEnumerable())
-        {
-            lianes.Add(await DbToApi(liane));
-        }
+      var filter = GetAccessLevelFilter(user.Id, ResourceAccessLevel.Member);
 
-        return lianes.ToImmutableList();
+      var paginatedLianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, filter);
+      return await paginatedLianes.ConvertDataAsync(ToOutputDto);
+      
     }
 
-    public async Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
-    {
-        // Add new Liane
-        var id = ObjectId.GenerateNewId()
-            .ToString();
-        var createdBy = currentContext.CurrentUser().Id;
-        var createdAt = DateTime.UtcNow;
-        var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To) };
-        var driverData = new DriverData(createdBy, lianeRequest.DriverCapacity);
-        var created = new LianeDb(id, createdBy, createdAt, lianeRequest.DepartureTime,
-            lianeRequest.ReturnTime, members.ToImmutableList(), driverData );
-
-        await mongo.GetCollection<LianeDb>()
-            .InsertOneAsync(created);
-        
-        
-        // Handle Share with contacts 
-        // TODO
-
-        return await DbToApi(created);
-        
-    }
 }

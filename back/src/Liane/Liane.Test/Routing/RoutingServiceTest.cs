@@ -19,7 +19,7 @@ public sealed class RoutingServiceTest : BaseTest
 
     public RoutingServiceTest()
     {
-        tested = ServiceProvider.GetService<IRoutingService>();
+        tested = ServiceProvider.GetService<IRoutingService>()!;
     }
 
  

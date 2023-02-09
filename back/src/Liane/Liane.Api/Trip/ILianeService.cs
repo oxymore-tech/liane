@@ -1,15 +1,11 @@
-using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Util.Http;
+using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public interface ILianeService
+public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
-    Task<Liane> Get(string id);
-    
-    Task<ImmutableList<Liane>> List();
-    
-    Task<Liane> Create(LianeRequest lianeRequest);
-    
-
+  Task<PaginatedResponse<Liane, DatetimeCursor>> ListForMemberUser(Ref<User.User> user, PaginatedRequestParams<DatetimeCursor> pagination);
 }

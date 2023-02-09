@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo.Serialization;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 

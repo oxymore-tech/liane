@@ -136,3 +136,12 @@ export type Route = Readonly<{
   distance: number;
   delta?: number;
 }>;
+
+export type DatetimeCursor = string; // TODO
+
+export type PaginatedResponse<T> = Readonly<{
+  pageSize: number;
+  hasNext: boolean;
+  data: T[];
+  nextCursor?: DatetimeCursor;
+}>;

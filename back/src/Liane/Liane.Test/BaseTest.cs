@@ -19,7 +19,7 @@ public class BaseTest
         var services = new ServiceCollection();
         
         var osrmClient = new OsrmClient(new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
-        services.AddService<IRallyingPointService>(new RallyingPointServiceMockImpl());
+        services.AddService(RallyingPointServiceMock.CreateMockRallyingPointService());
         services.AddService<IOsrmService>(osrmClient);
         services.AddTransient<IRoutingService, RoutingServiceImpl>();
 
