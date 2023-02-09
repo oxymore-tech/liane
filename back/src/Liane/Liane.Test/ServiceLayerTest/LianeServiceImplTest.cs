@@ -3,19 +3,20 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Util;
 using MongoDB.Driver;
 using NUnit.Framework;
 
 namespace Liane.Test.ServiceLayerTest;
 
 [TestFixture(Category = "Integration")]
-public class LianeServiceImplTest : BaseServiceLayerTest
+public sealed class LianeServiceImplTest : BaseServiceLayerTest
 {
   private ILianeService testedService;
 
   protected override void InitService(IMongoDatabase db)
   {
-    testedService = new LianeServiceImpl(db, Moq.Mock.Of<IRoutingService>());
+    testedService = new LianeServiceImpl(db, Moq.Mock.Of<IRoutingService>(), Moq.Mock.Of<ICurrentContext>());
   }
 
   [Test]
@@ -34,8 +35,8 @@ public class LianeServiceImplTest : BaseServiceLayerTest
       await testedService.Create(l, userA);
     }
 
-    var resultsA = await testedService.ListForMemberUser(userA, new PaginatedRequestParams<DatetimeCursor>());
-    var resultsB = await testedService.ListForMemberUser(userB, new PaginatedRequestParams<DatetimeCursor>());
+    var resultsA = await testedService.ListForMemberUser(userA, new Pagination<DatetimeCursor>());
+    var resultsB = await testedService.ListForMemberUser(userB, new Pagination<DatetimeCursor>());
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);

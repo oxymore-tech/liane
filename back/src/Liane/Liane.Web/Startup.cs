@@ -15,6 +15,7 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Binder;
 using Liane.Web.Hubs;
 using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
@@ -157,7 +158,10 @@ public static class Startup
     {
       ConfigureLianeServices(context, services);
         services.AddService<FileStreamResultExecutor>();
-        services.AddControllers()
+    services.AddControllers(options =>
+      {
+        options.ModelBinderProviders.Insert(0, new BindersProvider());
+      })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());

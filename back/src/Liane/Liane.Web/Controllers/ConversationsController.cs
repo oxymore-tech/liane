@@ -25,6 +25,6 @@ public sealed class ConversationsController : ControllerBase
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(ConversationGroup))]
   public Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetPaginatedMessages([FromRoute] string id, [FromQuery] int? limit, [FromQuery] string? cursor)
   {
-    return chatService.GetGroupMessages(new PaginatedRequestParams<DatetimeCursor>(cursor ?? new DatetimeCursor(DateTime.Now), limit ?? 25), id);
+    return chatService.GetGroupMessages(new Pagination<DatetimeCursor>(cursor ?? new DatetimeCursor(DateTime.Now), limit ?? 25), id);
   }
 }

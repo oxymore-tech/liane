@@ -6,10 +6,7 @@ namespace Liane.Service.Internal.Util;
 
 public interface ICurrentContext
 {
-  const string CurrentResourceName = nameof(CurrentResource); 
-  const string CurrentResourceAccessLevelName = nameof(CurrentResourceAccessLevelName);
-   AuthUser CurrentUser();
-   T? CurrentResource<T>() where T : class, IIdentity;
-   ResourceAccessLevel CurrentResourceAccessLevel();
-
+  AuthUser CurrentUser();
+  T? CurrentResource<T>() where T : class, IIdentity;
+  ResourceAccessLevel CurrentResourceAccessLevel();
 }

@@ -19,15 +19,18 @@ public sealed record DatetimeCursor(DateTime Timestamp, string? Id = null) : IId
     return ((DateTimeOffset)Timestamp.ToUniversalTime()).ToUnixTimeMilliseconds() + (Id != null ? "_" + Id : "");
   }
 
-  public static implicit operator string(DatetimeCursor @cursor)
+  public static implicit operator string(DatetimeCursor cursor)
   {
     return cursor.ToString();
   }
 
-  public static implicit operator DatetimeCursor?(string? @raw)
+  public static implicit operator DatetimeCursor?(string? raw)
   {
-    if (raw == null) return null;
-    // Parse string to Datetime and Id
+    return raw == null ? null : Parse(raw);
+  }
+
+  public static DatetimeCursor Parse(string raw)
+  {
     var items = raw.Split("_");
     var unixTimestamp = (long)Convert.ChangeType(items[0], typeof(long));
     var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).UtcDateTime;

@@ -72,13 +72,13 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
         dynamic task = getIfMatchesMethod.Invoke(resolver, new[] { resourceId, filter })!;
 
         var result = await task;
-        context.HttpContext.Items[ICurrentContext.CurrentResourceName] = result;
+        context.HttpContext.Items[CurrentContextImpl.CurrentResourceName] = result;
 
         if (result == null) throw new ForbiddenException();
       }
 
       // Set context to current access level 
-      context.HttpContext.Items[ICurrentContext.CurrentResourceAccessLevelName] = accessLevel;
+      context.HttpContext.Items[CurrentContextImpl.CurrentResourceAccessLevelName] = accessLevel;
     }
     catch (System.Exception e)
     {

@@ -61,7 +61,7 @@ public sealed class ChatHub : Hub
     Task.Run(async () =>
     {
       var latestMessages = await chatService.GetGroupMessages(
-        new PaginatedRequestParams<DatetimeCursor>(nowCursor), groupId);
+        new Pagination<DatetimeCursor>(nowCursor), groupId);
       logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);
       await caller.SendAsync(ReceiveLatestMessages, latestMessages);
     });

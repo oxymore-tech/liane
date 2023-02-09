@@ -18,7 +18,7 @@ public sealed record PaginatedResponse<TData, TCursor>(
     return new PaginatedResponse<TOut, TCursor>(PageSize, NextCursor, Data.Select(transformer).ToImmutableList(), TotalCount);
   }
 
-  public async Task<PaginatedResponse<TOut, TCursor>> ConvertDataAsync<TOut>(Func<TData, Task<TOut>> transformer)
+  public async Task<PaginatedResponse<TOut, TCursor>> SelectAsync<TOut>(Func<TData, Task<TOut>> transformer)
   {
     var outs = new List<TOut>();
     foreach (var r in Data)
