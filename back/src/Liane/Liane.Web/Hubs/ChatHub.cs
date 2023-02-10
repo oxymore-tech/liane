@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Liane.Web.Hubs;
 
-[Authorize(Policy = Startup.RequireAuthPolicy)]
+[Authorize(Policy = Startup.ChatAuthorizationPolicy)]
 public sealed class ChatHub : Hub
 {
   private readonly ILogger<ChatHub> logger;
@@ -23,7 +23,7 @@ public sealed class ChatHub : Hub
   private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
 
   private const string ReceiveMessage = nameof(ReceiveMessage);
-  private const string GetLatestMessages = nameof(GetLatestMessages);
+  private const string ReceiveLatestMessages = nameof(ReceiveLatestMessages);
   private const string Me = nameof(Me);
 
   public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService)
@@ -41,8 +41,10 @@ public sealed class ChatHub : Hub
 
   public async Task SendToGroup(ChatMessage message, string groupId)
   {
+    logger.LogInformation(message.Text);
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
     // TODO handle notifications in service for disconnected users 
+    logger.LogInformation(sent.Text + " "+currentContext.CurrentUser().Id);
     await Clients.Group(groupId).SendAsync(ReceiveMessage, sent);
   }
 
@@ -53,13 +55,15 @@ public sealed class ChatHub : Hub
     var nowCursor = DatetimeCursor.Now();
     var updatedConversation = await chatService.ReadAndGetConversation(groupId, userId, nowCursor.Timestamp);
     await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-
+    logger.LogInformation("User " + userId + " joined conversation " + groupId);
+    var caller = Clients.Caller;
     // Send latest messages async
     Task.Run(async () =>
     {
       var latestMessages = await chatService.GetGroupMessages(
         new PaginatedRequestParams<DatetimeCursor>(nowCursor), groupId);
-      await Clients.Caller.SendAsync(GetLatestMessages, latestMessages);
+      logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);
+      await caller.SendAsync(ReceiveLatestMessages, latestMessages);
     });
     return updatedConversation;
   }
@@ -78,7 +82,7 @@ public sealed class ChatHub : Hub
                                   + Context.ConnectionId);
     currentConnectionsCache.CreateEntry(userId);
     // Update User's last connection
-    var user = userService.UpdateLastConnection(userId, DateTime.Now);
+    User user = await userService.UpdateLastConnection(userId, DateTime.Now);
     await Clients.Caller.SendAsync(Me, user);
     // TODO send latest unread notifications count 
   }

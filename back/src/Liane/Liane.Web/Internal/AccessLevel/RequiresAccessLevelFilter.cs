@@ -42,7 +42,8 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
 
       var internalResolverInterface = resolver.GetType().GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IInternalResourceResolverService<,>));
       if (internalResolverInterface == null) throw new ConstraintException();
-      var internalResourceType = internalResolverInterface.GetGenericArguments().FirstOrDefault(type => type != resourceType)!;
+      // Get type TDb
+      var internalResourceType = internalResolverInterface.GetGenericArguments()[0];
 
       // Get access level context factory and generate context object for given access level and user
       var method = accessorProvider.GetType().GetMethod(nameof(IAccessLevelContextFactory.NewAccessLevelContext))!.MakeGenericMethod(internalResourceType);

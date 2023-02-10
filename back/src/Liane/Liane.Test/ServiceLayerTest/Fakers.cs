@@ -14,7 +14,7 @@ public class Fakers
 {
   private static Faker<DbUser> DbUserFaker => new Faker<DbUser>()
     .CustomInstantiator(f => new DbUser(
-        ObjectId.GenerateNewId(), false, f.Phone.PhoneNumber("0#########"), f.Name.FirstName(), null, null, null, DateTime.Today, null
+        ObjectId.GenerateNewId().ToString(), false, f.Phone.PhoneNumber("0#########"), f.Name.FirstName(), null, null, null, DateTime.Today, null
       )
     );
 

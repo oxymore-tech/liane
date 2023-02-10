@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
 
+
 [Route("api/liane")]
 [ApiController]
 [RequiresAuth]
@@ -16,32 +17,35 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext)
-  {
-    this.lianeService = lianeService;
-    this.currentContext = currentContext;
-  }
 
-  [HttpGet("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public Task<Api.Trip.Liane> Get([FromRoute] string id)
-  {
-    var current = currentContext.CurrentResource<Api.Trip.Liane>();
-    return current != null ? Task.FromResult(current) : lianeService.Get(id);
-  }
+public LianeController(ILianeService lianeService, ICurrentContext currentContext)
+{
+  this.lianeService = lianeService;
+  this.currentContext = currentContext;
+}
 
-  [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromQuery] int? limit, [FromQuery] string? cursor)
-  {
-    return lianeService.ListForMemberUser(
-      currentContext.CurrentUser().Id,
-      new PaginatedRequestParams<DatetimeCursor>(cursor, limit ?? 25)
-    ); // TODO model binder for pagination
-  }
+    [HttpGet("{id}")]
+    [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+    public Task<Api.Trip.Liane> Get([FromRoute] string id)
+    {
+      var current = currentContext.CurrentResource<Api.Trip.Liane>();
+      return current != null ? Task.FromResult(current) : lianeService.Get(id);
+    }
 
-  [HttpPost("")]
-  public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
-  {
-    return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
-  }
+    [HttpGet("")]
+    public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromQuery] int? limit, [FromQuery] string? cursor)
+    {
+      return lianeService.ListForMemberUser(
+        currentContext.CurrentUser().Id, 
+        new PaginatedRequestParams<DatetimeCursor>(cursor, limit ?? 25)
+        ); // TODO model binder for pagination
+    }
+    
+    [HttpPost("")]
+    public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
+    {
+        return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
+    }
+    
+    
 }
