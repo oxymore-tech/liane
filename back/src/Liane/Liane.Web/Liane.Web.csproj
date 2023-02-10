@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Liane.Api\Liane.Api.csproj" />
+        <ProjectReference Include="..\Liane.Mock\Liane.Mock.csproj" />
         <ProjectReference Include="..\Liane.Service\Liane.Service.csproj" />
     </ItemGroup>
 
