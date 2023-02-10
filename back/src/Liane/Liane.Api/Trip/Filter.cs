@@ -7,6 +7,5 @@ public sealed record Filter(
   Ref<RallyingPoint>? From,
   Ref<RallyingPoint>? To,
   DateTime? GoTime,
-  DateTime? ReturnTime,
-  bool PartInto
+  DateTime? ReturnTime
 );

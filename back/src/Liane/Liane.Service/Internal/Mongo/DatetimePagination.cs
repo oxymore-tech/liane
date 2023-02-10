@@ -11,25 +11,6 @@ namespace Liane.Service.Internal.Mongo;
 
 public sealed class DatetimePagination<TData> where TData : class, IIdentity
 {
-  private static FilterDefinition<TData> CreatePaginationFilter(DatetimeCursor cursor, bool sortAsc, Expression<Func<TData, object>> indexedField)
-  {
-    Func<Expression<Func<TData, object>>, object, FilterDefinition<TData>> filterFn = sortAsc ? Builders<TData>.Filter.Gt : Builders<TData>.Filter.Lt;
-    // Select messages created before given cursor Timestamp
-    var filter = filterFn(indexedField, cursor.Timestamp);
-    if (cursor.Id != null)
-    {
-      // If Id is provided, filter Id index
-      filter = Builders<TData>.Filter.Or(filter,
-        Builders<TData>.Filter.And(
-          Builders<TData>.Filter.Eq(indexedField, cursor.Timestamp),
-          filterFn(d => d.Id!, cursor.Id)
-        )
-      );
-    }
-
-    return filter;
-  }
-
   public static async Task<PaginatedResponse<TData, DatetimeCursor>> List(
     IMongoDatabase mongo,
     Pagination<DatetimeCursor> pagination,
@@ -61,5 +42,24 @@ public sealed class DatetimePagination<TData> where TData : class, IIdentity
     }
 
     return new PaginatedResponse<TData, DatetimeCursor>(pagination.Limit, cursor, data.ToImmutableList());
+  }
+
+  private static FilterDefinition<TData> CreatePaginationFilter(DatetimeCursor cursor, bool sortAsc, Expression<Func<TData, object>> indexedField)
+  {
+    Func<Expression<Func<TData, object>>, object, FilterDefinition<TData>> filterFn = sortAsc ? Builders<TData>.Filter.Gt : Builders<TData>.Filter.Lt;
+    // Select messages created before given cursor Timestamp
+    var filter = filterFn(indexedField, cursor.Timestamp);
+    if (cursor.Id != null)
+    {
+      // If Id is provided, filter Id index
+      filter = Builders<TData>.Filter.Or(filter,
+        Builders<TData>.Filter.And(
+          Builders<TData>.Filter.Eq(indexedField, cursor.Timestamp),
+          filterFn(d => d.Id!, cursor.Id)
+        )
+      );
+    }
+
+    return filter;
   }
 }

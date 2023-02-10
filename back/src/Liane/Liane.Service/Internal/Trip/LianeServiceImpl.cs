@@ -27,7 +27,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List(Filter filter, Pagination<DatetimeCursor> pagination)
   {
     var f = FilterDefinition<LianeDb>.Empty;
+    if (filter.From is not null || filter.To is not null)
+    {
+      // f &= Builders<LianeDb>.Filter.GeoWithinBox("Members.From", )
+    }
 
+    // Mongo.GetCollection<LianeDb>()
+    //   .Find(f)
     var paginatedLianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, f);
     return await paginatedLianes.SelectAsync(ToOutputDto);
   }

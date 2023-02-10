@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -23,17 +22,6 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
 {
-  private static readonly string[] AccentedChars =
-  {
-    "[aáÁàÀâÂäÄãÃåÅæÆ]",
-    "[cçÇ]",
-    "[eéÉèÈêÊëË]",
-    "[iíÍìÌîÎïÏ]",
-    "[nñÑ]",
-    "[oóÓòÒôÔöÖõÕøØœŒß]",
-    "[uúÚùÙûÛüÜ]"
-  };
-
   private const int MaxRadius = 400_000;
   private const int MaxRallyingPoint = 10;
 
@@ -63,20 +51,15 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
   {
     var filter = FilterDefinition<RallyingPoint>.Empty;
-    if (pos.HasValue)
+
+    if (search is not null)
+    {
+      filter = Builders<RallyingPoint>.Filter.Text(search, new TextSearchOptions { CaseSensitive = false, DiacriticSensitive = false });
+    }
+    else if (pos.HasValue)
     {
       var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
-      filter &= Builders<RallyingPoint>.Filter.Near(x => x.Location, point, MaxRadius);
-    }
-
-    if (search != null)
-    {
-      // var regex = new Regex($".*{ToSearchPattern(search)}.*", RegexOptions.IgnoreCase);
-      // filter &= (builder.Regex(x => x.Label, new BsonRegularExpression(regex))
-      //            | builder.Regex(x => x.Address, new BsonRegularExpression(regex))
-      //            | builder.Regex(x => x.ZipCode, new BsonRegularExpression(regex))
-      //            | builder.Regex(x => x.City, new BsonRegularExpression(regex)));
-      filter &= Builders<RallyingPoint>.Filter.Text(search, new TextSearchOptions { CaseSensitive = false, DiacriticSensitive = false });
+      filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, point, MaxRadius);
     }
 
     return (await Mongo.GetCollection<RallyingPoint>()
@@ -123,12 +106,6 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     }
 
     return rallyingPoints.Distinct().ToImmutableList();
-  }
-
-  private static string ToSearchPattern(string search)
-  {
-    search = Regex.Escape(search);
-    return AccentedChars.Aggregate(search, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
   }
 
   protected override RallyingPoint ToDb(RallyingPoint inputDto, string id)
