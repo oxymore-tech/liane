@@ -25,8 +25,4 @@
         <ProjectReference Include="..\Liane.Web\Liane.Web.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="Resources\redis-data.txt" />
-    </ItemGroup>
-
 </Project>
