@@ -36,6 +36,14 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var f = Builders<LianeDb>.Filter.In("Members.From", rallyingPoints)
             | Builders<LianeDb>.Filter.In("Members.To", rallyingPoints);
 
+    if (filter.GoTime is not null)
+    {
+      var date = filter.GoTime.Value.Date;
+      var dayAfter = filter.GoTime.Value.Date.AddDays(1);
+      f &= Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, date)
+           & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, dayAfter);
+    }
+    
     var lianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, f);
     return await lianes.SelectAsync(ToOutputDto);
   }
