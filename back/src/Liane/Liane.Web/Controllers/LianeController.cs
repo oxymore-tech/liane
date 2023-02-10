@@ -5,6 +5,7 @@ using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Liane.Web.Controllers;
 
@@ -15,8 +16,7 @@ public sealed class LianeController : ControllerBase
 {
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
-
-
+  
   public LianeController(ILianeService lianeService, ICurrentContext currentContext)
   {
     this.lianeService = lianeService;
@@ -31,12 +31,12 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
-  [HttpPost("")]
+  [HttpGet("search")]
   public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromBody] Filter filter, [FromQuery] Pagination<DatetimeCursor> pagination)
   {
     return lianeService.List(filter, pagination);
   }
-
+  
   [HttpGet("")]
   public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromQuery] Pagination<DatetimeCursor> pagination)
   {
