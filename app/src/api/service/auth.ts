@@ -4,13 +4,13 @@ import { clearStorage, getUserSession, processAuthResponse } from "@/api/storage
 
 export interface AuthService {
   login(request: AuthRequest): Promise<AuthUser>;
-  me(): Promise<AuthUser | undefined>;
+  authUser(): Promise<AuthUser | undefined>;
   sendSms(phone: string): Promise<void>;
   logout(): Promise<void>;
 }
 
 export class AuthServiceClient implements AuthService {
-  async me(): Promise<AuthUser | undefined> {
+  async authUser(): Promise<AuthUser | undefined> {
     return getUserSession();
   }
 
