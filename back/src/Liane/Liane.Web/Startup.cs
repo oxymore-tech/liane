@@ -48,7 +48,6 @@ namespace Liane.Web;
 
 public static class Startup
 {
-    public const string ChatAuthorizationPolicy = nameof(ChatAuthorizationPolicy);
     public const string RequireAuthPolicy = nameof(RequireAuthPolicy);
 
     private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
@@ -206,7 +205,6 @@ public static class Startup
         
         services.AddAuthorization(x =>
         {
-          x.AddPolicy(ChatAuthorizationPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
           x.AddPolicy(RequireAuthPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
         });
         
