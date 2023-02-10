@@ -73,8 +73,9 @@ public sealed class MockServiceImpl : IMockService
     radius ??= DefaultRadius;
     var rallyingPoints = await rallyingPointService.List(pos, null, radius, null);
     // Pick departure point in closest results and destination point amongst distant results
-    var closest = rallyingPoints.GetRange(0, rallyingPoints.Count / 4).ToList();
-    var farthest = rallyingPoints.GetRange(rallyingPoints.Count / 2, rallyingPoints.Count).ToList();
+    var half = rallyingPoints.Count / 2;
+    var closest = rallyingPoints.Take(half).ToList();
+    var farthest = rallyingPoints.Skip(half).Take(half).ToList();
     var faker = CreateLianeFaker(closest, farthest);
     foreach (var lianeRequest in faker.Generate(count))
     {

@@ -9,10 +9,10 @@
     "Password": "secret"
   },
   "Nominatim": {
-    "Url": "https://liane.app:7070"
+    "Url": "http://liane.app:7070"
   },
   "Osrm": {
-    "Url": "https://liane.app:5000"
+    "Url": "http://liane.app:5000"
   },
   "Auth": {
     "SecretKey": "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M",

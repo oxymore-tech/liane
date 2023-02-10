@@ -19,7 +19,7 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
-  
+
   public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService)
   {
     this.lianeService = lianeService;
@@ -40,7 +40,7 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.List(filter, pagination);
   }
-  
+
   [HttpGet("")]
   public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromQuery] Pagination<DatetimeCursor> pagination)
   {
@@ -52,10 +52,10 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
   }
-  
+
   [HttpPost("generate")]
   [RequiresAdminAuth]
-  public async Task<User> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] int? radius )
+  public async Task<User> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] int? radius)
   {
     return await mockService.GenerateLiane(count, new LatLng(lat, lng), radius);
   }
