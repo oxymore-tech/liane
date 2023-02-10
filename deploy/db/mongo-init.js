@@ -1,13 +1,13 @@
-use
-liane;
+use liane;
+
+db.rallying_point.createIndex({Location: "2dsphere"});
 
 db.rallying_point.createIndex(
   {
     Label: "text",
     Address: "text",
     ZipCode: "text",
-    City: "text",
-    Location: "2dsphere"
+    City: "text"
   },
   {
     weights: {
