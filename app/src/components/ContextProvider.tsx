@@ -1,5 +1,5 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, LatLng, LocationPermissionLevel } from "@/api";
+import { AuthUser, LatLng, LocationPermissionLevel, User } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { UnauthorizedError } from "@/api/exception";
@@ -10,7 +10,7 @@ interface AppContextProps {
   locationPermission: LocationPermissionLevel;
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
-  authUser?: AuthUser;
+  user?: User;
   setAuthUser: (authUser?: AuthUser) => void;
   services: AppServices;
 }
@@ -25,12 +25,25 @@ export const AppContext = createContext<AppContextProps>({
 });
 
 async function initContext(service: AppServices): Promise<{
-  authUser: AuthUser | undefined;
+  user: User | undefined;
   locationPermission: LocationPermissionLevel;
   position: LatLng;
 }> {
   // await SplashScreen.preventAutoHideAsync();
-  const authUser = await service.auth.me();
+  const authUser = await service.auth.authUser();
+  let user;
+  console.log("auth", authUser);
+  if (authUser) {
+    try {
+      user = await SERVICES.chatHub.start();
+      console.log("user", user);
+    } catch (e) {
+      if (!__DEV__) {
+        console.log("Could not start hub :", e);
+      }
+      //TODO user = cached value for an offline mode
+    }
+  }
 
   if (!__DEV__) {
     await initializeNotification();
@@ -38,7 +51,7 @@ async function initContext(service: AppServices): Promise<{
   }
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
-  return { authUser, locationPermission, position };
+  return { user, locationPermission, position };
 }
 
 interface ContextProviderProps {
@@ -49,7 +62,7 @@ interface ContextProviderState {
   appLoaded: boolean;
   locationPermission: LocationPermissionLevel;
   position?: LatLng;
-  authUser?: AuthUser;
+  user?: User;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
@@ -59,7 +72,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       locationPermission: LocationPermissionLevel.NEVER,
       appLoaded: false,
       position: undefined,
-      authUser: undefined
+      user: undefined
     };
   }
 
@@ -72,7 +85,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     initContext(SERVICES).then(async p =>
       this.setState(prev => ({
         ...prev,
-        authUser: p.authUser,
+        user: p.user,
         locationPermission: p.locationPermission,
         position: p.position,
         appLoaded: true
@@ -84,7 +97,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     if (error instanceof UnauthorizedError) {
       this.setState(prev => ({
         ...prev,
-        authUser: undefined
+        user: undefined
       }));
     }
   }
@@ -98,12 +111,14 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   setAuthUser = async (a?: AuthUser) => {
     try {
+      let user: User;
       if (a) {
         await registerRumUser(a);
+        user = await SERVICES.chatHub.start();
       }
       this.setState(prev => ({
         ...prev,
-        authUser: a
+        user: user
       }));
     } catch (e) {
       console.log("Problem while setting auth user : ", e);
@@ -112,7 +127,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   render() {
     const { children } = this.props;
-    const { appLoaded, locationPermission, position, authUser } = this.state;
+    const { appLoaded, locationPermission, position, user } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
     // TODO handle loading view
@@ -123,7 +138,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
           setLocationPermission,
           setAuthUser,
           position,
-          authUser,
+          user,
           services: SERVICES
         }}>
         {children}

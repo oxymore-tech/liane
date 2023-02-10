@@ -1,10 +1,12 @@
 using System;
-using MongoDB.Bson;
+using Liane.Service.Internal.Mongo.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Service.Internal.User;
 
 public sealed record DbUser(
-    ObjectId Id,
+    [property:BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
+    string Id,
     bool IsAdmin,
     string Phone,
     string? Pseudo,

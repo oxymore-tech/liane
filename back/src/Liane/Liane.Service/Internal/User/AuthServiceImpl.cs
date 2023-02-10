@@ -107,7 +107,7 @@ public sealed class AuthServiceImpl : IAuthService
 
         var (refreshToken, encryptedToken, salt) = GenerateRefreshToken();
 
-        var userId = dbUser?.Id ?? ObjectId.GenerateNewId();
+        var userId = dbUser?.Id ?? ObjectId.GenerateNewId().ToString();
 
         var createdAt = DateTime.UtcNow;
         var update = Builders<DbUser>.Update
@@ -119,14 +119,14 @@ public sealed class AuthServiceImpl : IAuthService
             .Set(p => p.PushToken, request.PushToken);
         await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
-        var authUser = new AuthUser(userId.ToString(), number, dbUser?.IsAdmin ?? false);
+        var authUser = new AuthUser(userId, number, dbUser?.IsAdmin ?? false);
         return GenerateAuthResponse(authUser, refreshToken);
     }
 
     public async Task<AuthResponse> RefreshToken(RefreshTokenRequest request)
     {
         var dbUser = await mongo.GetCollection<DbUser>()
-            .Find(u => u.Id == new ObjectId(request.UserId))
+            .Find(u => u.Id == request.UserId)
             .FirstOrDefaultAsync();
 
         if (dbUser.RefreshToken is null)
@@ -142,7 +142,7 @@ public sealed class AuthServiceImpl : IAuthService
 
         var (newRefreshToken, encryptedToken, salt) = GenerateRefreshToken();
         await mongo.GetCollection<DbUser>()
-            .UpdateOneAsync(u => u.Id == new ObjectId(request.UserId), Builders<DbUser>.Update
+            .UpdateOneAsync(u => u.Id == request.UserId, Builders<DbUser>.Update
                 .Set(p => p.RefreshToken, encryptedToken)
                 .Set(p => p.Salt, salt));
 
@@ -174,7 +174,7 @@ public sealed class AuthServiceImpl : IAuthService
     private async Task RevokeRefreshToken(string userId)
     {
         await mongo.GetCollection<DbUser>()
-            .UpdateOneAsync(u => u.Id == new ObjectId(userId), Builders<DbUser>.Update
+            .UpdateOneAsync(u => u.Id == userId, Builders<DbUser>.Update
                 .Unset(u => u.RefreshToken));
     }
 

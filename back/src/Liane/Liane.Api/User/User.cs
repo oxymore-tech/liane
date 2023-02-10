@@ -8,6 +8,5 @@ public sealed record User(
   string Phone,
   string? Pseudo,
   string? PushToken,
-  Ref<User>? CreatedBy,
   DateTime? CreatedAt
-) : IEntity;
+) : IIdentity;

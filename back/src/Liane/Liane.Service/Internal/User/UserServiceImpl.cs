@@ -20,7 +20,7 @@ public sealed class UserServiceImpl : IUserService
   {
     var user = await mongo.GetCollection<DbUser>()
       .FindOneAndUpdateAsync(
-        u => u.Id.ToString() == id,
+        u => u.Id == id,
         Builders<DbUser>.Update.Set(u => u.LastConnection, timestamp)
       );
     return MapUser(user);
@@ -29,7 +29,7 @@ public sealed class UserServiceImpl : IUserService
   public async Task<Api.User.User> Get(string id)
   {
     var dbUser = await mongo.GetCollection<DbUser>()
-      .Find(u => u.Id.ToString() == id)
+      .Find(u => u.Id == id)
       .FirstOrDefaultAsync();
 
     if (dbUser is null)
@@ -60,6 +60,6 @@ public sealed class UserServiceImpl : IUserService
 
   private static Api.User.User MapUser(DbUser dbUser)
   {
-    return new Api.User.User(dbUser.Id.ToString(), dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, null, dbUser.CreatedAt);
+    return new Api.User.User(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
   }
 }

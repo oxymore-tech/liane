@@ -19,13 +19,13 @@ import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
 import { Row } from "@/components/base/AppLayout";
 import Avatar from "@/assets/avatar.svg";
 import { ProfileScreen } from "@/screens/ProfileScreen";
+import { ChatScreen } from "@/screens/ChatScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Home() {
   const insets = useSafeAreaInsets();
-  // const { authUser } = useContext(AppContext);
   const iconSize = 24;
   return (
     <Tab.Navigator
@@ -48,14 +48,15 @@ function Home() {
 }
 
 function Navigation() {
-  const { authUser } = useContext(AppContext);
+  const { user } = useContext(AppContext);
 
-  if (authUser) {
+  if (user) {
     return (
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="LianeWizard" component={LianeModalScreen} options={{ headerShown: false, animation: "fade" }} />
-        <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false, animation: "fade" }} />
+        <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>

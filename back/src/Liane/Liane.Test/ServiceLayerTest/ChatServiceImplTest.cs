@@ -1,11 +1,10 @@
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Routing;
-using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.User;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -25,7 +24,7 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
   public async Task TestPagination()
   {
     var conversation = Fakers.ConversationFaker.Generate();
-    var author = Fakers.FakeDbUsers[0].Id.ToString();
+    var author = conversation.Members[0].User.Id;
     const int messageCount = 12;
     await testedService.Create(conversation, author);
     var messages = Fakers.MessageFaker.Generate(messageCount);
@@ -35,6 +34,8 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
     }
 
     const int limit = 8;
+    // Make sure our cursor is after 1st message date 
+    Thread.Sleep(1);
     var firstPage = await testedService.GetGroupMessages(
       new PaginatedRequestParams<DatetimeCursor>(DatetimeCursor.Now(), limit),
       conversation.Id);
@@ -45,9 +46,11 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
     var secondPage = await testedService.GetGroupMessages(
       new PaginatedRequestParams<DatetimeCursor>(firstPage.NextCursor, limit),
       conversation.Id);
-
+    
     Assert.AreEqual(messageCount - limit, secondPage.Data.Count);
     Assert.IsNull(secondPage.NextCursor);
+    
+    Assert.IsEmpty(firstPage.Data.Intersect(secondPage.Data).ToImmutableList());
   }
 
   [TearDown]

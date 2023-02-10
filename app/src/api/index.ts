@@ -5,11 +5,11 @@ export type Identity = Readonly<{
 export type Entity = Readonly<
   {
     createdBy?: Ref<User>;
-    createdAt?: Date;
+    createdAt?: UTCDateTime;
   } & Identity
 >;
 
-export type Ref<T extends Identity> = string | T;
+export type Ref<T extends Identity> = string; // | T;
 
 export type AuthUser = Readonly<{
   id: string;
@@ -34,7 +34,7 @@ export type AuthRequest = Readonly<{
 export type User = Readonly<
   {
     phone: string;
-    token: string;
+    pseudo: string;
   } & Entity
 >;
 
@@ -124,6 +124,16 @@ export type ChatMessage = Readonly<
   } & Entity
 >;
 
+export type ConversationGroup = Readonly<
+  {
+    members: {
+      user: Ref<User>;
+      joinedAt: UTCDateTime;
+      lastReadAt: UTCDateTime;
+    }[];
+  } & Identity
+>;
+
 export type TypedMessage = Readonly<
   {
     type: "proposal";
@@ -137,11 +147,15 @@ export type Route = Readonly<{
   delta?: number;
 }>;
 
-export type DatetimeCursor = string; // TODO
-
-export type PaginatedResponse<T> = Readonly<{
+export type PaginatedResponse<T, TCursor> = Readonly<{
   pageSize: number;
-  hasNext: boolean;
   data: T[];
-  nextCursor?: DatetimeCursor;
+  nextCursor?: TCursor;
 }>;
+
+export type PaginatedRequestParams<T> = {
+  cursor?: T;
+  limit: number;
+};
+
+export type DatetimeCursor = string; // TODO

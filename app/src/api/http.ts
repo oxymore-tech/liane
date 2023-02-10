@@ -99,7 +99,7 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
 
 const refreshTokenMutex = new Mutex();
 
-async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
+async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}): Promise<Response> {
   const { body, bodyAsJson } = options;
   const url = formatUrl(uri, options);
   const formatedBody = formatBody(body, bodyAsJson);
@@ -127,7 +127,9 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
-        return tryRefreshToken(method, uri, options);
+        return tryRefreshToken(async () => {
+          return await fetchAndCheck(method, uri, options);
+        });
       case 403:
         throw new ForbiddenError();
       default:
@@ -139,6 +141,37 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   return response;
 }
 
+export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResult>): Promise<TResult> {
+  const refreshToken = await getRefreshToken();
+  const user = await getUserSession();
+  if (refreshToken && user) {
+    if (refreshTokenMutex.isLocked()) {
+      // Ignore if concurrent refresh
+      await refreshTokenMutex.waitForUnlock();
+    } else {
+      return refreshTokenMutex.runExclusive(async () => {
+        if (__DEV__) {
+          console.debug("Refresh token");
+        }
+        // Call refresh token endpoint
+        try {
+          const res = await postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } });
+          await processAuthResponse(res);
+          // Retry
+          return await retryAction();
+        } catch (e) {
+          // Logout if unauthorized
+          if (e instanceof UnauthorizedError) {
+            await clearStorage();
+          }
+          throw new UnauthorizedError();
+        }
+      });
+    }
+  }
+  throw new UnauthorizedError();
+}
+/*
 async function tryRefreshToken(method: MethodType, uri: string, options: QueryPostOptions<any>): Promise<Response> {
   const refreshToken = await getRefreshToken();
   const user = await getUserSession();
@@ -164,6 +197,7 @@ async function tryRefreshToken(method: MethodType, uri: string, options: QueryPo
   }
   throw new UnauthorizedError();
 }
+*/
 
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();

@@ -47,11 +47,49 @@ const shortMonthDayFormatter = new Intl.DateTimeFormat(locale, {
   day: "2-digit"
 });
 
+const dateFormatter = new Intl.DateTimeFormat(locale, {
+  month: "2-digit",
+  day: "2-digit",
+  year: "2-digit"
+});
+
 // Load time formatter
 const timeFormatter = new Intl.DateTimeFormat(locale, {
   hour: "2-digit",
   minute: "2-digit"
 });
+
+export const toRelativeTimeString = (timestamp: Date) => {
+  let time, date;
+  /*  const delta = (new Date().getTime() - timestamp.getTime()) / 1000;
+  const minutes = Math.floor(delta / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days <= 1) {
+    date = chatDatetimeFormatter.format(-days, "day");
+  } else {
+    date = dateFormatter.format(timestamp);
+  }
+
+  if (hours > 0) {
+    time = timeFormatter.format(timestamp);
+  } else if (minutes > 0) {
+    time = chatDatetimeFormatter.format(-minutes, "minute");
+  } else {
+    time = chatDatetimeFormatter.format(-delta, "second");
+  }*/
+  console.log(timestamp);
+  date = dateFormatter.format(timestamp);
+  time = timeFormatter.format(timestamp);
+  return date + ", " + time;
+};
+
+// TODO https://formatjs.io/docs/polyfills/intl-relativetimeformat
+/*const chatDatetimeFormatter = new Intl.RelativeTimeFormat(locale, {
+  localeMatcher: "best fit",
+  numeric: "auto"
+});*/
 
 export const formatMonthDay = monthDayFormatter.format;
 export const formatShortMonthDay = shortMonthDayFormatter.format;
