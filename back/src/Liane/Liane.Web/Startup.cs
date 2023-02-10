@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
+using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Match;
@@ -217,8 +218,11 @@ public static class Startup
             options.PayloadSerializerOptions.Converters.Add(new DatetimeCursorConverter());
           });
 
-        // For Resource Access
+        // For Resource access level
         services.AddSingleton<IAccessLevelContextFactory, MongoAccessLevelContextFactory>();
+        
+        // For Mock data generation
+        services.AddService<MockServiceImpl>();
     
     }
 

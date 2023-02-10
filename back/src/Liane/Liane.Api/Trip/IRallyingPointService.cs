@@ -9,9 +9,12 @@ namespace Liane.Api.Trip;
 
 public interface IRallyingPointService : ICrudService<RallyingPoint>
 {
+  
+   const int MaxRadius = 400_000;
+   const int MaxRallyingPoint = 10;
   Task Generate();
 
-  Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search);
+  Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search, int? radius = MaxRadius, int? limit = MaxRallyingPoint);
 
   Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto);
 

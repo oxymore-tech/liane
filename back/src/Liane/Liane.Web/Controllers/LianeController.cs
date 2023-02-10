@@ -1,11 +1,13 @@
 using System.Threading.Tasks;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Api.Util.Pagination;
+using Liane.Mock;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Liane.Web.Controllers;
 
@@ -16,11 +18,13 @@ public sealed class LianeController : ControllerBase
 {
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
+  private readonly IMockService mockService;
   
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
+    this.mockService = mockService;
   }
 
   [HttpGet("{id}")]
@@ -47,5 +51,12 @@ public sealed class LianeController : ControllerBase
   public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
   {
     return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
+  }
+  
+  [HttpPost("generate")]
+  [RequiresAdminAuth]
+  public async Task<User> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] int? radius )
+  {
+    return await mockService.GenerateLiane(count, new LatLng(lat, lng), radius);
   }
 }

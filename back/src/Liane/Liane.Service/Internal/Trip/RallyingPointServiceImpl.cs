@@ -48,7 +48,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
   }
 
-  public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search)
+  public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search, int? radius = IRallyingPointService.MaxRadius, int? limit = IRallyingPointService.MaxRallyingPoint)
   {
     var filter = FilterDefinition<RallyingPoint>.Empty;
 
@@ -58,13 +58,14 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     }
     else if (pos.HasValue)
     {
+      radius ??= IRallyingPointService.MaxRadius;
       var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
-      filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, point, MaxRadius);
+      filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, point, radius);
     }
 
     return (await Mongo.GetCollection<RallyingPoint>()
         .Find(filter)
-        .Limit(MaxRallyingPoint)
+        .Limit(limit)
         .ToCursorAsync())
       .ToEnumerable()
       .ToImmutableList();
