@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
@@ -14,6 +15,7 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Binder;
 using Liane.Web.Hubs;
 using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
@@ -39,13 +41,13 @@ using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using NSwag;
+using JsonAttribute = NLog.Layouts.JsonAttribute;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web;
 
 public static class Startup
 {
-    public const string ChatAuthorizationPolicy = nameof(ChatAuthorizationPolicy);
     public const string RequireAuthPolicy = nameof(RequireAuthPolicy);
 
     private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
@@ -155,12 +157,16 @@ public static class Startup
     {
       ConfigureLianeServices(context, services);
         services.AddService<FileStreamResultExecutor>();
-        services.AddControllers()
+    services.AddControllers(options =>
+      {
+        options.ModelBinderProviders.Insert(0, new BindersProvider());
+      })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new RefJsonConverterFactory());
                 options.JsonSerializerOptions.Converters.Add(new DatetimeCursorConverter());
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
         services.AddCors(options =>
             {
@@ -199,7 +205,6 @@ public static class Startup
         
         services.AddAuthorization(x =>
         {
-          x.AddPolicy(ChatAuthorizationPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
           x.AddPolicy(RequireAuthPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
         });
         

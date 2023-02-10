@@ -14,7 +14,7 @@ public interface IChatService : ICrudEntityService<ConversationGroup>
     
     /** New methods **/
 
-    Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetGroupMessages(PaginatedRequestParams<DatetimeCursor> pagination, Ref<ConversationGroup> group);
+    Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetGroupMessages(Pagination<DatetimeCursor> pagination, Ref<ConversationGroup> group);
 
     Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp);
 

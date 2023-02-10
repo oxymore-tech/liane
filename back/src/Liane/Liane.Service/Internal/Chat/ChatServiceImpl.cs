@@ -51,7 +51,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       .ToImmutableList();
   }
 
-  public async Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetGroupMessages(PaginatedRequestParams<DatetimeCursor> pagination, Ref<ConversationGroup> group)
+  public async Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetGroupMessages(Pagination<DatetimeCursor> pagination, Ref<ConversationGroup> group)
   {
     // Get messages in DESC order 
     var paginatedMessageDb = await DatetimePagination<DbChatMessage>.List(

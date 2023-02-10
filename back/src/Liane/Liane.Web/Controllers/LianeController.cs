@@ -26,19 +26,22 @@ public LianeController(ILianeService lianeService, ICurrentContext currentContex
 
     [HttpGet("{id}")]
     [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-    public Task<Api.Trip.Liane> Get([FromRoute] string id)
+  public async Task<Api.Trip.Liane> Get([FromRoute] string id)
     {
       var current = currentContext.CurrentResource<Api.Trip.Liane>();
-      return current != null ? Task.FromResult(current) : lianeService.Get(id);
-    }
+    return current ?? await lianeService.Get(id);
+  }
 
-    [HttpGet("")]
-    public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromQuery] int? limit, [FromQuery] string? cursor)
+  [HttpPost("")]
+  public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromBody] Filter filter, Pagination<DatetimeCursor> pagination)
+  {
+    return lianeService.List(filter, pagination);
+  }
+  
+  [HttpGet("")]
+  public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List(Pagination<DatetimeCursor> pagination)
     {
-      return lianeService.ListForMemberUser(
-        currentContext.CurrentUser().Id, 
-        new PaginatedRequestParams<DatetimeCursor>(cursor, limit ?? 25)
-        ); // TODO model binder for pagination
+    return lianeService.ListForCurrentUser(pagination);
     }
     
     [HttpPost("")]

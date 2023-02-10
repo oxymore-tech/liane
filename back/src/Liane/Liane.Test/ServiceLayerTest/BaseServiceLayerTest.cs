@@ -1,3 +1,4 @@
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.User;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -6,19 +7,17 @@ namespace Liane.Test.ServiceLayerTest;
 
 public abstract class BaseServiceLayerTest
 {
-  
-  private IMongoDatabase Db;
+  private IMongoDatabase? db;
 
   [OneTimeSetUp]
   public void SetupMockData()
   {
     // Load db with test settings
-    var mongo = new MockMongoSettings("localhost", "mongoadmin", "secret");
-    Db = mongo.GetDatabase();
-    InitService(Db);
+    var mongo = new MongoSettings("localhost", "mongoadmin", "secret");
+    db = mongo.GetDatabase(MongoDatabaseTestExtensions.DbName);
+    InitService(db);
     // Insert mock users 
-    var t = Fakers.FakeDbUsers;
-    Db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
+    db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
   }
 
   protected abstract void InitService(IMongoDatabase db);
@@ -28,12 +27,12 @@ public abstract class BaseServiceLayerTest
   /// </summary>
   protected void DropTestedCollection<T>()
   {
-    Db.DropCollection<T>();
+    db?.DropCollection<T>();
   }
-  
+
   [OneTimeTearDown]
   public void ClearMockData()
   {
-    Db.Drop();
+    db?.Drop();
   }
 }

@@ -11,7 +11,6 @@ namespace Liane.Service.Internal.Mongo;
 
 public sealed class DatetimePagination<TData> where TData : class, IIdentity
 {
-  
   private static FilterDefinition<TData> CreatePaginationFilter(DatetimeCursor cursor, bool sortAsc, Expression<Func<TData, object>> indexedField)
   {
     Func<Expression<Func<TData, object>>, object, FilterDefinition<TData>> filterFn = sortAsc ? Builders<TData>.Filter.Gt : Builders<TData>.Filter.Lt;
@@ -33,7 +32,7 @@ public sealed class DatetimePagination<TData> where TData : class, IIdentity
 
   public static async Task<PaginatedResponse<TData, DatetimeCursor>> List(
     IMongoDatabase mongo,
-    PaginatedRequestParams<DatetimeCursor> pagination,
+    Pagination<DatetimeCursor> pagination,
     Expression<Func<TData, object>> indexedField,
     FilterDefinition<TData> baseFilter,
     bool sortAsc = true
@@ -49,7 +48,8 @@ public sealed class DatetimePagination<TData> where TData : class, IIdentity
     filter = Builders<TData>.Filter.And(baseFilter, filter);
 
     // Check if collection has next page by selecting one more entry
-    var result = (await collection.FindAsync(filter, new FindOptions<TData> { Sort = sort, Limit = pagination.Limit + 1 })).ToList();
+    var result = (await collection.FindAsync(filter, new FindOptions<TData> { Sort = sort, Limit = pagination.Limit + 1 }))
+      .ToList();
 
     var hasNext = result.Count > pagination.Limit;
     var data = result.GetRange(0, Math.Min(result.Count, pagination.Limit));

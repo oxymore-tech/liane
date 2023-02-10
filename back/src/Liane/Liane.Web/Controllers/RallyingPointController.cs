@@ -44,7 +44,7 @@ public sealed class RallyingPointController : ControllerBase
     [RequiresAdminAuth]
     public async Task Generate()
     {
-        await rallyingPointService.ImportCities();
+        await rallyingPointService.Generate();
     }
 
     [HttpGet("")]

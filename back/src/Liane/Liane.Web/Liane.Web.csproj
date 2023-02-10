@@ -27,13 +27,4 @@
         <ProjectReference Include="..\Liane.Service\Liane.Service.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <EmbeddedResource Include="Resources\cities.json" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Controllers\WebSocketController.cs" />
-      <Compile Remove="Controllers\ChatHub.cs" />
-    </ItemGroup>
-
 </Project>

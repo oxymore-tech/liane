@@ -11,57 +11,58 @@ namespace Liane.Service.Internal.Util;
 
 public sealed class CurrentContextImpl : ICurrentContext
 {
-    private readonly IHttpContextAccessor httpContextAccessor;
+  internal const string CurrentResourceName = nameof(CurrentResource);
+  internal const string CurrentResourceAccessLevelName = nameof(CurrentResourceAccessLevelName);
 
-    public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
-    {
-        this.httpContextAccessor = httpContextAccessor;
-    }
+  private readonly IHttpContextAccessor httpContextAccessor;
 
-    public T? CurrentResource<T>() where T : class, IIdentity
+  public CurrentContextImpl(IHttpContextAccessor httpContextAccessor)
+  {
+    this.httpContextAccessor = httpContextAccessor;
+  }
+
+  public T? CurrentResource<T>() where T : class, IIdentity
+  {
+    if (httpContextAccessor.HttpContext != null)
     {
-      if (httpContextAccessor.HttpContext != null)
+      var value = httpContextAccessor.HttpContext?.Items[CurrentResourceName];
+      if (value is T validValue)
       {
-        var value = this.httpContextAccessor.HttpContext?.Items[ICurrentContext.CurrentResourceName];
-        if (value is T validValue)
-        {
-          return validValue;
-        }
+        return validValue;
       }
-
-      return null;
     }
 
-    public ResourceAccessLevel CurrentResourceAccessLevel()
+    return null;
+  }
+
+  public ResourceAccessLevel CurrentResourceAccessLevel()
+  {
+    var value = httpContextAccessor.HttpContext?.Items[CurrentResourceAccessLevelName];
+    if (value is ResourceAccessLevel validValue)
     {
-      if (httpContextAccessor.HttpContext != null)
-      {
-        var value = this.httpContextAccessor.HttpContext?.Items[ICurrentContext.CurrentResourceAccessLevelName];
-        if (value is ResourceAccessLevel validValue)
-        {
-          return validValue;
-        }
-      }
-      return ResourceAccessLevel.Any;
+      return validValue;
     }
 
-    public AuthUser CurrentUser() //TODO check here that user really exists in Db ?
+    return ResourceAccessLevel.Any;
+  }
+
+  public AuthUser CurrentUser()
+  {
+    if (httpContextAccessor.HttpContext == null)
     {
-        if (httpContextAccessor.HttpContext == null)
-        {
-            throw new ForbiddenException();
-        }
-
-        var userId = httpContextAccessor.HttpContext.User.Identity?.Name;
-        var phone = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.MobilePhone)?.Value;
-
-        if (userId == null || phone == null)
-        {
-            throw new ForbiddenException();
-        }
-
-        var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == AuthServiceImpl.AdminRole);
-
-        return new AuthUser(userId, phone, isAdmin);
+      throw new ForbiddenException();
     }
+
+    var userId = httpContextAccessor.HttpContext.User.Identity?.Name;
+    var phone = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.MobilePhone)?.Value;
+
+    if (userId == null || phone == null)
+    {
+      throw new ForbiddenException();
+    }
+
+    var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == AuthServiceImpl.AdminRole);
+
+    return new AuthUser(userId, phone, isAdmin);
+  }
 }

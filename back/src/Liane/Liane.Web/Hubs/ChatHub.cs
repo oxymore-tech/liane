@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Liane.Web.Hubs;
 
-[Authorize(Policy = Startup.ChatAuthorizationPolicy)]
+[Authorize(Policy = Startup.RequireAuthPolicy)]
 public sealed class ChatHub : Hub
 {
   private readonly ILogger<ChatHub> logger;
@@ -44,7 +44,7 @@ public sealed class ChatHub : Hub
     logger.LogInformation(message.Text);
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
     // TODO handle notifications in service for disconnected users 
-    logger.LogInformation(sent.Text + " "+currentContext.CurrentUser().Id);
+    logger.LogInformation(sent.Text + " " + currentContext.CurrentUser().Id);
     await Clients.Group(groupId).SendAsync(ReceiveMessage, sent);
   }
 
@@ -61,7 +61,7 @@ public sealed class ChatHub : Hub
     Task.Run(async () =>
     {
       var latestMessages = await chatService.GetGroupMessages(
-        new PaginatedRequestParams<DatetimeCursor>(nowCursor), groupId);
+        new Pagination<DatetimeCursor>(nowCursor), groupId);
       logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);
       await caller.SendAsync(ReceiveLatestMessages, latestMessages);
     });
