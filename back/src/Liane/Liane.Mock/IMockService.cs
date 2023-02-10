@@ -1,6 +1,6 @@
+using System.Threading.Tasks;
 using Liane.Api.Routing;
-using Liane.Api.Trip;
-using Microsoft.AspNetCore.Mvc;
+using Liane.Api.User;
 
 namespace Liane.Mock;
 
@@ -14,5 +14,5 @@ public interface IMockService
   /// <param name="count">number of items to generate</param>
   /// <param name="pos">center location</param>
   /// <param name="radius">radius (in meters)</param>
-  Task<Api.User.User> GenerateLiane(int count, LatLng pos, int? radius);
+  Task<User> GenerateLiane(int count, LatLng pos, int? radius);
 }
