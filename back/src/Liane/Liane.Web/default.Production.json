@@ -6,9 +6,6 @@
       "Microsoft": "Error"
     }
   },
-  "Redis": {
-    "Host": "redis"
-  },
   "Mongo": {
     "Host": "mongo"
   },
