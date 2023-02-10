@@ -16,7 +16,7 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
 
   protected override void InitService(IMongoDatabase db)
   {
-    testedService = new LianeServiceImpl(db, Moq.Mock.Of<IRoutingService>(), Moq.Mock.Of<ICurrentContext>());
+    testedService = new LianeServiceImpl(db, Moq.Mock.Of<IRoutingService>(), Moq.Mock.Of<ICurrentContext>(), Moq.Mock.Of<IRallyingPointService>());
   }
 
   [Test]
