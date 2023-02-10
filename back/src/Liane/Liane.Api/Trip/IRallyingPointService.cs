@@ -1,18 +1,20 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
-using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
 public interface IRallyingPointService : ICrudService<RallyingPoint>
 {
-  
-   const int MaxRadius = 400_000;
-   const int MaxRallyingPoint = 10;
+  const int MaxRadius = 50_000;
+  const int MaxRallyingPoint = 10;
+
   Task Generate();
+
+  Task<ImmutableHashSet<RallyingPoint>> FindSurroundingPoints(IEnumerable<Ref<RallyingPoint>> points, int? radius = MaxRadius);
 
   Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search, int? radius = MaxRadius, int? limit = MaxRallyingPoint);
 

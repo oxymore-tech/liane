@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -17,25 +18,26 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 {
   private readonly ICurrentContext currentContext;
   private readonly IRoutingService routingService;
+  private readonly IRallyingPointService rallyingPointService;
 
-  public LianeServiceImpl(IMongoDatabase mongo, IRoutingService routingService, ICurrentContext currentContext) : base(mongo)
+  public LianeServiceImpl(IMongoDatabase mongo, IRoutingService routingService, ICurrentContext currentContext, IRallyingPointService rallyingPointService) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
+    this.rallyingPointService = rallyingPointService;
   }
 
   public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List(Filter filter, Pagination<DatetimeCursor> pagination)
   {
-    var f = FilterDefinition<LianeDb>.Empty;
-    if (filter.From is not null || filter.To is not null)
-    {
-      // f &= Builders<LianeDb>.Filter.GeoWithinBox("Members.From", )
-    }
+    var rallyingPoints = (await rallyingPointService.FindSurroundingPoints(ImmutableList.Create(filter.From, filter.To).Where(p => p is not null).Select(r => r!)))
+      .Select(r => (Ref<RallyingPoint>)r)
+      .ToImmutableHashSet();
 
-    // Mongo.GetCollection<LianeDb>()
-    //   .Find(f)
-    var paginatedLianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, f);
-    return await paginatedLianes.SelectAsync(ToOutputDto);
+    var f = Builders<LianeDb>.Filter.In("Members.From", rallyingPoints)
+            | Builders<LianeDb>.Filter.In("Members.To", rallyingPoints);
+
+    var lianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, f);
+    return await lianes.SelectAsync(ToOutputDto);
   }
 
   public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> ListForCurrentUser(Pagination<DatetimeCursor> pagination)

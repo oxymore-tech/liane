@@ -29,11 +29,15 @@ public sealed class DatetimePagination<TData> where TData : class, IIdentity
     filter = Builders<TData>.Filter.And(baseFilter, filter);
 
     // Check if collection has next page by selecting one more entry
-    var result = (await collection.FindAsync(filter, new FindOptions<TData> { Sort = sort, Limit = pagination.Limit + 1 }))
-      .ToList();
+    var findFluent = collection.Find(filter)
+      .Sort(sort)
+      .Limit(pagination.Limit + 1);
+    var total = await findFluent.CountDocumentsAsync();
+    var result = await findFluent.ToListAsync();
 
     var hasNext = result.Count > pagination.Limit;
-    var data = result.GetRange(0, Math.Min(result.Count, pagination.Limit));
+    var count = Math.Min(result.Count, pagination.Limit);
+    var data = result.GetRange(0, count);
     DatetimeCursor? cursor = null;
     if (hasNext)
     {
@@ -41,7 +45,7 @@ public sealed class DatetimePagination<TData> where TData : class, IIdentity
       cursor = hasNext ? new DatetimeCursor((DateTime)indexedField.Compile().Invoke(last), last.Id) : null;
     }
 
-    return new PaginatedResponse<TData, DatetimeCursor>(pagination.Limit, cursor, data.ToImmutableList());
+    return new PaginatedResponse<TData, DatetimeCursor>(count, cursor, data.ToImmutableList(), (int)total);
   }
 
   private static FilterDefinition<TData> CreatePaginationFilter(DatetimeCursor cursor, bool sortAsc, Expression<Func<TData, object>> indexedField)
