@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Mock;
@@ -72,6 +73,7 @@ public static class Startup
         services.AddService<ChatServiceImpl>();
         services.AddService<IntentMatchingServiceImpl>();
         services.AddService<LianeServiceImpl>();
+        services.AddService<JoinLianeRequestServiceImpl>();
         
         services.AddSettings<FirebaseSettings>(context);
         services.AddService<NotificationServiceImpl>();

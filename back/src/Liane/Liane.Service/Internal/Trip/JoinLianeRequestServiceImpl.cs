@@ -5,9 +5,9 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class JoinLianeRequestService : MongoCrudEntityService<JoinLianeRequest>, IJoinLianeRequestService
+public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeRequest>, IJoinLianeRequestService
 {
-  public JoinLianeRequestService(IMongoDatabase mongo) : base(mongo)
+  public JoinLianeRequestServiceImpl(IMongoDatabase mongo) : base(mongo)
   {
   }
 
