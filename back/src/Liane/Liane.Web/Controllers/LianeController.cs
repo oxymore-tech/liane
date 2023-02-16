@@ -7,6 +7,7 @@ using Liane.Mock;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -19,12 +20,14 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
+  private readonly IJoinLianeRequestService joinLianeRequestService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, IJoinLianeRequestService joinLianeRequestService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
+    this.joinLianeRequestService = joinLianeRequestService;
   }
 
   [HttpGet("{id}")]
@@ -33,6 +36,15 @@ public sealed class LianeController : ControllerBase
   {
     var current = currentContext.CurrentResource<Api.Trip.Liane>();
     return current ?? await lianeService.Get(id);
+  }
+  
+  [HttpPost("{id}/join")]
+  public async Task<JoinLianeRequest> Get([FromRoute] string id, [FromBody] JoinLianeRequest request)
+  {
+    var current = currentContext.CurrentUser();
+    if (request.TargetLiane.Id != id) throw new BadHttpRequestException("wrong liane id");
+    return await joinLianeRequestService.Create(request, current.Id);
+    
   }
 
   [HttpPost("match")]

@@ -10,8 +10,8 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed record DriverData
 (
-    Ref<Api.User.User> User, 
-    int Capacity
+  Ref<Api.User.User> User,
+  bool CanDrive = true
 );
 
 public sealed record LianeDb(
@@ -22,5 +22,5 @@ public sealed record LianeDb(
     DateTime DepartureTime,
     DateTime? ReturnTime,
     ImmutableList<LianeMember> Members,
-    DriverData DriverData 
+    DriverData DriverData  // The current or default driver
 ): IIdentity, ISharedResource<LianeMember>;

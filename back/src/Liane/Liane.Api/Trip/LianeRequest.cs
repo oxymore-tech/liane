@@ -7,7 +7,7 @@ public sealed record LianeRequest(
   string? Id,
   DateTime DepartureTime,
   DateTime? ReturnTime,
-  int DriverCapacity,
+  int AvailableSeats,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To
 );

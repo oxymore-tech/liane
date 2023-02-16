@@ -103,15 +103,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   protected override async Task<Api.Trip.Liane> MapEntity(LianeDb liane)
   {
-    var driver = liane.DriverData.User;
-    var wayPoints = await GetWayPoints(driver, liane.Members);
+    var driver = liane.DriverData.CanDrive ? liane.DriverData.User : null;
+    var wayPoints = await GetWayPoints(liane.DriverData.User, liane.Members);
     return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, driver);
   }
 
   protected override LianeDb ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
   {
-    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To) };
-    var driverData = new DriverData(createdBy, lianeRequest.DriverCapacity);
+    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats) };
+    var driverData = new DriverData(createdBy, lianeRequest.AvailableSeats > 0);
     return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime,
       lianeRequest.ReturnTime, members.ToImmutableList(), driverData);
   }
