@@ -41,14 +41,14 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
       conversation.Id);
 
     Assert.AreEqual(limit, firstPage.Data.Count);
-    Assert.NotNull(firstPage.NextCursor);
+    Assert.NotNull(firstPage.Next);
 
     var secondPage = await testedService.GetGroupMessages(
-      new Pagination(firstPage.NextCursor, limit),
+      new Pagination(firstPage.Next, limit),
       conversation.Id);
     
     Assert.AreEqual(messageCount - limit, secondPage.Data.Count);
-    Assert.IsNull(secondPage.NextCursor);
+    Assert.IsNull(secondPage.Next);
     
     Assert.IsEmpty(firstPage.Data.Intersect(secondPage.Data).ToImmutableList());
   }

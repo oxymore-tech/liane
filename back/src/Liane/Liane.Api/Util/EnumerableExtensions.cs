@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Liane.Api.Util;
 
@@ -53,14 +54,6 @@ public static class EnumerableExtensions
     if (pagination.Cursor is not null)
     {
       var filter = pagination.Cursor.ToFilter(pagination.SortAsc, paginationField);
-      // var paramExpr = Expression.Parameter(typeof(IEntity), "e");
-      // Expression<Func<IEntity, bool>> filter = (Expression<Func<IEntity, bool>>)Expression.Lambda(
-      //   Expression.MakeBinary(
-      //     ExpressionType.LessThan,
-      //     Expression.MakeMemberAccess(paramExpr, typeof(IEntity).GetProperty("CreatedAt")!)
-      //     ,Expression.Convert(Expression.Constant(DateTime.Now), typeof(DateTime?))),
-      //   paramExpr);
-      //Expression<Func<IEntity, bool>> filter = e => e.CreatedAt < DateTime.Now;
       enumerable = enumerable.Where(e => filter.Compile()(e));
     }
     else
@@ -69,12 +62,14 @@ public static class EnumerableExtensions
     }
 
     var paginated = enumerable
-      .Take(pagination.Limit)
+      .Take(pagination.Limit + 1)
       .ToImmutableList();
-    var last = paginated.LastOrDefault();
-    var limit = paginated.Count;
-    var next = totalCount > limit && last is not null ? pagination.Cursor?.From(last, paginationField) : null;
-    return new PaginatedResponse<T>(limit, next, paginated, totalCount);
+    var limited = paginated.Take(pagination.Limit)
+      .ToImmutableList();
+    var last = limited.LastOrDefault();
+    var limit = limited.Count;
+    var next = paginated.Count > limited.Count && last is not null ? pagination.Cursor?.From(last, paginationField) : null;
+    return new PaginatedResponse<T>(limit, next, limited, totalCount);
   }
 
   public static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)

@@ -50,27 +50,27 @@ public static class MongoDatabaseExtensions
   public static async Task<PaginatedResponse<TData>> Paginate<TData>(
     this IMongoDatabase mongo,
     Pagination pagination,
-    Expression<Func<TData, object?>> indexedField,
+    Expression<Func<TData, object?>> paginationField,
     FilterDefinition<TData> baseFilter,
     bool? sortAsc = null
   ) where TData : IIdentity
   {
     var effectiveSortAsc = sortAsc ?? pagination.SortAsc;
     var sort = effectiveSortAsc
-      ? Builders<TData>.Sort.Ascending(indexedField).Ascending(m => m.Id)
-      : Builders<TData>.Sort.Descending(indexedField).Descending(m => m.Id);
+      ? Builders<TData>.Sort.Ascending(paginationField).Ascending(m => m.Id)
+      : Builders<TData>.Sort.Descending(paginationField).Descending(m => m.Id);
 
     var collection = mongo.GetCollection<TData>();
-    var filter = pagination.Cursor != null ? CreatePaginationFilter(pagination.Cursor, effectiveSortAsc, indexedField) : FilterDefinition<TData>.Empty;
+    var filter = pagination.Cursor != null ? CreatePaginationFilter(pagination.Cursor, effectiveSortAsc, paginationField) : FilterDefinition<TData>.Empty;
 
     filter = Builders<TData>.Filter.And(baseFilter, filter);
 
     // Check if collection has next page by selecting one more entry
-    var findFluent = collection.Find(filter)
+    var find = collection.Find(filter)
       .Sort(sort)
       .Limit(pagination.Limit + 1);
-    var total = await findFluent.CountDocumentsAsync();
-    var result = await findFluent.ToListAsync();
+    var total = await find.CountDocumentsAsync();
+    var result = await find.ToListAsync();
 
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
@@ -79,7 +79,7 @@ public static class MongoDatabaseExtensions
     if (hasNext)
     {
       var last = data.Last();
-      cursor = hasNext ? new Cursor.Time((DateTime?)indexedField.Compile().Invoke(last) ?? DateTime.UtcNow, last.Id) : null;
+      cursor = hasNext ? pagination.Cursor?.From(last, paginationField) : null;
     }
 
     return new PaginatedResponse<TData>(count, cursor, data.ToImmutableList(), (int)total);

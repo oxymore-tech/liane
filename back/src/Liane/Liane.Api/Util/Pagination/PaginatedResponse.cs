@@ -7,19 +7,19 @@ namespace Liane.Api.Util.Pagination;
 
 public sealed record PaginatedResponse<TData>(
   int PageSize,
-  Cursor? NextCursor,
+  Cursor? Next,
   ImmutableList<TData> Data,
   int? TotalCount = null
 )
 {
   public PaginatedResponse<TOut> Select<TOut>(Func<TData, TOut> transformer)
   {
-    return new PaginatedResponse<TOut>(PageSize, NextCursor, Data.Select(transformer).ToImmutableList(), TotalCount);
+    return new PaginatedResponse<TOut>(PageSize, Next, Data.Select(transformer).ToImmutableList(), TotalCount);
   }
 
   public async Task<PaginatedResponse<TOut>> SelectAsync<TOut>(Func<TData, Task<TOut>> transformer)
   {
     var data = await Data.SelectAsync(transformer);
-    return new PaginatedResponse<TOut>(PageSize, NextCursor, data, TotalCount);
+    return new PaginatedResponse<TOut>(PageSize, Next, data, TotalCount);
   }
 };
