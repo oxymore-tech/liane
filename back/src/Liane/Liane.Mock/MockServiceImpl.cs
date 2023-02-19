@@ -72,6 +72,12 @@ public sealed class MockServiceImpl : IMockService
     // Fetch all rallying points in given radius
     radius ??= DefaultRadius;
     var rallyingPoints = await rallyingPointService.List(pos, null, radius, null);
+
+    if (rallyingPoints.Count < count)
+    {
+      throw new ArgumentException($"Not enough rallying points arround ({pos.Lat}, {pos.Lng}) to generates lianes : {rallyingPoints.Count} < {count}");
+    }
+
     // Pick departure point in closest results and destination point amongst distant results
     var half = rallyingPoints.Count / 2;
     var closest = rallyingPoints.Take(half).ToList();
