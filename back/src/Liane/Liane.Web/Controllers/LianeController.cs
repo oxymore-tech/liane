@@ -35,10 +35,10 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
-  [HttpGet("search")]
-  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromBody] Filter filter, [FromQuery] Pagination pagination)
+  [HttpGet("match")]
+  public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination)
   {
-    return lianeService.List(filter, pagination);
+    return lianeService.Match(filter, pagination);
   }
 
   [HttpGet("")]

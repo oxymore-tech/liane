@@ -34,7 +34,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   public virtual async Task<TOut> Get(Ref<TOut> reference)
   {
     var resolved = await ResolveRef(reference);
-    return await ToOutputDto(resolved!); //TODO can get send back null ?
+    return await MapEntity(resolved!); //TODO can get send back null ?
   }
   
   public virtual async Task<bool> Delete(Ref<TOut> reference)
@@ -44,7 +44,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
     return res.IsAcknowledged;
   }
 
-  protected abstract Task<TOut> ToOutputDto(TDb dbRecord);
+  protected abstract Task<TOut> MapEntity(TDb dbRecord);
   
   public async Task<TOut?> GetIfMatches(string id, Predicate<TDb> filter)
   {
@@ -53,7 +53,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
     {
       throw new ResourceNotFoundException($"{typeof(TDb).Name} '{id}' not found");
     }
-    return filter(value) ? await ToOutputDto(value) : null;
+    return filter(value) ? await MapEntity(value) : null;
   }
 
   protected FilterDefinition<TDb> GetAccessLevelFilter(string? userId, ResourceAccessLevel accessLevel)
@@ -79,7 +79,7 @@ public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TD
     var created = ToDb(obj, id);
     await Mongo.GetCollection<TDb>().InsertOneAsync(
       created);
-    return await ToOutputDto(created);
+    return await MapEntity(created);
   }
 
   protected abstract TDb ToDb(TIn inputDto, string originalId);
@@ -93,7 +93,7 @@ public abstract class MongoCrudService<T> : MongoCrudService<T,T,T>  where T : c
   {
   }
 
-  protected override Task<T> ToOutputDto(T dbRecord)
+  protected override Task<T> MapEntity(T dbRecord)
   {
     return Task.FromResult(dbRecord);
   }
@@ -118,7 +118,7 @@ public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudServ
     var created = ToDb(obj, id, createdAt, createdBy);
     await Mongo.GetCollection<TDb>().InsertOneAsync(
       created);
-    return await ToOutputDto(created);
+    return await MapEntity(created);
   }
 
   protected abstract TDb ToDb(TIn inputDto, string originalId, DateTime createdAt, string createdBy);
@@ -132,7 +132,7 @@ public abstract class MongoCrudEntityService<T> : MongoCrudEntityService<T,T,T> 
   protected MongoCrudEntityService(IMongoDatabase mongo) : base(mongo)
   {
   }
-  protected override Task<T> ToOutputDto(T dbRecord)
+  protected override Task<T> MapEntity(T dbRecord)
   {
     return Task.FromResult(dbRecord);
   }

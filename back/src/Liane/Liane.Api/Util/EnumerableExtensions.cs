@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Microsoft.AspNetCore.DataProtection;
 
 namespace Liane.Api.Util;
 
@@ -44,7 +43,7 @@ public static class EnumerableExtensions
   }
 
   public static PaginatedResponse<T> Paginate<T>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
-    where T : IEntity
+    where T : IIdentity
   {
     var totalCount = collection.Count;
     IEnumerable<T> enumerable = collection;
@@ -73,7 +72,7 @@ public static class EnumerableExtensions
   }
 
   public static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)
-    where T : IEntity
+    where T : IIdentity
   {
     if (sortField is not null)
     {

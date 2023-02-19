@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -16,6 +17,8 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, LianeDb, Api.Trip.Liane>, ILianeService
 {
+  public const int MaxDeltaInSeconds = 15 * 3600;
+
   private readonly ICurrentContext currentContext;
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
@@ -27,7 +30,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     this.rallyingPointService = rallyingPointService;
   }
 
-  public async Task<PaginatedResponse<Api.Trip.Liane>> List(Filter filter, Pagination pagination)
+  public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
   {
     var from = await rallyingPointService.Get(filter.From);
     var to = await rallyingPointService.Get(filter.To);
@@ -43,11 +46,17 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     f &= Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, date)
          & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, dayAfter);
 
+    var currentUser = currentContext.CurrentUser();
+
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(f)
-      .SelectAsync(ToOutputDto);
+      .SelectAsync(l => MatchLiane(l, currentUser.Id, from, to));
 
-    return lianes.Paginate(pagination, l => l.CreatedAt);
+    return lianes
+      .Where(l => l is not null)
+      .Cast<LianeMatch>()
+      .ToImmutableList()
+      .Paginate(pagination, l => l.DeltaInSeconds);
   }
 
   public async Task<PaginatedResponse<Api.Trip.Liane>> ListForCurrentUser(Pagination pagination)
@@ -61,10 +70,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var filter = GetAccessLevelFilter(userId, ResourceAccessLevel.Member);
 
     var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter);
-    return await paginatedLianes.SelectAsync(ToOutputDto);
+    return await paginatedLianes.SelectAsync(MapEntity);
   }
 
-  private async Task<ImmutableSortedSet<WayPoint>> GetWayPointsSet(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
+  private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
   {
     Ref<RallyingPoint>? from = null;
     Ref<RallyingPoint>? to = null;
@@ -92,11 +101,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return await routingService.GetTrip(from, to, wayPoints.ToImmutableHashSet());
   }
 
-  protected override async Task<Api.Trip.Liane> ToOutputDto(LianeDb liane)
+  protected override async Task<Api.Trip.Liane> MapEntity(LianeDb liane)
   {
-    var wayPoints = await GetWayPointsSet(liane.DriverData.User, liane.Members);
-    return new Api.Trip.Liane(Id: liane.Id, Members: liane.Members, CreatedBy: liane.CreatedBy!, CreatedAt: liane.CreatedAt, DepartureTime: liane.DepartureTime, ReturnTime: liane.ReturnTime,
-      Driver: liane.DriverData.User, WayPoints: wayPoints);
+    var driver = liane.DriverData.User;
+    var wayPoints = await GetWayPoints(driver, liane.Members);
+    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, driver);
   }
 
   protected override LianeDb ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
@@ -105,5 +114,25 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var driverData = new DriverData(createdBy, lianeRequest.DriverCapacity);
     return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime,
       lianeRequest.ReturnTime, members.ToImmutableList(), driverData);
+  }
+
+  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, Ref<Api.User.User> currentUser, RallyingPoint from, RallyingPoint to)
+  {
+    var driver = lianeDb.DriverData.User;
+    var wayPoints = await GetWayPoints(driver, lianeDb.Members);
+    var newWayPoints = await GetWayPoints(driver, lianeDb.Members.Add(new LianeMember(currentUser, from, to)));
+    if (!newWayPoints.IsWrongDirection(from, to))
+    {
+      return null;
+    }
+
+    var delta = newWayPoints.TotalDuration() - wayPoints.TotalDuration();
+    if (delta > MaxDeltaInSeconds)
+    {
+      return null;
+    }
+
+    var liane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, newWayPoints, lianeDb.Members, driver);
+    return new LianeMatch(liane, delta);
   }
 }

@@ -55,7 +55,7 @@ function start {
 
 function init {
   mongo_purge
-  sleep 3
+  sleep 6
   source "${SCRIPTPATH}/../deploy/utils.sh"  
   init_db "mongo" "mongoadmin" "secret" "${SCRIPTPATH}/../deploy/db"
 }
