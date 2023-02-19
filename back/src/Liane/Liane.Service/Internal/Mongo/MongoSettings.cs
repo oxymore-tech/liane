@@ -75,13 +75,7 @@ public static class MongoDatabaseExtensions
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
     var data = result.GetRange(0, count);
-    Cursor? cursor = null;
-    if (hasNext)
-    {
-      var last = data.Last();
-      cursor = hasNext ? pagination.Cursor?.From(last, paginationField) : null;
-    }
-
+    var cursor = hasNext ? pagination.Cursor?.From(data.Last(), paginationField) : null;
     return new PaginatedResponse<TData>(count, cursor, data.ToImmutableList(), (int)total);
   }
 
@@ -90,7 +84,7 @@ public static class MongoDatabaseExtensions
   {
     return cursor.ToFilter(sortAsc, indexedField);
   }
-  
+
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer)
   {
     return await (await source.ToListAsync())
