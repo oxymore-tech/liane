@@ -3,9 +3,19 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
+public enum Direction
+{
+  Departure,
+  Arrival
+}
+
+public record DepartureOrArrivalTime(
+  DateTime DateTime,
+  Direction Direction
+);
+
 public sealed record Filter(
-  Ref<RallyingPoint>? From,
-  Ref<RallyingPoint>? To,
-  DateTime? GoTime,
-  DateTime? ReturnTime
+  Ref<RallyingPoint> From,
+  Ref<RallyingPoint> To,
+  DepartureOrArrivalTime TargetTime
 );

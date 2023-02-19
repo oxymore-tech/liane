@@ -51,22 +51,21 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       .ToImmutableList();
   }
 
-  public async Task<PaginatedResponse<ChatMessage, DatetimeCursor>> GetGroupMessages(Pagination<DatetimeCursor> pagination, Ref<ConversationGroup> group)
+  public async Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group)
   {
     // Get messages in DESC order 
-    var paginatedMessageDb = await DatetimePagination<DbChatMessage>.List(
-      Mongo,
+    var messages = await Mongo.Paginate(
       pagination,
       m => m.CreatedAt,
       Builders<DbChatMessage>.Filter.Where(m => m.GroupId == group.Id),
       false
     );
-    return paginatedMessageDb.ConvertData(ToOutputDto);
+    return messages.Select(ToOutputDto);
   }
 
   protected override ConversationGroup ToDb(ConversationGroup inputDto, string originalId, DateTime createdAt, string createdBy)
   {
-    return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy! };
+    return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy };
   }
 
   private ChatMessage ToOutputDto(DbChatMessage m)

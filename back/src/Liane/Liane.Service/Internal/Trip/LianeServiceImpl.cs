@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
@@ -27,38 +27,40 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     this.rallyingPointService = rallyingPointService;
   }
 
-  public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List(Filter filter, Pagination<DatetimeCursor> pagination)
+  public async Task<PaginatedResponse<Api.Trip.Liane>> List(Filter filter, Pagination pagination)
   {
-    var rallyingPoints = (await rallyingPointService.FindSurroundingPoints(ImmutableList.Create(filter.From, filter.To).Where(p => p is not null).Select(r => r!)))
-      .Select(r => (Ref<RallyingPoint>)r)
-      .ToImmutableHashSet();
+    var from = await rallyingPointService.Get(filter.From);
+    var to = await rallyingPointService.Get(filter.To);
 
-    var f = Builders<LianeDb>.Filter.In("Members.From", rallyingPoints)
-            | Builders<LianeDb>.Filter.In("Members.To", rallyingPoints);
+    var setFrom = await rallyingPointService.List(from.Location, null);
+    var setTo = await rallyingPointService.List(to.Location, null);
 
-    if (filter.GoTime is not null)
-    {
-      var date = filter.GoTime.Value.Date;
-      var dayAfter = filter.GoTime.Value.Date.AddDays(1);
-      f &= Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, date)
-           & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, dayAfter);
-    }
-    
-    var lianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, f);
-    return await lianes.SelectAsync(ToOutputDto);
+    var f = (Builders<LianeDb>.Filter.In("Members.From", setFrom) | Builders<LianeDb>.Filter.In("Members.To", setFrom))
+            & (Builders<LianeDb>.Filter.In("Members.From", setTo) | Builders<LianeDb>.Filter.In("Members.To", setTo));
+
+    var date = filter.TargetTime.DateTime.Date;
+    var dayAfter = filter.TargetTime.DateTime.Date.AddDays(1);
+    f &= Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, date)
+         & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, dayAfter);
+
+    var lianes = await Mongo.GetCollection<LianeDb>()
+      .Find(f)
+      .SelectAsync(ToOutputDto);
+
+    return lianes.Paginate(pagination, l => l.CreatedAt);
   }
 
-  public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> ListForCurrentUser(Pagination<DatetimeCursor> pagination)
+  public async Task<PaginatedResponse<Api.Trip.Liane>> ListForCurrentUser(Pagination pagination)
   {
     var currentUser = currentContext.CurrentUser();
     return await ListForMemberUser(currentUser.Id, pagination);
   }
 
-  public async Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> ListForMemberUser(string userId, Pagination<DatetimeCursor> pagination)
+  public async Task<PaginatedResponse<Api.Trip.Liane>> ListForMemberUser(string userId, Pagination pagination)
   {
     var filter = GetAccessLevelFilter(userId, ResourceAccessLevel.Member);
 
-    var paginatedLianes = await DatetimePagination<LianeDb>.List(Mongo, pagination, l => l.DepartureTime, filter);
+    var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter);
     return await paginatedLianes.SelectAsync(ToOutputDto);
   }
 

@@ -1,31 +1,25 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Liane.Api.Util.Pagination;
 
-public sealed record PaginatedResponse<TData, TCursor>(
+public sealed record PaginatedResponse<TData>(
   int PageSize,
-  TCursor? NextCursor,
+  Cursor? NextCursor,
   ImmutableList<TData> Data,
   int? TotalCount = null
 )
 {
-  public PaginatedResponse<TOut, TCursor> ConvertData<TOut>(Func<TData, TOut> transformer)
+  public PaginatedResponse<TOut> Select<TOut>(Func<TData, TOut> transformer)
   {
-    return new PaginatedResponse<TOut, TCursor>(PageSize, NextCursor, Data.Select(transformer).ToImmutableList(), TotalCount);
+    return new PaginatedResponse<TOut>(PageSize, NextCursor, Data.Select(transformer).ToImmutableList(), TotalCount);
   }
 
-  public async Task<PaginatedResponse<TOut, TCursor>> SelectAsync<TOut>(Func<TData, Task<TOut>> transformer)
+  public async Task<PaginatedResponse<TOut>> SelectAsync<TOut>(Func<TData, Task<TOut>> transformer)
   {
-    var outs = new List<TOut>();
-    foreach (var r in Data)
-    {
-      outs.Add(await transformer(r));
-    }
-
-    return new PaginatedResponse<TOut, TCursor>(PageSize, NextCursor, outs.ToImmutableList(), TotalCount);
+    var data = await Data.SelectAsync(transformer);
+    return new PaginatedResponse<TOut>(PageSize, NextCursor, data, TotalCount);
   }
 };

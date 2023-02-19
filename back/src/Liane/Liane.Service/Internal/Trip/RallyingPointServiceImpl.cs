@@ -46,19 +46,6 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
   }
 
-  public async Task<ImmutableHashSet<RallyingPoint>> FindSurroundingPoints(IEnumerable<Ref<RallyingPoint>> points, int? radius = IRallyingPointService.MaxRadius)
-  {
-    var rallyingPoints = new HashSet<RallyingPoint>();
-
-    foreach (var point in points)
-    {
-      var resolvedPoint = await Get(point);
-      rallyingPoints.UnionWith(await List(resolvedPoint.Location, null, radius, null));
-    }
-
-    return rallyingPoints.ToImmutableHashSet();
-  }
-
   public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search, int? radius = IRallyingPointService.MaxRadius, int? limit = IRallyingPointService.MaxRallyingPoint)
   {
     var filter = FilterDefinition<RallyingPoint>.Empty;

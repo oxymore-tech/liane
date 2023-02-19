@@ -166,7 +166,7 @@ public static class Startup
             {
                 options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new RefJsonConverterFactory());
-                options.JsonSerializerOptions.Converters.Add(new DatetimeCursorConverter());
+                options.JsonSerializerOptions.Converters.Add(new CursorJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
         services.AddCors(options =>
@@ -215,7 +215,7 @@ public static class Startup
           {
             options.PayloadSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
             options.PayloadSerializerOptions.Converters.Add(new RefJsonConverterFactory());
-            options.PayloadSerializerOptions.Converters.Add(new DatetimeCursorConverter());
+            options.PayloadSerializerOptions.Converters.Add(new CursorJsonConverter());
           });
 
         // For Resource access level

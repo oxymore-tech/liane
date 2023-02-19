@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Liane.Api.Util;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -22,7 +26,7 @@ public sealed record MongoSettings(string Host, string Username, string Password
         new EnumRepresentationConvention(BsonType.String)
       };
 
-      ConventionRegistry.Register("EnumStringConvention", pack, t => true);
+      ConventionRegistry.Register("EnumStringConvention", pack, _ => true);
       BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
@@ -43,6 +47,56 @@ public sealed record MongoSettings(string Host, string Username, string Password
 
 public static class MongoDatabaseExtensions
 {
+  public static async Task<PaginatedResponse<TData>> Paginate<TData>(
+    this IMongoDatabase mongo,
+    Pagination pagination,
+    Expression<Func<TData, object?>> indexedField,
+    FilterDefinition<TData> baseFilter,
+    bool? sortAsc = null
+  ) where TData : IIdentity
+  {
+    var effectiveSortAsc = sortAsc ?? pagination.SortAsc;
+    var sort = effectiveSortAsc
+      ? Builders<TData>.Sort.Ascending(indexedField).Ascending(m => m.Id)
+      : Builders<TData>.Sort.Descending(indexedField).Descending(m => m.Id);
+
+    var collection = mongo.GetCollection<TData>();
+    var filter = pagination.Cursor != null ? CreatePaginationFilter(pagination.Cursor, effectiveSortAsc, indexedField) : FilterDefinition<TData>.Empty;
+
+    filter = Builders<TData>.Filter.And(baseFilter, filter);
+
+    // Check if collection has next page by selecting one more entry
+    var findFluent = collection.Find(filter)
+      .Sort(sort)
+      .Limit(pagination.Limit + 1);
+    var total = await findFluent.CountDocumentsAsync();
+    var result = await findFluent.ToListAsync();
+
+    var hasNext = result.Count > pagination.Limit;
+    var count = Math.Min(result.Count, pagination.Limit);
+    var data = result.GetRange(0, count);
+    Cursor? cursor = null;
+    if (hasNext)
+    {
+      var last = data.Last();
+      cursor = hasNext ? new Cursor.Time((DateTime?)indexedField.Compile().Invoke(last) ?? DateTime.UtcNow, last.Id) : null;
+    }
+
+    return new PaginatedResponse<TData>(count, cursor, data.ToImmutableList(), (int)total);
+  }
+
+  private static FilterDefinition<TData> CreatePaginationFilter<TData>(Cursor cursor, bool sortAsc, Expression<Func<TData, object?>> indexedField)
+    where TData : IIdentity
+  {
+    return cursor.ToFilter(sortAsc, indexedField);
+  }
+  
+  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer)
+  {
+    return await (await source.ToListAsync())
+      .SelectAsync(transformer);
+  }
+
   public static IMongoCollection<T> GetCollection<T>(this IMongoDatabase mongoDatabase)
   {
     var collectionName = GetCollectionName<T>();

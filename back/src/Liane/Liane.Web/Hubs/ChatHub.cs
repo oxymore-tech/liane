@@ -52,7 +52,7 @@ public sealed class ChatHub : Hub
   {
     var userId = currentContext.CurrentUser().Id;
     // Add user to group if he is a member and update last connection date
-    var nowCursor = DatetimeCursor.Now();
+    var nowCursor = Cursor.Now();
     var updatedConversation = await chatService.ReadAndGetConversation(groupId, userId, nowCursor.Timestamp);
     await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
     logger.LogInformation("User " + userId + " joined conversation " + groupId);
@@ -60,8 +60,7 @@ public sealed class ChatHub : Hub
     // Send latest messages async
     Task.Run(async () =>
     {
-      var latestMessages = await chatService.GetGroupMessages(
-        new Pagination<DatetimeCursor>(nowCursor), groupId);
+      var latestMessages = await chatService.GetGroupMessages(new Pagination(nowCursor), groupId);
       logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);
       await caller.SendAsync(ReceiveLatestMessages, latestMessages);
     });

@@ -6,7 +6,7 @@ namespace Liane.Api.Trip;
 
 public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
-  Task<PaginatedResponse<Liane, DatetimeCursor>> List(Filter filter, Pagination<DatetimeCursor> pagination);
-  Task<PaginatedResponse<Liane, DatetimeCursor>> ListForCurrentUser(Pagination<DatetimeCursor> pagination);
-  Task<PaginatedResponse<Liane, DatetimeCursor>> ListForMemberUser(string userId, Pagination<DatetimeCursor> pagination);
+  Task<PaginatedResponse<Liane>> List(Filter filter, Pagination pagination);
+  Task<PaginatedResponse<Liane>> ListForCurrentUser(Pagination pagination);
+  Task<PaginatedResponse<Liane>> ListForMemberUser(string userId, Pagination pagination);
 }

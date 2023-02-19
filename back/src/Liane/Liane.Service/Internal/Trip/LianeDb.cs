@@ -8,7 +8,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Service.Internal.Trip;
 
-
 public sealed record DriverData
 (
     Ref<Api.User.User> User, 

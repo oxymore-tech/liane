@@ -37,14 +37,14 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
     // Make sure our cursor is after 1st message date 
     Thread.Sleep(1);
     var firstPage = await testedService.GetGroupMessages(
-      new Pagination<DatetimeCursor>(DatetimeCursor.Now(), limit),
+      new Pagination(Cursor.Now(), limit),
       conversation.Id);
 
     Assert.AreEqual(limit, firstPage.Data.Count);
     Assert.NotNull(firstPage.NextCursor);
 
     var secondPage = await testedService.GetGroupMessages(
-      new Pagination<DatetimeCursor>(firstPage.NextCursor, limit),
+      new Pagination(firstPage.NextCursor, limit),
       conversation.Id);
     
     Assert.AreEqual(messageCount - limit, secondPage.Data.Count);

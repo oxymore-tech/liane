@@ -22,8 +22,8 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
   [Test]
   public async Task TestListAccessLevel()
   {
-    var userA = Fakers.FakeDbUsers[0].Id.ToString();
-    var userB = Fakers.FakeDbUsers[0].Id.ToString();
+    var userA = Fakers.FakeDbUsers[0].Id;
+    var userB = Fakers.FakeDbUsers[0].Id;
     const int lianesACount = 3;
     const int lianesBCount = 1;
     var lianesA = Fakers.LianeRequestFaker.Generate(lianesACount);
@@ -35,8 +35,8 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
       await testedService.Create(l, userA);
     }
 
-    var resultsA = await testedService.ListForMemberUser(userA, new Pagination<DatetimeCursor>());
-    var resultsB = await testedService.ListForMemberUser(userB, new Pagination<DatetimeCursor>());
+    var resultsA = await testedService.ListForMemberUser(userA, new Pagination());
+    var resultsB = await testedService.ListForMemberUser(userB, new Pagination());
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);

@@ -36,13 +36,13 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpGet("search")]
-  public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromBody] Filter filter, [FromQuery] Pagination<DatetimeCursor> pagination)
+  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromBody] Filter filter, [FromQuery] Pagination pagination)
   {
     return lianeService.List(filter, pagination);
   }
 
   [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Liane, DatetimeCursor>> List([FromQuery] Pagination<DatetimeCursor> pagination)
+  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination)
   {
     return lianeService.ListForCurrentUser(pagination);
   }

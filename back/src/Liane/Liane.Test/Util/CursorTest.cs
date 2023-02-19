@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace Liane.Test.Util;
 
 [TestFixture]
-public class TestCursor
+public sealed class CursorTest
 {
   [Test]
   public void ShouldConvertToStringDatetime()
@@ -13,9 +13,10 @@ public class TestCursor
     var id = "12334";
     var date = DateTime.UtcNow;
     var dateStr = ((DateTimeOffset)date).ToUnixTimeMilliseconds();
-    var cursor = (DatetimeCursor)$"{dateStr}_{id}";
-    Assert.AreEqual(id, cursor.Id);
-    Assert.AreEqual(DateTimeOffset.FromUnixTimeMilliseconds(dateStr).UtcDateTime, cursor.Timestamp.ToUniversalTime());
+    var cursor = (Cursor)$"{dateStr}_{id}";
+    Assert.IsInstanceOf<Cursor.Time>(cursor);
+    Assert.AreEqual(id, ((Cursor.Time)cursor).Id);
+    Assert.AreEqual(DateTimeOffset.FromUnixTimeMilliseconds(dateStr).UtcDateTime, ((Cursor.Time)cursor).Timestamp.ToUniversalTime());
   }
   
   [Test]
@@ -24,7 +25,7 @@ public class TestCursor
     var id = "12334";
     var date = DateTime.UtcNow;
     var dateStr = ((DateTimeOffset)date).ToUnixTimeMilliseconds();
-    var cursor = (DatetimeCursor)$"{dateStr}_{id}";
+    var cursor = (Cursor)$"{dateStr}_{id}";
     var strCursor = (string)cursor;
     Assert.AreEqual($"{dateStr}_{id}", strCursor);
   }
