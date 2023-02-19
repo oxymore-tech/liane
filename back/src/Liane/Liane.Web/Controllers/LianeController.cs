@@ -35,7 +35,7 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
-  [HttpGet("match")]
+  [HttpPost("match")]
   public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination)
   {
     return lianeService.Match(filter, pagination);
