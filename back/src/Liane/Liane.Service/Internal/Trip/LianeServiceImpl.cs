@@ -49,10 +49,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .Cast<LianeMatch>()
       .OrderBy(l =>
       {
-        var exactMatchScore = l.MatchData.Type == nameof(ExactMatch) ? 0 : 1;
+        var exactMatchScore = l.MatchData is ExactMatch ? 0 : 1;
         var hourDeltaScore = (filter.TargetTime.DateTime - l.DepartureTime).Hours;
         return hourDeltaScore*2 + exactMatchScore;
       })
+      .ThenByDescending(l => l.MatchData is ExactMatch ? 0 : ((CompatibleMatch)l.MatchData).DeltaInSeconds)
       .ToImmutableList());
   }
   
