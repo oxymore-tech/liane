@@ -84,4 +84,17 @@ public sealed class OsrmClient : IOsrmService
 
         return result;
     }
+
+    public async Task<Response.Table> Table(IEnumerable<LatLng> coordinates)
+    {
+      // TODO check if we'll use distance matrix 
+      var uri = $"/table/v1/driving/{Format(coordinates)}?annotations=duration,distance";
+      var result = await client.GetFromJsonAsync<Response.Table>(uri);
+      if (result == null)
+      {
+        throw new ResourceNotFoundException("Osrm response");
+      }
+
+      return result;
+    }
 }
