@@ -10,7 +10,6 @@ using Liane.Service.Internal.Osrm;
 using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing;
-
 public sealed class RoutingServiceImpl : IRoutingService
 {
     private readonly IOsrmService osrmService;
@@ -25,12 +24,17 @@ public sealed class RoutingServiceImpl : IRoutingService
     public async Task<Route> GetRoute(RoutingQuery query)
     {
         var coordinates = ImmutableList.Create(query.Start, query.End);
-        var routeResponse = await osrmService.Route(coordinates, overview: "full");
+        return await GetRoute(coordinates);
+    }
+    
+    public async Task<Route> GetRoute(ImmutableList<LatLng> coordinates)
+    {
+      var routeResponse = await osrmService.Route(coordinates, overview: "full");
 
-        var geojson = routeResponse.Routes[0].Geometry;
-        var duration = routeResponse.Routes[0].Duration;
-        var distance = routeResponse.Routes[0].Distance;
-        return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
+      var geojson = routeResponse.Routes[0].Geometry;
+      var duration = routeResponse.Routes[0].Duration;
+      var distance = routeResponse.Routes[0].Distance;
+      return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
     }
 
     public async Task<ImmutableList<Route>> GetAlternatives(RoutingQuery query)
@@ -252,4 +256,104 @@ public sealed class RoutingServiceImpl : IRoutingService
 
         return waypoints;
     }
+
+
+    /// <summary>
+    /// Get the matrix of durations between each pair of rallying points as a dictionary
+    /// </summary>
+    private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, double>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
+    {
+      var durationTable = (await osrmService.Table(keys.Select(rp => rp.Location))).Durations;
+      var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, double>>();
+
+      for (int i = 0; i < durationTable.Length; i++)
+      {
+        matrix[keys[i]] = new Dictionary<RallyingPoint, double>();
+        for (int j = 0; j < durationTable[i].Length; j++)
+        {
+          matrix[keys[i]][keys[j]] = durationTable[i][j];
+        }
+      }
+
+      return matrix;
+    }
+    
+    
+
+    public async Task<ImmutableSortedSet<WayPoint>?> GetTrip(RouteSegment  extremities, IEnumerable<RouteSegment> segments)
+    {
+      var start = await extremities.From.Resolve(rallyingPointService.Get);
+      var end = await extremities.To.Resolve(rallyingPointService.Get);
+      // A dictionary holding each point's constraints
+      // The HashSet contains all points that must be visited before this point can be added to the trip.
+      // If the hashset of a given point P contains P, it indicates this point is no longer visitable.
+      var pointsDictionary = new Dictionary<RallyingPoint, HashSet<RallyingPoint>>();
+      var trip = new List<WayPoint>();
+      HashSet<RallyingPoint> visitable;
+
+      foreach (var member in segments)
+      {
+        // TODO optimize ref resolving 
+        var resolvedFrom = await member.From.Resolve(rallyingPointService.Get);
+        var resolvedTo = await member.To.Resolve(rallyingPointService.Get);
+        pointsDictionary.TryAdd(resolvedFrom, new HashSet<RallyingPoint>());
+        pointsDictionary.TryAdd(resolvedTo, new HashSet<RallyingPoint>());
+        // Add precedence constraints
+        if (resolvedFrom != start) pointsDictionary[resolvedTo].Add(resolvedFrom);
+      
+      } 
+      // Add start and end point
+      pointsDictionary.TryAdd(start, new HashSet<RallyingPoint>());
+      if (pointsDictionary[start].Count > 0)
+      {
+        // If start has constraints, then there is no solution
+        return null;
+      }
+      // End is marked with precedence constraints from all other points except itself and start
+      pointsDictionary[end] = pointsDictionary.Keys.Except(new[] { start, end }).ToHashSet();
+
+      // Get distance matrix for points 
+      var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
+     
+      // Start trip and add starting point directly 
+      trip.Add(new WayPoint(start, 0, 0));
+      // Add a constraint to indicate this point has already been visited 
+      pointsDictionary[start].Add(start);
+      
+      // Get visitable points
+      visitable = pointsDictionary.Where(kv => kv.Value.Count == 0).Select(kv => kv.Key).ToHashSet();
+      var currentPoint = start;
+
+      while (visitable.Any())
+      {
+        // Get next point amongst visitable 
+        var nextPointData = matrix[currentPoint].IntersectBy(visitable, kv => kv.Key).MinBy(kv => kv.Value);
+        var selected = nextPointData.Key;
+        
+        // Append to trip
+        trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value));
+     
+        // Update constraints and visitable points 
+        foreach (var kv in pointsDictionary)
+        {
+          kv.Value.Remove(selected);
+        }  
+        pointsDictionary[selected].Add(selected);
+
+        currentPoint = selected;
+        visitable = pointsDictionary.Where(kv => kv.Value.Count == 0)
+          .Select(kv => kv.Key).ToHashSet();
+        
+      }
+
+      if (trip.Count != pointsDictionary.Count)
+      {
+        // No solution found
+        return null;
+      }
+
+      return trip.ToImmutableSortedSet();
+
+    }
+    
 }

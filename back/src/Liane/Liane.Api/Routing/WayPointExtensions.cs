@@ -1,27 +1,31 @@
 using System.Collections.Immutable;
 using System.Linq;
-using Liane.Api.Trip;
-using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Routing;
 
 public static class WayPointExtensions
 {
-  public static bool IsWrongDirection(this ImmutableSortedSet<WayPoint> wayPoints, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
+  /// <summary>
+  /// Check if given RouteSegment is included in given trip and in the right direction
+  /// </summary>
+  /// <param name="trip"></param> the ordered wayPoints of the trip
+  /// <param name="segment"></param> the oriented segment to test
+  public static bool IncludesSegment(this ImmutableSortedSet<WayPoint> trip, RouteSegment segment)
   {
-    foreach (var wayPoint in wayPoints)
+    bool visitedFromPoint = false;
+    foreach (var wayPoint in trip)
     {
-      if (wayPoint.RallyingPoint == from)
+      if (wayPoint.RallyingPoint == segment.From)
       {
-        return false;
+        visitedFromPoint = true;
       }
-      if (wayPoint.RallyingPoint == to)
+      if (wayPoint.RallyingPoint == segment.To)
       {
-        return true;
+        // Return True only if we visit segment.To after segment.From
+        return visitedFromPoint;
       }
     }
-
-    return true;
+    return false;
   }
 
   public static int TotalDuration(this ImmutableSortedSet<WayPoint> wayPoints) => wayPoints.Aggregate(0, (acc, w) => acc + w.Duration);

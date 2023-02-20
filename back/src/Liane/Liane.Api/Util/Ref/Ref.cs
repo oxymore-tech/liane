@@ -5,17 +5,17 @@ namespace Liane.Api.Util.Ref;
 
 public abstract record Ref<T> where T : class, IIdentity
 {
-    private Ref()
-    {
-    }
-    public string Id => this switch
-    {
-        Unresolved u => u.RefId,
-        Resolved r => r.Value.Id!,
-        _ => throw new ArgumentOutOfRangeException()
-    };
+  private Ref()
+  {
+  }
+  public string Id => this switch
+  {
+    Unresolved u => u.RefId,
+    Resolved r => r.Value.Id!,
+    _ => throw new ArgumentOutOfRangeException()
+  };
 
-    public abstract Task<T> Resolve(Func<string, Task<T>> resolver);
+  public abstract Task<T> Resolve(Func<Ref<T>, Task<T>> resolver);
 
     public abstract void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor);
 
@@ -30,10 +30,15 @@ public abstract record Ref<T> where T : class, IIdentity
         Resolved r => r.Value,
         _ => null
     };
+    
+    public override int GetHashCode()
+    {
+      return Id.GetHashCode();
+    }
 
     public sealed record Unresolved(string RefId) : Ref<T>
     {
-        public override async Task<T> Resolve(Func<string, Task<T>> resolver)
+        public override async Task<T> Resolve(Func<Ref<T>, Task<T>> resolver)
         {
             return await resolver(Id);
         }
@@ -51,7 +56,7 @@ public abstract record Ref<T> where T : class, IIdentity
 
     public sealed record Resolved(T Value) : Ref<T>
     {
-        public override Task<T> Resolve(Func<string, Task<T>> resolver)
+        public override Task<T> Resolve(Func<Ref<T>, Task<T>> resolver)
         {
             return Task.FromResult(Value);
         }

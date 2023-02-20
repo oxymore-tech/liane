@@ -9,7 +9,8 @@ namespace Liane.Api.Trip;
 public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,
-  Ref<RallyingPoint> To
+  Ref<RallyingPoint> To,
+  int SeatCount = -1 // Defaults to a passenger seat
 ) : IResourceMember;
 
 public sealed record Liane(

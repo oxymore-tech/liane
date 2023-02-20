@@ -17,5 +17,6 @@ public record DepartureOrArrivalTime(
 public sealed record Filter(
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
-  DepartureOrArrivalTime TargetTime
+  DepartureOrArrivalTime TargetTime,
+  int AvailableSeats = -1 // Passenger
 );

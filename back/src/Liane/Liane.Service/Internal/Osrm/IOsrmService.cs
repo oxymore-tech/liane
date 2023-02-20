@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 
@@ -35,4 +34,9 @@ public interface IOsrmService
         string overview = "false",
         string annotations = "false",
         string steps = "false");
+    
+    Task<Response.Table> Table(IEnumerable<LatLng> coordinates);
+    
+    
 }
+
