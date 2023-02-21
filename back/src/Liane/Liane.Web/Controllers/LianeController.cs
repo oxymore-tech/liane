@@ -52,6 +52,13 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
   }
+  
+  [HttpGet("all")]
+  [RequiresAdminAuth]
+  public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination)
+  {
+    return lianeService.ListAll(pagination);
+  }
 
   [HttpPost("generate")]
   [RequiresAdminAuth]
