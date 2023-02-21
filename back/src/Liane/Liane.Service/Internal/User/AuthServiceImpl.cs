@@ -205,7 +205,7 @@ public sealed class AuthServiceImpl : IAuthService
         var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(KeySize));
         var salt = RandomNumberGenerator.GetBytes(KeySize);
         var encryptedToken = HashString(refreshToken, salt);
-        return (refreshToken, Convert.ToBase64String(salt), encryptedToken);
+        return (refreshToken, encryptedToken, Convert.ToBase64String(salt));
     }
 
     private string GenerateToken(AuthUser user)

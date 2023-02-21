@@ -2,7 +2,7 @@ import { ChatMessage, ConversationGroup, DatetimeCursor, PaginatedRequestParams,
 import { get, tryRefreshToken } from "@/api/http";
 import { HubConnection } from "@microsoft/signalr";
 import { createChatConnection } from "@/api/chat";
-import { UnauthorizedError } from "@/api/exception";
+import { getRefreshToken } from "@/api/storage";
 
 export interface ChatService {
   list(id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage, DatetimeCursor>>;
@@ -51,14 +51,23 @@ export class HubServiceClient implements ChatService {
         console.log("me", me);
         resolve(me);
       });
-      this.hub.start().catch(async err => {
-        // Retry if err 401
-        if (err instanceof UnauthorizedError) {
-          await tryRefreshToken<void>(async () => {
-            this.hub.start().catch(e => reject(e));
-          });
+      this.hub.start().catch(async (err: Error) => {
+        console.debug("Hub [start] error :", err, this.hub.state);
+        // Only reject if error happens before connection is established
+        if (this.hub.state !== "Connected") {
+          // Retry if err 401
+          if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
+            try {
+              await tryRefreshToken<void>(async () => {
+                await this.hub.start().catch(e => reject(e));
+              });
+            } catch (e) {
+              reject(e);
+            }
+          } else {
+            reject(err);
+          }
         }
-        reject(err);
       });
     });
   };
