@@ -171,33 +171,6 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
   }
   throw new UnauthorizedError();
 }
-/*
-async function tryRefreshToken(method: MethodType, uri: string, options: QueryPostOptions<any>): Promise<Response> {
-  const refreshToken = await getRefreshToken();
-  const user = await getUserSession();
-  if (refreshToken && user && !refreshTokenMutex.isLocked()) {
-    return refreshTokenMutex.runExclusive(async () => {
-      if (__DEV__) {
-        console.debug("Refresh token");
-      }
-      // Call refresh token endpoint
-      try {
-        const res = await postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } });
-        await processAuthResponse(res);
-        // Retry query
-        return await fetchAndCheck(method, uri, options);
-      } catch (e) {
-        // Logout if unauthorized
-        if (e instanceof UnauthorizedError) {
-          await clearStorage();
-        }
-      }
-      throw new UnauthorizedError();
-    });
-  }
-  throw new UnauthorizedError();
-}
-*/
 
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
