@@ -4,7 +4,7 @@ import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signal
 import { getAccessToken, getRefreshToken } from "@/api/storage";
 
 export interface ChatHubService {
-  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage>>;
+  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
   stop(): Promise<void>;
   start(): Promise<User>;
@@ -47,7 +47,7 @@ export class HubServiceClient implements ChatHubService {
   start = () => {
     console.log("start");
     return new Promise<User>((resolve, reject) => {
-      let successfullyStarted = false;
+      let alreadyClosed = false;
       this.hub.on("ReceiveLatestMessages", async messages => {
         if (this.onReceiveLatestMessagesCallback) {
           await this.onReceiveLatestMessagesCallback(messages);
@@ -63,31 +63,31 @@ export class HubServiceClient implements ChatHubService {
         resolve(me);
       });
       this.hub.onclose(err => {
-        if (!successfullyStarted) {
+        if (!alreadyClosed) {
           if (__DEV__) {
             console.log("Connection closed with error during initialization: ", err);
           }
-          successfullyStarted = true;
+          alreadyClosed = true;
           reject(err);
         }
       });
       this.hub.start().catch(async (err: Error) => {
-         console.debug("Hub [start] error :", err, this.hub.state);
-                // Only reject if error happens before connection is established
-                if (this.hub.state !== "Connected") {
-                  // Retry if err 401
-                  if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
-                    try {
-                      await tryRefreshToken<void>(async () => {
-                        await this.hub.start().catch(e => reject(e));
-                      });
-                    } catch (e) {
-                      reject(e);
-                    }
-                  } else {
-                    reject(err);
-                  }
-                }
+        console.debug("Hub [start] error :", err, this.hub.state);
+        // Only reject if error happens before connection is established
+        if (this.hub.state !== "Connected") {
+          // Retry if err 401
+          if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
+            try {
+              await tryRefreshToken<void>(async () => {
+                await this.hub.start().catch(e => reject(e));
+              });
+            } catch (e) {
+              reject(e);
+            }
+          } else {
+            reject(err);
+          }
+        }
       });
     });
   };
@@ -96,7 +96,7 @@ export class HubServiceClient implements ChatHubService {
     console.log("stop");
     return this.hub.stop();
   };
-  list = async (id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage>> =>
+  list = async (id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>> =>
     get(`/conversation/${id}/message`, { params });
   async connectToChat(
     conversationRef: Ref<ConversationGroup>,

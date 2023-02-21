@@ -168,8 +168,8 @@ export type PaginatedResponse<T> = Readonly<{
   nextCursor?: string;
 }>;
 
-export type PaginatedRequestParams<T> = {
-  cursor?: T;
+export type PaginatedRequestParams = {
+  cursor?: string;
   limit: number;
 };
 

@@ -1,5 +1,5 @@
 import { ChatHubService, OnLatestMessagesCallback, OnMessageCallback } from "@/api/service/chat";
-import { ChatMessage, ConversationGroup, DatetimeCursor, PaginatedRequestParams, PaginatedResponse, User, Ref } from "@/api";
+import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, User, Ref } from "@/api";
 
 export class HubServiceMock implements ChatHubService {
   connectToChat(
@@ -9,7 +9,7 @@ export class HubServiceMock implements ChatHubService {
   ): Promise<ConversationGroup> {
     throw new Error("Not implemented");
   }
-  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage>> {
+  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>> {
     throw new Error("Not implemented");
   }
   send(message: ChatMessage): Promise<void> {
