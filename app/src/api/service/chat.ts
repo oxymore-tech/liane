@@ -1,4 +1,4 @@
-import { ChatMessage, ConversationGroup, DatetimeCursor, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
+import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
 import { BaseUrl, get, tryRefreshToken } from "@/api/http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { getAccessToken, getRefreshToken } from "@/api/storage";
@@ -59,7 +59,7 @@ export class HubServiceClient implements ChatHubService {
         }
       });
       this.hub.on("Me", async (me: User) => {
-        console.log("me", me); // TODO find out why sent twice on startup
+        console.log("me", me);
         resolve(me);
       });
       this.hub.onclose(err => {
@@ -72,18 +72,22 @@ export class HubServiceClient implements ChatHubService {
         }
       });
       this.hub.start().catch(async (err: Error) => {
-        // Retry if err 401
-
-        if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
-          try {
-            await tryRefreshToken<void>(async () => {
-              await this.hub.start().catch(e => reject(e));
-            });
-          } catch (e) {
-            reject(e);
-          }
-        }
-        reject(err);
+         console.debug("Hub [start] error :", err, this.hub.state);
+                // Only reject if error happens before connection is established
+                if (this.hub.state !== "Connected") {
+                  // Retry if err 401
+                  if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
+                    try {
+                      await tryRefreshToken<void>(async () => {
+                        await this.hub.start().catch(e => reject(e));
+                      });
+                    } catch (e) {
+                      reject(e);
+                    }
+                  } else {
+                    reject(err);
+                  }
+                }
       });
     });
   };
