@@ -1,4 +1,5 @@
 import { LatLng } from "@/api/index";
+import * as d from "@/assets/map-style-test.json";
 
 const DEFAULT_BLAJOUX = {
   lat: 44.3593807,

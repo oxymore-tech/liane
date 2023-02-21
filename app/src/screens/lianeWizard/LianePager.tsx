@@ -2,7 +2,6 @@ import { WizardStateSequence, WizardStepsKeys } from "@/screens/lianeWizard/Stat
 import { WizardFormData } from "@/screens/lianeWizard/WizardContext";
 import { StyleSheet } from "react-native";
 import { WizardPage, WizardPager } from "@/components/Pager";
-import { AppColorPalettes } from "@/theme/colors";
 import React from "react";
 import { Column } from "@/components/base/AppLayout";
 

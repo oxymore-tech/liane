@@ -1,8 +1,9 @@
 import React from "react";
-import { BaseFormProps, CarForm, DateForm, FormComponent, LocationForm, RememberChoiceForm, TimeForm } from "@/screens/lianeWizard/Forms";
+import { BaseFormProps, CarForm, DateForm, FormComponent, TimeForm } from "@/screens/lianeWizard/Forms";
 import { AppColors } from "@/theme/colors";
 import { WizardStateMachineInterpreter, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
+import { LocationForm } from "@/components/forms/LocationForm";
 
 export interface WizardStepData {
   forms: (() => JSX.Element)[];
@@ -17,6 +18,8 @@ const WithName =
 
 export type WizardFormDataKey = WizardStepsKeys | "returnTrip";
 
+const rallyingPointsMustBeDifferent = "Veuillez choisir des points de départ et d'arrivée différents.";
+
 export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
   returnTrip: {
     forms: [WithName(TimeForm, "returnTime")],
@@ -24,12 +27,28 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
     color: AppColors.blue
   },
   to: {
-    forms: [WithName(LocationForm, "to")],
+    forms: [
+      WithName(LocationForm, "to", {
+        rules: {
+          validate: (v, formValues) => {
+            return v === undefined || formValues.from === undefined || formValues.from.id !== v.id || rallyingPointsMustBeDifferent;
+          }
+        }
+      })
+    ],
     title: "Où allez-vous ?",
     color: AppColors.pink
   },
   from: {
-    forms: [WithName(LocationForm, "from")],
+    forms: [
+      WithName(LocationForm, "from", {
+        rules: {
+          validate: (v, formValues) => {
+            return v === undefined || formValues.to === undefined || formValues.to.id !== v.id || rallyingPointsMustBeDifferent;
+          }
+        }
+      })
+    ],
     title: "D'où partez-vous ?",
     color: AppColors.orange
   },
@@ -44,12 +63,7 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
     color: AppColors.blue
   },
   vehicle: {
-    forms: [
-      WithName(CarForm, "driverCapacity", { defaultValue: 0 }),
-      WithName(RememberChoiceForm, "rememberVehicleChoice", {
-        rules: { required: false }
-      })
-    ],
+    forms: [WithName(CarForm, "availableSeats", { defaultValue: -1 })], // defaults to 1 passenger seat
     title: "Avez-vous un véhicule ?",
     color: AppColors.white
   }

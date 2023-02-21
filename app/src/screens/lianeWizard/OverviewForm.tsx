@@ -13,6 +13,7 @@ import { WizardContext, WizardFormData, WizardFormDataKey } from "@/screens/lian
 import { formatShortMonthDay, formatTime } from "@/api/i18n";
 import { LianeWizardFormData, LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { useSelector } from "@xstate/react";
+import { WithForms } from "@/screens/lianeWizard/Forms";
 
 const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
@@ -63,7 +64,6 @@ const ReturnTrip = ({ onSubmit, onReset }: FormComponentProps<"returnTime">) => 
           icon="plus-outline"
           color={AppColorPalettes.blue[500]}
           onPress={event => {
-            console.log("click", event.nativeEvent);
             setShowPopup(event.nativeEvent);
           }}
         />
@@ -94,22 +94,8 @@ const ShareList = ({ onItemAdded }: { onItemAdded: Function }) => {
   );
 };
 */
-const WithForms = (key: WizardFormDataKey) => {
-  const { title, forms, color } = WizardFormData[key];
 
-  return (
-    <Column style={styles.containerModal} spacing={16}>
-      <AppText style={[styles.titleModal, { color: defaultTextColor(color) }]}>{title}</AppText>
-      <Column style={styles.formContainer} spacing={16}>
-        {forms.map((Form, index) => (
-          <Form key={`${key}.field${index}`} />
-        ))}
-      </Column>
-    </Column>
-  );
-};
-
-type FormComponentProps<FieldName extends LianeWizardFormKey> = {
+export type FormComponentProps<FieldName extends LianeWizardFormKey> = {
   onReset: (oldValue: LianeWizardFormData[FieldName]) => void;
   onSubmit: () => void;
 };
@@ -140,7 +126,16 @@ const FormCardButton = <FieldName extends LianeWizardFormKey>({
     }
   };
   return (
-    <CardButton label={label} value={valueFormatter(value)} color={color} extendedView={form} useOkButton={true} onCloseExtendedView={onClosePopup} />
+    <View style={{ flex: 1 }}>
+      <CardButton
+        label={label}
+        value={valueFormatter(value)}
+        color={color}
+        extendedView={form}
+        useOkButton={true}
+        onCloseExtendedView={onClosePopup}
+      />
+    </View>
   );
 };
 export const OverviewForm = () => {
@@ -200,11 +195,11 @@ export const OverviewForm = () => {
           <Row style={styles.singleCardRow}>
             <FormCardButton
               wizardFormName={"vehicle"}
-              fieldName={"driverCapacity"}
+              fieldName={"availableSeats"}
               label={"Véhicule"}
               valueFormatter={value => (value > 0 ? "Oui" : "Non")}
               onSubmit={onSubmit}
-              onReset={oldValue => setValue("driverCapacity", oldValue)}
+              onReset={oldValue => setValue("availableSeats", oldValue)}
             />
           </Row>
         </Column>

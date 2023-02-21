@@ -7,9 +7,10 @@ import { AppColorPalettes } from "@/theme/colors";
 import ContextProvider from "@/components/ContextProvider";
 import { RootNavigation } from "@/api/navigation";
 import Navigation from "@/components/Navigation";
+import MapLibreGL from "@maplibre/maplibre-react-native";
 
 const queryClient = new QueryClient();
-
+MapLibreGL.setAccessToken(null);
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ContextProvider>

@@ -23,17 +23,20 @@ export const AppColorPalettes = {
     700: "#374151",
     800: "#2E2E2E"
   },
-  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#9FCEFF", 100: "#CEE4FE", 700: AppColors.darkBlue },
+  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#9FCEFF", 100: "#CEE4FE", 700: AppColors.darkBlue, 900: "#030636" },
   pink: {
     500: AppColors.pink,
+    400: "#F49496",
+    600: "#E7696C",
     100: "#FFD6D7"
   },
   yellow: {
     500: AppColors.yellow,
-
+    700: "#F39F41",
+    200: "#FFD19E",
     100: "#FFE4C7"
   },
-  orange: { 500: AppColors.orange, 100: "#FFB186", 700: "#AA2900" }
+  orange: { 500: AppColors.orange, 600: "#E34526", 400: "#EF6E55", 100: "#ff6a3f", 700: "#AA2900" }
 } as const;
 
 export const WithAlpha = (color: AppColors.white | AppColors.black, alpha: number) => {
@@ -50,5 +53,17 @@ export const defaultTextColor = (color: ColorValue) => {
       return AppColorPalettes.gray[700];
   }
 };
+
+export const ContextualColors = {
+  orangeWarn: {
+    bg: "#FFBC8B"
+  },
+  greenValid: {
+    bg: "#B9E7C3"
+  },
+  redAlert: {
+    bg: "#ff8b8b"
+  }
+} as const;
 
 export const HouseColor: ColorValue[] = ["#C6E1FC", /* "#FFD7AA", */ "#FFBE76", "#FFAA4B", "#FF8459", "#FFADAF"];

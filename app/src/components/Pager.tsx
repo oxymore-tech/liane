@@ -1,10 +1,11 @@
 import React, { PropsWithChildren } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
 import { useNavigation } from "@react-navigation/native";
+import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
 export interface WizardPageProps extends PropsWithChildren {
   backgroundColor: AppColors;
@@ -16,7 +17,7 @@ export interface WizardPagerProps {
   currentPage: number;
   children: (index: number) => JSX.Element;
   pageCount: number;
-  previousPageOnGoBack: boolean;
+  previousPageOnGoBack?: boolean;
 }
 
 /* TODO restore anims
@@ -49,29 +50,6 @@ export const WizardPage = ({ backgroundColor, children }: WizardPageProps) => {
   );
 };
 
-//TODO component
-const PagerButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => (
-  <Pressable onPress={onPress}>
-    <View
-      style={{
-        backgroundColor,
-        opacity,
-        borderRadius: 24
-      }}>
-      <AppText
-        style={{
-          fontWeight: "600",
-          fontSize: 14,
-          color,
-          textAlign: "center",
-          paddingVertical: 12
-        }}>
-        {text}
-      </AppText>
-    </View>
-  </Pressable>
-);
-
 export const WizardPager = ({ children, pageCount, color, onPageChange, currentPage, previousPageOnGoBack = true }: WizardPagerProps) => {
   const currentPageChild = children(currentPage);
   const { backgroundColor } = currentPageChild.props as WizardPageProps;
@@ -80,17 +58,17 @@ export const WizardPager = ({ children, pageCount, color, onPageChange, currentP
   const navigation = useNavigation();
 
   React.useEffect(() => {
-    const onGoBackListener = e => {
+    const onGoBackListener = () => {
       if (!previousPageOnGoBack || currentPage === 0) {
         // Ignore this
         return;
       }
-      // Prevent default behavior of leaving the screen
-      e.preventDefault();
+      // Navigate back
       onPageChange(currentPage - 1);
+      return true;
     };
-    navigation.addListener("beforeRemove", onGoBackListener);
-    return () => navigation.removeListener("beforeRemove", onGoBackListener);
+    const sub = BackHandler.addEventListener("hardwareBackPress", onGoBackListener);
+    return () => sub.remove();
   });
 
   const dots = [...Array(pageCount)].map((_, index) => (
@@ -114,7 +92,7 @@ export const WizardPager = ({ children, pageCount, color, onPageChange, currentP
         <Row style={styles.bottomContainer}>
           <View style={{ flexBasis: 100 }}>
             {currentPage > 0 && (
-              <PagerButton
+              <AppRoundedButton
                 backgroundColor={AppColors.white}
                 color={AppColorPalettes.gray[800]}
                 opacity={0.75}
@@ -128,10 +106,10 @@ export const WizardPager = ({ children, pageCount, color, onPageChange, currentP
           </Row>
           <View style={{ flexBasis: 100 }}>
             {currentPage < pageCount - 1 && (
-              <PagerButton color={grayColor} backgroundColor={color} text="Suivant" onPress={() => onPageChange(currentPage + 1)} />
+              <AppRoundedButton color={grayColor} backgroundColor={color} text="Suivant" onPress={() => onPageChange(currentPage + 1)} />
             )}
             {currentPage === pageCount - 1 && (
-              <PagerButton color={grayColor} backgroundColor={color} text="Terminer" onPress={() => onPageChange(null)} />
+              <AppRoundedButton color={grayColor} backgroundColor={color} text="Terminer" onPress={() => onPageChange(null)} />
             )}
           </View>
         </Row>

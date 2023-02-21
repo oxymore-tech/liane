@@ -151,15 +151,21 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
     } else {
       return refreshTokenMutex.runExclusive(async () => {
         if (__DEV__) {
-          console.debug("Refresh token");
+          console.debug("Try refresh token...");
         }
         // Call refresh token endpoint
         try {
-          const res = await postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } });
+          const res = await Promise.race([
+            new Promise((_, reject) => setTimeout(reject, 10000)),
+            postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } })
+          ]);
           await processAuthResponse(res);
           // Retry
           return await retryAction();
         } catch (e) {
+          if (__DEV__) {
+            console.error("Error: could not refresh token: ", e);
+          }
           // Logout if unauthorized
           if (e instanceof UnauthorizedError) {
             await clearStorage();

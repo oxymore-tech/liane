@@ -1,47 +1,33 @@
-import React, { useMemo } from "react";
-import { Pressable, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
-import { LianeView } from "@/components/LianeView";
+import React, { useCallback, useMemo, useState } from "react";
+import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import { LianeView } from "@/components/trip/LianeView";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
 import { Liane, PaginatedResponse, UTCDateTime } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
-import { AppButton } from "@/components/base/AppButton";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useQueryClient } from "react-query";
-import { Column } from "@/components/base/AppLayout";
-import { LianeModalScreenResponseParams } from "@/screens/lianeWizard/LianeModalScreen";
+import { Column, Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppButton } from "@/components/base/AppButton";
+import { useQueryClient } from "react-query";
 
 interface TripSection extends SectionBase<Liane> {
   date: string;
 }
 
-const MyTripsScreen = ({
-  data,
-  navigation,
-  route
-}: WithFetchResourceProps<PaginatedResponse<Liane>> & NativeStackScreenProps<LianeModalScreenResponseParams>) => {
-  const queryClient = useQueryClient();
+const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<PaginatedResponse<Liane>> & NativeStackScreenProps<{}>) => {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
 
-  React.useEffect(() => {
-    // Update react query cache
-    if (route.params?.lianeResponse) {
-      const liane = route.params?.lianeResponse;
-      if (__DEV__) {
-        console.log("Update cache with liane", liane);
-      }
-      queryClient.setQueryData<Liane[]>(LianeQueryKey, oldData => {
-        if (oldData) {
-          return [liane, ...oldData];
-        } else {
-          return [liane];
-        }
-      });
-    }
-  }, [queryClient, route.params?.lianeResponse]);
+  const [refreshing, setRefreshing] = useState(false);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries(LianeQueryKey);
+    setRefreshing(false);
+  };
   // Create section list from a list of Liane objects
   const sections = useMemo(() => convertToDateSections(data.data), [data]);
 
@@ -55,7 +41,43 @@ const MyTripsScreen = ({
         });
       }}
       style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
-      <LianeView liane={item} />
+      <View>
+        <View style={{ flexGrow: 1, marginRight: 40 }}>
+          <LianeView liane={item} />
+        </View>
+        <Pressable
+          onPress={() => navigation.navigate("Chat")}
+          style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
+          <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
+        </Pressable>
+      </View>
+
+      <Row
+        style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
+        spacing={8}>
+        <Row
+          style={{
+            paddingHorizontal: 4,
+            paddingVertical: 2,
+            borderRadius: 4,
+            alignItems: "center",
+            backgroundColor: item.driver ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
+          }}>
+          <AppCustomIcon name={item.driver ? "car-check-mark" : "car-strike-through"} />
+        </Row>
+        <Row
+          style={{
+            paddingHorizontal: 4,
+            paddingVertical: 2,
+            borderRadius: 4,
+            alignItems: "center",
+            backgroundColor: AppColorPalettes.gray[100]
+          }}>
+          <AppText style={{ fontSize: 18 }}>2/3</AppText>
+          <AppIcon name={"people-outline"} />
+        </Row>
+      </Row>
+      <View style={{ position: "absolute", right: 16, top: -16 }} />
     </Pressable>
   );
 
@@ -79,6 +101,7 @@ const MyTripsScreen = ({
       />
 
       <SectionList
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         sections={sections}
         renderItem={renderItem}
         keyExtractor={item => item.id}
@@ -141,4 +164,4 @@ const convertToDateSections = (data: Liane[]): TripSection[] =>
   ).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
 export const LianeQueryKey = "getLianes";
-export default WithFetchResource(MyTripsScreen, repository => repository.liane.list, LianeQueryKey);
+export default WithFetchResource(MyTripsScreen, repository => repository.liane.list(), LianeQueryKey);

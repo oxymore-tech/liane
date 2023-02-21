@@ -9,7 +9,7 @@ export class AuthServiceMock implements AuthService {
     isAdmin: false
   };
 
-  async me(): Promise<AuthUser | undefined> {
+  async authUser(): Promise<AuthUser | undefined> {
     await new Promise(resolve => setTimeout(resolve, 500));
     return this.mockUser;
   }

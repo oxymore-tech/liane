@@ -1,11 +1,10 @@
 import { ChatMessage, ConversationGroup, DatetimeCursor, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
-import { get, tryRefreshToken } from "@/api/http";
-import { HubConnection } from "@microsoft/signalr";
-import { createChatConnection } from "@/api/chat";
-import { UnauthorizedError } from "@/api/exception";
+import { BaseUrl, get, tryRefreshToken } from "@/api/http";
+import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { getAccessToken, getRefreshToken } from "@/api/storage";
 
-export interface ChatService {
-  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage, DatetimeCursor>>;
+export interface ChatHubService {
+  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
   stop(): Promise<void>;
   start(): Promise<User>;
@@ -17,9 +16,20 @@ export interface ChatService {
 }
 
 export type OnMessageCallback = (res: ChatMessage) => void;
-export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage, DatetimeCursor>) => void;
+export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
 
-export class HubServiceClient implements ChatService {
+function createChatConnection(): HubConnection {
+  return new HubConnectionBuilder()
+    .withUrl(`${BaseUrl}/hub`, {
+      accessTokenFactory: async () => {
+        return (await getAccessToken())!;
+      }
+    })
+    .configureLogging(LogLevel.Information)
+    .withAutomaticReconnect()
+    .build();
+}
+export class HubServiceClient implements ChatHubService {
   private hub: HubConnection;
   private currentConversationId?: string = undefined;
 
@@ -37,6 +47,7 @@ export class HubServiceClient implements ChatService {
   start = () => {
     console.log("start");
     return new Promise<User>((resolve, reject) => {
+      let successfullyStarted = false;
       this.hub.on("ReceiveLatestMessages", async messages => {
         if (this.onReceiveLatestMessagesCallback) {
           await this.onReceiveLatestMessagesCallback(messages);
@@ -48,15 +59,29 @@ export class HubServiceClient implements ChatService {
         }
       });
       this.hub.on("Me", async (me: User) => {
-        console.log("me", me);
+        console.log("me", me); // TODO find out why sent twice on startup
         resolve(me);
       });
-      this.hub.start().catch(async err => {
+      this.hub.onclose(err => {
+        if (!successfullyStarted) {
+          if (__DEV__) {
+            console.log("Connection closed with error during initialization: ", err);
+          }
+          successfullyStarted = true;
+          reject(err);
+        }
+      });
+      this.hub.start().catch(async (err: Error) => {
         // Retry if err 401
-        if (err instanceof UnauthorizedError) {
-          await tryRefreshToken<void>(async () => {
-            this.hub.start().catch(e => reject(e));
-          });
+
+        if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
+          try {
+            await tryRefreshToken<void>(async () => {
+              await this.hub.start().catch(e => reject(e));
+            });
+          } catch (e) {
+            reject(e);
+          }
         }
         reject(err);
       });
@@ -67,10 +92,8 @@ export class HubServiceClient implements ChatService {
     console.log("stop");
     return this.hub.stop();
   };
-  list = async (
-    id: Ref<ConversationGroup>,
-    params: PaginatedRequestParams<DatetimeCursor>
-  ): Promise<PaginatedResponse<ChatMessage, DatetimeCursor>> => get(`/conversation/${id}/message`, { params });
+  list = async (id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage>> =>
+    get(`/conversation/${id}/message`, { params });
   async connectToChat(
     conversationRef: Ref<ConversationGroup>,
     onReceiveLatestMessages: OnLatestMessagesCallback,
