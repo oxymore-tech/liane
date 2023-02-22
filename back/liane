@@ -22,7 +22,17 @@ function token {
 }
 
 function dump_on_local {
-    ssh gjini.co "/home/ubuntu/liane/deploy/liane dump" | docker exec -i mongo mongorestore --archive --gzip -u mongoadmin -p secret
+  local environment=${1:-dev}
+    
+  local suffix=""
+  
+  if [[ "${environment}" = "dev" ]]; then
+    suffix="-dev"
+  elif [[ "${environment}" = "prod" ]]; then
+    suffix=""
+  fi;
+  
+  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | docker exec -i mongo mongorestore --archive --gzip -u mongoadmin -p secret
 }
 
 function mongo_start {
@@ -76,7 +86,7 @@ case "$1" in
   init
   ;;
  dump_on_local)
-  dump_on_local
+  dump_on_local "${ARGS[@]}"
   ;;
  *)
   # else
