@@ -37,11 +37,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var from = (await filter.From.Resolve(rallyingPointService.Get));
     var to = (await filter.To.Resolve(rallyingPointService.Get));
     var resolvedFilter = filter with { From = from, To = to };
+    var isDriverMatch = filter.AvailableSeats > 0;
     // Filter Lianes in database 
     var lianesCursor = await Filter(resolvedFilter);
     
     // Select lazily while under limit 
-    var lianes = await lianesCursor.SelectAsync(l => MatchLiane(l, from, to));
+    var lianes = await lianesCursor.SelectAsync(l => MatchLiane(l, from, to, isDriverMatch));
 
     Cursor? nextCursor = null; //TODO
     return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor,lianes
@@ -56,20 +57,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ThenByDescending(l => l.MatchData is ExactMatch ? 0 : ((CompatibleMatch)l.MatchData).DeltaInSeconds)
       .ToImmutableList());
   }
-  
-  private FindOptions<LianeDb, int> GetAvailableSeatsFindOptions(int requestedSeats)
-  {
-    var pipeline = new EmptyPipelineDefinition<LianeDb>()
-      .Match(Builders<LianeDb>.Filter.Empty)
-      .Project(Builders<LianeDb>.Projection.Expression(g => new { ScoreSum = g.Members.Sum(s => s.SeatCount) }));
-    var projection = Builders<LianeDb>.Projection.Expression<int>(g => g.Members.Sum(s => s.SeatCount));
 
-    var findOptions = new FindOptions<LianeDb, int>()
-    {
-      Projection = projection
-    };
-    return findOptions;
-  }
+  
   public async Task<IFindFluent<LianeDb, LianeDb>> Filter(Filter filter, int geographicalRadius = DefaultRadiusInMeters)
   {
     // Get Liane near both From and To 
@@ -115,6 +104,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var currentUser = currentContext.CurrentUser();
     return await ListForMemberUser(currentUser.Id, pagination);
+  }
+
+  public async Task<PaginatedResponse<Api.Trip.Liane>> ListAll(Pagination pagination)
+  {
+    var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, FilterDefinition<LianeDb>.Empty);
+    return await paginatedLianes.SelectAsync(MapEntity);
   }
 
   public async Task<PaginatedResponse<Api.Trip.Liane>> ListForMemberUser(string userId, Pagination pagination)
@@ -189,7 +184,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
   }
 
-  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to)
+  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, bool matchForDriver)
   {
     var defaultDriver = lianeDb.DriverData.User;
     var (driverSegment, segments) = ExtractRouteSegments(defaultDriver, lianeDb.Members);
@@ -203,7 +198,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
     else
     {
-      var tripIntent = await routingService.GetTrip(driverSegment, segments.Append((from, to)));
+      // If match for a driver, use the candidate segment as driverSegment
+      var matchDriverSegment = matchForDriver ? (from, to) : driverSegment;
+      var matchSegments = matchForDriver ? segments : segments.Append((from, to));
+      var tripIntent = await routingService.GetTrip(matchDriverSegment, matchSegments);
       if (tripIntent is null)
       {
         return null;
@@ -220,6 +218,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
 
     var driver =  lianeDb.DriverData.CanDrive ? lianeDb.DriverData.User : null;
-    return new LianeMatch(lianeDb.Id, lianeDb.DepartureTime, lianeDb.ReturnTime, newWayPoints, 1, driver, matchType);
+    return new LianeMatch(lianeDb.Id, lianeDb.DepartureTime, lianeDb.ReturnTime, newWayPoints, wayPoints, 1, driver, matchType);
   }
 }

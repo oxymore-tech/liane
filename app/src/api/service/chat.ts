@@ -1,11 +1,10 @@
-import { ChatMessage, ConversationGroup, DatetimeCursor, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
-import { get, tryRefreshToken } from "@/api/http";
-import { HubConnection } from "@microsoft/signalr";
-import { createChatConnection } from "@/api/chat";
-import { getRefreshToken } from "@/api/storage";
+import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
+import { BaseUrl, get, tryRefreshToken } from "@/api/http";
+import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { getAccessToken, getRefreshToken } from "@/api/storage";
 
-export interface ChatService {
-  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams<DatetimeCursor>): Promise<PaginatedResponse<ChatMessage, DatetimeCursor>>;
+export interface ChatHubService {
+  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
   stop(): Promise<void>;
   start(): Promise<User>;
@@ -17,9 +16,20 @@ export interface ChatService {
 }
 
 export type OnMessageCallback = (res: ChatMessage) => void;
-export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage, DatetimeCursor>) => void;
+export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
 
-export class HubServiceClient implements ChatService {
+function createChatConnection(): HubConnection {
+  return new HubConnectionBuilder()
+    .withUrl(`${BaseUrl}/hub`, {
+      accessTokenFactory: async () => {
+        return (await getAccessToken())!;
+      }
+    })
+    .configureLogging(LogLevel.Information)
+    .withAutomaticReconnect()
+    .build();
+}
+export class HubServiceClient implements ChatHubService {
   private hub: HubConnection;
   private currentConversationId?: string = undefined;
 
@@ -37,6 +47,7 @@ export class HubServiceClient implements ChatService {
   start = () => {
     console.log("start");
     return new Promise<User>((resolve, reject) => {
+      let alreadyClosed = false;
       this.hub.on("ReceiveLatestMessages", async messages => {
         if (this.onReceiveLatestMessagesCallback) {
           await this.onReceiveLatestMessagesCallback(messages);
@@ -50,6 +61,15 @@ export class HubServiceClient implements ChatService {
       this.hub.on("Me", async (me: User) => {
         console.log("me", me);
         resolve(me);
+      });
+      this.hub.onclose(err => {
+        if (!alreadyClosed) {
+          if (__DEV__) {
+            console.log("Connection closed with error during initialization: ", err);
+          }
+          alreadyClosed = true;
+          reject(err);
+        }
       });
       this.hub.start().catch(async (err: Error) => {
         console.debug("Hub [start] error :", err, this.hub.state);
@@ -76,10 +96,8 @@ export class HubServiceClient implements ChatService {
     console.log("stop");
     return this.hub.stop();
   };
-  list = async (
-    id: Ref<ConversationGroup>,
-    params: PaginatedRequestParams<DatetimeCursor>
-  ): Promise<PaginatedResponse<ChatMessage, DatetimeCursor>> => get(`/conversation/${id}/message`, { params });
+  list = async (id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>> =>
+    get(`/conversation/${id}/message`, { params });
   async connectToChat(
     conversationRef: Ref<ConversationGroup>,
     onReceiveLatestMessages: OnLatestMessagesCallback,

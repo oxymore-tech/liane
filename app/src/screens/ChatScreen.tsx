@@ -52,7 +52,7 @@ export const ChatScreen = ({ route, navigation }: NativeStackScreenProps<ChatScr
     setMessages(oldList => [m, ...oldList]);
   };
 
-  const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage, DatetimeCursor>) => {
+  const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage>) => {
     setMessages(m.data);
     setPaginationCursor(m.nextCursor);
   };

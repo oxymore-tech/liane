@@ -5,6 +5,8 @@ import { AppServices, CreateAppServices } from "@/api/service";
 import { UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
 import { initializeNotification } from "@/api/service/notification";
+import { View } from "react-native";
+import { AppColors } from "@/theme/colors";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -32,13 +34,12 @@ async function initContext(service: AppServices): Promise<{
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.authUser();
   let user;
-  console.log("auth", authUser);
+
   if (authUser) {
     try {
       user = await SERVICES.chatHub.start();
-      console.log("user", user);
     } catch (e) {
-      if (!__DEV__) {
+      if (__DEV__) {
         console.log("Could not start hub :", e);
       }
       //TODO user = cached value for an offline mode
@@ -121,7 +122,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: user
       }));
     } catch (e) {
-      console.log("Problem while setting auth user : ", e);
+      console.error("Problem while setting auth user : ", e);
     }
   };
 
@@ -143,7 +144,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         }}>
         {children}
       </AppContext.Provider>
-    ) : null;
+    ) : (
+      <View style={{ flex: 1, backgroundColor: AppColors.darkBlue, alignItems: "center", justifyContent: "center" }} />
+    );
   }
 }
 

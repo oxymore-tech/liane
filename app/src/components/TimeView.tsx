@@ -1,19 +1,16 @@
 import React from "react";
 import { AppText, AppTextProps } from "@/components/base/AppText";
 import { TimeInSeconds } from "@/util/datetime";
+import { formatTime, locale } from "@/api/i18n";
 
 export interface TimeViewProps extends AppTextProps {
   value?: TimeInSeconds;
 }
-
-const padNumber = (value: number) => value.toString().padStart(2, "0");
-
+const time24hFormatter = new Intl.DateTimeFormat(locale, {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false
+});
 export function TimeView({ value, ...props }: TimeViewProps) {
-  let hour;
-  let minute;
-  if (value) {
-    hour = padNumber(Math.floor(value / 3600));
-    minute = padNumber(Math.floor((value / 60) % 60));
-  }
-  return <AppText {...props}>{`${hour ?? "--"}:${minute ?? "--"}`}</AppText>;
+  return <AppText {...props}>{value ? time24hFormatter.format(new Date(value! * 1000)) : "--:--"}</AppText>;
 }

@@ -31,6 +31,17 @@ public readonly struct LatLng
     return $"{Lng.ToString(CultureInfo.InvariantCulture)},{Lat.ToString(CultureInfo.InvariantCulture)}";
   }
 
+  public static LatLng Parse(string s)
+  {
+    var values = s.Split(",");
+    if (values.Length == 2)
+    {
+      return new (double.Parse(values[1]), double.Parse(values[0]));
+    }
+
+    throw new FormatException();
+  }
+
   public double Distance(LatLng other) => Distance(other.Lat, other.Lng);
 
   public double Distance(double lat, double lng)

@@ -1,3 +1,4 @@
+import { TimeInSeconds } from "@/util/datetime";
 export type Identity = Readonly<{
   id?: string;
 }>;
@@ -8,7 +9,7 @@ export type Entity = Identity &
     createdAt?: UTCDateTime;
   }>;
 
-export type Ref<T extends Identity> = string; // | T;
+export type Ref<T extends Identity> = string | T;
 
 export type AuthUser = Readonly<{
   id: string;
@@ -75,10 +76,10 @@ export type LianeRequest = Identity &
   Readonly<{
     departureTime: UTCDateTime;
     returnTime?: UTCDateTime;
-    driverCapacity: number;
+    availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
-    shareWith: Ref<User>[];
+    // shareWith: Ref<User>[];
   }>;
 
 export type Liane = Identity &
@@ -94,13 +95,14 @@ export type Liane = Identity &
 
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
-  duration: number;
+  duration: TimeInSeconds;
 }>;
 
 export type LianeMember = Readonly<{
   user: Ref<User>;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
+  seatCount: number;
 }>;
 
 // A date time in ISO 8601 format
@@ -160,15 +162,40 @@ export type Route = Readonly<{
   delta?: number;
 }>;
 
-export type PaginatedResponse<T, TCursor> = Readonly<{
+export type PaginatedResponse<T> = Readonly<{
   pageSize: number;
   data: T[];
-  nextCursor?: TCursor;
+  nextCursor?: string;
 }>;
 
-export type PaginatedRequestParams<T> = {
-  cursor?: T;
+export type PaginatedRequestParams = {
+  cursor?: string;
   limit: number;
 };
 
-export type DatetimeCursor = string; // TODO
+export type TargetTimeDirection = "Departure" | "Arrival";
+
+export type LianeSearchFilter = Readonly<{
+  to: Ref<RallyingPoint>;
+  from: Ref<RallyingPoint>;
+  targetTime: {
+    dateTime: UTCDateTime;
+    direction: TargetTimeDirection;
+  };
+  //TODO withReturnTrip?: boolean;
+  availableSeats: number;
+}>;
+
+export type ExactMatch = { type: "ExactMatch" };
+export type CompatibleMatch = { type: "CompatibleMatch"; deltaInSeconds: TimeInSeconds };
+
+export type LianeMatch = Readonly<{
+  liane: Ref<Liane>;
+  departureTime: UTCDateTime;
+  returnTime: UTCDateTime;
+  wayPoints: WayPoint[];
+  originalTrip: WayPoint[];
+  driver: Ref<User>;
+  matchData: ExactMatch | CompatibleMatch;
+  freeSeatsCount: number;
+}>;

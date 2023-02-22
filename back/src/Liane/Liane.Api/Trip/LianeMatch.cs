@@ -18,6 +18,7 @@ public sealed record LianeMatch(
   DateTime DepartureTime,
   DateTime? ReturnTime,
   ImmutableSortedSet<WayPoint> WayPoints,
+  ImmutableSortedSet<WayPoint> OriginalTrip,
   int FreeSeatsCount,
   Ref<User.User>? Driver,
   MatchType MatchData

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useActor, useInterpret, useSelector } from "@xstate/react";
@@ -12,7 +12,7 @@ import { AppText } from "@/components/base/AppText";
 import { OverviewForm } from "@/screens/lianeWizard/OverviewForm";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
-import { LianeWizardFormData, toLianeRequest } from "@/screens/lianeWizard/LianeWizardFormData";
+import { fromLianeRequest, LianeWizardFormData, toLianeRequest } from "@/screens/lianeWizard/LianeWizardFormData";
 import { FormProvider, useForm } from "react-hook-form";
 import { CreateLianeContextMachine, WizardStateSequence, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -22,15 +22,13 @@ import { LianePager } from "@/screens/lianeWizard/LianePager";
 import { ModalSizeContext } from "@/components/CardButton";
 import { AppContext } from "@/components/ContextProvider";
 import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
+import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
+import { Liane, LianeRequest } from "@/api";
+import { useQueryClient } from "react-query";
+import { LianeQueryKey } from "@/screens/MyTripsScreen";
 
 export interface LianeModalScreenParams extends ParamListBase {
-  lianeRequest?: LianeWizardFormData;
-  // Name of the route to return to and pass LianeModalScreenResponseParams
-  origin?: string;
-}
-
-export interface LianeModalScreenResponseParams extends ParamListBase {
-  lianeResponse?: LianeWizardFormData;
+  lianeRequest?: LianeRequest;
 }
 
 //TODO animated component
@@ -39,78 +37,81 @@ const DynamicHouseVector = ({ snapPoint }) => {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const machineContext = useContext(WizardContext);
-  const stateValue = useSelector(machineContext, state => state.value);
+  // Get inner wizard step
+  const stateValue = useSelector(machineContext, state => state.value.wizard);
   const frontColor = HouseColor[WizardStateSequence.indexOf(stateValue) % HouseColor.length];
   return <LianeHouseVector maxHeight={height * (1 - snapPoint) - insets.top} maxWidth={width * 0.65} frontColor={frontColor} />;
 };
 
+// TODO put in theme file
 const maxSnapPoint = 0.8;
 const defaultSnapPoint = 0.75;
 const minHeight = 550;
+const modalMargin = 8;
+const animDuration = 300;
 
-export const LianeModalScreen = ({ navigation, route }: NativeStackScreenProps<LianeModalScreenParams, "LianeWizard">) => {
-  // TODO read route param const liane = route.params?.liane;
-  const insets = useSafeAreaInsets();
-  const dimensions = useWindowDimensions();
-  const height = dimensions.height - insets.top;
+export const LianeWizardScreen = ({ route, navigation }: NativeStackScreenProps<LianeModalScreenParams, "LianeWizard">) => {
+  const lianeRequest: LianeRequest | undefined = route.params?.lianeRequest;
   const { services } = useContext(AppContext);
-  const machine = useMemo(() => CreateLianeContextMachine(), []);
-  const lianeWizardMachine = useInterpret(machine);
 
   // Listen to keyboard state to hide backdrop when keyboard is visible
   const keyboardIsOpen = useKeyboardState();
+  const insets = useSafeAreaInsets();
+  const dimensions = useWindowDimensions();
+  const height = dimensions.height - insets.top;
+  const snapPoint = useMemo(() => Math.min(Math.max(defaultSnapPoint, minHeight / height), maxSnapPoint), [height]);
 
-  useEffect(() => {
-    const onDoneListener = async event => {
-      // Post liane request
-      const request = toLianeRequest(event.data);
-      const lianeResponse = await services.liane.post(request);
-      // Pass response
-      if (route.params?.origin) {
-        navigation.navigate({
-          name: route.params?.origin,
-          params: { lianeResponse },
-          merge: true
-        });
-      } else {
-        navigation.goBack();
-      }
-    };
-    lianeWizardMachine.onDone(onDoneListener);
-    return () => lianeWizardMachine.off(onDoneListener);
-  }, [lianeWizardMachine]);
-
-  const snapPoint = Math.min(Math.max(defaultSnapPoint, minHeight / height), maxSnapPoint);
-  const modalMargin = 8;
-
-  const closeWizard = () => {
-    navigation.goBack();
-  };
-
-  const backdropDecoration = (
-    <View
-      style={{
-        position: "absolute",
-        right: 32,
-        top: 0,
-        height: height * (1 - snapPoint) + 1,
-        justifyContent: "flex-end"
-      }}>
-      <DynamicHouseVector snapPoint={snapPoint} />
-    </View>
+  const backdropDecoration = useMemo(
+    () => (
+      <View
+        style={{
+          position: "absolute",
+          right: 32,
+          top: 0,
+          height: height * (1 - snapPoint) + 1,
+          justifyContent: "flex-end"
+        }}>
+        <DynamicHouseVector snapPoint={snapPoint} />
+      </View>
+    ),
+    [snapPoint, height]
   );
 
-  const animDuration = 300;
+  const queryClient = useQueryClient();
+
+  const machine = useMemo(() => {
+    const submitLianeForm = async (formData: LianeWizardFormData) => {
+      const request = toLianeRequest(formData);
+      const lianeResponse = await services.liane.post(request);
+      if (lianeResponse) {
+        await queryClient.invalidateQueries(LianeQueryKey);
+        navigation.goBack();
+        /*  queryClient.setQueryData<Liane[]>(LianeQueryKey, oldData => {
+          if (oldData) {
+            return [lianeResponse, ...oldData];
+          } else {
+            return [lianeResponse];
+          }
+        });
+      }*/
+      }
+      return lianeResponse;
+    };
+
+    return CreateLianeContextMachine(submitLianeForm, lianeRequest ? fromLianeRequest(lianeRequest) : undefined);
+  }, [lianeRequest, services.liane, queryClient, navigation]);
+
+  const lianeWizardMachine = useInterpret(machine);
 
   return (
     <WizardContext.Provider value={lianeWizardMachine}>
       <View style={{ backgroundColor: AppColors.white, flex: 1 }}>
-        {backdropDecoration}
+        {keyboardIsOpen ? null : backdropDecoration}
 
         <Pressable
           style={{ position: "absolute", top: 16 + insets.top, left: 16 }}
           onPress={() => {
-            closeWizard();
+            navigation.goBack();
           }}>
           <AppIcon name="close-outline" size={32} />
         </Pressable>
@@ -155,11 +156,11 @@ const LianeWizard = () => {
 
   const { handleSubmit } = formContext;
   const submit = useMemo(() => {
-    const onSubmit = data => {
+    const onSubmit = (data: LianeWizardFormData) => {
       send("NEXT", { data });
     };
 
-    const onError = (errors, e) => {
+    const onError = (errors: any, e: any) => {
       console.log("ERR", errors, e);
     };
 
@@ -168,54 +169,56 @@ const LianeWizard = () => {
 
   let title: string;
   let content;
-  let action;
-  let isWizardStep = false;
+  let bottom = null;
+  const isWizardStep = state.matches("wizard");
 
   if (state.matches("overview")) {
-    title = "Lancer une Liane";
+    title = "Votre liane est prête !";
     content = (
       <View style={[styles.contentContainer, { marginBottom: insets.bottom + 36 }]}>
         <OverviewForm />
       </View>
     );
-    action = (
-      <View
-        style={{
-          alignSelf: "center",
-          paddingTop: 8,
-          paddingHorizontal: 8
-        }}>
-        <AppButton
-          onPress={() => {
-            // send liane request
-            send("SUBMIT");
-            // close modal
-            // TODO
-          }}
-          icon="arrow-right"
-          color={AppColors.white}
-          kind="circular"
-          foregroundColor={AppColorPalettes.orange[500]}
-        />
-      </View>
+    bottom = (
+      <BottomOptionBg color={AppColorPalettes.blue[300]}>
+        <AppButton icon={"arrow-right"} title={"Publier"} onPress={() => send("SUBMIT")} />
+      </BottomOptionBg>
     );
-  } else if (state.matches("submitted")) {
-    console.log("render submitted");
-    title = "Lancer une Liane";
-    content = <ActivityIndicator style={{ alignSelf: "center" }} />;
-  } else {
-    // wizard step
-    isWizardStep = true;
-    const step = state.value as WizardStepsKeys;
+  } else if (isWizardStep) {
+    const step = state.value.wizard as WizardStepsKeys;
+
     title = WizardFormData[step].title;
 
     // TODO fix exiting here as well
     content = (
       <View style={{ flex: 1, marginBottom: insets.bottom }}>
-        <LianePager onNext={submit} onPrev={() => send("PREV")} step={state.value as WizardStepsKeys} />
+        <LianePager onNext={submit} onPrev={() => send("PREV")} step={step} />
       </View>
     );
+  } else {
+    // Submitting
+    title = "Publication en cours...";
+    if (state.matches("submitting.failure")) {
+      content = null;
+      bottom = (
+        <BottomOptionBg color={AppColorPalettes.blue[300]}>
+          <AppButton color={AppColors.darkBlue} icon={"refresh-outline"} title={"Réessayer"} onPress={() => send("RETRY")} />
+        </BottomOptionBg>
+      );
+    } else {
+      content = (
+        <View style={{ flex: 1 }}>
+          <ActivityIndicator style={{ alignSelf: "center" }} />
+        </View>
+      );
+      bottom = (
+        <BottomOptionBg color={AppColorPalettes.blue[300]}>
+          <AppButton color={AppColors.darkBlue} icon={"loader-outline"} title={"Annuler"} onPress={() => send("CANCEL")} />
+        </BottomOptionBg>
+      );
+    }
   }
+
   return (
     <FormProvider {...formContext}>
       <Column style={{ flex: 1 }}>
@@ -223,9 +226,9 @@ const LianeWizard = () => {
           <AppText numberOfLines={1} style={[styles.title, { fontSize: isWizardStep ? 20 : AppDimensions.textSize.large }]}>
             {title}
           </AppText>
-          {action}
         </Row>
         {content}
+        {bottom}
       </Column>
     </FormProvider>
   );

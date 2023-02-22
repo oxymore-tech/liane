@@ -59,4 +59,12 @@ public sealed class RallyingPointController : ControllerBase
 
         return await rallyingPointService.List(latLng, search);
     }
+
+    [HttpGet("snap")]
+    [DisableAuth]
+    public async Task<RallyingPoint?> Snap([FromQuery] double lat, [FromQuery] double lng)
+    {
+      return await rallyingPointService.Snap(new(lat, lng), IRallyingPointService.MaxRadius);
+    }
+
 }

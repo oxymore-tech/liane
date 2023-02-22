@@ -17,11 +17,12 @@ import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppPressable } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // @ts-ignore
 export interface LianeCardProps extends PressableProps {
   label?: string;
-  value: string;
+  value: string | JSX.Element;
   onCancel?: () => void;
   color: ColorValue;
   textColor?: ColorValue;
@@ -46,11 +47,12 @@ const CancelButton = ({ color, label, onCancel }) => {
   );
 };
 
-export const ModalSizeContext = React.createContext<Rect>({ bottom: 8, left: 8, right: 8, top: 8 });
+export const ModalSizeContext = React.createContext<Rect | undefined>(undefined);
 type Rect = { left: number; top: number; right: number; bottom: number };
 
 const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) => {
   const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const animState = useSharedValue(0);
   const centerX = useSharedValue(x);
@@ -63,7 +65,8 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
   const [showContent, setShowContent] = useState(false);
   const [closing, setClosing] = useState(false);
 
-  const modalRect = useContext(ModalSizeContext);
+  const providedModalRect = useContext(ModalSizeContext);
+  const modalRect = providedModalRect || { left: 8, right: 8, top: 16 + insets.top, bottom: 16 + insets.bottom };
 
   const closeModal = (validate: boolean) => {
     setClosing(true);
@@ -244,6 +247,8 @@ export const CardButton = forwardRef(
       setModalSpecs({ y: pageY, x: pageX });
     };
 
+    const valueIsString = typeof value === "string";
+
     return (
       <View style={styles.baseContainer}>
         {extendedView && modalSpecs.x !== 0 && modalSpecs.y !== 0 && (
@@ -263,9 +268,12 @@ export const CardButton = forwardRef(
           <AppPressable backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
             {label && <AppText style={[{ color: finalTextColor }, styles.label]}>{label}</AppText>}
 
-            <AppText numberOfLines={1} style={[{ color: finalTextColor }, styles.value]}>
-              {value}
-            </AppText>
+            {valueIsString && (
+              <AppText numberOfLines={1} style={[{ color: finalTextColor }, styles.value]}>
+                {value}
+              </AppText>
+            )}
+            {!valueIsString && value}
           </AppPressable>
         </View>
         {onCancel && <CancelButton color={color} label={label} onCancel={onCancel} />}
@@ -276,14 +284,14 @@ export const CardButton = forwardRef(
 
 const styles = StyleSheet.create({
   baseContainer: {
-    flex: 1
+    flexGrow: 1
   },
   pressableContainer: {
     borderRadius: AppDimensions.borderRadius
   },
   cardContainer: {
-    paddingVertical: AppDimensions.button.paddingVertical,
-    paddingHorizontal: AppDimensions.button.paddingHorizontal
+    paddingVertical: 12,
+    paddingHorizontal: 18
   },
   label: {
     fontSize: AppDimensions.textSize.default,

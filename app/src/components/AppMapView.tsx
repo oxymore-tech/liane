@@ -1,9 +1,12 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import MapLibreGL, { Logger } from "@maplibre/maplibre-react-native";
 import { MapStyle } from "@/api/location";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
+import { LatLng, RallyingPoint } from "@/api";
+import LocationPin from "@/assets/location_pin.svg";
+import { AppColorPalettes } from "@/theme/colors";
 
 MapLibreGL.setAccessToken(null);
 
@@ -18,14 +21,29 @@ Logger.setLogCallback(log => {
 });
 
 const AppMapView = () => {
-  const { position } = useContext(AppContext);
+  const { services } = useContext(AppContext);
+  const [position, _] = useState<LatLng | undefined>(services.location.getLastKnownLocation());
 
+  const [displayedRallyingPoints, setDisplayedRallyingPoints] = useState<RallyingPoint[]>([]);
   if (position) {
     const coordinatesA = [position.lng, position.lat];
+    const onRegionChange = async c => {
+      // TODO cache or use timeout
+      // const lowerLeft = c.properties.visibleBounds[1];
+      // const upperRight = c.properties.visibleBounds[0];
+      //const rallyingPoints = await services.rallyingPoint.view({ lat: lowerLeft[1], lng: lowerLeft[0] }, { lat: upperRight[1], lng: upperRight[0] });
+      console.log(c, c.properties.visibleBounds);
+      // setDisplayedRallyingPoints(rallyingPoints);
+    };
 
     return (
-      <MapLibreGL.MapView style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
+      <MapLibreGL.MapView onRegionDidChange={onRegionChange} style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
         <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={coordinatesA} />
+        {displayedRallyingPoints.map(rp => (
+          <MapLibreGL.MarkerView coordinate={[rp.location.lng, rp.location.lat]} id={rp.id!}>
+            <LocationPin fill={AppColorPalettes.orange[700]} />
+          </MapLibreGL.MarkerView>
+        ))}
       </MapLibreGL.MapView>
     );
   }

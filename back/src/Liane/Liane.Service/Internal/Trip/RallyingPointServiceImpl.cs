@@ -79,9 +79,8 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     return res.IsAcknowledged;
   }
 
-  public async Task<RallyingPoint?> Snap(LatLng position)
+  public async Task<RallyingPoint?> Snap(LatLng position, int radius = 100)
   {
-    const int radius = 100;
     var builder = Builders<RallyingPoint>.Filter;
     var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(position.Lng, position.Lat));
     var filter = builder.Near(x => x.Location, point, radius);

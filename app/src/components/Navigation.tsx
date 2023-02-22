@@ -8,11 +8,9 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import NotificationScreen from "@/screens/NotificationScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
-import HomeScreen from "@/screens/HomeScreen";
 import { AppText } from "@/components/base/AppText";
 import MyTripsScreen from "@/screens/MyTripsScreen";
 import LianeIcon from "@/assets/icon.svg";
-import { LianeModalScreen } from "@/screens/lianeWizard/LianeModalScreen";
 import { LianeDetailScreen } from "@/screens/LianeDetailScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
@@ -20,6 +18,11 @@ import { Row } from "@/components/base/AppLayout";
 import Avatar from "@/assets/avatar.svg";
 import { ProfileScreen } from "@/screens/ProfileScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
+import { SearchScreen } from "@/screens/search/SearchScreen";
+import HomeScreen from "@/screens/HomeScreen";
+import { LianeWizardScreen } from "@/screens/lianeWizard/LianeWizardScreen";
+import { SearchResultsScreen } from "@/screens/search/SearchResultsScreen";
+import { LianeMatchDetailScreen } from "@/screens/LianeMatchDetailScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,11 +57,14 @@ function Navigation() {
     return (
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
-        <Stack.Screen name="LianeWizard" component={LianeModalScreen} options={{ headerShown: false, animation: "fade" }} />
+        <Stack.Screen name="LianeWizard" component={LianeWizardScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false, presentation: "modal" }} />
+        <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="LianeMatchDetail" component={LianeMatchDetailScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }

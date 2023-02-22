@@ -1,11 +1,9 @@
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 
-export type WizardStepsKeys = "to" | "from" | "time" | "date" | "vehicle";
-
-export type StatesKeys = WizardStepsKeys | "overview" | "submitted";
-
-export const WizardStateSequence: Readonly<WizardStepsKeys[]> = ["to", "from", "date", "time", "vehicle"];
+export type StatesKeys = "wizard" | "overview" | "submitting"; //TODO| "submitted"
+export const WizardStateSequence = ["to", "from", "date", "time", "vehicle"] as const;
+export type WizardStepsKeys = (typeof WizardStateSequence)[number];
 
 const createStateSequence = <T extends unknown>(stateKeys: readonly Partial<T>[], nextState: T) => {
   const states = [
@@ -36,43 +34,77 @@ type Schema = {
 
 export type WizardDataEvent = { type: "NEXT"; data: { data: LianeWizardFormData } } | { type: "UPDATE"; data: { data: LianeWizardFormData } };
 
-type Event = WizardDataEvent | { type: "PREV" } | { type: "SUBMIT" };
+type Event = WizardDataEvent | { type: "PREV" } | { type: "SUBMIT" } | { type: "CANCEL" } | { type: "RETRY" };
 
 export type WizardStateMachine = StateMachine<LianeWizardFormData, Schema, Event>;
 
 export type WizardStateMachineInterpreter = Interpreter<LianeWizardFormData, Schema, Event>;
 
-const states: { [name in StatesKeys]: any } = {
-  ...createStateSequence<StatesKeys>(WizardStateSequence, "overview"),
+// @ts-ignore
+const defaultContext: LianeWizardFormData = {};
 
+const states: { [name in StatesKeys]: any } = {
+  wizard: {
+    initial: WizardStateSequence[0],
+    states: createStateSequence(WizardStateSequence, "#lianeWizard.overview")
+  },
   overview: {
     on: {
       UPDATE: {
         actions: ["set"]
       },
       SUBMIT: {
-        target: "submitted"
+        target: "submitting"
       }
     }
   },
-  submitted: {
+  submitting: {
+    initial: "pending",
+    on: {
+      CANCEL: { target: "overview" }
+    },
+    invoke: {
+      src: "submit",
+      onDone: {
+        target: ".success"
+      },
+      onError: {
+        actions: (context, event) => console.log(context, event.data),
+        target: ".failure"
+      }
+    },
+    states: {
+      pending: {},
+      success: { type: "final" },
+      failure: {
+        on: {
+          RETRY: { target: "#lianeWizard.submitting" }
+        }
+      }
+    }
+  }
+  /*submitted: {
     type: "final",
     data: (context, event) => context
-  }
+  }*/
 };
 
-// @ts-ignore
-const defaultContext: LianeWizardFormData = {};
-
-export const CreateLianeContextMachine = (initialValue?: LianeWizardFormData): WizardStateMachine => {
+export const CreateLianeContextMachine = (
+  submit: (formData: LianeWizardFormData) => Promise<unknown>,
+  initialValue?: LianeWizardFormData
+): WizardStateMachine => {
   return createMachine(
     {
+      id: "lianeWizard",
       predictableActionArguments: true,
       context: initialValue || defaultContext,
-      initial: (initialValue ? "overview" : "to") as StatesKeys,
+      initial: (initialValue ? "overview" : "wizard") as StatesKeys,
       states
     },
     {
+      services: {
+        submit: (context, _) => submit(context)
+      },
       actions: {
         set: assign<LianeWizardFormData, WizardDataEvent>((context, event) => {
           return {

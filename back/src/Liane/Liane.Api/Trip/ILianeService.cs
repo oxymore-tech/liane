@@ -10,5 +10,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
   Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination);
   Task<PaginatedResponse<Liane>> ListForCurrentUser(Pagination pagination);
+  Task<PaginatedResponse<Liane>> ListAll(Pagination pagination);
   Task<PaginatedResponse<Liane>> ListForMemberUser(string userId, Pagination pagination);
 }

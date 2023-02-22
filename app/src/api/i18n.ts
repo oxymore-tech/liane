@@ -79,7 +79,7 @@ export const toRelativeTimeString = (timestamp: Date) => {
   } else {
     time = chatDatetimeFormatter.format(-delta, "second");
   }*/
-  console.log(timestamp);
+
   date = dateFormatter.format(timestamp);
   time = timeFormatter.format(timestamp);
   return date + ", " + time;

@@ -1,28 +1,24 @@
-import { Pressable, Switch, View } from "react-native";
-import React, { useContext, useEffect, useRef } from "react";
+import { StyleSheet, Switch, View } from "react-native";
+import React, { useEffect, useState } from "react";
 import DatePicker from "react-native-date-picker";
 import { ControllerFieldState, useController } from "react-hook-form";
-import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { RallyingPointInput } from "@/components/RallyingPointInput";
-import { RallyingPoint } from "@/api";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppSwitchToggle } from "@/components/base/AppOptionToggle";
 import { AppButton } from "@/components/base/AppButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { TimeInSeconds, toTimeInSeconds } from "@/util/datetime";
-import MapLibreGL from "@maplibre/maplibre-react-native";
-import { MapStyle } from "@/api/location";
-import LocationPin from "@/assets/location_pin.svg";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
-import { AppContext } from "@/components/ContextProvider";
-import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
+import { WizardFormData, WizardFormDataKey } from "@/screens/lianeWizard/WizardContext";
+import { AppDimensions } from "@/theme/dimensions";
+import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
 
 export interface BaseFormProps<T> {
   name: LianeWizardFormKey;
   defaultValue?: T;
-  rules?: { required?: boolean; validate?: (value: T, formValues: unknown) => boolean };
+  rules?: { required?: boolean; validate?: (value: T, formValues: any) => string | boolean };
 }
 
 interface InternalBaseFormProps<T> {
@@ -90,94 +86,6 @@ export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, 
   );
 });
 
-export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormContext(
-  ({ value, onChange, fieldState: { error, invalid } }: InternalBaseFormProps<RallyingPoint | undefined>) => {
-    const { position } = useContext(AppContext);
-    const center = value ? [value.location.lng, value.location.lat] : undefined;
-    const cameraRef = useRef<MapLibreGL.Camera>(null);
-    // Listen to keyboard state to hide backdrop when keyboard is visible
-    const keyboardsIsVisible = useKeyboardState();
-
-    return (
-      <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
-        <MapLibreGL.MapView
-          style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
-          styleJSON={MapStyle}
-          logoEnabled={false}
-          attributionEnabled={false}>
-          <MapLibreGL.Camera
-            ref={cameraRef}
-            maxZoomLevel={15}
-            minZoomLevel={5}
-            zoomLevel={8}
-            animationMode={"moveTo"}
-            centerCoordinate={center || (position && [position.lng, position.lat])}
-            padding={{ paddingBottom: value ? 100 : 0 }}
-          />
-          {value && (
-            <MapLibreGL.MarkerView coordinate={center}>
-              <LocationPin fill={AppColorPalettes.orange[700]} />
-            </MapLibreGL.MarkerView>
-          )}
-        </MapLibreGL.MapView>
-        <View style={{ position: "absolute", top: 16, left: 24, right: 24 }}>
-          <RallyingPointInput placeholder="Chercher une adresse" onChange={onChange} value={value} />
-        </View>
-        {!keyboardsIsVisible && invalid && (
-          <Row
-            spacing={16}
-            style={{
-              position: "absolute",
-              bottom: 16,
-              left: 24,
-              right: 24,
-              backgroundColor: AppColors.white,
-              borderRadius: 16,
-              alignItems: "center",
-              paddingHorizontal: 16,
-              paddingVertical: 8
-            }}>
-            <AppIcon name="alert-triangle" animation="shake" color="darkred" size={40} />
-            <AppText numberOfLines={2} style={{ color: "darkred", flex: 1 }}>
-              Veuillez sélectionner un point de ralliement.
-            </AppText>
-          </Row>
-        )}
-        {!keyboardsIsVisible && value && (
-          <Row
-            spacing={16}
-            style={{
-              position: "absolute",
-              bottom: 16,
-              left: 24,
-              right: 24,
-              backgroundColor: AppColors.white,
-              borderRadius: 16,
-              height: 80,
-              alignItems: "center",
-              padding: 16
-            }}>
-            <Pressable
-              onPress={() => {
-                cameraRef.current?.flyTo(center);
-              }}>
-              <LocationPin fill={AppColorPalettes.orange[700]} />
-            </Pressable>
-            <Column>
-              <AppText style={{ fontWeight: "600" }}>{value.label}</AppText>
-              <AppText>1 rue de Adresse</AppText>
-              <AppText>Ville</AppText>
-            </Column>
-            <View style={{ position: "relative", top: -52, flexGrow: 1, alignItems: "flex-end", paddingRight: 16 }}>
-              <MonkeySmilingVector maxWidth={80} />
-            </View>
-          </Row>
-        )}
-      </View>
-    );
-  }
-);
-
 export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ value, onChange }: InternalBaseFormProps<boolean>) => (
   <Row style={{ alignItems: "center" }} spacing={8}>
     <Switch
@@ -191,58 +99,98 @@ export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ val
   </Row>
 ));
 
-export const CarForm: FormComponent<number> = WithFormContext(({ value, onChange }: InternalBaseFormProps<number>) => {
+export const CarForm: FormComponent<number> = WithFormController(({ value, onChange }: BaseFormComponentProps<number>) => {
+  //TODO redo layout
   return (
     <Column spacing={32} style={{ justifyItems: "space-between", alignItems: "center", paddingVertical: 16 }}>
       <AppSwitchToggle
         defaultSelectedValue={value > 0}
         options={[false, true]}
         selectionColor={AppColorPalettes.blue[500]}
-        onSelectValue={selection => {
-          onChange(selection ? 1 : 0);
+        onSelectValue={_ => {
+          onChange(-value);
         }}
       />
 
-      {value > 0 /*(
-        <Column style={{ alignItems: "center" }} spacing={8}>
-          <AppText>Places disponibles</AppText>
-          <Row style={{ alignItems: "center" }}>
-            <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="minus-outline" onPress={() => onChange(Math.max(1, value - 1))} />
-            <AppText style={{ fontSize: 40 }}>{value}</AppText>
-            <AppIcon name="people-outline" size={40} />
-            <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="plus-outline" onPress={() => onChange(value + 1)} />
+      <Column style={{ alignSelf: "stretch" }}>
+        <View style={{ position: "relative", top: 10, left: 32, alignItems: "stretch" }}>
+          <MonkeySmilingVector maxWidth={80} bodyColor={AppColorPalettes.blue[100]} />
+        </View>
+        <Column
+          spacing={8}
+          style={{
+            backgroundColor: AppColorPalettes.blue[100],
+            borderRadius: 16,
+            maxHeight: 110,
+            alignItems: "center",
+            padding: 16,
+            marginHorizontal: 16,
+            flex: 1
+          }}>
+          <AppText style={{ fontSize: 16 }}>{value > 0 ? "Combien de places avez-vous ?" : "Combien de personnes voyagent ?"}</AppText>
+          <Row style={{ alignItems: "center" }} spacing={16}>
+            <AppButton
+              kind="circular"
+              color={AppColorPalettes.blue[400]}
+              icon="minus-outline"
+              onPress={() => {
+                onChange(Math.sign(value) * Math.max(1, Math.abs(value) - 1));
+              }}
+            />
+            <Row
+              spacing={4}
+              style={{ backgroundColor: WithAlpha(AppColors.black, 0.1), paddingVertical: 8, paddingHorizontal: 16, borderRadius: 24 }}>
+              <AppText style={{ fontSize: 24, minWidth: 20 }}>{Math.abs(value)}</AppText>
+              <AppIcon name="people-outline" size={24} />
+            </Row>
+            <AppButton
+              kind="circular"
+              color={AppColorPalettes.blue[500]}
+              icon="plus-outline"
+              onPress={() => {
+                onChange(Math.sign(value) * Math.min(8, Math.abs(value) + 1));
+                //TODO set a maximum value
+              }}
+            />
           </Row>
         </Column>
-      )*/ && (
-        <Column>
-          <View style={{ position: "relative", top: 10, left: 32, alignItems: "stretch" }}>
-            <MonkeySmilingVector maxWidth={80} bodyColor={AppColorPalettes.blue[100]} />
-          </View>
-          <Column
-            spacing={8}
-            style={{
-              backgroundColor: AppColorPalettes.blue[100],
-              borderRadius: 16,
-              maxHeight: 110,
-              alignItems: "center",
-              padding: 16,
-              marginHorizontal: 16,
-              flex: 1
-            }}>
-            <AppText style={{ fontSize: 16 }}>Combien de personnes voyagent ?</AppText>
-            <Row style={{ alignItems: "center" }} spacing={16}>
-              <AppButton kind="circular" color={AppColorPalettes.blue[400]} icon="minus-outline" onPress={() => onChange(Math.max(1, value - 1))} />
-              <Row
-                spacing={4}
-                style={{ backgroundColor: WithAlpha(AppColors.black, 0.1), paddingVertical: 8, paddingHorizontal: 16, borderRadius: 24 }}>
-                <AppText style={{ fontSize: 24, minWidth: 20 }}>{value}</AppText>
-                <AppIcon name="people-outline" size={24} />
-              </Row>
-              <AppButton kind="circular" color={AppColorPalettes.blue[500]} icon="plus-outline" onPress={() => onChange(value + 1)} />
-            </Row>
-          </Column>
-        </Column>
-      )}
+      </Column>
     </Column>
   );
+});
+
+export const WithForms = (key: WizardFormDataKey) => {
+  const { title, forms, color } = WizardFormData[key];
+
+  return (
+    <Column style={styles.containerModal} spacing={16}>
+      <AppText style={[styles.titleModal, { color: defaultTextColor(color) }]}>{title}</AppText>
+      <Column style={styles.formContainer} spacing={16}>
+        {forms.map((Form, index) => (
+          <Form key={`${key}.field${index}`} />
+        ))}
+      </Column>
+    </Column>
+  );
+};
+
+const styles = StyleSheet.create({
+  containerModal: {
+    padding: 4,
+    alignItems: "center",
+    flex: 1
+  },
+  formContainer: {
+    alignItems: "center",
+    flex: 1,
+    width: "100%",
+    marginBottom: 60,
+    justifyContent: "space-between"
+  },
+  titleModal: {
+    fontSize: AppDimensions.textSize.medium,
+    paddingTop: 8,
+    paddingHorizontal: 16,
+    alignSelf: "flex-start"
+  }
 });

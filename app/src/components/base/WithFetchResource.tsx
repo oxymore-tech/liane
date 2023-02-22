@@ -10,19 +10,32 @@ export interface WithFetchResourceProps<T> {
   data: T;
 }
 
+export interface WithFetchResourceErrorComponentProps {
+  error?: any;
+}
+
+export interface WithFetchResourceParams {
+  params?: any;
+}
 /**
  * Higher order component that shows a spinner while fetching data asynchronously and displays an error when necessary.
  * @param WrappedComponent the component receiving the data. Props should extend WithFetchResourceProps.
  * @param loadData the callback to fetch the data.
  * @param queryKey a key used for caching
+ * @param ErrorComponent a component to display if an error is shown
  */
 
 export const WithFetchResource =
-  <T,>(WrappedComponent: React.ComponentType<WithFetchResourceProps<T>>, loadData: (repository: AppServices) => () => Promise<T>, queryKey: string) =>
-  (props: any) => {
+  <T,>(
+    WrappedComponent: React.ComponentType<WithFetchResourceProps<T> & WithFetchResourceParams>,
+    loadData: (repository: AppServices, params: any) => Promise<T>,
+    queryKey: string,
+    ErrorComponent?: React.ComponentType<WithFetchResourceErrorComponentProps>
+  ) =>
+  (props: any & WithFetchResourceParams) => {
     const { services } = useContext(AppContext);
-    const resolvedDataLoader = loadData(services);
-    const { isLoading, error, data } = useQuery<T, Error>(queryKey, () => resolvedDataLoader());
+
+    const { isLoading, error, data } = useQuery<T, Error>(queryKey, () => loadData(services, props.params));
     if (isLoading) {
       return (
         <View style={styles.container}>
@@ -35,7 +48,9 @@ export const WithFetchResource =
       if (error instanceof UnauthorizedError) {
         throw error;
       } else {
-        return (
+        return ErrorComponent ? (
+          <ErrorComponent error={error} />
+        ) : (
           <View style={styles.container}>
             <AppText style={{ textAlign: "center" }}>
               Error:

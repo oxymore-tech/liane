@@ -1,9 +1,16 @@
 import React, { useEffect } from "react";
-import { Icon, IconProps } from "react-native-eva-icons";
+import { Icon } from "react-native-eva-icons";
 import { AppDimensions } from "@/theme/dimensions";
 import { ColorValue } from "react-native";
 import { AppColorPalettes } from "@/theme/colors";
 import { IconAnimationRegistry } from "react-native-eva-icons/animation";
+import CarQuestionMark from "@/assets/icons/car_question_mark.svg";
+import CarCheckMark from "@/assets/icons/car_check_mark.svg";
+import CarStrikeThrough from "@/assets/icons/car_strike_through.svg";
+import MessageCircleFull from "@/assets/icons/message-circle-full.svg";
+import Car from "@/assets/icons/car.svg";
+import Position from "@/assets/icons/position.svg";
+import TwistingArrow from "@/assets/icons/twisting_arrow.svg";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
@@ -15,14 +22,54 @@ export type AppIconProps = {
 };
 
 export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, animation }: AppIconProps) {
-  const iconRef = React.useRef();
+  const iconRef = React.useRef<Icon>();
   useEffect(() => {
     if (animation) {
       iconRef.current?.startAnimation();
     }
   });
+  // @ts-ignore
   return <Icon name={name} width={size} height={size} fill={color} animation={animation} ref={iconRef} />;
 }
+
+export type AppCustomIconProps = {
+  name: CustomIconName;
+  color?: ColorValue;
+  size?: number;
+};
+
+export type CustomIconName = (typeof AppIconsNames)[number];
+export const AppCustomIcon = ({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize }: AppCustomIconProps) => {
+  const props = { color, width: size, height: size };
+  switch (name) {
+    case "car-check-mark":
+      return <CarCheckMark {...props} />;
+    case "car-question-mark":
+      return <CarQuestionMark {...props} />;
+    case "car-strike-through":
+      return <CarStrikeThrough {...props} />;
+    case "message-circle-full":
+      return <MessageCircleFull {...props} />;
+    case "twisting-arrow":
+      return <TwistingArrow {...props} />;
+    case "car":
+      return <Car {...props} />;
+    case "position":
+      return <Position {...props} />;
+    default:
+      throw Error(name + " is not a valid icon name");
+  }
+};
+
+const AppIconsNames = [
+  "car-check-mark",
+  "car-question-mark",
+  "car-strike-through",
+  "message-circle-full",
+  "car",
+  "position",
+  "twisting-arrow"
+] as const;
 
 const EvaIconsNames = [
   "activity",
