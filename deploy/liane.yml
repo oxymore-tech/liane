@@ -5,6 +5,8 @@ services:
     image: "mongo:4.4.4"
     volumes:
       - "/data/${PROJECT}/mongo:/data/db"
+    ports:
+      - "${MONGO_HOST_PORT}:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}

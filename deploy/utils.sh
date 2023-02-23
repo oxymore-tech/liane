@@ -3,26 +3,32 @@ function init {
   init_db "$(get_project)-mongo-1" "${MONGO_USERNAME}" "${MONGO_PASSWORD}" "${LIANE_HOME}/deploy/db"
 }
 
-function dump {
+function liane_compose {
+  local command=${1}
+  
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
+  MONGO_HOST_PORT=$(get_mongo_host_port)
+  
   export PROJECT
   export DOMAIN
-  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" exec -T mongo mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
+  export MONGO_HOST_PORT
+  
+  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${command}"
+}
+
+function dump {
+  liane_compose exec -T mongo mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
 }
 
 function start {
   create_osm_network
   docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
-  PROJECT=$(get_project)
-  DOMAIN=$(get_domain)
-  export PROJECT
-  export DOMAIN
-  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" up -d --build --remove-orphans
+  liane_compose up -d --build --remove-orphans
 }
 
 function stop {
-  docker compose -p "$(get_project)" down
+  liane_compose down
 }
 
 function get_domain() {
@@ -49,6 +55,17 @@ function get_project() {
   else
     echo "Project should begin with 'liane' or 'liane-XXX' : ${project}"
     exit 1
+  fi
+}
+
+function get_mongo_host_port() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "27017"
+  else
+    echo "27016"
   fi
 }
 
