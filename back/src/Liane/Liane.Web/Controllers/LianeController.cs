@@ -7,6 +7,7 @@ using Liane.Mock;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
+using Liane.Web.Internal.Debug;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -36,6 +37,7 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpPost("match")]
+  [DebugRequest]
   public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination)
   {
     return lianeService.Match(filter, pagination);
@@ -52,7 +54,7 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
   }
-  
+
   [HttpGet("all")]
   [RequiresAdminAuth]
   public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination)
