@@ -80,7 +80,8 @@ public static class Startup
         
         services.AddSingleton<IMongoDatabase>(sp => {
           var settings = sp.GetRequiredService<MongoSettings>();
-          return settings.GetDatabase();
+          var logger = sp.GetRequiredService<ILogger<IMongoDatabase>>();
+          return settings.GetDatabase(logger);
         });
     }
 

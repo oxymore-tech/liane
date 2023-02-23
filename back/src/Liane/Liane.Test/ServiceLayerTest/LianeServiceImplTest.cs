@@ -26,8 +26,6 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
     testedService = new LianeServiceImpl(db, ServiceProvider.GetService<IRoutingService>()!, Moq.Mock.Of<ICurrentContext>(), Moq.Mock.Of<IRallyingPointService>(), Moq.Mock.Of<IChatService>());
   }
 
-
-
   [Test]
   public async Task TestMatchLiane()
   {

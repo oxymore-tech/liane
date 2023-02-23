@@ -27,27 +27,26 @@ internal sealed class RefToStringBsonSerializer<T> : SerializerBase<Ref<T>?> whe
     return null;
   }
 }
+
 internal sealed class RefToObjectIdBsonSerializer<T> : SerializerBase<Ref<T>?> where T : class, IIdentity
 {
-    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Ref<T>? value)
+  public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Ref<T>? value)
+  {
+    if (value is not null)
     {
-      if (value is not null)
-      {
-         context.Writer.WriteObjectId(ObjectId.Parse(value));
-      }
-      else
-      {
-        context.Writer.WriteNull();
-      }
-     
+      context.Writer.WriteObjectId(ObjectId.Parse(value));
     }
-
-    public override Ref<T>? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+    else
     {
-      var bsonType = context.Reader.CurrentBsonType;
-        if (bsonType == BsonType.ObjectId) return (Ref<T>)context.Reader.ReadObjectId().ToString();
-        context.Reader.ReadNull();
-        return null;
-
+      context.Writer.WriteNull();
     }
+  }
+
+  public override Ref<T>? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+  {
+    var bsonType = context.Reader.CurrentBsonType;
+    if (bsonType == BsonType.ObjectId) return (Ref<T>)context.Reader.ReadObjectId().ToString();
+    context.Reader.ReadNull();
+    return null;
+  }
 }

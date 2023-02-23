@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS compiler
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS compiler
 
 WORKDIR /app
 
@@ -8,12 +8,11 @@ COPY src/ ./src/
 RUN dotnet restore && dotnet test --filter Category\!=Integration && dotnet publish -c Release
 
 
-
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 EXPOSE 5000
 
 WORKDIR /app
 
-COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/net6.0/publish .
+COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/net7.0/publish .
 
 ENTRYPOINT [ "/app/Liane.Web" ]

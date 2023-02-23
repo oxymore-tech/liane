@@ -7,22 +7,23 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.User;
 using Liane.Test.Mock;
+using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
 
 namespace Liane.Test.ServiceLayerTest;
 
-public abstract class BaseServiceLayerTest 
+public abstract class BaseServiceLayerTest
 {
-  private IMongoDatabase db;
+  private readonly IMongoDatabase db;
   protected readonly ServiceProvider ServiceProvider;
 
-  public BaseServiceLayerTest() 
+  protected BaseServiceLayerTest()
   {
     // Load db with test settings
     var mongo = new MongoSettings("localhost", "mongoadmin", "secret");
-    db = mongo.GetDatabase(MongoDatabaseTestExtensions.DbName);
+    db = mongo.GetDatabase(new TestLogger<IMongoDatabase>(), (MongoDatabaseTestExtensions.DbName));
     // Load services 
     var services = new ServiceCollection();
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
@@ -61,7 +62,7 @@ public abstract class BaseServiceLayerTest
   {
     db.GetCollection<T>().Indexes.CreateOne(indexModel);
   }
-  
+
   [OneTimeTearDown]
   public void ClearMockData()
   {

@@ -10,10 +10,12 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.Notification;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Events;
 
 namespace Liane.Service.Internal.Mongo;
 
@@ -21,7 +23,7 @@ public sealed record MongoSettings(string Host, string Username, string Password
 {
   private static bool _init;
 
-  public IMongoDatabase GetDatabase(string databaseName = "liane")
+  public IMongoDatabase GetDatabase(ILogger<IMongoDatabase> logger, string databaseName = "liane")
   {
     if (!_init)
     {
@@ -54,7 +56,12 @@ public sealed record MongoSettings(string Host, string Username, string Password
     var mongo = new MongoClient(new MongoClientSettings
     {
       Server = new MongoServerAddress(Host, 27017),
-      Credential = MongoCredential.CreateCredential("admin", Username, Password)
+      Credential = MongoCredential.CreateCredential("admin", Username, Password),
+      ClusterConfigurator = cb => {
+        cb.Subscribe<CommandStartedEvent>(e => {
+          logger.LogDebug($"{e.CommandName} - {e.Command.ToJson()}");
+        });
+      }
     });
 
     return mongo.GetDatabase(databaseName);
