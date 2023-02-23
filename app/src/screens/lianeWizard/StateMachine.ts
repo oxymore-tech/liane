@@ -2,7 +2,7 @@ import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 
 export type StatesKeys = "wizard" | "overview" | "submitting"; //TODO| "submitted"
-export const WizardStateSequence = ["to", "from", "date", "time", "vehicle"] as const;
+export const WizardStateSequence = ["from", "to", "date", "time", "vehicle"] as const;
 export type WizardStepsKeys = (typeof WizardStateSequence)[number];
 
 const createStateSequence = <T extends unknown>(stateKeys: readonly Partial<T>[], nextState: T) => {
