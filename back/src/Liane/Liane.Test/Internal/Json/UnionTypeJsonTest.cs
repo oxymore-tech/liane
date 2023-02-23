@@ -5,39 +5,21 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Json;
 using NUnit.Framework;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace Liane.Test.Internal.Json;
 
 [TestFixture]
 public sealed class UnionTypeJsonTest
 {
-    private readonly JsonSerializerOptions options = new() { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new RefJsonConverterFactory() } };
+    private readonly JsonSerializerOptions options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true, Converters = { new RefJsonConverterFactory() }, TypeInfoResolver = new PolymorphicTypeResolver()};
 
     [Test]
-    public void ShouldSerializeUnresolvedRef()
+    public void ShouldSerialize()
     {
-        var actual = JsonSerializer.Serialize((Ref<RallyingPoint>)"XXX", options);
-        Assert.AreEqual("\"XXX\"", actual);
+      var match = new CompatibleMatch(0);
+      var actual = JsonSerializer.Serialize<MatchType>(match, options);
+        Assert.AreEqual("{\"type\":\"CompatibleMatch\",\"deltaInSeconds\":0}", actual);
     }
 
-    [Test]
-    public void ShouldDeserializeUnresolvedRef()
-    {
-        var actual = JsonSerializer.Deserialize<Ref<RallyingPoint>>("\"AAA\"", options);
-        Assert.AreEqual((Ref<RallyingPoint>)"AAA", actual);
-    }
-    
-    [Test]
-    public void ShouldSerializeResolvedRef()
-    {
-        var actual = JsonSerializer.Serialize((Ref<RallyingPoint>)new RallyingPoint("33", "Mende", new LatLng(30.0, 12.0), LocationType.CarpoolArea, "", "15000", "", null, true), options);
-        Assert.AreEqual("{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":1,\"address\":\"\",\"zip_code\":\"15000\",\"city\":\"\",\"place_count\":null,\"is_active\":true}", actual);
-    }
-
-    [Test]
-    public void ShouldDeserializeResolvedRef()
-    {
-        var actual = JsonSerializer.Deserialize<Ref<RallyingPoint>>("{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":1,\"address\":\"\",\"zip_code\":\"15000\",\"city\":\"\",\"place_count\":null,\"is_active\":true}", options);
-        Assert.AreEqual((Ref<RallyingPoint>)new RallyingPoint("33", "Mende", new LatLng(30.0, 12.0), LocationType.CarpoolArea, "", "15000", "", null, true), actual);
-    }
 }
