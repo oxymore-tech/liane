@@ -4,6 +4,10 @@ function init {
 }
 
 function dump {
+  PROJECT=$(get_project)
+  DOMAIN=$(get_domain)
+  export PROJECT
+  export DOMAIN
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" exec -T mongo mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
 }
 
