@@ -10,12 +10,12 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 
+namespace Liane.Service.Internal.Trip;
 
 public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, LianeDb, Liane.Api.Trip.Liane>, ILianeService
 {
@@ -96,7 +96,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     // If search is passenger search, fetch Liane with driver only
     var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.DriverData.CanDrive , filter.AvailableSeats <= 0);
     
-   // TODO var hasAvailableSeats = Builders<LianeDb>.Filter.Where(l => l.Members.Select(m => m.SeatCount).Sum() + filter.AvailableSeats > 0);
+    // TODO var hasAvailableSeats = Builders<LianeDb>.Filter.Where(l => l.Members.Select(m => m.SeatCount).Sum() + filter.AvailableSeats > 0);
 
     var f = nearFrom & timeFilter & nearTo &  isDriverSearch;
 

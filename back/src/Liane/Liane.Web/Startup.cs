@@ -50,281 +50,272 @@ namespace Liane.Web;
 
 public static class Startup
 {
-    public const string RequireAuthPolicy = nameof(RequireAuthPolicy);
+  public const string RequireAuthPolicy = nameof(RequireAuthPolicy);
 
-    private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
+  private static void ConfigureLianeServices(WebHostBuilderContext context, IServiceCollection services)
+  {
+    services.AddService<OsrmClient>();
+    services.AddService<RoutingServiceImpl>();
+    services.AddService<AddressServiceNominatimImpl>();
+    services.AddSettings<OsrmSettings>(context);
+    services.AddSettings<NominatimSettings>(context);
+
+    services.AddSettings<MongoSettings>(context);
+
+    services.AddService<CurrentContextImpl>();
+    services.AddSettings<TwilioSettings>(context);
+    services.AddSettings<AuthSettings>(context);
+    services.AddService<AuthServiceImpl>();
+    services.AddService<UserServiceImpl>();
+
+    services.AddService<RallyingPointServiceImpl>();
+    services.AddService<TripIntentServiceImpl>();
+    services.AddService<ChatServiceImpl>();
+    services.AddService<IntentMatchingServiceImpl>();
+    services.AddService<LianeServiceImpl>();
+
+    services.AddSettings<FirebaseSettings>(context);
+    services.AddService<NotificationServiceImpl>();
+    services.AddService<JoinLianeRequestServiceImpl>();
+
+    services.AddSingleton(MongoFactory.Create);
+  }
+
+  public static void StartCurrentModule(string[] args)
+  {
+    var logger = ConfigureLogger();
+    try
     {
-        services.AddService<OsrmClient>();
-        services.AddService<RoutingServiceImpl>();
-        services.AddService<AddressServiceNominatimImpl>();
-        services.AddSettings<OsrmSettings>(context);
-        services.AddSettings<NominatimSettings>(context);
-
-        services.AddSettings<MongoSettings>(context);
-
-        services.AddService<CurrentContextImpl>();
-        services.AddSettings<TwilioSettings>(context);
-        services.AddSettings<AuthSettings>(context);
-        services.AddService<AuthServiceImpl>();
-        services.AddService<UserServiceImpl>();
-
-        services.AddService<RallyingPointServiceImpl>();
-        services.AddService<TripIntentServiceImpl>();
-        services.AddService<ChatServiceImpl>();
-        services.AddService<IntentMatchingServiceImpl>();
-        services.AddService<LianeServiceImpl>();
-        
-        services.AddSettings<FirebaseSettings>(context);
-        services.AddService<NotificationServiceImpl>();
-        services.AddService<JoinLianeRequestServiceImpl>();
-        
-        services.AddSingleton<IMongoDatabase>(sp => {
-          var settings = sp.GetRequiredService<MongoSettings>();
-          var logger = sp.GetRequiredService<ILogger<IMongoDatabase>>();
-          return settings.GetDatabase(logger);
-        });
+      StartCurrentModuleWeb(args);
     }
-
-    public static void StartCurrentModule(string[] args)
+    catch (Exception e)
     {
-        var logger = ConfigureLogger();
-        try
-        {
-            StartCurrentModuleWeb(args);
-        }
-        catch (Exception e)
-        {
-            logger.Fatal(e);
-        }
-        finally
-        {
-            LogManager.Shutdown();
-        }
+      logger.Fatal(e);
     }
-
-    private static Logger ConfigureLogger()
+    finally
     {
-        var loggingConfiguration = new LoggingConfiguration();
-
-        AspNetLayoutRendererBase.Register("trace_id",
-            (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("TraceId"));
-        AspNetLayoutRendererBase.Register("span_id",
-            (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("SpanId"));
-        AspNetLayoutRendererBase.Register("user_id", (_, httpContext, _) => httpContext.User.Identity?.Name);
-        AspNetLayoutRendererBase.Register("request_path",
-            (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("RequestPath"));
-
-        Layout jsonLayout = new JsonLayout
-        {
-            Attributes =
-            {
-                new JsonAttribute("date", "${longdate}"),
-                new JsonAttribute("thread_id", "${threadid}"),
-                new JsonAttribute("trace_id", "${trace_id}"),
-                new JsonAttribute("span_id", "${span_id}"),
-                new JsonAttribute("tenant_id", "${tenant_id}"),
-                new JsonAttribute("user_id", "${user_id}"),
-                new JsonAttribute("request_path", "${request_path}"),
-                new JsonAttribute("duration", "${event-properties:ElapsedMilliseconds}"),
-                new JsonAttribute("level", "${level:upperCase=true}"),
-                new JsonAttribute("logger", "${logger}"),
-                new JsonAttribute("message", "${message}"),
-                new JsonAttribute("exception", "${exception:format=ToString}")
-            }
-        };
-        Layout devLayout = new SimpleLayout(
-            "${longdate} | ${uppercase:${level:padding=5}} | ${threadid:padding=3} | ${logger:padding=40:fixedLength=true:alignmentOnTruncation=right} | ${message} ${exception:format=ToString}");
-        var coloredConsoleTarget = new ColoredConsoleTarget
-        {
-            RowHighlightingRules =
-            {
-                new ConsoleRowHighlightingRule
-                    { Condition = "level <= LogLevel.Debug", ForegroundColor = ConsoleOutputColor.DarkGray },
-                new ConsoleRowHighlightingRule
-                    { Condition = "level == LogLevel.Info", ForegroundColor = ConsoleOutputColor.DarkBlue },
-                new ConsoleRowHighlightingRule
-                    { Condition = "level == LogLevel.Warn", ForegroundColor = ConsoleOutputColor.DarkYellow },
-                new ConsoleRowHighlightingRule
-                    { Condition = "level >= LogLevel.Error", ForegroundColor = ConsoleOutputColor.Red }
-            },
-            Layout = Env.IsDevelopment() ? devLayout : jsonLayout
-        };
-        var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
-        loggingConfiguration.AddTarget(consoleTarget);
-        loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
-        var logFactory = NLogBuilder.ConfigureNLog(loggingConfiguration);
-        var logger = logFactory.GetCurrentClassLogger();
-        return logger;
+      LogManager.Shutdown();
     }
+  }
 
-    private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+  private static Logger ConfigureLogger()
+  {
+    var loggingConfiguration = new LoggingConfiguration();
+
+    AspNetLayoutRendererBase.Register("trace_id",
+      (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("TraceId"));
+    AspNetLayoutRendererBase.Register("span_id",
+      (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("SpanId"));
+    AspNetLayoutRendererBase.Register("user_id", (_, httpContext, _) => httpContext.User.Identity?.Name);
+    AspNetLayoutRendererBase.Register("request_path",
+      (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("RequestPath"));
+
+    Layout jsonLayout = new JsonLayout
     {
-      var jsonSerializerConverters = new JsonConverter[]
+      Attributes =
       {
-        new TimeOnlyJsonConverter(),
-        new RefJsonConverterFactory(),
-        new CursorJsonConverter(),
-        new JsonStringEnumConverter()
-      };
-      ConfigureLianeServices(context, services); 
-      services.AddService<FileStreamResultExecutor>();
-      services.AddControllers(options =>
+        new JsonAttribute("date", "${longdate}"),
+        new JsonAttribute("thread_id", "${threadid}"),
+        new JsonAttribute("trace_id", "${trace_id}"),
+        new JsonAttribute("span_id", "${span_id}"),
+        new JsonAttribute("tenant_id", "${tenant_id}"),
+        new JsonAttribute("user_id", "${user_id}"),
+        new JsonAttribute("request_path", "${request_path}"),
+        new JsonAttribute("duration", "${event-properties:ElapsedMilliseconds}"),
+        new JsonAttribute("level", "${level:upperCase=true}"),
+        new JsonAttribute("logger", "${logger}"),
+        new JsonAttribute("message", "${message}"),
+        new JsonAttribute("exception", "${exception:format=ToString}")
+      }
+    };
+    Layout devLayout = new SimpleLayout(
+      "${longdate} | ${uppercase:${level:padding=5}} | ${threadid:padding=3} | ${logger:padding=40:fixedLength=true:alignmentOnTruncation=right} | ${message} ${exception:format=ToString}");
+    var coloredConsoleTarget = new ColoredConsoleTarget
+    {
+      RowHighlightingRules =
       {
-        options.ModelBinderProviders.Insert(0, new BindersProvider());
-      })
-            .AddJsonOptions(options =>
-            {
-              foreach (var converter in jsonSerializerConverters)
-              {
-                options.JsonSerializerOptions.Converters.Add(converter);
-              }
-            });
-        services.AddCors(options =>
-            {
-                options.AddPolicy("AllowLocal",
-                    p => p.WithOrigins("http://localhost:3000")
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials());
-            }
-        );
+        new ConsoleRowHighlightingRule
+          { Condition = "level <= LogLevel.Debug", ForegroundColor = ConsoleOutputColor.DarkGray },
+        new ConsoleRowHighlightingRule
+          { Condition = "level == LogLevel.Info", ForegroundColor = ConsoleOutputColor.DarkBlue },
+        new ConsoleRowHighlightingRule
+          { Condition = "level == LogLevel.Warn", ForegroundColor = ConsoleOutputColor.DarkYellow },
+        new ConsoleRowHighlightingRule
+          { Condition = "level >= LogLevel.Error", ForegroundColor = ConsoleOutputColor.Red }
+      },
+      Layout = Env.IsDevelopment() ? devLayout : jsonLayout
+    };
+    var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
+    loggingConfiguration.AddTarget(consoleTarget);
+    loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
+    var logFactory = NLogBuilder.ConfigureNLog(loggingConfiguration);
+    var logger = logFactory.GetCurrentClassLogger();
+    return logger;
+  }
 
-        services.AddControllers(options => { options.Filters.Add<ExceptionFilter>(); });
-        services.AddService<HttpContextAccessor>();
-        services.AddSwaggerDocument(settings =>
-        {
-            settings.Title = "Liane API";
-            settings.Version = Assembly.GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion;
-            settings.AddSecurity("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                In = OpenApiSecurityApiKeyLocation.Header,
-                Type = OpenApiSecuritySchemeType.ApiKey
-            });
-        });
-        
-        services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
-
-        services.AddAuthentication(options =>
-        {
-          options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-          options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-          options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer();
-        
-        services.AddAuthorization(x =>
-        {
-          x.AddPolicy(RequireAuthPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); });
-        });
-        
-        // Add json converters here as well
-        services.AddSignalR()
-          .AddJsonProtocol(options =>
-          {
-            foreach (var converter in jsonSerializerConverters)
-            {
-              options.PayloadSerializerOptions.Converters.Add(converter);
-            }
-          });
-
-        // For Resource access level
-        services.AddSingleton<IAccessLevelContextFactory, MongoAccessLevelContextFactory>();
-        
-        // For Mock data generation
-        services.AddService<MockServiceImpl>();
-        
-        // For services using json serialization
-        var jsonSerializerOptions = new JsonSerializerOptions();
+  private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+  {
+    var jsonSerializerConverters = new JsonConverter[]
+    {
+      new TimeOnlyJsonConverter(),
+      new RefJsonConverterFactory(),
+      new CursorJsonConverter(),
+      new JsonStringEnumConverter()
+    };
+    ConfigureLianeServices(context, services);
+    services.AddService<FileStreamResultExecutor>();
+    services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
+      .AddJsonOptions(options =>
+      {
         foreach (var converter in jsonSerializerConverters)
         {
-         jsonSerializerOptions.Converters.Add(converter);
+          options.JsonSerializerOptions.Converters.Add(converter);
         }
-        services.AddSingleton(jsonSerializerOptions);
-        
-        // Hub service abstraction
-        services.AddSingleton<IHubService, HubServiceImpl>();
-
-    }
-
-    private static void StartCurrentModuleWeb(string[] args)
-    {
-        WebHost.CreateDefaultBuilder(args)
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-
-                logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-            })
-            .UseNLog()
-            .ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                var env = hostingContext.HostingEnvironment;
-
-                var compositeFileProvider = new CompositeFileProvider(
-                    new EmbeddedFileProvider(typeof(Startup).Assembly),
-                    new PhysicalFileProvider(Directory.GetCurrentDirectory())
-                );
-
-                config.SetFileProvider(compositeFileProvider);
-                config.AddJsonFile("default.json", true, true);
-                config.AddJsonFile($"default.{env.EnvironmentName}.json", true, true);
-                config.AddJsonFile("appsettings.json", true, true);
-                config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
-                config.AddCommandLine(args);
-                config.AddEnvironmentVariables("LIANE_");
-            })
-            .ConfigureServices(ConfigureServices)
-            .Configure(Configure)
-            .UseUrls("http://*:5000")
-            .UseKestrel()
-            .Build()
-            .Run();
-    }
-
-    private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
-    {
-        app.UseOpenApi();
-        app.UseSwaggerUi3();
-        app.UseCors("AllowLocal");
-
-        var env = context.HostingEnvironment;
-        if (env.IsDevelopment())
-        {
-            app.UseDeveloperExceptionPage();
-        }
-        else
-        {
-            app.UseHsts();
-        }
-
-        app.UseRouting();
-
-        app.UseCors(x => x
-            .AllowAnyOrigin()
+      });
+    services.AddCors(options =>
+      {
+        options.AddPolicy("AllowLocal",
+          p => p.WithOrigins("http://localhost:3000")
             .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .AllowCredentials());
+      }
+    );
 
-        app.UseAuthentication();
-        app.UseAuthorization();
-
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapHub<ChatHub>("/api/hub");
-            endpoints.MapControllers();
-        });
-
-        StartServicesHook(app.ApplicationServices)
-            .GetAwaiter()
-            .GetResult();
-    }
-
-    private static async Task StartServicesHook(IServiceProvider appApplicationServices)
+    services.AddControllers(options => { options.Filters.Add<ExceptionFilter>(); });
+    services.AddService<HttpContextAccessor>();
+    services.AddSwaggerDocument(settings =>
     {
-        foreach (var onStartup in appApplicationServices.GetServices<IOnStartup>())
+      settings.Title = "Liane API";
+      settings.Version = Assembly.GetExecutingAssembly()
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+        ?.InformationalVersion;
+      settings.AddSecurity("Bearer", new OpenApiSecurityScheme
+      {
+        Name = "Authorization",
+        In = OpenApiSecurityApiKeyLocation.Header,
+        Type = OpenApiSecuritySchemeType.ApiKey
+      });
+    });
+
+    services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
+
+    services.AddAuthentication(options =>
+    {
+      options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    }).AddJwtBearer();
+
+    services.AddAuthorization(x => { x.AddPolicy(RequireAuthPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); }); });
+
+    // Add json converters here as well
+    services.AddSignalR()
+      .AddJsonProtocol(options =>
+      {
+        foreach (var converter in jsonSerializerConverters)
         {
-            await onStartup.OnStartup();
+          options.PayloadSerializerOptions.Converters.Add(converter);
         }
+      });
+
+    // For Resource access level
+    services.AddSingleton<IAccessLevelContextFactory, MongoAccessLevelContextFactory>();
+
+    // For Mock data generation
+    services.AddService<MockServiceImpl>();
+
+    // For services using json serialization
+    var jsonSerializerOptions = new JsonSerializerOptions();
+    foreach (var converter in jsonSerializerConverters)
+    {
+      jsonSerializerOptions.Converters.Add(converter);
     }
+
+    services.AddSingleton(jsonSerializerOptions);
+
+    // Hub service abstraction
+    services.AddSingleton<IHubService, HubServiceImpl>();
+  }
+
+  private static void StartCurrentModuleWeb(string[] args)
+  {
+    WebHost.CreateDefaultBuilder(args)
+      .ConfigureLogging(logging =>
+      {
+        logging.ClearProviders();
+        logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+      })
+      .UseNLog()
+      .ConfigureAppConfiguration((hostingContext, config) =>
+      {
+        var env = hostingContext.HostingEnvironment;
+
+        var compositeFileProvider = new CompositeFileProvider(
+          new EmbeddedFileProvider(typeof(Startup).Assembly),
+          new PhysicalFileProvider(Directory.GetCurrentDirectory())
+        );
+
+        config.SetFileProvider(compositeFileProvider);
+        config.AddJsonFile("default.json", true, true);
+        config.AddJsonFile($"default.{env.EnvironmentName}.json", true, true);
+        config.AddJsonFile("appsettings.json", true, true);
+        config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
+        config.AddCommandLine(args);
+        config.AddEnvironmentVariables("LIANE_");
+      })
+      .ConfigureServices(ConfigureServices)
+      .Configure(Configure)
+      .UseUrls("http://*:5000")
+      .UseKestrel()
+      .Build()
+      .Run();
+  }
+
+  private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
+  {
+    app.UseOpenApi();
+    app.UseSwaggerUi3();
+    app.UseCors("AllowLocal");
+
+    var env = context.HostingEnvironment;
+    if (env.IsDevelopment())
+    {
+      app.UseDeveloperExceptionPage();
+    }
+    else
+    {
+      app.UseHsts();
+    }
+
+    app.UseRouting();
+
+    app.UseCors(x => x
+      .AllowAnyOrigin()
+      .AllowAnyMethod()
+      .AllowAnyHeader());
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.UseEndpoints(endpoints =>
+    {
+      endpoints.MapHub<ChatHub>("/api/hub");
+      endpoints.MapControllers();
+    });
+
+    StartServicesHook(app.ApplicationServices)
+      .GetAwaiter()
+      .GetResult();
+
+    app.ApplicationServices.GetRequiredService<IMongoDatabase>();
+  }
+
+  private static async Task StartServicesHook(IServiceProvider appApplicationServices)
+  {
+    foreach (var onStartup in appApplicationServices.GetServices<IOnStartup>())
+    {
+      await onStartup.OnStartup();
+    }
+  }
 }

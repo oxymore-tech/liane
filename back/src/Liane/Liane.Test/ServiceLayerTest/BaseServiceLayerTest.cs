@@ -22,8 +22,8 @@ public abstract class BaseServiceLayerTest
   protected BaseServiceLayerTest()
   {
     // Load db with test settings
-    var mongo = new MongoSettings("localhost", "mongoadmin", "secret");
-    db = mongo.GetDatabase(new TestLogger<IMongoDatabase>(), (MongoDatabaseTestExtensions.DbName));
+    var settings = new MongoSettings("localhost", "mongoadmin", "secret");
+    db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), MongoDatabaseTestExtensions.DbName);
     // Load services 
     var services = new ServiceCollection();
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
@@ -53,19 +53,5 @@ public abstract class BaseServiceLayerTest
   protected void DropTestedCollection<T>()
   {
     db.DropCollection<T>();
-  }
-
-  /// <summary>
-  /// Create index in given Collection. Should be called in [SetUp]
-  /// </summary>
-  protected void IndexCollection<T>(CreateIndexModel<T> indexModel)
-  {
-    db.GetCollection<T>().Indexes.CreateOne(indexModel);
-  }
-
-  [OneTimeTearDown]
-  public void ClearMockData()
-  {
-    db.Drop();
   }
 }

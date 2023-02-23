@@ -161,12 +161,4 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
     DropTestedCollection<Api.Trip.Liane>();
   }
 
-  [SetUp]
-  public void CreateGeoIndex()
-  {
-    // Create index 
-    var indexKey = Builders<LianeDb>.IndexKeys.Geo2DSphere(l => l.Geometry);
-    var indexOptions = new CreateIndexOptions { Name = "location_index" };
-    IndexCollection(new CreateIndexModel<LianeDb>(indexKey, indexOptions));
-  }
 }
