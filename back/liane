@@ -24,11 +24,9 @@ function token {
 function dump_on_local {
   local environment=${1:-dev}
     
-  local suffix=""
+  local suffix="-dev"
   
-  if [[ "${environment}" = "dev" ]]; then
-    suffix="-dev"
-  elif [[ "${environment}" = "prod" ]]; then
+  if [[ "${environment}" = "prod" ]]; then
     suffix=""
   fi;
   
