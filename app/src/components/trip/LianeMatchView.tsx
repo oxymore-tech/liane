@@ -1,10 +1,11 @@
 import React from "react";
-import { LianeMatch, LianeSearchFilter } from "@/api";
+import { LianeMatch } from "@/api";
 import { WayPointsView } from "@/components/trip/WayPointsView";
+import { InternalLianeSearchFilter } from "@/util/ref";
 
 export interface LianeMatchViewProps {
   match: LianeMatch;
-  filter: LianeSearchFilter;
+  filter: InternalLianeSearchFilter;
 }
 
 export const LianeMatchView = ({ match, filter }: LianeMatchViewProps) => {

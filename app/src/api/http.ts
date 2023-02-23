@@ -156,7 +156,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
         // Call refresh token endpoint
         try {
           const res = await Promise.race([
-            new Promise((_, reject) => setTimeout(reject, 10000)),
+            new Promise<AuthResponse>((_, reject) => setTimeout(reject, 10000)),
             postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } })
           ]);
           await processAuthResponse(res);

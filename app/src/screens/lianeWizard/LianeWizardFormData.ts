@@ -1,5 +1,5 @@
 import { LianeRequest, RallyingPoint } from "@/api";
-import { TimeInSeconds, toTimeInSeconds } from "@/util/datetime";
+import { TimeInSeconds } from "@/util/datetime";
 
 export type LianeWizardFormKey = keyof LianeWizardFormData;
 
@@ -11,7 +11,7 @@ export type LianeWizardFormData = {
   from: RallyingPoint;
   to: RallyingPoint;
 };
-
+/*
 export const fromLianeRequest = (req: LianeRequest): LianeWizardFormData => {
   const departureDatetime = new Date(req.departureTime);
   return {
@@ -22,7 +22,7 @@ export const fromLianeRequest = (req: LianeRequest): LianeWizardFormData => {
     availableSeats: req.availableSeats
   };
 };
-
+*/
 export const toLianeRequest = (formData: LianeWizardFormData): LianeRequest => {
   let departureTime: any = new Date(formData.departureTime * 1000);
   departureTime.setUTCFullYear(formData.departureDate.getUTCFullYear());
@@ -43,7 +43,6 @@ export const toLianeRequest = (formData: LianeWizardFormData): LianeRequest => {
     to: formData.to.id!,
     availableSeats: formData.availableSeats,
     returnTime,
-    departureTime,
-    shareWith: []
+    departureTime
   };
 };

@@ -13,6 +13,7 @@ export interface ChatHubService {
     onReceiveLatestMessages: OnLatestMessagesCallback,
     onReceiveMessage: OnMessageCallback
   ): Promise<ConversationGroup>;
+  disconnectFromConversation(): Promise<void>;
 }
 
 export type OnMessageCallback = (res: ChatMessage) => void;

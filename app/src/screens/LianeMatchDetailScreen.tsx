@@ -1,6 +1,4 @@
-import { CompatibleMatch, LianeMatch, LianeSearchFilter } from "@/api";
-import { ParamListBase } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { CompatibleMatch, LianeMatch } from "@/api";
 import React from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -9,18 +7,14 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatMonthDay, formatTime } from "@/api/i18n";
-import { AppPressable } from "@/components/base/AppPressable";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { AppButton } from "@/components/base/AppButton";
 import { formatDuration } from "@/util/datetime";
+import { useAppNavigation } from "@/api/navigation";
 
-export interface LianeMatchDetailScreenParams extends ParamListBase {
-  lianeMatch: LianeMatch;
-  filter: LianeSearchFilter;
-}
-
-export const LianeMatchDetailScreen = ({ route, navigation }: NativeStackScreenProps<LianeMatchDetailScreenParams, "LianeMatchDetail">) => {
+export const LianeMatchDetailScreen = () => {
+  const { route, navigation } = useAppNavigation<"LianeMatchDetail">();
   const liane: LianeMatch = route.params!.lianeMatch;
   const insets = useSafeAreaInsets();
   const isExactMatch = liane.matchData.type === "ExactMatch";
@@ -42,7 +36,7 @@ export const LianeMatchDetailScreen = ({ route, navigation }: NativeStackScreenP
           style={[
             styles.tag,
             {
-              backgroundColor: AppColorPalettes.yellow[200]
+              backgroundColor: AppColorPalettes.yellow[100]
             }
           ]}
           spacing={8}>
@@ -65,18 +59,8 @@ export const LianeMatchDetailScreen = ({ route, navigation }: NativeStackScreenP
           </AppText>
         </Row>
         {isExactMatch && (
-          <Row
-            spacing={8}
-            style={[
-              {
-                paddingHorizontal: 4,
-                paddingVertical: 2,
-                borderRadius: 4,
-                alignItems: "center"
-              },
-              isExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg
-            ]}>
-            {isExactMatch ? <AppIcon name={"arrow-up"} size={20} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
+          <Row spacing={8} style={[styles.tag, isExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg]}>
+            {isExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
             <AppText style={{ fontSize: 16 }}>{isExactMatch ? "Trajet exact" : "Trajet compatible"}</AppText>
           </Row>
         )}

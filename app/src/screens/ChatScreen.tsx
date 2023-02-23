@@ -1,6 +1,4 @@
-import { ChatMessage, ConversationGroup, DatetimeCursor, PaginatedResponse, User } from "@/api";
-import { ParamListBase } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { ChatMessage, ConversationGroup, PaginatedResponse, User } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -12,11 +10,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
-
-export interface ChatScreenParams extends ParamListBase {
-  conversationId: string;
-}
-
+import { useAppNavigation } from "@/api/navigation";
 const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
   const sender = message.createdBy === currentUser.id;
   return (
@@ -38,12 +32,13 @@ const MessageBubble = ({ message, currentUser }: { message: ChatMessage; current
   );
 };
 
-export const ChatScreen = ({ route, navigation }: NativeStackScreenProps<ChatScreenParams, "Chat">) => {
+export const ChatScreen = () => {
+  const { navigation } = useAppNavigation<"Chat">();
   const groupId = "63e533f3536b694be7bdf273";
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [paginationCursor, setPaginationCursor] = useState<DatetimeCursor>();
+  const [paginationCursor, setPaginationCursor] = useState<string>();
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
 

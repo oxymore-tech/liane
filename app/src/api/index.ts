@@ -9,7 +9,8 @@ export type Entity = Identity &
     createdAt?: UTCDateTime;
   }>;
 
-export type Ref<T extends Identity> = string | T;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type Ref<T extends Identity> = string;
 
 export type AuthUser = Readonly<{
   id: string;

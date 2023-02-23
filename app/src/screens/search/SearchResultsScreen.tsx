@@ -1,6 +1,4 @@
-import { ParamListBase } from "@react-navigation/native";
-import { LianeMatch, LianeSearchFilter } from "@/api";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { LianeMatch } from "@/api";
 import { FlatList, ListRenderItemInfo, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
@@ -15,17 +13,16 @@ import { toLianeRequest } from "@/screens/search/SearchFormData";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { formatDuration } from "@/util/datetime";
-
-export interface SearchResultsScreenParams extends ParamListBase {
-  filter: LianeSearchFilter;
-}
+import { InternalLianeSearchFilter, toUnresolved } from "@/util/ref";
+import { useAppNavigation } from "@/api/navigation";
 
 const formatWholeDatetime = (date: Date) => {
   return `${formatMonthDay(date)} à ${formatTime(date)}`;
 };
 
-export const SearchResultsScreen = ({ route, navigation }: NativeStackScreenProps<SearchResultsScreenParams, "SearchResults">) => {
-  const filter: LianeSearchFilter = route.params!.filter;
+export const SearchResultsScreen = () => {
+  const { route, navigation } = useAppNavigation<"SearchResults">();
+  const filter: InternalLianeSearchFilter = route.params!.filter;
   const insets = useSafeAreaInsets();
 
   return (
@@ -52,56 +49,32 @@ export const SearchResultsScreen = ({ route, navigation }: NativeStackScreenProp
   );
 };
 
-/* Filter row :
- {data.length > 0 && (
-        <Row style={styles.infoContainer}>
-          <Row
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 4,
-              alignItems: "center",
-              backgroundColor: AppColorPalettes.gray[200]
-            }}>
-            <AppText style={styles.infoText}>{data.length} résultats</AppText>
-          </Row>
-
-          <Row
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 4,
-              alignItems: "center",
-              backgroundColor: AppColorPalettes.blue[100]
-            }}>
-            <AppIcon name={"funnel-outline"} />
-            <AppText style={styles.infoText}>Filtrer</AppText>
-          </Row>
-        </Row>
-      )}
- */
-
-const EmptyResultView = ({ route, navigation }) => (
-  <NoItemPlaceholder
-    action={
-      <AppRoundedButton
-        backgroundColor={AppColors.orange}
-        text={"Ajouter une annonce"}
-        onPress={() => {
-          navigation.navigate("LianeWizard", { lianeRequest: toLianeRequest(route.params!.filter) });
-        }}
-      />
-    }
-  />
-);
+const EmptyResultView = () => {
+  const { route, navigation } = useAppNavigation<"SearchResults">();
+  return (
+    <NoItemPlaceholder
+      action={
+        <AppRoundedButton
+          backgroundColor={AppColors.orange}
+          text={"Ajouter une annonce"}
+          onPress={() => {
+            navigation.navigate("LianeWizard", { lianeRequest: toLianeRequest(route.params!.filter) });
+          }}
+        />
+      }
+    />
+  );
+};
 
 export const MatchQueryKey = "match";
 const ResultsView = WithFetchPaginatedResponse(
-  ({ data, navigation, route }) => {
+  ({ data }: { data: LianeMatch[] }) => {
+    const { route, navigation } = useAppNavigation<"SearchResults">();
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
       const isExactMatch = item.matchData.type === "ExactMatch";
-      const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0) / 60; // Value in minutes
+      const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0);
 
+      console.log(item, tripDuration);
       return (
         <View>
           <Row style={[styles.header, styles.grayBorder, { backgroundColor: AppColorPalettes.yellow[500] }]} spacing={4}>
@@ -142,7 +115,7 @@ const ResultsView = WithFetchPaginatedResponse(
                   },
                   isExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg
                 ]}>
-                {isExactMatch ? <AppIcon name={"arrow-up"} size={20} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
+                {isExactMatch ? <AppIcon name={"arrow-upward-outline"} size={20} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
                 <AppText style={{ fontSize: 16 }}>{isExactMatch ? "Trajet exact" : "Trajet compatible"}</AppText>
               </Row>
               <View style={{ flexGrow: 1 }} />
@@ -175,9 +148,17 @@ const ResultsView = WithFetchPaginatedResponse(
       );
     };
 
-    return <FlatList keyExtractor={i => i.liane} data={data} renderItem={renderMatchItem} style={{ padding: 16 }} />;
+    return (
+      <FlatList
+        keyExtractor={i => i.liane}
+        data={data}
+        renderItem={renderMatchItem}
+        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+        style={{ padding: 16 }}
+      />
+    );
   },
-  (repository, params) => repository.liane.match(params.filter),
+  (repository, params) => repository.liane.match(toUnresolved(params.filter, ["to", "from"])),
   MatchQueryKey,
   EmptyResultView
 );

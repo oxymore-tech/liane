@@ -1,6 +1,4 @@
 import { Liane } from "@/api";
-import { ParamListBase } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { LianeView } from "@/components/trip/LianeView";
@@ -11,12 +9,10 @@ import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { AppPressable } from "@/components/base/AppPressable";
+import { useAppNavigation } from "@/api/navigation";
 
-export interface LianeDetailScreenParams extends ParamListBase {
-  liane: Liane;
-}
-
-export const LianeDetailScreen = ({ route, navigation }: NativeStackScreenProps<LianeDetailScreenParams, "LianeDetail">) => {
+export const LianeDetailScreen = () => {
+  const { route, navigation } = useAppNavigation<"LianeDetail">();
   const liane: Liane = route.params!.liane;
   const insets = useSafeAreaInsets();
 
@@ -69,7 +65,7 @@ export const LianeDetailScreen = ({ route, navigation }: NativeStackScreenProps<
       <View style={styles.separator} />
 
       <Column spacing={8} style={styles.actionsContainer}>
-        <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat")}>
+        <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: "TODO" })}>
           <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
             <AppIcon name={"message-circle-outline"} />
             <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>

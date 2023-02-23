@@ -1,11 +1,11 @@
-import { StyleSheet, View } from "react-native";
+import { NativeTouchEvent, StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { CardButton } from "@/components/CardButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppDimensions } from "@/theme/dimensions";
@@ -19,16 +19,17 @@ const horizontalCardSpacing = 12;
 const verticalCardSpacing = 8;
 
 const ReturnTrip = ({ onSubmit, onReset }: FormComponentProps<"returnTime">) => {
-  const state = useState(null);
+  const state = useState<NativeTouchEvent | null>(null);
   const [showPopup, setShowPopup] = state;
   const machine = useContext(WizardContext);
   const value: LianeWizardFormData["returnTime"] = useSelector(machine, state => state.context.returnTime);
 
+  // TODO fix add types
   const ref = useRef(null);
 
   useEffect(() => {
     if (state[0]) {
-      ref.current?.showModal(showPopup.pageX, showPopup.pageY);
+      ref.current?.showModal(showPopup!.pageX, showPopup!.pageY);
       state[0] = null;
     }
   });

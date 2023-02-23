@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import React, { useContext } from "react";
+import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -14,7 +14,7 @@ import { WizardFormData } from "@/screens/lianeWizard/WizardContext";
 import { DatetimeForm } from "@/components/forms/DatetimeForm";
 import { SwitchToggleForm } from "@/components/forms/SelectToggleForm";
 import { fromSearchFilter, SearchData, toSearchFilter } from "@/screens/search/SearchFormData";
-import { LianeSearchFilter } from "@/api";
+import { useAppNavigation } from "@/api/navigation";
 
 const DateTimeForm = () => {
   return (
@@ -52,7 +52,8 @@ const DateTimeForm = () => {
     </Column>
   );
 };
-export const SearchScreen = ({ navigation, route }) => {
+export const SearchScreen = () => {
+  const { route, navigation } = useAppNavigation<"Search">();
   const insets = useSafeAreaInsets();
   const formContext = useForm<SearchData>({
     mode: "onChange",

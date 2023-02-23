@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { LianeView } from "@/components/trip/LianeView";
 import { AppText } from "@/components/base/AppText";
@@ -6,7 +6,6 @@ import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
 import { Liane, PaginatedResponse, UTCDateTime } from "@/api";
 import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Column, Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
@@ -17,7 +16,7 @@ interface TripSection extends SectionBase<Liane> {
   date: string;
 }
 
-const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<PaginatedResponse<Liane>> & NativeStackScreenProps<{}>) => {
+const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<PaginatedResponse<Liane>>) => {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
@@ -94,9 +93,7 @@ const MyTripsScreen = ({ data, navigation, route }: WithFetchResourceProps<Pagin
         icon="plus-outline"
         title="Nouvelle Liane"
         onPress={() => {
-          navigation.navigate("LianeWizard", {
-            origin: route.name
-          });
+          navigation.navigate("LianeWizard");
         }}
       />
 

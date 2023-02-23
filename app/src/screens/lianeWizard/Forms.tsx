@@ -1,5 +1,5 @@
 import { StyleSheet, Switch, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import DatePicker from "react-native-date-picker";
 import { ControllerFieldState, useController } from "react-hook-form";
 import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
@@ -36,6 +36,7 @@ const WithFormContext =
     if (rulesWithDefaults.required === undefined) {
       rulesWithDefaults.required = true;
     }
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const { field, fieldState } = useController({
       name,
       rules: rulesWithDefaults,
@@ -100,6 +101,7 @@ export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ val
 ));
 
 export const CarForm: FormComponent<number> = WithFormController(({ value, onChange }: BaseFormComponentProps<number>) => {
+  //TODO change
   //TODO redo layout
   return (
     <Column spacing={32} style={{ justifyItems: "space-between", alignItems: "center", paddingVertical: 16 }}>

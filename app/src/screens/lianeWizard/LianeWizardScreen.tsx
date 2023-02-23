@@ -5,39 +5,34 @@ import { useActor, useInterpret, useSelector } from "@xstate/react";
 import Animated, { SlideInDown } from "react-native-reanimated";
 import { LianeHouseVector } from "@/components/vectors/LianeHouseVector";
 import { WizardContext, WizardFormData } from "@/screens/lianeWizard/WizardContext";
-
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes, AppColors, HouseColor } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { OverviewForm } from "@/screens/lianeWizard/OverviewForm";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
-import { fromLianeRequest, LianeWizardFormData, toLianeRequest } from "@/screens/lianeWizard/LianeWizardFormData";
+import { LianeWizardFormData, toLianeRequest } from "@/screens/lianeWizard/LianeWizardFormData";
 import { FormProvider, useForm } from "react-hook-form";
 import { CreateLianeContextMachine, WizardStateSequence, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
 import { AppIcon } from "@/components/base/AppIcon";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ParamListBase } from "@react-navigation/native";
 import { LianePager } from "@/screens/lianeWizard/LianePager";
 import { ModalSizeContext } from "@/components/CardButton";
 import { AppContext } from "@/components/ContextProvider";
 import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
-import { Liane, LianeRequest } from "@/api";
+import { LianeRequest } from "@/api";
 import { useQueryClient } from "react-query";
 import { LianeQueryKey } from "@/screens/MyTripsScreen";
-
-export interface LianeModalScreenParams extends ParamListBase {
-  lianeRequest?: LianeRequest;
-}
+import { useAppNavigation } from "@/api/navigation";
 
 //TODO animated component
 // const AnimatedLianeHouseVector = Animated.createAnimatedComponent(LianeHouseVector);
-const DynamicHouseVector = ({ snapPoint }) => {
+const DynamicHouseVector = ({ snapPoint }: { snapPoint: number }) => {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const machineContext = useContext(WizardContext);
   // Get inner wizard step
+  // @ts-ignore
   const stateValue = useSelector(machineContext, state => state.value.wizard);
   const frontColor = HouseColor[WizardStateSequence.indexOf(stateValue) % HouseColor.length];
   return <LianeHouseVector maxHeight={height * (1 - snapPoint) - insets.top} maxWidth={width * 0.65} frontColor={frontColor} />;
@@ -50,7 +45,8 @@ const minHeight = 550;
 const modalMargin = 8;
 const animDuration = 300;
 
-export const LianeWizardScreen = ({ route, navigation }: NativeStackScreenProps<LianeModalScreenParams, "LianeWizard">) => {
+export const LianeWizardScreen = () => {
+  const { route, navigation } = useAppNavigation<"LianeWizard">();
   const lianeRequest: LianeRequest | undefined = route.params?.lianeRequest;
   const { services } = useContext(AppContext);
 
@@ -98,7 +94,7 @@ export const LianeWizardScreen = ({ route, navigation }: NativeStackScreenProps<
       return lianeResponse;
     };
 
-    return CreateLianeContextMachine(submitLianeForm, lianeRequest ? fromLianeRequest(lianeRequest) : undefined);
+    return CreateLianeContextMachine(submitLianeForm, undefined); //lianeRequest ? fromLianeRequest(lianeRequest) : undefined);
   }, [lianeRequest, services.liane, queryClient, navigation]);
 
   const lianeWizardMachine = useInterpret(machine);
@@ -155,6 +151,7 @@ const LianeWizard = () => {
   });
 
   const { handleSubmit } = formContext;
+
   const submit = useMemo(() => {
     const onSubmit = (data: LianeWizardFormData) => {
       send("NEXT", { data });
@@ -185,6 +182,7 @@ const LianeWizard = () => {
       </BottomOptionBg>
     );
   } else if (isWizardStep) {
+    // @ts-ignore
     const step = state.value.wizard as WizardStepsKeys;
 
     title = WizardFormData[step].title;

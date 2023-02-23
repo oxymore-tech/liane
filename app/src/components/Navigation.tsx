@@ -76,7 +76,12 @@ function Navigation() {
   );
 }
 
-const HomeScreenHeader = ({ label, navigation }) => {
+type HomeScreenHeaderProp = {
+  label: string;
+  navigation: any; //TODO
+};
+
+const HomeScreenHeader = ({ label, navigation }: HomeScreenHeaderProp) => {
   const insets = useSafeAreaInsets();
   return (
     <Row
@@ -89,7 +94,7 @@ const HomeScreenHeader = ({ label, navigation }) => {
         minHeight: 60,
         marginTop: insets.top
       }}>
-      <AppText style={{ fontSize: 22, fontWeight: 500, color: AppColors.darkBlue }}>{label}</AppText>
+      <AppText style={{ fontSize: 22, fontWeight: "500", color: AppColors.darkBlue }}>{label}</AppText>
       <Pressable
         onPress={() => {
           navigation.navigate("Profile");

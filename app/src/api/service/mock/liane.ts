@@ -165,7 +165,6 @@ export class LianeServiceMock implements LianeService {
   match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>> {
     return {
       pageSize: 1,
-      next: null,
       data: [
         {
           liane: "63f402fb5a62152114683382",

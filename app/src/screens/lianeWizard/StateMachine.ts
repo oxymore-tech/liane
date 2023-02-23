@@ -69,7 +69,6 @@ const states: { [name in StatesKeys]: any } = {
         target: ".success"
       },
       onError: {
-        actions: (context, event) => console.log(context, event.data),
         target: ".failure"
       }
     },

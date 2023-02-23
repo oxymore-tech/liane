@@ -1,14 +1,13 @@
-import { Pressable, SafeAreaView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import React from "react";
 import AppMapView from "@/components/AppMapView";
-import { RallyingPointInput } from "@/components/RallyingPointInput";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppStyles } from "@/theme/styles";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes } from "@/theme/colors";
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation }: { navigation: any }) => {
   const insets = useSafeAreaInsets();
   const navigateToSearch = () => {
     navigation.navigate("Search");

@@ -32,7 +32,12 @@ export interface LianeCardProps extends PressableProps {
   showPopup?: boolean;
 }
 
-const CancelButton = ({ color, label, onCancel }) => {
+type CancelButtonProps = {
+  color: ColorValue;
+  label?: string;
+  onCancel: () => void;
+};
+const CancelButton = ({ color, label, onCancel }: CancelButtonProps) => {
   const cancelColor = color === AppColors.white ? AppColorPalettes.blue[500] : AppColors.white;
   const cancelIconColor = cancelColor === AppColors.white ? AppColorPalettes.gray[800] : AppColors.white;
   const positionStyleOverride = label ? {} : { right: -12 };
@@ -50,7 +55,16 @@ const CancelButton = ({ color, label, onCancel }) => {
 export const ModalSizeContext = React.createContext<Rect | undefined>(undefined);
 type Rect = { left: number; top: number; right: number; bottom: number };
 
-const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) => {
+type CardModalProps = {
+  x: number;
+  y: number;
+  children: any;
+  onClosed: () => void;
+  useOkButton: boolean;
+  onClose?: (validate: boolean) => void;
+  color: ColorValue;
+};
+const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }: CardModalProps) => {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -203,7 +217,15 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }) =>
   );
 };
 
-const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }) => (
+type ModalButtonProps = {
+  color: ColorValue;
+  backgroundColor: ColorValue;
+  text: string;
+  onPress: () => void;
+  opacity?: number;
+};
+
+const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }: ModalButtonProps) => (
   <Pressable onPress={onPress}>
     <View
       style={{
@@ -237,7 +259,7 @@ export const CardButton = forwardRef(
     const [modalSpecs, setModalSpecs] = useState({ x: 0, y: 0 });
 
     useImperativeHandle(ref, () => ({
-      showModal: (fromX, fromY) => {
+      showModal: (fromX: number, fromY: number) => {
         setModalSpecs({ x: fromX, y: fromY });
       }
     }));

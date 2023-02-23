@@ -1,5 +1,5 @@
-import { LianeRequest, LianeSearchFilter, RallyingPoint } from "@/api";
-import { toTimeInSeconds } from "@/util/datetime";
+import { LianeRequest, RallyingPoint } from "@/api";
+import { InternalLianeSearchFilter } from "@/util/ref";
 
 export interface SearchData {
   to: RallyingPoint;
@@ -10,7 +10,7 @@ export interface SearchData {
   vehicle: number;
 }
 
-export const toSearchFilter = (formData: SearchData): LianeSearchFilter => {
+export const toSearchFilter = (formData: SearchData): InternalLianeSearchFilter => {
   const departureTime: any = new Date(
     formData.tripDate.getFullYear(),
     formData.tripDate.getMonth(),
@@ -31,7 +31,7 @@ export const toSearchFilter = (formData: SearchData): LianeSearchFilter => {
   };
 };
 
-export const fromSearchFilter = (formData: LianeSearchFilter): SearchData => {
+export const fromSearchFilter = (formData: InternalLianeSearchFilter): SearchData => {
   const tripDate = new Date(formData.targetTime.dateTime);
   return {
     from: formData.from,
@@ -43,10 +43,10 @@ export const fromSearchFilter = (formData: LianeSearchFilter): SearchData => {
   };
 };
 
-export const toLianeRequest = (filter: LianeSearchFilter): LianeRequest => {
+export const toLianeRequest = (filter: InternalLianeSearchFilter): LianeRequest => {
   return {
-    to: filter.to,
-    from: filter.from,
+    to: filter.to.id!,
+    from: filter.from.id!,
     departureTime: filter.targetTime.dateTime,
     // returnTime: filter.returnTime,
     availableSeats: filter.availableSeats
