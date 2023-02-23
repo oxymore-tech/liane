@@ -3,9 +3,7 @@ function init {
   init_db "$(get_project)-mongo-1" "${MONGO_USERNAME}" "${MONGO_PASSWORD}" "${LIANE_HOME}/deploy/db"
 }
 
-function liane_compose {
-  local command=${1}
-  
+function liane_compose {  
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
   MONGO_HOST_PORT=$(get_mongo_host_port)
@@ -14,7 +12,7 @@ function liane_compose {
   export DOMAIN
   export MONGO_HOST_PORT
   
-  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${command}"
+  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
 }
 
 function dump {
@@ -98,3 +96,4 @@ function init_osrm() {
   docker run -t -v "/data/osm:/data" osrm/osrm-backend osrm-partition "/data/${country}.osrm"
   docker run -t -v "/data/osm:/data" osrm/osrm-backend osrm-customize "/data/${country}.osrm"
 }
+
