@@ -3,9 +3,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Liane.Api.Notification;
+using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo.Serialization;
+using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
@@ -21,17 +25,29 @@ public sealed record MongoSettings(string Host, string Username, string Password
   {
     if (!_init)
     {
-      var pack = new ConventionPack
+      var alwaysPack = new ConventionPack
       {
-        new EnumRepresentationConvention(BsonType.String)
+        new EnumRepresentationConvention(BsonType.String),
+      };
+      var stringIdAsObjectIdPack = new ConventionPack
+      {
+        new IdSerializationConvention(),
+        new RefSerializationConvention(new [] { typeof(RallyingPoint) }.ToImmutableList())
       };
 
-      ConventionRegistry.Register("EnumStringConvention", pack, _ => true);
+      ConventionRegistry.Register("EnumStringConvention", alwaysPack, _ => true);
+      ConventionRegistry.Register("StringIdAsObjectId", stringIdAsObjectIdPack, t =>
+      {
+        var use =  !t.IsAssignableFrom(typeof(RallyingPoint));
+        return use;
+      });
       BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
-      BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));
+   //   BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefToStringBsonSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
+      BsonSerializer.RegisterDiscriminatorConvention(typeof(BaseNotificationDb), new NotificationDiscriminatorConvention());
+      BsonSerializer.RegisterDiscriminator(typeof(LianeEvent), "Type");
       _init = true;
     }
 
@@ -44,6 +60,75 @@ public sealed record MongoSettings(string Host, string Username, string Password
     return mongo.GetDatabase(databaseName);
   }
 };
+
+public class RefSerializationConvention : ConventionBase, IMemberMapConvention
+{
+
+  private readonly ImmutableList<Type> excludedTypes;
+
+  public RefSerializationConvention(ImmutableList<Type> excludedTypes)
+  {
+    this.excludedTypes = excludedTypes;
+  }
+
+  public RefSerializationConvention(string name, ImmutableList<Type> excludedTypes) : base(name)
+  {
+    this.excludedTypes = excludedTypes;
+  }
+
+  /// <inheritdoc/>
+  public void Apply(BsonMemberMap memberMap)
+  {
+    
+    if (!memberMap.MemberType.IsGenericType || !memberMap.MemberType.GetGenericTypeDefinition().IsAssignableFrom(typeof(Ref<>)) )
+    {
+      return;
+    }
+    
+    var referencedType = memberMap.MemberType.GetGenericArguments()[0];
+    Type serializerType;
+    if (excludedTypes.Contains(referencedType))
+    {
+      serializerType = typeof(RefToStringBsonSerializer<>).MakeGenericType(referencedType);
+    }
+    else
+    {
+      serializerType = typeof(RefToObjectIdBsonSerializer<>).MakeGenericType(referencedType);
+    }
+
+    memberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(serializerType)!);
+  }
+}
+public class IdSerializationConvention : ConventionBase, IMemberMapConvention
+{
+  /// <inheritdoc/>
+  public void Apply(BsonMemberMap memberMap)
+  {
+    if (memberMap != memberMap.ClassMap.IdMemberMap)
+    {
+      return;
+    }
+
+    if (memberMap.MemberType != typeof(string))
+    {
+      return;
+    }
+
+    var defaultStringSerializer = BsonSerializer.LookupSerializer(typeof(string));
+    if (memberMap.GetSerializer() != defaultStringSerializer)
+    {
+      return;
+    }
+
+    if (memberMap.IdGenerator != null)
+    {
+      return;
+    }
+
+    memberMap.SetSerializer(new String2ObjectIdBsonSerializer());
+  //  memberMap.SetIdGenerator(StringObjectIdGenerator.Instance);
+  }
+}
 
 public static class MongoDatabaseExtensions
 {

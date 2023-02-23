@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Liane.Api.Util;
@@ -75,6 +76,7 @@ public static class Startup
         
         services.AddSettings<FirebaseSettings>(context);
         services.AddService<NotificationServiceImpl>();
+        services.AddService<JoinLianeRequestServiceImpl>();
         
         services.AddSingleton<IMongoDatabase>(sp => {
           var settings = sp.GetRequiredService<MongoSettings>();
@@ -156,18 +158,25 @@ public static class Startup
 
     private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
     {
-      ConfigureLianeServices(context, services);
-        services.AddService<FileStreamResultExecutor>();
-    services.AddControllers(options =>
+      var jsonSerializerConverters = new JsonConverter[]
+      {
+        new TimeOnlyJsonConverter(),
+        new RefJsonConverterFactory(),
+        new CursorJsonConverter(),
+        new JsonStringEnumConverter()
+      };
+      ConfigureLianeServices(context, services); 
+      services.AddService<FileStreamResultExecutor>();
+      services.AddControllers(options =>
       {
         options.ModelBinderProviders.Insert(0, new BindersProvider());
       })
             .AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
-                options.JsonSerializerOptions.Converters.Add(new RefJsonConverterFactory());
-                options.JsonSerializerOptions.Converters.Add(new CursorJsonConverter());
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+              foreach (var converter in jsonSerializerConverters)
+              {
+                options.JsonSerializerOptions.Converters.Add(converter);
+              }
             });
         services.AddCors(options =>
             {
@@ -213,9 +222,10 @@ public static class Startup
         services.AddSignalR()
           .AddJsonProtocol(options =>
           {
-            options.PayloadSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
-            options.PayloadSerializerOptions.Converters.Add(new RefJsonConverterFactory());
-            options.PayloadSerializerOptions.Converters.Add(new CursorJsonConverter());
+            foreach (var converter in jsonSerializerConverters)
+            {
+              options.PayloadSerializerOptions.Converters.Add(converter);
+            }
           });
 
         // For Resource access level
@@ -223,7 +233,18 @@ public static class Startup
         
         // For Mock data generation
         services.AddService<MockServiceImpl>();
-    
+        
+        // For services using json serialization
+        var jsonSerializerOptions = new JsonSerializerOptions();
+        foreach (var converter in jsonSerializerConverters)
+        {
+         jsonSerializerOptions.Converters.Add(converter);
+        }
+        services.AddSingleton(jsonSerializerOptions);
+        
+        // Hub service abstraction
+        services.AddSingleton<IHubService, HubServiceImpl>();
+
     }
 
     private static void StartCurrentModuleWeb(string[] args)

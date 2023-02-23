@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Notification;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -17,7 +18,7 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
 
   protected override void InitService(IMongoDatabase db)
   {
-    testedService = new ChatServiceImpl(db);
+    testedService = new ChatServiceImpl(db, Moq.Mock.Of<ISendNotificationService>());
   }
 
   [Test]

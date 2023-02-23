@@ -18,14 +18,14 @@ public class Fakers
       )
     );
 
-  public static ImmutableList<DbUser> FakeDbUsers => DbUserFaker.Generate(8).ToImmutableList();
+  public static readonly ImmutableList<DbUser> FakeDbUsers = DbUserFaker.Generate(8).ToImmutableList();
 
   public static Faker<ConversationGroup> ConversationFaker => new Faker<ConversationGroup>()
     .CustomInstantiator(f =>
     {
       var memberUsers = f.PickRandom(FakeDbUsers, f.Random.Int(2, 3));
       var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now, null));
-      return new ConversationGroup(ObjectId.GenerateNewId().ToString(), f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today, members.ToImmutableList());
+      return new ConversationGroup(members.ToImmutableList(), ObjectId.GenerateNewId().ToString(), f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
     });
 
   public static readonly Faker<ChatMessage> MessageFaker = new Faker<ChatMessage>()

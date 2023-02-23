@@ -3,9 +3,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -13,8 +15,10 @@ namespace Liane.Service.Internal.Chat;
 
 public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>, IChatService
 {
-  public ChatServiceImpl(IMongoDatabase mongo) : base(mongo)
+  private readonly ISendNotificationService notificationService;
+  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService) : base(mongo)
   {
+    this.notificationService = notificationService;
   }
 
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
@@ -32,12 +36,36 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       );
   }
 
+  public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
+  {
+    // Get conversations ids where user's last read is before the latest message
+    var query = from c in Mongo.GetCollection<ConversationGroup>().AsQueryable()
+      where c.Members.Any(m => m.User == user && m.LastReadAt < c.LastMessageAt)
+      select c;
+
+    return await query.SelectAsync<ConversationGroup, Ref<ConversationGroup>>(async g => g.Id);
+
+  }
+
   public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)
   {
     var createdAt = DateTime.UtcNow;
     var sent = message with { Id = ObjectId.GenerateNewId().ToString(), CreatedBy = author.Id, CreatedAt = createdAt };
     await Mongo.GetCollection<DbChatMessage>()
       .InsertOneAsync(new DbChatMessage(sent.Id, groupId, sent.CreatedBy, createdAt, sent.Text));
+    await Mongo.GetCollection<ConversationGroup>()
+      .UpdateOneAsync(c => c.Id == groupId, 
+        Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt)
+        );
+    // Send push notification asynchronously to other conversation members
+    Task.Run(async () =>
+    {
+      var conversation = await ResolveRef<ConversationGroup>(groupId);
+      Parallel.ForEach(conversation!.Members, info =>
+      {
+        if (info.User != author) notificationService.SendTo(info.User, nameof(ChatMessage), sent);
+      });
+    });
     return sent;
   }
 

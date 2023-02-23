@@ -1,51 +1,46 @@
 using System;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Hub;
+using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Task = System.Threading.Tasks.Task;
 
 namespace Liane.Web.Hubs;
 
 [Authorize(Policy = Startup.RequireAuthPolicy)]
-public sealed class ChatHub : Hub
+public sealed class ChatHub : Hub<IHubClient>
 {
   private readonly ILogger<ChatHub> logger;
   private readonly IChatService chatService;
   private readonly ICurrentContext currentContext;
   private readonly IUserService userService;
-  private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
+  private readonly HubServiceImpl hubService;
+  private readonly INotificationService notificationService;
 
-  private const string ReceiveMessage = nameof(ReceiveMessage);
-  private const string ReceiveLatestMessages = nameof(ReceiveLatestMessages);
-  private const string Me = nameof(Me);
-
-  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService)
+  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, HubServiceImpl hubService, INotificationService notificationService)
   {
     this.logger = logger;
     this.chatService = chatService;
     this.currentContext = currentContext;
     this.userService = userService;
+    this.hubService = hubService;
+    this.notificationService = notificationService;
   }
-
-  public bool IsConnected(Ref<User> user)
-  {
-    return currentConnectionsCache.Get(user.Id) != null;
-  }
-
+  
   public async Task SendToGroup(ChatMessage message, string groupId)
   {
     logger.LogInformation(message.Text);
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
     // TODO handle notifications in service for disconnected users 
     logger.LogInformation(sent.Text + " " + currentContext.CurrentUser().Id);
-    await Clients.Group(groupId).SendAsync(ReceiveMessage, sent);
+    // Send created message directly to the caller, the rest of the group will be handled by chat service
+    await Clients.Caller.ReceiveMessage(sent);
   }
 
   public async Task<ConversationGroup> JoinGroupChat(string groupId)
@@ -62,7 +57,7 @@ public sealed class ChatHub : Hub
     {
       var latestMessages = await chatService.GetGroupMessages(new Pagination(nowCursor), groupId);
       logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);
-      await caller.SendAsync(ReceiveLatestMessages, latestMessages);
+      await caller.ReceiveLatestMessages(latestMessages);
     });
     return updatedConversation;
   }
@@ -79,16 +74,22 @@ public sealed class ChatHub : Hub
     logger.LogInformation("User " + userId
                                   + " connected to hub with connection ID : "
                                   + Context.ConnectionId);
-    currentConnectionsCache.CreateEntry(userId);
-    // Update User's last connection
-    User user = await userService.UpdateLastConnection(userId, DateTime.Now);
-    await Clients.Caller.SendAsync(Me, user);
-    // TODO send latest unread notifications count 
+    hubService.AddConnectedUser(userId);
+    // Get user data
+    var user = await userService.GetFullUser(userId);
+    await Clients.Caller.Me(user);
+    // Send latest unread notifications count and conversations 
+    var unreadConversationsIds = await chatService.GetUnreadConversationsIds(userId);
+    var unreadNotificationsCount = await notificationService.GetUnreadCount(userId);
+    await Clients.Caller.ReceiveUnreadOverview(new UnreadOverview(unreadNotificationsCount, unreadConversationsIds));
   }
 
   public override async Task OnDisconnectedAsync(Exception? exception)
   {
-    currentConnectionsCache.Remove(currentContext.CurrentUser().Id);
+    var now = DateTime.Now;
+    var userId = currentContext.CurrentUser().Id;
+    hubService.RemoveUser(userId);
     await base.OnDisconnectedAsync(exception);
+    await userService.UpdateLastConnection(userId, now);
   }
 }

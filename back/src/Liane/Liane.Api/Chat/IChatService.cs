@@ -11,7 +11,7 @@ public interface IChatService : ICrudEntityService<ConversationGroup>
 {
   Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<User.User> author);
   Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId);
-
   Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group);
   Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp);
+  Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user);
 }

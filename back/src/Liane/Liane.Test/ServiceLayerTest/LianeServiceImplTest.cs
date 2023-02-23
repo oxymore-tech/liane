@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
@@ -22,7 +23,7 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
 
   protected override void InitService(IMongoDatabase db)
   {
-    testedService = new LianeServiceImpl(db, ServiceProvider.GetService<IRoutingService>()!, Moq.Mock.Of<ICurrentContext>(), Moq.Mock.Of<IRallyingPointService>());
+    testedService = new LianeServiceImpl(db, ServiceProvider.GetService<IRoutingService>()!, Moq.Mock.Of<ICurrentContext>(), Moq.Mock.Of<IRallyingPointService>(), Moq.Mock.Of<IChatService>());
   }
 
 
@@ -137,7 +138,7 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
   public async Task TestListAccessLevel()
   {
     var userA = Fakers.FakeDbUsers[0].Id;
-    var userB = Fakers.FakeDbUsers[0].Id;
+    var userB = Fakers.FakeDbUsers[1].Id;
     const int lianesACount = 3;
     const int lianesBCount = 1;
     var lianesA = Fakers.LianeRequestFaker.Generate(lianesACount);

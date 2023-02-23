@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Util;
@@ -13,10 +14,10 @@ namespace Liane.Web.Controllers;
 public sealed class AuthController : ControllerBase
 {
   private readonly IAuthService authService;
-  private readonly INotificationService notificationService;
+  private readonly ISendNotificationService notificationService;
   private readonly ICurrentContext currentContext;
 
-  public AuthController(IAuthService authService, INotificationService notificationService, ICurrentContext currentContext)
+  public AuthController(IAuthService authService, ISendNotificationService notificationService, ICurrentContext currentContext)
   {
     this.authService = authService;
     this.notificationService = notificationService;

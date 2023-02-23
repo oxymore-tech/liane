@@ -3,7 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace Liane.Service.Internal.Mongo;
+namespace Liane.Service.Internal.Mongo.Serialization;
 
 internal sealed class LatLngBsonSerializer : StructSerializerBase<LatLng>
 {

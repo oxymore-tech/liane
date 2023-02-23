@@ -10,6 +10,7 @@ public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
+  bool? TakesReturnTrip = null,
   int SeatCount = -1 // Defaults to a passenger seat
 ) : IResourceMember;
 
