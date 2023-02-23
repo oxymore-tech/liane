@@ -1,9 +1,12 @@
 name: IOS Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
+    paths:
+      - app/**
 
 jobs:
   ios-build:

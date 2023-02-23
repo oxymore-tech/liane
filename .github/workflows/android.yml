@@ -1,9 +1,12 @@
 name: Android Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
+    paths:
+      - app/**
 
 jobs:
   android-build:
@@ -12,6 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        
+      - name: Check Diff
+        run: git diff-tree  --no-commit-id --name-only  $( git log -1 | grep commit | awk '{print $2}') | grep app
         
       - name: Find Version
         id: version
