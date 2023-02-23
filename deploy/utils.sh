@@ -4,7 +4,7 @@ function init {
 }
 
 function dump {
-  docker compose -f "${LIANE_HOME}/liane.yml" -p liane exec -T "$(get_project)-mongo-1" mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
+  docker compose -f "${LIANE_HOME}/liane.yml" -p "${PROJECT}" exec -T mongo mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
 }
 
 function start {
