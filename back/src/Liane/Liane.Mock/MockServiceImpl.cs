@@ -47,13 +47,14 @@ public sealed class MockServiceImpl : IMockService
     return new Faker<LianeRequest>()
       .CustomInstantiator(f =>
       {
-        var driverCapacity = f.Random.Int(0, 3);
-        var departure = f.Date.Soon(7).ToUniversalTime();
+        // Get a random number of offered (driver search) or required (passenger) seats
+        var seatCount = f.Random.Int(1, 3) * f.Random.ArrayElement(new []{1, -1});
+        var departure = f.Date.Soon(2).ToUniversalTime();
         DateTime? returnTrip = f.Random.Bool(0.2f) ? f.Date.SoonOffset(1, departure).DateTime.ToUniversalTime() : null;
         var from = f.PickRandom(departureSet);
         var to = f.PickRandom(destinationSet);
 
-        return new LianeRequest(null, departure, returnTrip, driverCapacity, from, to);
+        return new LianeRequest(null, departure, returnTrip, seatCount, from, to);
       });
   }
 
