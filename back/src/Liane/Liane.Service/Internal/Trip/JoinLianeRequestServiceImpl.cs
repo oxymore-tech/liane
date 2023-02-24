@@ -23,6 +23,7 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
   {
     var created = await base.Create(obj, ownerId);
     // Create associated notification for Liane owner asynchronously
+
     Task.Run(async () =>
     {
       // TODO send to default driver or owner ?

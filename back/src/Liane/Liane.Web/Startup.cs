@@ -9,7 +9,6 @@ using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Match;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
@@ -25,7 +24,6 @@ using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -72,7 +70,6 @@ public static class Startup
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<TripIntentServiceImpl>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<IntentMatchingServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
@@ -80,6 +77,15 @@ public static class Startup
     services.AddService<JoinLianeRequestServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);
+
+    services.AddScheduler(s =>
+    {
+      s.AddJob<LianeMockCronService>(configure: o =>
+      {
+        o.CronSchedule = "0 22 * * *";
+        o.CronTimeZone = "Europe/Paris";
+      });
+    });
   }
 
   public static void StartCurrentModule(string[] args)
@@ -199,7 +205,7 @@ public static class Startup
       });
     });
 
-    services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
+    services.AddService<TokenRequirementHandler>();
 
     services.AddAuthentication(options =>
     {
