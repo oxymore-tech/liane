@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
@@ -155,22 +154,13 @@ public static class Startup
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
   {
-    var jsonSerializerConverters = new JsonConverter[]
-    {
-      new TimeOnlyJsonConverter(),
-      new RefJsonConverterFactory(),
-      new CursorJsonConverter(),
-      new JsonStringEnumConverter()
-    };
+  
     ConfigureLianeServices(context, services);
     services.AddService<FileStreamResultExecutor>();
     services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
       .AddJsonOptions(options =>
       {
-        foreach (var converter in jsonSerializerConverters)
-        {
-          options.JsonSerializerOptions.Converters.Add(converter);
-        }
+        JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions);
       });
     services.AddCors(options =>
       {
@@ -213,10 +203,7 @@ public static class Startup
     services.AddSignalR()
       .AddJsonProtocol(options =>
       {
-        foreach (var converter in jsonSerializerConverters)
-        {
-          options.PayloadSerializerOptions.Converters.Add(converter);
-        }
+        JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions);
       });
 
     // For Resource access level
@@ -225,13 +212,9 @@ public static class Startup
     // For Mock data generation
     services.AddService<MockServiceImpl>();
 
-    // For services using json serialization
+    // For services using json serialization (notifications)
     var jsonSerializerOptions = new JsonSerializerOptions();
-    foreach (var converter in jsonSerializerConverters)
-    {
-      jsonSerializerOptions.Converters.Add(converter);
-    }
-
+    JsonSerializerSettings.ConfigureOptions(jsonSerializerOptions);
     services.AddSingleton(jsonSerializerOptions);
 
     // Hub service abstraction

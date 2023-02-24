@@ -43,7 +43,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
     }
   }
   
-  private async Task SendNotificationTo<T>(Ref<Api.User.User> receiver, Notification<T> notification) where T : class
+  private async Task SendNotificationTo(Ref<Api.User.User> receiver, BaseNotification notification)
   {
     // Try send via hub direct connection
     if (await hubService.TrySendNotification(receiver, notification))
@@ -98,7 +98,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
 
   private BaseNotification MapEntityClass<T>(NotificationDb<T> dbRecord) where T : class
   {
-    return new Notification<T>(dbRecord.Id, dbRecord.CreatedAt, dbRecord.Event);
+    return new BaseNotification.Notification<T>(dbRecord.Id, dbRecord.CreatedAt, dbRecord.Event);
   }
 
   protected override Task<BaseNotification> MapEntity(BaseNotificationDb dbRecord)
@@ -119,7 +119,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
     var timestamp = DateTime.Now;
     var dbRecord = new NotificationDb<T>(ObjectId.GenerateNewId().ToString(),  linkedEvent, receiver, timestamp);
     await Mongo.GetCollection<BaseNotificationDb>().InsertOneAsync(dbRecord);
-    var notification = new Notification<T>(dbRecord.Id, timestamp, linkedEvent);
+    var notification = new BaseNotification.Notification<T>(dbRecord.Id, timestamp, linkedEvent);
     
     // Send notification 
     Task.Run(() => SendNotificationTo(receiver, notification));
