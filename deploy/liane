@@ -3,23 +3,29 @@ set -e
 
 LIANE_HOME=$(cd "$(dirname "$0")/.." || exit;pwd)
 
-source "${LIANE_HOME}/deploy/.env"
 source "${LIANE_HOME}/deploy/utils.sh"
 
 case "$1" in
  init_osrm)
-  init_osrm
+   source_env
+   init_osrm
   ;;
  dump)
-  dump
+   source_env
+   dump
   ;;
  stop)
-  stop
+   source_env
+   stop
   ;;
  start)
-  start
+   source_env
+   start
+  ;;
+ test)
+   run_it_tests
   ;;
  *)
-  echo "Usage: liane (init_osrm|start|stop)"
+  echo "Usage: liane (init_osrm|start|stop|test)"
   ;;
 esac

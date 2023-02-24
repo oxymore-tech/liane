@@ -1,4 +1,17 @@
 
+function source_env() {  
+  if [ ! -f "${LIANE_HOME}/deploy/.env" ]; then
+    echo "${LIANE_HOME}/deploy/.env does not exist."
+    exit 1;
+  fi
+  
+  source "${LIANE_HOME}/deploy/.env"
+}
+
+function test_compose {  
+  docker compose -p "${PROJECT}" -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
+}
+
 function liane_compose {  
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
@@ -9,6 +22,12 @@ function liane_compose {
   export MONGO_HOST_PORT
   
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
+}
+
+function run_it_tests {
+  test_compose build
+  test_compose run test
+  test_compose down
 }
 
 function dump {
