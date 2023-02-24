@@ -8,8 +8,10 @@ function source_env() {
   source "${LIANE_HOME}/deploy/.env"
 }
 
-function test_compose {  
-  docker compose -p "${PROJECT}" -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
+function test_compose {
+  PROJECT=$(get_project)
+  
+  docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
 }
 
 function liane_compose {  
