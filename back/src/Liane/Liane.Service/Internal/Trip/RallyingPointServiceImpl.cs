@@ -97,7 +97,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   {
     search = Regex.Escape(search).ToLower();
     search = AccentedChars.Aggregate(search, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
-    return $@"^{search}.*";
+    return $@"\b{search}.*";
   }
 
   public async Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto)
