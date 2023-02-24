@@ -45,6 +45,12 @@ public abstract class BaseServiceLayerTest
     db.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
   }
 
+  [SetUp]
+  public void EnsureSchema()
+  {
+    MongoFactory.InitSchema(db);
+  }
+
   protected abstract void InitService(IMongoDatabase db);
 
   /// <summary>

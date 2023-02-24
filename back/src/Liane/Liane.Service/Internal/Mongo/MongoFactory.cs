@@ -72,7 +72,7 @@ public static class MongoFactory
     return db;
   }
 
-  private static void InitSchema(IMongoDatabase db)
+  public static void InitSchema(IMongoDatabase db)
   {
     CreateIndex(db, "geometry_index", Builders<LianeDb>.IndexKeys.Geo2DSphere(l => l.Geometry));
 
