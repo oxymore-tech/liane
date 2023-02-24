@@ -12,4 +12,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<PaginatedResponse<Liane>> ListForCurrentUser(Pagination pagination);
   Task<PaginatedResponse<Liane>> ListAll(Pagination pagination);
   Task<PaginatedResponse<Liane>> ListForMemberUser(string userId, Pagination pagination);
+  Task<Liane> AddMember(Ref<Api.Trip.Liane> liane, LianeMember newMember);
+  Task<Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<User.User> member);
 }

@@ -14,12 +14,11 @@ namespace Liane.Service.Internal.Mongo;
 
 public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolverService<TDb, TOut> where TDb : class, IIdentity where TOut : class, IIdentity
 {
-    
   protected readonly IMongoDatabase Mongo;
 
-  private async Task<TDb?> ResolveRef(string id)
+  protected async Task<TCollection?> ResolveRef<TCollection>(string id) where TCollection: class, IIdentity
   {
-    var obj = await Mongo.GetCollection<TDb>()
+    var obj = await Mongo.GetCollection<TCollection>()
       .Find(p => p.Id == id)
       .FirstOrDefaultAsync();
 
@@ -33,7 +32,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
 
   public virtual async Task<TOut> Get(Ref<TOut> reference)
   {
-    var resolved = await ResolveRef(reference);
+    var resolved = await ResolveRef<TDb>(reference);
     return await MapEntity(resolved!); //TODO can get send back null ?
   }
   
@@ -48,10 +47,10 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   
   public async Task<TOut?> GetIfMatches(string id, Predicate<TDb> filter)
   {
-    var value = await ResolveRef(id);
+    var value = await ResolveRef<TDb>(id);
     if (value is null)
     {
-      throw new ResourceNotFoundException($"{typeof(TDb).Name} '{id}' not found");
+      throw ResourceNotFoundException.For((Ref<TDb>)id);
     }
     return filter(value) ? await MapEntity(value) : null;
   }

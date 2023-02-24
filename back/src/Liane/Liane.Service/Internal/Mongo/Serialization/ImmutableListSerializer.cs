@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace Liane.Service.Internal.Mongo;
+namespace Liane.Service.Internal.Mongo.Serialization;
 
 internal sealed class ImmutableListSerializer<TValue> : EnumerableInterfaceImplementerSerializerBase<ImmutableList<TValue>, TValue>
 {

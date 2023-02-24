@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
-using Liane.Api.Util.Http;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
 using MongoDB.Bson;
@@ -17,11 +16,11 @@ public sealed class TripIntentServiceImpl : ITripIntentService
     private readonly IMongoDatabase mongo;
     private readonly IRallyingPointService rallyingPointService;
 
-    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext, IRallyingPointService rallyingPointService)
+    public TripIntentServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService)
     {
         this.currentContext = currentContext;
         this.rallyingPointService = rallyingPointService;
-        mongo = settings.GetDatabase();
+        this.mongo = mongo;
     }
 
     public async Task<TripIntent> Create(TripIntent tripIntent)

@@ -7,46 +7,28 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
 
-public sealed class UserServiceImpl : IUserService
+public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User>, IUserService
 {
-  private readonly IMongoDatabase mongo;
-
-  public UserServiceImpl(MongoSettings mongoSettings)
+  public UserServiceImpl(IMongoDatabase mongo) : base(mongo)
   {
-    mongo = mongoSettings.GetDatabase();
   }
 
-  public async Task<Api.User.User> UpdateLastConnection(string id, DateTime timestamp)
+  public async Task UpdateLastConnection(string id, DateTime timestamp)
   {
-    var user = await mongo.GetCollection<DbUser>()
-      .FindOneAndUpdateAsync(
+    await Mongo.GetCollection<DbUser>()
+      .UpdateOneAsync(
         u => u.Id == id,
         Builders<DbUser>.Update.Set(u => u.LastConnection, timestamp)
       );
-    return MapUser(user);
   }
 
-  public async Task<Api.User.User> Get(string id)
-  {
-    var dbUser = await mongo.GetCollection<DbUser>()
-      .Find(u => u.Id == id)
-      .FirstOrDefaultAsync();
-
-    if (dbUser is null)
-    {
-      throw new ResourceNotFoundException($"User ${id}");
-    }
-
-    return MapUser(dbUser);
-  }
-
-  public async Task<Api.User.User> GetByPhone(string phone)
+  public async Task<FullUser> GetByPhone(string phone)
   {
     var phoneNumber = phone.ToPhoneNumber();
 
     var number = phoneNumber.ToString();
 
-    var dbUser = await mongo.GetCollection<DbUser>()
+    var dbUser = await Mongo.GetCollection<DbUser>()
       .Find(u => u.Phone == number)
       .FirstOrDefaultAsync();
 
@@ -58,8 +40,22 @@ public sealed class UserServiceImpl : IUserService
     return MapUser(dbUser);
   }
 
-  private static Api.User.User MapUser(DbUser dbUser)
+  public async Task<FullUser> GetFullUser(string userId)
   {
-    return new Api.User.User(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
+    var userDb = await ResolveRef<DbUser>(userId);
+    if (userDb is null)
+    {
+      throw new ResourceNotFoundException($"User ${userId}");
+    }
+    return MapUser(userDb);
+  }
+
+  private FullUser MapUser(DbUser dbUser)
+  {
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
+  }
+  protected override async Task<Api.User.User> MapEntity(DbUser dbUser)
+  {
+    return new Api.User.User(dbUser.Id, dbUser.Pseudo, dbUser.CreatedAt);
   }
 }

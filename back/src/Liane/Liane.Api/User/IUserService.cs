@@ -1,11 +1,12 @@
 using System;
 using System.Threading.Tasks;
+using Liane.Api.Util.Http;
 
 namespace Liane.Api.User;
 
-public interface IUserService
+public interface IUserService : IResourceResolverService<User>
 {
-  Task<User> UpdateLastConnection(string id, DateTime timestamp);
-  Task<User> Get(string id);
-  Task<User> GetByPhone(string phone);
+  Task UpdateLastConnection(string id, DateTime timestamp);
+  Task<FullUser> GetByPhone(string phone);
+  Task<FullUser> GetFullUser(string userId);
 }

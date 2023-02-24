@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Immutable;
+using Liane.Api.Chat;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Mongo.Serialization;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
-
-public sealed record LianeSeatsProjectionModel
-  (int AvailableSeats);
 
 public sealed record DriverData
 (
@@ -19,7 +15,7 @@ public sealed record DriverData
 );
 
 public sealed record LianeDb(
-  [property: BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
+  //[property: BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
   string Id,
   string? CreatedBy,
   DateTime CreatedAt,
@@ -27,5 +23,6 @@ public sealed record LianeDb(
   DateTime? ReturnTime,
   ImmutableList<LianeMember> Members,
   DriverData DriverData,  // The current or default driver
+  Ref<ConversationGroup>? Conversation = null,
   GeoJsonPolygon<GeoJson2DGeographicCoordinates>? Geometry = null
 ): IIdentity, ISharedResource<LianeMember>;

@@ -57,15 +57,15 @@ namespace Liane.Service.Internal.Mongo;
   
   public  Predicate<TDb> HasAccessLevelPredicate => delegate(TDb t)
   {
-    return t.Members.Exists(m => (string)m.User == currentUserId);
+    return t.Members.Exists(m => m.User == (Ref<Api.User.User>)currentUserId);
   };
  
 
   public  FilterDefinition<TDb> HasAccessLevelFilterDefinition
   {
     get
-    { // Ref .Id does not work inside mongo Db 
-      return Builders<TDb>.Filter.ElemMatch(l => l.Members, m => (string)m.User == currentUserId);
+    { 
+      return Builders<TDb>.Filter.ElemMatch(l => l.Members, m => m.User == (Ref<Api.User.User>)currentUserId);
     }
   }
   

@@ -5,13 +5,10 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
+public abstract record MatchType : IUnion;
 
-public abstract record MatchType(string Type);
-
-public sealed record ExactMatch() : MatchType(nameof(ExactMatch));
-public sealed record CompatibleMatch(
-  int DeltaInSeconds
-) : MatchType(nameof(CompatibleMatch));
+public sealed record ExactMatch : MatchType;
+public sealed record CompatibleMatch(int DeltaInSeconds) : MatchType;
 
 public sealed record LianeMatch(
   Ref<Liane> Liane,

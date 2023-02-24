@@ -1,11 +1,10 @@
 using System;
-using Liane.Service.Internal.Mongo.Serialization;
-using MongoDB.Bson.Serialization.Attributes;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.User;
 
 public sealed record DbUser(
-    [property:BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
+  //  [property:BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
     string Id,
     bool IsAdmin,
     string Phone,
@@ -15,4 +14,4 @@ public sealed record DbUser(
     string? PushToken,
     DateTime? CreatedAt,
     DateTime? LastConnection
-);
+) : IIdentity;

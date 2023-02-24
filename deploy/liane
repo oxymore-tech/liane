@@ -7,9 +7,6 @@ source "${LIANE_HOME}/deploy/.env"
 source "${LIANE_HOME}/deploy/utils.sh"
 
 case "$1" in
- init)
-  init
-  ;;
  init_osrm)
   init_osrm
   ;;
@@ -23,6 +20,6 @@ case "$1" in
   start
   ;;
  *)
-  echo "Usage: liane (init|init_osrm|start|stop)"
+  echo "Usage: liane (init_osrm|start|stop)"
   ;;
 esac
