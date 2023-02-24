@@ -48,13 +48,16 @@ public abstract class BaseServiceLayerTest
   [SetUp]
   public void EnsureSchema()
   {
+    ClearTestedCollections();
     MongoFactory.InitSchema(db);
   }
 
   protected abstract void InitService(IMongoDatabase db);
 
+  protected virtual void ClearTestedCollections(){}
+
   /// <summary>
-  /// Clears given Collection. Should be called in [TearDown]
+  /// Clears given Collection. Should be called in ClearTestedCollections
   /// </summary>
   protected void DropTestedCollection<T>()
   {

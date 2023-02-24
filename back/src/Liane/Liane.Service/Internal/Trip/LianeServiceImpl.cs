@@ -95,10 +95,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     // If search is passenger search, fetch Liane with driver only
     var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.DriverData.CanDrive , filter.AvailableSeats <= 0);
     
-    // TODO var hasAvailableSeats = Builders<LianeDb>.Filter.Where(l => l.Members.Select(m => m.SeatCount).Sum() + filter.AvailableSeats > 0);
+    // l => l.TotalSeatCount + filter.AvailableSeats > 0
+    var hasAvailableSeats = Builders<LianeDb>.Filter.Gte("TotalSeatCount", -filter.AvailableSeats);
 
-    var f = nearFrom & timeFilter & nearTo &  isDriverSearch;
-
+    var f = nearFrom & timeFilter & isDriverSearch & hasAvailableSeats & nearTo;
     return Mongo.GetCollection<LianeDb>()
       .Find(f);
   }
@@ -230,7 +230,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
     var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates);
     var updateOneAsync = await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
-    int i = 0;
   }
 
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from , RallyingPoint to,  Filter filter)
