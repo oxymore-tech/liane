@@ -64,7 +64,7 @@ public static class RoutingServiceMock
                 var p2 = reverse[to];
                 var r = graph.Dijkstra(p1, p2);
                 return r.GetPath()
-                    .Select((n, i) => new WayPoint(indexes[n], i, 0))
+                    .Select((n, i) => new WayPoint(indexes[n], i, 0, 0))
                     .ToImmutableSortedSet();
             });
 

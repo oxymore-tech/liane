@@ -215,7 +215,7 @@ public sealed class RoutingServiceImpl : IRoutingService
                 continue;
             }
 
-            wayPoints.Add(new WayPoint(closestPoint, order, 0));
+            wayPoints.Add(new WayPoint(closestPoint, order, 0, 0));
             rallyingPoints.Add(closestPoint);
             order++;
         }
@@ -244,13 +244,15 @@ public sealed class RoutingServiceImpl : IRoutingService
             var waypoint = rawTrip.Waypoints[i];
             if (waypoint.TripsIndex != 0) throw new ArgumentException(); //TODO(improve) we should only have 1 trip in Trips array
             int duration = 0;
+            int distance = 0;
             if (i > 0)
             {
                 var routeLeg = rawTrip.Trips[0].Legs[i-1];
                 duration = (int)Math.Ceiling(routeLeg.Duration);
+                distance = (int)Math.Ceiling(routeLeg.Distance);
             }
 
-            return new WayPoint(rallyingPoint, waypoint.WaypointIndex, duration);
+            return new WayPoint(rallyingPoint, waypoint.WaypointIndex, duration, distance);
 
         }).ToImmutableSortedSet();
 
@@ -261,17 +263,19 @@ public sealed class RoutingServiceImpl : IRoutingService
     /// <summary>
     /// Get the matrix of durations between each pair of rallying points as a dictionary
     /// </summary>
-    private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, double>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
+    /// <returns>The matrix composed of tuples (duration, distance)</returns>
+    private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double duration, double distance)>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
     {
-      var durationTable = (await osrmService.Table(keys.Select(rp => rp.Location))).Durations;
-      var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, double>>();
+      var table = (await osrmService.Table(keys.Select(rp => rp.Location)));
+      var durationTable = table.Durations;
+      var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double, double)>>();
 
       for (int i = 0; i < durationTable.Length; i++)
       {
-        matrix[keys[i]] = new Dictionary<RallyingPoint, double>();
+        matrix[keys[i]] = new Dictionary<RallyingPoint, (double,double)>();
         for (int j = 0; j < durationTable[i].Length; j++)
         {
-          matrix[keys[i]][keys[j]] = durationTable[i][j];
+          matrix[keys[i]][keys[j]] = (durationTable[i][j], table.Distances[i][j]);
         }
       }
 
@@ -316,7 +320,7 @@ public sealed class RoutingServiceImpl : IRoutingService
       var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
      
       // Start trip and add starting point directly 
-      trip.Add(new WayPoint(start, 0, 0));
+      trip.Add(new WayPoint(start, 0, 0, 0));
       // Add a constraint to indicate this point has already been visited 
       pointsDictionary[start].Add(start);
       
@@ -331,7 +335,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         var selected = nextPointData.Key;
         
         // Append to trip
-        trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value));
+        trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value.duration, (int)nextPointData.Value.distance));
      
         // Update constraints and visitable points 
         foreach (var kv in pointsDictionary)
