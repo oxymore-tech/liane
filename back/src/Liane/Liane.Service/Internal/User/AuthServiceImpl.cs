@@ -88,7 +88,7 @@ public sealed class AuthServiceImpl : IAuthService
 
     var phoneNumber = request.Phone.ToPhoneNumber();
 
-    if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string expectedCode))
+    if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string? expectedCode))
     {
       throw new UnauthorizedAccessException("Invalid code");
     }

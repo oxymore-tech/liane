@@ -7,10 +7,13 @@ namespace Liane.Service.Internal.Notification;
 /// <summary>
 /// Hub methods callable from service layer
 /// </summary>
-public interface IHubService 
+public interface IHubService
 {
-   bool IsConnected(Ref<Api.User.User> user);
+  bool IsConnected(Ref<Api.User.User> user);
 
-   Task<bool> TrySendNotification(Ref<Api.User.User> receiver, BaseNotification notification);
+  void AddConnectedUser(Ref<Api.User.User> user);
 
+  void RemoveUser(Ref<Api.User.User> user);
+
+  Task<bool> TrySendNotification(Ref<Api.User.User> receiver, BaseNotification notification);
 }

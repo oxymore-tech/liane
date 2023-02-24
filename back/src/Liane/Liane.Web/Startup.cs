@@ -67,6 +67,7 @@ public static class Startup
     services.AddSettings<AuthSettings>(context);
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
+    services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<TripIntentServiceImpl>();
@@ -220,7 +221,7 @@ public static class Startup
       });
 
     // For Resource access level
-    services.AddSingleton<IAccessLevelContextFactory, MongoAccessLevelContextFactory>();
+    services.AddService<MongoAccessLevelContextFactory>();
 
     // For Mock data generation
     services.AddService<MockServiceImpl>();
@@ -233,9 +234,6 @@ public static class Startup
     }
 
     services.AddSingleton(jsonSerializerOptions);
-
-    // Hub service abstraction
-    services.AddSingleton<IHubService, HubServiceImpl>();
   }
 
   private static void StartCurrentModuleWeb(string[] args)

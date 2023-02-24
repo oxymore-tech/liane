@@ -80,15 +80,13 @@ public static class MongoFactory
 
     db.GetCollection<DbUser>()
       .Indexes
-      .CreateOne(
-        Builders<DbUser>.IndexKeys.Ascending(l => l.Phone),
-        new CreateIndexOptions { Name = "phone_index", Unique = true });
+      .CreateOne(new CreateIndexModel<DbUser>(Builders<DbUser>.IndexKeys.Ascending(l => l.Phone), new CreateIndexOptions { Name = "phone_index", Unique = true }));
 
     CreateIndex(db, "location_index", Builders<RallyingPoint>.IndexKeys.Geo2DSphere(l => l.Location));
 
     db.GetCollection<RallyingPoint>()
       .Indexes
-      .CreateOne(Builders<RallyingPoint>.IndexKeys.Combine(
+      .CreateOne(new CreateIndexModel<RallyingPoint>(Builders<RallyingPoint>.IndexKeys.Combine(
         Builders<RallyingPoint>.IndexKeys.Text(m => m.Label),
         Builders<RallyingPoint>.IndexKeys.Text(m => m.City),
         Builders<RallyingPoint>.IndexKeys.Text(m => m.ZipCode),
@@ -103,7 +101,7 @@ public static class MongoFactory
           { nameof(RallyingPoint.ZipCode), 5 },
           { nameof(RallyingPoint.Address), 1 },
         })
-      });
+      }));
   }
 
   private static void CreateIndex<T>(IMongoDatabase db, string name, IndexKeysDefinition<T> indexKey, CreateIndexOptions? options = null)

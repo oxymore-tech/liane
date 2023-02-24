@@ -5,6 +5,7 @@ using Liane.Api.Hub;
 using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
+using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -20,10 +21,10 @@ public sealed class ChatHub : Hub<IHubClient>
   private readonly IChatService chatService;
   private readonly ICurrentContext currentContext;
   private readonly IUserService userService;
-  private readonly HubServiceImpl hubService;
+  private readonly IHubService hubService;
   private readonly INotificationService notificationService;
 
-  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, HubServiceImpl hubService, INotificationService notificationService)
+  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService)
   {
     this.logger = logger;
     this.chatService = chatService;
@@ -32,7 +33,7 @@ public sealed class ChatHub : Hub<IHubClient>
     this.hubService = hubService;
     this.notificationService = notificationService;
   }
-  
+
   public async Task SendToGroup(ChatMessage message, string groupId)
   {
     logger.LogInformation(message.Text);
