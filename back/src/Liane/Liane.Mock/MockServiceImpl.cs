@@ -48,7 +48,7 @@ public sealed class MockServiceImpl : IMockService
       .CustomInstantiator(f =>
       {
         // Get a random number of offered (driver search) or required (passenger) seats
-        var seatCount = f.Random.Int(1, 3) * f.Random.ArrayElement(new []{1, -1});
+        var seatCount = f.Random.Int(1, 3) * f.Random.ArrayElement(new[] { 1, -1 });
         var departure = f.Date.Soon(2).ToUniversalTime();
         DateTime? returnTrip = f.Random.Bool(0.2f) ? f.Date.SoonOffset(1, departure).DateTime.ToUniversalTime() : null;
         var from = f.PickRandom(departureSet);
@@ -72,7 +72,7 @@ public sealed class MockServiceImpl : IMockService
 
     // Fetch all rallying points in given radius
     radius ??= DefaultRadius;
-    var rallyingPoints = await rallyingPointService.List(pos, null, radius, null);
+    var rallyingPoints = await rallyingPointService.List(pos, null, radius);
 
     if (rallyingPoints.Count < count)
     {
