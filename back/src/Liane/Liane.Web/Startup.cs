@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Mock;
@@ -78,14 +77,7 @@ public static class Startup
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddScheduler(s =>
-    {
-      s.AddJob<LianeMockCronService>(configure: o =>
-      {
-        o.CronSchedule = "0 22 * * *";
-        o.CronTimeZone = "Europe/Paris";
-      });
-    });
+    services.AddHostedService<LianeMockCronService>();
   }
 
   public static void StartCurrentModule(string[] args)
@@ -308,18 +300,7 @@ public static class Startup
       endpoints.MapControllers();
     });
 
-    StartServicesHook(app.ApplicationServices)
-      .GetAwaiter()
-      .GetResult();
-
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
   }
 
-  private static async Task StartServicesHook(IServiceProvider appApplicationServices)
-  {
-    foreach (var onStartup in appApplicationServices.GetServices<IOnStartup>())
-    {
-      await onStartup.OnStartup();
-    }
-  }
 }

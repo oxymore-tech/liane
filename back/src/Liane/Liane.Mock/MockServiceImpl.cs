@@ -84,15 +84,27 @@ public sealed class MockServiceImpl : IMockService
     var eachDay = (int)Math.Ceiling((double)count / numberOfDays);
     for (var i = 0; i < numberOfDays; i++)
     {
-      var faker = CreateLianeFaker(departureSet, arrivalSet, DateTime.Today.AddDays(i + 1));
-      foreach (var lianeRequest in faker.Generate(eachDay))
-      {
-        var liane = await lianeService.Create(lianeRequest, user.Id!);
-        lianes.Add(liane);
-      }
+      var day = DateTime.Today.AddDays(i + 1);
+      var inOneWay = eachDay / 2;
+      lianes.AddRange(await GenerateFakeLianesInOneWay(departureSet, arrivalSet, inOneWay, user, day));
+      lianes.AddRange(await GenerateFakeLianesInOneWay(arrivalSet, departureSet, inOneWay, user, day));
     }
 
     return lianes.ToImmutableList();
+  }
+
+  private async Task<List<Api.Trip.Liane>> GenerateFakeLianesInOneWay(ImmutableList<RallyingPoint> departureSet, ImmutableList<RallyingPoint> arrivalSet, int count, User user, DateTime day)
+  {
+    var lianes = new List<Api.Trip.Liane>();
+
+    var faker = CreateLianeFaker(departureSet, arrivalSet, day);
+    foreach (var lianeRequest in faker.Generate(count))
+    {
+      var liane = await lianeService.Create(lianeRequest, user.Id!);
+      lianes.Add(liane);
+    }
+
+    return lianes;
   }
 
   private async Task<(ImmutableList<RallyingPoint>, ImmutableList<RallyingPoint>)> GetRallyingPoints(LatLng from, LatLng? to, int? radius)

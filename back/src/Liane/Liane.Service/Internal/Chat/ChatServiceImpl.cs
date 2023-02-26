@@ -90,7 +90,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       Builders<DbChatMessage>.Filter.Where(m => m.GroupId == group.Id),
       false
     );
-    return messages.Select(ToOutputDto);
+    return messages.Select(MapEntity);
   }
 
   protected override ConversationGroup ToDb(ConversationGroup inputDto, string originalId, DateTime createdAt, string createdBy)
@@ -98,7 +98,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy };
   }
 
-  private ChatMessage ToOutputDto(DbChatMessage m)
+  private ChatMessage MapEntity(DbChatMessage m)
   {
     return new ChatMessage(m.Id, m.CreatedBy, m.CreatedAt, m.Text);
   }
