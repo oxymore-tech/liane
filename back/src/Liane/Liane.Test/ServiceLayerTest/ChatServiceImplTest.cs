@@ -31,7 +31,7 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
     var messages = Fakers.MessageFaker.Generate(messageCount);
     foreach (var message in messages)
     {
-      await testedService.SaveMessageInGroup(message, conversation.Id, author);
+      await testedService.SaveMessageInGroup(message, conversation.Id!, author);
     }
 
     const int limit = 8;
@@ -39,14 +39,14 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
     Thread.Sleep(1);
     var firstPage = await testedService.GetGroupMessages(
       new Pagination(Cursor.Now(), limit),
-      conversation.Id);
+      conversation.Id!);
 
     Assert.AreEqual(limit, firstPage.Data.Count);
     Assert.NotNull(firstPage.Next);
 
     var secondPage = await testedService.GetGroupMessages(
       new Pagination(firstPage.Next, limit),
-      conversation.Id);
+      conversation.Id!);
     
     Assert.AreEqual(messageCount - limit, secondPage.Data.Count);
     Assert.IsNull(secondPage.Next);

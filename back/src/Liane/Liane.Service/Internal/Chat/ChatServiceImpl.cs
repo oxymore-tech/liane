@@ -73,7 +73,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   {
     var sort = Builders<DbChatMessage>.Sort.Ascending(m => m.CreatedAt);
     var collection = Mongo.GetCollection<DbChatMessage>();
-    return (await collection.FindAsync(g => g.GroupId == groupId, new FindOptions<DbChatMessage> { Sort = sort }))
+    return (await collection.FindAsync(g => g.Group == groupId, new FindOptions<DbChatMessage> { Sort = sort }))
       .ToEnumerable()
       .Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
       .ToImmutableList();
@@ -85,7 +85,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     var messages = await Mongo.Paginate(
       pagination,
       m => m.CreatedAt,
-      Builders<DbChatMessage>.Filter.Where(m => m.GroupId == group.Id),
+      Builders<DbChatMessage>.Filter.Where(m => m.Group == group.Id),
       false
     );
     return messages.Select(ToOutputDto);

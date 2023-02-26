@@ -49,13 +49,12 @@ public static class MongoFactory
         var use = !t.IsAssignableFrom(typeof(RallyingPoint));
         return use;
       });
-      BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
-      BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
+      //BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
+      //BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
-      //   BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefToStringBsonSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(BaseNotificationDb), new NotificationDiscriminatorConvention());
-      BsonSerializer.RegisterDiscriminator(typeof(LianeEvent), "Type");
+      BsonSerializer.RegisterDiscriminatorConvention(typeof(NotificationDb), new NotificationDiscriminatorConvention());
+      BsonSerializer.RegisterDiscriminatorConvention(typeof(LianeEvent), new PolymorphicTypeDiscriminatorConvention());
       _init = true;
     }
 
