@@ -13,7 +13,7 @@ public sealed class LianeMockCronService : BackgroundService
 
   private readonly ILogger<LianeMockCronService> logger;
   private readonly IMockService mockService;
-  private bool runImmediatly = true;
+  private bool runImmediatly = false;
 
   public LianeMockCronService(ILogger<LianeMockCronService> logger, IMockService mockService)
   {
