@@ -9,6 +9,7 @@ using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Chat;
 
@@ -40,7 +41,8 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   {
     // Get conversations ids where user's last read is before the latest message
     var query = await Mongo.GetCollection<ConversationGroup>()
-      .Find(c => c.Members.Any(m => m.User == user && m.LastReadAt < c.LastMessageAt))
+      .AsQueryable()
+      .Where(c => c.Members.Any(m => m.User == user && m.LastReadAt < c.LastMessageAt))
       .ToListAsync();
 
     return query.Select(g => (Ref<ConversationGroup>)g.Id!)
