@@ -80,8 +80,9 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       }
       else
       {
-        var radian = (double)(distance ?? IRallyingPointService.MaxRadius) / 1000 / 6378.1;
+        var radian = (double)(distance ?? 500_000) / 1000 / 6378.1;
         filter &= Builders<RallyingPoint>.Filter.GeoWithinCenterSphere(x => x.Location, from.Value.Lng, from.Value.Lat, radian);
+        //filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, from.Value.Lng, from.Value.Lat);
       }
     }
 
