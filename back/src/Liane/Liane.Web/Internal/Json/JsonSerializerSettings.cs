@@ -15,7 +15,7 @@ public static class JsonSerializerSettings
     new NotificationJsonConverter()
   };
 
-  private static readonly JsonNamingPolicy NamingPolicy = new SnakeCaseNamingPolicy();
+  private static readonly JsonNamingPolicy NamingPolicy = JsonNamingPolicy.CamelCase;
   
   public static void ConfigureOptions(JsonSerializerOptions options)
   {
