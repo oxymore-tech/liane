@@ -24,7 +24,7 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
     var created = await base.Create(obj, ownerId);
     // Create associated notification for Liane owner asynchronously
 
-    Task.Run(async () =>
+    var _ = Task.Run(async () =>
     {
       // TODO send to default driver or owner ?
       // Send to default driver
@@ -50,7 +50,7 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
         Builders<JoinLianeRequest>.Update.Set(r => r.Accepted, status));
     
     // Notify sender asynchronously
-    Task.Run(() => notificationService.Create(updated, updated.CreatedBy!));
+    var _ = Task.Run(() => notificationService.Create(updated, updated.CreatedBy!));
     
     return updated;
   }

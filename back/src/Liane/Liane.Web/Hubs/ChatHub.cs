@@ -54,7 +54,7 @@ public sealed class ChatHub : Hub<IHubClient>
     logger.LogInformation("User " + userId + " joined conversation " + groupId);
     var caller = Clients.Caller;
     // Send latest messages async
-    Task.Run(async () =>
+    var _ = Task.Run(async () =>
     {
       var latestMessages = await chatService.GetGroupMessages(new Pagination(nowCursor), groupId);
       logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);

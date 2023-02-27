@@ -122,7 +122,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     var notification = new BaseNotification.Notification<T>(dbRecord.Id, timestamp, linkedEvent);
     
     // Send notification 
-    Task.Run(() => SendNotificationTo(receiver, notification));
+    var _ = Task.Run(() => SendNotificationTo(receiver, notification));
     
     return notification;
   }

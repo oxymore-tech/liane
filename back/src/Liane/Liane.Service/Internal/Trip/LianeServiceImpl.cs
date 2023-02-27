@@ -229,6 +229,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
     var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates);
+    await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
     var updateOneAsync = await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
   }
 

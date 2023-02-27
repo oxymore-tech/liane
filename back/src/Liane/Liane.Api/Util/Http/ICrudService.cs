@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Util.Ref;
 
@@ -9,6 +11,7 @@ public interface IResourceResolverService<TOut> where TOut : class, IIdentity
   /// Returns the resolved object from a given reference
   /// </summary>
   Task<TOut> Get(Ref<TOut> reference);
+  Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references);
 }
 
 public interface ICrudService<TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IIdentity

@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
@@ -34,6 +37,14 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   {
     var resolved = await ResolveRef<TDb>(reference);
     return await MapEntity(resolved!); //TODO can get send back null ?
+  }
+  
+  public virtual async Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references)
+  {
+
+    var query = Mongo.GetCollection<TDb>().Find(Builders<TDb>.Filter.In(f => f.Id, references.Select(r => (string) r).ToImmutableList()));
+    var resolved =  await query.SelectAsync(MapEntity);
+    return resolved.ToDictionary(v => v.Id!); 
   }
   
   public virtual async Task<bool> Delete(Ref<TOut> reference)
@@ -112,9 +123,8 @@ public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudServ
   {
     var id = ObjectId.GenerateNewId()
       .ToString();
-    var createdBy = ownerId;
     var createdAt = DateTime.UtcNow;
-    var created = ToDb(obj, id, createdAt, createdBy);
+    var created = ToDb(obj, id, createdAt, ownerId);
     await Mongo.GetCollection<TDb>().InsertOneAsync(
       created);
     return await MapEntity(created);

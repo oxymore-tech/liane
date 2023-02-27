@@ -3,23 +3,25 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Chat;
 
 public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>, IChatService
 {
   private readonly ISendNotificationService notificationService;
+  private readonly IUserService userService;
 
-  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService) : base(mongo)
+  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService, IUserService userService) : base(mongo)
   {
     this.notificationService = notificationService;
+    this.userService = userService;
   }
 
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
@@ -30,23 +32,36 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     if (userMembershipIndex < 0) throw new NullReferenceException();
 
     // Update Member's last connection and return
-    return await Mongo.GetCollection<ConversationGroup>()
-      .FindOneAndUpdateAsync(
+    var conversation = await Mongo.GetCollection<ConversationGroup>()
+      .FindOneAndUpdateAsync<ConversationGroup>(
         g => g.Id == group.Id,
-        Builders<ConversationGroup>.Update.Set(g => g.Members[userMembershipIndex].LastReadAt, timestamp)
+        Builders<ConversationGroup>.Update.Set(g => g.Members[userMembershipIndex].LastReadAt, timestamp),
+        new FindOneAndUpdateOptions<ConversationGroup> { ReturnDocument = ReturnDocument.After }
       );
-  }
+    var members = await userService.GetMany(conversation.Members.Select(m => m.User).ToImmutableList());
+    return conversation with { Members = conversation.Members.Select(m => m with { User = members[m.User.Id] }).ToImmutableList() };
+  
+}
 
   public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
   {
     // Get conversations ids where user's last read is before the latest message
-    var query = await Mongo.GetCollection<ConversationGroup>()
-      .AsQueryable()
-      .Where(c => c.Members.Any(m => m.User == user && m.LastReadAt < c.LastMessageAt))
-      .ToListAsync();
+    return await Mongo.GetCollection<ConversationGroup>().Find(new BsonDocument("$expr", new BsonDocument("$and", new BsonArray
+    {
+      new BsonDocument("$in",
+        new BsonArray
+        {
+          new ObjectId(user.Id),
+          "$Members.User"
+        }),
+      new BsonDocument("$lt",
+        new BsonArray
+        {
+          new BsonDocument("$min", "$Members.LastReadAt"),
+          "$LastMessageAt"
+        })
+    }))).SelectAsync<ConversationGroup, Ref<ConversationGroup>>( g => Task.FromResult((Ref<ConversationGroup>)g.Id!));
 
-    return query.Select(g => (Ref<ConversationGroup>)g.Id!)
-      .ToImmutableList();
   }
 
   public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)
@@ -60,7 +75,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
         Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt)
       );
     // Send push notification asynchronously to other conversation members
-    Task.Run(async () =>
+    var _ = Task.Run(async () =>
     {
       var conversation = await ResolveRef<ConversationGroup>(groupId);
       Parallel.ForEach(conversation!.Members, info =>
@@ -70,17 +85,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     });
     return sent;
   }
-
-  public async Task<ImmutableList<ChatMessage>> GetGroupConversation(string groupId)
-  {
-    var sort = Builders<DbChatMessage>.Sort.Ascending(m => m.CreatedAt);
-    var collection = Mongo.GetCollection<DbChatMessage>();
-    return (await collection.FindAsync(g => g.Group == groupId, new FindOptions<DbChatMessage> { Sort = sort }))
-      .ToEnumerable()
-      .Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
-      .ToImmutableList();
-  }
-
+  
   public async Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group)
   {
     // Get messages in DESC order 
@@ -90,7 +95,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       Builders<DbChatMessage>.Filter.Where(m => m.Group == group.Id),
       false
     );
-    return messages.Select(MapEntity);
+    return messages.Select(MapMessage);
   }
 
   protected override ConversationGroup ToDb(ConversationGroup inputDto, string originalId, DateTime createdAt, string createdBy)
@@ -98,7 +103,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy };
   }
 
-  private ChatMessage MapEntity(DbChatMessage m)
+  private ChatMessage MapMessage(DbChatMessage m)
   {
     return new ChatMessage(m.Id, m.CreatedBy, m.CreatedAt, m.Text);
   }
