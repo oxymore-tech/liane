@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+
+  mongo:
+    image: "mongo:4.4"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    restart: unless-stopped
+
+  test:
+    build:
+      context: ../back
+      target: test
+    depends_on:
+      - mongo

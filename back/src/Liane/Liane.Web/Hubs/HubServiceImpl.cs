@@ -11,9 +11,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Hubs;
 
-public class HubServiceImpl : IHubService
+public sealed class HubServiceImpl : IHubService
 {
-
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
   private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
@@ -42,7 +41,6 @@ public class HubServiceImpl : IHubService
       {
         // TODO handle retry 
         logger.LogInformation("Could not send notification to user {receiver} : {error}", receiver, e.Message);
-
       }
     }
 
@@ -51,12 +49,11 @@ public class HubServiceImpl : IHubService
 
   public void AddConnectedUser(Ref<User> user)
   {
-    currentConnectionsCache.CreateEntry(user.Id); 
+    currentConnectionsCache.CreateEntry(user.Id);
   }
 
   public void RemoveUser(Ref<User> user)
   {
-    currentConnectionsCache.Remove(user.Id); 
+    currentConnectionsCache.Remove(user.Id);
   }
-
 }

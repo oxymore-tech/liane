@@ -8,7 +8,6 @@ using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Match;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
@@ -24,7 +23,6 @@ using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -66,11 +64,11 @@ public static class Startup
     services.AddSettings<AuthSettings>(context);
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
+    services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<TripIntentServiceImpl>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<IntentMatchingServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
@@ -78,6 +76,8 @@ public static class Startup
     services.AddService<JoinLianeRequestServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);
+
+    services.AddHostedService<LianeMockCronService>();
   }
 
   public static void StartCurrentModule(string[] args)
@@ -188,7 +188,7 @@ public static class Startup
       });
     });
 
-    services.AddSingleton<IAuthorizationHandler, TokenRequirementHandler>();
+    services.AddService<TokenRequirementHandler>();
 
     services.AddAuthentication(options =>
     {
@@ -207,7 +207,7 @@ public static class Startup
       });
 
     // For Resource access level
-    services.AddSingleton<IAccessLevelContextFactory, MongoAccessLevelContextFactory>();
+    services.AddService<MongoAccessLevelContextFactory>();
 
     // For Mock data generation
     services.AddService<MockServiceImpl>();
@@ -216,9 +216,6 @@ public static class Startup
     var jsonSerializerOptions = new JsonSerializerOptions();
     JsonSerializerSettings.ConfigureOptions(jsonSerializerOptions);
     services.AddSingleton(jsonSerializerOptions);
-
-    // Hub service abstraction
-    services.AddSingleton<IHubService, HubServiceImpl>();
   }
 
   private static void StartCurrentModuleWeb(string[] args)
@@ -287,18 +284,7 @@ public static class Startup
       endpoints.MapControllers();
     });
 
-    StartServicesHook(app.ApplicationServices)
-      .GetAwaiter()
-      .GetResult();
-
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
   }
 
-  private static async Task StartServicesHook(IServiceProvider appApplicationServices)
-  {
-    foreach (var onStartup in appApplicationServices.GetServices<IOnStartup>())
-    {
-      await onStartup.OnStartup();
-    }
-  }
 }

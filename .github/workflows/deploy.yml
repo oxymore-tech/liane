@@ -42,4 +42,5 @@ jobs:
             git clone -b "${{ env.branch }}" git@github.com:oxymore-tech/liane.git "${{ env.project }}" || true;
             cd "${{ env.project }}/deploy"
             git pull
+            ./liane test
             ./liane start

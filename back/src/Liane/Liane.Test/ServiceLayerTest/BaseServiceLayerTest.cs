@@ -22,7 +22,7 @@ public abstract class BaseServiceLayerTest
   protected BaseServiceLayerTest()
   {
     // Load db with test settings
-    var settings = new MongoSettings("localhost", "mongoadmin", "secret");
+    var settings = new MongoSettings("mongo", "mongoadmin", "secret");
     db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), MongoDatabaseTestExtensions.DbName);
     // Load services 
     var services = new ServiceCollection();
@@ -48,13 +48,16 @@ public abstract class BaseServiceLayerTest
   [SetUp]
   public void EnsureSchema()
   {
+    ClearTestedCollections();
     MongoFactory.InitSchema(db);
   }
 
   protected abstract void InitService(IMongoDatabase db);
 
+  protected virtual void ClearTestedCollections(){}
+
   /// <summary>
-  /// Clears given Collection. Should be called in [TearDown]
+  /// Clears given Collection. Should be called in ClearTestedCollections
   /// </summary>
   protected void DropTestedCollection<T>()
   {

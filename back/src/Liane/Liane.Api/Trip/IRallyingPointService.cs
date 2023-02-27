@@ -13,7 +13,7 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
 
   Task Generate();
 
-  Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search, int? radius = MaxRadius, int? limit = MaxRallyingPoint);
+  Task<ImmutableList<RallyingPoint>> List(LatLng? from, LatLng? to, int? distance = null, string? search = null, int? limit = null);
 
   Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto);
 

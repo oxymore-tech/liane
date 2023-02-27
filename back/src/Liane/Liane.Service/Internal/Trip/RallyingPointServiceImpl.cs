@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -16,6 +16,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip.Import;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 
@@ -23,6 +24,17 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
 {
+  private static readonly string[] AccentedChars =
+  {
+    "[aáÁàÀâÂäÄãÃåÅæÆ]",
+    "[cçÇ]",
+    "[eéÉèÈêÊëË]",
+    "[iíÍìÌîÎïÏ]",
+    "[nñÑ]",
+    "[oóÓòÒôÔöÖõÕøØœŒß]",
+    "[uúÚùÙûÛüÜ]"
+  };
+
   private readonly ILogger<RallyingPointServiceImpl> logger;
 
   public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger)
@@ -46,19 +58,32 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
   }
 
-  public async Task<ImmutableList<RallyingPoint>> List(LatLng? pos, string? search, int? radius = IRallyingPointService.MaxRadius, int? limit = IRallyingPointService.MaxRallyingPoint)
+  public async Task<ImmutableList<RallyingPoint>> List(LatLng? from, LatLng? to, int? distance = null, string? search = null, int? limit = null)
   {
     var filter = FilterDefinition<RallyingPoint>.Empty;
 
     if (search is not null)
     {
-      filter = Builders<RallyingPoint>.Filter.Text(search, new TextSearchOptions { CaseSensitive = false, DiacriticSensitive = false });
+      var regex = new Regex(ToSearchPattern(search), RegexOptions.IgnoreCase);
+      filter &= Builders<RallyingPoint>.Filter.Regex(x => x.Label, new BsonRegularExpression(regex))
+                | Builders<RallyingPoint>.Filter.Regex(x => x.City, new BsonRegularExpression(regex))
+                | Builders<RallyingPoint>.Filter.Regex(x => x.ZipCode, new BsonRegularExpression(regex))
+                | Builders<RallyingPoint>.Filter.Regex(x => x.Address, new BsonRegularExpression(regex));
     }
-    else if (pos.HasValue)
+
+    if (from.HasValue)
     {
-      radius ??= IRallyingPointService.MaxRadius;
-      var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Value.Lng, pos.Value.Lat));
-      filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, point, radius);
+      if (to.HasValue)
+      {
+        var box = GeoJson.BoundingBox(new GeoJson2DGeographicCoordinates(from.Value.Lng, from.Value.Lat), new GeoJson2DGeographicCoordinates(to.Value.Lng, to.Value.Lat));
+        filter &= Builders<RallyingPoint>.Filter.GeoWithinBox(x => x.Location, box.Min.Longitude, box.Min.Latitude, box.Max.Longitude, box.Max.Latitude);
+      }
+      else
+      {
+        var radian = (double)(distance ?? 500_000) / 1000 / 6378.1;
+        filter &= Builders<RallyingPoint>.Filter.GeoWithinCenterSphere(x => x.Location, from.Value.Lng, from.Value.Lat, radian);
+        //filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, from.Value.Lng, from.Value.Lat);
+      }
     }
 
     return (await Mongo.GetCollection<RallyingPoint>()
@@ -67,6 +92,13 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
         .ToCursorAsync())
       .ToEnumerable()
       .ToImmutableList();
+  }
+
+  private static string ToSearchPattern(string search)
+  {
+    search = Regex.Escape(search).ToLower();
+    search = AccentedChars.Aggregate(search, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
+    return $@"\b{search}.*";
   }
 
   public async Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto)

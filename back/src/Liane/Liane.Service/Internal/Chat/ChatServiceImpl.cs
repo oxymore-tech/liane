@@ -3,19 +3,20 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Chat;
 
 public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>, IChatService
 {
   private readonly ISendNotificationService notificationService;
+
   public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService) : base(mongo)
   {
     this.notificationService = notificationService;
@@ -39,12 +40,13 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
   {
     // Get conversations ids where user's last read is before the latest message
-    var query = from c in Mongo.GetCollection<ConversationGroup>().AsQueryable()
-      where c.Members.Any(m => m.User == user && m.LastReadAt < c.LastMessageAt)
-      select c;
+    var query = await Mongo.GetCollection<ConversationGroup>()
+      .AsQueryable()
+      .Where(c => c.Members.Any(m => m.User == user && m.LastReadAt < c.LastMessageAt))
+      .ToListAsync();
 
-    return await query.SelectAsync<ConversationGroup, Ref<ConversationGroup>>(async g => g.Id);
-
+    return query.Select(g => (Ref<ConversationGroup>)g.Id!)
+      .ToImmutableList();
   }
 
   public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)
@@ -54,9 +56,9 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     await Mongo.GetCollection<DbChatMessage>()
       .InsertOneAsync(new DbChatMessage(sent.Id, groupId, sent.CreatedBy, createdAt, sent.Text));
     await Mongo.GetCollection<ConversationGroup>()
-      .UpdateOneAsync(c => c.Id == groupId, 
+      .UpdateOneAsync(c => c.Id == groupId,
         Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt)
-        );
+      );
     // Send push notification asynchronously to other conversation members
     Task.Run(async () =>
     {
@@ -88,7 +90,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       Builders<DbChatMessage>.Filter.Where(m => m.Group == group.Id),
       false
     );
-    return messages.Select(ToOutputDto);
+    return messages.Select(MapEntity);
   }
 
   protected override ConversationGroup ToDb(ConversationGroup inputDto, string originalId, DateTime createdAt, string createdBy)
@@ -96,7 +98,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy };
   }
 
-  private ChatMessage ToOutputDto(DbChatMessage m)
+  private ChatMessage MapEntity(DbChatMessage m)
   {
     return new ChatMessage(m.Id, m.CreatedBy, m.CreatedAt, m.Text);
   }

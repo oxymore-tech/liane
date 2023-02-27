@@ -47,6 +47,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     {
       throw new ResourceNotFoundException($"User ${userId}");
     }
+
     return MapUser(userDb);
   }
 
@@ -54,8 +55,9 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   {
     return new FullUser(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
   }
-  protected override async Task<Api.User.User> MapEntity(DbUser dbUser)
+
+  protected override Task<Api.User.User> MapEntity(DbUser dbUser)
   {
-    return new Api.User.User(dbUser.Id, dbUser.Pseudo, dbUser.CreatedAt);
+    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.Pseudo, dbUser.CreatedAt));
   }
 }

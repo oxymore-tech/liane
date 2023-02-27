@@ -41,12 +41,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var from = (await filter.From.Resolve(rallyingPointService.Get));
     var to = (await filter.To.Resolve(rallyingPointService.Get));
     var resolvedFilter = filter with { From = from, To = to };
-    var isDriverMatch = filter.AvailableSeats > 0;
     // Filter Lianes in database 
     var lianesCursor = await Filter(resolvedFilter);
     
     // Select lazily while under limit 
-    var lianes = await lianesCursor.SelectAsync(l => MatchLiane(l, from, to, isDriverMatch));
+    var lianes = await lianesCursor.SelectAsync(l => MatchLiane(l, from, to, filter));
 
     Cursor? nextCursor = null; //TODO
     return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor,lianes
@@ -96,10 +95,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     // If search is passenger search, fetch Liane with driver only
     var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.DriverData.CanDrive , filter.AvailableSeats <= 0);
     
-    // TODO var hasAvailableSeats = Builders<LianeDb>.Filter.Where(l => l.Members.Select(m => m.SeatCount).Sum() + filter.AvailableSeats > 0);
+    // l => l.TotalSeatCount + filter.AvailableSeats > 0
+    var hasAvailableSeats = Builders<LianeDb>.Filter.Gte("TotalSeatCount", -filter.AvailableSeats);
 
-    var f = nearFrom & timeFilter & nearTo &  isDriverSearch;
-
+    var f = nearFrom & timeFilter & isDriverSearch & hasAvailableSeats & nearTo;
     return Mongo.GetCollection<LianeDb>()
       .Find(f);
   }
@@ -231,14 +230,21 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
     var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates);
     var updateOneAsync = await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
-    int i = 0;
   }
 
-  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, bool matchForDriver)
+  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from , RallyingPoint to,  Filter filter)
   {
+    var matchForDriver = filter.AvailableSeats > 0;
     var defaultDriver = lianeDb.DriverData.User;
     var (driverSegment, segments) = ExtractRouteSegments(defaultDriver, lianeDb.Members);
     var wayPoints = (await routingService.GetTrip(driverSegment, segments))!;
+    var initialTripDuration = wayPoints.TotalDuration();
+
+    if (filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.DateTime)
+    {
+      // For filters on arrival types, filter here using trip duration
+      return null;
+    }
     ImmutableSortedSet<WayPoint> newWayPoints;
     MatchType matchType;
     if (wayPoints.IncludesSegment((from, to)))
@@ -258,7 +264,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       }
 
       newWayPoints = tripIntent;
-      var delta = newWayPoints.TotalDuration() - wayPoints.TotalDuration();
+      var delta = newWayPoints.TotalDuration() - initialTripDuration;
       if (delta > MaxDeltaInSeconds)
       {
         return null;

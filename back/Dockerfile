@@ -5,8 +5,18 @@ WORKDIR /app
 COPY Liane.sln ./
 COPY src/ ./src/
 
-RUN dotnet restore && dotnet test --filter Category\!=Integration && dotnet publish -c Release
+RUN dotnet restore && dotnet publish -c Release
 
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS test
+
+WORKDIR /app
+
+COPY Liane.sln ./
+COPY src/ ./src/
+
+RUN dotnet restore
+
+ENTRYPOINT [ "dotnet" , "test" ]
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 EXPOSE 5000

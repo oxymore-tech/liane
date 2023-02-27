@@ -53,9 +53,8 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
     
     Assert.IsEmpty(firstPage.Data.Intersect(secondPage.Data).ToImmutableList());
   }
-
-  [TearDown]
-  public void ClearTestedCollections()
+  
+  protected override void ClearTestedCollections()
   {
     DropTestedCollection<ConversationGroup>();
     DropTestedCollection<ChatMessage>();
