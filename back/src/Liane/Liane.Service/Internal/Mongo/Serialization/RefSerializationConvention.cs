@@ -9,16 +9,16 @@ namespace Liane.Service.Internal.Mongo.Serialization;
 public class RefSerializationConvention : ConventionBase, IMemberMapConvention
 {
 
-  private readonly ImmutableList<Type> excludedTypes;
+  private readonly ImmutableList<Type> typesWithStringId;
 
-  public RefSerializationConvention(ImmutableList<Type> excludedTypes)
+  public RefSerializationConvention(ImmutableList<Type> typesWithStringId)
   {
-    this.excludedTypes = excludedTypes;
+    this.typesWithStringId = typesWithStringId;
   }
 
-  public RefSerializationConvention(string name, ImmutableList<Type> excludedTypes) : base(name)
+  public RefSerializationConvention(string name, ImmutableList<Type> typesWithStringId) : base(name)
   {
-    this.excludedTypes = excludedTypes;
+    this.typesWithStringId = typesWithStringId;
   }
 
   /// <inheritdoc/>
@@ -31,15 +31,9 @@ public class RefSerializationConvention : ConventionBase, IMemberMapConvention
     }
     
     var referencedType = memberMap.MemberType.GetGenericArguments()[0];
-    Type serializerType;
-    if (excludedTypes.Contains(referencedType))
-    {
-      serializerType = typeof(RefToStringBsonSerializer<>).MakeGenericType(referencedType);
-    }
-    else
-    {
-      serializerType = typeof(RefToObjectIdBsonSerializer<>).MakeGenericType(referencedType);
-    }
+    var serializerType = typesWithStringId.Contains(referencedType) ?
+      typeof(RefToStringBsonSerializer<>).MakeGenericType(referencedType) : 
+      typeof(RefToObjectIdBsonSerializer<>).MakeGenericType(referencedType);
 
     memberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(serializerType)!);
   }

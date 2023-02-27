@@ -53,11 +53,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .Cast<LianeMatch>()
       .OrderBy(l =>
       {
-        var exactMatchScore = l.MatchData is ExactMatch ? 0 : 1;
+        var exactMatchScore = l.MatchData is MatchType.ExactMatch ? 0 : 1;
         var hourDeltaScore = (filter.TargetTime.DateTime - l.DepartureTime).Hours;
         return hourDeltaScore*2 + exactMatchScore;
       })
-      .ThenByDescending(l => l.MatchData is ExactMatch ? 0 : ((CompatibleMatch)l.MatchData).DeltaInSeconds)
+      .ThenByDescending(l => l.MatchData is MatchType.ExactMatch ? 0 : ((MatchType.CompatibleMatch)l.MatchData).DeltaInSeconds)
       .ToImmutableList());
   }
 
@@ -250,7 +250,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     if (wayPoints.IncludesSegment((from, to)))
     {
       newWayPoints = wayPoints;
-      matchType = new ExactMatch();
+      matchType = new MatchType.ExactMatch();
     }
     else
     {
@@ -270,7 +270,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         return null;
       }
 
-      matchType = new CompatibleMatch(delta);
+      matchType = new MatchType.CompatibleMatch(delta);
     }
 
     var driver =  lianeDb.DriverData.CanDrive ? lianeDb.DriverData.User : null;

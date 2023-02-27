@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
@@ -13,23 +13,23 @@ public sealed class PolymorphicTypeResolver : DefaultJsonTypeInfoResolver
   {
     var jsonTypeInfo = base.GetTypeInfo(type, options);
 
-    if (jsonTypeInfo.Type != typeof(MatchType))
-    {
-      return jsonTypeInfo;
-    }
+    if (!jsonTypeInfo.Type.IsAssignableTo(typeof(IUnion))) return jsonTypeInfo;
+
+    var candidateDerivedTypes = jsonTypeInfo.Type.GetNestedTypes().Where(t => t.IsAssignableTo(jsonTypeInfo.Type)).ToArray();
+
+    if (candidateDerivedTypes.Length == 0) return jsonTypeInfo;
 
     var polymorphismOptions = new JsonPolymorphismOptions
     {
       TypeDiscriminatorPropertyName = "type",
       IgnoreUnrecognizedTypeDiscriminators = true,
-      UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FailSerialization
+      UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor,
+      
     };
-    foreach (var jsonDerivedType in type.Assembly.GetTypes()
-               .Where(t => t != jsonTypeInfo.Type && t.IsAssignableTo(jsonTypeInfo.Type))
-               .Select(t => new JsonDerivedType(t, t.Name))
-               .ToArray())
+    
+    foreach (var jsonDerivedType in candidateDerivedTypes)
     {
-      polymorphismOptions.DerivedTypes.Add(jsonDerivedType);
+      polymorphismOptions.DerivedTypes.Add(new JsonDerivedType(jsonDerivedType, jsonDerivedType.Name));
     }
 
     jsonTypeInfo.PolymorphismOptions = polymorphismOptions;

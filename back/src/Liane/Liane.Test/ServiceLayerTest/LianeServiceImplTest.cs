@@ -65,15 +65,15 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
     // Check exact matches
     var expected = createdLianes[4];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<ExactMatch>(results.First(m => m.Liane == expected.Id).MatchData);
+    Assert.IsInstanceOf<MatchType.ExactMatch>(results.First(m => m.Liane == expected.Id).MatchData);
 
     // Check compatible matches
     expected = createdLianes[0];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<CompatibleMatch>(results.First(m => m.Liane == expected.Id).MatchData);
+    Assert.IsInstanceOf<MatchType.CompatibleMatch>(results.First(m => m.Liane == expected.Id).MatchData);
     expected = createdLianes[2];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<CompatibleMatch>(results.First(m => m.Liane == expected.Id).MatchData);
+    Assert.IsInstanceOf<MatchType.CompatibleMatch>(results.First(m => m.Liane == expected.Id).MatchData);
   }
 
   private LianeRequest[] CreateBaseLianeRequests()

@@ -17,7 +17,7 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Notification;
 
-public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificationDb, BaseNotification>, INotificationService, ISendNotificationService
+public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationDb, BaseNotification>, INotificationService, ISendNotificationService
 {
   private readonly IUserService userService;
   private readonly JsonSerializerOptions jsonSerializerOptions;
@@ -43,7 +43,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
     }
   }
   
-  private async Task SendNotificationTo<T>(Ref<Api.User.User> receiver, Notification<T> notification) where T : class
+  private async Task SendNotificationTo(Ref<Api.User.User> receiver, BaseNotification notification)
   {
     // Try send via hub direct connection
     if (await hubService.TrySendNotification(receiver, notification))
@@ -96,15 +96,15 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }
 
-  private BaseNotification MapEntityClass<T>(NotificationDb<T> dbRecord) where T : class
+  private BaseNotification MapEntityClass<T>(NotificationDb.WithEvent<T> dbRecord) where T : class
   {
-    return new Notification<T>(dbRecord.Id, dbRecord.CreatedAt, dbRecord.Event);
+    return new BaseNotification.Notification<T>(dbRecord.Id, dbRecord.CreatedAt, dbRecord.Event);
   }
 
-  protected override Task<BaseNotification> MapEntity(BaseNotificationDb dbRecord)
+  protected override Task<BaseNotification> MapEntity(NotificationDb dbRecord)
   {
     var type = dbRecord.GetType();
-    if (!type.GetTypeInfo().IsAssignableFrom(typeof(NotificationDb<>)))
+    if (!type.GetTypeInfo().IsAssignableFrom(typeof(NotificationDb.WithEvent<>)))
     {
       throw new ArgumentException("Bad NotificationDb type : " + nameof(type));
     }
@@ -117,9 +117,9 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
   public async Task<BaseNotification> Create<T>(T linkedEvent, Ref<Api.User.User> receiver) where T : class
   {
     var timestamp = DateTime.Now;
-    var dbRecord = new NotificationDb<T>(ObjectId.GenerateNewId().ToString(),  linkedEvent, receiver, timestamp);
-    await Mongo.GetCollection<BaseNotificationDb>().InsertOneAsync(dbRecord);
-    var notification = new Notification<T>(dbRecord.Id, timestamp, linkedEvent);
+    var dbRecord = new NotificationDb.WithEvent<T>(ObjectId.GenerateNewId().ToString(),  linkedEvent, receiver, timestamp);
+    await Mongo.GetCollection<NotificationDb>().InsertOneAsync(dbRecord);
+    var notification = new BaseNotification.Notification<T>(dbRecord.Id, timestamp, linkedEvent);
     
     // Send notification 
     Task.Run(() => SendNotificationTo(receiver, notification));
@@ -130,7 +130,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<BaseNotificat
   public async Task<int> GetUnreadCount(Ref<Api.User.User> user)
   {
     var resolvedUser = await ResolveRef<DbUser>(user);
-    var unreadCount = await Mongo.GetCollection<BaseNotificationDb>()
+    var unreadCount = await Mongo.GetCollection<NotificationDb>()
       .Find(n => n.Id == user.Id && resolvedUser!.LastConnection < n.CreatedAt)
       .CountDocumentsAsync();
     return (int)Math.Min(int.MaxValue, unreadCount);

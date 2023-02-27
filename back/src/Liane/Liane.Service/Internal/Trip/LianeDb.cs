@@ -17,9 +17,8 @@ public sealed record DriverData
 );
 
 public sealed record LianeDb(
-  //[property: BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
   string Id,
-  string? CreatedBy,
+  Ref<Api.User.User>? CreatedBy,
   DateTime CreatedAt,
   DateTime DepartureTime,
   DateTime? ReturnTime,

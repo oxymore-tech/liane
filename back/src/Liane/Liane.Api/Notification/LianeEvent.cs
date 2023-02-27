@@ -3,22 +3,24 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Notification;
 
-public record LianeEvent(
+public abstract record LianeEvent(
   string? Id,
-  DateTime CreatedAt,
-  string Type
-) : IIdentity;
+  DateTime? CreatedAt,
+  Ref<User.User> CreatedBy
+) : IEntity, IUnion
+{
+  public sealed record NewMember(
+    string? Id,
+    DateTime? CreatedAt,
+    Ref<User.User> CreatedBy,
+    Ref<Trip.Liane> Liane
+    ) : LianeEvent(Id, CreatedAt, CreatedBy);
+    
+  public sealed record MemberHasLeft(
+    string? Id,
+    DateTime? CreatedAt,
+    Ref<User.User> CreatedBy,
+    Ref<Trip.Liane> Liane
+  ) : LianeEvent(Id, CreatedAt, CreatedBy);
+}
 
-public sealed record NewLianeMemberEvent(
-  string? Id,
-  DateTime CreatedAt,
-  Ref<User.User> NewMember,
-  Ref<Trip.Liane> Liane
-  ) : LianeEvent(Id, CreatedAt, nameof(NewLianeMemberEvent));
-  
-public sealed record LianeMemberHasLeftEvent(
-  string? Id,
-  DateTime CreatedAt,
-  Ref<User.User> NewMember,
-  Ref<Trip.Liane> Liane
-) : LianeEvent(Id, CreatedAt, nameof(LianeMemberHasLeftEvent));
