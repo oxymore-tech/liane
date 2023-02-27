@@ -24,6 +24,7 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
 {
+  private static readonly Regex NonAlphanumerics = new Regex("[^a-zA-Z0-9]+");
   private static readonly string[] AccentedChars =
   {
     "[aáÁàÀâÂäÄãÃåÅæÆ]",
@@ -52,6 +53,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
     var rallyingPoints = (await LoadCarpoolArea(assembly))
       .Concat(await LoadTownHall(assembly))
+      .DistinctBy(p => p.Location)
       .ToImmutableList();
     await Mongo.GetCollection<RallyingPoint>()
       .InsertManyAsync(rallyingPoints);
@@ -80,9 +82,8 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       }
       else
       {
-        var radian = (double)(distance ?? 500_000) / 1000 / 6378.1;
-        filter &= Builders<RallyingPoint>.Filter.GeoWithinCenterSphere(x => x.Location, from.Value.Lng, from.Value.Lat, radian);
-        //filter = Builders<RallyingPoint>.Filter.Near(x => x.Location, from.Value.Lng, from.Value.Lat);
+        var center = GeoJson.Point(new GeoJson2DGeographicCoordinates(from.Value.Lng, from.Value.Lat));
+        filter &= Builders<RallyingPoint>.Filter.Near(x => x.Location, center, distance ?? 500_000);
       }
     }
 
@@ -96,9 +97,16 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
   private static string ToSearchPattern(string search)
   {
-    search = Regex.Escape(search).ToLower();
-    search = AccentedChars.Aggregate(search, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
-    return $@"\b{search}.*";
+    var words = NonAlphanumerics.Replace(search, " ")
+      .Trim()
+      .ToLower()
+      .Split();
+
+    return string.Concat(words.Select(w =>
+    {
+      var removeAccent = AccentedChars.Aggregate(w, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
+      return $@"\b{removeAccent}.*";
+    }));
   }
 
   public async Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto)

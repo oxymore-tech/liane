@@ -63,8 +63,6 @@ function start {
 
 function init {
   mongo_purge
-  sleep 6
-  source "${SCRIPTPATH}/../deploy/utils.sh"  
 }
 
 ARGS=${*:2}

@@ -62,7 +62,15 @@ public static class MongoFactory
     {
       Server = new MongoServerAddress(settings.Host, 27017),
       Credential = MongoCredential.CreateCredential("admin", settings.Username, settings.Password),
-      ClusterConfigurator = cb => { cb.Subscribe<CommandStartedEvent>(e => { logger.LogDebug($"{e.CommandName} - {e.Command.ToJson()}"); }); }
+      ClusterConfigurator = cb =>
+      {
+        cb.Subscribe<CommandStartedEvent>(e =>
+        {
+          var json = e.Command.ToJson();
+          var command = json.Length < 50_000 ? json : "Big query not displayed";
+          logger.LogDebug($"{e.CommandName} - {command}");
+        });
+      }
     });
 
     var db = mongo.GetDatabase(databaseName);
