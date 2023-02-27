@@ -9,7 +9,7 @@ import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { NoItemPlaceholder } from "@/components/NoItemPlaceholder";
-import { toLianeRequest } from "@/screens/search/SearchFormData";
+import { toLianeWizardFormData } from "@/screens/search/SearchFormData";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { formatDuration } from "@/util/datetime";
@@ -58,7 +58,7 @@ const EmptyResultView = () => {
           backgroundColor={AppColors.orange}
           text={"Ajouter une annonce"}
           onPress={() => {
-            navigation.navigate("LianeWizard", { lianeRequest: toLianeRequest(route.params!.filter) });
+            navigation.navigate("LianeWizard", { formData: toLianeWizardFormData(route.params!.filter) });
           }}
         />
       }
@@ -70,10 +70,10 @@ export const MatchQueryKey = "match";
 const ResultsView = WithFetchPaginatedResponse(
   ({ data }: { data: LianeMatch[] }) => {
     const { route, navigation } = useAppNavigation<"SearchResults">();
+    const filter = route.params!.filter;
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
       const isExactMatch = item.matchData.type === "ExactMatch";
       const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0);
-
       console.log(item, tripDuration);
       return (
         <View>
@@ -88,11 +88,11 @@ const ResultsView = WithFetchPaginatedResponse(
             onPress={() => {
               navigation.navigate({
                 name: "LianeMatchDetail",
-                params: { lianeMatch: item, filter: route.params!.filter }
+                params: { lianeMatch: item, filter }
               });
             }}
             style={[styles.item, styles.grayBorder, styles.itemLast]}>
-            <LianeMatchView match={item} filter={route.params!.filter} />
+            <LianeMatchView match={item} filter={filter} />
 
             <Row
               style={{
@@ -138,7 +138,7 @@ const ResultsView = WithFetchPaginatedResponse(
                   alignItems: "center",
                   backgroundColor: AppColorPalettes.gray[100]
                 }}>
-                <AppText style={{ fontSize: 18 }}>{item.freeSeatsCount}</AppText>
+                <AppText style={{ fontSize: 18 }}>{Math.abs(item.freeSeatsCount)}</AppText>
                 <AppIcon name={"people-outline"} size={22} />
               </Row>
             </Row>

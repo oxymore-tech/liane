@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Liane.Api.Chat;
 using Liane.Api.Hub;
 using Liane.Api.Notification;
 using Liane.Api.User;
@@ -42,6 +43,22 @@ public sealed class HubServiceImpl : IHubService
         // TODO handle retry 
         logger.LogInformation("Could not send notification to user {receiver} : {error}", receiver, e.Message);
       }
+    }
+
+    return false;
+  }
+
+  public async Task<bool> TrySendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  {
+    try
+    {
+      await hubContext.Clients.User(receiver).ReceiveMessage(conversation, message);
+      return true;
+    }
+    catch (Exception e)
+    {
+      // TODO handle retry 
+      logger.LogInformation("Could not send message to user {receiver} : {error}", receiver, e.Message);
     }
 
     return false;

@@ -17,11 +17,13 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
 {
   private readonly ISendNotificationService notificationService;
   private readonly IUserService userService;
+  private readonly IHubService hubService;
 
-  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService, IUserService userService) : base(mongo)
+  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService, IUserService userService, IHubService hubService) : base(mongo)
   {
     this.notificationService = notificationService;
     this.userService = userService;
+    this.hubService = hubService;
   }
 
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
@@ -74,13 +76,19 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       .UpdateOneAsync(c => c.Id == groupId,
         Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt)
       );
-    // Send push notification asynchronously to other conversation members
+    // Send notification asynchronously to other conversation members
     var _ = Task.Run(async () =>
     {
       var conversation = await ResolveRef<ConversationGroup>(groupId);
-      Parallel.ForEach(conversation!.Members, info =>
+      Parallel.ForEach(conversation!.Members, async info =>
       {
-        if (info.User != author) notificationService.SendTo(info.User, nameof(ChatMessage), sent);
+        if (info.User == author) return;
+        if (!hubService.IsConnected(info.User) || !await hubService.TrySendChatMessage(info.User, groupId, sent))
+        {
+          // Send detailled notification  
+          await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, sent));
+        }
+        
       });
     });
     return sent;

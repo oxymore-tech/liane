@@ -62,7 +62,8 @@ export const ContextualColors = {
     bg: "#B9E7C3"
   },
   redAlert: {
-    bg: "#ff8b8b"
+    bg: "#ffd7d0",
+    text: "#750000"
   }
 } as const;
 

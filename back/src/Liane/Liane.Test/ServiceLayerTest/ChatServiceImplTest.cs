@@ -22,7 +22,7 @@ public sealed class ChatServiceImplTest : BaseServiceLayerTest
 
   protected override void InitService(IMongoDatabase db)
   {
-    testedService = new ChatServiceImpl(db, Moq.Mock.Of<ISendNotificationService>(), new UserServiceImpl(db));
+    testedService = new ChatServiceImpl(db, Moq.Mock.Of<ISendNotificationService>(), new UserServiceImpl(db), Moq.Mock.Of<IHubService>());
   }
 
   [Test]

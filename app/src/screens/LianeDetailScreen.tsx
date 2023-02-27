@@ -65,12 +65,28 @@ export const LianeDetailScreen = () => {
       <View style={styles.separator} />
 
       <Column spacing={8} style={styles.actionsContainer}>
-        <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: "TODO" })}>
+        {liane.group && (
+          <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}>
+            <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+              <AppIcon name={"message-circle-outline"} />
+              <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
+              <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                <AppIcon name={"arrow-ios-forward-outline"} />
+              </View>
+            </Row>
+          </AppPressable>
+        )}
+        {!liane.group && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
+        <AppPressable
+          backgroundStyle={[styles.rowActionContainer]}
+          onPress={() => {
+            // TODO
+          }}>
           <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-            <AppIcon name={"message-circle-outline"} />
-            <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
+            <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
+            <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Supprimer l'annonce</AppText>
             <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-              <AppIcon name={"arrow-ios-forward-outline"} />
+              <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
             </View>
           </Row>
         </AppPressable>

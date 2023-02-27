@@ -92,6 +92,7 @@ export type Liane = Identity &
     wayPoints: WayPoint[];
     members: LianeMember[];
     driver?: Ref<User>;
+    group: Ref<ConversationGroup>;
   }>;
 
 export type WayPoint = Readonly<{
@@ -200,3 +201,10 @@ export type LianeMatch = Readonly<{
   matchData: ExactMatch | CompatibleMatch;
   freeSeatsCount: number;
 }>;
+
+export type Notification<T> = Readonly<
+  {
+    event: T;
+    type: string;
+  } & Identity
+>;

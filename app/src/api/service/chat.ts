@@ -1,4 +1,4 @@
-import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
+import { ChatMessage, ConversationGroup, Notification, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
 import { BaseUrl, get, tryRefreshToken } from "@/api/http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { getAccessToken, getRefreshToken } from "@/api/storage";
@@ -18,6 +18,12 @@ export interface ChatHubService {
 
 export type OnMessageCallback = (res: ChatMessage) => void;
 export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
+export type OnNotificationCallback = (res: Notification<any>) => void;
+
+export type UnreadOverview = Readonly<{
+  notificationCount: number;
+  conversations: Ref<ConversationGroup>[];
+}>;
 
 function createChatConnection(): HubConnection {
   return new HubConnectionBuilder()
@@ -33,6 +39,7 @@ function createChatConnection(): HubConnection {
 export class HubServiceClient implements ChatHubService {
   private hub: HubConnection;
   private currentConversationId?: string = undefined;
+  private unread?: UnreadOverview;
 
   // Sets a callback to receive latests messages when joining the conversation.
   // This callback will be automatically disposed of when closing conversation.
@@ -40,6 +47,7 @@ export class HubServiceClient implements ChatHubService {
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
 
+  private onReceiveNotificationCallback: OnNotificationCallback | null = null;
   private onReceiveMessageCallback: OnMessageCallback | null = null;
   constructor() {
     this.hub = createChatConnection();
@@ -54,14 +62,24 @@ export class HubServiceClient implements ChatHubService {
           await this.onReceiveLatestMessagesCallback(messages);
         }
       });
-      this.hub.on("ReceiveMessage", async message => {
-        if (this.onReceiveMessageCallback) {
+      this.hub.on("ReceiveMessage", async (convId, message) => {
+        if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
           await this.onReceiveMessageCallback(message);
+        } else if (this.unread && !this.unread.conversations.includes(convId)) {
+          this.unread.conversations.push(convId);
         }
       });
       this.hub.on("Me", async (me: User) => {
         console.log("me", me);
         resolve(me);
+      });
+      this.hub.on("ReceiveUnreadOverview", async (unread: UnreadOverview) => {
+        this.unread = unread;
+      });
+      this.hub.on("ReceiveNotification", async (notification: Notification<any>) => {
+        if (this.onReceiveNotificationCallback) {
+          await this.onReceiveNotificationCallback(notification);
+        }
       });
       this.hub.onclose(err => {
         if (!alreadyClosed) {

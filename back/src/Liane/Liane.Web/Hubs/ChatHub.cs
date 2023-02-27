@@ -38,10 +38,9 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     logger.LogInformation(message.Text);
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
-    // TODO handle notifications in service for disconnected users 
     logger.LogInformation(sent.Text + " " + currentContext.CurrentUser().Id);
     // Send created message directly to the caller, the rest of the group will be handled by chat service
-    await Clients.Caller.ReceiveMessage(sent);
+    await Clients.Caller.ReceiveMessage(groupId, sent);
   }
 
   public async Task<ConversationGroup> JoinGroupChat(string groupId)

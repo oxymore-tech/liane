@@ -22,7 +22,7 @@ public abstract class BaseServiceLayerTest
   protected BaseServiceLayerTest()
   {
     // Load db with test settings
-    var settings = new MongoSettings("mongo", "mongoadmin", "secret");
+    var settings = new MongoSettings("192.168.1.18", "mongoadmin", "secret");
     db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), MongoDatabaseTestExtensions.DbName);
     // Load services 
     var services = new ServiceCollection();

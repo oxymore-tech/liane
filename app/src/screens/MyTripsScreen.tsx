@@ -31,54 +31,58 @@ const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<PaginatedRes
   const sections = useMemo(() => convertToDateSections(data.data), [data]);
 
   // Render individual Liane items
-  const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => (
-    <Pressable
-      onPress={() => {
-        navigation.navigate({
-          name: "LianeDetail",
-          params: { liane: item }
-        });
-      }}
-      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
-      <View>
-        <View style={{ flexGrow: 1, marginRight: 40 }}>
-          <LianeView liane={item} />
+  const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+    return (
+      <Pressable
+        onPress={() => {
+          navigation.navigate({
+            name: "LianeDetail",
+            params: { liane: item }
+          });
+        }}
+        style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+        <View>
+          <View style={{ flexGrow: 1, marginRight: 40 }}>
+            <LianeView liane={item} />
+          </View>
+          {item.group && (
+            <Pressable
+              onPress={() => navigation.navigate("Chat")}
+              style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
+              <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
+            </Pressable>
+          )}
         </View>
-        <Pressable
-          onPress={() => navigation.navigate("Chat")}
-          style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
-          <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
-        </Pressable>
-      </View>
 
-      <Row
-        style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
-        spacing={8}>
         <Row
-          style={{
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderRadius: 4,
-            alignItems: "center",
-            backgroundColor: item.driver ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
-          }}>
-          <AppCustomIcon name={item.driver ? "car-check-mark" : "car-strike-through"} />
+          style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
+          spacing={8}>
+          <Row
+            style={{
+              paddingHorizontal: 4,
+              paddingVertical: 2,
+              borderRadius: 4,
+              alignItems: "center",
+              backgroundColor: item.driver ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
+            }}>
+            <AppCustomIcon name={item.driver ? "car-check-mark" : "car-strike-through"} />
+          </Row>
+          <Row
+            style={{
+              paddingHorizontal: 4,
+              paddingVertical: 2,
+              borderRadius: 4,
+              alignItems: "center",
+              backgroundColor: AppColorPalettes.gray[100]
+            }}>
+            <AppText style={{ fontSize: 18 }}>{item.members.length}</AppText>
+            <AppIcon name={"people-outline"} />
+          </Row>
         </Row>
-        <Row
-          style={{
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderRadius: 4,
-            alignItems: "center",
-            backgroundColor: AppColorPalettes.gray[100]
-          }}>
-          <AppText style={{ fontSize: 18 }}>2/3</AppText>
-          <AppIcon name={"people-outline"} />
-        </Row>
-      </Row>
-      <View style={{ position: "absolute", right: 16, top: -16 }} />
-    </Pressable>
-  );
+        <View style={{ position: "absolute", right: 16, top: -16 }} />
+      </Pressable>
+    );
+  };
 
   // Render section header using date as key
   const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane, TripSection> }) => (

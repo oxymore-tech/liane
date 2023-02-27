@@ -59,10 +59,11 @@ export const SearchScreen = () => {
     mode: "onChange",
     defaultValues: route.params?.filter ? fromSearchFilter(route.params?.filter) : undefined
   });
-  const { formState, handleSubmit } = formContext;
+  const { formState, handleSubmit, setValue, getValues } = formContext;
   const submitSearchForm = async (formData: SearchData) => {
     const filter = toSearchFilter(formData);
-    navigation.replace("SearchResults", { filter });
+    navigation.pop();
+    navigation.navigate({ name: "SearchResults", params: { filter }, key: "search" });
   };
 
   return (
@@ -82,27 +83,7 @@ export const SearchScreen = () => {
               paddingTop: 8,
               paddingBottom: 20
             }}>
-            <Column spacing={8} style={{ paddingRight: 8 }}>
-              <View
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  justifyContent: "center",
-                  width: 8,
-                  right: 2
-                }}>
-                <View
-                  style={{
-                    height: "50%",
-                    borderRightWidth: 1,
-                    borderTopWidth: 1,
-                    borderBottomWidth: 1,
-                    borderColor: AppColorPalettes.gray[200]
-                  }}
-                />
-              </View>
-
+            <Column spacing={8}>
               <FormCardButton
                 color={WizardFormData.from.color}
                 form={WithForms("from")}
@@ -117,6 +98,29 @@ export const SearchScreen = () => {
                 label={"Arrivée à"}
                 valueFormatter={value => value?.label || "--"}
               />
+
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  bottom: 0,
+                  justifyContent: "center",
+                  right: -12,
+                  width: 40
+                }}>
+                <AppRoundedButton
+                  backgroundColor={AppColors.white}
+                  text={"flip"}
+                  component={<AppIcon name={"flip-outline"} />}
+                  onPress={() => {
+                    // Switch to & from
+                    const from = getValues("from");
+                    const to = getValues("to");
+                    setValue("to", from);
+                    setValue("from", to);
+                  }}
+                />
+              </View>
             </Column>
 
             <View style={[styles.cardContainer, { backgroundColor: AppColors.yellow }]}>
@@ -131,6 +135,7 @@ export const SearchScreen = () => {
               name={"availableSeats"}
               label={"Voyageurs"}
               valueFormatter={(value: number) => {
+                console.log(value);
                 const plural = Math.abs(value) > 1 ? "s" : "";
                 return value > 0 ? `Conducteur (${Math.abs(value)} place${plural})` : Math.abs(value) + " passager" + plural;
               }}

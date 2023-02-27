@@ -47,7 +47,7 @@ const animDuration = 300;
 
 export const LianeWizardScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeWizard">();
-  const lianeRequest: LianeRequest | undefined = route.params?.lianeRequest;
+  const formData: LianeWizardFormData | undefined = route.params?.formData;
   const { services } = useContext(AppContext);
 
   // Listen to keyboard state to hide backdrop when keyboard is visible
@@ -76,12 +76,12 @@ export const LianeWizardScreen = () => {
   const queryClient = useQueryClient();
 
   const machine = useMemo(() => {
-    const submitLianeForm = async (formData: LianeWizardFormData) => {
-      const request = toLianeRequest(formData);
+    const submitLianeForm = async (fd: LianeWizardFormData) => {
+      const request = toLianeRequest(fd);
       const lianeResponse = await services.liane.post(request);
       if (lianeResponse) {
         await queryClient.invalidateQueries(LianeQueryKey);
-        navigation.goBack();
+        navigation.popToTop();
         /*  queryClient.setQueryData<Liane[]>(LianeQueryKey, oldData => {
           if (oldData) {
             return [lianeResponse, ...oldData];
@@ -94,8 +94,8 @@ export const LianeWizardScreen = () => {
       return lianeResponse;
     };
 
-    return CreateLianeContextMachine(submitLianeForm, undefined); //lianeRequest ? fromLianeRequest(lianeRequest) : undefined);
-  }, [lianeRequest, services.liane, queryClient, navigation]);
+    return CreateLianeContextMachine(submitLianeForm, formData || undefined);
+  }, [formData, services.liane, queryClient, navigation]);
 
   const lianeWizardMachine = useInterpret(machine);
 

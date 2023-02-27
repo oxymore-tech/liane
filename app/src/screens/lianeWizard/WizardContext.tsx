@@ -63,7 +63,7 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
     color: AppColors.blue
   },
   vehicle: {
-    forms: [WithName(CarForm, "availableSeats", { defaultValue: -1 })], // defaults to 1 passenger seat
+    forms: [WithName(CarForm, "availableSeats", { defaultValue: -1, rules: { required: false } })], // defaults to 1 passenger seat
     title: "Avez-vous un véhicule ?",
     color: AppColors.white
   }
