@@ -40,7 +40,7 @@ public sealed class MockServiceImpl : IMockService
       )
     );
 
-  private const int DefaultRadius = 40_000;
+  private const int DefaultRadius = 5_000;
 
   private static Faker<LianeRequest> CreateLianeFaker(IEnumerable<RallyingPoint> departureSet, IEnumerable<RallyingPoint> destinationSet, DateTime startDay)
   {
