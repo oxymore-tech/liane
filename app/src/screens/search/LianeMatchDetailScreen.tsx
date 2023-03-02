@@ -1,23 +1,44 @@
 import { CompatibleMatch, LianeMatch } from "@/api";
 import React from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { formatMonthDay, formatTime } from "@/api/i18n";
-import { LianeMatchView } from "@/components/trip/LianeMatchView";
+import { formatDateTime } from "@/api/i18n";
+import { LianeDetailedMatchView } from "@/components/trip/LianeMatchView";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { AppButton } from "@/components/base/AppButton";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
+import { toJoinLianeRequest } from "@/screens/search/SearchFormData";
+
+const formatSeatCount = (seatCount: number) => {
+  let count = seatCount;
+  let words: string[];
+  if (seatCount > 0) {
+    // offered seats
+    words = ["place", "disponible"];
+  } else {
+    // passengers
+    count = -seatCount;
+    words = ["passager"];
+  }
+  return `${count} ${words.map(word => word + (count > 1 ? "s" : "")).join(" ")}`;
+};
 
 export const LianeMatchDetailScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeMatchDetail">();
   const liane: LianeMatch = route.params!.lianeMatch;
   const insets = useSafeAreaInsets();
   const isExactMatch = liane.matchData.type === "ExactMatch";
+  const filter = route.params!.filter;
+
+  const formattedDepartureTime = formatDateTime(new Date(liane.liane.departureTime));
+  const formattedSeatCount = formatSeatCount(liane.freeSeatsCount);
+  const matchLabel = isExactMatch ? "Trajet exact" : "Trajet compatible";
+  const driverLabel = liane.liane.driver ? "John Doe" : "Aucun conducteur";
 
   return (
     <View style={styles.page}>
@@ -28,7 +49,13 @@ export const LianeMatchDetailScreen = () => {
         <AppText style={styles.title}>Détails de la Liane</AppText>
       </Row>
       <View style={styles.section}>
-        <LianeMatchView match={liane} filter={route.params!.filter} />
+        <LianeDetailedMatchView
+          from={filter.from}
+          to={filter.to}
+          departureTime={liane.liane.departureTime}
+          originalTrip={liane.liane.wayPoints}
+          newTrip={liane.wayPoints}
+        />
       </View>
       <View style={styles.separator} />
       <Column style={styles.tagsContainer} spacing={8}>
@@ -41,9 +68,7 @@ export const LianeMatchDetailScreen = () => {
           ]}
           spacing={8}>
           <AppIcon name={"calendar-outline"} />
-          <AppText style={{ fontSize: 16 }}>
-            {`${formatMonthDay(new Date(liane.departureTime))} à ${formatTime(new Date(liane.departureTime))}`}
-          </AppText>
+          <AppText style={{ fontSize: 16 }}>{formattedDepartureTime}</AppText>
         </Row>
         <Row
           style={[
@@ -54,14 +79,12 @@ export const LianeMatchDetailScreen = () => {
           ]}
           spacing={8}>
           <AppIcon name={"people-outline"} />
-          <AppText style={{ fontSize: 16 }}>
-            {liane.freeSeatsCount + " " + ["place", "disponible"].map(word => word + (liane.freeSeatsCount > 1 ? "s" : "")).join(" ")}
-          </AppText>
+          <AppText style={{ fontSize: 16 }}>{formattedSeatCount}</AppText>
         </Row>
         {isExactMatch && (
           <Row spacing={8} style={[styles.tag, isExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg]}>
             {isExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
-            <AppText style={{ fontSize: 16 }}>{isExactMatch ? "Trajet exact" : "Trajet compatible"}</AppText>
+            <AppText style={{ fontSize: 16 }}>{matchLabel}</AppText>
           </Row>
         )}
         {!isExactMatch && (
@@ -71,15 +94,23 @@ export const LianeMatchDetailScreen = () => {
       <View style={styles.separator} />
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
         <View
-          style={{ backgroundColor: liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg, padding: 12, borderRadius: 52 }}>
-          <AppCustomIcon name={liane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+          style={{
+            backgroundColor: liane.liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+            padding: 12,
+            borderRadius: 52
+          }}>
+          <AppCustomIcon name={liane.liane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
         </View>
-        <AppText style={{ fontSize: 18 }}>{liane.driver ? "John Doe" : "Aucun conducteur"} </AppText>
+        <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
       </Row>
       <View style={styles.separator} />
 
       <BottomOptionBg color={AppColors.darkBlue}>
-        <AppButton icon={"arrow-right"} title={"Rejoindre"} onPress={() => Alert.alert("Rejoindre cette Liane sera possible sous peu...")} />
+        <AppButton
+          icon={"arrow-right"}
+          title={"Rejoindre"}
+          onPress={() => navigation.navigate({ name: "RequestJoin", params: { request: toJoinLianeRequest(filter, liane, "") }, key: "req" })}
+        />
       </BottomOptionBg>
     </View>
   );

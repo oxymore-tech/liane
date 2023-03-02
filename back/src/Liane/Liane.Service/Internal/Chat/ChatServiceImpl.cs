@@ -17,18 +17,20 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
 {
   private readonly ISendNotificationService notificationService;
   private readonly IUserService userService;
+  private readonly IHubService hubService;
 
-  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService, IUserService userService) : base(mongo)
+  public ChatServiceImpl(IMongoDatabase mongo, ISendNotificationService notificationService, IUserService userService, IHubService hubService) : base(mongo)
   {
     this.notificationService = notificationService;
     this.userService = userService;
+    this.hubService = hubService;
   }
 
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
   {
     // Retrieve conversation and user's membership data
     var conversationGroup = await Get(group);
-    var userMembershipIndex = conversationGroup.Members.FindIndex(m => m.User == user);
+    var userMembershipIndex = conversationGroup.Members.FindIndex(m => m.User.Id == user.Id);
     if (userMembershipIndex < 0) throw new NullReferenceException();
 
     // Update Member's last connection and return
@@ -70,17 +72,26 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     var sent = message with { Id = ObjectId.GenerateNewId().ToString(), CreatedBy = author.Id, CreatedAt = createdAt };
     await Mongo.GetCollection<DbChatMessage>()
       .InsertOneAsync(new DbChatMessage(sent.Id, groupId, sent.CreatedBy, createdAt, sent.Text));
-    await Mongo.GetCollection<ConversationGroup>()
-      .UpdateOneAsync(c => c.Id == groupId,
-        Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt)
+    var conversation = await Mongo.GetCollection<ConversationGroup>()
+      .FindOneAndUpdateAsync<ConversationGroup>(c => c.Id == groupId,
+        Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt),
+        new FindOneAndUpdateOptions<ConversationGroup> { ReturnDocument = ReturnDocument.After }
+
       );
-    // Send push notification asynchronously to other conversation members
-    var _ = Task.Run(async () =>
+    // Send notification asynchronously to other conversation members
+    var _ = Task.Run(() =>
     {
-      var conversation = await ResolveRef<ConversationGroup>(groupId);
-      Parallel.ForEach(conversation!.Members, info =>
+      Parallel.ForEach(conversation!.Members, async info =>
       {
-        if (info.User != author) notificationService.SendTo(info.User, nameof(ChatMessage), sent);
+        if (info.User == author) return;
+        if (await hubService.TrySendChatMessage(info.User, groupId, sent))
+        {
+          return;
+        }
+        // User is not in the conversation so send detailed notification  
+        // var authorUser = await userService.Get(author);
+       //TODO await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, authorUser, sent));
+
       });
     });
     return sent;

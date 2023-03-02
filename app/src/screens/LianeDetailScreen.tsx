@@ -1,7 +1,6 @@
 import { Liane } from "@/api";
-import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { LianeView } from "@/components/trip/LianeView";
+import React, { useContext, useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -10,22 +9,17 @@ import { AppText } from "@/components/base/AppText";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { AppPressable } from "@/components/base/AppPressable";
 import { useAppNavigation } from "@/api/navigation";
+import { AppContext } from "@/components/ContextProvider";
+import { DetailedWayPointView } from "@/components/trip/WayPointsView";
 
-export const LianeDetailScreen = () => {
-  const { route, navigation } = useAppNavigation<"LianeDetail">();
-  const liane: Liane = route.params!.liane;
-  const insets = useSafeAreaInsets();
-
+const LianeDetail = ({ liane }: { liane: Liane }) => {
+  const { user } = useContext(AppContext);
+  const { navigation } = useAppNavigation<"LianeDetail">();
+  const currentUserIsOwner = liane.createdBy === user!.id;
   return (
-    <View style={styles.page}>
-      <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
-        <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
-          <AppIcon name={"arrow-ios-back-outline"} size={24} color={defaultTextColor(AppColors.yellow)} />
-        </Pressable>
-        <AppText style={styles.title}>Détails de la Liane</AppText>
-      </Row>
+    <Column>
       <View style={styles.section}>
-        <LianeView liane={liane} />
+        <DetailedWayPointView wayPoints={liane.wayPoints} departureTime={liane.departureTime} />
       </View>
       <View style={styles.separator} />
       <Column style={styles.tagsContainer} spacing={8}>
@@ -58,23 +52,71 @@ export const LianeDetailScreen = () => {
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
         <View
           style={{ backgroundColor: liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg, padding: 12, borderRadius: 52 }}>
-          <AppCustomIcon name={liane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+          <AppCustomIcon name={liane.driver ? "car-check-mark" : "car-strike-through"} size={28} />
         </View>
-        <AppText style={{ fontSize: 18 }}>{liane.driver ? "John Doe" : "Aucun conducteur"} </AppText>
+        <Column spacing={2}>
+          <AppText style={{ fontSize: 16 }}>{liane.driver ? "John Doe" : "Aucun conducteur"} </AppText>
+          {__DEV__ && <AppText style={{ fontSize: 12 }}>{liane.driver} </AppText>}
+        </Column>
       </Row>
       <View style={styles.separator} />
 
       <Column spacing={8} style={styles.actionsContainer}>
-        <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: "TODO" })}>
-          <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-            <AppIcon name={"message-circle-outline"} />
-            <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
-            <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-              <AppIcon name={"arrow-ios-forward-outline"} />
-            </View>
-          </Row>
-        </AppPressable>
+        {liane.group && (
+          <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}>
+            <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+              <AppIcon name={"message-circle-outline"} />
+              <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
+              <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                <AppIcon name={"arrow-ios-forward-outline"} />
+              </View>
+            </Row>
+          </AppPressable>
+        )}
+        {!liane.group && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
+        {currentUserIsOwner && (
+          <AppPressable
+            backgroundStyle={[styles.rowActionContainer]}
+            onPress={() => {
+              // TODO
+            }}>
+            <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+              <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
+              <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Supprimer l'annonce</AppText>
+              <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
+              </View>
+            </Row>
+          </AppPressable>
+        )}
       </Column>
+    </Column>
+  );
+};
+
+export const LianeDetailScreen = () => {
+  const { route, navigation } = useAppNavigation<"LianeDetail">();
+  const { services } = useContext(AppContext);
+  const lianeParam = route.params!.liane;
+  const insets = useSafeAreaInsets();
+  const [liane, setLiane] = useState(typeof lianeParam === "string" ? undefined : lianeParam);
+
+  useEffect(() => {
+    if (typeof lianeParam === "string") {
+      services.liane.get(lianeParam).then(l => setLiane(l));
+    }
+  }, [lianeParam, services]);
+
+  return (
+    <View style={styles.page}>
+      <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
+        <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
+          <AppIcon name={"arrow-ios-back-outline"} size={24} color={defaultTextColor(AppColors.yellow)} />
+        </Pressable>
+        <AppText style={styles.title}>Détails de la Liane</AppText>
+      </Row>
+      {liane && <LianeDetail liane={liane} />}
+      {!liane && <ActivityIndicator />}
     </View>
   );
 };

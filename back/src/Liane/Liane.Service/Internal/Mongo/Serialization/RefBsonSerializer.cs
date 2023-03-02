@@ -23,6 +23,7 @@ internal sealed class RefToStringBsonSerializer<T> : SerializerBase<Ref<T>?> whe
   {
     var bsonType = context.Reader.CurrentBsonType;
     if (bsonType == BsonType.String) return context.Reader.ReadString();
+    else if (bsonType == BsonType.Document) return BsonSerializer.Deserialize<T>(context.Reader);
     context.Reader.ReadNull();
     return null;
   }
@@ -46,6 +47,7 @@ internal sealed class RefToObjectIdBsonSerializer<T> : SerializerBase<Ref<T>?> w
   {
     var bsonType = context.Reader.CurrentBsonType;
     if (bsonType == BsonType.ObjectId) return (Ref<T>)context.Reader.ReadObjectId().ToString();
+    else if (bsonType == BsonType.Document) return BsonSerializer.Deserialize<T>(context.Reader);
     context.Reader.ReadNull();
     return null;
   }

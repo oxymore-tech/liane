@@ -1,5 +1,7 @@
-import { LianeRequest, RallyingPoint } from "@/api";
+import { JoinLianeRequest, JoinLianeRequestDetailed, Liane, LianeMatch, LianeRequest, RallyingPoint, Ref } from "@/api";
 import { InternalLianeSearchFilter } from "@/util/ref";
+import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
+import { toTimeInSeconds } from "@/util/datetime";
 
 export interface SearchData {
   to: RallyingPoint;
@@ -7,7 +9,7 @@ export interface SearchData {
   tripTime: Date;
   tripDate: Date;
   timeIsDepartureTime: boolean;
-  vehicle: number;
+  availableSeats: number;
 }
 
 export const toSearchFilter = (formData: SearchData): InternalLianeSearchFilter => {
@@ -27,7 +29,7 @@ export const toSearchFilter = (formData: SearchData): InternalLianeSearchFilter 
       direction: formData.timeIsDepartureTime ? "Departure" : "Arrival",
       dateTime: goTime
     },
-    availableSeats: formData.vehicle
+    availableSeats: formData.availableSeats
   };
 };
 
@@ -39,16 +41,30 @@ export const fromSearchFilter = (formData: InternalLianeSearchFilter): SearchDat
     tripDate,
     tripTime: tripDate,
     timeIsDepartureTime: formData.targetTime.direction === "Departure",
-    vehicle: formData.availableSeats
+    availableSeats: formData.availableSeats
   };
 };
 
-export const toLianeRequest = (filter: InternalLianeSearchFilter): LianeRequest => {
+export const toLianeWizardFormData = (filter: InternalLianeSearchFilter): LianeWizardFormData => {
   return {
-    to: filter.to.id!,
-    from: filter.from.id!,
-    departureTime: filter.targetTime.dateTime,
-    // returnTime: filter.returnTime,
+    to: filter.to,
+    from: filter.from,
+    departureDate: new Date(filter.targetTime.dateTime),
+    departureTime: toTimeInSeconds(new Date(filter.targetTime.dateTime)),
+    returnTime: filter.returnTime,
     availableSeats: filter.availableSeats
+  };
+};
+
+export const toJoinLianeRequest = (filter: InternalLianeSearchFilter, match: LianeMatch, message: string): JoinLianeRequestDetailed => {
+  return {
+    to: filter.to,
+    from: filter.from,
+    targetLiane: match.liane,
+    takeReturnTrip: false, //TODO
+    message,
+    seats: filter.availableSeats,
+    matchType: match.matchData,
+    wayPoints: match.wayPoints
   };
 };

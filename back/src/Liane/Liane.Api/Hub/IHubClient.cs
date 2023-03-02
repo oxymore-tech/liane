@@ -16,7 +16,7 @@ public interface IHubClient
   
   Task ReceiveNotification(BaseNotification notification);
   
-  Task ReceiveMessage(ChatMessage message);
+  Task ReceiveMessage(string conversationId, ChatMessage message);
   
   Task ReceiveLatestMessages(PaginatedResponse<ChatMessage> messages);
   

@@ -2,7 +2,7 @@ import { LatLng, RallyingPoint } from "@/api";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import MapLibreGL from "@maplibre/maplibre-react-native";
-import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
+import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { MapStyle } from "@/api/location";
@@ -36,6 +36,7 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
     const locationButton = useMemo(
       () => (
         <Pressable
+          style={{ height: "100%", width: 36, justifyContent: "center", alignItems: "center" }}
           onPress={async () => {
             try {
               const currentLocation = await services.location.currentLocation();

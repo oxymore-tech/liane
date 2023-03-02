@@ -8,6 +8,5 @@ namespace Liane.Service.Internal.Notification;
 public interface ISendNotificationService : IResourceResolverService<BaseNotification>
 {
   Task<string> SendTo(string phone, string title, string message);
-  Task<string> SendTo(Ref<Api.User.User> receiver, string title, object message);
-  Task<string> Send(string deviceToken, string title, string message);
+  Task<string> SendTo(Ref<Api.User.User> receiver, string title, string message, object? payload);
 }

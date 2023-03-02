@@ -62,7 +62,7 @@ public static class MongoFactory
       //BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(NotificationDb), new NotificationDiscriminatorConvention());
+      BsonSerializer.RegisterDiscriminatorConvention(typeof(NotificationDb), new NotificationDiscriminatorConvention(new[]{typeof(JoinLianeRequest)}.ToImmutableList()));
       BsonSerializer.RegisterDiscriminatorConvention(typeof(LianeEvent), new PolymorphicTypeDiscriminatorConvention());
       _init = true;
     }

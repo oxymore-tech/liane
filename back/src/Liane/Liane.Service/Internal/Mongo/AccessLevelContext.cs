@@ -38,7 +38,7 @@ namespace Liane.Service.Internal.Mongo;
  public  FilterDefinition<TDb> HasAccessLevelFilterDefinition
   {
     get {
-      return Builders<TDb>.Filter.Eq(m => m.CreatedBy!.Id, currentUserId);
+      return Builders<TDb>.Filter.Eq(m => m.CreatedBy, (Ref<Api.User.User>)currentUserId);
     }
 }
   

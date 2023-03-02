@@ -9,20 +9,28 @@ namespace Liane.Test.Internal.Json;
 
 public class NotificationJsonTest
 {
-  private readonly JsonSerializerOptions options = new()
+  private readonly JsonSerializerOptions options;
+
+  public NotificationJsonTest()
   {
-    PropertyNamingPolicy = new SnakeCaseNamingPolicy(), 
-    PropertyNameCaseInsensitive = true, 
-    Converters = { new RefJsonConverterFactory(), new NotificationJsonConverter() }, 
-    TypeInfoResolver = new PolymorphicTypeResolver(),
-  };
-  
-  
+    var options = new JsonSerializerOptions();
+    JsonSerializerSettings.ConfigureOptions(options);
+    this.options = options;
+  }
+
   [Test]
-  public void ShouldSerialize()
+  public void ShouldSerializeBaseClass()
   {
     var notification = new BaseNotification.Notification<string>("id", DateTime.Parse("2023-03-03"), "ok");
     var actual = JsonSerializer.Serialize<BaseNotification>(notification, options);
-    Assert.AreEqual("{\"id\":\"id\",\"created_at\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
+    Assert.AreEqual("{\"id\":\"id\",\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
   }
+  
+    [Test]
+    public void ShouldSerialize()
+    {
+      var notification = new BaseNotification.Notification<string>("id", DateTime.Parse("2023-03-03"), "ok");
+      var actual = JsonSerializer.Serialize(notification, options);
+      Assert.AreEqual("{\"id\":\"id\",\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
+    }
 }

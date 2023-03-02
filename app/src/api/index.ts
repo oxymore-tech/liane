@@ -12,6 +12,8 @@ export type Entity = Identity &
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type Ref<T extends Identity> = string;
 
+export type WithResolvedRef<Key extends string, TRef extends Identity, T extends { [k in Key]: Ref<TRef> }> = Omit<T, Key> & { [k in Key]: TRef };
+
 export type AuthUser = Readonly<{
   id: string;
   phone: string;
@@ -37,6 +39,12 @@ export type User = Readonly<
     phone: string;
     pseudo: string;
   } & Entity
+>;
+
+export type FullUser = Readonly<
+  {
+    pushToken?: string;
+  } & User
 >;
 
 export type LatLng = Readonly<{
@@ -83,15 +91,14 @@ export type LianeRequest = Identity &
     // shareWith: Ref<User>[];
   }>;
 
-export type Liane = Identity &
+export type Liane = Entity &
   Readonly<{
-    createdBy?: Ref<User>;
-    createdAt?: UTCDateTime;
     departureTime: UTCDateTime;
     returnTime?: UTCDateTime;
     wayPoints: WayPoint[];
     members: LianeMember[];
     driver?: Ref<User>;
+    group: Ref<ConversationGroup>;
   }>;
 
 export type WayPoint = Readonly<{
@@ -112,26 +119,10 @@ export type UTCDateTime = string;
 // A time in ISO 8601 format
 export type UTCTimeOnly = string;
 
-export type TripIntent = Readonly<
-  {
-    from: Ref<RallyingPoint>;
-    to: Ref<RallyingPoint>;
-    goTime: UTCTimeOnly;
-    returnTime?: UTCTimeOnly;
-  } & Entity
->;
-
 export type Match = Readonly<{
   user: Ref<User>;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
-}>;
-
-export type TripIntentMatch = Readonly<{
-  tripIntent: TripIntent;
-  from: RallyingPoint;
-  to: RallyingPoint;
-  matches: Match[];
 }>;
 
 export type ChatMessage = Readonly<
@@ -166,7 +157,7 @@ export type Route = Readonly<{
 export type PaginatedResponse<T> = Readonly<{
   pageSize: number;
   data: T[];
-  nextCursor?: string;
+  next?: string;
 }>;
 
 export type PaginatedRequestParams = {
@@ -191,12 +182,56 @@ export type ExactMatch = { type: "ExactMatch" };
 export type CompatibleMatch = { type: "CompatibleMatch"; deltaInSeconds: TimeInSeconds };
 
 export type LianeMatch = Readonly<{
-  liane: Ref<Liane>;
-  departureTime: UTCDateTime;
-  returnTime: UTCDateTime;
+  liane: Liane;
   wayPoints: WayPoint[];
-  originalTrip: WayPoint[];
-  driver: Ref<User>;
   matchData: ExactMatch | CompatibleMatch;
   freeSeatsCount: number;
 }>;
+
+// Notifications
+export type Notification<T> = Readonly<
+  {
+    event: T;
+    createdAt: UTCDateTime;
+    seen: boolean;
+    type: string;
+  } & Identity
+>;
+
+export type NewConversationMessage = Readonly<{
+  conversationId: string;
+  sender: User;
+  message: ChatMessage;
+}>;
+
+export type JoinLianeRequest = Readonly<
+  {
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    targetLiane: Ref<Liane>;
+    seats: number;
+    takeReturnTrip: boolean;
+    message: string;
+    accepted?: boolean;
+  } & Entity
+>;
+
+export const isJoinLianeRequest = (notification: Notification<any>): notification is Notification<JoinLianeRequest> => {
+  return notification.type === "JoinLianeRequest";
+};
+
+export type JoinLianeRequestDetailed = Readonly<
+  {
+    from: RallyingPoint;
+    to: RallyingPoint;
+    targetLiane: Liane;
+    seats: number;
+    takeReturnTrip: boolean;
+    message: string;
+    accepted?: boolean;
+    matchType: ExactMatch | CompatibleMatch;
+    wayPoints: WayPoint[];
+    createdBy?: User;
+    createdAt?: UTCDateTime;
+  } & Identity
+>;

@@ -1,11 +1,11 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import NotificationScreen from "@/screens/NotificationScreen";
+import NotificationScreen from "@/screens/notifications/NotificationScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppText } from "@/components/base/AppText";
@@ -22,7 +22,15 @@ import { SearchScreen } from "@/screens/search/SearchScreen";
 import HomeScreen from "@/screens/HomeScreen";
 import { LianeWizardScreen } from "@/screens/lianeWizard/LianeWizardScreen";
 import { SearchResultsScreen } from "@/screens/search/SearchResultsScreen";
-import { LianeMatchDetailScreen } from "@/screens/LianeMatchDetailScreen";
+import { LianeMatchDetailScreen } from "@/screens/search/LianeMatchDetailScreen";
+import { WithBadge } from "@/components/base/WithBadge";
+import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
+import { isJoinLianeRequest, Notification } from "@/api";
+import { useObservable } from "@/util/hooks/subscription";
+import { RootNavigation } from "@/api/navigation";
+import { StackActions } from "@react-navigation/native";
+import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
+import { getNotificationContent } from "@/api/service/notification";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,17 +49,51 @@ function Home() {
         ],
         tabBarShowLabel: false
       }}>
-      {makeTab("Rechercher", "search-outline", HomeScreen, iconSize, {
-        headerShown: false
-      })}
-      {makeTab("Mes trajets", LianeIcon, MyTripsScreen, (iconSize * 4) / 3)}
-      {makeTab("Notifications", "bell-outline", NotificationScreen, iconSize)}
+      {makeTab(
+        "Rechercher",
+        ({ focused }) => (
+          <TabIcon iconName={"search-outline"} focused={focused} size={iconSize} />
+        ),
+        HomeScreen,
+        {
+          headerShown: false
+        }
+      )}
+      {makeTab(
+        "Mes trajets",
+        ({ focused }) => (
+          <TabIcon iconName={LianeIcon} focused={focused} size={(iconSize * 4) / 3} />
+        ),
+        MyTripsScreen
+      )}
+      {makeTab(
+        "Notifications",
+        ({ focused }) => {
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const { services } = useContext(AppContext);
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
+          return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
+        },
+        NotificationScreen
+      )}
     </Tab.Navigator>
   );
 }
 
 function Navigation() {
-  const { user } = useContext(AppContext);
+  const { user, services } = useContext(AppContext);
+
+  useEffect(() => {
+    const initialNotification = services.notification.initialNotification();
+    if (user && initialNotification) {
+      // check if app was opened by a notification
+      const { navigate } = getNotificationContent(initialNotification, user);
+      if (navigate) {
+        navigate(RootNavigation);
+      }
+    }
+  }, [user, services]);
 
   if (user) {
     return (
@@ -63,6 +105,8 @@ function Navigation() {
         <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false, presentation: "modal" }} />
+        <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
+        <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMatchDetail" component={LianeMatchDetailScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
@@ -105,29 +149,43 @@ const HomeScreenHeader = ({ label, navigation }: HomeScreenHeaderProp) => {
   );
 };
 
-const makeTab = (label: string, iconName: IconName | React.FunctionComponent, screen: any, iconSize: number = 24, { headerShown = true } = {}) => (
-  <Tab.Screen
-    name={label}
-    component={screen}
-    options={({ navigation }) => ({
-      headerShown,
-      header: () => <HomeScreenHeader label={label} navigation={navigation} />,
-      tabBarLabel: ({ focused }) => (
-        <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>
-      ),
-      tabBarIcon: ({ focused }) =>
-        typeof iconName === "string" ? (
-          <AppIcon size={iconSize} name={iconName} color={focused ? AppColors.white : AppColorPalettes.blue[400]} />
-        ) : (
-          iconName({
-            color: focused ? AppColors.white : AppColorPalettes.blue[400],
-            height: iconSize,
-            width: iconSize
-          })
-        ) // TODO resize svg file directly
-    })}
-  />
-);
+interface TabIconProps {
+  // String or svg component
+  iconName: IconName | React.FunctionComponent;
+  focused: boolean;
+  size: number;
+}
+
+const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
+  return typeof iconName === "string" ? (
+    <AppIcon size={size} name={iconName} color={focused ? AppColors.white : AppColorPalettes.blue[400]} />
+  ) : (
+    iconName({
+      color: focused ? AppColors.white : AppColorPalettes.blue[400],
+      height: size,
+      width: size
+    })
+  );
+};
+
+const BadgeTabIcon = WithBadge(TabIcon);
+
+const makeTab = (label: string, icon: (props: { focused: boolean }) => React.ReactNode, screen: any, { headerShown = true } = {}) => {
+  return (
+    <Tab.Screen
+      name={label}
+      component={screen}
+      options={({ navigation }) => ({
+        headerShown,
+        header: () => <HomeScreenHeader label={label} navigation={navigation} />,
+        tabBarLabel: ({ focused }) => (
+          <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>
+        ),
+        tabBarIcon: icon
+      })}
+    />
+  );
+};
 
 const styles = StyleSheet.create({
   bottomBar: {

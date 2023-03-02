@@ -1,6 +1,4 @@
-import { Identity, LianeSearchFilter, RallyingPoint, Ref } from "@/api";
-
-export type WithResolvedRef<Key extends string, TRef extends Identity, T extends { [k in Key]: Ref<TRef> }> = Omit<T, Key> & { [k in Key]: TRef };
+import { LianeSearchFilter, RallyingPoint, WithResolvedRef } from "@/api";
 
 export type WithSomeResolvedRef<T extends { [x: string]: any }> = WithResolvedRef<any, any, T>;
 export type ResolvedFields = (typeof ResolvedRefs)[keyof typeof ResolvedRefs];
