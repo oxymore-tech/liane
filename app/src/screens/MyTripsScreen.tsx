@@ -14,8 +14,7 @@ import { LianeView } from "@/components/trip/LianeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
-import { Liane, PaginatedResponse, ResolvedJoinLianeRequest, UTCDateTime } from "@/api";
-import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
+import { JoinLianeRequestDetailed, Liane, UTCDateTime } from "@/api";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
@@ -26,7 +25,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
 
-interface TripSection extends SectionBase<Liane> {
+interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
 }
 
@@ -84,19 +83,18 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
   );
 };
 
-const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | ResolvedJoinLianeRequest, TripSection>) => {
+const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
   const isRequest = isResolvedJoinLianeRequest(item);
-  console.log(isRequest);
+  //console.log(isRequest);
   if (!isRequest) {
     return renderLianeItem({ item, index, section });
   }
-  const liane: Liane = isRequest ? item.targetLiane : item;
 
   return (
     <Pressable onPress={() => {}} style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <View>
         <View style={{ flexGrow: 1, marginRight: 40 }}>
-          <JoinRequestSegmentOverview from={item.from} to={item.to} departureTime={liane.departureTime} />
+          <JoinRequestSegmentOverview request={item} />
         </View>
       </View>
 
@@ -117,7 +115,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
     </Pressable>
   );
 };
-const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | ResolvedJoinLianeRequest, TripSection> }) => (
+const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
   <View style={[styles.header, styles.grayBorder]}>
     <AppText style={styles.headerTitle}>{date}</AppText>
   </View>
@@ -245,11 +243,11 @@ const styles = StyleSheet.create({
   }
 });
 
-const isResolvedJoinLianeRequest = (item: Liane | ResolvedJoinLianeRequest): item is ResolvedJoinLianeRequest => {
+const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
   return item.targetLiane !== undefined;
 };
 
-const convertToDateSections = (data: (Liane | ResolvedJoinLianeRequest)[]): TripSection[] =>
+const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): TripSection[] =>
   Object.entries(
     data.reduce((tmp, item) => {
       const liane: Liane = isResolvedJoinLianeRequest(item) ? item.targetLiane : item;
@@ -265,7 +263,7 @@ const convertToDateSections = (data: (Liane | ResolvedJoinLianeRequest)[]): Trip
       // add this item to its group
 
       return tmp;
-    }, {} as { [key: UTCDateTime]: (Liane | ResolvedJoinLianeRequest)[] })
+    }, {} as { [key: UTCDateTime]: (Liane | JoinLianeRequestDetailed)[] })
   ).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
 export const LianeQueryKey = "getLianes";

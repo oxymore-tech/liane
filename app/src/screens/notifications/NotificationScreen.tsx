@@ -2,14 +2,16 @@ import React, { useContext } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { FlatList, RefreshControl, View } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
-import { isJoinLianeRequest, Notification } from "@/api";
+import { Notification } from "@/api";
 import { AppText } from "@/components/base/AppText";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
-import { formatDateTime, toRelativeTimeString } from "@/api/i18n";
+import { toRelativeTimeString } from "@/api/i18n";
 import { AppPressable } from "@/components/base/AppPressable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
+import { getNotificationContent } from "@/api/service/notification";
+import { AppContext } from "@/components/ContextProvider";
 
 const NotificationQueryKey = "notification";
 
@@ -20,35 +22,18 @@ const NoNotificationView = () => {
     </Center>
   );
 };
-const getNotificationContent = (navigation, notification: Notification<any>) => {
-  let body;
-  let onClick;
-  if (isJoinLianeRequest(notification)) {
-    if (notification.event.accepted) {
-      body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} a rejoint votre Liane.`;
-      onClick = () => navigation.navigate("LianeDetail", { liane: notification.event.targetLiane });
-    } else {
-      body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} voudrait rejoindre votre Liane.`;
-      onClick = () => navigation.navigate("OpenJoinLianeRequest", { request: notification.event });
-    }
-  } else {
-    // Unknown type
-    console.debug("unknown notification", JSON.stringify(notification));
-    body = "Nouvelle notification : TODO";
-  }
-  return { body, onClick };
-};
 
 const NotificationScreen = WithFetchPaginatedResponse<Notification<any>>(
   ({ data, refresh, refreshing }) => {
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
+    const { user } = useContext(AppContext);
 
     const renderItem = ({ item }: { item: Notification<any> }) => {
       const datetime = toRelativeTimeString(new Date(item.createdAt!));
-      const { body, onClick } = getNotificationContent(navigation, item);
+      const { body, navigate } = getNotificationContent(item, user!);
       return (
-        <AppPressable key={item.id} onPress={onClick}>
+        <AppPressable key={item.id} onPress={() => navigate(navigation)}>
           <Row style={{ paddingHorizontal: 24 }}>
             {!item.read && (
               <View style={{ justifyContent: "center", padding: 4 }}>

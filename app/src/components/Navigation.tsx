@@ -5,7 +5,7 @@ import { Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import NotificationScreen from "@/screens/NotificationScreen";
+import NotificationScreen from "@/screens/notifications/NotificationScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppText } from "@/components/base/AppText";
@@ -30,6 +30,7 @@ import { useObservable } from "@/util/hooks/subscription";
 import { RootNavigation } from "@/api/navigation";
 import { StackActions } from "@react-navigation/native";
 import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
+import { getNotificationContent } from "@/api/service/notification";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -80,22 +81,17 @@ function Home() {
   );
 }
 
-const goToNotificationScreen = (initialNotification: Notification<any> | null | undefined) => {
-  if (!initialNotification) {
-    return;
-  }
-  if (isJoinLianeRequest(initialNotification)) {
-    RootNavigation.dispatch(StackActions.push("OpenJoinLianeRequest"));
-  }
-};
-
 function Navigation() {
   const { user, services } = useContext(AppContext);
 
   useEffect(() => {
-    if (user) {
+    const initialNotification = services.notification.initialNotification();
+    if (user && initialNotification) {
       // check if app was opened by a notification
-      goToNotificationScreen(services.notification.initialNotification());
+      const { navigate } = getNotificationContent(initialNotification, user);
+      if (navigate) {
+        navigate(RootNavigation);
+      }
     }
   }, [user, services]);
 

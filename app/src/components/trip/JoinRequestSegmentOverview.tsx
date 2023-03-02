@@ -1,18 +1,21 @@
 import React from "react";
 import { WayPointsView } from "@/components/trip/WayPointsView";
-import { RallyingPoint, UTCDateTime, WayPoint } from "@/api";
+import { addSeconds } from "@/util/datetime";
+import { JoinLianeRequestDetailed } from "@/api";
 export interface JoinRequestSegmentOverviewProps {
-  from: RallyingPoint;
-
-  to: RallyingPoint;
-
-  departureTime: UTCDateTime;
+  request: JoinLianeRequestDetailed;
 }
 
-export const JoinRequestSegmentOverview = ({ from, to, departureTime }: JoinRequestSegmentOverviewProps) => {
-  const wayPoints: WayPoint[] = [
-    { rallyingPoint: from, duration: NaN },
-    { rallyingPoint: to, duration: NaN }
-  ];
-  return <WayPointsView wayPoints={wayPoints} departureTime={departureTime} />;
+export const JoinRequestSegmentOverview = ({ request }: JoinRequestSegmentOverviewProps) => {
+  const departureIndex = request.wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
+  const arrivalIndex = request.wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
+  const dStart = request.wayPoints[departureIndex].duration;
+  const departure = new Date(request.targetLiane.departureTime);
+
+  return (
+    <WayPointsView
+      wayPoints={request.wayPoints.slice(departureIndex, arrivalIndex + 1)}
+      departureTime={addSeconds(departure, dStart).toISOString()}
+    />
+  );
 };

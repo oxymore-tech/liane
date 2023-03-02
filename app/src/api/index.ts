@@ -235,9 +235,3 @@ export type JoinLianeRequestDetailed = Readonly<
     createdAt?: UTCDateTime;
   } & Identity
 >;
-
-export type ResolvedJoinLianeRequest = WithResolvedRef<
-  "to",
-  RallyingPoint,
-  WithResolvedRef<"from", RallyingPoint, WithResolvedRef<"targetLiane", Liane, JoinLianeRequest>>
->;

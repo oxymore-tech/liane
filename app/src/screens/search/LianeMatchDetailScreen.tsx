@@ -7,7 +7,7 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatDateTime } from "@/api/i18n";
-import { LianeDetailedMatchView, LianeMatchView } from "@/components/trip/LianeMatchView";
+import { LianeDetailedMatchView } from "@/components/trip/LianeMatchView";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { AppButton } from "@/components/base/AppButton";
 import { formatDuration } from "@/util/datetime";

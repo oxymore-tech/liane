@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Liane.Api.Notification;
 using Liane.Api.Trip;
 using Liane.Api.User;
-using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
@@ -78,19 +77,14 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
     await UpdateAcceptedStatus(userId, request, false);
   }
 
-  public async Task<PaginatedResponse<JoinLianeRequest>> ListUserRequests(Ref<Api.User.User> fromUser, Pagination pagination)
+  public async Task<PaginatedResponse<JoinLianeRequestDetailed>> ListUserRequests(Ref<Api.User.User> fromUser, Pagination pagination)
   {
     var filter = GetAccessLevelFilter(fromUser, ResourceAccessLevel.Owner);
 
     var paginated = await Mongo.Paginate<JoinLianeRequest>(pagination, r => r.CreatedAt, filter, false);
 
     // Resolve liane
-    return await paginated.SelectAsync(async r => r with
-    {
-      To = await rallyingPointService.Get(r.To),
-      From = await rallyingPointService.Get(r.From), 
-      TargetLiane = await lianeService.Get(r.TargetLiane)
-    }); //TODO bad perf here 
+    return await paginated.SelectAsync(MapDetailedRequest); //TODO bad perf here 
   }
 
   public async Task<PaginatedResponse<JoinLianeRequest>> ListLianeRequests(Ref<Api.Trip.Liane> liane, Pagination pagination)
@@ -108,9 +102,8 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
     }); //TODO(perf): use single db call 
   }
 
-  public async Task<JoinLianeRequestDetailed> GetDetailedRequest(Ref<JoinLianeRequest> request)
+  private async Task<JoinLianeRequestDetailed> MapDetailedRequest(JoinLianeRequest found)
   {
-    var found = await Mongo.GetCollection<JoinLianeRequest>().Find(r => r.Id == request.Id).FirstOrDefaultAsync();
     var from = await rallyingPointService.Get(found.From);
     var to = await rallyingPointService.Get(found.To);
     var matchData = await lianeService.GetNewTrip(found.TargetLiane, from, to, found.Seats > 0);
@@ -122,6 +115,12 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
       await userService.Get(found.CreatedBy!),
       found.CreatedAt, found.Seats, found.TakeReturnTrip, found.Message, found.Accepted, matchType, wayPoints
     );
+  }
+
+  public async Task<JoinLianeRequestDetailed> GetDetailedRequest(Ref<JoinLianeRequest> request)
+  {
+    var found = await Mongo.GetCollection<JoinLianeRequest>().Find(r => r.Id == request.Id).FirstOrDefaultAsync();
+    return await MapDetailedRequest(found);
   }
   
 }

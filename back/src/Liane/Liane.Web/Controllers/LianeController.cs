@@ -69,7 +69,7 @@ public sealed class LianeController : ControllerBase
   }
   
   [HttpGet("request")]
-  public async Task<PaginatedResponse<JoinLianeRequest>> ListUserRequests([FromQuery] Pagination pagination)
+  public async Task<PaginatedResponse<JoinLianeRequestDetailed>> ListUserRequests([FromQuery] Pagination pagination)
   {
     // Get user's requests 
     return await joinLianeRequestService.ListUserRequests(currentContext.CurrentUser().Id, pagination);

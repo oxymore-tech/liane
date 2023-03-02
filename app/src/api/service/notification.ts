@@ -1,9 +1,10 @@
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import notifee, { EventType } from "@notifee/react-native";
-import { FullUser, isJoinLianeRequest, Notification, PaginatedResponse } from "@/api";
+import { FullUser, isJoinLianeRequest, Notification, PaginatedResponse, User } from "@/api";
 import { get, patch } from "@/api/http";
 import { AuthService } from "@/api/service/auth";
 import { Platform } from "react-native";
+import { NavigationContainerRefWithCurrent, NavigationProp } from "@react-navigation/native";
 
 export interface NotificationService {
   displayNotification: (notification: Notification<any>) => Promise<void>;
@@ -18,6 +19,16 @@ export interface NotificationService {
 }
 
 const DefaultChannelId = "liane_default";
+
+const DefaultAndroidSettings = {
+  channelId: DefaultChannelId,
+  pressAction: {
+    id: "default"
+  },
+  smallIcon: "ic_notification",
+  largeIcon: "ic_launcher"
+};
+
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
   console.log("received push", JSON.stringify(message));
   if (!message.notification) {
@@ -25,13 +36,7 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
   }
   const { title, body } = message.notification;
   return await notifee.displayNotification({
-    android: {
-      channelId: DefaultChannelId,
-      pressAction: {
-        id: "default"
-      },
-      smallIcon: "ic_notification"
-    },
+    android: DefaultAndroidSettings,
     title,
     body
   });
@@ -41,7 +46,7 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
   console.debug(JSON.stringify(detail));
-
+  /*
   // Check if the user pressed the "Mark as read" action
   if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "mark-as-read") {
     // Update external API
@@ -49,33 +54,15 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
 
     // Remove the notification
     await notifee.cancelNotification(notification.id!);
-  }
+  }*/
 });
 async function displayNotifeeNotification(notification: Notification<any>) {
-  let title: string;
-  let body: string;
-  if (isJoinLianeRequest(notification)) {
-    title = "Nouvelle demande";
-    body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} voudrait rejoindre votre Liane.`;
-  } else {
-    // Unknown type
-    console.debug("unknown notification", JSON.stringify(notification));
-    title = "Nouveau message";
-    body = `Test`;
-    //return;
-  }
+  let data = getNotificationContent(notification);
 
   await notifee.displayNotification({
-    android: {
-      channelId: DefaultChannelId,
-      pressAction: {
-        id: "default"
-      },
-      smallIcon: "ic_notification",
-      largeIcon: "ic_launcher"
-    },
-    title,
-    body
+    android: DefaultAndroidSettings,
+    title: data.title,
+    body: data.body
   });
 }
 
@@ -138,3 +125,36 @@ export class NotificationServiceClient implements NotificationService {
     await patch("user/notification/" + notificationId);
   }
 }
+
+export type NotificationData = {
+  title: string;
+  body: string;
+  navigate: (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void;
+};
+export const getNotificationContent = (notification: Notification<any>, me: User) => {
+  let d: NotificationData = {};
+  if (isJoinLianeRequest(notification)) {
+    if (notification.event.accepted) {
+      if (notification.event.createdBy === me.id) {
+        d.title = "Demande acceptée";
+        d.body = "Vous avez rejoint une nouvelle Liane.";
+      } else {
+        d.title = "Nouveau membre";
+        d.body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} a rejoint votre Liane.`;
+      }
+      d.navigate = navigation => navigation.navigate("LianeDetail", { liane: notification.event.targetLiane });
+      return d;
+    } else {
+      d.title = "Nouvelle demande";
+      d.body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} voudrait rejoindre votre Liane.`;
+      d.navigate = navigation => navigation.navigate("OpenJoinLianeRequest", { request: notification.event });
+      return d;
+    }
+  }
+  // Unknown type
+  console.debug("untreated notification", JSON.stringify(notification));
+  d.body = "TODO " + notification.type;
+  d.title = "Nouvelle notification";
+  d.navigate = () => {};
+  return d;
+};

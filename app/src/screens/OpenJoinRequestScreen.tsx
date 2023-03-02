@@ -5,7 +5,7 @@ import React, { useContext } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { StyleSheet, View } from "react-native";
-import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
@@ -15,6 +15,7 @@ import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { formatDuration } from "@/util/datetime";
 import { formatMonthDay, formatTime } from "@/api/i18n";
+import { TripCard } from "@/components/TripCard";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -56,36 +57,41 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
     const role = data.seats > 0 ? "conducteur" : "passager";
     const isExactMatch = data.matchType.type === "ExactMatch";
     const dateTime = `${formatMonthDay(new Date(data.targetLiane.departureTime))} à ${formatTime(new Date(data.targetLiane.departureTime))}`;
+    const headerDate = (
+      <Row spacing={8}>
+        <AppIcon name={"calendar-outline"} />
+        <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
+      </Row>
+    );
+    const tripContent = (
+      <LianeMatchView
+        from={data.from}
+        to={data.to}
+        departureTime={data.targetLiane.departureTime}
+        originalTrip={data.targetLiane.wayPoints}
+        newTrip={data.wayPoints}
+      />
+    );
     return (
       <Column spacing={24}>
         <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 18 }}>
           {userName} souhaite rejoindre votre Liane en tant que {role} :
         </AppText>
-        <Row
-          style={[
-            styles.tag,
-            {
-              backgroundColor: AppColors.yellow
-            }
-          ]}
-          spacing={8}>
-          <AppIcon name={"calendar-outline"} />
-          <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
-        </Row>
-        <View style={styles.card}>
-          <LianeMatchView
-            from={data.from}
-            to={data.to}
-            departureTime={data.targetLiane.departureTime}
-            originalTrip={data.targetLiane.wayPoints}
-            newTrip={data.wayPoints}
-          />
-        </View>
+        <TripCard header={headerDate} content={tripContent} />
+
+        {data.message.length > 0 && (
+          <Row spacing={12} style={[styles.card, { alignItems: "center" }]}>
+            <AppIcon name={"message-circle-outline"} />
+            <View style={{ paddingLeft: 4, borderLeftWidth: 2, borderLeftColor: AppColorPalettes.gray[400] }}>
+              <AppText>{data.message}</AppText>
+            </View>
+          </Row>
+        )}
         <Row spacing={16} style={{ alignItems: "center" }}>
           <AppIcon name={isExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} color={AppColors.white} />
           <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
             {isExactMatch
-              ? "Ce trajet ne vous ajoute aucun arrêt supplémentaire."
+              ? "Votre trajet reste inchangé"
               : "Le trajet sera rallongé de " + formatDuration((data.matchType as CompatibleMatch).deltaInSeconds)}
           </AppText>
         </Row>

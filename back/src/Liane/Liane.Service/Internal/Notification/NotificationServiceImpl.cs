@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,7 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Liane.Api.Notification;
+using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
@@ -47,6 +49,25 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
       FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromFile(firebaseSettings.ServiceAccountFile) });
     }
   }
+
+  private async Task<(string title, string message)> WriteNotificationFr(Ref<Api.User.User> receiver, BaseNotification notification)
+  {
+    if (notification is BaseNotification.Notification<JoinLianeRequest> n)
+    {
+      if (receiver.Id == n.Event.CreatedBy)
+      {
+        if (n.Event.Accepted == true) return ("Demande acceptée", "Vous avez rejoint une nouvelle Liane !");
+        if (n.Event.Accepted == false) return ("Demande refusée", "Votre demande a été refusée.");
+      }
+      else
+      {
+        var role = n.Event.Seats > 0 ? "conducteur" : "passager";
+        return ("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.");
+      }
+    }
+
+    return ("NA", "NA");
+  }
   
   private async Task SendNotificationTo(Ref<Api.User.User> receiver, BaseNotification notification)
   {
@@ -59,7 +80,8 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     // Otherwise send via FCM
     try
     {
-      await SendTo(receiver, "Notification", notification);
+      var (title, message) = await WriteNotificationFr(receiver, notification);
+      await SendTo(receiver, title, message, notification);
     }
     catch (Exception e)
     {
@@ -67,7 +89,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     }
   }
 
-  public async Task<string> SendTo(Ref<Api.User.User> receiver, string title, object message)
+  public async Task<string> SendTo(Ref<Api.User.User> receiver, string title, string message, object? payload = null)
   {
     var receiverUser = await ResolveRef<DbUser>(receiver);
     if (receiverUser == null) throw new ArgumentNullException("No user with Id "+receiver.Id);
@@ -79,8 +101,8 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     }
 
     // For now just send the whole notification object in json
-    var jsonObject = JsonSerializer.Serialize(message, jsonSerializerOptions);
-    return await Send(receiverUser.PushToken, title, jsonObject);
+    var jsonObject = payload is null ? null : JsonSerializer.Serialize(payload, jsonSerializerOptions);
+    return await Send(receiverUser.PushToken, title, message, jsonObject);
   }
 
   public async Task<string> SendTo(string phone, string title, string message)
@@ -94,17 +116,19 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     return await Send(user.PushToken, title, message);
   }
 
-  public Task<string> Send(string deviceToken, string title, string message)
+  public Task<string> Send(string deviceToken, string title, string message, string? jsonPayload = null)
   {
     var firebaseMessage = new Message
     {
       Token = deviceToken,
+      
       Notification = new FirebaseAdmin.Messaging.Notification
       {
         Title = title,
         Body = message
       }
     };
+    if (jsonPayload is not null) firebaseMessage.Data = new Dictionary<string, string> { { "jsonPayload", jsonPayload } };
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }
 
