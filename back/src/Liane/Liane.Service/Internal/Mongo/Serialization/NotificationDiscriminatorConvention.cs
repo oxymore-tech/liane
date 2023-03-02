@@ -12,21 +12,22 @@ namespace Liane.Service.Internal.Mongo.Serialization;
 
 public sealed class NotificationDiscriminatorConvention : IDiscriminatorConvention
 {
-
   /// <param name="includedEventTypes">If null, includes types from NotificationDb assembly + String for raw events</param>
   public NotificationDiscriminatorConvention(ImmutableList<Type>? includedEventTypes = null)
   {
     this.includedEventTypes = includedEventTypes ?? typeof(NotificationDb).Assembly.GetTypes()
       .Where(t => t.GetTypeInfo().IsClass)
-      .Append(typeof(string)).ToImmutableList();
+      .Append(typeof(string))
+      .ToImmutableList();
   }
 
-  public static FilterDefinition<NotificationDb> GetDiscriminatorFilter<TEvent>() 
+  public static FilterDefinition<NotificationDb> GetDiscriminatorFilter<TEvent>()
   {
     return new BsonDocument("_t", typeof(TEvent).Name);
   }
+
   public string ElementName => "_t";
-  
+
   private readonly ImmutableList<Type> includedEventTypes;
 
   public Type GetActualType(IBsonReader bsonReader, Type nominalType)

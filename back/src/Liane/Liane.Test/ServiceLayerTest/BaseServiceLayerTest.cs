@@ -1,6 +1,9 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
@@ -16,17 +19,20 @@ namespace Liane.Test.ServiceLayerTest;
 
 public abstract class BaseServiceLayerTest
 {
-  private readonly IMongoDatabase db;
+  private IMongoDatabase db;
   protected readonly ServiceProvider ServiceProvider;
 
   protected BaseServiceLayerTest()
   {
     // Load db with test settings
-    var settings = new MongoSettings("mongo", "mongoadmin", "secret");
-    db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), MongoDatabaseTestExtensions.DbName);
+    // var mongoHost = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
+    // var settings = new MongoSettings(mongoHost, "mongoadmin", "secret");
+    // db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), MongoDatabaseTestExtensions.DbName);
+    
     // Load services 
     var services = new ServiceCollection();
-    var osrmClient = new OsrmClient(new OsrmSettings(new Uri("http://liane.gjini.co:5000")));
+    var osrmUrl = Environment.GetEnvironmentVariable("OSRM_URL") ?? "http://liane.gjini.co:5000";
+    var osrmClient = new OsrmClient(new OsrmSettings(new Uri(osrmUrl)));
     services.AddService(RallyingPointServiceMock.CreateMockRallyingPointService(db));
     services.AddService<IOsrmService>(osrmClient);
     services.AddTransient<IRoutingService, RoutingServiceImpl>();
@@ -35,20 +41,34 @@ public abstract class BaseServiceLayerTest
   }
 
   [OneTimeSetUp]
-  public void SetupMockData()
+  public async Task SetupMockData()
   {
+    var mongoHost = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
+    var settings = new MongoSettings(mongoHost, "mongoadmin", "secret");
+    var client = MongoFactory.GetMongoClient(settings, new TestLogger<IMongoDatabase>());
+
+    var databases = (await client.ListDatabaseNamesAsync())
+      .ToEnumerable()
+      .Where(d => d.StartsWith("liane_test"));
+    foreach (var database in databases)
+    {
+      await client.DropDatabaseAsync(database);
+    }
+  }
+
+  [SetUp]
+  public void EnsureSchema()
+  {
+    var mongoHost = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
+    var settings = new MongoSettings(mongoHost, "mongoadmin", "secret");
+    db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), $"liane_test_{GetType().Name.ToTinyName()}_{TestContext.CurrentContext.Test.Name.ToTinyName()}");
     db.Drop();
     // Init services in child class 
     InitService(db);
     // Insert mock users & rallying points
     db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
     db.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
-  }
-
-  [SetUp]
-  public void EnsureSchema()
-  {
-    ClearTestedCollections();
+    //ClearTestedCollections();
     MongoFactory.InitSchema(db);
   }
 

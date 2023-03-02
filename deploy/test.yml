@@ -6,11 +6,19 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongoadmin
       MONGO_INITDB_ROOT_PASSWORD: secret
-    restart: unless-stopped
+
+  osrm:
+    image: "osrm/osrm-backend"
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
+    volumes:
+      - "/data/osm:/data:ro"
 
   test:
     build:
       context: ../back
       target: test
+    environment:
+      OSRM_URL: "http://osrm:5000"
     depends_on:
       - mongo
+      - osrm

@@ -31,6 +31,15 @@ public static class MongoFactory
 
   public static IMongoDatabase GetDatabase(MongoSettings settings, ILogger<IMongoDatabase> logger, string databaseName = "liane")
   {
+    var mongo = GetMongoClient(settings, logger);
+    var db = mongo.GetDatabase(databaseName);
+    InitSchema(db);
+
+    return db;
+  }
+
+  public static MongoClient GetMongoClient(MongoSettings settings, ILogger<IMongoDatabase> logger)
+  {
     if (!_init)
     {
       var alwaysPack = new ConventionPack
@@ -72,11 +81,7 @@ public static class MongoFactory
         });
       }
     });
-
-    var db = mongo.GetDatabase(databaseName);
-    InitSchema(db);
-
-    return db;
+    return mongo;
   }
 
   public static void InitSchema(IMongoDatabase db)
