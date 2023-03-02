@@ -66,7 +66,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
       }
     }
 
-    return ("NA", "NA");
+    return ("Notification", "NA");
   }
   
   private async Task SendNotificationTo(Ref<Api.User.User> receiver, BaseNotification notification)
@@ -181,7 +181,8 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     var filter = Builders<NotificationDb>.Filter.ElemMatch(r => r.Receivers, r => r.User == user);
 
     var paginated = await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);
-    return await paginated.SelectAsync(MapEntity);
+    var t = await paginated.SelectAsync(async n => (await MapEntity(n)) with {Seen = n.Receivers.Find(r => r.User.Id == user.Id)?.SeenAt is not null});
+    return t;
   }
   
   public async Task ReadNotification(string notificationId, Ref<Api.User.User> user)

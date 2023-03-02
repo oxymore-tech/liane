@@ -61,10 +61,10 @@ public sealed class LianeController : ControllerBase
   }
   
   [HttpPatch("request/{id}")]
-  public async Task SetStatus([FromRoute] string id, [FromBody] bool accept)
+  public async Task SetStatus([FromRoute] string id, [FromQuery] int? accept)
   {
     var currentUser = currentContext.CurrentUser().Id;
-    if (accept) await joinLianeRequestService.AcceptJoinRequest(currentUser, id);
+    if (accept == 1) await joinLianeRequestService.AcceptJoinRequest(currentUser, id);
     else await joinLianeRequestService.RefuseJoinRequest(currentUser, id);
   }
   

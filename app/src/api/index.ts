@@ -193,7 +193,7 @@ export type Notification<T> = Readonly<
   {
     event: T;
     createdAt: UTCDateTime;
-    read: boolean;
+    seen: boolean;
     type: string;
   } & Identity
 >;

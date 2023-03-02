@@ -36,7 +36,6 @@ export type ConsumeMessage = (res: ChatMessage) => void;
 
 export type Disconnect = () => Promise<void>;
 export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
-
 export type OnNotificationCallback = (n: Notification<any>) => void;
 
 type UnreadOverview = Readonly<{
@@ -59,14 +58,16 @@ export class HubServiceClient implements ChatHubService {
   private hub: HubConnection;
   private currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
-  readonly unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  // readonly unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
   private notificationSubject: Subject<Notification<any>> = new Subject<Notification<any>>();
-  // Sets a callback to receive latests messages when joining the conversation.
+  // Sets a callback to receive the lat est messages when joining the conversation.
   // This callback will be automatically disposed of when closing conversation.
   private onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   private onReceiveMessageCallback: ConsumeMessage | null = null;
+
+  unreadNotificationCount = new BehaviorSubject<number>(0);
 
   private isStarted = false;
   constructor() {
@@ -127,8 +128,6 @@ export class HubServiceClient implements ChatHubService {
           if (!this.unreadConversations.getValue().includes(notification.event.conversationId)) {
             this.unreadConversations.next([...this.unreadConversations.getValue(), notification.event.conversationId]);
           }
-        } else {
-          this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
         }
         this.notificationSubject.next(notification);
       });

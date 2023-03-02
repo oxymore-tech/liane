@@ -107,7 +107,6 @@ export const WithFetchPaginatedResponse = <T,>(
           </ScrollView>
         );
       } else {
-        console.log(JSON.stringify(data));
         return <WrappedComponent data={dataList} refresh={refresh} refreshing={refreshing} {...props} />;
       }
     },

@@ -5,9 +5,10 @@ import { get, patch } from "@/api/http";
 import { AuthService } from "@/api/service/auth";
 import { Platform } from "react-native";
 import { NavigationContainerRefWithCurrent, NavigationProp } from "@react-navigation/native";
-
+import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
+import { getCurrentUser } from "@/api/storage";
 export interface NotificationService {
-  displayNotification: (notification: Notification<any>) => Promise<void>;
+  receiveNotification: (notification: Notification<any>) => Promise<void>;
 
   checkInitialNotification: () => Promise<void>;
 
@@ -15,7 +16,9 @@ export interface NotificationService {
 
   list: () => Promise<PaginatedResponse<Notification<any>>>;
 
-  read: (notificationId: string) => Promise<void>;
+  read: (notificationId: string) => Promise<boolean>;
+  initUnreadNotificationCount: (initialCount: Observable<number>) => void;
+  unreadNotificationCount: Observable<number>;
 }
 
 const DefaultChannelId = "liane_default";
@@ -38,7 +41,8 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
   return await notifee.displayNotification({
     android: DefaultAndroidSettings,
     title,
-    body
+    body,
+    data: message.data
   });
 }
 
@@ -57,7 +61,8 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
   }*/
 });
 async function displayNotifeeNotification(notification: Notification<any>) {
-  let data = getNotificationContent(notification);
+  const user = await getCurrentUser();
+  let data = getNotificationContent(notification, user!);
 
   await notifee.displayNotification({
     android: DefaultAndroidSettings,
@@ -107,22 +112,53 @@ export const PushNotifications = (() => {
 PushNotifications?.setBackgroundMessageHandler(onMessageReceived);
 export class NotificationServiceClient implements NotificationService {
   private _initialNotification = undefined;
-  initialNotification = () => this._initialNotification;
-  displayNotification = displayNotifeeNotification;
 
+  private _readNotifications: string[] = [];
+  initialNotification = () => this._initialNotification;
+  unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+
+  private _sub?: SubscriptionLike;
+
+  initUnreadNotificationCount(initialCount: Observable<number>) {
+    if (this._sub) {
+      this._sub.unsubscribe();
+    }
+    this._sub = initialCount.subscribe(count => {
+      this.unreadNotificationCount.next(count);
+    });
+  }
+  async receiveNotification(notification: Notification<any>) {
+    await displayNotifeeNotification(notification);
+    // Increment counter
+    this.unreadNotificationCount.next(Math.max(0, this.unreadNotificationCount.getValue() - 1));
+  }
   async checkInitialNotification(): Promise<void> {
     const m = await PushNotifications?.getInitialNotification();
-    console.debug("opened via", JSON.stringify(m));
+    if (m && m.data?.jsonPayload) {
+      console.debug("opened via", JSON.stringify(m));
+      this._initialNotification = JSON.parse(m.data!.jsonPayload);
+      return;
+    }
     const n = await notifee.getInitialNotification();
-    console.debug("opened via", JSON.stringify(n));
+    if (n && n.notification.data?.jsonPayload) {
+      this._initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
+      console.debug("opened via", JSON.stringify(n));
+    }
   }
 
   async list(): Promise<PaginatedResponse<Notification<any>>> {
     return await get(`/user/notification`);
   }
 
-  async read(notificationId: string): Promise<void> {
-    await patch("user/notification/" + notificationId);
+  async read(notificationId: string): Promise<boolean> {
+    if (!this._readNotifications.includes(notificationId)) {
+      this._readNotifications.push(notificationId);
+      await patch("user/notification/" + notificationId);
+      // Decrement counter
+      this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
+      return true;
+    }
+    return false;
   }
 }
 
@@ -143,13 +179,15 @@ export const getNotificationContent = (notification: Notification<any>, me: User
         d.body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} a rejoint votre Liane.`;
       }
       d.navigate = navigation => navigation.navigate("LianeDetail", { liane: notification.event.targetLiane });
-      return d;
+    } else if (notification.event.accepted === false) {
+      d.title = "Demande refusée";
+      d.body = `Votre demande n'a pas été acceptée.`;
     } else {
       d.title = "Nouvelle demande";
       d.body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} voudrait rejoindre votre Liane.`;
       d.navigate = navigation => navigation.navigate("OpenJoinLianeRequest", { request: notification.event });
-      return d;
     }
+    return d;
   }
   // Unknown type
   console.debug("untreated notification", JSON.stringify(notification));

@@ -72,7 +72,7 @@ function Home() {
           // eslint-disable-next-line react-hooks/rules-of-hooks
           const { services } = useContext(AppContext);
           // eslint-disable-next-line react-hooks/rules-of-hooks
-          const notificationCount = useObservable<number>(services.chatHub.unreadNotificationCount);
+          const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
           return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
         },
         NotificationScreen

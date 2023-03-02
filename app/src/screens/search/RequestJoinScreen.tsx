@@ -13,9 +13,10 @@ import { formatMonthDay, formatTime } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { JoinLianeRequest } from "@/api";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
+import { TripCard } from "@/components/TripCard";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
-  const { route } = useAppNavigation<"RequestJoin">();
+  const { route, navigation } = useAppNavigation<"RequestJoin">();
   const insets = useSafeAreaInsets();
 
   const { services } = useContext(AppContext);
@@ -37,7 +38,23 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     };
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
+    navigation.goBack();
   };
+  const headerDate = (
+    <Row spacing={8}>
+      <AppIcon name={"calendar-outline"} />
+      <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
+    </Row>
+  );
+  const tripContent = (
+    <LianeMatchView
+      from={request.from}
+      to={request.to}
+      departureTime={request.targetLiane.departureTime}
+      originalTrip={request.targetLiane.wayPoints}
+      newTrip={request.wayPoints}
+    />
+  );
 
   return (
     <Column style={{ flexGrow: 1, marginBottom: insets.bottom }}>
@@ -48,26 +65,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
           paddingTop: 8,
           paddingBottom: 20
         }}>
-        <Row
-          style={[
-            styles.tag,
-            {
-              backgroundColor: AppColors.yellow
-            }
-          ]}
-          spacing={8}>
-          <AppIcon name={"calendar-outline"} />
-          <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
-        </Row>
-        <View style={styles.card}>
-          <LianeMatchView
-            from={request.from}
-            to={request.to}
-            departureTime={request.targetLiane.departureTime}
-            originalTrip={request.targetLiane.wayPoints}
-            newTrip={request.wayPoints}
-          />
-        </View>
+        <TripCard header={headerDate} content={tripContent} />
         <Row style={styles.card} spacing={8}>
           {request.seats > 0 ? <AppCustomIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
           <AppText style={{ fontSize: 16 }}>{peopleDescription}</AppText>

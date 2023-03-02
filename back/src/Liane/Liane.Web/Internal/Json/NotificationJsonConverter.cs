@@ -45,6 +45,8 @@ internal sealed class NotificationJsonConverter: JsonConverter<BaseNotification>
       // Write base fields
       writer.WritePropertyName(ConvertName(options, nameof(value.Id)));
       writer.WriteStringValue(value.Id);
+      writer.WritePropertyName(ConvertName(options, nameof(value.Seen)));
+      writer.WriteBooleanValue(value.Seen);
       writer.WritePropertyName(ConvertName(options, nameof(value.CreatedAt)));
       JsonSerializer.Serialize(writer, value.CreatedAt, options);
       

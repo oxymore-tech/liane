@@ -50,7 +50,9 @@ async function initContext(service: AppServices): Promise<{
   if (authUser) {
     try {
       user = await service.chatHub.start();
-      service.chatHub.subscribeToNotifications(service.notification.displayNotification);
+      // Branch hub to notifications
+      service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
+      service.chatHub.subscribeToNotifications(service.notification.receiveNotification);
       online = true;
     } catch (e) {
       if (__DEV__) {
@@ -113,7 +115,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     return { hasError: true };
   }
 
-  componentDidMount() {
+  private initContext() {
     initContext(SERVICES).then(async p =>
       this.setState(prev => ({
         ...prev,
@@ -124,6 +126,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         status: p.online ? "online" : "offline"
       }))
     );
+  }
+
+  componentDidMount() {
+    this.initContext();
   }
 
   componentWillUnmount() {

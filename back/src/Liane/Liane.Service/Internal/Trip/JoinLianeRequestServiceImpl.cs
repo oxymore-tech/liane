@@ -54,8 +54,10 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
 
     // Update request status and notify request sender
     var updated = await Mongo.GetCollection<JoinLianeRequest>()
-      .FindOneAndUpdateAsync(r => r.Id == request.Id,
-        Builders<JoinLianeRequest>.Update.Set(r => r.Accepted, status));
+      .FindOneAndUpdateAsync<JoinLianeRequest>(r => r.Id == request.Id,
+        Builders<JoinLianeRequest>.Update.Set(r => r.Accepted, status),
+        new FindOneAndUpdateOptions<JoinLianeRequest> { ReturnDocument = ReturnDocument.After }
+        );
     
     // Notify sender asynchronously
     var _ = Task.Run(() => notificationService.Create(updated, updated.CreatedBy!));

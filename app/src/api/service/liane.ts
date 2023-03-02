@@ -39,6 +39,6 @@ export class LianeServiceClient implements LianeService {
     return get("/liane/request/" + joinRequestId);
   }
   async setAcceptedStatus(joinRequestId: string, accept: boolean): Promise<void> {
-    await patch("/liane/request/" + joinRequestId, { body: accept });
+    await patch("/liane/request/" + joinRequestId, { params: { accept: accept ? 1 : 0 } });
   }
 }

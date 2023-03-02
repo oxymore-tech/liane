@@ -27,24 +27,33 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification<any>>(
   ({ data, refresh, refreshing }) => {
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
-    const { user } = useContext(AppContext);
+    const { user, services } = useContext(AppContext);
 
     const renderItem = ({ item }: { item: Notification<any> }) => {
       const datetime = toRelativeTimeString(new Date(item.createdAt!));
       const { body, navigate } = getNotificationContent(item, user!);
+      console.log(item);
       return (
-        <AppPressable key={item.id} onPress={() => navigate(navigation)}>
+        <AppPressable
+          key={item.id}
+          onPress={() => {
+            navigate(navigation);
+            services.notification.read(item.id!).then(updated => {
+              if (updated) {
+                refresh();
+              }
+            });
+          }}>
           <Row style={{ paddingHorizontal: 24 }}>
-            {!item.read && (
-              <View style={{ justifyContent: "center", padding: 4 }}>
-                <View style={{ width: 8, height: 8, backgroundColor: AppColors.blue, borderRadius: 16 }} />
-              </View>
-            )}
+            <View style={{ justifyContent: "center", padding: 4 }}>
+              <View style={{ width: 8, height: 8, backgroundColor: AppColors.blue, opacity: item.seen ? 0 : 1, borderRadius: 16 }} />
+            </View>
+
             <Center style={{ paddingVertical: 24, paddingHorizontal: 8 }}>
               <AppIcon name={"message-square-outline"} />
             </Center>
             <Column style={{ justifyContent: "space-evenly", paddingVertical: 16, paddingHorizontal: 8, flexShrink: 1 }} spacing={2}>
-              <AppText style={{ flexGrow: 1, fontSize: 14, fontWeight: item.read ? "normal" : "bold" }} numberOfLines={2}>
+              <AppText style={{ flexGrow: 1, fontSize: 14, fontWeight: item.seen ? "normal" : "bold" }} numberOfLines={2}>
                 {body}
               </AppText>
               <AppText style={{ color: AppColorPalettes.gray[500] }}>{datetime}</AppText>
