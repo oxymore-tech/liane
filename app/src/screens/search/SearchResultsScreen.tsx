@@ -1,5 +1,5 @@
 import { LianeMatch } from "@/api";
-import { FlatList, ListRenderItemInfo, Pressable, StyleSheet, View } from "react-native";
+import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -67,18 +67,19 @@ const EmptyResultView = () => {
 };
 
 export const MatchQueryKey = "match";
-const ResultsView = WithFetchPaginatedResponse(
-  ({ data }: { data: LianeMatch[] }) => {
+const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
+  ({ data, refresh, refreshing }) => {
     const { route, navigation } = useAppNavigation<"SearchResults">();
     const filter = route.params!.filter;
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
       const isExactMatch = item.matchData.type === "ExactMatch";
       const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0);
-      console.log(item, tripDuration);
+      const departureDatetime = formatWholeDatetime(new Date(item.liane.departureTime));
+      // console.log(item, tripDuration);
       return (
         <View>
           <Row style={[styles.header, styles.grayBorder, { backgroundColor: AppColorPalettes.yellow[500] }]} spacing={4}>
-            <AppText style={styles.headerTitle}>{formatWholeDatetime(new Date(item.departureTime))}</AppText>
+            <AppText style={styles.headerTitle}>{departureDatetime}</AppText>
             <View style={{ marginLeft: 4, paddingLeft: 4, borderLeftWidth: 1, height: "100%" }} />
 
             <AppIcon name={"clock-outline"} size={18} />
@@ -92,7 +93,13 @@ const ResultsView = WithFetchPaginatedResponse(
               });
             }}
             style={[styles.item, styles.grayBorder, styles.itemLast]}>
-            <LianeMatchView match={item} filter={filter} />
+            <LianeMatchView
+              from={filter.from}
+              to={filter.to}
+              departureTime={item.liane.departureTime}
+              originalTrip={item.liane.wayPoints}
+              newTrip={item.wayPoints}
+            />
 
             <Row
               style={{
@@ -127,7 +134,7 @@ const ResultsView = WithFetchPaginatedResponse(
                   alignItems: "center",
                   backgroundColor: AppColorPalettes.gray[100]
                 }}>
-                <AppCustomIcon name={item.driver ? "car-check-mark" : "car-strike-through"} />
+                <AppCustomIcon name={item.liane.driver ? "car-check-mark" : "car-strike-through"} />
               </Row>
               <Row
                 spacing={4}
@@ -150,6 +157,7 @@ const ResultsView = WithFetchPaginatedResponse(
 
     return (
       <FlatList
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         keyExtractor={i => i.liane}
         data={data}
         renderItem={renderMatchItem}
@@ -159,7 +167,7 @@ const ResultsView = WithFetchPaginatedResponse(
     );
   },
   (repository, params) => repository.liane.match(toUnresolved(params.filter, ["to", "from"])),
-  MatchQueryKey,
+  ({ filter }) => MatchQueryKey + JSON.stringify(filter),
   EmptyResultView
 );
 

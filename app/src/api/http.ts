@@ -17,7 +17,7 @@ export interface ListOptions<T> {
   readonly sort?: SortOptions<T>;
 }
 
-type MethodType = "GET" | "POST" | "PUT" | "DELETE";
+type MethodType = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type QueryParams = { [k: string]: any };
 
@@ -82,6 +82,10 @@ export function post(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("POST", uri, options);
 }
 
+export function patch(uri: string, options: QueryPostOptions<any> = {}) {
+  return fetchAndCheck("PATCH", uri, options);
+}
+
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
   const response = await fetchAndCheck(method, uri, options);
   return response.json();
@@ -112,7 +116,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
     method,
     body: formatedBody
   });
-  if (response.status !== 200 && response.status !== 201) {
+  if (response.status !== 200 && response.status !== 201 && response.status !== 204) {
     switch (response.status) {
       case 400:
         /*

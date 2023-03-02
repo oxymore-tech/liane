@@ -14,12 +14,8 @@ public abstract record MatchType : IUnion
 
 
 public sealed record LianeMatch(
-  Ref<Liane> Liane,
-  DateTime DepartureTime,
-  DateTime? ReturnTime,
+  Liane Liane, 
   ImmutableSortedSet<WayPoint> WayPoints,
-  ImmutableSortedSet<WayPoint> OriginalTrip,
   int FreeSeatsCount,
-  Ref<User.User>? Driver,
   MatchType MatchData
 );

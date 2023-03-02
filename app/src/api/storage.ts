@@ -1,5 +1,29 @@
 import EncryptedStorage from "react-native-encrypted-storage";
-import { AuthResponse, AuthUser } from "@/api/index";
+import { AuthResponse, AuthUser, FullUser } from "@/api/index";
+
+export async function storeCurrentUser(user?: FullUser) {
+  try {
+    if (user) {
+      await storeEncryptedString("user", JSON.stringify(user));
+    } else {
+      await storeEncryptedString("user");
+    }
+  } catch (e) {
+    console.warn("Unable to store user", e);
+  }
+}
+
+export async function getCurrentUser(): Promise<FullUser | undefined> {
+  try {
+    const stored = await getEncryptedString("user");
+    if (stored) {
+      return stored ? JSON.parse(stored) : undefined;
+    }
+  } catch (e) {
+    console.warn("Unable to get user", e);
+  }
+  return undefined;
+}
 
 export async function storeUserSession(authUser?: AuthUser) {
   try {

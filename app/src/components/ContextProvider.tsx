@@ -2,11 +2,13 @@ import React, { Component, createContext, ReactNode } from "react";
 import { AuthUser, LatLng, LocationPermissionLevel, User } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
-import { UnauthorizedError } from "@/api/exception";
+import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
-import { initializeNotification } from "@/api/service/notification";
-import { View } from "react-native";
+import { initializeNotification, initializePushNotification } from "@/api/service/notification";
+import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
+import { AppText } from "@/components/base/AppText";
+import { CreateMockServices } from "@/api/service/mock";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -15,6 +17,7 @@ interface AppContextProps {
   user?: User;
   setAuthUser: (authUser?: AuthUser) => void;
   services: AppServices;
+  status: "online" | "offline";
 }
 
 const SERVICES = CreateAppServices();
@@ -23,36 +26,62 @@ export const AppContext = createContext<AppContextProps>({
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {},
   setAuthUser: () => {},
-  services: SERVICES
+  services: SERVICES,
+  status: "offline"
 });
 
 async function initContext(service: AppServices): Promise<{
   user: User | undefined;
   locationPermission: LocationPermissionLevel;
   position: LatLng;
+  online: boolean;
 }> {
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.authUser();
   let user;
+  let online = false;
+  //let notificationSubscription = undefined;
+  if (!__DEV__) {
+    await initializeRum();
+  }
+
+  await initializeNotification();
 
   if (authUser) {
     try {
-      user = await SERVICES.chatHub.start();
+      user = await service.chatHub.start();
+      service.chatHub.subscribeToNotifications(service.notification.displayNotification);
+      online = true;
     } catch (e) {
       if (__DEV__) {
         console.log("Could not start hub :", e);
       }
-      //TODO user = cached value for an offline mode
+      //user = cached value for an offline mode
+      user = await service.auth.currentUser();
     }
   }
 
-  if (!__DEV__) {
-    await initializeNotification();
-    await initializeRum();
+  if (online && user) {
+    try {
+      if (Platform.OS === "android") {
+        await initializePushNotification(user, service.auth);
+      }
+    } catch (e) {
+      if (__DEV__) {
+        console.log("Could not init notifications :", e);
+      }
+    }
   }
+
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
-  return { user, locationPermission, position };
+  await service.notification.checkInitialNotification();
+
+  return { user, locationPermission, position, online };
+}
+
+async function destroyContext(service: AppServices): Promise<void> {
+  await service.chatHub.stop();
 }
 
 interface ContextProviderProps {
@@ -64,6 +93,7 @@ interface ContextProviderState {
   locationPermission: LocationPermissionLevel;
   position?: LatLng;
   user?: User;
+  status: "online" | "offline";
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
@@ -73,7 +103,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       locationPermission: LocationPermissionLevel.NEVER,
       appLoaded: false,
       position: undefined,
-      user: undefined
+      user: undefined,
+      status: "offline"
     };
   }
 
@@ -89,9 +120,14 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: p.user,
         locationPermission: p.locationPermission,
         position: p.position,
-        appLoaded: true
+        appLoaded: true,
+        status: p.online ? "online" : "offline"
       }))
     );
+  }
+
+  componentWillUnmount() {
+    destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
   }
 
   componentDidCatch(error: any) {
@@ -100,6 +136,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         ...prev,
         user: undefined
       }));
+    } else if (error instanceof NetworkUnavailable) {
+      console.log("Error : no network");
     }
   }
 
@@ -128,11 +166,25 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   render() {
     const { children } = this.props;
-    const { appLoaded, locationPermission, position, user } = this.state;
+    const { appLoaded, locationPermission, position, user, status } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
+    if (!appLoaded) {
+      return (
+        <View style={styles.page}>
+          <ActivityIndicator />
+        </View>
+      );
+    } else if (status !== "online") {
+      return (
+        <View style={styles.page}>
+          <AppText style={{ color: AppColors.white }}>Erreur: réseau indisponible</AppText>
+        </View>
+      );
+    }
+
     // TODO handle loading view
-    return appLoaded ? (
+    return (
       <AppContext.Provider
         value={{
           locationPermission,
@@ -140,14 +192,22 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
           setAuthUser,
           position,
           user,
+          status,
           services: SERVICES
         }}>
         {children}
       </AppContext.Provider>
-    ) : (
-      <View style={{ flex: 1, backgroundColor: AppColors.darkBlue, alignItems: "center", justifyContent: "center" }} />
     );
   }
 }
 
 export default ContextProvider;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: AppColors.darkBlue,
+    alignItems: "center",
+    justifyContent: "center"
+  }
+});

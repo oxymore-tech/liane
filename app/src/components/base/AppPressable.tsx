@@ -53,6 +53,9 @@ export function AppPressable({ backgroundStyle, foregroundStyle, children, style
       onTouchEnd={() => {
         opacitySv.value = 0;
       }}
+      onTouchCancel={() => {
+        opacitySv.value = 0;
+      }}
       onTouchStart={() => {
         opacitySv.value = 1;
       }}>

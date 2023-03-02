@@ -59,6 +59,6 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
 const styles = StyleSheet.create({
   buttonPadding: {
     paddingVertical: 8,
-    paddingHorizontal: 8
+    paddingHorizontal: 12
   }
 });

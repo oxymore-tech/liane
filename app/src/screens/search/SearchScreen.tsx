@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column } from "@/components/base/AppLayout";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
@@ -15,6 +15,7 @@ import { DatetimeForm } from "@/components/forms/DatetimeForm";
 import { SwitchToggleForm } from "@/components/forms/SelectToggleForm";
 import { fromSearchFilter, SearchData, toSearchFilter } from "@/screens/search/SearchFormData";
 import { useAppNavigation } from "@/api/navigation";
+import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 
 const DateTimeForm = () => {
   return (
@@ -52,7 +53,7 @@ const DateTimeForm = () => {
     </Column>
   );
 };
-export const SearchScreen = () => {
+export const SearchScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"Search">();
   const insets = useSafeAreaInsets();
   const formContext = useForm<SearchData>({
@@ -67,95 +68,86 @@ export const SearchScreen = () => {
   };
 
   return (
-    <View style={[styles.page, { backgroundColor: AppColors.darkBlue }]}>
-      <Row style={{ paddingVertical: 4 }}>
-        <Pressable onPress={navigation.goBack}>
-          <AppIcon name="close-outline" size={32} color={AppColors.white} />
-        </Pressable>
-        <AppText style={[styles.title, { color: AppColors.white }]}>{"Trouver une Liane"} </AppText>
-      </Row>
-      <FormProvider {...formContext}>
-        <Column style={{ flexGrow: 1, marginBottom: insets.bottom }}>
-          <Column
-            spacing={24}
-            style={{
-              paddingHorizontal: 12,
-              paddingTop: 8,
-              paddingBottom: 20
-            }}>
-            <Column spacing={8}>
-              <FormCardButton
-                color={WizardFormData.from.color}
-                form={WithForms("from")}
-                name={"from"}
-                label={"Départ de"}
-                valueFormatter={value => value?.label || "--"}
-              />
-              <FormCardButton
-                color={WizardFormData.to.color}
-                form={WithForms("to")}
-                name={"to"}
-                label={"Arrivée à"}
-                valueFormatter={value => value?.label || "--"}
-              />
-
-              <View
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  justifyContent: "center",
-                  right: -12,
-                  width: 40
-                }}>
-                <AppRoundedButton
-                  backgroundColor={AppColors.white}
-                  text={"flip"}
-                  component={<AppIcon name={"flip-outline"} />}
-                  onPress={() => {
-                    // Switch to & from
-                    const from = getValues("from");
-                    const to = getValues("to");
-                    setValue("to", from);
-                    setValue("from", to);
-                  }}
-                />
-              </View>
-            </Column>
-
-            <View style={[styles.cardContainer, { backgroundColor: AppColors.yellow }]}>
-              <AppText style={[{ color: defaultTextColor(AppColors.yellow) }, styles.label]}>{"Date et heure du trajet"}</AppText>
-              <DateTimeForm />
-            </View>
-
+    <FormProvider {...formContext}>
+      <Column style={{ flexGrow: 1, marginBottom: insets.bottom }}>
+        <Column
+          spacing={24}
+          style={{
+            paddingHorizontal: 12,
+            paddingTop: 8,
+            paddingBottom: 20
+          }}>
+          <Column spacing={8}>
             <FormCardButton
-              defaultValue={-1}
-              color={WizardFormData.vehicle.color}
-              form={WithForms("vehicle")}
-              name={"availableSeats"}
-              label={"Voyageurs"}
-              valueFormatter={(value: number) => {
-                console.log(value);
-                const plural = Math.abs(value) > 1 ? "s" : "";
-                return value > 0 ? `Conducteur (${Math.abs(value)} place${plural})` : Math.abs(value) + " passager" + plural;
-              }}
+              color={WizardFormData.from.color}
+              form={WithForms("from")}
+              name={"from"}
+              label={"Départ de"}
+              valueFormatter={value => value?.label || "--"}
             />
+            <FormCardButton
+              color={WizardFormData.to.color}
+              form={WithForms("to")}
+              name={"to"}
+              label={"Arrivée à"}
+              valueFormatter={value => value?.label || "--"}
+            />
+
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                justifyContent: "center",
+                right: -12,
+                width: 40
+              }}>
+              <AppRoundedButton
+                backgroundColor={AppColors.white}
+                text={"flip"}
+                component={<AppIcon name={"flip-outline"} />}
+                onPress={() => {
+                  // Switch to & from
+                  const from = getValues("from");
+                  const to = getValues("to");
+                  setValue("to", from);
+                  setValue("from", to);
+                }}
+              />
+            </View>
           </Column>
 
-          <View style={{ flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: 24 }}>
-            <AppRoundedButton
-              color={defaultTextColor(AppColors.orange)}
-              enabled={formState.isValid}
-              onPress={() => handleSubmit(submitSearchForm)()}
-              backgroundColor={AppColors.orange}
-              text={"Lancer la recherche"}
-            />
+          <View style={[styles.cardContainer, { backgroundColor: AppColors.yellow }]}>
+            <AppText style={[{ color: defaultTextColor(AppColors.yellow) }, styles.label]}>{"Date et heure du trajet"}</AppText>
+            <DateTimeForm />
           </View>
+
+          <FormCardButton
+            defaultValue={-1}
+            color={WizardFormData.vehicle.color}
+            form={WithForms("vehicle")}
+            name={"availableSeats"}
+            label={"Voyageurs"}
+            valueFormatter={(value: number) => {
+              const plural = Math.abs(value) > 1 ? "s" : "";
+              return value > 0 ? `Conducteur (${Math.abs(value)} place${plural})` : Math.abs(value) + " passager" + plural;
+            }}
+          />
         </Column>
-      </FormProvider>
-    </View>
+
+        <View style={{ flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: 24 }}>
+          <AppRoundedButton
+            color={defaultTextColor(AppColors.orange)}
+            enabled={formState.isValid}
+            onPress={() => handleSubmit(submitSearchForm)()}
+            backgroundColor={AppColors.orange}
+            text={"Lancer la recherche"}
+          />
+        </View>
+      </Column>
+    </FormProvider>
   );
-};
+}, "Trouver une Liane");
 
 const styles = StyleSheet.create({
   page: {

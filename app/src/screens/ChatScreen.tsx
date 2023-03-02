@@ -1,9 +1,9 @@
 import { ChatMessage, ConversationGroup, PaginatedResponse, User } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
@@ -26,15 +26,17 @@ const MessageBubble = ({ message, currentUser }: { message: ChatMessage; current
         marginRight: sender ? 0 : 56,
         marginLeft: sender ? 56 : 0
       }}>
-      <AppText style={{ fontSize: 14 }}>{message.text}</AppText>
+      <AppText numberOfLines={-1} style={{ fontSize: 14 }}>
+        {message.text}
+      </AppText>
       <AppText style={{ fontSize: 10, alignSelf: sender ? "flex-end" : "flex-start" }}>{toRelativeTimeString(new Date(message.createdAt!))}</AppText>
     </Column>
   );
 };
 
 export const ChatScreen = () => {
-  const { navigation } = useAppNavigation<"Chat">();
-  const groupId = "63e533f3536b694be7bdf273";
+  const { navigation, route } = useAppNavigation<"Chat">();
+  const groupId = route.params.conversationId;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -42,46 +44,45 @@ export const ChatScreen = () => {
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
 
+  const members = conversation ? conversation.id : ""; //TODO
+
   const appendMessage = (m: ChatMessage) => {
-    console.log([m, ...messages]);
+    // console.log([m, ...messages]);
     setMessages(oldList => [m, ...oldList]);
+    setInputValue("");
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage>) => {
     setMessages(m.data);
-    setPaginationCursor(m.nextCursor);
+    setPaginationCursor(m.next);
   };
 
   const fetchNextPage = async () => {
+    console.log(paginationCursor);
     if (paginationCursor) {
-      console.log(paginationCursor);
       const paginatedResult = await services.chatHub.list(groupId, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
-        console.log(oldList.length);
-        console.log(oldList.map(o => o.id));
-        console.log(paginatedResult.data.length);
-        console.log(paginatedResult.data.map(o => o.id));
         return [...oldList, ...paginatedResult.data];
       });
-      setPaginationCursor(paginatedResult.nextCursor);
+      setPaginationCursor(paginatedResult.next);
     }
   };
 
   useEffect(() => {
-    services.chatHub.connectToChat(groupId, onReceiveLatestMessages, appendMessage).then(conv => {
+    services.chatHub.connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage).then(conv => {
       if (__DEV__) {
         console.log("Joined conversation", conv);
       }
       setConversation(conv);
     });
     return () => {
-      services.chatHub.disconnectFromConversation().catch(e => {
+      services.chatHub.disconnectFromChat(route.params.conversationId).catch(e => {
         if (__DEV__) {
           console.log(e);
         }
       });
     };
-  }, [services]);
+  }, [route, services]);
 
   const sendButton = (
     <Pressable
@@ -97,24 +98,22 @@ export const ChatScreen = () => {
 
   return (
     <View style={{ backgroundColor: AppColors.white, justifyContent: "flex-end", flex: 1 }}>
-      <FlatList
-        style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
-        data={messages}
-        keyExtractor={m => m.id}
-        renderItem={({ item }) => <MessageBubble message={item} currentUser={user!} />}
-        inverted={true}
-        onEndReachedThreshold={0.2}
-        onEndReached={() => fetchNextPage()}
-      />
-
-      <Row
-        spacing={16}
-        style={{ backgroundColor: AppColors.darkBlue, padding: 16, paddingBottom: 16 + insets.bottom + 8, marginTop: 8, alignItems: "flex-end" }}>
-        <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
-
-        <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} clearButtonMode="always" />
-      </Row>
-
+      {conversation && (
+        <FlatList
+          style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
+          data={messages}
+          keyExtractor={m => m.id}
+          renderItem={({ item }) => <MessageBubble message={item} currentUser={user!} />}
+          inverted={true}
+          onEndReachedThreshold={0.2}
+          onEndReached={() => fetchNextPage()}
+        />
+      )}
+      {!conversation && (
+        <Center>
+          <ActivityIndicator />
+        </Center>
+      )}
       <Row
         spacing={8}
         style={{
@@ -133,14 +132,19 @@ export const ChatScreen = () => {
         {conversation ? (
           <View
             style={{
-              backgroundColor: AppColors.white,
-              borderRadius: 24,
-              paddingVertical: 16,
-              paddingHorizontal: 24
+              justifyContent: "center"
             }}>
-            <AppText>{conversation.id}</AppText>
+            <AppText style={{ color: AppColors.white, fontSize: 16 }}>{members}</AppText>
           </View>
         ) : null}
+      </Row>
+
+      <Row
+        spacing={16}
+        style={{ backgroundColor: AppColors.darkBlue, padding: 16, paddingBottom: 16 + insets.bottom + 8, marginTop: 8, alignItems: "flex-end" }}>
+        <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
+
+        <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
       </Row>
     </View>
   ); // TODO loading screen

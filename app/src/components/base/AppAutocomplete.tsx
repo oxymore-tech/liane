@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Keyboard, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppTextInput, AppTextInputProps } from "@/components/base/AppTextInput";
 import { AppText } from "@/components/base/AppText";
-import useDebounce from "@/api/hook";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Identity } from "@/api";
+import { useDebounce } from "@/util/hooks/debounce";
 
 export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;

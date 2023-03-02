@@ -18,7 +18,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { LianePager } from "@/screens/lianeWizard/LianePager";
 import { ModalSizeContext } from "@/components/CardButton";
 import { AppContext } from "@/components/ContextProvider";
-import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
+import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { LianeRequest } from "@/api";
 import { useQueryClient } from "react-query";

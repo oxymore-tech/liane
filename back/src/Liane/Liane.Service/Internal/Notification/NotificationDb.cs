@@ -1,19 +1,22 @@
 using System;
+using System.Collections.Immutable;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.Notification;
 
 
+public sealed record Receiver(Ref<Api.User.User> User, DateTime? SeenAt = null);
+
 public abstract record NotificationDb(
   string? Id,
-  Ref<Api.User.User> Receiver,
+  ImmutableList<Receiver> Receivers,
   DateTime CreatedAt
 ) : IIdentity
 {
   public sealed record WithEvent<T>(
     string? Id,
     T Event,
-    Ref<Api.User.User> Receiver,
+    ImmutableList<Receiver> Receivers,
     DateTime CreatedAt
-  ) : NotificationDb(Id, Receiver, CreatedAt) where T : class;
+  ) : NotificationDb(Id, Receivers, CreatedAt) where T : class;
 }

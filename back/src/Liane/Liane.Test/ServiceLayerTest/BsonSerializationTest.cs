@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Notification;
 using Liane.Service.Internal.Mongo;
@@ -14,11 +16,19 @@ public sealed class BsonSerializationTest: BaseServiceLayerTest
 {
   private IMongoDatabase db;
 
+  private static ImmutableList<Receiver> MakeReceivers()
+  {
+    return new[]
+    {
+      new Receiver(ObjectId.GenerateNewId().ToString())
+    }.ToImmutableList();
+  }
+
     [Test]
     public async Task ShouldFindNotification()
     {
       var id = ObjectId.GenerateNewId().ToString();
-      NotificationDb n = new NotificationDb.WithEvent<string>(id, "ok", ObjectId.GenerateNewId().ToString() , DateTime.Now);
+      NotificationDb n = new NotificationDb.WithEvent<string>(id, "ok", MakeReceivers() , DateTime.Now);
       await db.GetCollection<NotificationDb>().InsertOneAsync(n);
      
       var x = db.GetCollection<NotificationDb>().Find(e => e.Id == id).FirstOrDefault();
@@ -32,13 +42,13 @@ public sealed class BsonSerializationTest: BaseServiceLayerTest
     [Test]
     public async Task ShouldFindNotificationStringOnly()
     {
-      NotificationDb n1 = new NotificationDb.WithEvent<string>(ObjectId.GenerateNewId().ToString(), "ok", ObjectId.GenerateNewId().ToString() , DateTime.Now);
+      NotificationDb n1 = new NotificationDb.WithEvent<string>(ObjectId.GenerateNewId().ToString(), "ok",  MakeReceivers() , DateTime.Now);
       await db.GetCollection<NotificationDb>().InsertOneAsync(n1);
      
-      NotificationDb n2 = new NotificationDb.WithEvent<string>(ObjectId.GenerateNewId().ToString(), "hi", ObjectId.GenerateNewId().ToString() , DateTime.Now);
+      NotificationDb n2 = new NotificationDb.WithEvent<string>(ObjectId.GenerateNewId().ToString(), "hi",  MakeReceivers() , DateTime.Now);
       await db.GetCollection<NotificationDb>().InsertOneAsync(n2);
       
-      NotificationDb n3 = new NotificationDb.WithEvent<Dummy>(ObjectId.GenerateNewId().ToString(), new Dummy("hello"), ObjectId.GenerateNewId().ToString() , DateTime.Now);
+      NotificationDb n3 = new NotificationDb.WithEvent<Dummy>(ObjectId.GenerateNewId().ToString(), new Dummy("hello"),  MakeReceivers(), DateTime.Now);
       await db.GetCollection<NotificationDb>().InsertOneAsync(n3);
 
       const int expectedSize = 2;

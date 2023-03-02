@@ -12,9 +12,9 @@ public interface IHubService
 {
   bool IsConnected(Ref<Api.User.User> user);
 
-  void AddConnectedUser(Ref<Api.User.User> user);
+  Task AddConnectedUser(Ref<Api.User.User> user, string connexionId);
 
-  void RemoveUser(Ref<Api.User.User> user);
+  Task RemoveUser(Ref<Api.User.User> user, string connectionId);
 
   Task<bool> TrySendNotification(Ref<Api.User.User> receiver, BaseNotification notification);
   

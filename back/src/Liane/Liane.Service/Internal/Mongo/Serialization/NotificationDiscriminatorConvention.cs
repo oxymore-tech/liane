@@ -18,7 +18,7 @@ public sealed class NotificationDiscriminatorConvention : IDiscriminatorConventi
   {
     this.includedEventTypes = includedEventTypes ?? typeof(NotificationDb).Assembly.GetTypes()
       .Where(t => t.GetTypeInfo().IsClass)
-      .Append(typeof(string)).ToImmutableList();
+      .Append(typeof(string)).ToImmutableList(); //TODO include API records
   }
 
   public static FilterDefinition<NotificationDb> GetDiscriminatorFilter<TEvent>() 

@@ -4,7 +4,6 @@ using Liane.Api.Util.Ref;
 namespace Liane.Service.Internal.User;
 
 public sealed record DbUser(
-  //  [property:BsonSerializer(typeof(String2ObjectIdBsonSerializer))]
     string Id,
     bool IsAdmin,
     string Phone,

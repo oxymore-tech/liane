@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -8,6 +10,7 @@ using Google.Apis.Auth.OAuth2;
 using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.User;
@@ -22,6 +25,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
   private readonly IUserService userService;
   private readonly JsonSerializerOptions jsonSerializerOptions;
   private readonly IHubService hubService;
+  private readonly ILogger<NotificationServiceImpl> logger;
 
   public NotificationServiceImpl(
     FirebaseSettings firebaseSettings, 
@@ -31,6 +35,7 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     JsonSerializerOptions jsonSerializerOptions, IHubService hubService) : base(database)
   {
     this.userService = userService;
+    this.logger = logger;
     this.jsonSerializerOptions = jsonSerializerOptions;
     this.hubService = hubService;
     if (firebaseSettings.ServiceAccountFile is null)
@@ -52,7 +57,14 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
       
     }
     // Otherwise send via FCM
-    await SendTo(receiver, "Notification", notification);
+    try
+    {
+      await SendTo(receiver, "Notification", notification);
+    }
+    catch (Exception e)
+    {
+      logger.LogDebug("Tried to send notification to user without pushToken {receiver}", receiver.Id);
+    }
   }
 
   public async Task<string> SendTo(Ref<Api.User.User> receiver, string title, object message)
@@ -96,43 +108,65 @@ public sealed class NotificationServiceImpl : BaseMongoCrudService<NotificationD
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }
 
-  private BaseNotification MapEntityClass<T>(NotificationDb.WithEvent<T> dbRecord) where T : class
+  private static BaseNotification MapEntityClass<T>(NotificationDb.WithEvent<T> dbRecord) where T : class
   {
     return new BaseNotification.Notification<T>(dbRecord.Id, dbRecord.CreatedAt, dbRecord.Event);
   }
 
-  protected override Task<BaseNotification> MapEntity(NotificationDb dbRecord)
+  protected override async Task<BaseNotification> MapEntity(NotificationDb dbRecord)
   {
     var type = dbRecord.GetType();
-    if (!type.GetTypeInfo().IsAssignableFrom(typeof(NotificationDb.WithEvent<>)))
+    if (!type.IsGenericType || type.GetGenericTypeDefinition() !=(typeof(NotificationDb.WithEvent<>)))
     {
       throw new ArgumentException("Bad NotificationDb type : " + nameof(type));
     }
     var eventType = type.GetGenericArguments()[0];
-    var method = typeof(NotificationServiceImpl).GetMethod(nameof(MapEntityClass))!;
+    var method = typeof(NotificationServiceImpl).GetMethod(nameof(MapEntityClass), BindingFlags.Static | BindingFlags.NonPublic)!;
     var generic = method.MakeGenericMethod(eventType);
-    return (Task<BaseNotification>)generic.Invoke(this, new object?[]{dbRecord})!;
+    return (BaseNotification)generic.Invoke(this, new object?[]{dbRecord})!;
   }
 
-  public async Task<BaseNotification> Create<T>(T linkedEvent, Ref<Api.User.User> receiver) where T : class
+  public async Task Create<T>(T linkedEvent, Ref<Api.User.User> receiver) where T : class
+  {
+    await Create(linkedEvent, new[] { receiver }.ToImmutableList());
+  }
+  public async Task Create<T>(T linkedEvent, ImmutableList<Ref<Api.User.User>> receivers) where T : class
   {
     var timestamp = DateTime.Now;
-    var dbRecord = new NotificationDb.WithEvent<T>(ObjectId.GenerateNewId().ToString(),  linkedEvent, receiver, timestamp);
+    var dbRecord = new NotificationDb.WithEvent<T>(ObjectId.GenerateNewId().ToString(),  linkedEvent, receivers.Select(u => new Receiver(u)).ToImmutableList(), timestamp);
     await Mongo.GetCollection<NotificationDb>().InsertOneAsync(dbRecord);
-    var notification = new BaseNotification.Notification<T>(dbRecord.Id, timestamp, linkedEvent);
-    
     // Send notification 
-    var _ = Task.Run(() => SendNotificationTo(receiver, notification));
-    
-    return notification;
+    var notification = new BaseNotification.Notification<T>(dbRecord.Id, timestamp, linkedEvent);
+    var _ = Task.Run(() =>
+    {
+      Parallel.ForEach(receivers, async receiver => await SendNotificationTo(receiver, notification));
+    });
   }
 
   public async Task<int> GetUnreadCount(Ref<Api.User.User> user)
   {
-    var resolvedUser = await ResolveRef<DbUser>(user);
+    var filter = Builders<NotificationDb>.Filter.ElemMatch(n => n.Receivers, r => r.User == user.Id && r.SeenAt == null);
     var unreadCount = await Mongo.GetCollection<NotificationDb>()
-      .Find(n => n.Id == user.Id && resolvedUser!.LastConnection < n.CreatedAt)
+      .Find(filter)
       .CountDocumentsAsync();
-    return (int)Math.Min(int.MaxValue, unreadCount);
+    return (int)Math.Min(100, unreadCount);
+  }
+
+  public async Task<PaginatedResponse<BaseNotification>> List(Ref<Api.User.User> user, Pagination pagination)
+  {
+    var filter = Builders<NotificationDb>.Filter.ElemMatch(r => r.Receivers, r => r.User == user);
+
+    var paginated = await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);
+    return await paginated.SelectAsync(MapEntity);
+  }
+  
+  public async Task ReadNotification(string notificationId, Ref<Api.User.User> user)
+  {
+    //TODO improve
+    var notification = await Mongo.GetCollection<NotificationDb>().Find(n => n.Id == notificationId).FirstOrDefaultAsync();
+    var memberIndex = notification.Receivers.FindIndex(r => r.User.Id == user.Id);
+    await Mongo.GetCollection<NotificationDb>().UpdateOneAsync(n => n.Id == notificationId, 
+      Builders<NotificationDb>.Update.Set(n => n.Receivers[memberIndex].SeenAt, DateTime.Now)
+      );
   }
 }

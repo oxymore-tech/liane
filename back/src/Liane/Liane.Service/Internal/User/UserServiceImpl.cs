@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
@@ -13,13 +14,22 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   {
   }
 
-  public async Task UpdateLastConnection(string id, DateTime timestamp)
+  private async Task UpdateField<T>(string userId, Expression<Func<DbUser, T>> field, T value)
   {
     await Mongo.GetCollection<DbUser>()
       .UpdateOneAsync(
-        u => u.Id == id,
-        Builders<DbUser>.Update.Set(u => u.LastConnection, timestamp)
+        u => u.Id == userId,
+        Builders<DbUser>.Update.Set(field, value)
       );
+  }
+  public async Task UpdateLastConnection(string id, DateTime timestamp)
+  {
+    await UpdateField(id, u => u.LastConnection , timestamp);
+  }
+  
+  public async Task UpdatePushToken(string id, string pushToken)
+  {
+    await UpdateField(id, u => u.PushToken , pushToken);
   }
 
   public async Task<FullUser> GetByPhone(string phone)

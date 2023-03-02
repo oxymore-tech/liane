@@ -36,7 +36,7 @@ public sealed class ChatHub : Hub<IHubClient>
 
   public async Task SendToGroup(ChatMessage message, string groupId)
   {
-    logger.LogInformation(message.Text);
+
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
     logger.LogInformation(sent.Text + " " + currentContext.CurrentUser().Id);
     // Send created message directly to the caller, the rest of the group will be handled by chat service
@@ -49,7 +49,7 @@ public sealed class ChatHub : Hub<IHubClient>
     // Add user to group if he is a member and update last connection date
     var nowCursor = Cursor.Now();
     var updatedConversation = await chatService.ReadAndGetConversation(groupId, userId, nowCursor.Timestamp);
-    await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
+    //await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
     logger.LogInformation("User " + userId + " joined conversation " + groupId);
     var caller = Clients.Caller;
     // Send latest messages async
@@ -62,9 +62,10 @@ public sealed class ChatHub : Hub<IHubClient>
     return updatedConversation;
   }
 
-  public Task LeaveGroupChat(string groupId)
+  public async Task LeaveGroupChat(string groupId)
   {
-    return Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
+    var userId = currentContext.CurrentUser().Id;
+    //return Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
   }
 
   public override async Task OnConnectedAsync()
@@ -74,7 +75,7 @@ public sealed class ChatHub : Hub<IHubClient>
     logger.LogInformation("User " + userId
                                   + " connected to hub with connection ID : "
                                   + Context.ConnectionId);
-    hubService.AddConnectedUser(userId);
+    await hubService.AddConnectedUser(userId, Context.ConnectionId);
     // Get user data
     var user = await userService.GetFullUser(userId);
     await Clients.Caller.Me(user);
@@ -88,7 +89,7 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     var now = DateTime.Now;
     var userId = currentContext.CurrentUser().Id;
-    hubService.RemoveUser(userId);
+    await hubService.RemoveUser(userId, Context.ConnectionId);
     await base.OnDisconnectedAsync(exception);
     await userService.UpdateLastConnection(userId, now);
   }

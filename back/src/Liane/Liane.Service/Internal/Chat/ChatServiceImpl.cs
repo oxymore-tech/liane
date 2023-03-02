@@ -30,7 +30,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   {
     // Retrieve conversation and user's membership data
     var conversationGroup = await Get(group);
-    var userMembershipIndex = conversationGroup.Members.FindIndex(m => m.User == user);
+    var userMembershipIndex = conversationGroup.Members.FindIndex(m => m.User.Id == user.Id);
     if (userMembershipIndex < 0) throw new NullReferenceException();
 
     // Update Member's last connection and return
@@ -72,23 +72,26 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     var sent = message with { Id = ObjectId.GenerateNewId().ToString(), CreatedBy = author.Id, CreatedAt = createdAt };
     await Mongo.GetCollection<DbChatMessage>()
       .InsertOneAsync(new DbChatMessage(sent.Id, groupId, sent.CreatedBy, createdAt, sent.Text));
-    await Mongo.GetCollection<ConversationGroup>()
-      .UpdateOneAsync(c => c.Id == groupId,
-        Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt)
+    var conversation = await Mongo.GetCollection<ConversationGroup>()
+      .FindOneAndUpdateAsync<ConversationGroup>(c => c.Id == groupId,
+        Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt),
+        new FindOneAndUpdateOptions<ConversationGroup> { ReturnDocument = ReturnDocument.After }
+
       );
     // Send notification asynchronously to other conversation members
-    var _ = Task.Run(async () =>
+    var _ = Task.Run(() =>
     {
-      var conversation = await ResolveRef<ConversationGroup>(groupId);
       Parallel.ForEach(conversation!.Members, async info =>
       {
         if (info.User == author) return;
-        if (!hubService.IsConnected(info.User) || !await hubService.TrySendChatMessage(info.User, groupId, sent))
+        if (await hubService.TrySendChatMessage(info.User, groupId, sent))
         {
-          // Send detailled notification  
-          await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, sent));
+          return;
         }
-        
+        // User is not in the conversation so send detailed notification  
+        // var authorUser = await userService.Get(author);
+       //TODO await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, authorUser, sent));
+
       });
     });
     return sent;

@@ -20,12 +20,14 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
+  private readonly IJoinLianeRequestService joinLianeRequestService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, IJoinLianeRequestService joinLianeRequest)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
+    this.joinLianeRequestService = joinLianeRequest;
   }
 
   [HttpGet("{id}")]
@@ -34,6 +36,43 @@ public sealed class LianeController : ControllerBase
   {
     var current = currentContext.CurrentResource<Api.Trip.Liane>();
     return current ?? await lianeService.Get(id);
+  }
+  
+  [HttpPost("{id}/request")]
+  [RequiresAccessLevel(ResourceAccessLevel.Any, typeof(Api.Trip.Liane))] // Check resource exits
+  public async Task<JoinLianeRequest> Join([FromRoute] string id, [FromBody] JoinLianeRequest request)
+  {
+    return await joinLianeRequestService.Create(request with {TargetLiane = id}, currentContext.CurrentUser().Id);
+  }
+  
+  [HttpGet("{id}/request")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task<PaginatedResponse<JoinLianeRequest>> GetLianeRequests([FromRoute] string id, [FromQuery] Pagination pagination)
+  {
+    // Get requests linked to a particular Liane
+    return await joinLianeRequestService.ListLianeRequests(id, pagination);
+  }
+  
+   
+  [HttpGet("request/{id}")]
+  public async Task<JoinLianeRequestDetailed> GetDetailedLianeRequest([FromRoute] string id)
+  {
+    return await joinLianeRequestService.GetDetailedRequest(id);
+  }
+  
+  [HttpPatch("request/{id}")]
+  public async Task SetStatus([FromRoute] string id, [FromBody] bool accept)
+  {
+    var currentUser = currentContext.CurrentUser().Id;
+    if (accept) await joinLianeRequestService.AcceptJoinRequest(currentUser, id);
+    else await joinLianeRequestService.RefuseJoinRequest(currentUser, id);
+  }
+  
+  [HttpGet("request")]
+  public async Task<PaginatedResponse<JoinLianeRequest>> ListUserRequests([FromQuery] Pagination pagination)
+  {
+    // Get user's requests 
+    return await joinLianeRequestService.ListUserRequests(currentContext.CurrentUser().Id, pagination);
   }
 
   [HttpPost("match")]

@@ -1,27 +1,46 @@
-import { ChatMessage, ConversationGroup, Notification, PaginatedRequestParams, PaginatedResponse, Ref, User } from "@/api";
+import {
+  ChatMessage,
+  ConversationGroup,
+  FullUser,
+  NewConversationMessage,
+  Notification,
+  PaginatedRequestParams,
+  PaginatedResponse,
+  Ref
+} from "@/api";
 import { BaseUrl, get, tryRefreshToken } from "@/api/http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { getAccessToken, getRefreshToken } from "@/api/storage";
+import { getAccessToken, getCurrentUser, getRefreshToken, storeCurrentUser } from "@/api/storage";
+import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
+import { NetworkUnavailable } from "@/api/exception";
 
 export interface ChatHubService {
   list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
   stop(): Promise<void>;
-  start(): Promise<User>;
+  start(): Promise<FullUser>;
   connectToChat(
     conversation: Ref<ConversationGroup>,
     onReceiveLatestMessages: OnLatestMessagesCallback,
-    onReceiveMessage: OnMessageCallback
+    onReceiveMessage: ConsumeMessage
   ): Promise<ConversationGroup>;
-  disconnectFromConversation(): Promise<void>;
+  disconnectFromChat(conversation: Ref<ConversationGroup>): Promise<void>;
+  subscribeToNotifications(callback: OnNotificationCallback): SubscriptionLike;
+
+  unreadConversations: Observable<Ref<ConversationGroup>[]>;
+
+  unreadNotificationCount: Observable<number>;
 }
 
-export type OnMessageCallback = (res: ChatMessage) => void;
-export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
-export type OnNotificationCallback = (res: Notification<any>) => void;
+export type ConsumeMessage = (res: ChatMessage) => void;
 
-export type UnreadOverview = Readonly<{
-  notificationCount: number;
+export type Disconnect = () => Promise<void>;
+export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
+
+export type OnNotificationCallback = (n: Notification<any>) => void;
+
+type UnreadOverview = Readonly<{
+  notificationsCount: number;
   conversations: Ref<ConversationGroup>[];
 }>;
 
@@ -39,47 +58,79 @@ function createChatConnection(): HubConnection {
 export class HubServiceClient implements ChatHubService {
   private hub: HubConnection;
   private currentConversationId?: string = undefined;
-  private unread?: UnreadOverview;
-
+  readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
+  readonly unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  private notificationSubject: Subject<Notification<any>> = new Subject<Notification<any>>();
   // Sets a callback to receive latests messages when joining the conversation.
   // This callback will be automatically disposed of when closing conversation.
   private onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
+  private onReceiveMessageCallback: ConsumeMessage | null = null;
 
-  private onReceiveNotificationCallback: OnNotificationCallback | null = null;
-  private onReceiveMessageCallback: OnMessageCallback | null = null;
+  private isStarted = false;
   constructor() {
     this.hub = createChatConnection();
   }
 
   start = () => {
-    console.log("start");
-    return new Promise<User>((resolve, reject) => {
+    if (this.isStarted) {
+      console.debug("hub already started");
+      return new Promise<FullUser>(async (resolve, reject) => {
+        const found = await getCurrentUser();
+        if (found) {
+          resolve(found);
+        } else {
+          reject(new Error("current user not found"));
+        }
+      });
+    }
+    console.debug("start");
+    return new Promise<FullUser>((resolve, reject) => {
       let alreadyClosed = false;
       this.hub.on("ReceiveLatestMessages", async messages => {
+        // Called after joining a conversation
         if (this.onReceiveLatestMessagesCallback) {
           await this.onReceiveLatestMessagesCallback(messages);
         }
       });
       this.hub.on("ReceiveMessage", async (convId, message) => {
+        // Called when receiving a message inside current conversation
+        console.debug("received msg", convId, message, this.currentConversationId, this.onReceiveMessageCallback);
         if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
+          console.debug("should get");
           await this.onReceiveMessageCallback(message);
-        } else if (this.unread && !this.unread.conversations.includes(convId)) {
-          this.unread.conversations.push(convId);
+        } else if (!this.unreadConversations.getValue().includes(convId)) {
+          this.unreadConversations.next([...this.unreadConversations.getValue(), convId]);
         }
       });
-      this.hub.on("Me", async (me: User) => {
+      this.hub.on("Me", async (me: FullUser) => {
+        // Called when hub is started
         console.log("me", me);
+        this.isStarted = true;
+        await storeCurrentUser(me);
         resolve(me);
       });
       this.hub.on("ReceiveUnreadOverview", async (unread: UnreadOverview) => {
-        this.unread = unread;
+        // Called when hub is started
+        console.log("unread", unread);
+        this.unreadConversations.next(unread.conversations);
+        this.unreadNotificationCount.next(unread.notificationsCount);
       });
       this.hub.on("ReceiveNotification", async (notification: Notification<any>) => {
-        if (this.onReceiveNotificationCallback) {
-          await this.onReceiveNotificationCallback(notification);
+        // Called on new notification
+        if (__DEV__) {
+          console.log("received:", notification);
         }
+        if (this.isNewMessage(notification)) {
+          // Add to unread conversations if necessary
+          if (!this.unreadConversations.getValue().includes(notification.event.conversationId)) {
+            this.unreadConversations.next([...this.unreadConversations.getValue(), notification.event.conversationId]);
+          }
+        } else {
+          this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
+        }
+        this.notificationSubject.next(notification);
       });
       this.hub.onclose(err => {
         if (!alreadyClosed) {
@@ -103,6 +154,9 @@ export class HubServiceClient implements ChatHubService {
             } catch (e) {
               reject(e);
             }
+          } else if (err.message.includes("Network request failed")) {
+            // Network or server unavailable
+            reject(new NetworkUnavailable());
           } else {
             reject(err);
           }
@@ -111,8 +165,13 @@ export class HubServiceClient implements ChatHubService {
     });
   };
 
+  private isNewMessage(x: Notification<any>): x is Notification<NewConversationMessage> {
+    return x.type === "NewConversationMessage";
+  }
+
   stop = () => {
     console.log("stop");
+    // TODO close all observables
     return this.hub.stop();
   };
   list = async (id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>> =>
@@ -120,20 +179,24 @@ export class HubServiceClient implements ChatHubService {
   async connectToChat(
     conversationRef: Ref<ConversationGroup>,
     onReceiveLatestMessages: OnLatestMessagesCallback,
-    onReceiveMessage: OnMessageCallback
+    onReceiveMessage: ConsumeMessage
   ): Promise<ConversationGroup> {
     if (this.currentConversationId) {
-      await this.disconnectFromConversation();
+      await this.disconnectFromChat(this.currentConversationId);
     }
     this.onReceiveLatestMessagesCallback = onReceiveLatestMessages;
     this.onReceiveMessageCallback = onReceiveMessage;
     const conv: ConversationGroup = await this.hub.invoke("JoinGroupChat", conversationRef);
     console.log("joined " + conv.id);
     this.currentConversationId = conv.id;
+    // Remove from unread conversations
+    if (this.unreadConversations.getValue().includes(conversationRef)) {
+      this.unreadConversations.next(this.unreadConversations.getValue().filter(c => c !== conversationRef));
+    }
 
     return conv;
   }
-  async disconnectFromConversation(): Promise<void> {
+  async disconnectFromChat(_: Ref<ConversationGroup>): Promise<void> {
     if (this.currentConversationId) {
       this.onReceiveLatestMessagesCallback = null;
       this.onReceiveMessageCallback = null;
@@ -157,5 +220,8 @@ export class HubServiceClient implements ChatHubService {
     } else {
       throw new Error("Could not send message to undefined conversation");
     }
+  }
+  subscribeToNotifications(callback: OnNotificationCallback) {
+    return this.notificationSubject.subscribe(callback);
   }
 }
