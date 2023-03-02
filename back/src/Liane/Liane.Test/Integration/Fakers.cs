@@ -7,8 +7,7 @@ using Liane.Api.Trip;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;
 
-
-namespace Liane.Test.ServiceLayerTest;
+namespace Liane.Test.Integration;
 
 public class Fakers
 {

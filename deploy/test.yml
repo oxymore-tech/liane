@@ -19,6 +19,7 @@ services:
       target: test
     environment:
       OSRM_URL: "http://osrm:5000"
+      MONGO_HOST: "mongo"
     depends_on:
       - mongo
       - osrm

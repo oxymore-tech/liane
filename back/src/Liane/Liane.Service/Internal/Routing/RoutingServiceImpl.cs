@@ -293,7 +293,6 @@ public sealed class RoutingServiceImpl : IRoutingService
       // If the hashset of a given point P contains P, it indicates this point is no longer visitable.
       var pointsDictionary = new Dictionary<RallyingPoint, HashSet<RallyingPoint>>();
       var trip = new List<WayPoint>();
-      HashSet<RallyingPoint> visitable;
 
       foreach (var member in segments)
       {
@@ -323,9 +322,9 @@ public sealed class RoutingServiceImpl : IRoutingService
       trip.Add(new WayPoint(start, 0, 0, 0));
       // Add a constraint to indicate this point has already been visited 
       pointsDictionary[start].Add(start);
-      
+
       // Get visitable points
-      visitable = pointsDictionary.Where(kv => kv.Value.Count == 0).Select(kv => kv.Key).ToHashSet();
+      var visitable = pointsDictionary.Where(kv => kv.Value.Count == 0).Select(kv => kv.Key).ToHashSet();
       var currentPoint = start;
 
       while (visitable.Any())

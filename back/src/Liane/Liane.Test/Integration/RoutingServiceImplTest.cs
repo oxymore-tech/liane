@@ -5,14 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
 
-namespace Liane.Test.ServiceLayerTest;
+namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class RoutingServiceImplTest : BaseServiceLayerTest
+public sealed class RoutingServiceImplTest : BaseIntegrationTest
 {
-  private IRoutingService tested;
+  private IRoutingService tested = null!;
 
-  protected override void InitService(IMongoDatabase db)
+  protected override void Setup(IMongoDatabase db)
   {
     tested = ServiceProvider.GetService<IRoutingService>()!;
   }

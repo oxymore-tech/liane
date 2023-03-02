@@ -15,14 +15,14 @@ using MongoDB.Driver;
 using NUnit.Framework;
 using Filter = Liane.Api.Trip.Filter;
 
-namespace Liane.Test.ServiceLayerTest;
+namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class LianeServiceImplTest : BaseServiceLayerTest
+public sealed class LianeServiceImplTest : BaseIntegrationTest
 {
-  private LianeServiceImpl testedService;
+  private LianeServiceImpl testedService = null!;
 
-  protected override void InitService(IMongoDatabase db)
+  protected override void Setup(IMongoDatabase db)
   {
     testedService = new LianeServiceImpl(db, ServiceProvider.GetService<IRoutingService>()!, Moq.Mock.Of<ICurrentContext>(), Moq.Mock.Of<IRallyingPointService>(), Moq.Mock.Of<IChatService>());
   }
@@ -212,8 +212,4 @@ public sealed class LianeServiceImplTest : BaseServiceLayerTest
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);
   }
 
-  protected override void ClearTestedCollections()
-  {
-    DropTestedCollection<Api.Trip.Liane>();
-  }
 }

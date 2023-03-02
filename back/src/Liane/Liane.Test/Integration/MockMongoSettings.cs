@@ -1,7 +1,7 @@
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;
 
-namespace Liane.Test.ServiceLayerTest;
+namespace Liane.Test.Integration;
 
 internal static class MongoDatabaseTestExtensions
 {
