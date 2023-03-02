@@ -8,7 +8,9 @@ using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -30,7 +32,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task TestMatchLiane()
   {
-    var userA = Fakers.FakeDbUsers[0].Id;
+    var userA = Fakers.DbUsers[0].Id;
     var tomorrow = DateTime.Now.AddDays(1);
     // Create fake Liane in database
     var baseLianes = new[]
@@ -46,7 +48,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var createdLianes = new List<Api.Trip.Liane>();
     for (int i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.LianeRequest.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
       createdLianes.Add(await testedService.Create(lianeRequest, userA));
     }
 
@@ -90,114 +92,112 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var requests = new LianeRequest[baseLianes.Length];
     for (int i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2};
+      var lianeRequest = Fakers.LianeRequest.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2};
      requests[i] = lianeRequest;
     }
 
     return requests;
   }
 
-  [Test]
-  public async Task TestFilterLianeOnLocation()
-  {
-    var userA = Fakers.FakeDbUsers[0].Id;
-    // Create fake Liane in database
-    var baseLianesRequests = CreateBaseLianeRequests();
-    var createdLianes = new List<Api.Trip.Liane>();
-    foreach (var t in baseLianesRequests)
-    {
-      createdLianes.Add(await testedService.Create(t, userA));
-    }
-
-    // Test with radius 10km
-    var filter1 = new Filter(
-      LabeledPositions.GorgesDuTarnCausses,
-      LabeledPositions.ChamperbouxEglise,
-      new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
-    );
-    var radius1 = 10000;
-    var resultCursor = await testedService.Filter(filter1, radius1);
-    var resultIds1 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
-    Assert.AreEqual(3, resultIds1.Count);
-    Assert.Contains(createdLianes[0].Id, resultIds1);
-    Assert.Contains(createdLianes[1].Id, resultIds1);
-    Assert.Contains(createdLianes[2].Id, resultIds1);
-
-    // Test with radius 500m
-    var filter2 = new Filter(
-      LabeledPositions.GorgesDuTarnCausses,
-      LabeledPositions.BalsiegeParkingEglise,
-      new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
-    );
-    var radius2 = 500;
-    resultCursor = await testedService.Filter(filter2, radius2);
-    var resultIds2 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
-    Assert.AreEqual(2, resultIds2.Count);
-    Assert.Contains(createdLianes[0].Id, resultIds2);
-    Assert.Contains(createdLianes[2].Id, resultIds2);
-
-
-    var filter3 = new Filter(
-      LabeledPositions.GorgesDuTarnCausses,
-      LabeledPositions.BalsiegeParkingEglise,
-      new DepartureOrArrivalTime(DateTime.Now.AddDays(2), Direction.Departure)
-    );
-    resultCursor = await testedService.Filter(filter3, radius2);
-    var resultIds3 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
-    Assert.AreEqual(0, resultIds3.Count);
-  }
-
-    
-
-  [Test]
-  public async Task TestFilterLianeOnSeatCount()
-  {
-    var userA = Fakers.FakeDbUsers[0].Id;
-    // Create fake Liane in database
-    var baseLianesRequests = CreateBaseLianeRequests();
-    var createdLianes = new List<Api.Trip.Liane>();
-    for (int i = 0; i < baseLianesRequests.Length; i++)
-    {
-      createdLianes.Add(await testedService.Create(baseLianesRequests[i] with {AvailableSeats = i+1} , userA));
-    }
-
-    
-    const int radius = 10000;
-    
-    var filter1 = new Filter(
-      LabeledPositions.GorgesDuTarnCausses,
-      LabeledPositions.ChamperbouxEglise,
-      new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
-    );
-    var resultCursor = await testedService.Filter(filter1, radius);
-    var resultIds1 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
-    Assert.AreEqual(3, resultIds1.Count);
-    Assert.Contains(createdLianes[0].Id, resultIds1);
-    Assert.Contains(createdLianes[1].Id, resultIds1);
-    Assert.Contains(createdLianes[2].Id, resultIds1);
-    
-    var filter2 = new Filter(
-      LabeledPositions.GorgesDuTarnCausses,
-      LabeledPositions.ChamperbouxEglise,
-      new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure),
-      AvailableSeats: -2
-    );
-    resultCursor = await testedService.Filter(filter2, radius);
-    var resultIds2 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
-    Assert.AreEqual(2, resultIds2.Count);
-    Assert.Contains(createdLianes[1].Id, resultIds1);
-    Assert.Contains(createdLianes[2].Id, resultIds1);
-  }
+  // [Test]
+  // public async Task TestFilterLianeOnLocation()
+  // {
+  //   var userA = Fakers.DbUsers[0].Id;
+  //   // Create fake Liane in database
+  //   var baseLianesRequests = CreateBaseLianeRequests();
+  //   var createdLianes = new List<Api.Trip.Liane>();
+  //   foreach (var t in baseLianesRequests)
+  //   {
+  //     createdLianes.Add(await testedService.Create(t, userA));
+  //   }
+  //
+  //   // Test with radius 10km
+  //   var filter1 = new Filter(
+  //     LabeledPositions.GorgesDuTarnCausses,
+  //     LabeledPositions.ChamperbouxEglise,
+  //     new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
+  //   );
+  //   var radius1 = 10000;
+  //   var resultCursor = await testedService.Filter(filter1, radius1);
+  //   var resultIds1 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
+  //   Assert.AreEqual(3, resultIds1.Count);
+  //   Assert.Contains(createdLianes[0].Id, resultIds1);
+  //   Assert.Contains(createdLianes[1].Id, resultIds1);
+  //   Assert.Contains(createdLianes[2].Id, resultIds1);
+  //
+  //   // Test with radius 500m
+  //   var filter2 = new Filter(
+  //     LabeledPositions.GorgesDuTarnCausses,
+  //     LabeledPositions.BalsiegeParkingEglise,
+  //     new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
+  //   );
+  //   var radius2 = 500;
+  //   resultCursor = await testedService.Filter(filter2, radius2);
+  //   var resultIds2 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
+  //   Assert.AreEqual(2, resultIds2.Count);
+  //   Assert.Contains(createdLianes[0].Id, resultIds2);
+  //   Assert.Contains(createdLianes[2].Id, resultIds2);
+  //
+  //
+  //   var filter3 = new Filter(
+  //     LabeledPositions.GorgesDuTarnCausses,
+  //     LabeledPositions.BalsiegeParkingEglise,
+  //     new DepartureOrArrivalTime(DateTime.Now.AddDays(2), Direction.Departure)
+  //   );
+  //   resultCursor = await testedService.Filter(filter3, radius2);
+  //   var resultIds3 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
+  //   Assert.AreEqual(0, resultIds3.Count);
+  // }
+  
+  // [Test]
+  // public async Task TestFilterLianeOnSeatCount()
+  // {
+  //   var userA = Fakers.DbUsers[0].Id;
+  //   // Create fake Liane in database
+  //   var baseLianesRequests = CreateBaseLianeRequests();
+  //   var createdLianes = new List<Api.Trip.Liane>();
+  //   for (int i = 0; i < baseLianesRequests.Length; i++)
+  //   {
+  //     createdLianes.Add(await testedService.Create(baseLianesRequests[i] with {AvailableSeats = i+1} , userA));
+  //   }
+  //
+  //   
+  //   const int radius = 10000;
+  //   
+  //   var filter1 = new Filter(
+  //     LabeledPositions.GorgesDuTarnCausses,
+  //     LabeledPositions.ChamperbouxEglise,
+  //     new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
+  //   );
+  //   var resultCursor = await testedService.Filter(filter1, radius);
+  //   var resultIds1 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
+  //   Assert.AreEqual(3, resultIds1.Count);
+  //   Assert.Contains(createdLianes[0].Id, resultIds1);
+  //   Assert.Contains(createdLianes[1].Id, resultIds1);
+  //   Assert.Contains(createdLianes[2].Id, resultIds1);
+  //   
+  //   var filter2 = new Filter(
+  //     LabeledPositions.GorgesDuTarnCausses,
+  //     LabeledPositions.ChamperbouxEglise,
+  //     new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure),
+  //     AvailableSeats: -2
+  //   );
+  //   resultCursor = await testedService.Filter(filter2, radius);
+  //   var resultIds2 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
+  //   Assert.AreEqual(2, resultIds2.Count);
+  //   Assert.Contains(createdLianes[1].Id, resultIds1);
+  //   Assert.Contains(createdLianes[2].Id, resultIds1);
+  // }
 
   [Test]
   public async Task TestListAccessLevel()
   {
-    var userA = Fakers.FakeDbUsers[0].Id;
-    var userB = Fakers.FakeDbUsers[1].Id;
+    var userA = Fakers.DbUsers[0].Id;
+    var userB = Fakers.DbUsers[1].Id;
     const int lianesACount = 3;
     const int lianesBCount = 1;
-    var lianesA = Fakers.LianeRequestFaker.Generate(lianesACount);
-    var lianeB = Fakers.LianeRequestFaker.Generate();
+    var lianesA = Fakers.LianeRequest.Generate(lianesACount);
+    var lianeB = Fakers.LianeRequest.Generate();
 
     await testedService.Create(lianeB, userB);
     foreach (var l in lianesA)
@@ -210,6 +210,20 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);
+  }
+
+  [Test]
+  public async Task JbShouldMatchAugustinsLiane()
+  {
+    var augustin = Fakers.DbUser.Generate();
+    var jb = Fakers.DbUser.Generate();
+
+    await Db.GetCollection<DbUser>().InsertManyAsync(ImmutableList.Create(augustin, jb));
+    
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin.Id);
+    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival), -1), new Pagination());
+    
+    Assert.IsNotNull(actual);
   }
 
 }

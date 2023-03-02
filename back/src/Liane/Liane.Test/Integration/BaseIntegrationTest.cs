@@ -55,7 +55,7 @@ public abstract class BaseIntegrationTest
     // Init services in child class 
     Setup(Db);
     // Insert mock users & rallying points
-    Db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
+    Db.GetCollection<DbUser>().InsertMany(Fakers.DbUsers);
     Db.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
     MongoFactory.InitSchema(Db);
   }

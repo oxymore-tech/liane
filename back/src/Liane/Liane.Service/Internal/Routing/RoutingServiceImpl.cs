@@ -270,10 +270,10 @@ public sealed class RoutingServiceImpl : IRoutingService
       var durationTable = table.Durations;
       var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double, double)>>();
 
-      for (int i = 0; i < durationTable.Length; i++)
+      for (var i = 0; i < durationTable.Length; i++)
       {
         matrix[keys[i]] = new Dictionary<RallyingPoint, (double,double)>();
-        for (int j = 0; j < durationTable[i].Length; j++)
+        for (var j = 0; j < durationTable[i].Length; j++)
         {
           matrix[keys[i]][keys[j]] = (durationTable[i][j], table.Distances[i][j]);
         }

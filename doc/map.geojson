@@ -1,0 +1,18 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.5858764,
+          44.335399
+        ]
+      },
+      "properties": {
+        "name": "Aire de covoiturage de Formarés"
+      }
+    }
+  ]
+}

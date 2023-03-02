@@ -61,7 +61,7 @@ public sealed class ChatServiceImplTest : BaseIntegrationTest
       return conversation1;
     }
 
-    var messages = Fakers.MessageFaker.Generate(messageCount);
+    var messages = Fakers.Message.Generate(messageCount);
     foreach (var message in messages)
     {
       await testedService.SaveMessageInGroup(message, conversation1.Id!, author);

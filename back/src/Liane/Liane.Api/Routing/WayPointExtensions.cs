@@ -1,10 +1,30 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Routing;
 
 public static class WayPointExtensions
 {
+  public static IEnumerable<RouteSegment> ToRouteSegments(this IEnumerable<WayPoint> trip)
+  {
+    Ref<RallyingPoint>? previous = null;
+    foreach (var wayPoint in trip)
+    {
+      if (previous is null)
+      {
+        previous = wayPoint.RallyingPoint;
+      }
+      else
+      {
+        yield return (previous, wayPoint.RallyingPoint);
+        previous = null;
+      }
+    }
+  }
+
   /// <summary>
   /// Check if given RouteSegment is included in given trip and in the right direction
   /// </summary>
@@ -19,12 +39,14 @@ public static class WayPointExtensions
       {
         visitedFromPoint = true;
       }
+
       if (wayPoint.RallyingPoint == segment.To)
       {
         // Return True only if we visit segment.To after segment.From
         return visitedFromPoint;
       }
     }
+
     return false;
   }
 

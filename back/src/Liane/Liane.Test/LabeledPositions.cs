@@ -9,6 +9,7 @@ public sealed class LabeledPositions
   
   public static readonly RallyingPoint Mende = new("Mende_fakeId", "Mende", Positions.Mende, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint Florac = new("Florac_fakeId", "Florac", Positions.Florac, LocationType.CarpoolArea, "", "48000", "", null, true);
+  public static readonly RallyingPoint FloracCaravane = new("bnlc:48061-C-001", "Florac Caranave", Positions.FloracCaravane, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint LeCrouzet = new("LeCrouzet_fakeId", "LeCrouzet", Positions.LeCrouzet, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint GorgesDuTarnCausses = new("GorgesDuTarnCausses_fakeId", "GorgesDuTarnCausses", Positions.GorgesDuTarnCausses, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint Cocures = new("Cocures_fakeId", "Cocures", Positions.Cocures, LocationType.CarpoolArea, "", "48000", "", null, true);
