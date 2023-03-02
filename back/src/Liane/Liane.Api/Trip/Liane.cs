@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
@@ -23,5 +24,5 @@ public sealed record Liane(
   ImmutableSortedSet<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Ref<User.User>? Driver,
-  string? GroupId = null
+  Ref<ConversationGroup>? Group = null
 ) : IEntity, ISharedResource<LianeMember>;

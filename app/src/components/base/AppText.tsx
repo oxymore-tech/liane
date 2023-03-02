@@ -7,7 +7,11 @@ export interface AppTextProps extends TextProps {
   children?: ReactNode;
 }
 
+// Text with 1 line as default value. Use negative value to remove the limit.
 export function AppText({ style, children, numberOfLines = 1, ...props }: AppTextProps) {
+  if (numberOfLines < 0) {
+    numberOfLines = undefined;
+  }
   return (
     <Text style={[styles.text, style]} numberOfLines={numberOfLines} {...props}>
       {children}

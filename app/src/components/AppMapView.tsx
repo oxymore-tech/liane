@@ -28,11 +28,10 @@ const AppMapView = () => {
   if (position) {
     const coordinatesA = [position.lng, position.lat];
     const onRegionChange = async c => {
-      // TODO cache or use timeout
       // const lowerLeft = c.properties.visibleBounds[1];
       // const upperRight = c.properties.visibleBounds[0];
       //const rallyingPoints = await services.rallyingPoint.view({ lat: lowerLeft[1], lng: lowerLeft[0] }, { lat: upperRight[1], lng: upperRight[0] });
-      console.log(c, c.properties.visibleBounds);
+      // TODO   console.log(c, c.properties.visibleBounds);
       // setDisplayedRallyingPoints(rallyingPoints);
     };
 

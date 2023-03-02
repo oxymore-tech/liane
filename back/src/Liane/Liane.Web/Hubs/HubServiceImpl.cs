@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Liane.Api.Chat;
 using Liane.Api.Hub;
 using Liane.Api.Notification;
 using Liane.Api.User;
@@ -25,7 +26,7 @@ public sealed class HubServiceImpl : IHubService
 
   public bool IsConnected(Ref<User> user)
   {
-    return currentConnectionsCache.Get(user.Id) != null;
+    return currentConnectionsCache.Get(user.Id) is not null;
   }
 
   public async Task<bool> TrySendNotification(Ref<User> receiver, BaseNotification notification)
@@ -34,7 +35,7 @@ public sealed class HubServiceImpl : IHubService
     {
       try
       {
-        await hubContext.Clients.User(receiver).ReceiveNotification(notification);
+        await hubContext.Clients.Group(receiver.Id).ReceiveNotification(notification);
         return true;
       }
       catch (Exception e)
@@ -47,13 +48,39 @@ public sealed class HubServiceImpl : IHubService
     return false;
   }
 
-  public void AddConnectedUser(Ref<User> user)
+  public async Task<bool> TrySendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
-    currentConnectionsCache.CreateEntry(user.Id);
+   
+    if (IsConnected(receiver))
+    {
+      try
+      {
+        await hubContext.Clients.Group(receiver.Id).ReceiveMessage(conversation, message);
+        return true;
+      }
+      catch (Exception e)
+      {
+        // TODO handle retry 
+        logger.LogInformation("Could not send message to user {receiver} : {error}", receiver, e.Message);
+      }
+    }
+
+    logger.LogInformation("{receiver} is disconnected", receiver);
+    return false;
   }
 
-  public void RemoveUser(Ref<User> user)
+  public async Task AddConnectedUser(Ref<User> user, string connectionId)
+  {
+    // Make mono user group to map userId and connectionId 
+    // https://learn.microsoft.com/fr-fr/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
+    await hubContext.Groups.AddToGroupAsync(connectionId, user.Id);
+    currentConnectionsCache.Set(user.Id, true);
+  }
+
+
+  public async Task RemoveUser(Ref<User> user, string connectionId)
   {
     currentConnectionsCache.Remove(user.Id);
+    await hubContext.Groups.RemoveFromGroupAsync(connectionId, user.Id);
   }
 }

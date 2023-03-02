@@ -3,7 +3,7 @@ import { BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { useKeyboardState } from "@/components/utils/KeyboardStateHook";
+import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useNavigation } from "@react-navigation/native";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 

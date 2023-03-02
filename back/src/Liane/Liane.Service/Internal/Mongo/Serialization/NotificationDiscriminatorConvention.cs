@@ -12,20 +12,19 @@ namespace Liane.Service.Internal.Mongo.Serialization;
 
 public sealed class NotificationDiscriminatorConvention : IDiscriminatorConvention
 {
+
   /// <param name="includedEventTypes">If null, includes types from NotificationDb assembly + String for raw events</param>
   public NotificationDiscriminatorConvention(ImmutableList<Type>? includedEventTypes = null)
   {
     this.includedEventTypes = includedEventTypes ?? typeof(NotificationDb).Assembly.GetTypes()
       .Where(t => t.GetTypeInfo().IsClass)
-      .Append(typeof(string))
-      .ToImmutableList();
+      .Append(typeof(string)).ToImmutableList(); //TODO include API records
   }
 
   public static FilterDefinition<NotificationDb> GetDiscriminatorFilter<TEvent>()
   {
     return new BsonDocument("_t", typeof(TEvent).Name);
   }
-
   public string ElementName => "_t";
 
   private readonly ImmutableList<Type> includedEventTypes;
@@ -62,7 +61,7 @@ public sealed class NotificationDiscriminatorConvention : IDiscriminatorConventi
     if (nominalType != typeof(NotificationDb) && !actualType.IsSubclassOf(typeof(NotificationDb)))
       throw new Exception("Cannot use NotificationDiscriminator for type " + nominalType);
 
-    // Find event type 
+    // Find event type
     if (!actualType.IsGenericType || actualType.GetGenericTypeDefinition() != typeof(NotificationDb.WithEvent<>)) throw new Exception();
     var eventType = actualType.GetGenericArguments()[0];
     return eventType.Name;

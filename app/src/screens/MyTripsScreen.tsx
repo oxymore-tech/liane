@@ -1,37 +1,37 @@
-import React, { useMemo, useState } from "react";
-import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import React, { useContext, useMemo } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  SectionBase,
+  SectionList,
+  SectionListData,
+  SectionListRenderItemInfo,
+  StyleSheet,
+  View
+} from "react-native";
 import { LianeView } from "@/components/trip/LianeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
-import { Liane, PaginatedResponse, UTCDateTime } from "@/api";
-import { WithFetchResource, WithFetchResourceProps } from "@/components/base/WithFetchResource";
-import { Column, Row } from "@/components/base/AppLayout";
+import { JoinLianeRequestDetailed, Liane, UTCDateTime } from "@/api";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppButton } from "@/components/base/AppButton";
-import { useQueryClient } from "react-query";
+import { useAppNavigation } from "@/api/navigation";
+import { useQueries } from "react-query";
+import { AppContext } from "@/components/ContextProvider";
+import { UnauthorizedError } from "@/api/exception";
+import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
 
-interface TripSection extends SectionBase<Liane> {
+interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
 }
 
-const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<PaginatedResponse<Liane>>) => {
-  const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
-
-  const [refreshing, setRefreshing] = useState(false);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.invalidateQueries(LianeQueryKey);
-    setRefreshing(false);
-  };
-  // Create section list from a list of Liane objects
-  const sections = useMemo(() => convertToDateSections(data.data), [data]);
-
-  // Render individual Liane items
-  const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => (
+const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+  const { navigation } = useAppNavigation();
+  return (
     <Pressable
       onPress={() => {
         navigation.navigate({
@@ -44,11 +44,13 @@ const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<PaginatedRes
         <View style={{ flexGrow: 1, marginRight: 40 }}>
           <LianeView liane={item} />
         </View>
-        <Pressable
-          onPress={() => navigation.navigate("Chat")}
-          style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
-          <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
-        </Pressable>
+        {item.group && (
+          <Pressable
+            onPress={() => navigation.navigate("Chat", { conversationId: item.group })}
+            style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
+            <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
+          </Pressable>
+        )}
       </View>
 
       <Row
@@ -72,20 +74,112 @@ const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<PaginatedRes
             alignItems: "center",
             backgroundColor: AppColorPalettes.gray[100]
           }}>
-          <AppText style={{ fontSize: 18 }}>2/3</AppText>
+          <AppText style={{ fontSize: 18 }}>{item.members.length}</AppText>
           <AppIcon name={"people-outline"} />
         </Row>
       </Row>
       <View style={{ position: "absolute", right: 16, top: -16 }} />
     </Pressable>
   );
+};
 
-  // Render section header using date as key
-  const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane, TripSection> }) => (
-    <View style={[styles.header, styles.grayBorder]}>
-      <AppText style={styles.headerTitle}>{date}</AppText>
-    </View>
+const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
+  const isRequest = isResolvedJoinLianeRequest(item);
+  //console.log(isRequest);
+  if (!isRequest) {
+    return renderLianeItem({ item, index, section });
+  }
+
+  return (
+    <Pressable onPress={() => {}} style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+      <View>
+        <View style={{ flexGrow: 1, marginRight: 40 }}>
+          <JoinRequestSegmentOverview request={item} />
+        </View>
+      </View>
+
+      <Row
+        style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
+        spacing={8}>
+        <Row
+          style={{
+            paddingHorizontal: 4,
+            paddingVertical: 2,
+            borderRadius: 4,
+            alignItems: "center",
+            backgroundColor: AppColorPalettes.gray[100]
+          }}>
+          <AppText>En attente de validation</AppText>
+        </Row>
+      </Row>
+    </Pressable>
   );
+};
+const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
+  <View style={[styles.header, styles.grayBorder]}>
+    <AppText style={styles.headerTitle}>{date}</AppText>
+  </View>
+);
+const MyTripsScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const { services } = useContext(AppContext);
+  const queriesData = useQueries([
+    { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list() }
+  ]);
+
+  const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
+
+  const error = queriesData[0].error || queriesData[1].error;
+
+  const isFetching = queriesData[0].isFetching || queriesData[1].isFetching;
+
+  // Create section list from a list of Liane objects
+  const sections = useMemo(() => {
+    if (queriesData[0].data && queriesData[1].data) {
+      const data = [...queriesData[0].data!.data, ...queriesData[1].data!.data];
+      return convertToDateSections(data);
+    }
+    return [];
+  }, [queriesData]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+  if (error) {
+    // Show content depending on the error or propagate it
+    if (error instanceof UnauthorizedError) {
+      throw error;
+    } else {
+      return (
+        <View style={styles.container}>
+          <AppText style={{ textAlign: "center" }}>
+            Error:
+            {error.message}
+          </AppText>
+          <Center>
+            <AppButton
+              color={AppColors.orange}
+              title={"Réessayer"}
+              icon={"refresh-outline"}
+              onPress={() => {
+                if (queriesData[0].error) {
+                  queriesData[0].refetch();
+                }
+                if (queriesData[1].error) {
+                  queriesData[1].refetch();
+                }
+              }}
+            />
+          </Center>
+        </View>
+      );
+    }
+  }
 
   return (
     <Column spacing={16} style={styles.container}>
@@ -98,7 +192,14 @@ const MyTripsScreen = ({ data, navigation }: WithFetchResourceProps<PaginatedRes
       />
 
       <SectionList
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={() => {
+              queriesData.forEach(q => q.refetch());
+            }}
+          />
+        }
         sections={sections}
         renderItem={renderItem}
         keyExtractor={item => item.id}
@@ -142,11 +243,16 @@ const styles = StyleSheet.create({
   }
 });
 
-const convertToDateSections = (data: Liane[]): TripSection[] =>
+const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
+  return item.targetLiane !== undefined;
+};
+
+const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): TripSection[] =>
   Object.entries(
     data.reduce((tmp, item) => {
+      const liane: Liane = isResolvedJoinLianeRequest(item) ? item.targetLiane : item;
       // Get formatted date for local timezone
-      const group = formatMonthDay(new Date(item.departureTime));
+      const group = formatMonthDay(new Date(liane.departureTime));
       // Add item to this group (or create the group)
 
       if (!tmp[group]) {
@@ -157,8 +263,10 @@ const convertToDateSections = (data: Liane[]): TripSection[] =>
       // add this item to its group
 
       return tmp;
-    }, {} as { [key: UTCDateTime]: Liane[] })
+    }, {} as { [key: UTCDateTime]: (Liane | JoinLianeRequestDetailed)[] })
   ).map(([group, items]) => ({ date: group, data: items } as TripSection));
 
 export const LianeQueryKey = "getLianes";
-export default WithFetchResource(MyTripsScreen, repository => repository.liane.list(), LianeQueryKey);
+export const JoinRequestsQueryKey = "getJoinRequests";
+export default MyTripsScreen;
+//export default WithFetchResource(MyTripsScreen, repository => repository.liane.list(), LianeQueryKey);

@@ -1,7 +1,7 @@
 import React from "react";
 import { AppText, AppTextProps } from "@/components/base/AppText";
 import { TimeInSeconds } from "@/util/datetime";
-import { formatTime, locale } from "@/api/i18n";
+import { locale } from "@/api/i18n";
 
 export interface TimeViewProps extends AppTextProps {
   value?: TimeInSeconds;

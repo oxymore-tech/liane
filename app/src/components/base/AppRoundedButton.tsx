@@ -1,4 +1,4 @@
-import { ColorValue, Pressable, View } from "react-native";
+import { ColorValue, Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import React, { useMemo } from "react";
 import { AppPressable } from "@/components/base/AppPressable";
@@ -11,24 +11,28 @@ export interface AppRoundedButtonProps {
   onPress?: () => void;
   opacity?: number;
   enabled?: boolean;
+  component?: JSX.Element;
 }
-export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true }: AppRoundedButtonProps) => {
+export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true, component }: AppRoundedButtonProps) => {
   color = color || defaultTextColor(backgroundColor);
   const content = useMemo(
     () => (
-      <AppText
-        style={{
-          fontWeight: "600",
-          fontSize: 14,
-          color,
-          textAlign: "center",
-          paddingVertical: 12,
-          paddingHorizontal: 8
-        }}>
-        {text}
-      </AppText>
+      <View style={styles.buttonPadding}>
+        {component || (
+          <AppText
+            style={{
+              fontWeight: "600",
+              fontSize: 14,
+              color,
+              textAlign: "center",
+              paddingVertical: 4
+            }}>
+            {text}
+          </AppText>
+        )}
+      </View>
     ),
-    [color, text]
+    [color, text, component]
   );
   return enabled ? (
     <AppPressable
@@ -51,3 +55,10 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  buttonPadding: {
+    paddingVertical: 8,
+    paddingHorizontal: 12
+  }
+});

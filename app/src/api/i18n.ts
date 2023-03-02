@@ -100,3 +100,7 @@ export const formatTime = (date?: number | Date | undefined) => {
     return "--:--";
   }
 };
+
+export const formatDateTime = (date: Date) => {
+  return `${formatMonthDay(date)} à ${formatTime(date)}`;
+};

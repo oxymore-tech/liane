@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: AppDimensions.button.paddingHorizontal / 2
   },
   text: {
-    fontSize: AppDimensions.textSize.medium,
+    fontSize: 18,
     fontWeight: "600",
     marginVertical: AppDimensions.button.paddingVertical,
     marginHorizontal: AppDimensions.button.paddingHorizontal / 2

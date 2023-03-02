@@ -3,11 +3,18 @@ import { View } from "react-native";
 
 export type LinearLayoutProps = {
   spacing?: number;
+} & LayoutComponentProps;
 
+export type LayoutComponentProps = {
   children: ReactNode;
 
   style?: any;
 };
+
+export const Center = ({ style, children }: LayoutComponentProps) => (
+  <View style={[{ alignItems: "center", justifyContent: "center" }, style]}>{children}</View>
+);
+
 export const Row = ({ spacing = 0, children, style }: LinearLayoutProps) => (
   <LinearLayout direction="row" spacing={spacing} style={style}>
     {children}
