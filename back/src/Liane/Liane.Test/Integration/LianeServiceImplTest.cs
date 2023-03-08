@@ -4,8 +4,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Bogus.DataSets;
-using DeepEqual.Syntax;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -19,7 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Filter = Liane.Api.Trip.Filter;
 
 namespace Liane.Test.Integration;
@@ -47,7 +44,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var lianeMembers = ImmutableList.Create(
       new LianeMember(userA, LabeledPositions.Cocures, LabeledPositions.Mende, false, 3)
     );
-    var lianeId = ObjectId.GenerateNewId().ToString();
+    var lianeId = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
     await Db.GetCollection<LianeDb>().InsertOneAsync(new LianeDb(lianeId, userA, now, departureTime, null, lianeMembers, new DriverData(userA), null, null));
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
@@ -74,8 +71,10 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0].Id;
 
     var now = DateTime.UtcNow;
-    var liane1Id = await InsertLiane(now, userA,LabeledPositions.Cocures, LabeledPositions.Mende);
-    var liane2Id = await InsertLiane(now, userA,LabeledPositions.Cocures, LabeledPositions.Florac);
+    var liane1Id = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
+    await InsertLiane(liane1Id, now, userA,LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane2Id = ObjectId.Parse("6408a644437b60cfd3b15875").ToString();
+    await InsertLiane(liane2Id, now, userA,LabeledPositions.Cocures, LabeledPositions.Florac);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -89,23 +88,24 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       ),
       actual.Points.Select(p => p.RallyingPoint.Id));
     var pointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Cocures.Id)!;
-    Assert.AreEqual(1, pointDisplay.Lianes.Count);
+    Assert.AreEqual(2, pointDisplay.Lianes.Count);
     Assert.AreEqual(liane1Id, pointDisplay.Lianes[0].Id);
+    Assert.AreEqual(liane2Id, pointDisplay.Lianes[1].Id);
     
-    AssertJson.AreEqual("Segment.cocures-mende.json", actual.Segments);
+    AssertJson.AreEqual("Segment.cocures-florac-mende.json", actual.Segments);
   }
 
-  private async Task<string> InsertLiane(DateTime now, string userA, Ref<RallyingPoint> From, Ref<RallyingPoint> To)
+  private async Task InsertLiane(string id, DateTime now, string userA, Ref<RallyingPoint> From, Ref<RallyingPoint> To)
   {
     var departureTime = now.Date.AddDays(1).AddHours(9);
 
     var lianeMembers = ImmutableList.Create(
       new LianeMember(userA, From, To, false, 3)
     );
-    var liane1Id = ObjectId.GenerateNewId().ToString();
+
     await Db.GetCollection<LianeDb>()
-      .InsertOneAsync(new LianeDb(liane1Id, userA, now, departureTime, null, lianeMembers, new DriverData(userA)));
-    return liane1Id;
+      .InsertOneAsync(new LianeDb(id, userA, now, departureTime, null, lianeMembers, new DriverData(userA)));
+
   }
 
   [Test]
