@@ -8,13 +8,13 @@ using Liane.Api.Notification;
 
 namespace Liane.Web.Internal.Json;
 
-internal sealed class NotificationJsonConverter: JsonConverter<BaseNotification> 
+internal sealed class NotificationJsonConverter: JsonConverter<NotificationPayload> 
 {
     private const string EventPropertyName = "Event";
     private const string EventTypeDiscriminator = "Type";
     
 
-    public override BaseNotification Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override NotificationPayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
       throw new JsonException();
     }
@@ -35,10 +35,10 @@ internal sealed class NotificationJsonConverter: JsonConverter<BaseNotification>
       return options.PropertyNamingPolicy is null ? name : options.PropertyNamingPolicy.ConvertName(name);
     }
 
-    public override void Write(Utf8JsonWriter writer, BaseNotification value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, NotificationPayload value, JsonSerializerOptions options)
     {
       var notifType = value.GetType();
-      if (!notifType.IsGenericType || notifType.GetGenericTypeDefinition() != typeof(BaseNotification.Notification<>)) throw new JsonException();
+      if (!notifType.IsGenericType || notifType.GetGenericTypeDefinition() != typeof(NotificationPayload.WithEvent<>)) throw new JsonException();
       
       writer.WriteStartObject();
       

@@ -2,6 +2,9 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Notification;
+using Liane.Api.Trip;
+using Liane.Api.User;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.Notification;
@@ -52,6 +55,9 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
 
     NotificationDb n3 = new NotificationDb.WithEvent<Dummy>(ObjectId.GenerateNewId().ToString(), new Dummy("hello"), MakeReceivers(), DateTime.Now);
     await Db.GetCollection<NotificationDb>().InsertOneAsync(n3);
+    
+    NotificationDb n4 = new NotificationDb.WithEvent<Ref<JoinLianeRequest>>(ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString(), MakeReceivers(), DateTime.Now);
+    await Db.GetCollection<NotificationDb>().InsertOneAsync(n4);
 
     const int expectedSize = 2;
 

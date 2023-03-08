@@ -3,17 +3,22 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Notification;
 
-public abstract record BaseNotification(
+public sealed record Notification(
+  string title,
+  string message,
+  NotificationPayload Payload
+);
+public abstract record NotificationPayload(
   string? Id,
   bool Seen,
   DateTime CreatedAt) : IIdentity
 {
-  public sealed record Notification<T>(
+  public sealed record WithEvent<T>(
     string? Id,
     DateTime CreatedAt,
     T Event,
     bool Seen = false
-  ) : BaseNotification(Id, Seen, CreatedAt) where T : class
+  ) : NotificationPayload(Id, Seen, CreatedAt) where T : class
   {
     public string Type => typeof(T).Name;
   }

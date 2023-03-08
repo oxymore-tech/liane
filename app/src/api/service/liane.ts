@@ -1,12 +1,4 @@
-import {
-  JoinLianeRequest,
-  JoinLianeRequestDetailed,
-  Liane,
-  LianeMatch,
-  LianeRequest,
-  LianeSearchFilter,
-  PaginatedResponse,
-} from "@/api";
+import { JoinLianeRequest, JoinLianeRequestDetailed, Liane, LianeMatch, LianeRequest, LianeSearchFilter, PaginatedResponse } from "@/api";
 import { get, patch, postAs } from "@/api/http";
 
 export interface LianeService {
@@ -17,12 +9,12 @@ export interface LianeService {
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   setAcceptedStatus(joinRequestId: string, accept: boolean): Promise<void>;
   get(lianeId: string): Promise<Liane>;
-  listJoinRequests(): Promise<PaginatedResponse<ResolvedJoinLianeRequest>>;
+  listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
 }
 
 export class LianeServiceClient implements LianeService {
   list = async (): Promise<PaginatedResponse<Liane>> => get("/liane/");
-  listJoinRequests = async (): Promise<PaginatedResponse<ResolvedJoinLianeRequest>> => get("/liane/request/");
+  listJoinRequests = async (): Promise<PaginatedResponse<JoinLianeRequestDetailed>> => get("/liane/request/");
   get = async (id: string): Promise<Liane> => get("/liane/" + id);
   post = async (liane: LianeRequest): Promise<Liane> => {
     return postAs<Liane>("/liane/", { body: liane });

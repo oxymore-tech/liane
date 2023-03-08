@@ -6,7 +6,6 @@ import { Column } from "@/components/base/AppLayout";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
-import { AppIcon } from "@/components/base/AppIcon";
 import { FormProvider, useForm } from "react-hook-form";
 import { FormCardButton } from "@/components/forms/FormCardButton";
 import { WithForms } from "@/screens/lianeWizard/Forms";
@@ -16,6 +15,7 @@ import { SwitchToggleForm } from "@/components/forms/SelectToggleForm";
 import { fromSearchFilter, SearchData, toSearchFilter } from "@/screens/search/SearchFormData";
 import { useAppNavigation } from "@/api/navigation";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
+import { AppIconButton } from "@/components/base/AppIconButton";
 
 const DateTimeForm = () => {
   return (
@@ -99,13 +99,10 @@ export const SearchScreen = WithFullscreenModal(() => {
                 top: 0,
                 bottom: 0,
                 justifyContent: "center",
-                right: -12,
-                width: 40
+                right: -12
               }}>
-              <AppRoundedButton
+              <AppIconButton
                 backgroundColor={AppColors.white}
-                text={"flip"}
-                component={<AppIcon name={"flip-outline"} />}
                 onPress={() => {
                   // Switch to & from
                   const from = getValues("from");
@@ -113,6 +110,7 @@ export const SearchScreen = WithFullscreenModal(() => {
                   setValue("to", from);
                   setValue("from", to);
                 }}
+                name={"flip-outline"}
               />
             </View>
           </Column>

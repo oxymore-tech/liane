@@ -102,7 +102,7 @@ export const ChatScreen = () => {
         <FlatList
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
-          keyExtractor={m => m.id}
+          keyExtractor={m => m.id!}
           renderItem={({ item }) => <MessageBubble message={item} currentUser={user!} />}
           inverted={true}
           onEndReachedThreshold={0.2}

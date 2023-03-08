@@ -2,6 +2,8 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using Liane.Api.Notification;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
@@ -18,6 +20,8 @@ public sealed class NotificationDiscriminatorConvention : IDiscriminatorConventi
   {
     this.includedEventTypes = includedEventTypes ?? typeof(NotificationDb).Assembly.GetTypes()
       .Where(t => t.GetTypeInfo().IsClass)
+      .Concat(typeof(NotificationPayload).Assembly.GetTypes()
+        .Where(t => t.GetTypeInfo().IsClass))
       .Append(typeof(string)).ToImmutableList(); //TODO include API records
   }
 
@@ -64,6 +68,11 @@ public sealed class NotificationDiscriminatorConvention : IDiscriminatorConventi
     // Find event type
     if (!actualType.IsGenericType || actualType.GetGenericTypeDefinition() != typeof(NotificationDb.WithEvent<>)) throw new Exception();
     var eventType = actualType.GetGenericArguments()[0];
+    if (eventType.IsGenericType && eventType.GetGenericTypeDefinition() == (typeof(Ref<>)))
+    {
+      // If it's a ref send event type
+      return (eventType.GetGenericArguments()[0]).Name;
+    }
     return eventType.Name;
   }
 }

@@ -9,8 +9,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { toRelativeTimeString } from "@/api/i18n";
 import { AppPressable } from "@/components/base/AppPressable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppNavigation } from "@/api/navigation";
-import { getNotificationContent } from "@/api/service/notification";
+import { getNotificationNavigation, useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
 
 const NotificationQueryKey = "notification";
@@ -23,22 +22,22 @@ const NoNotificationView = () => {
   );
 };
 
-const NotificationScreen = WithFetchPaginatedResponse<Notification<any>>(
+const NotificationScreen = WithFetchPaginatedResponse<Notification>(
   ({ data, refresh, refreshing }) => {
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
-    const { user, services } = useContext(AppContext);
+    const { services } = useContext(AppContext);
 
-    const renderItem = ({ item }: { item: Notification<any> }) => {
-      const datetime = toRelativeTimeString(new Date(item.createdAt!));
-      const { body, navigate } = getNotificationContent(item, user!);
+    const renderItem = ({ item }: { item: Notification }) => {
+      const datetime = toRelativeTimeString(new Date(item.payload.createdAt!));
+      const navigate = getNotificationNavigation(item);
       console.log(item);
       return (
         <AppPressable
-          key={item.id}
+          key={item.payload.id}
           onPress={() => {
             navigate(navigation);
-            services.notification.read(item.id!).then(updated => {
+            services.notification.read(item.payload.id!).then(updated => {
               if (updated) {
                 refresh();
               }
@@ -46,15 +45,15 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification<any>>(
           }}>
           <Row style={{ paddingHorizontal: 24 }}>
             <View style={{ justifyContent: "center", padding: 4 }}>
-              <View style={{ width: 8, height: 8, backgroundColor: AppColors.blue, opacity: item.seen ? 0 : 1, borderRadius: 16 }} />
+              <View style={{ width: 8, height: 8, backgroundColor: AppColors.blue, opacity: item.payload.seen ? 0 : 1, borderRadius: 16 }} />
             </View>
 
             <Center style={{ paddingVertical: 24, paddingHorizontal: 8 }}>
               <AppIcon name={"message-square-outline"} />
             </Center>
             <Column style={{ justifyContent: "space-evenly", paddingVertical: 16, paddingHorizontal: 8, flexShrink: 1 }} spacing={2}>
-              <AppText style={{ flexGrow: 1, fontSize: 14, fontWeight: item.seen ? "normal" : "bold" }} numberOfLines={2}>
-                {body}
+              <AppText style={{ flexGrow: 1, fontSize: 14, fontWeight: item.payload.seen ? "normal" : "bold" }} numberOfLines={2}>
+                {item.message}
               </AppText>
               <AppText style={{ color: AppColorPalettes.gray[500] }}>{datetime}</AppText>
             </Column>
@@ -66,7 +65,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification<any>>(
       <View>
         <FlatList
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-          keyExtractor={i => i.id}
+          keyExtractor={i => i.payload.id!}
           data={data}
           renderItem={renderItem}
           ItemSeparatorComponent={() => (

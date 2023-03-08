@@ -25,7 +25,7 @@ import { SearchResultsScreen } from "@/screens/search/SearchResultsScreen";
 import { LianeMatchDetailScreen } from "@/screens/search/LianeMatchDetailScreen";
 import { WithBadge } from "@/components/base/WithBadge";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
-import { isJoinLianeRequest, Notification } from "@/api";
+import { isJoinLianeRequest, NotificationPayload } from "@/api";
 import { useObservable } from "@/util/hooks/subscription";
 import { RootNavigation } from "@/api/navigation";
 import { StackActions } from "@react-navigation/native";

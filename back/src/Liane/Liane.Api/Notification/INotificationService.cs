@@ -6,7 +6,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Notification;
 
-public interface INotificationService : IResourceResolverService<BaseNotification>
+public interface INotificationService : IResourceResolverService<NotificationPayload>
 {
 
   /// <summary>
@@ -18,7 +18,7 @@ public interface INotificationService : IResourceResolverService<BaseNotificatio
 
   Task<int> GetUnreadCount(Ref<Api.User.User> user);
 
-  Task<PaginatedResponse<BaseNotification>> List(Ref<User.User> user, Pagination pagination);
+  Task<PaginatedResponse<Notification>> List(Ref<User.User> user, Pagination pagination);
 
   Task ReadNotification(string notificationId, Ref<Api.User.User> user);
 }

@@ -3,7 +3,7 @@ import {
   ConversationGroup,
   FullUser,
   NewConversationMessage,
-  Notification,
+  NotificationPayload,
   PaginatedRequestParams,
   PaginatedResponse,
   Ref
@@ -36,7 +36,7 @@ export type ConsumeMessage = (res: ChatMessage) => void;
 
 export type Disconnect = () => Promise<void>;
 export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
-export type OnNotificationCallback = (n: Notification<any>) => void;
+export type OnNotificationCallback = (n: Notification) => void;
 
 type UnreadOverview = Readonly<{
   notificationsCount: number;
@@ -59,7 +59,7 @@ export class HubServiceClient implements ChatHubService {
   private currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   // readonly unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
-  private notificationSubject: Subject<Notification<any>> = new Subject<Notification<any>>();
+  private notificationSubject: Subject<Notification> = new Subject<Notification>();
   // Sets a callback to receive the lat est messages when joining the conversation.
   // This callback will be automatically disposed of when closing conversation.
   private onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
@@ -97,9 +97,8 @@ export class HubServiceClient implements ChatHubService {
       });
       this.hub.on("ReceiveMessage", async (convId, message) => {
         // Called when receiving a message inside current conversation
-        console.debug("received msg", convId, message, this.currentConversationId, this.onReceiveMessageCallback);
+        console.debug("received msg", convId, message, this.currentConversationId);
         if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
-          console.debug("should get");
           await this.onReceiveMessageCallback(message);
         } else if (!this.unreadConversations.getValue().includes(convId)) {
           this.unreadConversations.next([...this.unreadConversations.getValue(), convId]);
@@ -118,16 +117,10 @@ export class HubServiceClient implements ChatHubService {
         this.unreadConversations.next(unread.conversations);
         this.unreadNotificationCount.next(unread.notificationsCount);
       });
-      this.hub.on("ReceiveNotification", async (notification: Notification<any>) => {
+      this.hub.on("ReceiveNotification", async (notification: Notification) => {
         // Called on new notification
         if (__DEV__) {
           console.log("received:", notification);
-        }
-        if (this.isNewMessage(notification)) {
-          // Add to unread conversations if necessary
-          if (!this.unreadConversations.getValue().includes(notification.event.conversationId)) {
-            this.unreadConversations.next([...this.unreadConversations.getValue(), notification.event.conversationId]);
-          }
         }
         this.notificationSubject.next(notification);
       });
@@ -163,10 +156,6 @@ export class HubServiceClient implements ChatHubService {
       });
     });
   };
-
-  private isNewMessage(x: Notification<any>): x is Notification<NewConversationMessage> {
-    return x.type === "NewConversationMessage";
-  }
 
   stop = () => {
     console.log("stop");

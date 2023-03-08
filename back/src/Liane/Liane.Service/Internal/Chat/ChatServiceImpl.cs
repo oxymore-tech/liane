@@ -88,7 +88,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
         {
           return;
         }
-        // User is not in the conversation so send detailed notification  
+        // User is not connected so send detailed notification  
         // var authorUser = await userService.Get(author);
        //TODO await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, authorUser, sent));
 

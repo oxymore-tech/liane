@@ -8,7 +8,7 @@ import { APP_VERSION } from "@env";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
 export const ProfileScreen = () => {
-  const { services, setAuthUser } = useContext(AppContext);
+  const { services, setAuthUser, user } = useContext(AppContext);
   return (
     <View>
       <AppButton title="Déconnecter" color={AppColorPalettes.blue[500]} onPress={() => services.auth.logout().then(() => setAuthUser(undefined))} />
@@ -17,6 +17,7 @@ export const ProfileScreen = () => {
         <AppText>{APP_VERSION}</AppText>
       </View>
 
+      <AppText>{user?.phone}</AppText>
       <AppRoundedButton
         backgroundColor={AppColors.orange}
         text={"Gen"}

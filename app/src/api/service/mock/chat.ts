@@ -1,5 +1,5 @@
 import { ChatHubService, OnLatestMessagesCallback, ConsumeMessage, Disconnect } from "@/api/service/chat";
-import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, User, Ref, Notification } from "@/api";
+import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, User, Ref, NotificationPayload } from "@/api";
 import { BehaviorSubject, delay, of, Subject, SubscriptionLike } from "rxjs";
 
 export class HubServiceMock implements ChatHubService {
@@ -59,7 +59,7 @@ export class HubServiceMock implements ChatHubService {
       }
     ]);
   }
-  subscribeToNotifications(callback: (n: Notification<any>) => void): SubscriptionLike {
+  subscribeToNotifications(callback: (n: NotificationPayload<any>) => void): SubscriptionLike {
     return of("test1", "test2 ongoing", "Test3 is the last test.")
       .pipe(delay(30000))
       .subscribe(msg => {

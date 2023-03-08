@@ -59,29 +59,31 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
 
     return (
       <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
-        <MapLibreGL.MapView
-          ref={mapRef}
-          style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
-          styleJSON={MapStyle}
-          logoEnabled={false}
-          attributionEnabled={false}
-          onRegionDidChange={onRegionChange}>
-          <MapLibreGL.Camera
-            ref={cameraRef}
-            maxZoomLevel={15}
-            minZoomLevel={5}
-            zoomLevel={11}
-            animationMode={"moveTo"}
-            centerCoordinate={center || (position && [position.lng, position.lat])}
-            padding={{ paddingBottom: value ? 100 : 0 }}
-          />
+        <View>
+          <MapLibreGL.MapView
+            ref={mapRef}
+            style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
+            styleJSON={MapStyle}
+            logoEnabled={false}
+            attributionEnabled={false}
+            onRegionDidChange={onRegionChange}>
+            <MapLibreGL.Camera
+              ref={cameraRef}
+              maxZoomLevel={15}
+              minZoomLevel={5}
+              zoomLevel={11}
+              animationMode={"moveTo"}
+              centerCoordinate={center || (position && [position.lng, position.lat])}
+              padding={{ paddingBottom: value ? 100 : 0 }}
+            />
 
-          {value && (
-            <MapLibreGL.MarkerView coordinate={[value.location.lng, value.location.lat]} id={value.id!}>
-              <LocationPin fill={AppColorPalettes.orange[700]} />
-            </MapLibreGL.MarkerView>
-          )}
-        </MapLibreGL.MapView>
+            {value && (
+              <MapLibreGL.MarkerView coordinate={[value.location.lng, value.location.lat]} id={value.id!}>
+                <LocationPin fill={AppColorPalettes.orange[700]} />
+              </MapLibreGL.MarkerView>
+            )}
+          </MapLibreGL.MapView>
+        </View>
         <View style={{ position: "absolute", top: 16, left: 24, right: 24 }}>
           <RallyingPointInput placeholder="Chercher une adresse" onChange={onChange} value={value} trailing={locationButton} />
         </View>

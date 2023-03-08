@@ -1,5 +1,12 @@
-import { createNavigationContainerRef, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { JoinLianeRequest, JoinLianeRequestDetailed, Liane, LianeMatch } from "./index";
+import {
+  createNavigationContainerRef,
+  NavigationContainerRefWithCurrent,
+  NavigationProp,
+  RouteProp,
+  useNavigation,
+  useRoute
+} from "@react-navigation/native";
+import { isJoinLianeRequest, JoinLianeRequest, JoinLianeRequestDetailed, Liane, LianeMatch, Notification, User } from "./index";
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
@@ -24,4 +31,19 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 
   return { navigation, route };
 };
+
+export const getNotificationNavigation = ({
+  payload
+}: Notification): ((navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void) => {
+  if (isJoinLianeRequest(payload)) {
+    if (payload.event.accepted) {
+      return navigation => navigation.navigate("LianeDetail", { liane: payload.event.targetLiane });
+    }
+  } else {
+    return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.event });
+  }
+
+  return () => {};
+};
+
 export const RootNavigation = createNavigationContainerRef<NavigationParamList>();

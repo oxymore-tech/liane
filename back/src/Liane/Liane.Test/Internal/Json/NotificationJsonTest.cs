@@ -21,16 +21,16 @@ public class NotificationJsonTest
   [Test]
   public void ShouldSerializeBaseClass()
   {
-    var notification = new BaseNotification.Notification<string>("id", DateTime.Parse("2023-03-03"), "ok");
-    var actual = JsonSerializer.Serialize<BaseNotification>(notification, options);
+    var notification = new NotificationPayload.WithEvent<string>("id", DateTime.Parse("2023-03-03"), "ok");
+    var actual = JsonSerializer.Serialize<NotificationPayload>(notification, options);
     Assert.AreEqual("{\"id\":\"id\",\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
   }
   
     [Test]
     public void ShouldSerialize()
     {
-      var notification = new BaseNotification.Notification<string>("id", DateTime.Parse("2023-03-03"), "ok");
+      var notification = new NotificationPayload.WithEvent<string>("id", DateTime.Parse("2023-03-03"), "ok");
       var actual = JsonSerializer.Serialize(notification, options);
-      Assert.AreEqual("{\"id\":\"id\",\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
+      Assert.AreEqual("{\"event\":\"ok\",\"type\":\"String\",\"id\":\"id\",\"seen\":false,\"createdAt\":\"2023-03-03T00:00:00\"}", actual);
     }
 }

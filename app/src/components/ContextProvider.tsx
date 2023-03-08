@@ -8,7 +8,6 @@ import { initializeNotification, initializePushNotification } from "@/api/servic
 import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { CreateMockServices } from "@/api/service/mock";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -39,7 +38,7 @@ async function initContext(service: AppServices): Promise<{
   // await SplashScreen.preventAutoHideAsync();
   const authUser = await service.auth.authUser();
   let user;
-  let online = false;
+  let online = true;
   //let notificationSubscription = undefined;
   if (!__DEV__) {
     await initializeRum();
@@ -53,13 +52,17 @@ async function initContext(service: AppServices): Promise<{
       // Branch hub to notifications
       service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
       service.chatHub.subscribeToNotifications(service.notification.receiveNotification);
-      online = true;
     } catch (e) {
       if (__DEV__) {
         console.log("Could not start hub :", e);
       }
-      //user = cached value for an offline mode
-      user = await service.auth.currentUser();
+      if (e instanceof UnauthorizedError) {
+      } else if (e instanceof NetworkUnavailable) {
+        console.log("Error : no network");
+        //user = cached value for an offline mode
+        user = await service.auth.currentUser();
+        online = false;
+      }
     }
   }
 
@@ -181,7 +184,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
           <ActivityIndicator />
         </View>
       );
-    } else if (status !== "online") {
+    } else if (status !== "online" && !user) {
       return (
         <View style={styles.page}>
           <AppText style={{ color: AppColors.white }}>Erreur: réseau indisponible</AppText>
@@ -189,7 +192,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       );
     }
 
-    // TODO handle loading view
     return (
       <AppContext.Provider
         value={{

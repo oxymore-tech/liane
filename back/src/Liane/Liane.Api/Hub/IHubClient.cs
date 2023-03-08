@@ -14,7 +14,7 @@ public interface IHubClient
 
   Task ReceiveUnreadOverview(UnreadOverview unreadOverview);
   
-  Task ReceiveNotification(BaseNotification notification);
+  Task ReceiveNotification(Notification.Notification notification);
   
   Task ReceiveMessage(string conversationId, ChatMessage message);
   

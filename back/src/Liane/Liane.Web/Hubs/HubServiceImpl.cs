@@ -29,7 +29,7 @@ public sealed class HubServiceImpl : IHubService
     return currentConnectionsCache.Get(user.Id) is not null;
   }
 
-  public async Task<bool> TrySendNotification(Ref<User> receiver, BaseNotification notification)
+  public async Task<bool> TrySendNotification(Ref<User> receiver, Notification notification)
   {
     if (IsConnected(receiver))
     {

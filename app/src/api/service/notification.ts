@@ -1,20 +1,18 @@
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import notifee, { EventType } from "@notifee/react-native";
-import { FullUser, isJoinLianeRequest, Notification, PaginatedResponse, User } from "@/api";
+import { FullUser, Notification, NotificationPayload, PaginatedResponse } from "@/api";
 import { get, patch } from "@/api/http";
 import { AuthService } from "@/api/service/auth";
 import { Platform } from "react-native";
-import { NavigationContainerRefWithCurrent, NavigationProp } from "@react-navigation/native";
 import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
-import { getCurrentUser } from "@/api/storage";
 export interface NotificationService {
-  receiveNotification: (notification: Notification<any>) => Promise<void>;
+  receiveNotification: (notification: Notification) => Promise<void>;
 
   checkInitialNotification: () => Promise<void>;
 
-  initialNotification: () => Notification<any> | null | undefined;
+  initialNotification: () => NotificationPayload<any> | null | undefined;
 
-  list: () => Promise<PaginatedResponse<Notification<any>>>;
+  list: () => Promise<PaginatedResponse<Notification>>;
 
   read: (notificationId: string) => Promise<boolean>;
   initUnreadNotificationCount: (initialCount: Observable<number>) => void;
@@ -46,28 +44,25 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
   });
 }
 
-// Called when notification is pressed
+// Called when notification is pressed and app is open
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
   console.debug(JSON.stringify(detail));
-  /*
+
   // Check if the user pressed the "Mark as read" action
   if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "mark-as-read") {
-    // Update external API
-    console.debug("n pressed");
-
     // Remove the notification
     await notifee.cancelNotification(notification.id!);
-  }*/
+  }
+  if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "default") {
+    // TODO navigate
+  }
 });
-async function displayNotifeeNotification(notification: Notification<any>) {
-  const user = await getCurrentUser();
-  let data = getNotificationContent(notification, user!);
-
+async function displayNotifeeNotification(notification: Notification) {
   await notifee.displayNotification({
     android: DefaultAndroidSettings,
-    title: data.title,
-    body: data.body
+    title: notification.title,
+    body: notification.message
   });
 }
 
@@ -78,7 +73,7 @@ export async function initializeNotification() {
   // Create a channel (required for Android)
   await notifee.createChannel({
     id: DefaultChannelId,
-    name: "Default Channel"
+    name: "Général"
   });
 }
 
@@ -109,7 +104,7 @@ export const PushNotifications = (() => {
   return undefined;
 })();
 
-PushNotifications?.setBackgroundMessageHandler(onMessageReceived);
+// PushNotifications?.setBackgroundMessageHandler(onMessageReceived);
 export class NotificationServiceClient implements NotificationService {
   private _initialNotification = undefined;
 
@@ -127,7 +122,7 @@ export class NotificationServiceClient implements NotificationService {
       this.unreadNotificationCount.next(count);
     });
   }
-  async receiveNotification(notification: Notification<any>) {
+  async receiveNotification(notification: Notification) {
     await displayNotifeeNotification(notification);
     // Increment counter
     this.unreadNotificationCount.next(Math.max(0, this.unreadNotificationCount.getValue() - 1));
@@ -146,7 +141,7 @@ export class NotificationServiceClient implements NotificationService {
     }
   }
 
-  async list(): Promise<PaginatedResponse<Notification<any>>> {
+  async list(): Promise<PaginatedResponse<Notification>> {
     return await get(`/user/notification`);
   }
 
@@ -161,38 +156,3 @@ export class NotificationServiceClient implements NotificationService {
     return false;
   }
 }
-
-export type NotificationData = {
-  title: string;
-  body: string;
-  navigate: (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void;
-};
-export const getNotificationContent = (notification: Notification<any>, me: User) => {
-  let d: NotificationData = {};
-  if (isJoinLianeRequest(notification)) {
-    if (notification.event.accepted) {
-      if (notification.event.createdBy === me.id) {
-        d.title = "Demande acceptée";
-        d.body = "Vous avez rejoint une nouvelle Liane.";
-      } else {
-        d.title = "Nouveau membre";
-        d.body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} a rejoint votre Liane.`;
-      }
-      d.navigate = navigation => navigation.navigate("LianeDetail", { liane: notification.event.targetLiane });
-    } else if (notification.event.accepted === false) {
-      d.title = "Demande refusée";
-      d.body = `Votre demande n'a pas été acceptée.`;
-    } else {
-      d.title = "Nouvelle demande";
-      d.body = `Un nouveau ${notification.event.seats > 0 ? "conducteur" : "passager"} voudrait rejoindre votre Liane.`;
-      d.navigate = navigation => navigation.navigate("OpenJoinLianeRequest", { request: notification.event });
-    }
-    return d;
-  }
-  // Unknown type
-  console.debug("untreated notification", JSON.stringify(notification));
-  d.body = "TODO " + notification.type;
-  d.title = "Nouvelle notification";
-  d.navigate = () => {};
-  return d;
-};

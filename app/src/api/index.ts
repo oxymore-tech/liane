@@ -189,7 +189,13 @@ export type LianeMatch = Readonly<{
 }>;
 
 // Notifications
-export type Notification<T> = Readonly<
+export type Notification = Readonly<{
+  title: string;
+  message: string;
+  payload: NotificationPayload<any>;
+}>;
+
+export type NotificationPayload<T> = Readonly<
   {
     event: T;
     createdAt: UTCDateTime;
@@ -216,7 +222,7 @@ export type JoinLianeRequest = Readonly<
   } & Entity
 >;
 
-export const isJoinLianeRequest = (notification: Notification<any>): notification is Notification<JoinLianeRequest> => {
+export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinLianeRequest> => {
   return notification.type === "JoinLianeRequest";
 };
 

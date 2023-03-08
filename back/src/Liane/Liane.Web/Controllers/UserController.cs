@@ -26,7 +26,7 @@ public sealed class UserController : ControllerBase
   }
 
   [HttpGet("notification")]
-  public Task<PaginatedResponse<BaseNotification>> GetNotifications([FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<Notification>> GetNotifications([FromQuery] Pagination pagination)
   {
     return notificationService.List(currentContext.CurrentUser().Id, pagination);
   }
