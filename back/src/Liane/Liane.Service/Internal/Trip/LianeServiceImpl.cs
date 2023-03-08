@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -232,7 +233,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private async Task UpdateGeographyAsync(Liane.Api.Trip.Liane liane)
   {
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
-    var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates);
+    var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates.ToLatLng());
     await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
     var updateOneAsync = await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
   }
@@ -276,7 +277,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
   {
-    var rallyingPoints = await rallyingPointService.List(pos, pos2);
+    var rallyingPoints = (await rallyingPointService.List(pos, pos2))
+      .Select(r => r.Id!)
+      .ToImmutableList();
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, DateTime.UtcNow)
                  & (Builders<LianeDb>.Filter.In("Members.From", rallyingPoints) | Builders<LianeDb>.Filter.In("Members.To", rallyingPoints));
     var lianes = await Mongo.GetCollection<LianeDb>()
@@ -285,7 +288,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var pointsWithLianes = lianes.SelectMany(l => l.Members.SelectMany(m => ImmutableList.Create((m.From, l), (m.To, l))))
       .GroupBy(t => t.Item1)
-      .ToImmutableDictionary(g => g.Key, g => g.Select(e => e.Item2).ToImmutableList());
+      .ToImmutableDictionary(g => g.Key.Id, g => g.Select(e => e.Item2).ToImmutableList());
 
     var pointDisplays = rallyingPoints.Select(r =>
       {
@@ -294,7 +297,14 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       })
       .ToImmutableList();
 
-    return new LianeDisplay(pointDisplays, null);
+    var lianeSegments = await lianes.GroupBy(l => l.WayPoints)
+      .SelectAsync(async g =>
+      {
+        var route = await routingService.GetRoute(g.Key.Select(w => w.RallyingPoint.Location).ToImmutableList());
+        return new LianeSegment(route.Coordinates, g.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
+      });
+
+    return new LianeDisplay(pointDisplays, lianeSegments);
   }
 
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter)

@@ -5,13 +5,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Bogus.DataSets;
+using DeepEqual.Syntax;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Util;
+using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -39,25 +42,30 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0].Id;
 
     var now = DateTime.UtcNow;
-    var departureTime = now.Date.AddHours(9);
+    var departureTime = now.Date.AddDays(1).AddHours(9);
 
     var lianeMembers = ImmutableList.Create(
       new LianeMember(userA, LabeledPositions.Cocures, LabeledPositions.Mende, false, 3)
     );
-    await Db.GetCollection<LianeDb>().InsertOneAsync(new LianeDb(ObjectId.GenerateNewId().ToString(), userA, now, departureTime, null, lianeMembers, new DriverData(userA), null, null));
+    var lianeId = ObjectId.GenerateNewId().ToString();
+    await Db.GetCollection<LianeDb>().InsertOneAsync(new LianeDb(lianeId, userA, now, departureTime, null, lianeMembers, new DriverData(userA), null, null));
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
 
     // Check we get all points in the requested area
     CollectionAssert.AreEquivalent(ImmutableList.Create(
-      LabeledPositions.Cocures.Id,
-      LabeledPositions.LeCrouzet.Id,
-      LabeledPositions.LesBondonsParking.Id,
-      LabeledPositions.Rampon.Id
-      ), 
+        LabeledPositions.Cocures.Id,
+        LabeledPositions.LeCrouzet.Id,
+        LabeledPositions.LesBondonsParking.Id,
+        LabeledPositions.Rampon.Id
+      ),
       actual.Points.Select(p => p.RallyingPoint.Id));
-
+    var pointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Cocures.Id)!;
+    Assert.AreEqual(1, pointDisplay.Lianes.Count);
+    Assert.AreEqual(lianeId, pointDisplay.Lianes[0].Id);
+    
+    AssertJson.AreEqual("Segment.cocures-mende.json", actual.Segments);
   }
 
   [Test]

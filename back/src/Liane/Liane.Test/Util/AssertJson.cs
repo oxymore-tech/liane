@@ -5,14 +5,14 @@ using System.Text;
 using System.Text.Json;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Util;
+using Liane.Web.Internal.Json;
 using NUnit.Framework;
 
 namespace Liane.Test.Util;
 
 public static class AssertJson
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-        { WriteIndented = true, PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new LngLatTupleJsonConverter() } };
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerSettings.TestJsonOptions();
 
     public static void AreEqual(string expectedJsonFile, object actual)
     {
