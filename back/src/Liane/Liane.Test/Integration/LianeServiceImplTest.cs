@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Filter = Liane.Api.Trip.Filter;
 
 namespace Liane.Test.Integration;
@@ -45,8 +46,18 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     );
     await Db.GetCollection<LianeDb>().InsertOneAsync(new LianeDb(ObjectId.GenerateNewId().ToString(), userA, now, departureTime, null, lianeMembers, new DriverData(userA), null, null));
 
-    var actual = await testedService.Display(new LatLng(44.345090, 3.446960), new LatLng(44.195990, 3.564377));
+    var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
+
+    // Check we get all points in the requested area
+    CollectionAssert.AreEquivalent(ImmutableList.Create(
+      LabeledPositions.Cocures.Id,
+      LabeledPositions.LeCrouzet.Id,
+      LabeledPositions.LesBondonsParking.Id,
+      LabeledPositions.Rampon.Id
+      ), 
+      actual.Points.Select(p => p.RallyingPoint.Id));
+
   }
 
   [Test]
