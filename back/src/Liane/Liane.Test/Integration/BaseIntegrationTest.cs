@@ -8,6 +8,7 @@ using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
+using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Test.Mock;
 using Liane.Test.Util;
@@ -45,7 +46,7 @@ public abstract class BaseIntegrationTest
 
     var services = new ServiceCollection();
     var osrmClient = GetOsrmClient();
-    services.AddService(RallyingPointServiceMock.CreateMockRallyingPointService(Db));
+    services.AddService(new RallyingPointServiceImpl(Db, new TestLogger<RallyingPointServiceImpl>()));
     services.AddService<IOsrmService>(osrmClient);
     services.AddTransient<IRoutingService, RoutingServiceImpl>();
 

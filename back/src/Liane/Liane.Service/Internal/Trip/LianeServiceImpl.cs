@@ -21,7 +21,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 {
   const int MaxDeltaInSeconds = 15 * 60; // 15 min
   const int DefaultRadiusInMeters = 10_000; // 10km
-  const int LianeMatchPageDeltaInHours = 24; 
+  const int LianeMatchPageDeltaInHours = 24;
 
   private readonly ICurrentContext currentContext;
   private readonly IRoutingService routingService;
@@ -43,25 +43,25 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var resolvedFilter = filter with { From = from, To = to };
     // Filter Lianes in database 
     var lianesCursor = await Filter(resolvedFilter);
-    
+
     // Select lazily while under limit 
     var lianes = await lianesCursor.SelectAsync(l => MatchLiane(l, from, to, filter));
 
     Cursor? nextCursor = null; //TODO
-    return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor,lianes
+    return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor, lianes
       .Where(l => l is not null)
       .Cast<LianeMatch>()
       .OrderBy(l =>
       {
         var exactMatchScore = l.MatchData is MatchType.ExactMatch ? 0 : 1;
         var hourDeltaScore = (filter.TargetTime.DateTime - l.Liane.DepartureTime).Hours;
-        return hourDeltaScore*2 + exactMatchScore;
+        return hourDeltaScore * 2 + exactMatchScore;
       })
       .ThenByDescending(l => l.MatchData is MatchType.ExactMatch ? 0 : ((MatchType.CompatibleMatch)l.MatchData).DeltaInSeconds)
       .ToImmutableList());
   }
 
-  
+
   public async Task<IFindFluent<LianeDb, LianeDb>> Filter(Filter filter, int geographicalRadius = DefaultRadiusInMeters)
   {
     // Get Liane near both From and To 
@@ -76,7 +76,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       l => l.Geometry,
       Geometry.GetApproxCircle(to.Location, geographicalRadius)
     );
-    
+
     // Filter departureTime
     DateTime lowerBound, upperBound;
     if (filter.TargetTime.Direction == Direction.Departure)
@@ -89,12 +89,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       lowerBound = filter.TargetTime.DateTime.AddHours(-LianeMatchPageDeltaInHours);
       upperBound = filter.TargetTime.DateTime;
     }
+
     var timeFilter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, lowerBound)
                      & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, upperBound);
 
     // If search is passenger search, fetch Liane with driver only
-    var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.DriverData.CanDrive , filter.AvailableSeats <= 0);
-    
+    var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.DriverData.CanDrive, filter.AvailableSeats <= 0);
+
     // l => l.TotalSeatCount + filter.AvailableSeats > 0
     var hasAvailableSeats = Builders<LianeDb>.Filter.Gte("TotalSeatCount", -filter.AvailableSeats);
 
@@ -129,24 +130,24 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .Find(l => l.Id == liane.Id
       ).FirstOrDefaultAsync();
     if (toUpdate is null) throw ResourceNotFoundException.For(liane);
-    if (toUpdate.Members.Exists(m => m.User == newMember.User) ) throw new ArgumentException();
+    if (toUpdate.Members.Exists(m => m.User == newMember.User)) throw new ArgumentException();
 
     // If Liane now has 2 users, create a conversation
-    var updateDef =   Builders<LianeDb>.Update.Push(l => l.Members, newMember)
+    var updateDef = Builders<LianeDb>.Update.Push(l => l.Members, newMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
     if (toUpdate.Conversation is null)
     {
       var conv = await chatService.Create(ConversationGroup.CreateWithMembers(new[]
-      { 
+      {
         toUpdate.Members[0].User,
         newMember.User
       }, DateTime.Now), toUpdate.CreatedBy!);
       updateDef = updateDef.Set<LianeDb, Ref<ConversationGroup>?>(l => l.Conversation, conv.Id!);
     }
-    
+
     var updated = await Mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id, 
-        updateDef, 
+      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id,
+        updateDef,
         new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
 
     return await MapEntity(updated!);
@@ -157,7 +158,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var updated = await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id,
         Builders<LianeDb>.Update.Pull("Members.User", member)
-      ,new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
+        , new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
     if (updated is null) throw ResourceNotFoundException.For(liane);
     if (updated.Members.IsEmpty)
     {
@@ -197,7 +198,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     return ((from, to), segments.ToImmutableList());
   }
-  
+
   private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Ref<Liane.Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
   {
     var (driverSegment, segments) = ExtractRouteSegments(driver, lianeMembers);
@@ -208,7 +209,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   protected override async Task<Liane.Api.Trip.Liane> MapEntity(LianeDb liane)
   {
-    var driver =  liane.DriverData.CanDrive ? liane.DriverData.User : null;
+    var driver = liane.DriverData.CanDrive ? liane.DriverData.User : null;
     var wayPoints = await GetWayPoints(liane.DriverData.User, liane.Members);
     return new Liane.Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, driver, liane.Conversation);
   }
@@ -273,7 +274,30 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return (newWayPoints, matchType);
   }
 
-  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from , RallyingPoint to,  Filter filter)
+  public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
+  {
+    var rallyingPoints = await rallyingPointService.List(pos, pos2);
+    var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, DateTime.UtcNow)
+                 & (Builders<LianeDb>.Filter.In("Members.From", rallyingPoints) | Builders<LianeDb>.Filter.In("Members.To", rallyingPoints));
+    var lianes = await Mongo.GetCollection<LianeDb>()
+      .Find(filter)
+      .SelectAsync(MapEntity);
+
+    var pointsWithLianes = lianes.SelectMany(l => l.Members.SelectMany(m => ImmutableList.Create((m.From, l), (m.To, l))))
+      .GroupBy(t => t.Item1)
+      .ToImmutableDictionary(g => g.Key, g => g.Select(e => e.Item2).ToImmutableList());
+
+    var pointDisplays = rallyingPoints.Select(r =>
+      {
+        var pointLianes = pointsWithLianes.GetValueOrDefault(r, ImmutableList<Api.Trip.Liane>.Empty);
+        return new PointDisplay(r, pointLianes);
+      })
+      .ToImmutableList();
+
+    return new LianeDisplay(pointDisplays, null);
+  }
+
+  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter)
   {
     var matchForDriver = filter.AvailableSeats > 0;
     var defaultDriver = lianeDb.DriverData.User;
@@ -286,6 +310,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       // For filters on arrival types, filter here using trip duration
       return null;
     }
+
     ImmutableSortedSet<WayPoint> newWayPoints;
     MatchType matchType;
     if (wayPoints.IncludesSegment((from, to)))
@@ -314,7 +339,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       matchType = new MatchType.CompatibleMatch(delta);
     }
 
-    var driver =  lianeDb.DriverData.CanDrive ? lianeDb.DriverData.User : null;
+    var driver = lianeDb.DriverData.CanDrive ? lianeDb.DriverData.User : null;
     var originalLiane = new Liane.Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, driver);
     return new LianeMatch(originalLiane, newWayPoints, lianeDb.TotalSeatCount, matchType);
   }

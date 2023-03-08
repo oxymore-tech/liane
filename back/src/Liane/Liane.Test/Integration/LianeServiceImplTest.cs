@@ -4,13 +4,16 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Bogus.DataSets;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
 using Filter = Liane.Api.Trip.Filter;
@@ -24,7 +27,26 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   protected override void Setup(IMongoDatabase db)
   {
-    testedService = new LianeServiceImpl(db, ServiceProvider.GetService<IRoutingService>()!, Moq.Mock.Of<ICurrentContext>(), Moq.Mock.Of<IRallyingPointService>(), Moq.Mock.Of<IChatService>());
+    var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
+    var rallyingPointService = ServiceProvider.GetRequiredService<IRallyingPointService>();
+    testedService = new LianeServiceImpl(db, routingService, Moq.Mock.Of<ICurrentContext>(), rallyingPointService, Moq.Mock.Of<IChatService>());
+  }
+
+  [Test]
+  public async Task ShouldDisplayLiane()
+  {
+    var userA = Fakers.FakeDbUsers[0].Id;
+
+    var now = DateTime.UtcNow;
+    var departureTime = now.Date.AddHours(9);
+
+    var lianeMembers = ImmutableList.Create(
+      new LianeMember(userA, LabeledPositions.Cocures, LabeledPositions.Mende, false, 3)
+    );
+    await Db.GetCollection<LianeDb>().InsertOneAsync(new LianeDb(ObjectId.GenerateNewId().ToString(), userA, now, departureTime, null, lianeMembers, new DriverData(userA), null, null));
+
+    var actual = await testedService.Display(new LatLng(44.345090, 3.446960), new LatLng(44.195990, 3.564377));
+    Assert.IsNotNull(actual);
   }
 
   [Test]
@@ -90,8 +112,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var requests = new LianeRequest[baseLianes.Length];
     for (int i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2};
-     requests[i] = lianeRequest;
+      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      requests[i] = lianeRequest;
     }
 
     return requests;
@@ -147,7 +169,6 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(0, resultIds3.Count);
   }
 
-    
 
   [Test]
   public async Task TestFilterLianeOnSeatCount()
@@ -158,12 +179,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var createdLianes = new List<Api.Trip.Liane>();
     for (int i = 0; i < baseLianesRequests.Length; i++)
     {
-      createdLianes.Add(await testedService.Create(baseLianesRequests[i] with {AvailableSeats = i+1} , userA));
+      createdLianes.Add(await testedService.Create(baseLianesRequests[i] with { AvailableSeats = i + 1 }, userA));
     }
 
-    
+
     const int radius = 10000;
-    
+
     var filter1 = new Filter(
       LabeledPositions.GorgesDuTarnCausses,
       LabeledPositions.ChamperbouxEglise,
@@ -175,7 +196,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.Contains(createdLianes[0].Id, resultIds1);
     Assert.Contains(createdLianes[1].Id, resultIds1);
     Assert.Contains(createdLianes[2].Id, resultIds1);
-    
+
     var filter2 = new Filter(
       LabeledPositions.GorgesDuTarnCausses,
       LabeledPositions.ChamperbouxEglise,
@@ -211,5 +232,4 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);
   }
-
 }
