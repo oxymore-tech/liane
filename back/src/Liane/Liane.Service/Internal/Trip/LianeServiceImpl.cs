@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
@@ -15,8 +16,11 @@ using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
+using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Trip;
+
+using LngLatTuple = Tuple<double, double>;
 
 public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, LianeDb, Liane.Api.Trip.Liane>, ILianeService
 {
@@ -297,14 +301,78 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       })
       .ToImmutableList();
 
-    var lianeSegments = await lianes.GroupBy(l => l.WayPoints)
+    var rawLianeSegments = await lianes.GroupBy(l => l.WayPoints)
       .SelectAsync(async g =>
       {
         var route = await routingService.GetRoute(g.Key.Select(w => w.RallyingPoint.Location).ToImmutableList());
         return new LianeSegment(route.Coordinates, g.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
       });
 
+    var lianeSegments = TruncateOverlappingSegments(rawLianeSegments);
+
     return new LianeDisplay(pointDisplays, lianeSegments);
+  }
+
+  internal readonly struct LianeSet
+  {
+    public LianeSet(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+    {
+      HashKey = string.Join("_", lianes.Select(r => r.Id).Distinct().Order());
+    }
+
+    public ImmutableList<Ref<Api.Trip.Liane>> Lianes => HashKey.Split("_").Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
+    public string HashKey { get; }
+
+    public LianeSet Merge(LianeSet other)
+    {
+      return new LianeSet(other.Lianes.Concat(Lianes));
+    }
+  }
+
+  private ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
+  {
+    var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
+    var orderedCoordinates = new List<LngLatTuple>();
+    foreach (var lianeSegment in raw)
+    {
+      var lianeSet = new LianeSet(lianeSegment.Lianes.ToHashSet());
+      foreach (var coordinate in lianeSegment.Coordinates)
+      {
+        if (groupedCoordinates.TryGetValue(coordinate, out var currentLianeSet))
+        {
+          groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
+        }else
+        {
+          groupedCoordinates[coordinate] = lianeSet;
+          orderedCoordinates.Add(coordinate);
+        }
+      }
+    }
+    
+    var lianeSegments = new List<LianeSegment>();
+    var coordinates = new List<LngLatTuple>();
+    LianeSet? previousLianeSet = null;
+    foreach (var coordinate in orderedCoordinates)
+    {
+      var currentLianeSet = groupedCoordinates[coordinate];
+      if (previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
+      {
+        var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
+        lianeSegments.Add(lianeSegment);
+        coordinates.Clear();
+      }
+
+      coordinates.Add(coordinate);
+      previousLianeSet = currentLianeSet;
+    }
+    
+    if (coordinates.Count > 0 && previousLianeSet != null)
+    {
+      var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
+      lianeSegments.Add(lianeSegment);
+    }
+
+    return lianeSegments.ToImmutableList();
   }
 
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter)
