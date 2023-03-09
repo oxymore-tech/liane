@@ -56,11 +56,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .Cast<LianeMatch>()
       .OrderBy(l =>
       {
-        var exactMatchScore = l.MatchData is MatchType.ExactMatch ? 0 : 1;
+        var exactMatchScore = l.Match is Match.Exact ? 0 : 1;
         var hourDeltaScore = (filter.TargetTime.DateTime - l.Liane.DepartureTime).Hours;
         return hourDeltaScore * 2 + exactMatchScore;
       })
-      .ThenByDescending(l => l.MatchData is MatchType.ExactMatch ? 0 : ((MatchType.CompatibleMatch)l.MatchData).DeltaInSeconds)
+      .ThenByDescending(l => l.Match is Match.Exact ? 0 : ((Match.Compatible)l.Match).DeltaInSeconds)
       .ToImmutableList());
   }
 
@@ -235,13 +235,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
     var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates.ToLatLng());
-    await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
-    var updateOneAsync = await Mongo.GetCollection<LianeDb>().UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
+    await Mongo.GetCollection<LianeDb>()
+      .UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
   }
 
-  public async Task<(ImmutableSortedSet<WayPoint> wayPoints, MatchType matchType)?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
+  public async Task<(ImmutableSortedSet<WayPoint> wayPoints, Match matchType)?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
   {
-    MatchType matchType;
+    Match match;
     ImmutableSortedSet<WayPoint> newWayPoints;
     var lianeDb = await ResolveRef<LianeDb>(liane);
     var (driverSegment, segments) = ExtractRouteSegments(lianeDb.DriverData.User, lianeDb.Members);
@@ -250,7 +250,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     if (wayPoints.IncludesSegment((from, to)))
     {
       newWayPoints = wayPoints;
-      matchType = new MatchType.ExactMatch();
+      match = new Match.Exact();
     }
     else
     {
@@ -270,19 +270,20 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         return null;
       }
 
-      matchType = new MatchType.CompatibleMatch(delta);
+      match = new Match.Compatible(delta);
     }
 
-    return (newWayPoints, matchType);
+    return (newWayPoints, match);
   }
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
   {
-    var rallyingPoints = (await rallyingPointService.List(pos, pos2))
-      .Select(r => r.Id!)
+    var rallyingPoints = await rallyingPointService.List(pos, pos2);
+
+    var rallyingPointRefs = rallyingPoints.Select(r => r.Id!)
       .ToImmutableList();
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, DateTime.UtcNow)
-                 & (Builders<LianeDb>.Filter.In("Members.From", rallyingPoints) | Builders<LianeDb>.Filter.In("Members.To", rallyingPoints));
+                 & (Builders<LianeDb>.Filter.In("Members.From", rallyingPointRefs) | Builders<LianeDb>.Filter.In("Members.To", rallyingPointRefs));
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
       .SelectAsync(MapEntity);
@@ -293,7 +294,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var pointDisplays = rallyingPoints.Select(r =>
       {
-        var pointLianes = pointsWithLianes.GetValueOrDefault(r, ImmutableList<Api.Trip.Liane>.Empty);
+        var pointLianes = pointsWithLianes.GetValueOrDefault(r.Id!, ImmutableList<Api.Trip.Liane>.Empty);
         return new PointDisplay(r, pointLianes);
       })
       .ToImmutableList();
@@ -341,11 +342,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
 
     ImmutableSortedSet<WayPoint> newWayPoints;
-    MatchType matchType;
+    Match match;
     if (wayPoints.IncludesSegment((from, to)))
     {
       newWayPoints = wayPoints;
-      matchType = new MatchType.ExactMatch();
+      match = new Match.Exact();
     }
     else
     {
@@ -365,17 +366,17 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         return null;
       }
 
-      matchType = new MatchType.CompatibleMatch(delta);
+      match = new Match.Compatible(delta);
     }
 
     var driver = lianeDb.DriverData.CanDrive ? lianeDb.DriverData.User : null;
     var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, driver);
-    return new LianeMatch(originalLiane, newWayPoints, lianeDb.TotalSeatCount, matchType);
+    return new LianeMatch(originalLiane, newWayPoints, lianeDb.TotalSeatCount, match);
   }
 
   private static ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
   {
-    var cutCoordinate = new LngLatTuple(-1,-1);
+    var cutCoordinate = new LngLatTuple(-1, -1);
     var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
     var orderedCoordinates = new List<LngLatTuple>();
     foreach (var lianeSegment in raw)
@@ -387,14 +388,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         {
           groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
           orderedCoordinates.Add(cutCoordinate);
-        }else
+        }
+        else
         {
           groupedCoordinates[coordinate] = lianeSet;
           orderedCoordinates.Add(coordinate);
         }
       }
     }
-    
+
     var lianeSegments = new List<LianeSegment>();
     var coordinates = new List<LngLatTuple>();
     LianeSet? previousLianeSet = null;
@@ -408,11 +410,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
           var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
           lianeSegments.Add(lianeSegment);
         }
+
         coordinates.Clear();
         previousLianeSet = null;
         continue;
       }
-      
+
       var currentLianeSet = groupedCoordinates[coordinate];
       if (previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
       {
@@ -424,7 +427,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       coordinates.Add(coordinate);
       previousLianeSet = currentLianeSet;
     }
-    
+
     if (coordinates.Count > 0 && previousLianeSet != null)
     {
       var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);

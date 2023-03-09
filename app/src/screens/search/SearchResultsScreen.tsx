@@ -72,7 +72,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
     const { route, navigation } = useAppNavigation<"SearchResults">();
     const filter = route.params!.filter;
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
-      const isExactMatch = item.matchData.type === "ExactMatch";
+      const isExactMatch = item.match.type === "ExactMatch";
       const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0);
       const departureDatetime = formatWholeDatetime(new Date(item.liane.departureTime));
       // console.log(item, tripDuration);

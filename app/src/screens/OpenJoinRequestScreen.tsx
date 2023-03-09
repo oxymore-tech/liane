@@ -55,7 +55,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
   ({ data }) => {
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
-    const isExactMatch = data.matchType.type === "ExactMatch";
+    const isExactMatch = data.match.type === "ExactMatch";
     const dateTime = `${formatMonthDay(new Date(data.targetLiane.departureTime))} à ${formatTime(new Date(data.targetLiane.departureTime))}`;
     const headerDate = (
       <Row spacing={8}>
@@ -92,7 +92,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
             {isExactMatch
               ? "Votre trajet reste inchangé"
-              : "Le trajet sera rallongé de " + formatDuration((data.matchType as CompatibleMatch).deltaInSeconds)}
+              : "Le trajet sera rallongé de " + formatDuration((data.match as CompatibleMatch).deltaInSeconds)}
           </AppText>
         </Row>
         {data.seats > 0 && !data.targetLiane.driver && (

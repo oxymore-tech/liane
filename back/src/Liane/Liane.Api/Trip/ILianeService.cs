@@ -15,7 +15,7 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<PaginatedResponse<Liane>> ListForMemberUser(string userId, Pagination pagination);
   Task<Liane> AddMember(Ref<Liane> liane, LianeMember newMember);
   Task<Liane?> RemoveMember(Ref<Liane> liane, Ref<User.User> member);
-  Task<(ImmutableSortedSet<WayPoint> wayPoints, MatchType matchType)?> GetNewTrip(Ref<Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
+  Task<(ImmutableSortedSet<WayPoint> wayPoints, Match matchType)?> GetNewTrip(Ref<Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
 
   Task<LianeDisplay> Display(LatLng pos, LatLng pos2);
 }

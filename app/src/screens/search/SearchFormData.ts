@@ -64,7 +64,7 @@ export const toJoinLianeRequest = (filter: InternalLianeSearchFilter, match: Lia
     takeReturnTrip: false, //TODO
     message,
     seats: filter.availableSeats,
-    matchType: match.matchData,
+    match: match.match,
     wayPoints: match.wayPoints
   };
 };

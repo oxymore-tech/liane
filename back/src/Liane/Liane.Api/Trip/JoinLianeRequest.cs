@@ -5,7 +5,6 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-
 public sealed record JoinLianeRequest(
   string? Id,
   Ref<RallyingPoint> From,
@@ -30,6 +29,6 @@ public sealed record JoinLianeRequestDetailed(
   bool TakeReturnTrip,
   string Message,
   bool? Accepted,
-  MatchType MatchType,
+  Match Match,
   ImmutableSortedSet<WayPoint> WayPoints
   );
