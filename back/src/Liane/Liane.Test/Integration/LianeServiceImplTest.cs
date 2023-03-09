@@ -39,13 +39,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0].Id;
 
     var now = DateTime.UtcNow;
-    var departureTime = now.Date.AddDays(1).AddHours(9);
 
-    var lianeMembers = ImmutableList.Create(
-      new LianeMember(userA, LabeledPositions.Cocures, LabeledPositions.Mende, false, 3)
-    );
-    var lianeId = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
-    await Db.GetCollection<LianeDb>().InsertOneAsync(new LianeDb(lianeId, userA, now, departureTime, null, lianeMembers, new DriverData(userA), null, null));
+    var liane1Id = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
+    await InsertLiane(liane1Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -60,8 +56,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       actual.Points.Select(p => p.RallyingPoint.Id));
     var pointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Cocures.Id)!;
     Assert.AreEqual(1, pointDisplay.Lianes.Count);
-    Assert.AreEqual(lianeId, pointDisplay.Lianes[0].Id);
-    
+    Assert.AreEqual(liane1Id, pointDisplay.Lianes[0].Id);
+
     AssertJson.AreEqual("Segment.cocures-mende.json", actual.Segments);
   }
 
@@ -72,9 +68,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     var now = DateTime.UtcNow;
     var liane1Id = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
-    await InsertLiane(liane1Id, now, userA,LabeledPositions.Cocures, LabeledPositions.Mende);
+    await InsertLiane(liane1Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
     var liane2Id = ObjectId.Parse("6408a644437b60cfd3b15875").ToString();
-    await InsertLiane(liane2Id, now, userA,LabeledPositions.Cocures, LabeledPositions.Florac);
+    await InsertLiane(liane2Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Florac);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -91,10 +87,74 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(2, pointDisplay.Lianes.Count);
     Assert.AreEqual(liane1Id, pointDisplay.Lianes[0].Id);
     Assert.AreEqual(liane2Id, pointDisplay.Lianes[1].Id);
-    
+
     AssertJson.AreEqual("Segment.cocures-florac-mende.json", actual.Segments);
   }
 
+  [Test]
+  public async Task ShouldDisplayThreeLianes()
+  {
+    var userA = Fakers.FakeDbUsers[0].Id;
+
+    var now = DateTime.UtcNow;
+    var liane1Id = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
+    await InsertLiane(liane1Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane2Id = ObjectId.Parse("6408a644437b60cfd3b15875").ToString();
+    await InsertLiane(liane2Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Florac);
+    var liane3Id = ObjectId.Parse("6408a644437b60cfd3b15876").ToString();
+    await InsertLiane(liane3Id, now, userA, LabeledPositions.LeCrouzet, LabeledPositions.LesBondonsParking);
+
+    var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
+    Assert.IsNotNull(actual);
+
+    // Check we get all points in the requested area
+    CollectionAssert.AreEquivalent(ImmutableList.Create(
+        LabeledPositions.Cocures.Id,
+        LabeledPositions.LeCrouzet.Id,
+        LabeledPositions.LesBondonsParking.Id,
+        LabeledPositions.Rampon.Id
+      ),
+      actual.Points.Select(p => p.RallyingPoint.Id));
+    var pointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Cocures.Id)!;
+    Assert.AreEqual(2, pointDisplay.Lianes.Count);
+    Assert.AreEqual(liane1Id, pointDisplay.Lianes[0].Id);
+    Assert.AreEqual(liane2Id, pointDisplay.Lianes[1].Id);
+
+    AssertJson.AreEqual("Segment.cocures-florac-mende-lecrouzet-bondons.json", actual.Segments);
+  }
+
+  [Test]
+  public async Task ShouldDisplayThreeLianesWithIntersection()
+  {
+    var userA = Fakers.FakeDbUsers[0].Id;
+
+    var now = DateTime.UtcNow;
+    var liane1Id = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
+    await InsertLiane(liane1Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane2Id = ObjectId.Parse("6408a644437b60cfd3b15875").ToString();
+    await InsertLiane(liane2Id, now, userA, LabeledPositions.Cocures, LabeledPositions.Florac);
+    var liane3Id = ObjectId.Parse("6408a644437b60cfd3b15876").ToString();
+    await InsertLiane(liane3Id, now, userA, LabeledPositions.LeCrouzet, LabeledPositions.Rampon);
+
+    var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
+    Assert.IsNotNull(actual);
+
+    // Check we get all points in the requested area
+    CollectionAssert.AreEquivalent(ImmutableList.Create(
+        LabeledPositions.Cocures.Id,
+        LabeledPositions.LeCrouzet.Id,
+        LabeledPositions.LesBondonsParking.Id,
+        LabeledPositions.Rampon.Id
+      ),
+      actual.Points.Select(p => p.RallyingPoint.Id));
+    var pointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Cocures.Id)!;
+    Assert.AreEqual(2, pointDisplay.Lianes.Count);
+    Assert.AreEqual(liane1Id, pointDisplay.Lianes[0].Id);
+    Assert.AreEqual(liane2Id, pointDisplay.Lianes[1].Id);
+
+    AssertJson.AreEqual("Segment.cocures-florac-mende-lecrouzet-rampon.json", actual.Segments);
+  }
+  
   private async Task InsertLiane(string id, DateTime now, string userA, Ref<RallyingPoint> From, Ref<RallyingPoint> To)
   {
     var departureTime = now.Date.AddDays(1).AddHours(9);
@@ -105,7 +165,6 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     await Db.GetCollection<LianeDb>()
       .InsertOneAsync(new LianeDb(id, userA, now, departureTime, null, lianeMembers, new DriverData(userA)));
-
   }
 
   [Test]
