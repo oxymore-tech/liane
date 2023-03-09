@@ -26,10 +26,9 @@ public sealed class RoutingServiceImpl : IRoutingService
 
     public async Task<Route> GetRoute(RoutingQuery query)
     {
-        var coordinates = ImmutableList.Create(query.Start, query.End);
-        return await GetRoute(coordinates);
+      return await GetRoute(query.Coordinates);
     }
-    
+
     public async Task<Route> GetRoute(ImmutableList<LatLng> coordinates)
     {
       var routeResponse = await osrmService.Route(coordinates, overview: "full");
@@ -39,11 +38,21 @@ public sealed class RoutingServiceImpl : IRoutingService
       var distance = routeResponse.Routes[0].Distance;
       return new Route(geojson.Coordinates, duration, distance);
     }
+    public async Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query)
+    {
+      var multiLineStringGeometry = new List<ImmutableList<Tuple<double, double>>>();
+      for (var i = 0; i < query.Coordinates.Count - 1; i++)
+      {
+        var step = ImmutableList.Create(query.Coordinates[i], query.Coordinates[i + 1]);
+        var routeStepResponse = await osrmService.Route(step, overview: "full");
+        multiLineStringGeometry.Add(routeStepResponse.Routes[0].Geometry.Coordinates);
+      }
+      return new RouteWithSteps(multiLineStringGeometry.ToImmutableList());
+    }
 
     public async Task<ImmutableList<Route>> GetAlternatives(RoutingQuery query)
     {
-        var coordinates = ImmutableList.Create(query.Start, query.End);
-        var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
+      var routeResponse = await osrmService.Route(query.Coordinates, "true", overview: "full");
         return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
             .ToImmutableList();
     }
@@ -200,8 +209,8 @@ public sealed class RoutingServiceImpl : IRoutingService
         // No solution
         return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
     }
-    
-   
+
+
     public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
     {
         var route = await GetRoute(new RoutingQuery(from.Location, to.Location));
@@ -226,7 +235,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         return wayPoints.ToImmutableSortedSet();
     }
 
-    
+
     public async Task<ImmutableSortedSet<WayPoint>> GetTrip(Ref<RallyingPoint> from, Ref<RallyingPoint> to, ImmutableHashSet<Ref<RallyingPoint>> wayPoints)
     {
         // Get a list of coordinates from RallyingPoint references
@@ -237,10 +246,10 @@ public sealed class RoutingServiceImpl : IRoutingService
             coordinates.Add(await rallyingPointService.Get(wayPoint));
         }
         coordinates.Add(await rallyingPointService.Get(to));
-        
-        // Get trip from coordinates 
+
+        // Get trip from coordinates
         var rawTrip = await osrmService.Trip(coordinates.Select(rp => rp.Location));
-        
+
         // Get sorted WayPoints (map osrm waypoints to our rallying points)
         var waypoints = coordinates.Select((rallyingPoint, i) =>
         {
@@ -284,8 +293,8 @@ public sealed class RoutingServiceImpl : IRoutingService
 
       return matrix;
     }
-    
-    
+
+
 
     public async Task<ImmutableSortedSet<WayPoint>?> GetTrip(RouteSegment  extremities, IEnumerable<RouteSegment> segments)
     {
@@ -299,15 +308,15 @@ public sealed class RoutingServiceImpl : IRoutingService
 
       foreach (var member in segments)
       {
-        // TODO optimize ref resolving 
+        // TODO optimize ref resolving
         var resolvedFrom = await member.From.Resolve(rallyingPointService.Get);
         var resolvedTo = await member.To.Resolve(rallyingPointService.Get);
         pointsDictionary.TryAdd(resolvedFrom, new HashSet<RallyingPoint>());
         pointsDictionary.TryAdd(resolvedTo, new HashSet<RallyingPoint>());
         // Add precedence constraints
         if (resolvedFrom != start) pointsDictionary[resolvedTo].Add(resolvedFrom);
-      
-      } 
+
+      }
       // Add start and end point
       pointsDictionary.TryAdd(start, new HashSet<RallyingPoint>());
       if (pointsDictionary[start].Count > 0)
@@ -318,12 +327,12 @@ public sealed class RoutingServiceImpl : IRoutingService
       // End is marked with precedence constraints from all other points except itself and start
       pointsDictionary[end] = pointsDictionary.Keys.Except(new[] { start, end }).ToHashSet();
 
-      // Get distance matrix for points 
+      // Get distance matrix for points
       var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
-     
-      // Start trip and add starting point directly 
+
+      // Start trip and add starting point directly
       trip.Add(new WayPoint(start, 0, 0, 0));
-      // Add a constraint to indicate this point has already been visited 
+      // Add a constraint to indicate this point has already been visited
       pointsDictionary[start].Add(start);
 
       // Get visitable points
@@ -332,24 +341,24 @@ public sealed class RoutingServiceImpl : IRoutingService
 
       while (visitable.Any())
       {
-        // Get next point amongst visitable 
+        // Get next point amongst visitable
         var nextPointData = matrix[currentPoint].IntersectBy(visitable, kv => kv.Key).MinBy(kv => kv.Value);
         var selected = nextPointData.Key;
-        
+
         // Append to trip
         trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value.duration, (int)nextPointData.Value.distance));
-     
-        // Update constraints and visitable points 
+
+        // Update constraints and visitable points
         foreach (var kv in pointsDictionary)
         {
           kv.Value.Remove(selected);
-        }  
+        }
         pointsDictionary[selected].Add(selected);
 
         currentPoint = selected;
         visitable = pointsDictionary.Where(kv => kv.Value.Count == 0)
           .Select(kv => kv.Key).ToHashSet();
-        
+
       }
 
       if (trip.Count != pointsDictionary.Count)
@@ -361,5 +370,5 @@ public sealed class RoutingServiceImpl : IRoutingService
       return trip.ToImmutableSortedSet();
 
     }
-    
+
 }

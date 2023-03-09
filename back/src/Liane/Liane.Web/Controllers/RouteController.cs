@@ -16,9 +16,9 @@ public class RouteController : ControllerBase
     }
 
     [HttpPost("")]
-    public async Task<ActionResult<Route>> BasicRouteMethod([FromBody] RoutingQuery routingQuery)
+    public async Task<ActionResult<RouteWithSteps>> BasicRouteMethod([FromBody] RoutingQuery routingQuery)
     {
-        return await routeService.GetRoute(routingQuery);
+        return await routeService.GetRouteStepsGeometry(routingQuery);
     }
 
     [HttpGet("duration")]

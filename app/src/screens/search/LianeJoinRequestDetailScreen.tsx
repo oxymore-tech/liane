@@ -1,4 +1,4 @@
-import { Compatible, LianeMatch } from "@/api";
+import { CompatibleMatch, JoinLianeRequestDetailed } from "@/api";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -8,12 +8,10 @@ import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatDateTime } from "@/api/i18n";
 import { LianeDetailedMatchView } from "@/components/trip/LianeMatchView";
-import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
-import { AppButton } from "@/components/base/AppButton";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
-import { toJoinLianeRequest } from "@/screens/search/SearchFormData";
-import { TripChangeOverview } from "@/components/map/TripOverviewMap";
+import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
+import { AppPressable } from "@/components/base/AppPressable";
 
 const formatSeatCount = (seatCount: number) => {
   let count = seatCount;
@@ -29,17 +27,15 @@ const formatSeatCount = (seatCount: number) => {
   return `${count} ${words.map(word => word + (count > 1 ? "s" : "")).join(" ")}`;
 };
 
-export const LianeMatchDetailScreen = () => {
-  const { route, navigation } = useAppNavigation<"LianeMatchDetail">();
-  const liane: LianeMatch = route.params!.lianeMatch;
+export const LianeJoinRequestDetailScreen = () => {
+  const { route, navigation } = useAppNavigation<"LianeJoinRequestDetail">();
+  const request: JoinLianeRequestDetailed = route.params!.request;
   const insets = useSafeAreaInsets();
-  const isExactMatch = liane.match.type === "Exact";
-  const filter = route.params!.filter;
+  const isExactMatch = request.matchType.type === "ExactMatch";
 
-  const formattedDepartureTime = formatDateTime(new Date(liane.liane.departureTime));
-  const formattedSeatCount = formatSeatCount(liane.freeSeatsCount);
-  const matchLabel = isExactMatch ? "Trajet exact" : "Trajet compatible";
-  const driverLabel = liane.liane.driver ? "John Doe" : "Aucun conducteur";
+  const formattedDepartureTime = formatDateTime(new Date(request.targetLiane.departureTime));
+  const formattedSeatCount = formatSeatCount(request.seats);
+  const driverLabel = request.targetLiane.driver ? "John Doe" : "Aucun conducteur";
 
   return (
     <View style={styles.page}>
@@ -47,15 +43,15 @@ export const LianeMatchDetailScreen = () => {
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
           <AppIcon name={"arrow-ios-back-outline"} size={24} color={defaultTextColor(AppColors.yellow)} />
         </Pressable>
-        <AppText style={styles.title}>Détails de la Liane</AppText>
+        <AppText style={styles.title}>Détails du trajet</AppText>
       </Row>
       <View style={styles.section}>
         <LianeDetailedMatchView
-          from={filter.from}
-          to={filter.to}
-          departureTime={liane.liane.departureTime}
-          originalTrip={liane.liane.wayPoints}
-          newTrip={liane.wayPoints}
+          from={request.from}
+          to={request.to}
+          departureTime={request.targetLiane.departureTime}
+          originalTrip={request.targetLiane.wayPoints}
+          newTrip={request.wayPoints}
         />
       </View>
       <View style={styles.separator} />
@@ -82,38 +78,44 @@ export const LianeMatchDetailScreen = () => {
           <AppIcon name={"people-outline"} />
           <AppText style={{ fontSize: 16 }}>{formattedSeatCount}</AppText>
         </Row>
-        <TripChangeOverview params={{ liane: liane.liane, newWayPoints: liane.wayPoints }} />
-        {isExactMatch && (
-          <Row spacing={8} style={[styles.tag, isExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg]}>
-            {isExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
-            <AppText style={{ fontSize: 16 }}>{matchLabel}</AppText>
-          </Row>
-        )}
+
+        {isExactMatch && <TripOverview params={{ liane: request.targetLiane }} />}
         {!isExactMatch && (
-          <AppText>Ce trajet fait faire un détour de {formatDuration((liane.match as Compatible).deltaInSeconds)} à John Doe</AppText>
+          <Column>
+            <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: request.wayPoints }} />
+            <AppText>Ce trajet fait faire un détour de {formatDuration((request.matchType as CompatibleMatch).deltaInSeconds)} à John Doe</AppText>
+          </Column>
         )}
       </Column>
       <View style={styles.separator} />
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
         <View
           style={{
-            backgroundColor: liane.liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+            backgroundColor: request.targetLiane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
             padding: 12,
             borderRadius: 52
           }}>
-          <AppCustomIcon name={liane.liane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+          <AppCustomIcon name={request.targetLiane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
         </View>
         <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
       </Row>
       <View style={styles.separator} />
 
-      <BottomOptionBg color={AppColors.darkBlue}>
-        <AppButton
-          icon={"arrow-right"}
-          title={"Rejoindre"}
-          onPress={() => navigation.navigate({ name: "RequestJoin", params: { request: toJoinLianeRequest(filter, liane, "") }, key: "req" })}
-        />
-      </BottomOptionBg>
+      <Column style={styles.section}>
+        <AppPressable
+          backgroundStyle={[styles.rowActionContainer]}
+          onPress={() => {
+            // TODO
+          }}>
+          <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+            <AppIcon name={"close-outline"} color={ContextualColors.redAlert.text} />
+            <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Annuler la demande</AppText>
+            <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+              <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
+            </View>
+          </Row>
+        </AppPressable>
+      </Column>
     </View>
   );
 };

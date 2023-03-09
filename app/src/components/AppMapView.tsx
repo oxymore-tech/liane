@@ -37,7 +37,11 @@ const AppMapView = () => {
     <MapLibreGL.MapView onRegionDidChange={onRegionChange} style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
       <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={center} />
       {lianeDisplay?.points.map(p => (
-        <MapLibreGL.MarkerView coordinate={toGeoJson(p.rallyingPoint.location)} id={p.rallyingPoint.id!} title={p.rallyingPoint.label}>
+        <MapLibreGL.MarkerView
+          coordinate={toGeoJson(p.rallyingPoint.location)}
+          id={p.rallyingPoint.id!}
+          title={p.rallyingPoint.label}
+          key={p.rallyingPoint.id!}>
           <LocationPin fill={AppColorPalettes.orange[700]} />
         </MapLibreGL.MarkerView>
       ))}

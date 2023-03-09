@@ -4,6 +4,7 @@ import { RallyingPointClient, RallyingPointService } from "@/api/service/rallyin
 import { ChatHubService, HubServiceClient } from "@/api/service/chat";
 import { LocationService, LocationServiceClient } from "@/api/service/location";
 import { NotificationService, NotificationServiceClient } from "@/api/service/notification";
+import { RoutingService, RoutingServiceClient } from "@/api/service/routing";
 
 export type AppServices = {
   readonly auth: AuthService;
@@ -12,6 +13,7 @@ export type AppServices = {
   readonly chatHub: ChatHubService;
   readonly location: LocationService;
 
+  readonly routing: RoutingService;
   readonly notification: NotificationService;
 };
 
@@ -21,5 +23,6 @@ export const CreateAppServices = (): AppServices => ({
   rallyingPoint: new RallyingPointClient(),
   chatHub: new HubServiceClient(),
   location: new LocationServiceClient(),
+  routing: new RoutingServiceClient(),
   notification: new NotificationServiceClient()
 });

@@ -10,12 +10,13 @@ public interface IRoutingService
 {
     Task<Route> GetRoute(RoutingQuery routingQuery);
     Task<Route> GetRoute(ImmutableList<LatLng> coordinates);
+    Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query);
     Task<ImmutableList<Route>> GetAlternatives(RoutingQuery routingQuery);
     Task<DeltaRoute> CrossAWayPoint(RoutingWithPointQuery routingWithPointQuery);
     Task<DeltaRoute> MakeADetour(RoutingWithPointQuery routingWithPointQuery);
     Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to);
     Task<ImmutableSortedSet<WayPoint>> GetTrip(Ref<RallyingPoint> from, Ref<RallyingPoint> to, ImmutableHashSet<Ref<RallyingPoint>> wayPoints);
-        
+
     /// <summary>
     /// Solves the Travelling Salesman Problem while respecting precedence constraints provided by each pair of rallying points
     /// using a simple Nearest Neighbour heuristic.

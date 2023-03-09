@@ -20,6 +20,8 @@ export type NavigationParamList = {
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeWizard: { formData?: LianeWizardFormData };
   LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
+
+  LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
   Chat: { conversationId: string };
   LianeDetail: { liane: Liane | string };
   OpenJoinLianeRequest: { request: JoinLianeRequest };

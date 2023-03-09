@@ -25,12 +25,10 @@ import { SearchResultsScreen } from "@/screens/search/SearchResultsScreen";
 import { LianeMatchDetailScreen } from "@/screens/search/LianeMatchDetailScreen";
 import { WithBadge } from "@/components/base/WithBadge";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
-import { isJoinLianeRequest, NotificationPayload } from "@/api";
 import { useObservable } from "@/util/hooks/subscription";
-import { RootNavigation } from "@/api/navigation";
-import { StackActions } from "@react-navigation/native";
+import { getNotificationNavigation, RootNavigation } from "@/api/navigation";
 import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
-import { getNotificationContent } from "@/api/service/notification";
+import { LianeJoinRequestDetailScreen } from "@/screens/search/LianeJoinRequestDetailScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -88,7 +86,7 @@ function Navigation() {
     const initialNotification = services.notification.initialNotification();
     if (user && initialNotification) {
       // check if app was opened by a notification
-      const { navigate } = getNotificationContent(initialNotification, user);
+      const navigate = getNotificationNavigation(initialNotification.event);
       if (navigate) {
         navigate(RootNavigation);
       }
@@ -109,6 +107,7 @@ function Navigation() {
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMatchDetail" component={LianeMatchDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }

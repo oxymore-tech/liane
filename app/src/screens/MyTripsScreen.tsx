@@ -90,8 +90,17 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
     return renderLianeItem({ item, index, section });
   }
 
+  // else render join request
+  const { navigation } = useAppNavigation();
   return (
-    <Pressable onPress={() => {}} style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+    <Pressable
+      onPress={() => {
+        navigation.navigate({
+          name: "LianeJoinRequestDetail",
+          params: { request: item }
+        });
+      }}
+      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <View>
         <View style={{ flexGrow: 1, marginRight: 40 }}>
           <JoinRequestSegmentOverview request={item} />

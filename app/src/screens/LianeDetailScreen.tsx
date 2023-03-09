@@ -6,16 +6,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { formatMonthDay, formatTime } from "@/api/i18n";
+import { formatDateTime } from "@/api/i18n";
 import { AppPressable } from "@/components/base/AppPressable";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
 import { DetailedWayPointView } from "@/components/trip/WayPointsView";
+import { TripOverview } from "@/components/map/TripOverviewMap";
 
 const LianeDetail = ({ liane }: { liane: Liane }) => {
   const { user } = useContext(AppContext);
   const { navigation } = useAppNavigation<"LianeDetail">();
   const currentUserIsOwner = liane.createdBy === user!.id;
+  const dateTime = formatDateTime(new Date(liane.departureTime));
   return (
     <Column>
       <View style={styles.section}>
@@ -32,9 +34,7 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
           ]}
           spacing={8}>
           <AppIcon name={"calendar-outline"} />
-          <AppText style={{ fontSize: 16 }}>
-            {`${formatMonthDay(new Date(liane.departureTime))} à ${formatTime(new Date(liane.departureTime))}`}
-          </AppText>
+          <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
         </Row>
         <Row
           style={[
@@ -48,6 +48,9 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
           <AppText style={{ fontSize: 16 }}>{liane.members.length + " membre" + (liane.members.length > 1 ? "s" : "")}</AppText>
         </Row>
       </Column>
+      <View style={{ paddingHorizontal: 24 }}>
+        <TripOverview params={{ liane }} />
+      </View>
       <View style={styles.separator} />
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
         <View

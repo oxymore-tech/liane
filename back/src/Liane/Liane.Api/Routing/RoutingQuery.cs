@@ -1,13 +1,22 @@
+using System.Collections.Immutable;
+using System.Text.Json.Serialization;
+
 namespace Liane.Api.Routing;
 
 public sealed class RoutingQuery
 {
+
     public RoutingQuery(LatLng start, LatLng end)
     {
-        Start = start;
-        End = end;
+        Coordinates = ImmutableList.Create(start, end);
     }
 
-    public LatLng Start { get; }
-    public LatLng End { get; }
+    [JsonConstructor]
+    public RoutingQuery(ImmutableList<LatLng> coordinates)
+    {
+      Coordinates = coordinates;
+    }
+
+    public ImmutableList<LatLng> Coordinates { get; }
+
 }
