@@ -1,7 +1,6 @@
 using System;
 using System.Text.Json;
 using Liane.Api.Notification;
-using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Json;
 using NUnit.Framework;
 
@@ -23,7 +22,7 @@ public class NotificationJsonTest
   {
     var notification = new NotificationPayload.WithEvent<string>("id", DateTime.Parse("2023-03-03"), "ok");
     var actual = JsonSerializer.Serialize<NotificationPayload>(notification, options);
-    Assert.AreEqual("{\"id\":\"id\",\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
+    Assert.AreEqual("{\"id\":\"id\",\"seen\":false,\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
   }
   
     [Test]

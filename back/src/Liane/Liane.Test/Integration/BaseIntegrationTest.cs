@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
@@ -8,8 +9,8 @@ using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
+using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
-using Liane.Test.Mock;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -19,6 +20,8 @@ namespace Liane.Test.Integration;
 
 public abstract class BaseIntegrationTest
 {
+  private static readonly HashSet<string> DbNames = new();
+
   protected IMongoDatabase Db = null!;
   protected ServiceProvider ServiceProvider = null!;
 
@@ -41,11 +44,11 @@ public abstract class BaseIntegrationTest
   public void EnsureSchema()
   {
     var settings = GetMongoSettings();
-    Db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), $"liane_test_{GetType().Name.ToTinyName()}_{TestContext.CurrentContext.Test.Name.ToTinyName()}");
+    Db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), GetUniqueDbName());
 
     var services = new ServiceCollection();
     var osrmClient = GetOsrmClient();
-    services.AddService(RallyingPointServiceMock.CreateMockRallyingPointService(Db));
+    services.AddService(new RallyingPointServiceImpl(Db, new TestLogger<RallyingPointServiceImpl>()));
     services.AddService<IOsrmService>(osrmClient);
     services.AddTransient<IRoutingService, RoutingServiceImpl>();
 
@@ -82,5 +85,18 @@ public abstract class BaseIntegrationTest
     var osrmUrl = Environment.GetEnvironmentVariable("OSRM_URL") ?? "http://liane.gjini.co:5000";
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri(osrmUrl)));
     return osrmClient;
+  }
+
+  private string GetUniqueDbName()
+  {
+    var baseName = $"liane_test_{GetType().Name.ToTinyName()}_{TestContext.CurrentContext.Test.Name.ToTinyName()}";
+    var index = 1;
+    while (!DbNames.Add(baseName))
+    {
+      baseName = $"{baseName}_{index}";
+      index++;
+    }
+
+    return baseName;
   }
 }

@@ -37,14 +37,14 @@ public sealed class LianeController : ControllerBase
     var current = currentContext.CurrentResource<Api.Trip.Liane>();
     return current ?? await lianeService.Get(id);
   }
-  
+
   [HttpPost("{id}/request")]
   [RequiresAccessLevel(ResourceAccessLevel.Any, typeof(Api.Trip.Liane))] // Check resource exits
   public async Task<JoinLianeRequest> Join([FromRoute] string id, [FromBody] JoinLianeRequest request)
   {
-    return await joinLianeRequestService.Create(request with {TargetLiane = id}, currentContext.CurrentUser().Id);
+    return await joinLianeRequestService.Create(request with { TargetLiane = id }, currentContext.CurrentUser().Id);
   }
-  
+
   [HttpGet("{id}/request")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<PaginatedResponse<JoinLianeRequest>> GetLianeRequests([FromRoute] string id, [FromQuery] Pagination pagination)
@@ -52,14 +52,14 @@ public sealed class LianeController : ControllerBase
     // Get requests linked to a particular Liane
     return await joinLianeRequestService.ListLianeRequests(id, pagination);
   }
-  
-   
+
+
   [HttpGet("request/{id}")]
   public async Task<JoinLianeRequestDetailed> GetDetailedLianeRequest([FromRoute] string id)
   {
     return await joinLianeRequestService.GetDetailedRequest(id);
   }
-  
+
   [HttpPatch("request/{id}")]
   public async Task SetStatus([FromRoute] string id, [FromQuery] int? accept)
   {
@@ -67,12 +67,19 @@ public sealed class LianeController : ControllerBase
     if (accept == 1) await joinLianeRequestService.AcceptJoinRequest(currentUser, id);
     else await joinLianeRequestService.RefuseJoinRequest(currentUser, id);
   }
-  
+
   [HttpGet("request")]
   public async Task<PaginatedResponse<JoinLianeRequestDetailed>> ListUserRequests([FromQuery] Pagination pagination)
   {
-    // Get user's requests 
     return await joinLianeRequestService.ListUserRequests(currentContext.CurrentUser().Id, pagination);
+  }
+
+  [HttpGet("display")]
+  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2)
+  {
+    var from = new LatLng(lat, lng);
+    var to = new LatLng(lat2, lng2);
+    return await lianeService.Display(from, to);
   }
 
   [HttpPost("match")]

@@ -12,11 +12,20 @@ public static class JsonSerializerSettings
     new RefJsonConverterFactory(),
     new CursorJsonConverter(),
     new JsonStringEnumConverter(),
-    new NotificationJsonConverter()
+    new NotificationJsonConverter(),
+    new LngLatTupleConverter()
   };
 
   private static readonly JsonNamingPolicy NamingPolicy = JsonNamingPolicy.CamelCase;
-  
+
+  public static JsonSerializerOptions TestJsonOptions()
+  {
+    var options = new JsonSerializerOptions();
+    ConfigureOptions(options);
+    options.WriteIndented = true;
+    return options;
+  }
+
   public static void ConfigureOptions(JsonSerializerOptions options)
   {
     foreach (var converter in Converters)

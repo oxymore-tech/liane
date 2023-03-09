@@ -10,6 +10,9 @@ using Liane.Service.Internal.Osrm;
 using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing;
+
+using LngLatTuple = Tuple<double, double>;
+
 public sealed class RoutingServiceImpl : IRoutingService
 {
     private readonly IOsrmService osrmService;
@@ -34,14 +37,14 @@ public sealed class RoutingServiceImpl : IRoutingService
       var geojson = routeResponse.Routes[0].Geometry;
       var duration = routeResponse.Routes[0].Duration;
       var distance = routeResponse.Routes[0].Distance;
-      return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
+      return new Route(geojson.Coordinates, duration, distance);
     }
 
     public async Task<ImmutableList<Route>> GetAlternatives(RoutingQuery query)
     {
         var coordinates = ImmutableList.Create(query.Start, query.End);
         var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
-        return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates.ToLatLng(), r.Duration, r.Distance))
+        return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
             .ToImmutableList();
     }
 
@@ -61,10 +64,10 @@ public sealed class RoutingServiceImpl : IRoutingService
             duration = query.Duration;
         }
 
-        var coordinates = ImmutableList.Create(query.Start, wayPoint, query.End);
-        var routeResponse = await osrmService.Route(coordinates, overview: "full");
+        var input = ImmutableList.Create(query.Start, wayPoint, query.End);
+        var routeResponse = await osrmService.Route(input, overview: "full");
 
-        coordinates = routeResponse.Routes[0].Geometry.Coordinates.ToLatLng();
+        var coordinates = routeResponse.Routes[0].Geometry.Coordinates;
         var newDuration = routeResponse.Routes[0].Duration;
         var newDistance = routeResponse.Routes[0].Distance;
         var delta = duration - newDuration;
@@ -101,7 +104,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         if (Math.Abs(duration - newDuration) > 0 && Math.Abs(distance - newDistance) > 0)
         {
             // Then the fastest route not passing by the detourPoint is simply the fastestRoute and delta = 0
-            return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -1);
+            return new DeltaRoute(ImmutableList<Tuple<double, double>>.Empty, duration, distance, -1);
         }
 
         // Else find the steps where the route cross the detourPoint
@@ -142,7 +145,7 @@ public sealed class RoutingServiceImpl : IRoutingService
                 if (stepsId < 0)
                 {
                     // No solution
-                    return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -2);
+                    return new DeltaRoute(ImmutableList<LngLatTuple>.Empty, duration, distance, -2);
                 }
 
                 startIntersections = routeResponse.Routes[0].Legs[0].Steps[stepsId].Intersections;
@@ -175,7 +178,7 @@ public sealed class RoutingServiceImpl : IRoutingService
             if (stepsId > maxStepsId)
             {
                 // No solution
-                return new DeltaRoute(geojson.Coordinates.ToLatLng(), duration, distance, -3);
+                return new DeltaRoute(geojson.Coordinates, duration, distance, -3);
             }
 
             endIntersections = routeResponse.Routes[0].Legs[1].Steps[stepsId].Intersections;
@@ -195,7 +198,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         }
 
         // No solution
-        return new DeltaRoute(ImmutableList.Create<LatLng>(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
+        return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
     }
     
    
@@ -208,7 +211,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         var order = 0;
         foreach (var wp in route.Coordinates)
         {
-            var closestPoint = await rallyingPointService.Snap(new LatLng(wp.Lat, wp.Lng));
+            var closestPoint = await rallyingPointService.Snap(wp.ToLatLng());
 
             if (closestPoint == null || rallyingPoints.Contains(closestPoint))
             {
