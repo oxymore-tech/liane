@@ -26,6 +26,11 @@ const AppMapView = () => {
   const [lianeDisplay, setLianeDisplay] = useState<LianeDisplay>();
 
   const position = services.location.getLastKnownLocation();
+
+  if (!position) {
+    return <></>;
+  }
+
   const center = [position.lng, position.lat];
   const onRegionChange = async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
     const { from, to } = bboxToLatLng(feature.properties.visibleBounds);
