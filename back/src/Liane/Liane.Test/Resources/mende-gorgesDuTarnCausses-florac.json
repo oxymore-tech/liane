@@ -5,7 +5,7 @@
       "name": "Rue de la Libert\u00E9",
       "location": [
         3.499084,
-        3.499084
+        44.518149
       ],
       "distance": 13.990154,
       "hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
@@ -15,7 +15,7 @@
       "name": "Route de Florac",
       "location": [
         3.414941,
-        3.414941
+        44.366035
       ],
       "distance": 101.209946,
       "hint": "HhbPgEsWz4AOAAAACgAAAC4CAAAFAAAAPMt_QVIDLkE8LjNE7j3DQA4AAAAKAAAALgIAAAUAAACVHgAAnRs0ANP4pAI5GzQAR_WkAh4ALxEEBMYt",
@@ -25,7 +25,7 @@
       "name": "",
       "location": [
         3.582862,
-        3.582862
+        44.32323
       ],
       "distance": 607.20026,
       "hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
@@ -37,7 +37,7 @@
       "distance": 55818.1,
       "duration": 3661.1,
       "weight": 3661.1,
-      "weight_name": "routability",
+      "weightName": "routability",
       "geometry": null,
       "legs": [
         {

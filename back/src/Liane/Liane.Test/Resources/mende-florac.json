@@ -5,7 +5,7 @@
       "name": "Rue de la Libert\u00E9",
       "location": [
         3.499084,
-        3.499084
+        44.518149
       ],
       "distance": 13.990154,
       "hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
@@ -15,7 +15,7 @@
       "name": "",
       "location": [
         3.582862,
-        3.582862
+        44.32323
       ],
       "distance": 607.20026,
       "hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
@@ -27,7 +27,7 @@
       "distance": 38014.7,
       "duration": 2330.7,
       "weight": 2330.7,
-      "weight_name": "routability",
+      "weightName": "routability",
       "geometry": null,
       "legs": [
         {
