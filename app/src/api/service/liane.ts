@@ -45,7 +45,7 @@ export class LianeServiceClient implements LianeService {
   }
 
   display(from: LatLng, to: LatLng) {
-    return get<LianeDisplay>("/liane/display", { params: { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lat } });
+    return get<LianeDisplay>("/liane/display", { params: { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng } });
   }
 
   join(joinRequest: JoinLianeRequest) {

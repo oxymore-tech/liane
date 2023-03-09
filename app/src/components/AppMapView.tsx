@@ -35,14 +35,14 @@ const AppMapView = () => {
 
   return (
     <MapLibreGL.MapView onRegionDidChange={onRegionChange} style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
-      <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={center} />
+      <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={10} centerCoordinate={center} />
       {lianeDisplay?.points.map(p => (
         <MapLibreGL.MarkerView
-          coordinate={toGeoJson(p.rallyingPoint.location)}
+          key={p.rallyingPoint.id!}
           id={p.rallyingPoint.id!}
-          title={p.rallyingPoint.label}
-          key={p.rallyingPoint.id!}>
-          <LocationPin fill={AppColorPalettes.orange[700]} />
+          coordinate={toGeoJson(p.rallyingPoint.location)}
+          title={p.rallyingPoint.label}>
+          <LocationPin fill={p.lianes.length > 0 ? AppColorPalettes.orange[700] : AppColorPalettes.gray[400]} />
         </MapLibreGL.MarkerView>
       ))}
     </MapLibreGL.MapView>

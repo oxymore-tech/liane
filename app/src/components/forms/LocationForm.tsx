@@ -28,7 +28,7 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
     //   const [displayedRallyingPoints, setDisplayedRallyingPoints] = useState<RallyingPoint[]>([]);
     const onRegionChange = async c => {
       // TODO cache or use timeout
-      console.log(c, await mapRef.current?.getVisibleBounds());
+      //console.log(c, await mapRef.current?.getVisibleBounds());
       //const rallyingPoints = await services.rallyingPoint.search("", { lng: c.geometry.coordinates[0], lat: c.geometry.coordinates[1] });
       //   setDisplayedRallyingPoints(rallyingPoints);
     };

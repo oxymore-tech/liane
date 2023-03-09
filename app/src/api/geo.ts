@@ -7,13 +7,18 @@ export type BoudingBox = Readonly<{
 }>;
 
 export function bboxToLatLng(bbox: GeoJSON.Position[]): BoudingBox {
-  const [[lng, lat], [lng2, lat2]] = bbox;
+  const [upperLeft, bottomRight] = bbox;
   return {
-    from: { lat, lng },
-    to: { lat: lat2, lng: lng2 }
+    from: toLatLng(upperLeft),
+    to: toLatLng(bottomRight)
   };
 }
 
 export function toGeoJson(latLng: LatLng): GeoJSON.Position {
   return [latLng.lng, latLng.lat];
+}
+
+export function toLatLng(position: GeoJSON.Position): LatLng {
+  const [lng, lat] = position;
+  return { lat, lng };
 }
