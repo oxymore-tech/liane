@@ -1,4 +1,5 @@
 import { TimeInSeconds } from "@/util/datetime";
+import { GeoJSON } from "geojson";
 export type Identity = Readonly<{
   id?: string;
 }>;
@@ -128,7 +129,7 @@ export type PointDisplay = Readonly<{
 }>;
 
 export type LianeSegment = Readonly<{
-  coordinates: LngLat[];
+  coordinates: GeoJSON.Position[];
   lianes: Liane[];
 }>;
 
