@@ -1,10 +1,10 @@
 import { LatLng, RallyingPoint } from "@/api";
-import React, { useContext, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { Pressable, View } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { MapStyle } from "@/api/location";
 import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointInput } from "@/components/RallyingPointInput";
@@ -14,23 +14,30 @@ import { AppText } from "@/components/base/AppText";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { FormComponent } from "@/screens/lianeWizard/Forms";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
+import { AppPressable } from "@/components/base/AppPressable";
 
 export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormController(
   ({ value, onChange, fieldState: { error, invalid } }: BaseFormComponentProps<RallyingPoint | undefined>) => {
     const { services } = useContext(AppContext);
     const [position, setCurrentPosition] = useState<LatLng | undefined>(services.location.getLastKnownLocation());
+    const [recentLocations, setRecentLocations] = useState<RallyingPoint[]>([]);
     const center = value ? [value.location.lng, value.location.lat] : undefined;
     const cameraRef = useRef<MapLibreGL.Camera>(null);
     const mapRef = useRef<MapLibreGL.MapView>(null);
     // Listen to keyboard state to hide popup
     const keyboardsIsVisible = useKeyboardState();
 
-    //   const [displayedRallyingPoints, setDisplayedRallyingPoints] = useState<RallyingPoint[]>([]);
-    const onRegionChange = async c => {
-      // TODO cache or use timeout
-      //console.log(c, await mapRef.current?.getVisibleBounds());
-      //const rallyingPoints = await services.rallyingPoint.search("", { lng: c.geometry.coordinates[0], lat: c.geometry.coordinates[1] });
-      //   setDisplayedRallyingPoints(rallyingPoints);
+    useEffect(() => {
+      services.location.getRecentLocations().then(r => {
+        setRecentLocations(r);
+      });
+    }, [services]);
+
+    const updateValue = (v: RallyingPoint | undefined) => {
+      onChange(v);
+      if (v) {
+        services.location.cacheRecentLocation(v).then(updated => setRecentLocations(updated));
+      }
     };
 
     const locationButton = useMemo(
@@ -45,7 +52,7 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
               }
               const closestPoint = await services.rallyingPoint.snap(currentLocation);
               setCurrentPosition(closestPoint.location);
-              onChange(closestPoint);
+              updateValue(closestPoint);
             } catch (e) {
               console.error("location error :", e);
               // TODO show message to user
@@ -58,43 +65,28 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
     );
 
     return (
-      <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
-        <View>
-          <MapLibreGL.MapView
-            ref={mapRef}
-            style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
-            styleJSON={MapStyle}
-            logoEnabled={false}
-            attributionEnabled={false}
-            onRegionDidChange={onRegionChange}>
-            <MapLibreGL.Camera
-              ref={cameraRef}
-              maxZoomLevel={15}
-              minZoomLevel={5}
-              zoomLevel={11}
-              animationMode={"moveTo"}
-              centerCoordinate={center || (position && [position.lng, position.lat])}
-              padding={{ paddingBottom: value ? 100 : 0 }}
-            />
+      <Column style={{ flex: 1, padding: 16, width: "100%" }} spacing={8}>
+        <View style={{ width: "100%", zIndex: 5 }}>
+          <RallyingPointInput placeholder="Chercher une adresse" onChange={updateValue} value={value} trailing={locationButton} />
+        </View>
+        {!value && (
+          <View style={{ flexGrow: 1, backgroundColor: WithAlpha(AppColors.white, 0.6), width: "100%", borderRadius: 16, paddingVertical: 16 }}>
+            {recentLocations.map(r => (
+              <AppPressable key={r.id} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(r)}>
+                <Column>
+                  <AppText style={{ fontWeight: "bold" }}>{r.label}</AppText>
+                  <AppText numberOfLines={1}>{r.address}</AppText>
+                  <AppText numberOfLines={1}>{r.zipCode + ", " + r.city}</AppText>
+                </Column>
+              </AppPressable>
+            ))}
+          </View>
+        )}
 
-            {value && (
-              <MapLibreGL.MarkerView coordinate={[value.location.lng, value.location.lat]} id={value.id!}>
-                <LocationPin fill={AppColorPalettes.orange[700]} />
-              </MapLibreGL.MarkerView>
-            )}
-          </MapLibreGL.MapView>
-        </View>
-        <View style={{ position: "absolute", top: 16, left: 24, right: 24 }}>
-          <RallyingPointInput placeholder="Chercher une adresse" onChange={onChange} value={value} trailing={locationButton} />
-        </View>
         {!keyboardsIsVisible && invalid && (
           <Row
             spacing={16}
             style={{
-              position: "absolute",
-              bottom: 16,
-              left: 24,
-              right: 24,
               backgroundColor: AppColors.white,
               borderRadius: 16,
               alignItems: "center",
@@ -107,37 +99,66 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
             </AppText>
           </Row>
         )}
-        {!keyboardsIsVisible && value && !invalid && (
-          <Row
-            spacing={16}
-            style={{
-              position: "absolute",
-              bottom: 16,
-              left: 24,
-              right: 24,
-              backgroundColor: AppColors.white,
-              borderRadius: 16,
-              height: 80,
-              alignItems: "center",
-              padding: 16
-            }}>
-            <Pressable
-              onPress={() => {
-                cameraRef.current?.flyTo(center);
-              }}>
-              <LocationPin fill={AppColorPalettes.orange[700]} />
-            </Pressable>
-            <Column>
-              <AppText style={{ fontWeight: "bold" }}>{value.label}</AppText>
-              <AppText numberOfLines={1}>{value.address}</AppText>
-              <AppText numberOfLines={1}>{value.zipCode + ", " + value.city}</AppText>
-            </Column>
-            <View style={{ position: "absolute", top: -60, right: 8, flexGrow: 1, alignItems: "flex-end", paddingRight: 16 }}>
-              <MonkeySmilingVector maxWidth={80} />
-            </View>
-          </Row>
+
+        {value && (
+          <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
+            <MapLibreGL.MapView
+              ref={mapRef}
+              style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
+              styleJSON={MapStyle}
+              logoEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              scrollEnabled={false}
+              attributionEnabled={false}>
+              <MapLibreGL.Camera
+                ref={cameraRef}
+                maxZoomLevel={15}
+                minZoomLevel={5}
+                zoomLevel={11}
+                animationMode={"moveTo"}
+                centerCoordinate={center || (position && [position.lng, position.lat])}
+                padding={{ paddingBottom: value ? 100 : 0 }}
+              />
+
+              <MapLibreGL.MarkerView coordinate={[value.location.lng, value.location.lat]} id={value.id!} key={value.id!}>
+                <LocationPin fill={AppColorPalettes.orange[700]} />
+              </MapLibreGL.MarkerView>
+            </MapLibreGL.MapView>
+
+            {!keyboardsIsVisible && !invalid && (
+              <Row
+                spacing={16}
+                style={{
+                  position: "absolute",
+                  bottom: 16,
+                  left: 24,
+                  right: 24,
+                  backgroundColor: AppColors.white,
+                  borderRadius: 16,
+                  height: 80,
+                  alignItems: "center",
+                  padding: 16
+                }}>
+                <Pressable
+                  onPress={() => {
+                    cameraRef.current?.flyTo(center);
+                  }}>
+                  <LocationPin fill={AppColorPalettes.orange[700]} />
+                </Pressable>
+                <Column>
+                  <AppText style={{ fontWeight: "bold" }}>{value.label}</AppText>
+                  <AppText numberOfLines={1}>{value.address}</AppText>
+                  <AppText numberOfLines={1}>{value.zipCode + ", " + value.city}</AppText>
+                </Column>
+                <View style={{ position: "absolute", top: -60, right: 8, flexGrow: 1, alignItems: "flex-end", paddingRight: 16 }}>
+                  <MonkeySmilingVector maxWidth={80} />
+                </View>
+              </Row>
+            )}
+          </View>
         )}
-      </View>
+      </Column>
     );
   }
 );

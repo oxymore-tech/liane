@@ -1,6 +1,6 @@
 import { Liane } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -19,81 +19,83 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
   const currentUserIsOwner = liane.createdBy === user!.id;
   const dateTime = formatDateTime(new Date(liane.departureTime));
   return (
-    <Column>
-      <View style={styles.section}>
-        <DetailedWayPointView wayPoints={liane.wayPoints} departureTime={liane.departureTime} />
-      </View>
-      <View style={styles.separator} />
-      <Column style={styles.tagsContainer} spacing={8}>
-        <Row
-          style={[
-            styles.tag,
-            {
-              backgroundColor: AppColorPalettes.yellow[200]
-            }
-          ]}
-          spacing={8}>
-          <AppIcon name={"calendar-outline"} />
-          <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
-        </Row>
-        <Row
-          style={[
-            styles.tag,
-            {
-              backgroundColor: AppColorPalettes.gray[200]
-            }
-          ]}
-          spacing={8}>
-          <AppIcon name={"people-outline"} />
-          <AppText style={{ fontSize: 16 }}>{liane.members.length + " membre" + (liane.members.length > 1 ? "s" : "")}</AppText>
-        </Row>
-      </Column>
-      <View style={{ paddingHorizontal: 24 }}>
-        <TripOverview params={{ liane }} />
-      </View>
-      <View style={styles.separator} />
-      <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
-        <View
-          style={{ backgroundColor: liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg, padding: 12, borderRadius: 52 }}>
-          <AppCustomIcon name={liane.driver ? "car-check-mark" : "car-strike-through"} size={28} />
+    <ScrollView>
+      <Column>
+        <View style={styles.section}>
+          <DetailedWayPointView wayPoints={liane.wayPoints} departureTime={liane.departureTime} />
         </View>
-        <Column spacing={2}>
-          <AppText style={{ fontSize: 16 }}>{liane.driver ? "John Doe" : "Aucun conducteur"} </AppText>
-          {__DEV__ && <AppText style={{ fontSize: 12 }}>{liane.driver} </AppText>}
+        <View style={styles.separator} />
+        <Column style={styles.tagsContainer} spacing={8}>
+          <Row
+            style={[
+              styles.tag,
+              {
+                backgroundColor: AppColorPalettes.yellow[200]
+              }
+            ]}
+            spacing={8}>
+            <AppIcon name={"calendar-outline"} />
+            <AppText style={{ fontSize: 16 }}>{dateTime}</AppText>
+          </Row>
+          <Row
+            style={[
+              styles.tag,
+              {
+                backgroundColor: AppColorPalettes.gray[200]
+              }
+            ]}
+            spacing={8}>
+            <AppIcon name={"people-outline"} />
+            <AppText style={{ fontSize: 16 }}>{liane.members.length + " membre" + (liane.members.length > 1 ? "s" : "")}</AppText>
+          </Row>
         </Column>
-      </Row>
-      <View style={styles.separator} />
+        <View style={{ paddingHorizontal: 24 }}>
+          <TripOverview params={{ liane }} />
+        </View>
+        <View style={styles.separator} />
+        <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
+          <View
+            style={{ backgroundColor: liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg, padding: 12, borderRadius: 52 }}>
+            <AppCustomIcon name={liane.driver ? "car-check-mark" : "car-strike-through"} size={28} />
+          </View>
+          <Column spacing={2}>
+            <AppText style={{ fontSize: 16 }}>{liane.driver ? "John Doe" : "Aucun conducteur"} </AppText>
+            {__DEV__ && <AppText style={{ fontSize: 12 }}>{liane.driver} </AppText>}
+          </Column>
+        </Row>
+        <View style={styles.separator} />
 
-      <Column spacing={8} style={styles.actionsContainer}>
-        {liane.group && (
-          <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}>
-            <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-              <AppIcon name={"message-circle-outline"} />
-              <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
-              <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-                <AppIcon name={"arrow-ios-forward-outline"} />
-              </View>
-            </Row>
-          </AppPressable>
-        )}
-        {!liane.group && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
-        {currentUserIsOwner && (
-          <AppPressable
-            backgroundStyle={[styles.rowActionContainer]}
-            onPress={() => {
-              // TODO
-            }}>
-            <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-              <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
-              <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Supprimer l'annonce</AppText>
-              <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-                <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
-              </View>
-            </Row>
-          </AppPressable>
-        )}
+        <Column spacing={8} style={styles.actionsContainer}>
+          {liane.group && (
+            <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}>
+              <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+                <AppIcon name={"message-circle-outline"} />
+                <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
+                <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                  <AppIcon name={"arrow-ios-forward-outline"} />
+                </View>
+              </Row>
+            </AppPressable>
+          )}
+          {!liane.group && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
+          {currentUserIsOwner && (
+            <AppPressable
+              backgroundStyle={[styles.rowActionContainer]}
+              onPress={() => {
+                // TODO
+              }}>
+              <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+                <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
+                <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Supprimer l'annonce</AppText>
+                <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                  <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
+                </View>
+              </Row>
+            </AppPressable>
+          )}
+        </Column>
       </Column>
-    </Column>
+    </ScrollView>
   );
 };
 

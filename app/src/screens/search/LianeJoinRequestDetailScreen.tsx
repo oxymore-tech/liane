@@ -1,6 +1,6 @@
-import { CompatibleMatch, JoinLianeRequestDetailed } from "@/api";
+import { Compatible, JoinLianeRequestDetailed } from "@/api";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -31,7 +31,7 @@ export const LianeJoinRequestDetailScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeJoinRequestDetail">();
   const request: JoinLianeRequestDetailed = route.params!.request;
   const insets = useSafeAreaInsets();
-  const isExactMatch = request.matchType.type === "ExactMatch";
+  const isExactMatch = request.match.type === "Exact";
 
   const formattedDepartureTime = formatDateTime(new Date(request.targetLiane.departureTime));
   const formattedSeatCount = formatSeatCount(request.seats);
@@ -45,77 +45,79 @@ export const LianeJoinRequestDetailScreen = () => {
         </Pressable>
         <AppText style={styles.title}>Détails du trajet</AppText>
       </Row>
-      <View style={styles.section}>
-        <LianeDetailedMatchView
-          from={request.from}
-          to={request.to}
-          departureTime={request.targetLiane.departureTime}
-          originalTrip={request.targetLiane.wayPoints}
-          newTrip={request.wayPoints}
-        />
-      </View>
-      <View style={styles.separator} />
-      <Column style={styles.tagsContainer} spacing={8}>
-        <Row
-          style={[
-            styles.tag,
-            {
-              backgroundColor: AppColorPalettes.yellow[100]
-            }
-          ]}
-          spacing={8}>
-          <AppIcon name={"calendar-outline"} />
-          <AppText style={{ fontSize: 16 }}>{formattedDepartureTime}</AppText>
-        </Row>
-        <Row
-          style={[
-            styles.tag,
-            {
-              backgroundColor: AppColorPalettes.gray[200]
-            }
-          ]}
-          spacing={8}>
-          <AppIcon name={"people-outline"} />
-          <AppText style={{ fontSize: 16 }}>{formattedSeatCount}</AppText>
-        </Row>
-
-        {isExactMatch && <TripOverview params={{ liane: request.targetLiane }} />}
-        {!isExactMatch && (
-          <Column>
-            <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: request.wayPoints }} />
-            <AppText>Ce trajet fait faire un détour de {formatDuration((request.matchType as CompatibleMatch).deltaInSeconds)} à John Doe</AppText>
-          </Column>
-        )}
-      </Column>
-      <View style={styles.separator} />
-      <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
-        <View
-          style={{
-            backgroundColor: request.targetLiane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
-            padding: 12,
-            borderRadius: 52
-          }}>
-          <AppCustomIcon name={request.targetLiane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+      <ScrollView>
+        <View style={styles.section}>
+          <LianeDetailedMatchView
+            from={request.from}
+            to={request.to}
+            departureTime={request.targetLiane.departureTime}
+            originalTrip={request.targetLiane.wayPoints}
+            newTrip={request.wayPoints}
+          />
         </View>
-        <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
-      </Row>
-      <View style={styles.separator} />
-
-      <Column style={styles.section}>
-        <AppPressable
-          backgroundStyle={[styles.rowActionContainer]}
-          onPress={() => {
-            // TODO
-          }}>
-          <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-            <AppIcon name={"close-outline"} color={ContextualColors.redAlert.text} />
-            <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Annuler la demande</AppText>
-            <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-              <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
-            </View>
+        <View style={styles.separator} />
+        <Column style={styles.tagsContainer} spacing={8}>
+          <Row
+            style={[
+              styles.tag,
+              {
+                backgroundColor: AppColorPalettes.yellow[100]
+              }
+            ]}
+            spacing={8}>
+            <AppIcon name={"calendar-outline"} />
+            <AppText style={{ fontSize: 16 }}>{formattedDepartureTime}</AppText>
           </Row>
-        </AppPressable>
-      </Column>
+          <Row
+            style={[
+              styles.tag,
+              {
+                backgroundColor: AppColorPalettes.gray[200]
+              }
+            ]}
+            spacing={8}>
+            <AppIcon name={"people-outline"} />
+            <AppText style={{ fontSize: 16 }}>{formattedSeatCount}</AppText>
+          </Row>
+
+          {isExactMatch && <TripOverview params={{ liane: request.targetLiane }} />}
+          {!isExactMatch && (
+            <Column>
+              <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: request.wayPoints }} />
+              <AppText>Ce trajet fait faire un détour de {formatDuration((request.match as Compatible).deltaInSeconds)} à John Doe</AppText>
+            </Column>
+          )}
+        </Column>
+        <View style={styles.separator} />
+        <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
+          <View
+            style={{
+              backgroundColor: request.targetLiane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+              padding: 12,
+              borderRadius: 52
+            }}>
+            <AppCustomIcon name={request.targetLiane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+          </View>
+          <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
+        </Row>
+        <View style={styles.separator} />
+
+        <Column style={styles.section}>
+          <AppPressable
+            backgroundStyle={[styles.rowActionContainer]}
+            onPress={() => {
+              // TODO
+            }}>
+            <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+              <AppIcon name={"close-outline"} color={ContextualColors.redAlert.text} />
+              <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Annuler la demande</AppText>
+              <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
+              </View>
+            </Row>
+          </AppPressable>
+        </Column>
+      </ScrollView>
     </View>
   );
 };

@@ -146,7 +146,7 @@ export type ChatMessage = Readonly<
 export type ConversationGroup = Readonly<
   {
     members: {
-      user: Ref<User>;
+      user: User;
       joinedAt: UTCDateTime;
       lastReadAt: UTCDateTime;
     }[];

@@ -1,10 +1,16 @@
-import { LatLng } from "@/api";
+import { LatLng, RallyingPoint } from "@/api";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation from "react-native-geolocation-service";
+import { retrieveAsync, storeAsync } from "@/api/storage";
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
   getLastKnownLocation(): LatLng;
+  cacheRecentLocation(rallyingPoint: RallyingPoint): Promise<RallyingPoint[]>;
+  getRecentLocations(): Promise<RallyingPoint[]>;
 }
+
+const cacheSize = 5;
+const rallyingPointsKey = "rallyingPoints";
 
 export class LocationServiceClient implements LocationService {
   // Default location
@@ -75,6 +81,19 @@ export class LocationServiceClient implements LocationService {
 
     return false;
   };
+  async cacheRecentLocation(rallyingPoint: RallyingPoint): Promise<RallyingPoint[]> {
+    let cachedValues = (await retrieveAsync<RallyingPoint[]>(rallyingPointsKey)) ?? [];
+    cachedValues = cachedValues.filter(v => v.id !== rallyingPoint.id);
+    cachedValues.unshift(rallyingPoint);
+    cachedValues = cachedValues.slice(0, cacheSize);
+    await storeAsync<RallyingPoint[]>(rallyingPointsKey, cachedValues);
+
+    return cachedValues;
+  }
+
+  async getRecentLocations(): Promise<RallyingPoint[]> {
+    return (await retrieveAsync<RallyingPoint[]>(rallyingPointsKey)) ?? [];
+  }
   currentLocation(): Promise<LatLng> {
     return new Promise<LatLng>(async (resolve, reject) => {
       const enabled = await this.hasLocationPermission();

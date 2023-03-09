@@ -44,7 +44,12 @@ export const ChatScreen = () => {
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
 
-  const members = conversation ? conversation.id : ""; //TODO
+  const members = conversation
+    ? conversation.members
+        .filter(m => m.user.id !== user!.id)
+        .map(m => m.user.pseudo)
+        .join(", ")
+    : "";
 
   const appendMessage = (m: ChatMessage) => {
     // console.log([m, ...messages]);
@@ -141,7 +146,14 @@ export const ChatScreen = () => {
 
       <Row
         spacing={16}
-        style={{ backgroundColor: AppColors.darkBlue, padding: 16, paddingBottom: 16 + insets.bottom + 8, marginTop: 8, alignItems: "flex-end" }}>
+        style={{
+          backgroundColor: AppColors.darkBlue,
+          paddingHorizontal: 16,
+          paddingBottom: 12 + insets.bottom,
+          paddingTop: 12,
+          marginTop: 8,
+          alignItems: "flex-end"
+        }}>
         <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
 
         <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
