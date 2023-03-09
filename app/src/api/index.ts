@@ -47,6 +47,8 @@ export type FullUser = Readonly<
   } & User
 >;
 
+export type LngLat = [number, number];
+
 export type LatLng = Readonly<{
   lat: number;
   lng: number;
@@ -104,6 +106,7 @@ export type Liane = Entity &
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
   duration: TimeInSeconds;
+  order: number;
 }>;
 
 export type LianeMember = Readonly<{
@@ -119,10 +122,19 @@ export type UTCDateTime = string;
 // A time in ISO 8601 format
 export type UTCTimeOnly = string;
 
-export type Match = Readonly<{
-  user: Ref<User>;
-  from: Ref<RallyingPoint>;
-  to: Ref<RallyingPoint>;
+export type PointDisplay = Readonly<{
+  rallyingPoint: RallyingPoint;
+  lianes: Liane[];
+}>;
+
+export type LianeSegment = Readonly<{
+  coordinates: LngLat[];
+  lianes: Liane[];
+}>;
+
+export type LianeDisplay = Readonly<{
+  points: PointDisplay[];
+  segments: LianeSegment[];
 }>;
 
 export type ChatMessage = Readonly<
@@ -178,13 +190,14 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type ExactMatch = { type: "ExactMatch" };
-export type CompatibleMatch = { type: "CompatibleMatch"; deltaInSeconds: TimeInSeconds };
+export type Exact = { type: "Exact" };
+export type Compatible = { type: "Compatible"; deltaInSeconds: TimeInSeconds };
+export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{
   liane: Liane;
   wayPoints: WayPoint[];
-  matchData: ExactMatch | CompatibleMatch;
+  match: Match;
   freeSeatsCount: number;
 }>;
 
@@ -235,7 +248,7 @@ export type JoinLianeRequestDetailed = Readonly<
     takeReturnTrip: boolean;
     message: string;
     accepted?: boolean;
-    matchType: ExactMatch | CompatibleMatch;
+    match: Match;
     wayPoints: WayPoint[];
     createdBy?: User;
     createdAt?: UTCDateTime;

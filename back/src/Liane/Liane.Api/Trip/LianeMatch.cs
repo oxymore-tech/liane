@@ -1,21 +1,24 @@
-using System;
 using System.Collections.Immutable;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public abstract record MatchType : IUnion
+[Union]
+public abstract record Match
 {
-  public sealed record ExactMatch : MatchType;
-  public sealed record CompatibleMatch(int DeltaInSeconds) : MatchType;
+  private Match()
+  {
+  }
+
+  public sealed record Exact : Match;
+
+  public sealed record Compatible(int DeltaInSeconds) : Match;
 }
 
-
-
 public sealed record LianeMatch(
-  Liane Liane, 
+  Liane Liane,
   ImmutableSortedSet<WayPoint> WayPoints,
   int FreeSeatsCount,
-  MatchType MatchData
+  Match Match
 );

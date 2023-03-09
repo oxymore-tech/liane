@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Liane.Api.Util.Ref;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
@@ -14,11 +15,11 @@ public sealed class PolymorphicTypeDiscriminatorConvention : IDiscriminatorConve
   {
     return new BsonDocument("_t", typeof(T).Name);
   }
+
   public string ElementName => "_t";
 
   public Type GetActualType(IBsonReader bsonReader, Type nominalType)
   {
-
     var bookmark = bsonReader.GetBookmark();
     bsonReader.ReadStartDocument();
     var foundType = nominalType;
@@ -38,8 +39,11 @@ public sealed class PolymorphicTypeDiscriminatorConvention : IDiscriminatorConve
 
   public BsonValue GetDiscriminator(Type nominalType, Type actualType)
   {
-    if (!actualType.IsAssignableTo(typeof(IUnion)))  throw new Exception($"Cannot use {nameof(PolymorphicTypeDiscriminatorConvention)} for type " + nominalType);
-    
+    if (actualType.GetCustomAttribute(typeof(UnionAttribute)) is null)
+    {
+      throw new Exception($"Cannot use {nameof(PolymorphicTypeDiscriminatorConvention)} for type " + nominalType);
+    }
+
     return actualType.Name;
   }
 }

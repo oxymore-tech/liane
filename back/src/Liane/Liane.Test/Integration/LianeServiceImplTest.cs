@@ -239,15 +239,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Check exact matches
     var expected = createdLianes[4];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<MatchType.ExactMatch>(results.First(m => m.Liane.Id == expected.Id).MatchData);
+    Assert.IsInstanceOf<Match.Exact>(results.First(m => m.Liane.Id == expected.Id).Match);
 
     // Check compatible matches
     expected = createdLianes[0];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<MatchType.CompatibleMatch>(results.First(m => m.Liane.Id == expected.Id).MatchData);
+    Assert.IsInstanceOf<Match.Compatible>(results.First(m => m.Liane.Id == expected.Id).Match);
     expected = createdLianes[2];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<MatchType.CompatibleMatch>(results.First(m => m.Liane.Id == expected.Id).MatchData);
+    Assert.IsInstanceOf<Match.Compatible>(results.First(m => m.Liane.Id == expected.Id).Match);
   }
 
   private LianeRequest[] CreateBaseLianeRequests()

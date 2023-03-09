@@ -32,7 +32,7 @@ export const LianeMatchDetailScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeMatchDetail">();
   const liane: LianeMatch = route.params!.lianeMatch;
   const insets = useSafeAreaInsets();
-  const isExactMatch = liane.matchData.type === "ExactMatch";
+  const isExactMatch = liane.match.type === "ExactMatch";
   const filter = route.params!.filter;
 
   const formattedDepartureTime = formatDateTime(new Date(liane.liane.departureTime));
@@ -88,7 +88,7 @@ export const LianeMatchDetailScreen = () => {
           </Row>
         )}
         {!isExactMatch && (
-          <AppText>Ce trajet fait faire un détour de {formatDuration((liane.matchData as CompatibleMatch).deltaInSeconds)} à John Doe</AppText>
+          <AppText>Ce trajet fait faire un détour de {formatDuration((liane.match as CompatibleMatch).deltaInSeconds)} à John Doe</AppText>
         )}
       </Column>
       <View style={styles.separator} />

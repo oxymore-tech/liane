@@ -1,12 +1,13 @@
 import React, { useContext, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import MapLibreGL, { Logger } from "@maplibre/maplibre-react-native";
+import { StyleSheet } from "react-native";
+import MapLibreGL, { Logger, RegionPayload } from "@maplibre/maplibre-react-native";
 import { MapStyle } from "@/api/location";
-import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/ContextProvider";
-import { LatLng, RallyingPoint } from "@/api";
+import { LianeDisplay } from "@/api";
 import LocationPin from "@/assets/location_pin.svg";
 import { AppColorPalettes } from "@/theme/colors";
+import { GeoJSON } from "geojson";
+import { bboxToLatLng, toGeoJson } from "@/api/geo";
 
 MapLibreGL.setAccessToken(null);
 
@@ -22,35 +23,25 @@ Logger.setLogCallback(log => {
 
 const AppMapView = () => {
   const { services } = useContext(AppContext);
-  const [position, _] = useState<LatLng | undefined>(services.location.getLastKnownLocation());
+  const [lianeDisplay, setLianeDisplay] = useState<LianeDisplay>();
 
-  const [displayedRallyingPoints, setDisplayedRallyingPoints] = useState<RallyingPoint[]>([]);
-  if (position) {
-    const coordinatesA = [position.lng, position.lat];
-    const onRegionChange = async c => {
-      // const lowerLeft = c.properties.visibleBounds[1];
-      // const upperRight = c.properties.visibleBounds[0];
-      //const rallyingPoints = await services.rallyingPoint.view({ lat: lowerLeft[1], lng: lowerLeft[0] }, { lat: upperRight[1], lng: upperRight[0] });
-      // TODO   console.log(c, c.properties.visibleBounds);
-      // setDisplayedRallyingPoints(rallyingPoints);
-    };
+  const position = services.location.getLastKnownLocation();
+  const center = [position.lng, position.lat];
+  const onRegionChange = async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
+    const { from, to } = bboxToLatLng(feature.properties.visibleBounds);
+    const r = await services.liane.display(from, to);
+    setLianeDisplay(r);
+  };
 
-    return (
-      <MapLibreGL.MapView onRegionDidChange={onRegionChange} style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
-        <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={coordinatesA} />
-        {displayedRallyingPoints.map(rp => (
-          <MapLibreGL.MarkerView coordinate={[rp.location.lng, rp.location.lat]} id={rp.id!}>
-            <LocationPin fill={AppColorPalettes.orange[700]} />
-          </MapLibreGL.MarkerView>
-        ))}
-      </MapLibreGL.MapView>
-    );
-  }
-  // TODO else
   return (
-    <View>
-      <AppText>No map.</AppText>
-    </View>
+    <MapLibreGL.MapView onRegionDidChange={onRegionChange} style={styles.map} styleJSON={MapStyle} logoEnabled={false} attributionEnabled={false}>
+      <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={8} centerCoordinate={center} />
+      {lianeDisplay?.points.map(p => (
+        <MapLibreGL.MarkerView coordinate={toGeoJson(p.rallyingPoint.location)} id={p.rallyingPoint.id!} title={p.rallyingPoint.label}>
+          <LocationPin fill={AppColorPalettes.orange[700]} />
+        </MapLibreGL.MarkerView>
+      ))}
+    </MapLibreGL.MapView>
   );
 };
 
