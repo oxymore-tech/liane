@@ -62,7 +62,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldDisplayTwoLianes()
+  public async Task ShouldDisplay2Lianes()
   {
     var userA = Fakers.FakeDbUsers[0].Id;
 
@@ -92,7 +92,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldDisplayThreeLianes()
+  public async Task ShouldDisplay3Lianes()
   {
     var userA = Fakers.FakeDbUsers[0].Id;
 
@@ -124,7 +124,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldDisplayThreeLianesWithIntersection()
+  public async Task ShouldDisplay3LianesWithIntersection()
   {
     var userA = Fakers.FakeDbUsers[0].Id;
 
@@ -154,7 +154,41 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     AssertJson.AreEqual("Segment.cocures-florac-mende-lecrouzet-rampon.json", actual.Segments);
   }
-  
+
+  [Test]
+  public async Task ShouldDisplay2CrossingLianes()
+  {
+    var userA = Fakers.FakeDbUsers[0].Id;
+
+    var now = DateTime.UtcNow;
+    var liane1Id = ObjectId.Parse("6408a644437b60cfd3b15874").ToString();
+    await InsertLiane(liane1Id, now, userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
+    var liane2Id = ObjectId.Parse("6408a644437b60cfd3b15875").ToString();
+    await InsertLiane(liane2Id, now, userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
+
+    var actual = await testedService.Display(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
+    Assert.IsNotNull(actual);
+
+    // Check we get all points in the requested area
+    CollectionAssert.AreEquivalent(ImmutableList.Create(
+        LabeledPositions.Mende.Id,
+        LabeledPositions.LanuejolsParkingEglise.Id,
+        LabeledPositions.SaintBauzileEglise.Id,
+        LabeledPositions.SaintEtienneDuValdonnezParking.Id,
+        LabeledPositions.RouffiacBoulangerie.Id
+      ),
+      actual.Points.Select(p => p.RallyingPoint.Id));
+    var mendePointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Mende.Id)!;
+    Assert.AreEqual(1, mendePointDisplay.Lianes.Count);
+    Assert.AreEqual(liane1Id, mendePointDisplay.Lianes[0].Id);
+    
+    var lanuejolsPointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.LanuejolsParkingEglise.Id)!;
+    Assert.AreEqual(1, lanuejolsPointDisplay.Lianes.Count);
+    Assert.AreEqual(liane2Id, lanuejolsPointDisplay.Lianes[0].Id);
+
+    AssertJson.AreEqual("Segment.mende-valdonnez-beauzile-lanuejols.json", actual.Segments);
+  }
+
   private async Task InsertLiane(string id, DateTime now, string userA, Ref<RallyingPoint> From, Ref<RallyingPoint> To)
   {
     var departureTime = now.Date.AddDays(1).AddHours(9);

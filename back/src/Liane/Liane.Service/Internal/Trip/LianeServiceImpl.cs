@@ -326,52 +326,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
   }
 
-  private ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
-  {
-    var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
-    var orderedCoordinates = new List<LngLatTuple>();
-    foreach (var lianeSegment in raw)
-    {
-      var lianeSet = new LianeSet(lianeSegment.Lianes.ToHashSet());
-      foreach (var coordinate in lianeSegment.Coordinates)
-      {
-        if (groupedCoordinates.TryGetValue(coordinate, out var currentLianeSet))
-        {
-          groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
-        }else
-        {
-          groupedCoordinates[coordinate] = lianeSet;
-          orderedCoordinates.Add(coordinate);
-        }
-      }
-    }
-    
-    var lianeSegments = new List<LianeSegment>();
-    var coordinates = new List<LngLatTuple>();
-    LianeSet? previousLianeSet = null;
-    foreach (var coordinate in orderedCoordinates)
-    {
-      var currentLianeSet = groupedCoordinates[coordinate];
-      if (previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
-      {
-        var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-        lianeSegments.Add(lianeSegment);
-        coordinates.Clear();
-      }
-
-      coordinates.Add(coordinate);
-      previousLianeSet = currentLianeSet;
-    }
-    
-    if (coordinates.Count > 0 && previousLianeSet != null)
-    {
-      var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-      lianeSegments.Add(lianeSegment);
-    }
-
-    return lianeSegments.ToImmutableList();
-  }
-
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter)
   {
     var matchForDriver = filter.AvailableSeats > 0;
@@ -417,5 +371,66 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var driver = lianeDb.DriverData.CanDrive ? lianeDb.DriverData.User : null;
     var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, driver);
     return new LianeMatch(originalLiane, newWayPoints, lianeDb.TotalSeatCount, matchType);
+  }
+
+  private static ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
+  {
+    var cutCoordinate = new LngLatTuple(-1,-1);
+    var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
+    var orderedCoordinates = new List<LngLatTuple>();
+    foreach (var lianeSegment in raw)
+    {
+      var lianeSet = new LianeSet(lianeSegment.Lianes.ToHashSet());
+      foreach (var coordinate in lianeSegment.Coordinates)
+      {
+        if (groupedCoordinates.TryGetValue(coordinate, out var currentLianeSet))
+        {
+          groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
+          orderedCoordinates.Add(cutCoordinate);
+        }else
+        {
+          groupedCoordinates[coordinate] = lianeSet;
+          orderedCoordinates.Add(coordinate);
+        }
+      }
+    }
+    
+    var lianeSegments = new List<LianeSegment>();
+    var coordinates = new List<LngLatTuple>();
+    LianeSet? previousLianeSet = null;
+    foreach (var coordinate in orderedCoordinates)
+    {
+      if (coordinate.Equals(cutCoordinate))
+      {
+        // Special case the route is already truncated because is crossing another route
+        if (previousLianeSet != null)
+        {
+          var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
+          lianeSegments.Add(lianeSegment);
+        }
+        coordinates.Clear();
+        previousLianeSet = null;
+        continue;
+      }
+      
+      var currentLianeSet = groupedCoordinates[coordinate];
+      if (previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
+      {
+        var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
+        lianeSegments.Add(lianeSegment);
+        coordinates.Clear();
+      }
+
+      coordinates.Add(coordinate);
+      previousLianeSet = currentLianeSet;
+    }
+    
+    if (coordinates.Count > 0 && previousLianeSet != null)
+    {
+      var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
+      lianeSegments.Add(lianeSegment);
+    }
+
+    return lianeSegments.ToImmutableList();
   }
 }
