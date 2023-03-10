@@ -15,7 +15,7 @@ import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { formatDuration } from "@/util/datetime";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { TripCard } from "@/components/TripCard";
-import { TripChangeOverview } from "@/components/map/TripOverviewMap";
+import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -78,7 +78,10 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           {userName} souhaite rejoindre votre Liane en tant que {role} :
         </AppText>
         <TripCard header={headerDate} content={tripContent} />
-        <TripChangeOverview params={{ liane: data.targetLiane, newWayPoints: data.wayPoints }} />
+        <View style={{ backgroundColor: AppColorPalettes.gray[400], borderRadius: 16, overflow: "hidden" }}>
+          {isExactMatch && <TripOverview params={{ liane: data.targetLiane }} />}
+          {!isExactMatch && <TripChangeOverview params={{ liane: data.targetLiane, newWayPoints: data.wayPoints }} />}
+        </View>
         {data.message.length > 0 && (
           <Row spacing={12} style={[styles.card, { alignItems: "center" }]}>
             <AppIcon name={"message-circle-outline"} />

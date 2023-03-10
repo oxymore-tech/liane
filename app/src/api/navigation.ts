@@ -37,12 +37,13 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 export const getNotificationNavigation = ({
   payload
 }: Notification): ((navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void) => {
+  console.log(payload);
   if (isJoinLianeRequest(payload)) {
     if (payload.event.accepted) {
       return navigation => navigation.navigate("LianeDetail", { liane: payload.event.targetLiane });
+    } else {
+      return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.event });
     }
-  } else {
-    return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.event });
   }
 
   return () => {};
