@@ -86,7 +86,7 @@ function Navigation() {
     const initialNotification = services.notification.initialNotification();
     if (user && initialNotification) {
       // check if app was opened by a notification
-      const navigate = getNotificationNavigation(initialNotification.event);
+      const navigate = getNotificationNavigation(initialNotification);
       if (navigate) {
         navigate(RootNavigation);
       }
