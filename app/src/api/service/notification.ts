@@ -1,22 +1,37 @@
-import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import notifee, { EventType } from "@notifee/react-native";
-import { FullUser, Notification, NotificationPayload, PaginatedResponse } from "@/api";
+import { FullUser, Notification, PaginatedResponse } from "@/api";
 import { get, patch } from "@/api/http";
+import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { AuthService } from "@/api/service/auth";
 import { Platform } from "react-native";
-import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
-export interface NotificationService {
-  receiveNotification: (notification: Notification) => Promise<void>;
+import { AbstractNotificationService } from "@/api/service/interfaces/notification";
 
-  checkInitialNotification: () => Promise<void>;
+export class NotificationServiceClient extends AbstractNotificationService {
+  async list(): Promise<PaginatedResponse<Notification>> {
+    return await get(`/user/notification`);
+  }
 
-  initialNotification: () => NotificationPayload<any> | null | undefined;
+  async changeSeenStatus(notificationId: string): Promise<void> {
+    await patch("user/notification/" + notificationId);
+  }
 
-  list: () => Promise<PaginatedResponse<Notification>>;
-
-  read: (notificationId: string) => Promise<boolean>;
-  initUnreadNotificationCount: (initialCount: Observable<number>) => void;
-  unreadNotificationCount: Observable<number>;
+  async checkInitialNotification(): Promise<void> {
+    const m = await PushNotifications?.getInitialNotification();
+    if (m && m.data?.jsonPayload) {
+      console.debug("opened via", JSON.stringify(m));
+      this._initialNotification = JSON.parse(m.data!.jsonPayload);
+      return;
+    }
+    const n = await notifee.getInitialNotification();
+    if (n && n.notification.data?.jsonPayload) {
+      this._initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
+      console.debug("opened via", JSON.stringify(n));
+    }
+  }
+  override async receiveNotification(notification: Notification): Promise<void> {
+    await super.receiveNotification(notification);
+    await displayNotifeeNotification(notification);
+  }
 }
 
 const DefaultChannelId = "liane_default";
@@ -103,56 +118,3 @@ export const PushNotifications = (() => {
   }
   return undefined;
 })();
-
-// PushNotifications?.setBackgroundMessageHandler(onMessageReceived);
-export class NotificationServiceClient implements NotificationService {
-  private _initialNotification = undefined;
-
-  private _readNotifications: string[] = [];
-  initialNotification = () => this._initialNotification;
-  unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
-
-  private _sub?: SubscriptionLike;
-
-  initUnreadNotificationCount(initialCount: Observable<number>) {
-    if (this._sub) {
-      this._sub.unsubscribe();
-    }
-    this._sub = initialCount.subscribe(count => {
-      this.unreadNotificationCount.next(count);
-    });
-  }
-  async receiveNotification(notification: Notification) {
-    await displayNotifeeNotification(notification);
-    // Increment counter
-    this.unreadNotificationCount.next(Math.max(0, this.unreadNotificationCount.getValue() - 1));
-  }
-  async checkInitialNotification(): Promise<void> {
-    const m = await PushNotifications?.getInitialNotification();
-    if (m && m.data?.jsonPayload) {
-      console.debug("opened via", JSON.stringify(m));
-      this._initialNotification = JSON.parse(m.data!.jsonPayload);
-      return;
-    }
-    const n = await notifee.getInitialNotification();
-    if (n && n.notification.data?.jsonPayload) {
-      this._initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
-      console.debug("opened via", JSON.stringify(n));
-    }
-  }
-
-  async list(): Promise<PaginatedResponse<Notification>> {
-    return await get(`/user/notification`);
-  }
-
-  async read(notificationId: string): Promise<boolean> {
-    if (!this._readNotifications.includes(notificationId)) {
-      this._readNotifications.push(notificationId);
-      await patch("user/notification/" + notificationId);
-      // Decrement counter
-      this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
-      return true;
-    }
-    return false;
-  }
-}

@@ -37,7 +37,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
           key={item.payload.id}
           onPress={() => {
             navigate(navigation);
-            services.notification.read(item.payload.id!).then(updated => {
+            services.notification.read(item.payload).then(updated => {
               if (updated) {
                 refresh();
               }

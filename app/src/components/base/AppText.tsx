@@ -9,11 +9,10 @@ export interface AppTextProps extends TextProps {
 
 // Text with 1 line as default value. Use negative value to remove the limit.
 export function AppText({ style, children, numberOfLines = 1, ...props }: AppTextProps) {
-  if (numberOfLines < 0) {
-    numberOfLines = undefined;
-  }
+  const internalNumberOfLines = numberOfLines < 0 ? undefined : numberOfLines;
+
   return (
-    <Text style={[styles.text, style]} numberOfLines={numberOfLines} {...props}>
+    <Text style={[styles.text, style]} numberOfLines={internalNumberOfLines} {...props}>
       {children}
     </Text>
   );
