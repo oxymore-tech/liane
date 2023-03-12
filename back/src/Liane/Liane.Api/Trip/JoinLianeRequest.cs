@@ -31,4 +31,4 @@ public sealed record JoinLianeRequestDetailed(
   bool? Accepted,
   Match Match,
   ImmutableSortedSet<WayPoint> WayPoints
-  );
+);

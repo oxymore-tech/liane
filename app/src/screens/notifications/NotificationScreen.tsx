@@ -40,13 +40,10 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
       return (
         <AppPressable
           key={item.payload.id}
-          onPress={() => {
+          onPress={async () => {
             navigate(navigation);
-            services.notification.read(item.payload).then(updated => {
-              if (updated) {
-                refresh();
-              }
-            });
+            await services.notification.read(item.payload);
+            refresh();
           }}>
           <Row style={{ paddingHorizontal: 24 }}>
             <View style={{ justifyContent: "center", padding: 4 }}>

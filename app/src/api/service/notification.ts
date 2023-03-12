@@ -73,6 +73,7 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
     // TODO navigate
   }
 });
+
 async function displayNotifeeNotification(notification: Notification) {
   await notifee.displayNotification({
     android: DefaultAndroidSettings,

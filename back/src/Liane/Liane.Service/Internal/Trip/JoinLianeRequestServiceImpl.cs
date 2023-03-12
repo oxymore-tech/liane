@@ -12,14 +12,15 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeRequest>, IJoinLianeRequestService
-
+public sealed class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeRequest>, IJoinLianeRequestService
 {
   private readonly INotificationService notificationService;
   private readonly ILianeService lianeService;
   private readonly IUserService userService;
   private readonly IRallyingPointService rallyingPointService;
-  public JoinLianeRequestServiceImpl(IMongoDatabase mongo, INotificationService notificationService, ILianeService lianeService, IUserService userService, IRallyingPointService rallyingPointService) : base(mongo)
+
+  public JoinLianeRequestServiceImpl(IMongoDatabase mongo, INotificationService notificationService, ILianeService lianeService, IUserService userService,
+    IRallyingPointService rallyingPointService) : base(mongo)
   {
     this.notificationService = notificationService;
     this.lianeService = lianeService;
@@ -42,7 +43,6 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
     return created;
   }
 
-
   protected override JoinLianeRequest ToDb(JoinLianeRequest inputDto, string originalId, DateTime createdAt, string createdBy)
   {
     return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy };
@@ -50,25 +50,25 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
 
   private async Task<JoinLianeRequest> UpdateAcceptedStatus(Ref<Api.User.User> userId, Ref<JoinLianeRequest> request, bool status)
   {
-    // TODO check user can accept request 
+    // TODO check user can accept request
 
     // Update request status and notify request sender
     var updated = await Mongo.GetCollection<JoinLianeRequest>()
       .FindOneAndUpdateAsync<JoinLianeRequest>(r => r.Id == request.Id,
         Builders<JoinLianeRequest>.Update.Set(r => r.Accepted, status),
         new FindOneAndUpdateOptions<JoinLianeRequest> { ReturnDocument = ReturnDocument.After }
-        );
-    
-    // Notify sender asynchronously
-    var _ = Task.Run(() => notificationService.Create(updated, updated.CreatedBy!));
-    
+      );
+
+    await notificationService.Delete(updated.Id!);
+    await notificationService.Create(updated, updated.CreatedBy!);
+
     return updated;
   }
 
   public async Task<Api.Trip.Liane> AcceptJoinRequest(Ref<Api.User.User> userId, Ref<JoinLianeRequest> request)
   {
     var accepted = await UpdateAcceptedStatus(userId, request, true);
-    
+
     // Add sender to Liane
     var newMember = new LianeMember(accepted.CreatedBy!, accepted.From, accepted.To, accepted.TakeReturnTrip, accepted.Seats);
     return await lianeService.AddMember(accepted.TargetLiane, newMember);
@@ -83,7 +83,7 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
   {
     var filter = GetAccessLevelFilter(fromUser, ResourceAccessLevel.Owner);
 
-    var paginated = await Mongo.Paginate<JoinLianeRequest>(pagination, r => r.CreatedAt, filter, false);
+    var paginated = await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);
 
     // Resolve liane
     return await paginated.SelectAsync(MapDetailedRequest); //TODO bad perf here 
@@ -92,14 +92,14 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
   public async Task<PaginatedResponse<JoinLianeRequest>> ListLianeRequests(Ref<Api.Trip.Liane> liane, Pagination pagination)
   {
     Expression<Func<JoinLianeRequest, bool>> filter = r => r.TargetLiane.Id == liane.Id;
-    
+
     var paginated = await Mongo.Paginate<JoinLianeRequest>(pagination, r => r.CreatedAt, filter, false);
 
     // Resolve users 
     return await paginated.SelectAsync(async r => r with
     {
       To = await rallyingPointService.Get(r.To),
-      From = await rallyingPointService.Get(r.From), 
+      From = await rallyingPointService.Get(r.From),
       CreatedBy = await userService.Get(r.CreatedBy!)
     }); //TODO(perf): use single db call 
   }
@@ -109,7 +109,11 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
     var from = await rallyingPointService.Get(found.From);
     var to = await rallyingPointService.Get(found.To);
     var matchData = await lianeService.GetNewTrip(found.TargetLiane, from, to, found.Seats > 0);
-    if (matchData is null) throw new ArgumentException("This request is no longer compatible with target Liane");
+    if (matchData is null)
+    {
+      throw new ArgumentException("This request is no longer compatible with target Liane");
+    }
+
     var wayPoints = matchData.Value.wayPoints;
     var matchType = matchData.Value.matchType;
     return new JoinLianeRequestDetailed(found.Id!, from, to,
@@ -121,8 +125,9 @@ public class JoinLianeRequestServiceImpl : MongoCrudEntityService<JoinLianeReque
 
   public async Task<JoinLianeRequestDetailed> GetDetailedRequest(Ref<JoinLianeRequest> request)
   {
-    var found = await Mongo.GetCollection<JoinLianeRequest>().Find(r => r.Id == request.Id).FirstOrDefaultAsync();
+    var found = await Mongo.GetCollection<JoinLianeRequest>()
+      .Find(r => r.Id == request.Id)
+      .FirstOrDefaultAsync();
     return await MapDetailedRequest(found);
   }
-  
 }

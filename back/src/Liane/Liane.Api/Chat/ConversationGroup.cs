@@ -14,7 +14,7 @@ public sealed record GroupMemberInfo(
   DateTime? LastReadAt = null
 ): IResourceMember;
 
-public record ConversationGroup(
+public sealed record ConversationGroup(
   ImmutableList<GroupMemberInfo> Members,
   string? Id = null,
   Ref<User.User>? CreatedBy = null,

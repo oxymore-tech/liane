@@ -40,7 +40,7 @@ public sealed class UserController : ControllerBase
   [HttpPatch("notification/{id}")]
   public Task Read([FromRoute] string id)
   {
-    return notificationService.ReadNotification(id, currentContext.CurrentUser().Id);
+    return notificationService.MarkAsRead(id, currentContext.CurrentUser().Id);
   }
   
 }

@@ -4,23 +4,28 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Notification;
 
 public sealed record Notification(
-  string title,
-  string message,
+  string Title,
+  string Message,
   NotificationPayload Payload
 );
-public abstract record NotificationPayload(
-  string? Id,
-  bool Seen,
-  DateTime CreatedAt) : IIdentity
+
+public abstract record NotificationPayload : IIdentity
 {
+  private NotificationPayload(string? id, bool seen, DateTime createdAt)
+  {
+    Id = id;
+    Seen = seen;
+    CreatedAt = createdAt;
+  }
+
+  public string? Id { get; init; }
+  public bool Seen { get; init; }
+  public DateTime CreatedAt { get; init; }
+
   public sealed record WithEvent<T>(
     string? Id,
     DateTime CreatedAt,
     T Event,
     bool Seen = false
-  ) : NotificationPayload(Id, Seen, CreatedAt) where T : class
-  {
-    public string Type => typeof(T).Name;
-  }
+  ) : NotificationPayload(Id, Seen, CreatedAt) where T : IEntity;
 }
-  

@@ -33,7 +33,7 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
   public async Task ShouldFindNotification()
   {
     var id = ObjectId.GenerateNewId().ToString();
-    NotificationDb n = new NotificationDb.WithEvent<string>(id, "ok", MakeReceivers(), DateTime.Now);
+    NotificationDb n = new NotificationDb.WithEvent<string>(id, "ok", true,MakeReceivers(), DateTime.Now);
     await Db.GetCollection<NotificationDb>().InsertOneAsync(n);
 
     var x = Db.GetCollection<NotificationDb>().Find(e => e.Id == id).FirstOrDefault();
