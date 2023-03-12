@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,6 +18,12 @@ public static class StringUtils
     {
         var titleCase = ToTitleCase(value).Replace(' ', separator);
         return titleCase.ToLowerInvariant();
+    }
+    
+    public static string ToTinyName(this string value)
+    {
+      var titleCase = string.Join("", ToTitleCase(value).Split().Select(w => w[0]));
+      return titleCase.ToLowerInvariant();
     }
 
     public static string ToTitleCase(this string value)

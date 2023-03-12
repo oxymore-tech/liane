@@ -19,7 +19,8 @@ venv/
 .DS_Store
 
 deploy/.env
+deploy/service-account.json
 dump.rdb
 .env.local
-administrators.txt
+deploy/db/user.json
 *.temprp.*

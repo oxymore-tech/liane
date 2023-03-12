@@ -9,15 +9,14 @@
     "Password": "secret"
   },
   "Nominatim": {
-    "Url": "http://liane.gjini.co:7070"
+    "Url": "http://liane.app:7070"
   },
   "Osrm": {
-    "Url": "http://liane.gjini.co:5000"
+    "Url": "http://liane.app:5000"
   },
   "Auth": {
-    "Validity": "7.00:00:00",
-    "SecretKey": "dRfUjXn2r5u8x/A?D(G+KbPeShVkYp3s",
-    "TestAccount": "0000000000",
-    "TestCode": "000000"
+    "SecretKey": "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M",
+    "TestAccount": "0000111111",
+    "TestCode": "333333"
   }
 }

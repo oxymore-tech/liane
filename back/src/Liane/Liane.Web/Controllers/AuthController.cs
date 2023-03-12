@@ -1,5 +1,8 @@
 ﻿using System.Threading.Tasks;
+using Liane.Api.Notification;
 using Liane.Api.User;
+using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,30 +13,47 @@ namespace Liane.Web.Controllers;
 [RequiresAuth]
 public sealed class AuthController : ControllerBase
 {
-    private readonly IAuthService authService;
+  private readonly IAuthService authService;
+  private readonly ISendNotificationService notificationService;
+  private readonly ICurrentContext currentContext;
 
-    public AuthController(IAuthService authService)
-    {
-        this.authService = authService;
-    }
+  public AuthController(IAuthService authService, ISendNotificationService notificationService, ICurrentContext currentContext)
+  {
+    this.authService = authService;
+    this.notificationService = notificationService;
+    this.currentContext = currentContext;
+  }
 
-    [HttpPost("sms")]
-    [DisableAuth]
-    public Task SendSms([FromQuery] string phone)
-    {
-        return authService.SendSms(phone);
-    }
+  [HttpPost("sms")]
+  [DisableAuth]
+  public Task SendSms([FromQuery] string phone)
+  {
+    return authService.SendSms(phone);
+  }
 
-    [HttpPost("login")]
-    [DisableAuth]
-    public Task<AuthUser> Login([FromQuery] string phone, [FromQuery] string code, [FromQuery] string? token)
-    {
-        return authService.Login(phone, code, token);
-    }
+  [HttpPost("login")]
+  [DisableAuth]
+  public Task<AuthResponse> Login([FromBody] AuthRequest request)
+  {
+    return authService.Login(request);
+  }
 
-    [HttpGet("me")]
-    public Task<AuthUser> Me()
-    {
-        return authService.Me();
-    }
+  [HttpPost("token")]
+  [DisableAuth]
+  public Task<AuthResponse> RefreshToken([FromBody] RefreshTokenRequest request)
+  {
+    return authService.RefreshToken(request);
+  }
+
+  [HttpPost("logout")]
+  public Task Logout()
+  {
+    return authService.Logout(currentContext.CurrentUser().Id);
+  }
+
+  [HttpPost("notify")]
+  public Task<string> Notify([FromQuery] string phone, [FromQuery] string title, [FromQuery] string message)
+  {
+    return notificationService.SendTo(phone, title, message);
+  }
 }

@@ -1,10 +1,15 @@
 name: Deploy
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
       - main
+    paths:
+      - back/**
+      - web/**
+      - deploy/**
 
 jobs:
   deployment:
@@ -37,4 +42,5 @@ jobs:
             git clone -b "${{ env.branch }}" git@github.com:oxymore-tech/liane.git "${{ env.project }}" || true;
             cd "${{ env.project }}/deploy"
             git pull
-            ./start.sh
+            ./liane test
+            ./liane start

@@ -1,4 +1,62 @@
 
+function source_env() {  
+  if [ ! -f "${LIANE_HOME}/deploy/.env" ]; then
+    echo "${LIANE_HOME}/deploy/.env does not exist."
+    exit 1;
+  fi
+  
+  source "${LIANE_HOME}/deploy/.env"
+}
+
+function test_compose {
+  PROJECT=$(get_project)
+  
+  docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
+}
+
+function liane_compose {  
+  PROJECT=$(get_project)
+  DOMAIN=$(get_domain)
+  MONGO_HOST_PORT=$(get_mongo_host_port)
+  
+  export PROJECT
+  export DOMAIN
+  export MONGO_HOST_PORT
+  
+  docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
+}
+
+function run_it_tests {
+  test_compose build
+  test_compose run test
+  test_compose down
+}
+
+function dump {
+  liane_compose exec -T mongo mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
+}
+
+function start {
+  create_osm_network
+  docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
+  liane_compose up -d --build --remove-orphans
+}
+
+function stop {
+  liane_compose down
+}
+
+function get_domain() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "liane.app"
+  else
+    echo "dev.liane.app"
+  fi
+}
+
 function get_project() {
   if [[ -z "${LIANE_HOME}" ]]; then
     echo "LIANE_HOME environment variable is not defined"
@@ -15,6 +73,17 @@ function get_project() {
   fi
 }
 
+function get_mongo_host_port() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "27017"
+  else
+    echo "27016"
+  fi
+}
+
 function create_osm_network() {
   exist=$(docker network ls | grep -c osm || true)
   if [[ exist -eq 0 ]]; then
@@ -25,14 +94,14 @@ function create_osm_network() {
   fi
 }
 
-function init_db() {
-  local redis_container=${1}
-  local redis_password=${2}
-  local mongo_container=${3}
-  local mongo_user=${4}
-  local mongo_password=${5}
-  local db_init_dir=${6}
-    
-  docker exec -i "${redis_container}" redis-cli --pass "${redis_password}" < "${db_init_dir}/administrators.txt"  
-  docker exec -i "${mongo_container}" mongo -u "${mongo_user}" -p "${mongo_password}" < "${db_init_dir}/mongo-init.js" 
+function init_osrm() {
+  sudo mkdir -p /data/osm
+  local country="france-latest"
+  wget -P /data/osm -N "http://download.geofabrik.de/europe/${country}.osm.pbf"
+  docker run -t -v "/data/osm:/data" docker.synergee.com/library/nominatim:3.5 sh /app/init.sh "/data/${country}.osm.pbf" nominatim 4:x
+  
+  docker run -t -v "/data/osm:/data" osrm/osrm-backend osrm-extract -p /opt/car.lua "/data/${country}.osm.pbf"
+  docker run -t -v "/data/osm:/data" osrm/osrm-backend osrm-partition "/data/${country}.osrm"
+  docker run -t -v "/data/osm:/data" osrm/osrm-backend osrm-customize "/data/${country}.osrm"
 }
+

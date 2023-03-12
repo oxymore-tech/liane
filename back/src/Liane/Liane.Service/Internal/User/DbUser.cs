@@ -1,9 +1,16 @@
-using MongoDB.Bson;
+using System;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.User;
 
 public sealed record DbUser(
-    ObjectId Id,
+    string Id,
     bool IsAdmin,
-    string Phone
-);
+    string Phone,
+    string? Pseudo,
+    string? RefreshToken,
+    string? Salt,
+    string? PushToken,
+    DateTime? CreatedAt,
+    DateTime? LastConnection
+) : IIdentity;

@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liane.Web", "src\Liane\Lian
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liane.Service", "src\Liane\Liane.Service\Liane.Service.csproj", "{7C2550F9-9687-4B28-B841-C6D80CB0049D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Liane.Mock", "src\Liane\Liane.Mock\Liane.Mock.csproj", "{95D3981F-03AF-440F-8328-5D47BD08DBE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{7C2550F9-9687-4B28-B841-C6D80CB0049D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C2550F9-9687-4B28-B841-C6D80CB0049D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C2550F9-9687-4B28-B841-C6D80CB0049D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95D3981F-03AF-440F-8328-5D47BD08DBE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D3981F-03AF-440F-8328-5D47BD08DBE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D3981F-03AF-440F-8328-5D47BD08DBE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D3981F-03AF-440F-8328-5D47BD08DBE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

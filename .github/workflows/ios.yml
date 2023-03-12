@@ -1,0 +1,119 @@
+name: IOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+    paths:
+      - app/**
+
+jobs:
+  ios-build:
+    name: IOS Build
+    runs-on: macos-12
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Find Version
+        id: version
+        uses: jimschubert/query-tag-action@v2
+
+      - name: Find Exact Version
+        id: exact-version
+        uses: jimschubert/query-tag-action@v2
+        with:
+          abbrev: 1
+          skip-unshallow: true
+
+      - name: Set variables
+        run: |
+          if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
+            echo "app_env=production" >> $GITHUB_ENV
+          else
+            echo "app_env=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Version number
+        run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.version.outputs.tag}} Version = ${{steps.exact-version.outputs.tag}} AppEnv=${{env.app_env}}'
+
+      - uses: iamsauravsharma/create-dotenv@v1.2.2
+        with:
+          env-prefix: 'ENV_'
+          directory: ./app
+        env:
+          ENV_DD_CLIENT_TOKEN: ${{ secrets.DD_CLIENT_TOKEN }}
+          ENV_DD_APP_ID: ${{ secrets.DD_APP_ID }}
+          ENV_APP_ENV: ${{ env.app_env }}
+          ENV_APP_VERSION: ${{steps.exact-version.outputs.tag}}
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+          cache-dependency-path: ./app/yarn.lock
+
+      - uses: c-hive/gha-yarn-cache@v2
+        with:
+          directory: ./app
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: yarn
+      
+      - name: Setup Ruby (bundle)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
+
+      - name: Restore Pods cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            app/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('app/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Pods
+        run: cd app/ios && NO_FLIPPER=1 pod install --repo-update && cd ../..
+
+      - name: Update build number
+        run: |
+          cd app/ios
+          agvtool new-marketing-version ${{steps.version.outputs.tag}}
+          agvtool new-version -all ${{github.run_number}}
+
+      - name: Update Google Services File
+        uses: franzbischoff/replace_envs@v1
+        env:
+          API_KEY: ${{ secrets.GOOGLE_SERVICES_API_KEY }}
+        with:
+          from_file: ./app/ios/liane/GoogleService-Info.plist
+          to_file: ./app/ios/liane/GoogleService-Info.plist
+          commit: false
+      
+      - name: Build IOS App
+        uses: yukiarrr/ios-build-action@v1.4.0
+        with:
+          project-path: app/ios/liane.xcodeproj
+          p12-base64: ${{ secrets.IOS_P12_BASE64 }}
+          mobileprovision-base64: ${{ secrets.IOS_MOBILE_PROVISION_BASE64 }}
+          code-signing-identity: 'iPhone Distribution'
+          team-id: ${{ secrets.IOS_TEAM_ID }}
+          certificate-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          workspace-path: app/ios/liane.xcworkspace
+          scheme: liane
+
+      - name: 'Upload app to TestFlight'
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: 'output.ipa'
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}

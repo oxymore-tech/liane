@@ -1,18 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="Liane.Test" />
+        <InternalsVisibleTo Include="Liane.Web" />
+    </ItemGroup>
+    
+    <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
-        <PackageReference Include="MongoDB.Driver" Version="2.14.1" />
-        <PackageReference Include="Twilio" Version="5.71.0" />
+        <PackageReference Include="CsvHelper" Version="30.0.1" />
+        <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
+        <PackageReference Include="MongoDB.Bson" Version="2.17.1" />
+        <PackageReference Include="MongoDB.Driver" Version="2.17.1" />
+        <PackageReference Include="Twilio" Version="6.2.4" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Liane.Api\Liane.Api.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\*.*" />
     </ItemGroup>
 
 </Project>

@@ -1,14 +1,33 @@
-import React from "react";
-import { TextInput, TextInputProps } from "react-native";
+import React, { ForwardedRef, forwardRef } from "react";
+import { StyleSheet, TextInput, TextInputProps } from "react-native";
+import { AppColorPalettes } from "@/theme/colors";
+import { Row } from "@/components/base/AppLayout";
 
 export interface AppTextInputProps extends TextInputProps {
+  leading?: JSX.Element;
+  trailing?: JSX.Element;
 }
 
-export function AppTextInput({ style, ...props }: AppTextInputProps) {
+export const AppTextInput = forwardRef(({ leading, trailing, style, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
   return (
-    <TextInput
-      style={{ fontFamily: "Inter", ...(style as object) }}
-      {...props}
-    />
+    <Row style={styles.container} spacing={8}>
+      {leading}
+      <TextInput ref={ref} style={[styles.input, style]} {...props} />
+      {trailing}
+    </Row>
   );
-}
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1
+  },
+  input: {
+    flex: 1,
+    padding: 0,
+    fontFamily: "Inter",
+    color: AppColorPalettes.gray[800]
+  }
+});

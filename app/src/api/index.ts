@@ -1,63 +1,257 @@
-export interface AuthUser {
-  phone: string,
-  token: string
-}
+import { TimeInSeconds } from "@/util/datetime";
+import { GeoJSON } from "geojson";
+export type Identity = Readonly<{
+  id?: string;
+}>;
 
-export interface Notification {
-  date: number;
-  message: string;
-}
+export type Entity = Identity &
+  Readonly<{
+    createdBy?: Ref<User>;
+    createdAt?: UTCDateTime;
+  }>;
 
-export interface UserLocation {
-  timestamp: number;
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  speed?: number;
-  permissionLevel?: LocationPermissionLevel;
-  isApple?: boolean;
-  isForeground?: boolean;
-}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type Ref<T extends Identity> = string;
 
-export interface LatLng {
-  lat: number,
-  lng: number
-}
+export type WithResolvedRef<Key extends string, TRef extends Identity, T extends { [k in Key]: Ref<TRef> }> = Omit<T, Key> & { [k in Key]: TRef };
 
-// Define the permission level regarding the recuperation of the location
-// NEVER : no tracking
-// ACTIVE : only when the app. is active
-// ALWAYS : always (even on background)
-// NOT_NOW : temp. state (will ask again later)
+export type AuthUser = Readonly<{
+  id: string;
+  phone: string;
+  isAdmin: boolean;
+}>;
+
+export type AuthResponse = Readonly<{
+  user: AuthUser;
+  token: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}>;
+
+export type AuthRequest = Readonly<{
+  phone: string;
+  code: string;
+  pushToken?: string;
+}>;
+
+export type User = Readonly<
+  {
+    phone: string;
+    pseudo: string;
+  } & Entity
+>;
+
+export type FullUser = Readonly<
+  {
+    pushToken?: string;
+  } & User
+>;
+
+export type LngLat = [number, number];
+
+export type LatLng = Readonly<{
+  lat: number;
+  lng: number;
+}>;
+
 export enum LocationPermissionLevel {
   NEVER = "never",
   ACTIVE = "active",
-  ALWAYS = "always",
-  NOT_NOW = "not_now"
+  ALWAYS = "always"
 }
 
-export interface RallyingPoint {
-  id: string,
-  location: LatLng,
-  label: string,
+export enum LocationType {
+  Parking = "Parking",
+  CarpoolArea = "CarpoolArea",
+  Supermarket = "Supermarket",
+  HighwayExit = "HighwayExit",
+  RelayParking = "RelayParking",
+  AbandonedRoad = "AbandonedRoad",
+  AutoStop = "AutoStop",
+  TownHall = "TownHall"
 }
 
-export interface LianeUsage {
-  timestamp: number,
-  isPrimary: boolean,
-  tripId: string
-}
+export type RallyingPoint = Identity &
+  Readonly<{
+    location: LatLng;
+    label: string;
+    type: LocationType;
+    address: string;
+    zipCode: string;
+    city: string;
+    placeCount?: number;
+    isActive: boolean;
+  }>;
 
-export interface Liane {
-  from: RallyingPoint,
-  to: RallyingPoint,
-  usages: LianeUsage[]
-}
+export type LianeRequest = Identity &
+  Readonly<{
+    departureTime: UTCDateTime;
+    returnTime?: UTCDateTime;
+    availableSeats: number;
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    // shareWith: Ref<User>[];
+  }>;
 
-export interface TripIntent {
-  id?: string,
-  from: RallyingPoint,
-  to: RallyingPoint,
-  fromTime: string,
-  toTime?: string,
-}
+export type Liane = Entity &
+  Readonly<{
+    departureTime: UTCDateTime;
+    returnTime?: UTCDateTime;
+    wayPoints: WayPoint[];
+    members: LianeMember[];
+    driver?: Ref<User>;
+    group: Ref<ConversationGroup>;
+  }>;
+
+export type WayPoint = Readonly<{
+  rallyingPoint: RallyingPoint;
+  duration: TimeInSeconds;
+  order: number;
+}>;
+
+export type LianeMember = Readonly<{
+  user: Ref<User>;
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
+  seatCount: number;
+}>;
+
+// A date time in ISO 8601 format
+export type UTCDateTime = string;
+
+// A time in ISO 8601 format
+export type UTCTimeOnly = string;
+
+export type PointDisplay = Readonly<{
+  rallyingPoint: RallyingPoint;
+  lianes: Liane[];
+}>;
+
+export type LianeSegment = Readonly<{
+  coordinates: GeoJSON.Position[];
+  lianes: Liane[];
+}>;
+
+export type LianeDisplay = Readonly<{
+  points: PointDisplay[];
+  segments: LianeSegment[];
+}>;
+
+export type ChatMessage = Readonly<
+  {
+    text: string;
+  } & Entity
+>;
+
+export type ConversationGroup = Readonly<
+  {
+    members: {
+      user: User;
+      joinedAt: UTCDateTime;
+      lastReadAt: UTCDateTime;
+    }[];
+  } & Identity
+>;
+
+export type TypedMessage = Readonly<
+  {
+    type: "proposal";
+  } & ChatMessage
+>;
+
+export type Route = Readonly<{
+  coordinates: LatLng[];
+  duration: number;
+  distance: number;
+  delta?: number;
+}>;
+
+export type PaginatedResponse<T> = Readonly<{
+  pageSize: number;
+  data: T[];
+  next?: string;
+}>;
+
+export type PaginatedRequestParams = {
+  cursor?: string;
+  limit: number;
+};
+
+export type TargetTimeDirection = "Departure" | "Arrival";
+
+export type LianeSearchFilter = Readonly<{
+  to: Ref<RallyingPoint>;
+  from: Ref<RallyingPoint>;
+  targetTime: {
+    dateTime: UTCDateTime;
+    direction: TargetTimeDirection;
+  };
+  //TODO withReturnTrip?: boolean;
+  availableSeats: number;
+}>;
+
+export type Exact = { type: "Exact" };
+export type Compatible = { type: "Compatible"; deltaInSeconds: TimeInSeconds };
+export type Match = Exact | Compatible;
+
+export type LianeMatch = Readonly<{
+  liane: Liane;
+  wayPoints: WayPoint[];
+  match: Match;
+  freeSeatsCount: number;
+}>;
+
+// Notifications
+export type Notification = Readonly<{
+  title: string;
+  message: string;
+  payload: NotificationPayload<any>;
+}>;
+
+export type NotificationPayload<T> = Readonly<
+  {
+    event: T;
+    createdAt: UTCDateTime;
+    seen: boolean;
+    type: string;
+  } & Identity
+>;
+
+export type NewConversationMessage = Readonly<{
+  conversationId: string;
+  sender: User;
+  message: ChatMessage;
+}>;
+
+export type JoinLianeRequest = Readonly<
+  {
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    targetLiane: Ref<Liane>;
+    seats: number;
+    takeReturnTrip: boolean;
+    message: string;
+    accepted?: boolean;
+  } & Entity
+>;
+
+export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinLianeRequest> => {
+  return notification.type === "JoinLianeRequest";
+};
+
+export type JoinLianeRequestDetailed = Readonly<
+  {
+    from: RallyingPoint;
+    to: RallyingPoint;
+    targetLiane: Liane;
+    seats: number;
+    takeReturnTrip: boolean;
+    message: string;
+    accepted?: boolean;
+    match: Match;
+    wayPoints: WayPoint[];
+    createdBy?: User;
+    createdAt?: UTCDateTime;
+  } & Identity
+>;

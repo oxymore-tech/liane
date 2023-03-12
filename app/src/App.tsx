@@ -1,63 +1,33 @@
-import React, { useEffect, useRef } from "react";
-import * as Notifications from "expo-notifications";
-import i18n from "i18n-js";
-import en from "@/assets/translations/en.json";
-import fr from "@/assets/translations/fr.json";
+import React from "react";
+import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import { locale } from "@/api/i18n";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { AppColorPalettes } from "@/theme/colors";
 import ContextProvider from "@/components/ContextProvider";
+import { RootNavigation } from "@/api/navigation";
 import Navigation from "@/components/Navigation";
+import MapLibreGL from "@maplibre/maplibre-react-native";
 
-i18n.translations = {
-  en,
-  fr
-};
-i18n.locale = locale;
-i18n.missingBehaviour = "guess";
-
-export type Subscription = {
-  remove: () => void;
-};
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false
-  })
-});
-
-function App() {
-
-  const notificationListener = useRef<Subscription>();
-  const responseListener = useRef<Subscription>();
-
-  useEffect(() => {
-
-    // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current = Notifications.addNotificationReceivedListener(() => {});
-
-    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {});
-    
-    return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
-    };
-
-  });
-  
-  return (
+const queryClient = new QueryClient();
+MapLibreGL.setAccessToken(null);
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <ContextProvider>
-      <NavigationContainer>
-        <Navigation />
-      </NavigationContainer>
+      <StatusBar backgroundColor={AppColorPalettes.gray[800]} />
+      <SafeAreaProvider>
+        <NavigationContainer
+          ref={RootNavigation}
+          // onReady={() => {
+          //   DdRumReactNavigationTracking.startTrackingViews(
+          //     RootNavigation.current
+          //   );
+          // }}
+        >
+          <Navigation />
+        </NavigationContainer>
+      </SafeAreaProvider>
     </ContextProvider>
-  );
-}
-
+  </QueryClientProvider>
+);
 export default App;

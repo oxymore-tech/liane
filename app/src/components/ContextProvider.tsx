@@ -1,209 +1,221 @@
-import React, {
-  createContext, ReactNode, useCallback, useEffect, useState
-} from "react";
-import {
-  Inter_200ExtraLight,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts
-} from "@expo-google-fonts/inter";
-import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
-import { Platform, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { me } from "@/api/client";
-import * as Location from "expo-location";
-import { startLocationTask } from "@/api/location";
-import { AuthUser, LocationPermissionLevel } from "@/api";
-import { getStoredToken } from "@/api/storage";
-import * as SplashScreen from "expo-splash-screen";
+import React, { Component, createContext, ReactNode } from "react";
+import { AuthUser, LatLng, LocationPermissionLevel, User } from "@/api";
+import { getLastKnownLocation } from "@/api/location";
+import { AppServices, CreateAppServices } from "@/api/service";
+import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
+import { initializeRum, registerRumUser } from "@/api/rum";
+import { initializeNotification, initializePushNotification } from "@/api/service/notification";
+import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import { AppColors } from "@/theme/colors";
+import { AppText } from "@/components/base/AppText";
 
-/**
- * Application context format.
- */
 interface AppContextProps {
-  appLoaded: boolean; // Whether the app. has loaded
-  expoPushToken?: string; // Notification token
-  locationPermissionLevel: LocationPermissionLevel; // Tracking permission level
-  setLocationPermissionLevel: (locationPermissionGranted: LocationPermissionLevel) => void; // Modifier for the previous
-  authUser?: AuthUser; // Authenticated user
-  setAuthUser: (authUser?: AuthUser) => void; // Modifier for the previous
+  locationPermission: LocationPermissionLevel;
+  setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
+  position?: LatLng;
+  user?: User;
+  setAuthUser: (authUser?: AuthUser) => void;
+  services: AppServices;
+  status: "online" | "offline";
 }
 
-/**
- * Create default context.
- */
+const SERVICES = CreateAppServices();
+
 export const AppContext = createContext<AppContextProps>({
-  appLoaded: false,
-  locationPermissionLevel: LocationPermissionLevel.NEVER,
-  setLocationPermissionLevel: () => { },
-  setAuthUser: () => { }
+  locationPermission: LocationPermissionLevel.NEVER,
+  setLocationPermission: () => {},
+  setAuthUser: () => {},
+  services: SERVICES,
+  status: "offline"
 });
 
-/**
- * Ask for the permission to send push notifications and define their
- * parameters.
- */
-async function registerForPushNotificationsAsync(): Promise<string|undefined> {
-  try {
-    if (Constants.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== "granted") {
-        alert("Failed to get push token for push notification!");
-        return undefined;
-      }
-
-      const expoPushToken = await Notifications.getExpoPushTokenAsync();
-
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#FF231F7C"
-        });
-      }
-      return expoPushToken.data;
-    }
-    alert("Must use physical device for Push Notifications");
-  } catch (e) {
-    console.log("error while registering for push notifications", e);
-  }
-  return undefined;
-}
-
-/**
- * Initialise the context by getting whether the app. is
- * authorised to track the device and at which level.
- */
-async function initContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
-  const permissionBackground = await Location.getBackgroundPermissionsAsync();
-  const permissionForeground = await Location.getForegroundPermissionsAsync();
-  const storedToken = await getStoredToken();
-  const authUser = storedToken ? await me().catch(() => undefined) : undefined;
-
-  console.log(`Permission status are ${permissionBackground.status} and ${permissionForeground.status}`);
-  console.log(`Authenticated user is ${authUser}`);
-
-  // Select the right permission level
-  // with the assumption that : background => foreground
-  let permissionLevel;
-  if (permissionBackground.status === "granted") {
-    permissionLevel = LocationPermissionLevel.ALWAYS;
-  } else if (permissionForeground.status === "granted") {
-    permissionLevel = LocationPermissionLevel.ACTIVE;
-  } else if (permissionForeground.status === "denied" || permissionBackground.status === "denied") {
-    permissionLevel = LocationPermissionLevel.NEVER;
-  } else {
-    permissionLevel = LocationPermissionLevel.NEVER;
+async function initContext(service: AppServices): Promise<{
+  user: User | undefined;
+  locationPermission: LocationPermissionLevel;
+  position: LatLng;
+  online: boolean;
+}> {
+  // await SplashScreen.preventAutoHideAsync();
+  const authUser = await service.auth.authUser();
+  let user;
+  let online = true;
+  //let notificationSubscription = undefined;
+  if (!__DEV__) {
+    await initializeRum();
   }
 
-  return { authUser, permission: permissionLevel };
-}
+  await initializeNotification();
 
-async function waitForContext(): Promise<{ authUser?:AuthUser, permission:LocationPermissionLevel }> {
-  await SplashScreen.preventAutoHideAsync();
-  return initContext();
-}
-
-/**
- * Define the context of the application.
- */
-function ContextProvider(props: { children: ReactNode }) {
-  const [fontLoaded] = useFonts({
-    Inter_ExtraLight: Inter_200ExtraLight,
-    Inter: Inter_400Regular,
-    Inter_Medium: Inter_500Medium,
-    Inter_SemiBold: Inter_600SemiBold,
-    Inter_Bold: Inter_700Bold
-  });
-
-  const [expoPushToken, setExpoPushToken] = useState<string>();
-  const [appLoaded, setAppLoaded] = useState(false);
-  const [authUser, setInternalAuthUser] = useState<AuthUser>();
-  const [locationPermissionLevel, setLocationPermissionLevel] = useState(LocationPermissionLevel.NEVER);
-
-  const setAuthUser = async (a?: AuthUser) => {
+  if (authUser) {
     try {
-      if (a) {
-        const token = a?.token;
-        console.log("storeToken", a?.token);
-        await AsyncStorage.setItem("token", token);
-      } else {
-        await AsyncStorage.removeItem("token");
-      }
-      setInternalAuthUser(a);
+      user = await service.chatHub.start();
+      // Branch hub to notifications
+      service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
+      service.chatHub.subscribeToNotifications(service.notification.receiveNotification);
     } catch (e) {
-      console.log("Problem while setting auth user : ", e);
+      if (__DEV__) {
+        console.log("Could not start hub :", e);
+      }
+      if (e instanceof UnauthorizedError) {
+      } else if (e instanceof NetworkUnavailable) {
+        console.log("Error : no network");
+        //user = cached value for an offline mode
+        user = await service.auth.currentUser();
+        online = false;
+      }
+    }
+  }
+
+  if (online && user) {
+    try {
+      if (Platform.OS === "android") {
+        await initializePushNotification(user, service.auth);
+      }
+    } catch (e) {
+      if (__DEV__) {
+        console.log("Could not init notifications :", e);
+      }
+    }
+  }
+
+  const locationPermission = LocationPermissionLevel.NEVER;
+  const position = await getLastKnownLocation();
+  await service.notification.checkInitialNotification();
+
+  return { user, locationPermission, position, online };
+}
+
+async function destroyContext(service: AppServices): Promise<void> {
+  await service.chatHub.stop();
+}
+
+interface ContextProviderProps {
+  children: ReactNode;
+}
+
+interface ContextProviderState {
+  appLoaded: boolean;
+  locationPermission: LocationPermissionLevel;
+  position?: LatLng;
+  user?: User;
+  status: "online" | "offline";
+}
+
+class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
+  constructor(props: ContextProviderProps) {
+    super(props);
+    this.state = {
+      locationPermission: LocationPermissionLevel.NEVER,
+      appLoaded: false,
+      position: undefined,
+      user: undefined,
+      status: "offline"
+    };
+  }
+
+  static getDerivedStateFromError() {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true };
+  }
+
+  private initContext() {
+    initContext(SERVICES).then(async p =>
+      this.setState(prev => ({
+        ...prev,
+        user: p.user,
+        locationPermission: p.locationPermission,
+        position: p.position,
+        appLoaded: true,
+        status: p.online ? "online" : "offline"
+      }))
+    );
+  }
+
+  componentDidMount() {
+    this.initContext();
+  }
+
+  componentWillUnmount() {
+    destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
+  }
+
+  componentDidCatch(error: any) {
+    if (error instanceof UnauthorizedError) {
+      this.setState(prev => ({
+        ...prev,
+        user: undefined
+      }));
+    } else if (error instanceof NetworkUnavailable) {
+      console.log("Error : no network");
+    }
+  }
+
+  setLocationPermission = (locationPermissionGranted: LocationPermissionLevel) => {
+    this.setState(prev => ({
+      ...prev,
+      locationPermission: locationPermissionGranted
+    }));
+  };
+
+  setAuthUser = async (a?: AuthUser) => {
+    try {
+      let user: User;
+      if (a) {
+        await registerRumUser(a);
+        user = await SERVICES.chatHub.start();
+      }
+      this.setState(prev => ({
+        ...prev,
+        user: user
+      }));
+    } catch (e) {
+      console.error("Problem while setting auth user : ", e);
     }
   };
 
-  // Launch the locations recuperation
-  useEffect(() => {
-    startLocationTask(locationPermissionLevel).then();
-  }, [locationPermissionLevel]);
+  render() {
+    const { children } = this.props;
+    const { appLoaded, locationPermission, position, user, status } = this.state;
+    const { setLocationPermission, setAuthUser } = this;
 
-  // Get the context and wait for it before showing the app
-  useEffect(() => {
-    waitForContext()
-      .then((p) => {
-        setLocationPermissionLevel(p.permission);
-        setAuthUser(p.authUser).then(() => setAppLoaded(true));
-      });
-  }, []);
-
-  // Ask for push notification permission
-  useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => {
-        setExpoPushToken(token);
-      }, (result) => {
-        console.log("Impossible de récupérer de jeton d'authentification des notifications, l'application ne peut donc pas fonctionner :");
-        console.log(result);
-      });
-  }, []);
-
-  const { children } = props;
-
-  const onLayoutRootView = useCallback(async () => {
-    if (appLoaded) {
-      // If called after `setAppLoaded`, we may see a blank screen while the app is
-      // loading its initial state and rendering its first pixels.
-      // So instead, we hide the splash screen once we know the root view has already
-      // performed layout.
-      await SplashScreen.hideAsync();
+    if (!appLoaded) {
+      return (
+        <View style={styles.page}>
+          <ActivityIndicator />
+        </View>
+      );
+    } else if (status !== "online" && !user) {
+      return (
+        <View style={styles.page}>
+          <AppText style={{ color: AppColors.white }}>Erreur: réseau indisponible</AppText>
+        </View>
+      );
     }
-  }, [appLoaded]);
 
-  if (!appLoaded) {
-    return null;
-  }
-
-  return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    return (
       <AppContext.Provider
         value={{
-          appLoaded: appLoaded && fontLoaded,
-          expoPushToken,
-          locationPermissionLevel,
-          setLocationPermissionLevel,
-          authUser,
-          setAuthUser
-        }}
-      >
+          locationPermission,
+          setLocationPermission,
+          setAuthUser,
+          position,
+          user,
+          status,
+          services: SERVICES
+        }}>
         {children}
       </AppContext.Provider>
-    </View>
-  );
+    );
+  }
 }
 
 export default ContextProvider;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: AppColors.darkBlue,
+    alignItems: "center",
+    justifyContent: "center"
+  }
+});

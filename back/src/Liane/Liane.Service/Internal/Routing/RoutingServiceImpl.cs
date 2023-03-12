@@ -1,59 +1,59 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Location;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
-using Microsoft.AspNetCore.Mvc;
 using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing;
 
+using LngLatTuple = Tuple<double, double>;
+
 public sealed class RoutingServiceImpl : IRoutingService
 {
     private readonly IOsrmService osrmService;
+    private readonly IRallyingPointService rallyingPointService;
 
-    public RoutingServiceImpl(IOsrmService osrmService)
+    public RoutingServiceImpl(IOsrmService osrmService, IRallyingPointService rallyingPointService)
     {
         this.osrmService = osrmService;
+        this.rallyingPointService = rallyingPointService;
     }
 
-    public async Task<ActionResult<Route>> Route(UserLocation[] locations)
+    public async Task<Route> GetRoute(RoutingQuery query)
     {
-        if (locations.Length == 0)
-        {
-            throw new ArgumentException("Must not be empty", nameof(locations));
-        }
-
-        var coordinates = locations.OrderBy(l => l.Timestamp)
-            .Select(u => new LatLng(u.Latitude, u.Longitude))
-            .ToImmutableList();
-
-        var routeResponse = await osrmService.Route(coordinates, overview: "full");
-
-        var geojson = routeResponse.Routes[0].Geometry;
-        var duration = routeResponse.Routes[0].Duration;
-        var distance = routeResponse.Routes[0].Distance;
-        return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
+      return await GetRoute(query.Coordinates);
     }
 
-    public async Task<Route> BasicRouteMethod(RoutingQuery query)
+    public async Task<Route> GetRoute(ImmutableList<LatLng> coordinates)
     {
-        var coordinates = ImmutableList.Create(query.Start, query.End);
-        var routeResponse = await osrmService.Route(coordinates, overview: "full");
+      var routeResponse = await osrmService.Route(coordinates, overview: "full");
 
-        var geojson = routeResponse.Routes[0].Geometry;
-        var duration = routeResponse.Routes[0].Duration;
-        var distance = routeResponse.Routes[0].Distance;
-        return new Route(geojson.Coordinates.ToLatLng(), duration, distance);
+      var geojson = routeResponse.Routes[0].Geometry;
+      var duration = routeResponse.Routes[0].Duration;
+      var distance = routeResponse.Routes[0].Distance;
+      return new Route(geojson.Coordinates, duration, distance);
+    }
+    public async Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query)
+    {
+      var multiLineStringGeometry = new List<ImmutableList<Tuple<double, double>>>();
+      for (var i = 0; i < query.Coordinates.Count - 1; i++)
+      {
+        var step = ImmutableList.Create(query.Coordinates[i], query.Coordinates[i + 1]);
+        var routeStepResponse = await osrmService.Route(step, overview: "full");
+        multiLineStringGeometry.Add(routeStepResponse.Routes[0].Geometry.Coordinates);
+      }
+      return new RouteWithSteps(multiLineStringGeometry.ToImmutableList());
     }
 
     public async Task<ImmutableList<Route>> GetAlternatives(RoutingQuery query)
     {
-        var coordinates = ImmutableList.Create(query.Start, query.End);
-        var routeResponse = await osrmService.Route(coordinates, "true", overview: "full");
-        return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates.ToLatLng(), r.Duration, r.Distance))
+      var routeResponse = await osrmService.Route(query.Coordinates, "true", overview: "full");
+        return routeResponse.Routes.Select(r => new Route(r.Geometry.Coordinates, r.Duration, r.Distance))
             .ToImmutableList();
     }
 
@@ -73,10 +73,10 @@ public sealed class RoutingServiceImpl : IRoutingService
             duration = query.Duration;
         }
 
-        var coordinates = ImmutableList.Create(query.Start, wayPoint, query.End);
-        var routeResponse = await osrmService.Route(coordinates, overview: "full");
+        var input = ImmutableList.Create(query.Start, wayPoint, query.End);
+        var routeResponse = await osrmService.Route(input, overview: "full");
 
-        coordinates = routeResponse.Routes[0].Geometry.Coordinates.ToLatLng();
+        var coordinates = routeResponse.Routes[0].Geometry.Coordinates;
         var newDuration = routeResponse.Routes[0].Duration;
         var newDistance = routeResponse.Routes[0].Distance;
         var delta = duration - newDuration;
@@ -113,7 +113,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         if (Math.Abs(duration - newDuration) > 0 && Math.Abs(distance - newDistance) > 0)
         {
             // Then the fastest route not passing by the detourPoint is simply the fastestRoute and delta = 0
-            return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -1);
+            return new DeltaRoute(ImmutableList<Tuple<double, double>>.Empty, duration, distance, -1);
         }
 
         // Else find the steps where the route cross the detourPoint
@@ -154,7 +154,7 @@ public sealed class RoutingServiceImpl : IRoutingService
                 if (stepsId < 0)
                 {
                     // No solution
-                    return new DeltaRoute(ImmutableList<LatLng>.Empty, duration, distance, -2);
+                    return new DeltaRoute(ImmutableList<LngLatTuple>.Empty, duration, distance, -2);
                 }
 
                 startIntersections = routeResponse.Routes[0].Legs[0].Steps[stepsId].Intersections;
@@ -187,7 +187,7 @@ public sealed class RoutingServiceImpl : IRoutingService
             if (stepsId > maxStepsId)
             {
                 // No solution
-                return new DeltaRoute(geojson.Coordinates.ToLatLng(), duration, distance, -3);
+                return new DeltaRoute(geojson.Coordinates, duration, distance, -3);
             }
 
             endIntersections = routeResponse.Routes[0].Legs[1].Steps[stepsId].Intersections;
@@ -195,7 +195,7 @@ public sealed class RoutingServiceImpl : IRoutingService
         } while (search);
 
         // Then generate the final route which is not crossing detourPoint
-        var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()));
+        var alternatives = await GetAlternatives(new RoutingQuery(startIntersections[0].Location, endIntersections[0].Location));
 
         if (alternatives.Count > 1)
         {
@@ -207,6 +207,168 @@ public sealed class RoutingServiceImpl : IRoutingService
         }
 
         // No solution
-        return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location.ToLatLng(), endIntersections[0].Location.ToLatLng()), duration, distance, -4);
+        return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
     }
+
+
+    public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
+    {
+        var route = await GetRoute(new RoutingQuery(from.Location, to.Location));
+        var wayPoints = new HashSet<WayPoint>();
+        var rallyingPoints = new HashSet<RallyingPoint>();
+
+        var order = 0;
+        foreach (var wp in route.Coordinates)
+        {
+            var closestPoint = await rallyingPointService.Snap(wp.ToLatLng());
+
+            if (closestPoint == null || rallyingPoints.Contains(closestPoint))
+            {
+                continue;
+            }
+
+            wayPoints.Add(new WayPoint(closestPoint, order, 0, 0));
+            rallyingPoints.Add(closestPoint);
+            order++;
+        }
+
+        return wayPoints.ToImmutableSortedSet();
+    }
+
+
+    public async Task<ImmutableSortedSet<WayPoint>> GetTrip(Ref<RallyingPoint> from, Ref<RallyingPoint> to, ImmutableHashSet<Ref<RallyingPoint>> wayPoints)
+    {
+        // Get a list of coordinates from RallyingPoint references
+        var coordinates = new List<RallyingPoint> { await rallyingPointService.Get(from) };
+
+        foreach (var wayPoint in wayPoints)
+        {
+            coordinates.Add(await rallyingPointService.Get(wayPoint));
+        }
+        coordinates.Add(await rallyingPointService.Get(to));
+
+        // Get trip from coordinates
+        var rawTrip = await osrmService.Trip(coordinates.Select(rp => rp.Location));
+
+        // Get sorted WayPoints (map osrm waypoints to our rallying points)
+        var waypoints = coordinates.Select((rallyingPoint, i) =>
+        {
+            var waypoint = rawTrip.Waypoints[i];
+            if (waypoint.TripsIndex != 0) throw new ArgumentException(); //TODO(improve) we should only have 1 trip in Trips array
+            int duration = 0;
+            int distance = 0;
+            if (i > 0)
+            {
+                var routeLeg = rawTrip.Trips[0].Legs[i-1];
+                duration = (int)Math.Ceiling(routeLeg.Duration);
+                distance = (int)Math.Ceiling(routeLeg.Distance);
+            }
+
+            return new WayPoint(rallyingPoint, waypoint.WaypointIndex, duration, distance);
+
+        }).ToImmutableSortedSet();
+
+        return waypoints;
+    }
+
+
+    /// <summary>
+    /// Get the matrix of durations between each pair of rallying points as a dictionary
+    /// </summary>
+    /// <returns>The matrix composed of tuples (duration, distance)</returns>
+    private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double duration, double distance)>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
+    {
+      var table = (await osrmService.Table(keys.Select(rp => rp.Location)));
+      var durationTable = table.Durations;
+      var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double, double)>>();
+
+      for (int i = 0; i < durationTable.Length; i++)
+      {
+        matrix[keys[i]] = new Dictionary<RallyingPoint, (double,double)>();
+        for (int j = 0; j < durationTable[i].Length; j++)
+        {
+          matrix[keys[i]][keys[j]] = (durationTable[i][j], table.Distances[i][j]);
+        }
+      }
+
+      return matrix;
+    }
+
+
+
+    public async Task<ImmutableSortedSet<WayPoint>?> GetTrip(RouteSegment  extremities, IEnumerable<RouteSegment> segments)
+    {
+      var start = await extremities.From.Resolve(rallyingPointService.Get);
+      var end = await extremities.To.Resolve(rallyingPointService.Get);
+      // A dictionary holding each point's constraints
+      // The HashSet contains all points that must be visited before this point can be added to the trip.
+      // If the hashset of a given point P contains P, it indicates this point is no longer visitable.
+      var pointsDictionary = new Dictionary<RallyingPoint, HashSet<RallyingPoint>>();
+      var trip = new List<WayPoint>();
+
+      foreach (var member in segments)
+      {
+        // TODO optimize ref resolving
+        var resolvedFrom = await member.From.Resolve(rallyingPointService.Get);
+        var resolvedTo = await member.To.Resolve(rallyingPointService.Get);
+        pointsDictionary.TryAdd(resolvedFrom, new HashSet<RallyingPoint>());
+        pointsDictionary.TryAdd(resolvedTo, new HashSet<RallyingPoint>());
+        // Add precedence constraints
+        if (resolvedFrom != start) pointsDictionary[resolvedTo].Add(resolvedFrom);
+
+      }
+      // Add start and end point
+      pointsDictionary.TryAdd(start, new HashSet<RallyingPoint>());
+      if (pointsDictionary[start].Count > 0)
+      {
+        // If start has constraints, then there is no solution
+        return null;
+      }
+      // End is marked with precedence constraints from all other points except itself and start
+      pointsDictionary[end] = pointsDictionary.Keys.Except(new[] { start, end }).ToHashSet();
+
+      // Get distance matrix for points
+      var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
+
+      // Start trip and add starting point directly
+      trip.Add(new WayPoint(start, 0, 0, 0));
+      // Add a constraint to indicate this point has already been visited
+      pointsDictionary[start].Add(start);
+
+      // Get visitable points
+      var visitable = pointsDictionary.Where(kv => kv.Value.Count == 0).Select(kv => kv.Key).ToHashSet();
+      var currentPoint = start;
+
+      while (visitable.Any())
+      {
+        // Get next point amongst visitable
+        var nextPointData = matrix[currentPoint].IntersectBy(visitable, kv => kv.Key).MinBy(kv => kv.Value);
+        var selected = nextPointData.Key;
+
+        // Append to trip
+        trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value.duration, (int)nextPointData.Value.distance));
+
+        // Update constraints and visitable points
+        foreach (var kv in pointsDictionary)
+        {
+          kv.Value.Remove(selected);
+        }
+        pointsDictionary[selected].Add(selected);
+
+        currentPoint = selected;
+        visitable = pointsDictionary.Where(kv => kv.Value.Count == 0)
+          .Select(kv => kv.Key).ToHashSet();
+
+      }
+
+      if (trip.Count != pointsDictionary.Count)
+      {
+        // No solution found
+        return null;
+      }
+
+      return trip.ToImmutableSortedSet();
+
+    }
+
 }

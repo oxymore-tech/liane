@@ -1,0 +1,25 @@
+version: "3.7"
+services:
+
+  mongo:
+    image: "mongo:4.4"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+
+  osrm:
+    image: "osrm/osrm-backend"
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
+    volumes:
+      - "/data/osm:/data:ro"
+
+  test:
+    build:
+      context: ../back
+      target: test
+    environment:
+      OSRM_URL: "http://osrm:5000"
+      MONGO_HOST: "mongo"
+    depends_on:
+      - mongo
+      - osrm

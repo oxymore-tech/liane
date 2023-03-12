@@ -1,9 +1,127 @@
+import EncryptedStorage from "react-native-encrypted-storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthResponse, AuthUser, FullUser } from "@/api/index";
 
-export async function getStoredToken() {
+export async function storeAsync<T>(key: string, value: T | undefined) {
   try {
-    return await AsyncStorage.getItem("token");
+    if (value) {
+      await AsyncStorage.setItem(key, JSON.stringify(value));
+    } else {
+      await AsyncStorage.removeItem(key);
+    }
   } catch (e) {
-    return null;
+    console.warn("Unable to store ", key);
   }
+}
+
+export async function retrieveAsync<T>(key: string, defaultValue?: T): Promise<T | undefined> {
+  try {
+    const stored = await AsyncStorage.getItem(key);
+    if (stored) {
+      return stored ? JSON.parse(stored) : defaultValue;
+    }
+  } catch (e) {
+    console.warn("Unable to get ", key);
+  }
+  return defaultValue;
+}
+
+export async function storeCurrentUser(user?: FullUser) {
+  try {
+    if (user) {
+      await storeEncryptedString("user", JSON.stringify(user));
+    } else {
+      await storeEncryptedString("user");
+    }
+  } catch (e) {
+    console.warn("Unable to store user", e);
+  }
+}
+
+export async function getCurrentUser(): Promise<FullUser | undefined> {
+  try {
+    const stored = await getEncryptedString("user");
+    if (stored) {
+      return stored ? JSON.parse(stored) : undefined;
+    }
+  } catch (e) {
+    console.warn("Unable to get user", e);
+  }
+  return undefined;
+}
+
+export async function storeUserSession(authUser?: AuthUser) {
+  try {
+    if (authUser) {
+      await storeEncryptedString("user_session", JSON.stringify(authUser));
+    } else {
+      await storeEncryptedString("user_session");
+    }
+  } catch (e) {
+    console.warn("Unable to store user_session", e);
+  }
+}
+
+export async function getUserSession(): Promise<AuthUser | undefined> {
+  try {
+    const stored = await getEncryptedString("user_session");
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn("Unable to get user_session", e);
+  }
+  return undefined;
+}
+
+async function storeEncryptedString(key: string, value?: string | undefined) {
+  if (__DEV__) {
+    console.debug("Store encrypted string", key, value);
+  }
+  try {
+    if (value) {
+      await EncryptedStorage.setItem(key, value);
+    } else {
+      await EncryptedStorage.removeItem(key);
+    }
+  } catch (e) {
+    console.warn("Unable to store encrypted string", key, e);
+  }
+}
+
+async function getEncryptedString(key: string): Promise<string | undefined> {
+  try {
+    return (await EncryptedStorage.getItem(key)) as string;
+  } catch (e) {
+    return undefined;
+  }
+}
+
+export async function getAccessToken(): Promise<string | undefined> {
+  return getEncryptedString("access_token");
+}
+
+export async function storeAccessToken(token?: string | undefined) {
+  return storeEncryptedString("access_token", token);
+}
+
+export async function getRefreshToken(): Promise<string | undefined> {
+  return getEncryptedString("refresh_token");
+}
+
+export async function storeRefreshToken(token?: string | undefined) {
+  return storeEncryptedString("refresh_token", token);
+}
+
+export async function clearStorage() {
+  await storeAccessToken(undefined);
+  await storeRefreshToken(undefined);
+  await storeUserSession(undefined);
+}
+
+export async function processAuthResponse(authResponse: AuthResponse): Promise<AuthUser> {
+  await storeAccessToken(authResponse.token.accessToken);
+  await storeRefreshToken(authResponse.token.refreshToken);
+  await storeUserSession(authResponse.user);
+  return authResponse.user;
 }

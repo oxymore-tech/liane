@@ -1,12 +1,15 @@
 using System;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public sealed record TripIntent (
+public sealed record TripIntent(
     string? Id,
-    string User,
-    RallyingPoints.RallyingPoint From,
-    RallyingPoints.RallyingPoint To,
-    DateTime FromTime,
-    DateTime? ToTime 
-);
+    string? Title,
+    Ref<RallyingPoint> From,
+    Ref<RallyingPoint> To,
+    TimeOnly GoTime,
+    TimeOnly? ReturnTime,
+    Ref<User.User>? CreatedBy,
+    DateTime? CreatedAt
+) : IEntity;

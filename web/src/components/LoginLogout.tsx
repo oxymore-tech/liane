@@ -7,15 +7,15 @@ export interface LoginLogoutProps {
 }
 
 export function LoginLogout({ className = "" }: LoginLogoutProps) {
-  const { authUser, setAuthUser } = useContext(AppContext);
+  const { user, setUser } = useContext(AppContext);
 
   function disconnect() {
-    setAuthUser(undefined);
+    setUser(undefined);
   }
 
   return (
     <div className={`grid grid-cols-2 ${className}`}>
-      {authUser
+      {user
         ? (
           <>
             <span className="">Vous êtes connecté.</span>

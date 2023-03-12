@@ -1,8 +1,13 @@
-import { ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
+import { API_URL, APP_ENV } from "@env";
+import { Mutex } from "async-mutex";
+import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import { getStoredToken } from "@/api/storage";
+import { clearStorage, getRefreshToken, getAccessToken, getUserSession, processAuthResponse } from "@/api/storage";
+import { AuthResponse } from "@/api/index";
 
-const BaseUrl = __DEV__ ? "https://liane-dev.gjini.co/api" : "https://liane-dev.gjini.co/api";
+const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
+
+export const BaseUrl = `${API_URL || `https://${domain}`}/api`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -12,7 +17,7 @@ export interface ListOptions<T> {
   readonly sort?: SortOptions<T>;
 }
 
-type MethodType = "GET" | "POST" | "PUT" | "DELETE";
+type MethodType = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type QueryParams = { [k: string]: any };
 
@@ -69,12 +74,16 @@ export async function postAs<T>(uri: string, options: QueryPostOptions<T> = {}):
   return fetchAndCheckAs<T>("POST", uri, options);
 }
 
-export async function remove(uri: string, options: QueryPostOptions<any> = {}) {
+export async function del(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("DELETE", uri, options);
 }
 
 export function post(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("POST", uri, options);
+}
+
+export function patch(uri: string, options: QueryPostOptions<any> = {}) {
+  return fetchAndCheck("PATCH", uri, options);
 }
 
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
@@ -92,22 +101,29 @@ function formatBody(body?: any, bodyAsJson: boolean = true) {
   return body;
 }
 
-async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}) {
+const refreshTokenMutex = new Mutex();
+
+async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}): Promise<Response> {
   const { body, bodyAsJson } = options;
-  const response = await fetch(formatUrl(uri, options), {
-    headers: await headers(body, bodyAsJson),
+  const url = formatUrl(uri, options);
+  const formatedBody = formatBody(body, bodyAsJson);
+  const formatedHeaders = await headers(body, bodyAsJson);
+  if (__DEV__) {
+    console.debug(`Fetch API ${method} "${url}"`, formatedBody ?? "");
+  }
+  const response = await fetch(url, {
+    headers: formatedHeaders,
     method,
-    body: formatBody(body, bodyAsJson)
+    body: formatedBody
   });
-  if (response.status !== 200 && response.status !== 201) {
+  if (response.status !== 200 && response.status !== 201 && response.status !== 204) {
     switch (response.status) {
       case 400:
         /*
-        const message400 = await response.text();
-        console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
-        throw new Error(message400); */
-        if ((response.headers.get("content-type") === "application/json")
-          || (response.headers.get("content-type") === ("application/problem+json"))) {
+                const message400 = await response.text();
+                console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
+                throw new Error(message400); */
+        if (response.headers.get("content-type") === "application/json" || response.headers.get("content-type") === "application/problem+json") {
           const json = await response.json();
           throw new ValidationError(json?.errors);
         }
@@ -115,8 +131,11 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
+        return tryRefreshToken(async () => {
+          return await fetchAndCheck(method, uri, options);
+        });
       case 403:
-        throw new UnauthorizedError();
+        throw new ForbiddenError();
       default:
         const message = await response.text();
         console.log(`Unexpected error on ${method} ${uri}`, response.status, message);
@@ -126,9 +145,46 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   return response;
 }
 
+export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResult>): Promise<TResult> {
+  const refreshToken = await getRefreshToken();
+  const user = await getUserSession();
+  if (refreshToken && user) {
+    if (refreshTokenMutex.isLocked()) {
+      // Ignore if concurrent refresh
+      await refreshTokenMutex.waitForUnlock();
+    } else {
+      return refreshTokenMutex.runExclusive(async () => {
+        if (__DEV__) {
+          console.debug("Try refresh token...");
+        }
+        // Call refresh token endpoint
+        try {
+          const res = await Promise.race([
+            new Promise<AuthResponse>((_, reject) => setTimeout(reject, 10000)),
+            postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } })
+          ]);
+          await processAuthResponse(res);
+          // Retry
+          return await retryAction();
+        } catch (e) {
+          if (__DEV__) {
+            console.error("Error: could not refresh token: ", e);
+          }
+          // Logout if unauthorized
+          if (e instanceof UnauthorizedError) {
+            await clearStorage();
+          }
+          throw new UnauthorizedError();
+        }
+      });
+    }
+  }
+  throw new UnauthorizedError();
+}
+
 async function headers(body?: any, bodyAsJson: boolean = true) {
   const h = new Headers();
-  const token = await getStoredToken();
+  const token = await getAccessToken();
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }

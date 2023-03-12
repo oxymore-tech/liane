@@ -2,8 +2,35 @@
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
+# shellcheck disable=SC2120
+function token {
+  local environment=${1:-local}
+  
+  local baseUrl
+  
+  if [[ "${environment}" = "local" ]]; then
+    baseUrl="http://localhost:5000"
+  elif [[ "${environment}" = "dev" ]]; then
+     baseUrl="https://dev.liane.app"
+  elif [[ "${environment}" = "prod" ]]; then
+    baseUrl="https://liane.app"
+  fi;
+  
+  local token
+  token=$(http POST "${baseUrl}/api/auth/login" phone=0000111111 code=333333 | jq -r .token.accessToken)
+  echo "Authorization:Bearer${token}"
+}
+
 function dump_on_local {
-    ssh gjini.co "/home/ubuntu/liane/deploy/dump.sh" | docker exec -i mongo mongorestore --archive --gzip -u mongoadmin -p secret
+  local environment=${1:-dev}
+    
+  local suffix="-dev"
+  
+  if [[ "${environment}" = "prod" ]]; then
+    suffix=""
+  fi;
+  
+  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | docker exec -i mongo mongorestore --archive --gzip -u mongoadmin -p secret
 }
 
 function mongo_start {
@@ -26,27 +53,8 @@ function mongo_purge {
     mongo_start
 }
 
-function redis_start {
-    redis_stop
-    docker run -d --name redis \
-        -p 6379:6379 \
-        -v "${SCRIPTPATH}/data/redis:/var/lib/redis" \
-        --restart unless-stopped redis:6.0.3
-}
-
-function redis_stop {
-    docker rm -f redis 2> /dev/null
-}
-
-function redis_purge {
-    redis_stop
-    sudo rm -Rf "${SCRIPTPATH}/data/redis"
-    redis_start
-}
-
 function stop {
   mongo_stop
-  redis_stop
 }
 
 function start {
@@ -54,16 +62,17 @@ function start {
 }
 
 function init {
-  redis_purge
   mongo_purge
-  sleep 3
-  source "${SCRIPTPATH}/../deploy/utils.sh"  
-  init_db "redis" "${REDIS_PASSWORD}" "mongo" "mongoadmin" "secret" "${SCRIPTPATH}/../deploy/db"
 }
+
+ARGS=${*:2}
 
 case "$1" in
  stop)
   stop
+  ;;
+ token)
+  token "${ARGS[@]}"
   ;;
  start)
   start
@@ -72,10 +81,10 @@ case "$1" in
   init
   ;;
  dump_on_local)
-  dump_on_local
+  dump_on_local "${ARGS[@]}"
   ;;
  *)
   # else
-  echo "Usage: (init|start|stop|dump_on_local)"
+  echo "Usage: liane (token|init|start|stop|dump_on_local)"
   ;;
 esac

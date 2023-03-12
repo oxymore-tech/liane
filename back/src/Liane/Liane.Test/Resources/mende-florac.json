@@ -1,41 +1,41 @@
 {
-  "Code": "Ok",
-  "Waypoints": [
+  "code": "Ok",
+  "waypoints": [
     {
-      "Name": "Rue de la Libert\u00E9",
-      "Location": [
+      "name": "Rue de la Libert\u00E9",
+      "location": [
         3.499084,
         44.518149
       ],
-      "Distance": 13.990154,
-      "Hint": "bXsKgHV7CoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAABxAwAATGQ1AAVLpwJhZDUAiEqnAgEAPwWLWyP5",
-      "Nodes": null
+      "distance": 13.990154,
+      "hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
+      "nodes": null
     },
     {
-      "Name": "",
-      "Location": [
+      "name": "",
+      "location": [
         3.582862,
         44.32323
       ],
-      "Distance": 607.20026,
-      "Hint": "6LgAgEZTBoAAAAAACQAAAMcEAADoAgAAAAAAALFcJUEafapEjrZPRAAAAAAJAAAAxwQAAOgCAABxAwAAjqs2AJ5RpAKlmDYAJUGkAm0AbxOLWyP5",
-      "Nodes": null
+      "distance": 607.20026,
+      "hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
+      "nodes": null
     }
   ],
-  "Routes": [
+  "routes": [
     {
-      "Distance": 37971.3,
-      "Duration": 2328.5,
-      "Weight": 2328.5,
-      "WeightName": null,
-      "Geometry": null,
-      "Legs": [
+      "distance": 38014.7,
+      "duration": 2330.7,
+      "weight": 2330.7,
+      "weightName": "routability",
+      "geometry": null,
+      "legs": [
         {
-          "Distance": 37971.3,
-          "Duration": 2328.5,
-          "Steps": [],
-          "Weight": 2328.5,
-          "Annotation": null
+          "distance": 38014.7,
+          "duration": 2330.7,
+          "steps": [],
+          "weight": 2330.7,
+          "annotation": null
         }
       ]
     }

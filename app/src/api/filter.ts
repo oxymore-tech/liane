@@ -49,5 +49,4 @@ export type QuerySelector<T> = {
 
 export type FilterQuery<T> = {
   [P in keyof T]?: Condition<T[P]>;
-} &
-RootQuerySelector<T>;
+} & RootQuerySelector<T>;

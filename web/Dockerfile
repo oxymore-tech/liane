@@ -9,8 +9,8 @@ RUN yarn
 
 COPY . ./
 
-ARG PROJECT
-ENV NEXT_PUBLIC_APP_URL https://${PROJECT}.gjini.co
+ARG DOMAIN
+ENV NEXT_PUBLIC_APP_URL https://${DOMAIN}
 
 RUN yarn build
 

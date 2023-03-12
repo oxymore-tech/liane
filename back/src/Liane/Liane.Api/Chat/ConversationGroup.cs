@@ -1,0 +1,29 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using Liane.Api.Util.Http;
+using Liane.Api.Util.Ref;
+
+namespace Liane.Api.Chat;
+
+public sealed record GroupMemberInfo(
+  // TODO resolved ref
+  Ref<User.User> User,
+  DateTime JoinedAt,
+  DateTime? LastReadAt = null
+): IResourceMember;
+
+public record ConversationGroup(
+  ImmutableList<GroupMemberInfo> Members,
+  string? Id = null,
+  Ref<User.User>? CreatedBy = null,
+  DateTime? CreatedAt = null,
+  DateTime? LastMessageAt = null
+) : IEntity, ISharedResource<GroupMemberInfo>
+{
+  public static ConversationGroup CreateWithMembers(IEnumerable<Ref<User.User>> members, DateTime joinedAt)
+  {
+    return new ConversationGroup(members.Select(m => new GroupMemberInfo(m, joinedAt)).ToImmutableList());
+  }
+}

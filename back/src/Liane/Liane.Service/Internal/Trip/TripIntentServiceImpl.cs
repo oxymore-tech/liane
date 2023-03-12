@@ -1,91 +1,70 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.RallyingPoints;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Http;
-using Liane.Service.Internal.RallyingPoints;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class TripIntentServiceImpl : ITripIntentService
+public sealed class TripIntentServiceImpl : ITripIntentService
 {
     private readonly ICurrentContext currentContext;
     private readonly IMongoDatabase mongo;
+    private readonly IRallyingPointService rallyingPointService;
 
-    public TripIntentServiceImpl(MongoSettings settings, ICurrentContext currentContext)
+    public TripIntentServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService)
     {
         this.currentContext = currentContext;
-        mongo = settings.GetDatabase();
+        this.rallyingPointService = rallyingPointService;
+        this.mongo = mongo;
     }
 
-    public async Task<TripIntent> Create(ReceivedTripIntent tripIntent)
+    public async Task<TripIntent> Create(TripIntent tripIntent)
     {
-        var ti = new TripIntent(
-            null,
-            currentContext.CurrentUser().Phone,
-            tripIntent.From,
-            tripIntent.To,
-            DateTime.Parse(tripIntent.FromTime, null, DateTimeStyles.RoundtripKind),
-            tripIntent.ToTime is null ? null : DateTime.Parse(tripIntent.ToTime, null, DateTimeStyles.RoundtripKind)
-        );
+        var from = await rallyingPointService.Get(tripIntent.From);
+        var to = await rallyingPointService.Get(tripIntent.To);
 
-        var newId = ObjectId.GenerateNewId();
-        var created = ti with { Id = newId.ToString() };
+        var id = ObjectId.GenerateNewId()
+            .ToString();
+        var createdBy = currentContext.CurrentUser().Id;
+        var createdAt = DateTime.UtcNow;
+        var created = tripIntent with { Id = id, From = from, To = to, CreatedBy = createdBy, CreatedAt = createdAt };
 
-        await mongo.GetCollection<DbTripIntent>().InsertOneAsync(ToDbTripIntent(created));
+        await mongo.GetCollection<TripIntent>()
+            .InsertOneAsync(created);
+
         return created;
     }
 
     public async Task Delete(string id)
     {
-        await mongo.GetCollection<DbTripIntent>().DeleteOneAsync(ti => ti.Id == ObjectId.Parse(id));
+        await mongo.GetCollection<TripIntent>()
+            .DeleteOneAsync(ti => ti.Id == id);
     }
 
     public async Task<ImmutableList<TripIntent>> List()
     {
-        var filter = FilterDefinition<DbTripIntent>.Empty;
-
-        var builder = Builders<DbTripIntent>.Filter;
-        var currentUser = currentContext.CurrentUser();
-
-        if (!currentUser.IsAdmin)
+        var cursorAsync = await mongo.GetCollection<TripIntent>()
+            .Find(i => true)
+            .ToCursorAsync();
+        var tripIntents = new List<TripIntent>();
+        foreach (var tripIntent in cursorAsync.ToEnumerable())
         {
-            var regex = new Regex(Regex.Escape(currentUser.Phone), RegexOptions.None);
-            filter &= builder.Regex(x => x.User, new BsonRegularExpression(regex));
+            tripIntents.Add(await ResolveRallyingPoints(tripIntent));
         }
 
-        var result = (await mongo.GetCollection<DbTripIntent>().FindAsync(filter))
-            .ToEnumerable()
-            .Select(ToTripIntent)
+        return tripIntents
             .ToImmutableList();
-
-        return result;
     }
 
-    private static DbTripIntent ToDbTripIntent(TripIntent tripIntent)
+    private async Task<TripIntent> ResolveRallyingPoints(TripIntent tripIntent)
     {
-        return new DbTripIntent(tripIntent.Id is null ? null : ObjectId.Parse(tripIntent.Id), tripIntent.User,
-            RallyingPointServiceImpl.ToDbRallyingPoint(tripIntent.From), RallyingPointServiceImpl.ToDbRallyingPoint(tripIntent.To),
-            tripIntent.FromTime, tripIntent.ToTime);
-    }
-
-    private static TripIntent ToTripIntent(DbTripIntent dbTripIntent)
-    {
-        return new TripIntent(dbTripIntent.Id.ToString(), dbTripIntent.User, ToRallyingPoint(dbTripIntent.From), ToRallyingPoint(dbTripIntent.To),
-            dbTripIntent.FromTime, dbTripIntent.ToTime);
-    }
-
-    private static RallyingPoint ToRallyingPoint(DbRallyingPoint rallyingPoint)
-    {
-        var loc = new LatLng(rallyingPoint.Location.Coordinates.Latitude, rallyingPoint.Location.Coordinates.Longitude);
-        return new RallyingPoint(rallyingPoint.Id.ToString(), rallyingPoint.Label, loc, rallyingPoint.IsActive);
+        var from = await rallyingPointService.Get(tripIntent.From);
+        var to = await rallyingPointService.Get(tripIntent.To);
+        return tripIntent with { From = from, To = to };
     }
 }

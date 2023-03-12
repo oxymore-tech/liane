@@ -4,10 +4,12 @@
       "Default": "Debug",
       "System": "Warning",
       "Microsoft": "Error",
-      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
+      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information",
+      "Liane.Web.Internal.Debug": "Debug"
     }
   },
   "Auth": {
+    "Validity": "0.08:00:00",
     "Issuer": "Liane",
     "Audience": "Liane"
   }
