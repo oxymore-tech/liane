@@ -24,6 +24,7 @@ import { useQueries } from "react-query";
 import { AppContext } from "@/components/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
+import { extractDatePart } from "@/util/datetime";
 
 interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -126,7 +127,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 };
 const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
   <View style={[styles.header, styles.grayBorder]}>
-    <AppText style={styles.headerTitle}>{date}</AppText>
+    <AppText style={styles.headerTitle}>{formatMonthDay(new Date(date))}</AppText>
   </View>
 );
 const MyTripsScreen = ({ navigation }) => {
@@ -260,8 +261,8 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): Trip
   Object.entries(
     data.reduce((tmp, item) => {
       const liane: Liane = isResolvedJoinLianeRequest(item) ? item.targetLiane : item;
-      // Get formatted date for local timezone
-      const group = formatMonthDay(new Date(liane.departureTime));
+      // Use date for grouping
+      const group = extractDatePart(liane.departureTime);
       // Add item to this group (or create the group)
 
       if (!tmp[group]) {
@@ -273,7 +274,9 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): Trip
 
       return tmp;
     }, {} as { [key: UTCDateTime]: (Liane | JoinLianeRequestDetailed)[] })
-  ).map(([group, items]) => ({ date: group, data: items } as TripSection));
+  )
+    .map(([group, items]) => ({ date: group, data: items } as TripSection))
+    .sort((a, b) => -a.date.localeCompare(b.date));
 
 export const LianeQueryKey = "getLianes";
 export const JoinRequestsQueryKey = "getJoinRequests";

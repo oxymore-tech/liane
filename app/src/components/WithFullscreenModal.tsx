@@ -1,6 +1,6 @@
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
-import { Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
@@ -14,6 +14,7 @@ export const WithFullscreenModal = (WrappedComponent: React.ComponentType, title
         </Pressable>
         <AppText style={[styles.title, { color: AppColors.white }]}>{title} </AppText>
       </Row>
+
       <WrappedComponent {...props} />
     </View>
   );

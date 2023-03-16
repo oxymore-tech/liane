@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
-import { Pressable, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { MapStyle } from "@/api/location";
 import LocationPin from "@/assets/location_pin.svg";
@@ -71,15 +71,20 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
         </View>
         {!value && (
           <View style={{ flexGrow: 1, backgroundColor: WithAlpha(AppColors.white, 0.6), width: "100%", borderRadius: 16, paddingVertical: 16 }}>
-            {recentLocations.map(r => (
-              <AppPressable key={r.id} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(r)}>
-                <Column>
-                  <AppText style={{ fontWeight: "bold" }}>{r.label}</AppText>
-                  <AppText numberOfLines={1}>{r.address}</AppText>
-                  <AppText numberOfLines={1}>{r.zipCode + ", " + r.city}</AppText>
-                </Column>
-              </AppPressable>
-            ))}
+            <AppText style={[styles.bold, { paddingHorizontal: 16 }]}>Recherches récentes</AppText>
+            <FlatList
+              data={recentLocations}
+              keyExtractor={r => r.id!}
+              renderItem={({ item }) => (
+                <AppPressable key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+                  <Column>
+                    <AppText style={styles.bold}>{item.label}</AppText>
+                    <AppText numberOfLines={1}>{item.address}</AppText>
+                    <AppText numberOfLines={1}>{item.zipCode + ", " + item.city}</AppText>
+                  </Column>
+                </AppPressable>
+              )}
+            />
           </View>
         )}
 
@@ -142,12 +147,14 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
                 }}>
                 <Pressable
                   onPress={() => {
-                    cameraRef.current?.flyTo(center);
+                    if (center) {
+                      cameraRef.current?.flyTo(center);
+                    }
                   }}>
                   <LocationPin fill={AppColorPalettes.orange[700]} />
                 </Pressable>
                 <Column>
-                  <AppText style={{ fontWeight: "bold" }}>{value.label}</AppText>
+                  <AppText style={styles.bold}>{value.label}</AppText>
                   <AppText numberOfLines={1}>{value.address}</AppText>
                   <AppText numberOfLines={1}>{value.zipCode + ", " + value.city}</AppText>
                 </Column>
@@ -162,3 +169,9 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
     );
   }
 );
+
+const styles = StyleSheet.create({
+  bold: {
+    fontWeight: "bold"
+  }
+});

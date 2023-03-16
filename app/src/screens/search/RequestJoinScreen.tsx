@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
-import { StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
@@ -14,12 +14,14 @@ import { CardTextInput } from "@/components/base/CardTextInput";
 import { JoinLianeRequest } from "@/api";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
+import { useKeyboardState } from "@/util/hooks/keyboardState";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"RequestJoin">();
   const insets = useSafeAreaInsets();
 
   const { services } = useContext(AppContext);
+  const keyboardIsVisible = useKeyboardState();
   const request = route.params.request;
   const [message, setMessage] = useState("");
 
@@ -38,7 +40,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     };
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
-    navigation.goBack();
+    navigation.navigate("Home", { screen: "Mes trajets" });
   };
   const headerDate = (
     <Row spacing={8}>
@@ -57,31 +59,38 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   );
 
   return (
-    <Column style={{ flexGrow: 1, marginBottom: insets.bottom }}>
-      <Column
-        spacing={8}
+    <Column
+      style={{
+        marginBottom: Math.max(keyboardIsVisible ? 0 : insets.bottom, 8),
+        justifyContent: "space-between",
+        flexGrow: 1
+      }}>
+      <ScrollView
         style={{
+          flexShrink: 1,
           paddingHorizontal: 12,
           paddingTop: 8,
           paddingBottom: 20
         }}>
-        <TripCard header={headerDate} content={tripContent} />
-        <Row style={styles.card} spacing={8}>
-          {request.seats > 0 ? <AppCustomIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
-          <AppText style={{ fontSize: 16 }}>{peopleDescription}</AppText>
-        </Row>
-        <View style={{ marginTop: 24 }}>
+        <Column spacing={8}>
+          <TripCard header={headerDate} content={tripContent} />
+          <Row style={styles.card} spacing={8}>
+            {request.seats > 0 ? <AppCustomIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
+            <AppText style={{ fontSize: 16 }}>{peopleDescription}</AppText>
+          </Row>
+        </Column>
+      </ScrollView>
+      <KeyboardAvoidingView behavior={"padding"} style={{ flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: 24 }}>
+        <View style={{ marginVertical: 24 }}>
           <CardTextInput multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
         </View>
-      </Column>
-      <View style={{ flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: 24 }}>
         <AppRoundedButton
           color={defaultTextColor(AppColors.orange)}
           onPress={requestJoin}
           backgroundColor={AppColors.orange}
           text={"Envoyer la demande"}
         />
-      </View>
+      </KeyboardAvoidingView>
     </Column>
   );
 }, "Récapitulatif");

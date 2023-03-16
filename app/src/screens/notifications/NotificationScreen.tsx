@@ -11,6 +11,7 @@ import { AppPressable } from "@/components/base/AppPressable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getNotificationNavigation, useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
+import { useQueryClient } from "react-query";
 
 const NotificationQueryKey = "notification";
 
@@ -27,6 +28,10 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
     const { services } = useContext(AppContext);
+    const queryClient = useQueryClient();
+    services.chatHub.subscribeToNotifications(async (n: Notification) => {
+      await queryClient.invalidateQueries(NotificationQueryKey); //TODO just add received notification
+    });
 
     const renderItem = ({ item }: { item: Notification }) => {
       const datetime = toRelativeTimeString(new Date(item.payload.createdAt!));

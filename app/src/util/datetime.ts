@@ -1,3 +1,4 @@
+import { UTCDateTime } from "@/api";
 export type TimeInSeconds = number;
 export const toTimeInSeconds = (datetime: Date) => {
   return (datetime.getUTCHours() * 60 + datetime.getUTCMinutes()) * 60 + datetime.getUTCSeconds();
@@ -14,4 +15,8 @@ export const formatDuration = (duration: TimeInSeconds) => {
 export const addSeconds = (date: Date, seconds: number) => {
   date.setSeconds(seconds + date.getUTCSeconds());
   return date;
+};
+
+export const extractDatePart = (isoDatetime: UTCDateTime) => {
+  return isoDatetime.slice(0, isoDatetime.indexOf("T"));
 };

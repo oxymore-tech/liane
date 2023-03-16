@@ -14,6 +14,13 @@ export const BottomOptionBg = ({ color, childWidth = 104, children }: BottomOpti
   const bgHeight = bottom + 72;
 
   const d = 56 - childViewWidth;
+  console.log(
+    childViewWidth,
+    width,
+    bgHeight,
+    d,
+    `M${width} ${bgHeight}V0.5H${344.5 + d}C${294.5 + d} 0.499992 ${299.374 + d} 36.5 ${278.5 + d} 36.5H60.5H0V${bgHeight}H${width}Z`
+  );
 
   return (
     <View style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}>

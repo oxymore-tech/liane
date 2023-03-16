@@ -1,6 +1,6 @@
 import { ChatMessage, ConversationGroup, PaginatedResponse, User } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -144,20 +144,25 @@ export const ChatScreen = () => {
         ) : null}
       </Row>
 
-      <Row
-        spacing={16}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{
-          backgroundColor: AppColors.darkBlue,
-          paddingHorizontal: 16,
-          paddingBottom: 12 + insets.bottom,
-          paddingTop: 12,
-          marginTop: 8,
-          alignItems: "flex-end"
+          backgroundColor: AppColors.darkBlue
         }}>
-        <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingBottom: 12 + insets.bottom,
+            paddingTop: 12,
+            marginTop: 8
+          }}>
+          <Row style={{ alignItems: "flex-end" }} spacing={16}>
+            <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
 
-        <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
-      </Row>
+            <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
+          </Row>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   ); // TODO loading screen
 };
