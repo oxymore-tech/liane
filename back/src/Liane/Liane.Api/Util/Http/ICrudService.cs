@@ -11,10 +11,11 @@ public interface IResourceResolverService<TOut> where TOut : class, IIdentity
   /// Returns the resolved object from a given reference
   /// </summary>
   Task<TOut> Get(Ref<TOut> reference);
+
   Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references);
 }
 
-public interface ICrudService<TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IIdentity
+public interface ICrudService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IIdentity
 {
   Task<bool> Delete(Ref<TOut> reference);
 
@@ -25,7 +26,7 @@ public interface ICrudService<T> : ICrudService<T, T> where T : class, IIdentity
 {
 }
 
-public interface ICrudEntityService<TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity
+public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity
 {
   Task<bool> Delete(Ref<TOut> reference);
 

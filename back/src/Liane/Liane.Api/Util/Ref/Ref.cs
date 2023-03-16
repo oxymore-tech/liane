@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 
 namespace Liane.Api.Util.Ref;
 
-public abstract record Ref<T> where T : class, IIdentity
+public abstract record Ref<T>
+  where T : class, IIdentity
 {
   private Ref()
   {

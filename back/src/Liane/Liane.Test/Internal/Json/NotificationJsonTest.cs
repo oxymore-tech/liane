@@ -1,35 +1,30 @@
 using System;
+using System.Collections.Immutable;
 using System.Text.Json;
-using Liane.Api.Notification;
+using Liane.Api.Event;
 using Liane.Web.Internal.Json;
 using NUnit.Framework;
 
 namespace Liane.Test.Internal.Json;
 
-public class NotificationJsonTest
+[TestFixture]
+public sealed class NotificationJsonTest
 {
-  private readonly JsonSerializerOptions options;
-
-  public NotificationJsonTest()
-  {
-    var options = new JsonSerializerOptions();
-    JsonSerializerSettings.ConfigureOptions(options);
-    this.options = options;
-  }
+  private readonly JsonSerializerOptions options = JsonSerializerSettings.TestJsonOptions(false);
 
   [Test]
   public void ShouldSerializeBaseClass()
   {
-    var notification = new NotificationPayload.WithEvent<string>("id", DateTime.Parse("2023-03-03"), "ok");
-    var actual = JsonSerializer.Serialize<NotificationPayload>(notification, options);
-    Assert.AreEqual("{\"id\":\"id\",\"seen\":false,\"createdAt\":\"2023-03-03T00:00:00\",\"type\":\"String\",\"event\":\"ok\"}", actual);
+    var e = new Event("id", ImmutableList<Recipient>.Empty, "augustin", DateTime.Parse("2023-03-03"), true, "lianeId", new LianeEvent.JoinRequest("Aurillac", "Medon", 2, false, "Hey !"));
+    var actual = JsonSerializer.Serialize(e, options);
+    Assert.AreEqual("{\"id\":\"id\",\"recipients\":[],\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00\",\"needsAnswer\":true,\"liane\":\"lianeId\",\"lianeEvent\":{\"type\":\"JoinRequest\",\"from\":\"Aurillac\",\"to\":\"Medon\",\"seats\":2,\"takeReturnTrip\":false,\"message\":\"Hey !\"}}", actual);
   }
-  
-    [Test]
-    public void ShouldSerialize()
-    {
-      var notification = new NotificationPayload.WithEvent<string>("id", DateTime.Parse("2023-03-03"), "ok");
-      var actual = JsonSerializer.Serialize(notification, options);
-      Assert.AreEqual("{\"event\":\"ok\",\"type\":\"String\",\"id\":\"id\",\"seen\":false,\"createdAt\":\"2023-03-03T00:00:00\"}", actual);
-    }
+
+  [Test]
+  public void ShouldSerialize()
+  {
+    var e = new Event("id", ImmutableList<Recipient>.Empty, "augustin", DateTime.Parse("2023-03-03"), true, "lianeId", new LianeEvent.MemberHasLeft());
+    var actual = JsonSerializer.Serialize(e, options);
+    Assert.AreEqual("{\"id\":\"id\",\"recipients\":[],\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00\",\"needsAnswer\":true,\"liane\":\"lianeId\",\"lianeEvent\":{\"type\":\"MemberHasLeft\"}}", actual);
+  }
 }

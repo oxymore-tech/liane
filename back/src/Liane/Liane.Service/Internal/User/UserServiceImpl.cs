@@ -22,14 +22,15 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
         Builders<DbUser>.Update.Set(field, value)
       );
   }
+
   public async Task UpdateLastConnection(string id, DateTime timestamp)
   {
-    await UpdateField(id, u => u.LastConnection , timestamp);
+    await UpdateField(id, u => u.LastConnection, timestamp);
   }
-  
+
   public async Task UpdatePushToken(string id, string pushToken)
   {
-    await UpdateField(id, u => u.PushToken , pushToken);
+    await UpdateField(id, u => u.PushToken, pushToken);
   }
 
   public async Task<FullUser> GetByPhone(string phone)
@@ -52,7 +53,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
   public async Task<FullUser> GetFullUser(string userId)
   {
-    var userDb = await ResolveRef<DbUser>(userId);
+    var userDb = await Mongo.Get<DbUser>(userId);
     if (userDb is null)
     {
       throw new ResourceNotFoundException($"User ${userId}");
@@ -61,7 +62,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     return MapUser(userDb);
   }
 
-  private FullUser MapUser(DbUser dbUser)
+  private static FullUser MapUser(DbUser dbUser)
   {
     return new FullUser(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
   }

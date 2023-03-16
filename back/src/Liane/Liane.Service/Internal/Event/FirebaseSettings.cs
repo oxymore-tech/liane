@@ -1,3 +1,3 @@
-namespace Liane.Service.Internal.Notification;
+namespace Liane.Service.Internal.Event;
 
 public sealed record FirebaseSettings(string? ServiceAccountFile);

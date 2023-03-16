@@ -198,7 +198,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     );
 
     await Db.GetCollection<LianeDb>()
-      .InsertOneAsync(new LianeDb(id, userA, now, departureTime, null, lianeMembers, new DriverData(userA)));
+      .InsertOneAsync(new LianeDb(id, userA, now, departureTime, null, lianeMembers, new Driver(userA)));
   }
 
   [Test]

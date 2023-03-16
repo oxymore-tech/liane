@@ -1,11 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.Hub;
-using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Event;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -31,18 +31,20 @@ public sealed class HubServiceImpl : IHubService
 
   public async Task<bool> TrySendNotification(Ref<User> receiver, Notification notification)
   {
-    if (IsConnected(receiver))
+    if (!IsConnected(receiver))
     {
-      try
-      {
-        await hubContext.Clients.Group(receiver.Id).ReceiveNotification(notification);
-        return true;
-      }
-      catch (Exception e)
-      {
-        // TODO handle retry 
-        logger.LogInformation("Could not send notification to user {receiver} : {error}", receiver, e.Message);
-      }
+      return false;
+    }
+
+    try
+    {
+      await hubContext.Clients.Group(receiver.Id).ReceiveNotification(notification);
+      return true;
+    }
+    catch (Exception e)
+    {
+      // TODO handle retry 
+      logger.LogWarning(e, "Could not send notification to user {receiver} : {error}", receiver, e.Message);
     }
 
     return false;
@@ -50,7 +52,6 @@ public sealed class HubServiceImpl : IHubService
 
   public async Task<bool> TrySendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
-   
     if (IsConnected(receiver))
     {
       try

@@ -1,5 +1,5 @@
 
-namespace Liane.Web.Internal.AccessLevel;
+namespace Liane.Api.Util.Http;
 
 public enum ResourceAccessLevel
 {

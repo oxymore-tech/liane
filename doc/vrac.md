@@ -12,7 +12,7 @@ Voivi des idées et discussions en vrac abordées et qui serviront à définir n
 - se brancher et se faire connaitre avec nos points de transports limitrophes (gares des grandes villes autour, hotels)
 - possibilité de faire économiser à la région (en charge aujourd'hui du transport) de l'argent sur les alternatives bus et taxi
 - possibilité de rajouter à notre système n'importe quel véhicule : notemment des bus afrétés pour certaines occasions
-- possibilité de faire  fonctionner l'application avec un porte monnaie vituel
+- possibilité de faire fonctionner l'application avec un porte monnaie vituel
 - prospectives : possibilité de subventionner le porte monaie, monaie locales, points
 - démarré au niveau local et adaptable ailleurs
 - inclure les touristes nombreux et intérrésses de plus en plus à voyager sans leur propre voitures

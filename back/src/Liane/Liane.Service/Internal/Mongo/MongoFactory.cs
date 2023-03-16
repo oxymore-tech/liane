@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Liane.Api.Notification;
+using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Mongo.Serialization;
-using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +44,7 @@ public static class MongoFactory
       var alwaysPack = new ConventionPack
       {
         new EnumRepresentationConvention(BsonType.String),
+        new CamelCaseElementNameConvention(),
       };
       var stringIdAsObjectIdPack = new ConventionPack
       {
@@ -58,11 +58,10 @@ public static class MongoFactory
         var use = !t.IsAssignableFrom(typeof(RallyingPoint));
         return use;
       });
-      //BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
-      //BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
+      BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
+      BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(NotificationDb), new NotificationDiscriminatorConvention());
       BsonSerializer.RegisterDiscriminatorConvention(typeof(LianeEvent), new PolymorphicTypeDiscriminatorConvention());
       _init = true;
     }
@@ -77,7 +76,7 @@ public static class MongoFactory
         {
           var json = e.Command.ToJson();
           var command = json.Length < 50_000 ? json : "Big query not displayed";
-          logger.LogDebug($"{e.CommandName} - {command}");
+          logger.LogDebug("{e.CommandName} - {command}", e.CommandName, command);
         });
       }
     });

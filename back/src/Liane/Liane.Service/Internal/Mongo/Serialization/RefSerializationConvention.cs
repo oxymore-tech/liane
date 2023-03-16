@@ -6,9 +6,8 @@ using MongoDB.Bson.Serialization.Conventions;
 
 namespace Liane.Service.Internal.Mongo.Serialization;
 
-public class RefSerializationConvention : ConventionBase, IMemberMapConvention
+public sealed class RefSerializationConvention : ConventionBase, IMemberMapConvention
 {
-
   private readonly ImmutableList<Type> typesWithStringId;
 
   public RefSerializationConvention(ImmutableList<Type> typesWithStringId)
@@ -24,16 +23,15 @@ public class RefSerializationConvention : ConventionBase, IMemberMapConvention
   /// <inheritdoc/>
   public void Apply(BsonMemberMap memberMap)
   {
-    
-    if (!memberMap.MemberType.IsGenericType || !memberMap.MemberType.GetGenericTypeDefinition().IsAssignableFrom(typeof(Ref<>)) )
+    if (!memberMap.MemberType.IsGenericType || !memberMap.MemberType.GetGenericTypeDefinition().IsAssignableFrom(typeof(Ref<>)))
     {
       return;
     }
-    
+
     var referencedType = memberMap.MemberType.GetGenericArguments()[0];
-    var serializerType = typesWithStringId.Contains(referencedType) ?
-      typeof(RefToStringBsonSerializer<>).MakeGenericType(referencedType) : 
-      typeof(RefToObjectIdBsonSerializer<>).MakeGenericType(referencedType);
+    var serializerType = typesWithStringId.Contains(referencedType)
+      ? typeof(RefToStringBsonSerializer<>).MakeGenericType(referencedType)
+      : typeof(RefToObjectIdBsonSerializer<>).MakeGenericType(referencedType);
 
     memberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(serializerType)!);
   }

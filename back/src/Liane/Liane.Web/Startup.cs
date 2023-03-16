@@ -8,8 +8,8 @@ using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -67,13 +67,15 @@ public static class Startup
     services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
-    services.AddService<TripIntentServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
+    services.AddService<EventServiceImpl>();
+    
+    services.AddService<LianeNewMemberHandler>();
+    
     services.AddSettings<FirebaseSettings>(context);
-    services.AddService<NotificationServiceImpl>();
-    services.AddService<JoinLianeRequestServiceImpl>();
+    services.AddService<PushServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);
 

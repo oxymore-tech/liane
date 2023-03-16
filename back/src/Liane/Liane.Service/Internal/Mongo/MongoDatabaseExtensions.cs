@@ -6,12 +6,38 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo.Serialization;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Mongo;
 
 public static class MongoDatabaseExtensions
 {
+  public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> builder)
+    where T : class
+    where TExpected : class
+  {
+    return new BsonDocument(PolymorphicTypeDiscriminatorConvention.Type, typeof(TExpected).Name);
+  }
+
+  public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> field)
+    where T : class
+    where TExpected : class
+  {
+    var prefix = string.Join(".", ExpressionHelper.GetMembers(field)
+      .Select(m => m.Name.Uncapitalize())
+      .Reverse());
+    return new BsonDocument($"{prefix}.{PolymorphicTypeDiscriminatorConvention.Type}", typeof(TExpected).Name);
+  }
+
+  public static async Task<T?> Get<T>(this IMongoDatabase mongo, string id) where T : class, IIdentity
+  {
+    return await mongo.GetCollection<T>()
+      .Find(p => p.Id == id)
+      .FirstOrDefaultAsync();
+  }
+
   public static async Task<PaginatedResponse<TData>> Paginate<TData>(
     this IMongoDatabase mongo,
     Pagination pagination,

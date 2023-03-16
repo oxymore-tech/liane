@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
