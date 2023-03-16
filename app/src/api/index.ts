@@ -218,6 +218,38 @@ export type NotificationPayload<T> = Readonly<
   } & Identity
 >;
 
+export type UserEvent = Readonly<
+  {
+    createdAt: UTCDateTime;
+    createdBy: User;
+    seen: boolean;
+    needsAnswer: boolean;
+    liane: Ref<Liane>;
+    lianeEvent: LianeEvent;
+  } & Identity
+>;
+export type LianeEvent = JoinRequest | NewMember | MemberRejected | MemberHasLeft;
+
+export type JoinRequest = Readonly<{
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
+  seats: number;
+  takeReturnTrip: boolean;
+  message: string;
+  type: "JoinRequest";
+}>;
+
+export type NewMember = Readonly<{
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
+  seats: number;
+  takeReturnTrip: boolean;
+  type: "NewMember";
+}>;
+
+export type MemberRejected = Readonly<{ type: "MemberRejected" }>;
+export type MemberHasLeft = Readonly<{ type: "MemberHasLeft" }>;
+
 export type NewConversationMessage = Readonly<{
   conversationId: string;
   sender: User;
