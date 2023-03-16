@@ -45,6 +45,12 @@ public sealed class EventController : ControllerBase
     return await eventService.Answer(id, lianeEvent);
   }
 
+  [HttpGet("request")]
+  public async Task<PaginatedResponse<Event>> ListRequest([FromQuery] Pagination pagination)
+  {
+    return await eventService.List<LianeEvent.JoinRequest>(new EventFilter(true, null), pagination);
+  }
+  
   [HttpGet("event")]
   public async Task<PaginatedResponse<Event>> ListForCurrentUser([FromQuery] Pagination pagination)
   {
