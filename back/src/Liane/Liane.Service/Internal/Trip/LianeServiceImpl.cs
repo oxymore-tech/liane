@@ -352,7 +352,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     {
       // If match for a driver, use the candidate segment as driverSegment
       var matchDriverSegment = matchForDriver ? (from, to) : driverSegment;
-      var matchSegments = matchForDriver ? segments : segments.Append((from, to));
+      var matchSegments = matchForDriver ? segments.Append(driverSegment) : segments.Append((from, to));
       var tripIntent = await routingService.GetTrip(matchDriverSegment, matchSegments);
       if (tripIntent is null)
       {

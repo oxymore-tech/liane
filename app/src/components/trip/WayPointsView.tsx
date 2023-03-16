@@ -92,12 +92,10 @@ export const DetailedWayPointView = ({ wayPoints, departureTime, departureIndex,
         {!last && <View style={[styles.waypointLine, { flexGrow: 1, minHeight: 0 }]} />}
       </Column>
       <Column spacing={2}>
-        <AppText style={[styles.mainWayPointLabel, labelStyle]}>{wayPoint.wayPoint.rallyingPoint.label}</AppText>
+        <AppText style={[styles.mainWayPointLabel, labelStyle]}>{wayPoint.wayPoint.rallyingPoint.city}</AppText>
         <Column style={{ paddingLeft: 2, position: "relative", marginBottom: 12 }}>
+          <AppText>{wayPoint.wayPoint.rallyingPoint.label}</AppText>
           <AppText>{wayPoint.wayPoint.rallyingPoint.address}</AppText>
-          <AppText>
-            {wayPoint.wayPoint.rallyingPoint.zipCode} - {wayPoint.wayPoint.rallyingPoint.city}
-          </AppText>
         </Column>
       </Column>
     </Row>

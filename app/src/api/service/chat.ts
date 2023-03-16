@@ -93,12 +93,23 @@ export class HubServiceClient extends AbstractHubService {
     get(`/conversation/${id}/message`, { params });
 
   async leaveGroupChat(): Promise<void> {
+    await this.checkConnection();
     await this.hub.invoke("LeaveGroupChat", this.currentConversationId);
   }
-  joinGroupChat(conversationId: Ref<ConversationGroup>): Promise<ConversationGroup> {
+  async joinGroupChat(conversationId: Ref<ConversationGroup>): Promise<ConversationGroup> {
+    await this.checkConnection();
     return this.hub.invoke("JoinGroupChat", conversationId);
   }
   async sendToGroup(message: ChatMessage): Promise<void> {
+    await this.checkConnection();
     await this.hub.invoke("SendToGroup", message, this.currentConversationId);
   }
+
+  private checkConnection = async () => {
+    if (this.hub.state !== "Connected") {
+      console.debug("Tried to join chat but state was ", this.hub.state);
+      await this.hub.stop();
+      await this.hub.start();
+    }
+  };
 }

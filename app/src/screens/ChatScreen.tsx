@@ -1,7 +1,7 @@
-import { ChatMessage, ConversationGroup, PaginatedResponse, User } from "@/api";
+import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, User } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -11,6 +11,8 @@ import { AppContext } from "@/components/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
+import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
+import { getTrip } from "@/components/trip/trip";
 const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
   const sender = message.createdBy === currentUser.id;
   return (
@@ -34,15 +36,27 @@ const MessageBubble = ({ message, currentUser }: { message: ChatMessage; current
   );
 };
 
+const AttachedLianeOverview = ({ liane, user }: { liane: Liane; user: User }) => {
+  const { wayPoints, departureTime } = getTrip(liane, user);
+
+  return (
+    <View style={{ paddingLeft: 56, paddingTop: 8, paddingRight: 16 }}>
+      <TripOverviewHeader from={wayPoints[0].rallyingPoint} to={wayPoints[wayPoints.length - 1].rallyingPoint} dateTime={departureTime} />
+    </View>
+  );
+};
+
 export const ChatScreen = () => {
   const { navigation, route } = useAppNavigation<"Chat">();
   const groupId = route.params.conversationId;
+  const attachedLiane: Liane | undefined = undefined; //route.params.liane;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
+  const [error, setError] = useState<Error | undefined>(undefined);
 
   const members = conversation
     ? conversation.members
@@ -74,12 +88,16 @@ export const ChatScreen = () => {
   };
 
   useEffect(() => {
-    services.chatHub.connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage).then(conv => {
-      if (__DEV__) {
-        console.log("Joined conversation", conv);
-      }
-      setConversation(conv);
-    });
+    services.chatHub
+      .connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
+      .then(conv => {
+        if (__DEV__) {
+          console.log("Joined conversation", conv);
+        }
+        setConversation(conv);
+      })
+      .catch(e => setError(e));
+
     return () => {
       services.chatHub.disconnectFromChat(route.params.conversationId).catch(e => {
         if (__DEV__) {
@@ -115,12 +133,16 @@ export const ChatScreen = () => {
         />
       )}
       {!conversation && (
-        <Center>
+        <Center style={{ flex: 1 }}>
           <ActivityIndicator />
         </Center>
       )}
-      <Row
-        spacing={8}
+      {error && (
+        <Center style={{ flex: 1 }}>
+          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
+        </Center>
+      )}
+      <View
         style={{
           backgroundColor: AppColors.darkBlue,
           position: "absolute",
@@ -131,18 +153,21 @@ export const ChatScreen = () => {
           paddingBottom: 16,
           paddingHorizontal: 8
         }}>
-        <Pressable style={{ padding: 8 }} onPress={() => navigation.goBack()}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
-        </Pressable>
-        {conversation ? (
-          <View
-            style={{
-              justifyContent: "center"
-            }}>
-            <AppText style={{ color: AppColors.white, fontSize: 16 }}>{members}</AppText>
-          </View>
-        ) : null}
-      </Row>
+        <Row spacing={8}>
+          <Pressable style={{ padding: 8 }} onPress={() => navigation.goBack()}>
+            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+          </Pressable>
+          {conversation && (
+            <View
+              style={{
+                justifyContent: "center"
+              }}>
+              <AppText style={{ color: AppColors.white, fontSize: 16 }}>{members}</AppText>
+            </View>
+          )}
+        </Row>
+        {attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />}
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}

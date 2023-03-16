@@ -59,39 +59,42 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   );
 
   return (
-    <Column
-      style={{
-        marginBottom: Math.max(keyboardIsVisible ? 0 : insets.bottom, 8),
-        justifyContent: "space-between",
-        flexGrow: 1
-      }}>
-      <ScrollView
+    <KeyboardAvoidingView keyboardVerticalOffset={64} behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <Column
         style={{
-          flexShrink: 1,
-          paddingHorizontal: 12,
-          paddingTop: 8,
-          paddingBottom: 20
+          marginBottom: Math.max(keyboardIsVisible ? 0 : insets.bottom, 8),
+          justifyContent: "space-between",
+          flexGrow: 1
         }}>
-        <Column spacing={8}>
-          <TripCard header={headerDate} content={tripContent} />
-          <Row style={styles.card} spacing={8}>
-            {request.seats > 0 ? <AppCustomIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
-            <AppText style={{ fontSize: 16 }}>{peopleDescription}</AppText>
-          </Row>
-        </Column>
-      </ScrollView>
-      <KeyboardAvoidingView behavior={"padding"} style={{ flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: 24 }}>
-        <View style={{ marginVertical: 24 }}>
-          <CardTextInput multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
+        <ScrollView
+          style={{
+            flexShrink: 1,
+            paddingHorizontal: 12,
+            paddingTop: 8,
+            paddingBottom: 20
+          }}>
+          <Column spacing={8}>
+            <TripCard header={headerDate} content={tripContent} />
+            <Row style={styles.card} spacing={8}>
+              {request.seats > 0 ? <AppCustomIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
+              <AppText style={{ fontSize: 16 }}>{peopleDescription}</AppText>
+            </Row>
+          </Column>
+          <View style={{ marginVertical: 24 }}>
+            <CardTextInput multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
+          </View>
+        </ScrollView>
+
+        <View style={{ justifyContent: "flex-end", paddingHorizontal: 24 }}>
+          <AppRoundedButton
+            color={defaultTextColor(AppColors.orange)}
+            onPress={requestJoin}
+            backgroundColor={AppColors.orange}
+            text={"Envoyer la demande"}
+          />
         </View>
-        <AppRoundedButton
-          color={defaultTextColor(AppColors.orange)}
-          onPress={requestJoin}
-          backgroundColor={AppColors.orange}
-          text={"Envoyer la demande"}
-        />
-      </KeyboardAvoidingView>
-    </Column>
+      </Column>
+    </KeyboardAvoidingView>
   );
 }, "Récapitulatif");
 

@@ -2,11 +2,10 @@ import { LianeMatch } from "@/api";
 import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Row } from "@/components/base/AppLayout";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
-import { formatMonthDay, formatTime } from "@/api/i18n";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { NoItemPlaceholder } from "@/components/NoItemPlaceholder";
 import { toLianeWizardFormData } from "@/screens/search/SearchFormData";
@@ -15,10 +14,8 @@ import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { formatDuration } from "@/util/datetime";
 import { InternalLianeSearchFilter, toUnresolved } from "@/util/ref";
 import { useAppNavigation } from "@/api/navigation";
-
-const formatWholeDatetime = (date: Date) => {
-  return `${formatMonthDay(date)} à ${formatTime(date)}`;
-};
+import { formatDateTime } from "@/api/i18n";
+import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 
 export const SearchResultsScreen = () => {
   const { route, navigation } = useAppNavigation<"SearchResults">();
@@ -31,14 +28,7 @@ export const SearchResultsScreen = () => {
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
           <AppIcon name={"arrow-ios-back-outline"} size={24} color={AppColors.white} />
         </Pressable>
-        <Column style={{ flexShrink: 1, flexGrow: 1 }}>
-          <Row style={{ alignItems: "center" }} spacing={4}>
-            <AppText style={styles.headerText}>{filter.from.city}</AppText>
-            <AppIcon name={"arrow-forward-outline"} color={AppColors.white} size={14} />
-            <AppText style={styles.headerText}>{filter.to.city}</AppText>
-          </Row>
-          <AppText style={styles.headerText}>{formatWholeDatetime(new Date(filter.targetTime.dateTime))}</AppText>
-        </Column>
+        <TripOverviewHeader from={filter.from} to={filter.to} dateTime={filter.targetTime.dateTime} color={AppColors.white} />
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.navigate("Search", { filter })}>
           <AppIcon name={"edit"} size={24} color={AppColors.white} />
         </Pressable>
@@ -74,7 +64,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
       const isExactMatch = item.match.type === "Exact";
       const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0);
-      const departureDatetime = formatWholeDatetime(new Date(item.liane.departureTime));
+      const departureDatetime = formatDateTime(new Date(item.liane.departureTime));
       // console.log(item, tripDuration);
       return (
         <View>

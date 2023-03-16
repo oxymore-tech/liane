@@ -22,7 +22,7 @@ export type NavigationParamList = {
   LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
 
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
-  Chat: { conversationId: string };
+  Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
   OpenJoinLianeRequest: { request: JoinLianeRequest };
 };

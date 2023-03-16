@@ -47,7 +47,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         </View>
         {item.group && (
           <Pressable
-            onPress={() => navigation.navigate("Chat", { conversationId: item.group })}
+            onPress={() => navigation.navigate("Chat", { conversationId: item.group, liane: item })}
             style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
             <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
           </Pressable>
