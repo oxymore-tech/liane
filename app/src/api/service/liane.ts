@@ -4,12 +4,15 @@ import {
   LatLng,
   Liane,
   LianeDisplay,
+  LianeEvent,
   LianeMatch,
   LianeRequest,
   LianeSearchFilter,
+  MemberRejected,
+  NewMember,
   PaginatedResponse
 } from "@/api";
-import { get, patch, postAs } from "@/api/http";
+import { get, postAs } from "@/api/http";
 
 export interface LianeService {
   list(): Promise<PaginatedResponse<Liane>>;
@@ -18,7 +21,7 @@ export interface LianeService {
   display(from: LatLng, to: LatLng): Promise<LianeDisplay>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
-  setAcceptedStatus(joinRequestId: string, accept: boolean): Promise<void>;
+  answer(joinRequestId: string, accept: boolean, joinRequest: JoinRequest): Promise<void>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
 }
@@ -56,7 +59,13 @@ export class LianeServiceClient implements LianeService {
     return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }
 
-  async setAcceptedStatus(joinRequestId: string, accept: boolean) {
-    await patch("/liane/request/" + joinRequestId, { params: { accept: accept ? 1 : 0 } });
+  async answer(joinRequestId: string, accept: boolean, joinRequest: JoinRequest) {
+    let lianeEvent: LianeEvent;
+    if (accept) {
+      lianeEvent = <NewMember>{ ...joinRequest, type: "NewMember" };
+    } else {
+      lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: joinRequest.liane };
+    }
+    await postAs("/event/" + joinRequestId, { body: lianeEvent });
   }
 }
