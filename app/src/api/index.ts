@@ -101,7 +101,7 @@ export type Liane = Entity &
     returnTime?: UTCDateTime;
     wayPoints: WayPoint[];
     members: LianeMember[];
-    driver?: Ref<User>;
+    driver: { user: Ref<User>; canDrive: boolean };
     group: Ref<ConversationGroup>;
   }>;
 

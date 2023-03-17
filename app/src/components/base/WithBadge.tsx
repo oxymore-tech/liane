@@ -11,7 +11,7 @@ export function WithBadge<T>(WrappedComponent: ComponentType<T>): ComponentType<
   return ({ value, ...props }: BadgeProps & any) => (
     <View>
       <WrappedComponent {...props} />
-      {value && (
+      {value !== undefined && value !== null && value !== 0 && (
         <View style={styles.badge}>
           <AppText style={styles.badgeValue}>{value.toString()}</AppText>
         </View>

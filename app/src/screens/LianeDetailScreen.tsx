@@ -55,12 +55,16 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
         <View style={styles.separator} />
         <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
           <View
-            style={{ backgroundColor: liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg, padding: 12, borderRadius: 52 }}>
-            <AppCustomIcon name={liane.driver ? "car-check-mark" : "car-strike-through"} size={28} />
+            style={{
+              backgroundColor: liane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+              padding: 12,
+              borderRadius: 52
+            }}>
+            <AppCustomIcon name={liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={28} />
           </View>
           <Column spacing={2}>
-            <AppText style={{ fontSize: 16 }}>{liane.driver ? "John Doe" : "Aucun conducteur"} </AppText>
-            {__DEV__ && <AppText style={{ fontSize: 12 }}>{liane.driver} </AppText>}
+            <AppText style={{ fontSize: 16 }}>{liane.driver.canDrive ? "John Doe" : "Aucun conducteur"} </AppText>
+            {__DEV__ && <AppText style={{ fontSize: 12 }}>{liane.driver.user} </AppText>}
           </Column>
         </Row>
         <View style={styles.separator} />

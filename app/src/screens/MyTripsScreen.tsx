@@ -63,9 +63,9 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             paddingVertical: 2,
             borderRadius: 4,
             alignItems: "center",
-            backgroundColor: item.driver ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
+            backgroundColor: item.driver.canDrive ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
           }}>
-          <AppCustomIcon name={item.driver ? "car-check-mark" : "car-strike-through"} />
+          <AppCustomIcon name={item.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
         </Row>
         <Row
           style={{

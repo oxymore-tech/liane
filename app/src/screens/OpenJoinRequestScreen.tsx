@@ -96,7 +96,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
             {isExactMatch ? "Votre trajet reste inchangé" : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).deltaInSeconds)}
           </AppText>
         </Row>
-        {data.seats > 0 && !data.targetLiane.driver && (
+        {data.seats > 0 && !data.targetLiane.driver.canDrive && (
           <Row spacing={16} style={{ alignItems: "center" }}>
             <AppCustomIcon name={"car-check-mark"} color={AppColors.white} />
             <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
