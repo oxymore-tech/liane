@@ -80,25 +80,7 @@ public sealed class AuthServiceImpl : IAuthService
 
   public async Task<AuthResponse> Login(AuthRequest request)
   {
-    if (request.Phone.Equals(authSettings.TestAccount) && request.Code.Equals(authSettings.TestCode))
-    {
-      var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, true);
-      return GenerateAuthResponse(user, null);
-    }
-
-    var phoneNumber = request.Phone.ToPhoneNumber();
-
-    if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string? expectedCode))
-    {
-      throw new UnauthorizedAccessException("Invalid code");
-    }
-
-    if (expectedCode != request.Code)
-    {
-      throw new UnauthorizedAccessException("Invalid code");
-    }
-
-    var number = phoneNumber.ToString();
+    var (number, isAdmin) = Authenticate(request);
 
     var collection = mongo.GetCollection<DbUser>();
 
@@ -112,15 +94,38 @@ public sealed class AuthServiceImpl : IAuthService
     var createdAt = DateTime.UtcNow;
     var update = Builders<DbUser>.Update
       .SetOnInsert(p => p.Phone, number)
-      .SetOnInsert(p => p.IsAdmin, false)
+      .SetOnInsert(p => p.IsAdmin, isAdmin)
       .SetOnInsert(p => p.CreatedAt, createdAt)
       .Set(p => p.RefreshToken, encryptedToken)
       .Set(p => p.Salt, salt)
       .Set(p => p.PushToken, request.PushToken);
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
-    var authUser = new AuthUser(userId, number, dbUser?.IsAdmin ?? false);
+    var authUser = new AuthUser(userId, number, dbUser?.IsAdmin ?? isAdmin);
     return GenerateAuthResponse(authUser, refreshToken);
+  }
+
+  private (string, bool) Authenticate(AuthRequest request)
+  {
+    var phoneNumber = request.Phone.ToPhoneNumber().ToString();
+    var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber().ToString();
+
+    if (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode))
+    {
+      return (phoneNumber, true);
+    }
+
+    if (!smsCodeCache.TryGetValue(phoneNumber, out string? expectedCode))
+    {
+      throw new UnauthorizedAccessException("Invalid code");
+    }
+
+    if (expectedCode != request.Code)
+    {
+      throw new UnauthorizedAccessException("Invalid code");
+    }
+
+    return (phoneNumber, false);
   }
 
   public async Task<AuthResponse> RefreshToken(RefreshTokenRequest request)

@@ -22,8 +22,11 @@ function token {
     baseUrl="https://liane.app"
   fi;
   
+  local effectivePhone=${2:-${phone}}
+  local effectiveCode=${3:-${code}}
+  
   local token
-  token=$(http "${baseUrl}/api/auth/login" "phone=${phone}" "code=${code}" | jq -r .token.accessToken)
+  token=$(http "${baseUrl}/api/auth/login" "phone=${effectivePhone}" "code=${effectiveCode}" | jq -r .token.accessToken)
   echo "Authorization:Bearer${token}"
 }
 
@@ -71,14 +74,12 @@ function init {
   mongo_purge
 }
 
-ARGS=${*:2}
-
 case "$1" in
  stop)
   stop
   ;;
  token)
-  token "${ARGS[@]}"
+  token ${@:2}
   ;;
  start)
   start
@@ -87,7 +88,7 @@ case "$1" in
   init
   ;;
  dump_on_local)
-  dump_on_local "${ARGS[@]}"
+  dump_on_local ${@:2}
   ;;
  *)
   # else
