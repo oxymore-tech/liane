@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,20 +15,20 @@ namespace Liane.Service.Internal.Event;
 public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEventService
 {
   private readonly ICurrentContext currentContext;
-  private readonly Lazy<IEnumerable<IEventListener>> eventListeners;
   private readonly ILianeService lianeService;
+  private readonly EventDispatcher eventDispatcher;
 
-  public EventServiceImpl(IMongoDatabase mongo, Lazy<IEnumerable<IEventListener>> eventListeners, ICurrentContext currentContext, ILianeService lianeService) : base(mongo)
+  public EventServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, ILianeService lianeService, EventDispatcher eventDispatcher) : base(mongo)
   {
-    this.eventListeners = eventListeners;
     this.currentContext = currentContext;
     this.lianeService = lianeService;
+    this.eventDispatcher = eventDispatcher;
   }
 
   public new async Task<Api.Event.Event> Create(Api.Event.Event obj)
   {
     var created = await base.Create(obj);
-    DispatchEvent(created, null);
+    eventDispatcher.Dispatch(created,null);
     return created;
   }
 
@@ -77,19 +76,6 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
       LianeEvent.JoinRequest => true,
       _ => false
     };
-
-  private void DispatchEvent(Api.Event.Event e, Api.Event.Event? answersToEvent)
-  {
-    if (!eventListeners.IsValueCreated)
-    {
-      return;
-    }
-
-    foreach (var eventListener in eventListeners.Value)
-    {
-      var _ = Task.Run(() => eventListener.OnEvent(e, answersToEvent));
-    }
-  }
 
   public async Task<PaginatedResponse<Api.Event.Event>> List(Pagination pagination)
   {

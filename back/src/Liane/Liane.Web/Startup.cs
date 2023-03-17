@@ -68,6 +68,7 @@ public static class Startup
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
+    services.AddService<EventDispatcher>();
     services.AddService<EventServiceImpl>();
     services.AddService<NotificationServiceImpl>();
 
