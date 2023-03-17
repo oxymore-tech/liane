@@ -4,13 +4,9 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Event;
 
 [Union]
-public abstract record LianeEvent
+public abstract record LianeEvent(Ref<Trip.Liane> Liane)
 {
-  private LianeEvent()
-  {
-  }
 
-  public abstract Ref<Trip.Liane> Liane { get; init; }
 
   public sealed record JoinRequest(
     Ref<Trip.Liane> Liane,
@@ -19,7 +15,7 @@ public abstract record LianeEvent
     int Seats,
     bool TakeReturnTrip,
     string Message
-  ) : LianeEvent;
+  ) : LianeEvent(Liane);
 
   public sealed record NewMember(
     Ref<Trip.Liane> Liane,
@@ -27,9 +23,9 @@ public abstract record LianeEvent
     Ref<RallyingPoint> To,
     int Seats,
     bool TakeReturnTrip
-  ) : LianeEvent;
+  ) : LianeEvent(Liane);
 
-  public sealed record MemberRejected(Ref<Trip.Liane> Liane) : LianeEvent;
+  public sealed record MemberRejected(Ref<Trip.Liane> Liane) : LianeEvent(Liane);
 
-  public sealed record MemberHasLeft(Ref<Trip.Liane> Liane) : LianeEvent;
+  public sealed record MemberHasLeft(Ref<Trip.Liane> Liane) : LianeEvent(Liane);
 }

@@ -31,13 +31,13 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const dateTime = `${formatMonthDay(new Date(request.targetLiane.departureTime))} à ${formatTime(new Date(request.targetLiane.departureTime))}`;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
+      type: "JoinRequest",
       from: request.from.id!,
       message,
       seats: request.seats,
       takeReturnTrip: request.takeReturnTrip,
       liane: request.targetLiane.id!,
-      to: request.to.id!,
-      type: "JoinRequest"
+      to: request.to.id!
     };
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);

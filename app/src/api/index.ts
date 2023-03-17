@@ -222,22 +222,22 @@ export type LianeEvent = Readonly<{ liane: Ref<Liane>; type: string }>;
 
 export type JoinRequest = Readonly<
   {
+    type: "JoinRequest";
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     seats: number;
     takeReturnTrip: boolean;
     message: string;
-    type: "JoinRequest";
   } & LianeEvent
 >;
 
 export type NewMember = Readonly<
   {
+    type: "NewMember";
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     seats: number;
     takeReturnTrip: boolean;
-    type: "NewMember";
   } & LianeEvent
 >;
 
