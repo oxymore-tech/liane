@@ -14,10 +14,12 @@ namespace Liane.Web.Controllers;
 public sealed class EventController : ControllerBase
 {
   private readonly IEventService eventService;
+  private readonly ILianeRequestService lianeRequestService;
 
-  public EventController(IEventService eventService)
+  public EventController(IEventService eventService, ILianeRequestService lianeRequestService)
   {
     this.eventService = eventService;
+    this.lianeRequestService = lianeRequestService;
   }
 
   [HttpPost("")]
@@ -34,13 +36,13 @@ public sealed class EventController : ControllerBase
   }
 
   [HttpGet("join_request")]
-  public async Task<PaginatedResponse<Event>> ListRequest([FromQuery] Pagination pagination)
+  public async Task<PaginatedResponse<JoinLianeRequest>> ListJoinRequest([FromQuery] Pagination pagination)
   {
-    return await eventService.List(new EventFilter(true, null, new TypeOf<LianeEvent.JoinRequest>()), pagination);
+    return await lianeRequestService.List(pagination);
   }
 
   [HttpGet("event/{id}")]
-  public async Task<Event> GetEvent([FromRoute] string id)
+  public async Task<Event> Get([FromRoute] string id)
   {
     return await eventService.Get(id);
   }

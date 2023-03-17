@@ -69,12 +69,13 @@ public static class Startup
     services.AddService<LianeServiceImpl>();
 
     services.AddService<EventServiceImpl>();
-
-    services.AddService<LianeNewMemberHandler>();
     services.AddService<NotificationServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
     services.AddService<PushServiceImpl>();
+
+    services.AddService<LianeNewMemberHandler>();
+    services.AddService<LianeRequestServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);
 

@@ -4,6 +4,7 @@ import {
   LatLng,
   Liane,
   LianeDisplay,
+  LianeEvent,
   LianeMatch,
   LianeRequest,
   LianeSearchFilter,
@@ -29,7 +30,7 @@ export class LianeServiceClient implements LianeService {
   }
 
   listJoinRequests() {
-    return get<PaginatedResponse<JoinLianeRequestDetailed>>("/liane/request/");
+    return get<PaginatedResponse<JoinLianeRequestDetailed>>("/event/join_request/");
   }
 
   get(id: string) {
@@ -48,8 +49,8 @@ export class LianeServiceClient implements LianeService {
     return get<LianeDisplay>("/liane/display", { params: { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng } });
   }
 
-  join(joinRequest: JoinLianeRequest) {
-    return postAs<JoinLianeRequest>(`/liane/${joinRequest.targetLiane}/request`, { body: joinRequest });
+  event(lianeEvent: LianeEvent) {
+    return postAs<JoinLianeRequest>(`/event`, { body: lianeEvent });
   }
 
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
