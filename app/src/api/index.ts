@@ -1,5 +1,6 @@
 import { TimeInSeconds } from "@/util/datetime";
 import { GeoJSON } from "geojson";
+
 export type Identity = Readonly<{
   id?: string;
 }>;
@@ -224,7 +225,6 @@ export type UserEvent = Readonly<
     createdBy: User;
     seen: boolean;
     needsAnswer: boolean;
-    liane: Ref<Liane>;
     lianeEvent: LianeEvent;
   } & Identity
 >;

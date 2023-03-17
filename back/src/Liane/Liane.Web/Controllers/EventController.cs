@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
 
-[Route("api/liane")]
+[Route("api/event")]
 [ApiController]
 [RequiresAuth]
 public sealed class EventController : ControllerBase
@@ -20,17 +20,23 @@ public sealed class EventController : ControllerBase
     this.eventService = eventService;
   }
 
-  [HttpPost("{id}/event")]
-  public async Task<Event> Join([FromRoute] string id, [FromBody] LianeEvent lianeEvent)
+  [HttpPost("")]
+  public async Task<Event> Create([FromBody] LianeEvent lianeEvent)
   {
-    return await eventService.Create(id, lianeEvent);
+    return await eventService.Create(lianeEvent);
   }
 
-  [HttpGet("{id}/event")]
+  [HttpGet("liane/{id}/{type}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<PaginatedResponse<Event>> ListForLiane([FromRoute] string id, [FromQuery] Pagination pagination)
+  public async Task<PaginatedResponse<Event>> ListForLiane([FromRoute] string id, [FromRoute] TypeOf<LianeEvent>? type, [FromQuery] Pagination pagination)
   {
-    return await eventService.List(new EventFilter(true, id), pagination);
+    return await eventService.List(new EventFilter(true, id, type), pagination);
+  }
+
+  [HttpGet("join_request")]
+  public async Task<PaginatedResponse<Event>> ListRequest([FromQuery] Pagination pagination)
+  {
+    return await eventService.List(new EventFilter(true, null, new TypeOf<LianeEvent.JoinRequest>()), pagination);
   }
 
   [HttpGet("event/{id}")]
@@ -45,16 +51,10 @@ public sealed class EventController : ControllerBase
     return await eventService.Answer(id, lianeEvent);
   }
 
-  [HttpGet("request")]
-  public async Task<PaginatedResponse<Event>> ListRequest([FromQuery] Pagination pagination)
-  {
-    return await eventService.List<LianeEvent.JoinRequest>(new EventFilter(true, null), pagination);
-  }
-  
   [HttpGet("event")]
   public async Task<PaginatedResponse<Event>> ListForCurrentUser([FromQuery] Pagination pagination)
   {
-    return await eventService.List(new EventFilter(true, null), pagination);
+    return await eventService.List(new EventFilter(true, null, null), pagination);
   }
 
   [HttpPut("event/{id}")]

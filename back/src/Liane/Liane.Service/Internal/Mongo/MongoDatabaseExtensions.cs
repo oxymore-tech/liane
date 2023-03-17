@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Liane.Api.Event;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -29,6 +30,24 @@ public static class MongoDatabaseExtensions
       .Select(m => m.Name.Uncapitalize())
       .Reverse());
     return new BsonDocument($"{prefix}.{PolymorphicTypeDiscriminatorConvention.Type}", typeof(TExpected).Name);
+  }
+
+  public static FilterDefinition<T> IsInstanceOf<T, TTargetType>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> field, ITypeOf<TTargetType> typeOf)
+    where T : class
+    where TTargetType : class
+  {
+    return typeOf.Type == typeof(TTargetType)
+      ? Builders<T>.Filter.Empty
+      : IsInstanceOf(builder, field, typeOf.Type);
+  }
+
+  public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> field, Type targetType)
+    where T : class
+  {
+    var prefix = string.Join(".", ExpressionHelper.GetMembers(field)
+      .Select(m => m.Name.Uncapitalize())
+      .Reverse());
+    return new BsonDocument($"{prefix}.{PolymorphicTypeDiscriminatorConvention.Type}", targetType.Name);
   }
 
   public static async Task<T?> Get<T>(this IMongoDatabase mongo, string id) where T : class, IIdentity

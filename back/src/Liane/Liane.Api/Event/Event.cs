@@ -10,7 +10,6 @@ public sealed record Event(
   Ref<User.User> CreatedBy,
   DateTime? CreatedAt,
   bool NeedsAnswer,
-  Ref<Trip.Liane> Liane,
   LianeEvent LianeEvent
 ) : IEntity;
 

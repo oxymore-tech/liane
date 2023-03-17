@@ -13,7 +13,7 @@ public sealed record UserEvent(
   string Id,
   User.User CreatedBy,
   DateTime CreatedAt,
+  bool Seen,
   bool NeedsAnswer,
-  Ref<Trip.Liane> Liane,
   LianeEvent LianeEvent
 );

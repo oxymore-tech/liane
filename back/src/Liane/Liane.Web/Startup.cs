@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Mock;
@@ -40,7 +39,6 @@ using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using NSwag;
-using JsonAttribute = NLog.Layouts.JsonAttribute;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web;
@@ -71,9 +69,10 @@ public static class Startup
     services.AddService<LianeServiceImpl>();
 
     services.AddService<EventServiceImpl>();
-    
+
     services.AddService<LianeNewMemberHandler>();
-    
+    services.AddService<NotificationServiceImpl>();
+
     services.AddSettings<FirebaseSettings>(context);
     services.AddService<PushServiceImpl>();
 
@@ -156,14 +155,10 @@ public static class Startup
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
   {
-  
     ConfigureLianeServices(context, services);
     services.AddService<FileStreamResultExecutor>();
     services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
-      .AddJsonOptions(options =>
-      {
-        JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions);
-      });
+      .AddJsonOptions(options => { JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions); });
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
@@ -203,10 +198,7 @@ public static class Startup
 
     // Add json converters here as well
     services.AddSignalR()
-      .AddJsonProtocol(options =>
-      {
-        JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions);
-      });
+      .AddJsonProtocol(options => { JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions); });
 
     // For Resource access level
     services.AddService<MongoAccessLevelContextFactory>();
@@ -288,5 +280,4 @@ public static class Startup
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
   }
-
 }

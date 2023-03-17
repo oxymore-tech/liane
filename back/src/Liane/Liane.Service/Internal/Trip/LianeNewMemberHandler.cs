@@ -16,6 +16,6 @@ public sealed class LianeNewMemberHandler : IEventListener<LianeEvent.NewMember>
   public Task OnEvent(Api.Event.Event e, LianeEvent.NewMember newMember, Api.Event.Event? answersToEvent)
   {
     var member = new LianeMember(e.CreatedBy, newMember.From, newMember.To, newMember.TakeReturnTrip, newMember.Seats);
-    return lianeService.AddMember(e.Liane, member);
+    return lianeService.AddMember(newMember.Liane, member);
   }
 }

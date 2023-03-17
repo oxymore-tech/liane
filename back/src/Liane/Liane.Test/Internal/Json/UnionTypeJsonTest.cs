@@ -21,8 +21,8 @@ public sealed class UnionTypeJsonTest
   [Test]
   public void ShouldDeserializeLianeEvent()
   {
-    var lianeEvent = new LianeEvent.MemberHasLeft();
-    var actual = JsonSerializer.Deserialize<LianeEvent>("{\"type\":\"MemberHasLeft\"}", options);
+    var lianeEvent = new LianeEvent.MemberHasLeft("lianeId1");
+    var actual = JsonSerializer.Deserialize<LianeEvent>("{\"type\":\"MemberHasLeft\",\"liane\":\"lianeId1\"}", options);
     Assert.AreEqual(lianeEvent, actual);
   }
 }

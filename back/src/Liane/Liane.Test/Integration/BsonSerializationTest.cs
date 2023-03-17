@@ -24,12 +24,12 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
   [Test]
   public async Task ShouldFindJoinLianeEvent()
   {
-    var joinRequest = new LianeEvent.JoinRequest("Aurillac", "Medon", 2, false, "Hey !");
-    var e1 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true, "6408a644437b60cfd3b15874",
+    var joinRequest = new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false, "Hey !");
+    var e1 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true,
       joinRequest);
 
-    var e2 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), false, "6408a644437b60cfd3b15874",
-      new LianeEvent.NewMember("Aurillac", "Medon", 2, false));
+    var e2 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), false,
+      new LianeEvent.NewMember("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false));
 
     await Db.GetCollection<Event>().InsertOneAsync(e1);
     await Db.GetCollection<Event>().InsertOneAsync(e2);
@@ -39,7 +39,7 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
     var x = await Db.GetCollection<Event>()
       .Find(filter)
       .ToListAsync();
-    
+
     Assert.AreEqual(1, x.Count);
     Assert.AreEqual(joinRequest, x[0].LianeEvent);
   }
@@ -48,8 +48,8 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
   public async Task ShouldFindLianeEvent()
   {
     var id = ObjectId.GenerateNewId().ToString();
-    var join = new LianeEvent.JoinRequest("Aurillac", "Medon", 2, false, "Hey !");
-    var e1 = new Event(id, MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true, "6408a644437b60cfd3b15874", join);
+    var join = new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false, "Hey !");
+    var e1 = new Event(id, MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true, join);
 
     await Db.GetCollection<Event>()
       .InsertOneAsync(e1);

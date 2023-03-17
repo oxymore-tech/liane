@@ -33,12 +33,12 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
     return created;
   }
 
-  public async Task<Api.Event.Event> Create(Ref<Api.Trip.Liane> liane, LianeEvent lianeEvent)
+  public async Task<Api.Event.Event> Create(LianeEvent lianeEvent)
   {
     var currentUser = currentContext.CurrentUser();
-    var resolved = await liane.Resolve(lianeService.Get);
+    var resolved = await lianeEvent.Liane.Resolve(lianeService.Get);
     var needsAnswer = NeedsAnswer(lianeEvent);
-    return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.Now, needsAnswer, liane, lianeEvent));
+    return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.Now, needsAnswer, lianeEvent));
   }
 
   public async Task<Api.Event.Event> Answer(Ref<Api.Event.Event> id, LianeEvent lianeEvent)
@@ -46,10 +46,10 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
     var currentUser = currentContext.CurrentUser();
     var e = await Get(id);
     await Delete(id);
-    return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(e.CreatedBy, null)), currentUser.Id, DateTime.Now, false, e.Liane, lianeEvent));
+    return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(e.CreatedBy, null)), currentUser.Id, DateTime.Now, false, lianeEvent));
   }
 
-  public async Task<PaginatedResponse<Api.Event.Event>> List<T>(EventFilter eventFilter, Pagination pagination) where T : LianeEvent
+  public async Task<PaginatedResponse<Api.Event.Event>> List(EventFilter eventFilter, Pagination pagination)
   {
     var filter = Builders<Api.Event.Event>.Filter.Empty;
     if (eventFilter.ForCurrentUser)
@@ -60,12 +60,12 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
 
     if (eventFilter.Liane is not null)
     {
-      filter &= Builders<Api.Event.Event>.Filter.Eq(e => e.Liane, eventFilter.Liane);
+      filter &= Builders<Api.Event.Event>.Filter.Eq(e => e.LianeEvent.Liane, eventFilter.Liane);
     }
 
-    if (typeof(T) != typeof(LianeEvent))
+    if (eventFilter.Type is not null)
     {
-      filter &= Builders<Api.Event.Event>.Filter.IsInstanceOf<Api.Event.Event, T>(e => e.LianeEvent);
+      filter &= Builders<Api.Event.Event>.Filter.IsInstanceOf(e => e.LianeEvent, eventFilter.Type);
     }
 
     return await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);

@@ -10,7 +10,10 @@ public abstract record LianeEvent
   {
   }
 
+  public abstract Ref<Trip.Liane> Liane { get; init; }
+
   public sealed record JoinRequest(
+    Ref<Trip.Liane> Liane,
     Ref<RallyingPoint> From,
     Ref<RallyingPoint> To,
     int Seats,
@@ -19,13 +22,14 @@ public abstract record LianeEvent
   ) : LianeEvent;
 
   public sealed record NewMember(
+    Ref<Trip.Liane> Liane,
     Ref<RallyingPoint> From,
     Ref<RallyingPoint> To,
     int Seats,
     bool TakeReturnTrip
   ) : LianeEvent;
 
-  public sealed record MemberRejected : LianeEvent;
+  public sealed record MemberRejected(Ref<Trip.Liane> Liane) : LianeEvent;
 
-  public sealed record MemberHasLeft : LianeEvent;
+  public sealed record MemberHasLeft(Ref<Trip.Liane> Liane) : LianeEvent;
 }
