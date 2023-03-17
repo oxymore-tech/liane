@@ -35,7 +35,7 @@ public sealed class NotificationServiceImpl : INotificationService
     var currentRecipient = e.Recipients.FirstOrDefault(r => r.User == currentUser.Id);
     var seen = currentRecipient?.SeenAt != null;
 
-    var userEvent = new UserEvent(e.Id!, createdBy, e.CreatedAt!.Value, seen, e.NeedsAnswer, e.LianeEvent);
+    var userEvent = new NotificationPayload<LianeEvent>(e.Id!, createdBy, e.CreatedAt!.Value, seen, e.NeedsAnswer, e.LianeEvent);
     return new Notification(title, message, userEvent);
   }
 

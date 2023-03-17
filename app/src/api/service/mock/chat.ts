@@ -47,7 +47,7 @@ export class HubServiceMock extends AbstractHubService {
         this.notificationSubject.next({
           title: "Test",
           message: msg,
-          payload: { type: "String", event: msg, id: counter.toString(), seen: false, createdAt: now.toISOString() }
+          payload: { type: "String", content: msg, id: counter.toString(), seen: false, createdAt: now.toISOString() }
         });
       });
 

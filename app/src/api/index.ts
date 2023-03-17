@@ -212,9 +212,11 @@ export type Notification = Readonly<{
 
 export type NotificationPayload<T> = Readonly<
   {
-    event: T;
+    content: T;
     createdAt: UTCDateTime;
+    createdBy: User;
     seen: boolean;
+    needsAnswer: boolean;
     type: string;
   } & Identity
 >;

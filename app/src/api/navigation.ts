@@ -38,10 +38,10 @@ export const getNotificationNavigation = (
   payload: NotificationPayload<any>
 ): ((navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void) => {
   if (isJoinLianeRequest(payload)) {
-    if (payload.event.accepted) {
-      return navigation => navigation.navigate("LianeDetail", { liane: payload.event.targetLiane });
-    } else if (payload.event.accepted !== false) {
-      return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.event });
+    if (payload.content.accepted) {
+      return navigation => navigation.navigate("LianeDetail", { liane: payload.content.targetLiane });
+    } else if (payload.content.accepted !== false) {
+      return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.content });
     }
   }
 
