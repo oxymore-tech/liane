@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
 });
 
 const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return item.targetLiane !== undefined;
+  return item.liane !== undefined;
 };
 
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): TripSection[] =>

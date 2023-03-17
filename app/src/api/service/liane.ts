@@ -1,10 +1,9 @@
 import {
-  JoinLianeRequest,
   JoinLianeRequestDetailed,
+  JoinRequest,
   LatLng,
   Liane,
   LianeDisplay,
-  LianeEvent,
   LianeMatch,
   LianeRequest,
   LianeSearchFilter,
@@ -17,7 +16,7 @@ export interface LianeService {
   post(liane: LianeRequest): Promise<Liane>;
   match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   display(from: LatLng, to: LatLng): Promise<LianeDisplay>;
-  join(joinRequest: JoinLianeRequest): Promise<JoinLianeRequest>;
+  join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   setAcceptedStatus(joinRequestId: string, accept: boolean): Promise<void>;
   get(lianeId: string): Promise<Liane>;
@@ -49,12 +48,12 @@ export class LianeServiceClient implements LianeService {
     return get<LianeDisplay>("/liane/display", { params: { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng } });
   }
 
-  event(lianeEvent: LianeEvent) {
-    return postAs<JoinLianeRequest>(`/event`, { body: lianeEvent });
+  join(joinRequest: JoinRequest) {
+    return postAs<JoinRequest>(`/event`, { body: joinRequest });
   }
 
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
-    return get<JoinLianeRequestDetailed>("/liane/request/" + joinRequestId);
+    return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }
 
   async setAcceptedStatus(joinRequestId: string, accept: boolean) {

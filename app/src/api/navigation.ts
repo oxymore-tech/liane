@@ -6,7 +6,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { isJoinLianeRequest, JoinLianeRequest, JoinLianeRequestDetailed, Liane, LianeMatch, NotificationPayload } from "./index";
+import { isJoinLianeRequest, isJoinRequestAccepted, JoinLianeRequestDetailed, JoinRequest, Liane, LianeMatch, NotificationPayload } from "./index";
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
@@ -24,7 +24,7 @@ export type NavigationParamList = {
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
-  OpenJoinLianeRequest: { request: JoinLianeRequest };
+  OpenJoinLianeRequest: { request: NotificationPayload<JoinRequest> };
 };
 
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
@@ -38,11 +38,9 @@ export const getNotificationNavigation = (
   payload: NotificationPayload<any>
 ): ((navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void) => {
   if (isJoinLianeRequest(payload)) {
-    if (payload.content.accepted) {
-      return navigation => navigation.navigate("LianeDetail", { liane: payload.content.targetLiane });
-    } else if (payload.content.accepted !== false) {
-      return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.content });
-    }
+    return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.content });
+  } else if (isJoinRequestAccepted(payload)) {
+    return navigation => navigation.navigate("LianeDetail", { liane: payload.content.liane });
   }
 
   return () => {};

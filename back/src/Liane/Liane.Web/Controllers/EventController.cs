@@ -40,6 +40,12 @@ public sealed class EventController : ControllerBase
   {
     return await lianeRequestService.List(pagination);
   }
+  
+  [HttpGet("join_request/{id}")]
+  public async Task<JoinLianeRequest> ListJoinRequest([FromRoute] string id)
+  {
+    return await lianeRequestService.Get(id);
+  }
 
   [HttpGet("event/{id}")]
   public async Task<Event> Get([FromRoute] string id)

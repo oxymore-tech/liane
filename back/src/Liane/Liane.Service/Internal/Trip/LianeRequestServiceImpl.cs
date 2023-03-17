@@ -4,6 +4,7 @@ using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -26,6 +27,11 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   {
     var paginated = await eventService.List(new EventFilter(true, null, new TypeOf<LianeEvent>()), pagination);
     return await paginated.SelectAsync(Resolve);
+  }
+
+  public async Task<JoinLianeRequest> Get(Ref<Api.Event.Event> e)
+  {
+    return await Resolve(await eventService.Get(e));
   }
 
   private async Task<JoinLianeRequest> Resolve(Api.Event.Event e)
