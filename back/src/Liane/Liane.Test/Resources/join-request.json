@@ -1,0 +1,9 @@
+{
+  "type": "JoinRequest",
+  "from": "mairie:31039",
+  "message": "Hello !",
+  "seats": 3,
+  "takeReturnTrip": false,
+  "liane": "64148423891906407eafed04",
+  "to": "mairie:31198"
+}

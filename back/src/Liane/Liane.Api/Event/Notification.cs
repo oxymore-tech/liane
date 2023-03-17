@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Liane.Api.Event;
 
@@ -15,7 +16,8 @@ public interface INotificationPayload
   User.User CreatedBy { get; }
   DateTime CreatedAt { get; }
   bool NeedsAnswer { get; }
-  object Content { get; }
+  LianeEvent Content { get; }
+  string Type { get; }
 }
 
 public sealed record NotificationPayload<T>(
@@ -24,9 +26,10 @@ public sealed record NotificationPayload<T>(
   DateTime CreatedAt,
   bool Seen,
   bool NeedsAnswer,
-  T Content) : INotificationPayload
+  LianeEvent Content) : INotificationPayload
   where T : class
 {
-  object INotificationPayload.Content => Content;
+  //object INotificationPayload.Content => Content;
+
   public string Type => typeof(T).Name;
 }

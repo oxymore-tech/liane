@@ -60,7 +60,7 @@ public static class Startup
     services.AddService<CurrentContextImpl>();
     services.AddSettings<TwilioSettings>(context);
     services.AddSettings<AuthSettings>(context);
-    services.AddService<AuthServiceImpl2>();
+    services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<HubServiceImpl>();
 
