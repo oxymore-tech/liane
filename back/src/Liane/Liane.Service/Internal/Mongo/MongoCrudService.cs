@@ -34,7 +34,8 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   public virtual async Task<TOut> Get(Ref<TOut> reference)
   {
     var resolved = await ResolveRef<TDb>(reference);
-    return await MapEntity(resolved!); //TODO can get send back null ?
+    if (resolved is null) throw new ResourceNotFoundException(nameof(TOut)+ " not found : " + reference.Id);
+    return await MapEntity(resolved); 
   }
 
   public virtual async Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references)

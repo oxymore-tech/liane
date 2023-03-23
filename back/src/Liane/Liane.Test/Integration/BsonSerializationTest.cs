@@ -28,8 +28,9 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
     var e1 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true,
       joinRequest);
 
-    var e2 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), false,
-      new LianeEvent.NewMember("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false));
+    var recipients = MakeRecipients();
+    var e2 = new Event(ObjectId.GenerateNewId().ToString(), recipients, ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), false,
+      new LianeEvent.MemberAccepted("6408a644437b60cfd3b15874", recipients[0].User, "Aurillac", "Medon", 2, false));
 
     await Db.GetCollection<Event>().InsertOneAsync(e1);
     await Db.GetCollection<Event>().InsertOneAsync(e2);

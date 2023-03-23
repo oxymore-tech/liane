@@ -86,7 +86,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 
 const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
   const isRequest = isResolvedJoinLianeRequest(item);
-  //console.log(isRequest);
+  //console.log(JSON.stringify(item));
   if (!isRequest) {
     return renderLianeItem({ item, index, section });
   }

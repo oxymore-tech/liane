@@ -44,7 +44,7 @@ public sealed class NotificationServiceImpl : INotificationService
     return payload.LianeEvent switch
     {
       LianeEvent.JoinRequest join => WriteNotificationFr(join),
-      LianeEvent.NewMember => ("Demande acceptée", "Vous avez rejoint une nouvelle Liane !"),
+      LianeEvent.MemberAccepted => ("Demande acceptée", "Vous avez rejoint une nouvelle Liane !"),
       LianeEvent.MemberRejected => ("Demande acceptée", "Vous avez rejoint une nouvelle Liane !"),
       _ => ("Notification", "NA")
     };

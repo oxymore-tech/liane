@@ -25,7 +25,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
   public async Task<PaginatedResponse<JoinLianeRequest>> List(Pagination pagination)
   {
-    var paginated = await eventService.List(new EventFilter(true, null, new TypeOf<LianeEvent>()), pagination);
+    var paginated = await eventService.List(new EventFilter(false, null, new TypeOf<LianeEvent.JoinRequest>()), pagination);
     return await paginated.SelectAsync(Resolve);
   }
 

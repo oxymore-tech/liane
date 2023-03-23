@@ -28,7 +28,7 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
   public new async Task<Api.Event.Event> Create(Api.Event.Event obj)
   {
     var created = await base.Create(obj);
-    eventDispatcher.Dispatch(created,null);
+    await eventDispatcher.Dispatch(created,null);
     return created;
   }
 
@@ -51,10 +51,14 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
   public async Task<PaginatedResponse<Api.Event.Event>> List(EventFilter eventFilter, Pagination pagination)
   {
     var filter = Builders<Api.Event.Event>.Filter.Empty;
-    if (eventFilter.ForCurrentUser)
-    {
       var currentUser = currentContext.CurrentUser();
+    if (eventFilter.AsRecipient)
+    {
       filter &= Builders<Api.Event.Event>.Filter.ElemMatch(r => r.Recipients, r => r.User == currentUser.Id);
+    }
+    else
+    {
+      filter &= Builders<Api.Event.Event>.Filter.Eq(r => r.CreatedBy, (Ref<Api.User.User>)currentUser.Id);
     }
 
     if (eventFilter.Liane is not null)

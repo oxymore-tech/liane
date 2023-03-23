@@ -4,7 +4,7 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Event;
 
 public sealed record EventFilter(
-  bool ForCurrentUser,
+  bool AsRecipient,
   Ref<Trip.Liane>? Liane,
   ITypeOf<LianeEvent>? Type
 );

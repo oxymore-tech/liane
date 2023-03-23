@@ -75,7 +75,7 @@ public static class Startup
     services.AddSettings<FirebaseSettings>(context);
     services.AddService<PushServiceImpl>();
 
-    services.AddService<LianeNewMemberHandler>();
+    services.AddService<LianeMemberAcceptedHandler>();
     services.AddService<LianeRequestServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);

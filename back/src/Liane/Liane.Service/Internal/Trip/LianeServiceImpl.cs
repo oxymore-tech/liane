@@ -133,7 +133,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .Find(l => l.Id == liane.Id
       ).FirstOrDefaultAsync();
     if (toUpdate is null) throw ResourceNotFoundException.For(liane);
-    if (toUpdate.Members.Exists(m => m.User == newMember.User)) throw new ArgumentException();
+    if (toUpdate.Members.Exists(m => m.User == newMember.User)) throw new ArgumentException(newMember.User.Id + " already is a member of liane " + liane.Id);
 
     // If Liane now has 2 users, create a conversation
     var updateDef = Builders<LianeDb>.Update.Push(l => l.Members, newMember)

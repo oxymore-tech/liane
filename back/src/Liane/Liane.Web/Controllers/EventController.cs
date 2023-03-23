@@ -4,6 +4,7 @@ using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
+using Liane.Web.Internal.Debug;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -54,7 +55,8 @@ public sealed class EventController : ControllerBase
   }
 
   [HttpPost("{id}")]
-  public async Task<Event> Answer([FromRoute] string id, [FromQuery] LianeEvent lianeEvent)
+  [DebugRequest]
+  public async Task<Event> Answer([FromRoute] string id, [FromBody] LianeEvent lianeEvent)
   {
     return await eventService.Answer(id, lianeEvent);
   }

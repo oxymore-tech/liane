@@ -14,12 +14,12 @@ public sealed class EventDispatcher
     this.serviceProvider = serviceProvider;
   }
 
-  public void Dispatch(Api.Event.Event e, Api.Event.Event? answersToEvent)
+  public async Task Dispatch(Api.Event.Event e, Api.Event.Event? answersToEvent)
   {
     var listeners = serviceProvider.GetServices<IEventListener>();
     foreach (var eventListener in listeners)
     {
-      var _ = Task.Run(() => eventListener.OnEvent(e, answersToEvent));
+       await eventListener.OnEvent(e, answersToEvent);
     }
   }
 }

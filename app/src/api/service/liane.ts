@@ -9,8 +9,9 @@ import {
   LianeRequest,
   LianeSearchFilter,
   MemberRejected,
-  NewMember,
-  PaginatedResponse
+  MemberAccepted,
+  PaginatedResponse,
+  NotificationPayload
 } from "@/api";
 import { get, postAs } from "@/api/http";
 
@@ -21,14 +22,16 @@ export interface LianeService {
   display(from: LatLng, to: LatLng): Promise<LianeDisplay>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
-  answer(joinRequestId: string, accept: boolean, joinRequest: JoinRequest): Promise<void>;
+  answer(accept: boolean, event: NotificationPayload<JoinRequest>): Promise<void>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
 }
 
 export class LianeServiceClient implements LianeService {
-  list() {
-    return get<PaginatedResponse<Liane>>("/liane/");
+  async list() {
+    const lianes = await get<PaginatedResponse<Liane>>("/liane/");
+    console.debug(JSON.stringify(lianes));
+    return lianes;
   }
 
   listJoinRequests() {
@@ -59,20 +62,21 @@ export class LianeServiceClient implements LianeService {
     return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }
 
-  async answer(joinRequestId: string, accept: boolean, joinRequest: JoinRequest) {
+  async answer(accept: boolean, event: NotificationPayload<JoinRequest>) {
     let lianeEvent: LianeEvent;
     if (accept) {
-      lianeEvent = <NewMember>{
-        type: "NewMember",
-        liane: joinRequest.liane,
-        to: joinRequest.to,
-        from: joinRequest.from,
-        seats: joinRequest.seats,
-        takeReturnTrip: joinRequest.takeReturnTrip
+      lianeEvent = <MemberAccepted>{
+        type: "MemberAccepted",
+        liane: event.content.liane,
+        member: event.createdBy.id,
+        to: event.content.to,
+        from: event.content.from,
+        seats: event.content.seats,
+        takeReturnTrip: event.content.takeReturnTrip
       };
     } else {
-      lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: joinRequest.liane };
+      lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: event.content.liane, member: event.createdBy.id };
     }
-    await postAs("/event/" + joinRequestId, { body: lianeEvent });
+    await postAs("/event/" + event.id!, { body: lianeEvent });
   }
 }

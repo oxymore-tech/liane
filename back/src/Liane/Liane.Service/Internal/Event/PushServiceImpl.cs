@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FirebaseAdmin;
@@ -52,11 +53,8 @@ public sealed class PushServiceImpl : IPushService, IEventListener
 
   public async Task OnEvent(Api.Event.Event @event, Api.Event.Event? answersToEvent)
   {
-    var notification = await notificationService.Get(@event);
-    foreach (var recipient in @event.Recipients)
-    {
-      var _ = Task.Run(() => Notify(recipient.User, notification));
-    }
+    var notification = await notificationService.Get(@event); 
+    Task.WhenAll(@event.Recipients.Select(r => Notify(r.User, notification)));
   }
 
   private async Task SendTo(Ref<Api.User.User> receiver, Notification notification)
