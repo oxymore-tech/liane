@@ -231,9 +231,10 @@ export type JoinRequest = Readonly<
   } & LianeEvent
 >;
 
-export type NewMember = Readonly<
+export type MemberAccepted = Readonly<
   {
-    type: "NewMember";
+    type: "MemberAccepted";
+    member: Ref<User>;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     seats: number;
@@ -241,7 +242,7 @@ export type NewMember = Readonly<
   } & LianeEvent
 >;
 
-export type MemberRejected = Readonly<{ type: "MemberRejected" } & LianeEvent>;
+export type MemberRejected = Readonly<{ type: "MemberRejected"; member: Ref<User> } & LianeEvent>;
 export type MemberHasLeft = Readonly<{ type: "MemberHasLeft" } & LianeEvent>;
 
 export type NewConversationMessage = Readonly<{

@@ -25,11 +25,11 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const request = route.params.request;
 
   const acceptRequest = async () => {
-    await services.liane.answer(request.id!, true, request.content);
+    await services.liane.answer(true, request);
     navigation.goBack();
   };
   const refuseRequest = async () => {
-    await services.liane.answer(request.id!, false, request.content);
+    await services.liane.answer(false, request);
     navigation.goBack();
   };
   return (
