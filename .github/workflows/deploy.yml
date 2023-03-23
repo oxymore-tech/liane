@@ -38,6 +38,7 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            set -e
             cd ~
             git clone -b "${{ env.branch }}" git@github.com:oxymore-tech/liane.git "${{ env.project }}" || true;
             cd "${{ env.project }}/deploy"
