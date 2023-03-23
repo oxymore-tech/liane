@@ -142,6 +142,7 @@ const AutocompleteItem = ({ itemView, onPress }: AutocompleteItemProps) => (
 const styles = StyleSheet.create({
   input: {
     fontSize: 18,
+    paddingVertical: 4,
     color: AppColorPalettes.gray[800]
   },
   item: {
@@ -159,12 +160,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     height: 2 * borderRadius,
-    paddingVertical: 8,
     backgroundColor: AppColors.white,
     alignContent: "center",
     alignItems: "center",
     borderRadius,
     paddingLeft: 12,
+    paddingVertical: 4,
     paddingRight: 12
   }
 });
