@@ -20,7 +20,7 @@ public sealed class LianeEventJsonTest
       new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false, "Hey !"));
     var actual = JsonSerializer.Serialize(e, options);
     Assert.AreEqual(
-      "!!{\"id\":\"id\",\"recipients\":[],\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00\",\"needsAnswer\":true,\"lianeEvent\":{\"type\":\"JoinRequest\",\"liane\":\"6408a644437b60cfd3b15874\",\"from\":\"Aurillac\",\"to\":\"Medon\",\"seats\":2,\"takeReturnTrip\":false,\"message\":\"Hey !\"}}",
+      "{\"id\":\"id\",\"recipients\":[],\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00\",\"needsAnswer\":true,\"lianeEvent\":{\"type\":\"JoinRequest\",\"liane\":\"6408a644437b60cfd3b15874\",\"from\":\"Aurillac\",\"to\":\"Medon\",\"seats\":2,\"takeReturnTrip\":false,\"message\":\"Hey !\"}}",
       actual);
   }
   
