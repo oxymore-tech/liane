@@ -25,11 +25,11 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const request = route.params.request;
 
   const acceptRequest = async () => {
-    await services.liane.setAcceptedStatus(request.id!, true);
+    await services.liane.answer(true, request);
     navigation.goBack();
   };
   const refuseRequest = async () => {
-    await services.liane.setAcceptedStatus(request.id!, false);
+    await services.liane.answer(false, request);
     navigation.goBack();
   };
   return (
@@ -96,7 +96,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
             {isExactMatch ? "Votre trajet reste inchangé" : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).deltaInSeconds)}
           </AppText>
         </Row>
-        {data.seats > 0 && !data.targetLiane.driver && (
+        {data.seats > 0 && !data.targetLiane.driver.canDrive && (
           <Row spacing={16} style={{ alignItems: "center" }}>
             <AppCustomIcon name={"car-check-mark"} color={AppColors.white} />
             <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
@@ -107,7 +107,9 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
       </Column>
     );
   },
-  (repository, params) => repository.liane.getDetailedJoinRequest(params.request.id),
+  (repository, params) => {
+    return repository.liane.getDetailedJoinRequest(params.request.id);
+  },
   params => DetailedRequestQueryKey + params.request.id
 );
 

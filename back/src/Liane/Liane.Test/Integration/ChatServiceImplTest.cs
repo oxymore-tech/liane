@@ -8,7 +8,7 @@ using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.User;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -22,7 +22,7 @@ public sealed class ChatServiceImplTest : BaseIntegrationTest
 
   protected override void Setup(IMongoDatabase db)
   {
-    testedService = new ChatServiceImpl(db, Moq.Mock.Of<ISendNotificationService>(), new UserServiceImpl(db), Moq.Mock.Of<IHubService>());
+    testedService = new ChatServiceImpl(db, new UserServiceImpl(db), Moq.Mock.Of<IHubService>());
   }
 
   [Test]

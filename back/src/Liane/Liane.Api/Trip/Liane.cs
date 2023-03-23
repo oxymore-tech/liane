@@ -15,6 +15,12 @@ public sealed record LianeMember(
   int SeatCount = -1 // Defaults to a passenger seat
 ) : IResourceMember;
 
+public sealed record Driver
+(
+  Ref<User.User> User,
+  bool CanDrive = true
+);
+
 public sealed record Liane(
   string Id,
   Ref<User.User> CreatedBy,
@@ -23,6 +29,6 @@ public sealed record Liane(
   DateTime? ReturnTime,
   ImmutableSortedSet<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
-  Ref<User.User>? Driver,
+  Driver Driver,
   Ref<ConversationGroup>? Group = null
 ) : IEntity, ISharedResource<LianeMember>;

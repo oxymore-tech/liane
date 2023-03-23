@@ -35,7 +35,7 @@ export const LianeJoinRequestDetailScreen = () => {
 
   const formattedDepartureTime = formatDateTime(new Date(request.targetLiane.departureTime));
   const formattedSeatCount = formatSeatCount(request.seats);
-  const driverLabel = request.targetLiane.driver ? "John Doe" : "Aucun conducteur";
+  const driverLabel = request.targetLiane.driver.canDrive ? "John Doe" : "Aucun conducteur";
 
   return (
     <View style={styles.page}>
@@ -92,11 +92,11 @@ export const LianeJoinRequestDetailScreen = () => {
         <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
           <View
             style={{
-              backgroundColor: request.targetLiane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+              backgroundColor: request.targetLiane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
               padding: 12,
               borderRadius: 52
             }}>
-            <AppCustomIcon name={request.targetLiane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+            <AppCustomIcon name={request.targetLiane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={36} />
           </View>
           <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
         </Row>

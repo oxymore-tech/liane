@@ -124,7 +124,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
                   alignItems: "center",
                   backgroundColor: AppColorPalettes.gray[100]
                 }}>
-                <AppCustomIcon name={item.liane.driver ? "car-check-mark" : "car-strike-through"} />
+                <AppCustomIcon name={item.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
               </Row>
               <Row
                 spacing={4}

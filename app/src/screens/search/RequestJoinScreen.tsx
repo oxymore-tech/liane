@@ -11,9 +11,9 @@ import { AppText } from "@/components/base/AppText";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
-import { JoinLianeRequest } from "@/api";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
+import { JoinRequest } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
@@ -30,12 +30,13 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     request.seats > 0 ? `Conducteur (${Math.abs(request.seats)} place${plural})` : Math.abs(request.seats) + " passager" + plural;
   const dateTime = `${formatMonthDay(new Date(request.targetLiane.departureTime))} à ${formatTime(new Date(request.targetLiane.departureTime))}`;
   const requestJoin = async () => {
-    const unresolvedRequest: JoinLianeRequest = {
+    const unresolvedRequest: JoinRequest = {
+      type: "JoinRequest",
       from: request.from.id!,
       message,
       seats: request.seats,
       takeReturnTrip: request.takeReturnTrip,
-      targetLiane: request.targetLiane.id!,
+      liane: request.targetLiane.id!,
       to: request.to.id!
     };
     const r = { ...unresolvedRequest, message: message };

@@ -10,12 +10,6 @@ using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed record DriverData
-(
-  Ref<Api.User.User> User,
-  bool CanDrive = true
-);
-
 public sealed record LianeDb(
   string Id,
   Ref<Api.User.User>? CreatedBy,
@@ -23,11 +17,10 @@ public sealed record LianeDb(
   DateTime DepartureTime,
   DateTime? ReturnTime,
   ImmutableList<LianeMember> Members,
-  DriverData DriverData, // The current or default driver
+  Driver Driver,
   Ref<ConversationGroup>? Conversation = null,
   GeoJsonPolygon<GeoJson2DGeographicCoordinates>? Geometry = null
 ) : IIdentity, ISharedResource<LianeMember>
 {
-  [BsonElement]
-  public int TotalSeatCount => Members.Aggregate(0, (sum,v) => sum + v.SeatCount);
+  [BsonElement] public int TotalSeatCount => Members.Aggregate(0, (sum, v) => sum + v.SeatCount);
 }

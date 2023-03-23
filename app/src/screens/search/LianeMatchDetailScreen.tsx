@@ -39,7 +39,7 @@ export const LianeMatchDetailScreen = () => {
   const formattedDepartureTime = formatDateTime(new Date(liane.liane.departureTime));
   const formattedSeatCount = formatSeatCount(liane.freeSeatsCount);
   const matchLabel = isExactMatch ? "Trajet exact" : "Trajet compatible";
-  const driverLabel = liane.liane.driver ? "John Doe" : "Aucun conducteur";
+  const driverLabel = liane.liane.driver.canDrive ? "John Doe" : "Aucun conducteur";
 
   return (
     <View style={styles.page}>
@@ -99,11 +99,11 @@ export const LianeMatchDetailScreen = () => {
         <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
           <View
             style={{
-              backgroundColor: liane.liane.driver ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+            backgroundColor: liane.liane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
               padding: 12,
               borderRadius: 52
             }}>
-            <AppCustomIcon name={liane.liane.driver ? "car-check-mark" : "car-strike-through"} size={36} />
+          <AppCustomIcon name={liane.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={36} />
           </View>
           <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
         </Row>

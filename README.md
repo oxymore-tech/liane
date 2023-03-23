@@ -14,12 +14,25 @@ cd ~/workspace/perso
 git clone git@github.com:oxymore-tech/liane.git
 ```
 
-Installer la CLI liane (prérequis)
+Installer liane CLI (outils pour le dev) :
+
+Créer le fichier `.env.local` dans le répertoire `back` avec le contenu suivant :
 
 ```bash
-echo LIANE_HOME=~/workspace/perso/liane >> ~/.bashrc
+LIANE_TWILIO__ACCOUNT=
+LIANE_TWILIO__FROM=
+LIANE_TWILIO__TOKEN=
+LIANE_AUTH__TESTACCOUNT=
+LIANE_AUTH__TESTCODE=
+```
+
+Changer la valeur de LIANE_HOME si besoin et exécuter le code suivant : 
+
+```bash
+LIANE_HOME=~/workspace/perso/liane
+
 echo "PATH=\${PATH}:${LIANE_HOME}/back" >> ~/.bashrc
-source ${LIANE_HOME}/back/liane-completion.bash >> ~/.bashrc
+echo "source ${LIANE_HOME}/back/liane-completion.bash" >> ~/.bashrc
 ```
 
 Pour vérifier, ouvrez un nouveau terminal et entrez :
@@ -33,22 +46,9 @@ Vous devez obtenir le résultat suivant :
 ```bash
 Usage: liane (token|init|start|stop|dump_on_local)
 ```
+
 Ensuite lancez les 3 modules de lianes :
 
 - [Backend](back/README.md)
 - [Application mobile](app/README.md)
 - [Application web](web/README.md)
-
-# Concepts clés
-
-- `LatLng` : Coordonnées GPS d'un point au format latitude puis longitude.
-
-- `UserLocation` : type correspondant la localisation d'un utilisateur à laquelle est ajoutée des données supplémentaires telles que la précision de la localisation, la vitesse et la date.
-
-- `RallyingPoint` : Représente un point auquel sont rattachés les utilisateurs. Ils sont décrit par un identifiant Id, une position sous forme de LatLng et un réel représentant une distance quand on cherche la distance à un autre point. Ces points sont la clé du fonctionnement de l'application. Ils sont comme des arrêts de bus ou des gares et permettent de protéger la vie privée des utilisateurs.
-
-- `RawTrip`: Type correspondant à un trajet brut c'est à dire un trajet tel qu'il a été enregistré sur le mobile d'un utilisateur. Il est composé d'une liste de UserLocation et d'une chaîne de caractères correspondant au numéro de téléphone de l'utilisateur.
-
-- `Liane`: Une liane représente un trajet entre deux rallying points. Il peut s'agir d'un trajet réel effectué par un utilisateur ou d'un morceau de trajet effectué par un utilisateur. Un trajet réel est en général découpé en plusieurs Lianes. Ce type est composé d'un rallying point de départ "from", un rallying point d'arrivée "to" et une liste d'objets de type LianeUsage. 
-
-- `LianeUsage` : Il s'agit d'une sous information ajoutée à une Liane et permettant d'avoir des données supplémentaires comme le(s) créneau(x) horaire(s) auxquel(s) les Lianes sont empruntées ainsi qu'une information permettant de savoir si la Liane courante est un trajet ou un sous trajet. 

@@ -1,35 +1,41 @@
 import {
-  JoinLianeRequest,
   JoinLianeRequestDetailed,
+  JoinRequest,
   LatLng,
   Liane,
   LianeDisplay,
+  LianeEvent,
   LianeMatch,
   LianeRequest,
   LianeSearchFilter,
-  PaginatedResponse
+  MemberRejected,
+  MemberAccepted,
+  PaginatedResponse,
+  NotificationPayload
 } from "@/api";
-import { get, patch, postAs } from "@/api/http";
+import { get, postAs } from "@/api/http";
 
 export interface LianeService {
   list(): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   display(from: LatLng, to: LatLng): Promise<LianeDisplay>;
-  join(joinRequest: JoinLianeRequest): Promise<JoinLianeRequest>;
+  join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
-  setAcceptedStatus(joinRequestId: string, accept: boolean): Promise<void>;
+  answer(accept: boolean, event: NotificationPayload<JoinRequest>): Promise<void>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
 }
 
 export class LianeServiceClient implements LianeService {
-  list() {
-    return get<PaginatedResponse<Liane>>("/liane/");
+  async list() {
+    const lianes = await get<PaginatedResponse<Liane>>("/liane/");
+    console.debug(JSON.stringify(lianes));
+    return lianes;
   }
 
   listJoinRequests() {
-    return get<PaginatedResponse<JoinLianeRequestDetailed>>("/liane/request/");
+    return get<PaginatedResponse<JoinLianeRequestDetailed>>("/event/join_request/");
   }
 
   get(id: string) {
@@ -48,15 +54,29 @@ export class LianeServiceClient implements LianeService {
     return get<LianeDisplay>("/liane/display", { params: { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng } });
   }
 
-  join(joinRequest: JoinLianeRequest) {
-    return postAs<JoinLianeRequest>(`/liane/${joinRequest.targetLiane}/request`, { body: joinRequest });
+  join(joinRequest: JoinRequest) {
+    return postAs<JoinRequest>(`/event`, { body: joinRequest });
   }
 
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
-    return get<JoinLianeRequestDetailed>("/liane/request/" + joinRequestId);
+    return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }
 
-  async setAcceptedStatus(joinRequestId: string, accept: boolean) {
-    await patch("/liane/request/" + joinRequestId, { params: { accept: accept ? 1 : 0 } });
+  async answer(accept: boolean, event: NotificationPayload<JoinRequest>) {
+    let lianeEvent: LianeEvent;
+    if (accept) {
+      lianeEvent = <MemberAccepted>{
+        type: "MemberAccepted",
+        liane: event.content.liane,
+        member: event.createdBy.id,
+        to: event.content.to,
+        from: event.content.from,
+        seats: event.content.seats,
+        takeReturnTrip: event.content.takeReturnTrip
+      };
+    } else {
+      lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: event.content.liane, member: event.createdBy.id };
+    }
+    await postAs("/event/" + event.id!, { body: lianeEvent });
   }
 }

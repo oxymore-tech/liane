@@ -2,14 +2,13 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Notification;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -40,7 +39,6 @@ using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using NSwag;
-using JsonAttribute = NLog.Layouts.JsonAttribute;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web;
@@ -67,13 +65,18 @@ public static class Startup
     services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
-    services.AddService<TripIntentServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
-    services.AddSettings<FirebaseSettings>(context);
+    services.AddService<EventDispatcher>();
+    services.AddService<EventServiceImpl>();
     services.AddService<NotificationServiceImpl>();
-    services.AddService<JoinLianeRequestServiceImpl>();
+
+    services.AddSettings<FirebaseSettings>(context);
+    services.AddService<PushServiceImpl>();
+
+    services.AddService<LianeMemberAcceptedHandler>();
+    services.AddService<LianeRequestServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);
 
@@ -154,14 +157,10 @@ public static class Startup
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
   {
-  
     ConfigureLianeServices(context, services);
     services.AddService<FileStreamResultExecutor>();
     services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
-      .AddJsonOptions(options =>
-      {
-        JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions);
-      });
+      .AddJsonOptions(options => { JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions); });
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
@@ -201,10 +200,7 @@ public static class Startup
 
     // Add json converters here as well
     services.AddSignalR()
-      .AddJsonProtocol(options =>
-      {
-        JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions);
-      });
+      .AddJsonProtocol(options => { JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions); });
 
     // For Resource access level
     services.AddService<MongoAccessLevelContextFactory>();
@@ -286,5 +282,4 @@ public static class Startup
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
   }
-
 }

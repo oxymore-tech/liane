@@ -5,18 +5,14 @@ using Liane.Api.Util.Ref;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization.Conventions;
-using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Mongo.Serialization;
 
 public sealed class PolymorphicTypeDiscriminatorConvention : IDiscriminatorConvention
 {
-  public static FilterDefinition<T> GetDiscriminatorFilter<T>()
-  {
-    return new BsonDocument("_t", typeof(T).Name);
-  }
+  internal const string Type = "type";
 
-  public string ElementName => "_t";
+  public string ElementName => Type;
 
   public Type GetActualType(IBsonReader bsonReader, Type nominalType)
   {

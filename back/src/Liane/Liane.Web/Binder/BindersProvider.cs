@@ -1,4 +1,5 @@
 using System;
+using Liane.Api.Event;
 using Liane.Api.Util.Pagination;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
@@ -17,6 +18,11 @@ public sealed class BindersProvider : IModelBinderProvider
     if (context.Metadata.ModelType == typeof(Pagination))
     {
       return new BinderTypeModelBinder(typeof(PaginationModelBinder));
+    }
+
+    if (context.Metadata.ModelType == typeof(TypeOf<>))
+    {
+      return new BinderTypeModelBinder(typeof(TypeOfBinder));
     }
 
     return null;

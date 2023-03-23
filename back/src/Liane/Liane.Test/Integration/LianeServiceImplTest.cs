@@ -4,14 +4,16 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Api.Util.Startup;
+using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Util;
+using Liane.Service.Internal.User;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
@@ -28,9 +30,16 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   protected override void Setup(IMongoDatabase db)
   {
-    var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
-    var rallyingPointService = ServiceProvider.GetRequiredService<IRallyingPointService>();
-    testedService = new LianeServiceImpl(db, routingService, Moq.Mock.Of<ICurrentContext>(), rallyingPointService, Moq.Mock.Of<IChatService>());
+    testedService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+  }
+
+  protected override void SetupServices(IServiceCollection services)
+  {
+    services.AddService(Moq.Mock.Of<IHubService>());
+    services.AddService<UserServiceImpl>();
+    services.AddService<ChatServiceImpl>();
+    services.AddService<LianeServiceImpl>();
+  
   }
 
   [Test]
@@ -198,7 +207,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     );
 
     await Db.GetCollection<LianeDb>()
-      .InsertOneAsync(new LianeDb(id, userA, now, departureTime, null, lianeMembers, new DriverData(userA)));
+      .InsertOneAsync(new LianeDb(id, userA, now, departureTime, null, lianeMembers, new Driver(userA)));
   }
 
   [Test]
@@ -383,5 +392,22 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);
+  }
+
+  [Test]
+  public async Task TestAddLianeMember()
+  {
+    var userA = Fakers.FakeDbUsers[0].Id;
+    var userB = Fakers.FakeDbUsers[1].Id;
+    var lianeA = Fakers.LianeRequestFaker.Generate();
+    var createdLiane = await testedService.Create(lianeA, userA);
+    
+    var resolvedLianeA = await testedService.Get(createdLiane.Id);
+    Assert.NotNull(resolvedLianeA);
+
+    await testedService.AddMember(createdLiane, new LianeMember(userB, lianeA.From, lianeA.To));
+
+     resolvedLianeA = await testedService.Get(createdLiane.Id);
+    Assert.AreEqual(createdLiane.Members.Count + 1, resolvedLianeA.Members.Count);
   }
 }

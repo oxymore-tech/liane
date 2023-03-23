@@ -35,6 +35,8 @@ const Tab = createBottomTabNavigator();
 
 function Home() {
   const insets = useSafeAreaInsets();
+  const { services } = useContext(AppContext);
+  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
   const iconSize = 24;
   return (
     <Tab.Navigator
@@ -67,10 +69,6 @@ function Home() {
       {makeTab(
         "Notifications",
         ({ focused }) => {
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          const { services } = useContext(AppContext);
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
           return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
         },
         NotificationScreen

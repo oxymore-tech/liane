@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Mongo;
@@ -11,6 +12,7 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
+using Liane.Service.Internal.Util;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -50,8 +52,12 @@ public abstract class BaseIntegrationTest
     var osrmClient = GetOsrmClient();
     services.AddService(new RallyingPointServiceImpl(Db, new TestLogger<RallyingPointServiceImpl>()));
     services.AddService<IOsrmService>(osrmClient);
+    services.AddService(Db);
     services.AddTransient<IRoutingService, RoutingServiceImpl>();
-
+    
+    services.AddService<MockCurrentContext>();
+    SetupServices(services);
+    
     ServiceProvider = services.BuildServiceProvider();
 
     Db.Drop();
@@ -61,6 +67,11 @@ public abstract class BaseIntegrationTest
     Db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
     Db.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
     MongoFactory.InitSchema(Db);
+  }
+
+  protected virtual void SetupServices(IServiceCollection services)
+  {
+    
   }
 
   protected abstract void Setup(IMongoDatabase db);

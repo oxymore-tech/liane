@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Notification;
-using Liane.Api.Trip;
-using Liane.Api.User;
-using Liane.Api.Util.Ref;
+using Liane.Api.Event;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Mongo.Serialization;
-using Liane.Service.Internal.Notification;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -20,60 +15,51 @@ public sealed class BsonSerializationTest : BaseIntegrationTest
   protected override void Setup(IMongoDatabase db)
   {
   }
-  
-  private static ImmutableList<Receiver> MakeReceivers()
-  {
-    return new[]
-    {
-      new Receiver(ObjectId.GenerateNewId().ToString())
-    }.ToImmutableList();
-  }
-  
-  [Test]
-  public async Task ShouldFindNotification()
-  {
-    var id = ObjectId.GenerateNewId().ToString();
-    NotificationDb n = new NotificationDb.WithEvent<string>(id, "ok", MakeReceivers(), DateTime.Now);
-    await Db.GetCollection<NotificationDb>().InsertOneAsync(n);
 
-    var x = Db.GetCollection<NotificationDb>().Find(e => e.Id == id).FirstOrDefault();
-    Assert.NotNull(x);
+  private static ImmutableList<Recipient> MakeRecipients()
+  {
+    return ImmutableList.Create(new Recipient(ObjectId.GenerateNewId().ToString(), null));
   }
 
-  private record Dummy(
-    string message
-  );
-
   [Test]
-  public async Task ShouldFindNotificationStringOnly()
+  public async Task ShouldFindJoinLianeEvent()
   {
-    NotificationDb n1 = new NotificationDb.WithEvent<string>(ObjectId.GenerateNewId().ToString(), "ok", MakeReceivers(), DateTime.Now);
-    await Db.GetCollection<NotificationDb>().InsertOneAsync(n1);
+    var joinRequest = new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false, "Hey !");
+    var e1 = new Event(ObjectId.GenerateNewId().ToString(), MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true,
+      joinRequest);
 
-    NotificationDb n2 = new NotificationDb.WithEvent<string>(ObjectId.GenerateNewId().ToString(), "hi", MakeReceivers(), DateTime.Now);
-    await Db.GetCollection<NotificationDb>().InsertOneAsync(n2);
+    var recipients = MakeRecipients();
+    var e2 = new Event(ObjectId.GenerateNewId().ToString(), recipients, ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), false,
+      new LianeEvent.MemberAccepted("6408a644437b60cfd3b15874", recipients[0].User, "Aurillac", "Medon", 2, false));
 
-    NotificationDb n3 = new NotificationDb.WithEvent<Dummy>(ObjectId.GenerateNewId().ToString(), new Dummy("hello"), MakeReceivers(), DateTime.Now);
-    await Db.GetCollection<NotificationDb>().InsertOneAsync(n3);
-    
-    NotificationDb n4 = new NotificationDb.WithEvent<Ref<JoinLianeRequest>>(ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString(), MakeReceivers(), DateTime.Now);
-    await Db.GetCollection<NotificationDb>().InsertOneAsync(n4);
+    await Db.GetCollection<Event>().InsertOneAsync(e1);
+    await Db.GetCollection<Event>().InsertOneAsync(e2);
 
-    const int expectedSize = 2;
+    var filter = Builders<Event>.Filter.IsInstanceOf<Event, LianeEvent.JoinRequest>(e => e.LianeEvent);
 
-    var x = Db.GetCollection<NotificationDb>().Find(NotificationDiscriminatorConvention.GetDiscriminatorFilter<string>()).ToList();
-    Assert.AreEqual(expectedSize, x.Count);
+    var x = await Db.GetCollection<Event>()
+      .Find(filter)
+      .ToListAsync();
+
+    Assert.AreEqual(1, x.Count);
+    Assert.AreEqual(joinRequest, x[0].LianeEvent);
   }
 
   [Test]
   public async Task ShouldFindLianeEvent()
   {
     var id = ObjectId.GenerateNewId().ToString();
-    var lianeEvent = new LianeEvent.NewMember(id, DateTime.Parse("2023-03-03"), ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString());
+    var join = new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false, "Hey !");
+    var e1 = new Event(id, MakeRecipients(), ObjectId.GenerateNewId().ToString(), DateTime.Parse("2023-03-03"), true, join);
 
-    await Db.GetCollection<LianeEvent>().InsertOneAsync(lianeEvent);
-    var x = Db.GetCollection<LianeEvent>().Find(e => e.Id == id).FirstOrDefault();
+    await Db.GetCollection<Event>()
+      .InsertOneAsync(e1);
+
+    var x = Db.GetCollection<Event>()
+      .Find(e => e.Id == id)
+      .FirstOrDefault();
+
     Assert.NotNull(x);
+    Assert.AreEqual(join, x.LianeEvent);
   }
-
 }

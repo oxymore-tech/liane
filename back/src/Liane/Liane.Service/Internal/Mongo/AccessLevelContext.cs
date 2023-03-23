@@ -2,26 +2,24 @@ using System;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
-using Liane.Web.Internal.AccessLevel;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Mongo;
 
-
- public interface IMongoAccessLevelContext<TDb> : IAccessLevelContext<TDb> where TDb : class, IIdentity
- {
-   public FilterDefinition<TDb> HasAccessLevelFilterDefinition { get;}
- }
- class PublicAccessLevelContext<TDb> : IMongoAccessLevelContext<TDb> where TDb : class, IIdentity
+public interface IMongoAccessLevelContext<TDb> : IAccessLevelContext<TDb> where TDb : class, IIdentity
 {
-  public  ResourceAccessLevel AccessLevel => ResourceAccessLevel.Any;
-  public  Predicate<TDb> HasAccessLevelPredicate => delegate { return true; };
-  
+  public FilterDefinition<TDb> HasAccessLevelFilterDefinition { get; }
+}
+
+internal class PublicAccessLevelContext<TDb> : IMongoAccessLevelContext<TDb> where TDb : class, IIdentity
+{
+  public ResourceAccessLevel AccessLevel => ResourceAccessLevel.Any;
+  public Predicate<TDb> HasAccessLevelPredicate => delegate { return true; };
+
   public FilterDefinition<TDb> HasAccessLevelFilterDefinition => FilterDefinition<TDb>.Empty;
 }
 
-
- class OwnerAccessLevelContext<TDb> : IMongoAccessLevelContext<TDb> where TDb : class, IEntity
+internal class OwnerAccessLevelContext<TDb> : IMongoAccessLevelContext<TDb> where TDb : class, IEntity
 {
   private readonly string currentUserId;
 
@@ -30,21 +28,17 @@ namespace Liane.Service.Internal.Mongo;
     this.currentUserId = currentUserId!;
   }
 
+  public ResourceAccessLevel AccessLevel => ResourceAccessLevel.Owner;
 
-  public  ResourceAccessLevel AccessLevel => ResourceAccessLevel.Owner;
+  public Predicate<TDb> HasAccessLevelPredicate => t => t.CreatedBy!.Id == currentUserId;
 
-  public  Predicate<TDb> HasAccessLevelPredicate => t => t.CreatedBy!.Id == currentUserId;
-
- public  FilterDefinition<TDb> HasAccessLevelFilterDefinition
+  public FilterDefinition<TDb> HasAccessLevelFilterDefinition
   {
-    get {
-      return Builders<TDb>.Filter.Eq(m => m.CreatedBy, (Ref<Api.User.User>)currentUserId);
-    }
-}
-  
+    get { return Builders<TDb>.Filter.Eq(m => m.CreatedBy, (Ref<Api.User.User>)currentUserId); }
+  }
 }
 
- class MemberAccessLevelContext<TDb, TMemberDb> : IMongoAccessLevelContext<TDb> where TDb : class, IIdentity, ISharedResource<TMemberDb> where TMemberDb : IResourceMember
+internal class MemberAccessLevelContext<TDb, TMemberDb> : IMongoAccessLevelContext<TDb> where TDb : class, IIdentity, ISharedResource<TMemberDb> where TMemberDb : IResourceMember
 {
   private readonly string currentUserId;
 
@@ -53,21 +47,12 @@ namespace Liane.Service.Internal.Mongo;
     this.currentUserId = currentUserId!;
   }
 
-  public  ResourceAccessLevel AccessLevel => ResourceAccessLevel.Member;
-  
-  public  Predicate<TDb> HasAccessLevelPredicate => delegate(TDb t)
-  {
-    return t.Members.Exists(m => m.User == (Ref<Api.User.User>)currentUserId);
-  };
- 
+  public ResourceAccessLevel AccessLevel => ResourceAccessLevel.Member;
 
-  public  FilterDefinition<TDb> HasAccessLevelFilterDefinition
+  public Predicate<TDb> HasAccessLevelPredicate => delegate(TDb t) { return t.Members.Exists(m => m.User == (Ref<Api.User.User>)currentUserId); };
+
+  public FilterDefinition<TDb> HasAccessLevelFilterDefinition
   {
-    get
-    { 
-      return Builders<TDb>.Filter.ElemMatch(l => l.Members, m => m.User == (Ref<Api.User.User>)currentUserId);
-    }
+    get { return Builders<TDb>.Filter.ElemMatch(l => l.Members, m => m.User == (Ref<Api.User.User>)currentUserId); }
   }
-  
 }
-

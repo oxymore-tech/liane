@@ -12,7 +12,7 @@ export class NotificationServiceClient extends AbstractNotificationService {
   }
 
   async changeSeenStatus(notificationId: string): Promise<void> {
-    await patch("user/notification/" + notificationId);
+    await patch("/event/" + notificationId);
   }
 
   async checkInitialNotification(): Promise<void> {
@@ -73,6 +73,7 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
     // TODO navigate
   }
 });
+
 async function displayNotifeeNotification(notification: Notification) {
   await notifee.displayNotification({
     android: DefaultAndroidSettings,

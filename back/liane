@@ -2,22 +2,31 @@
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
-# shellcheck disable=SC2120
 function token {
   local environment=${1:-local}
   
   local baseUrl
   
+  source "${SCRIPTPATH}/.env.local"
+  
+  local phone=${LIANE_AUTH__TESTACCOUNT:-0000111111}
+  local code=${LIANE_AUTH__TESTCODE:-333333}
+  
   if [[ "${environment}" = "local" ]]; then
     baseUrl="http://localhost:5000"
+    phone=0000111111
+    code=333333
   elif [[ "${environment}" = "dev" ]]; then
-     baseUrl="https://dev.liane.app"
+    baseUrl="https://dev.liane.app"
   elif [[ "${environment}" = "prod" ]]; then
     baseUrl="https://liane.app"
   fi;
   
+  local effectivePhone=${2:-${phone}}
+  local effectiveCode=${3:-${code}}
+  
   local token
-  token=$(http POST "${baseUrl}/api/auth/login" phone=0000111111 code=333333 | jq -r .token.accessToken)
+  token=$(http "${baseUrl}/api/auth/login" "phone=${effectivePhone}" "code=${effectiveCode}" | jq -r .token.accessToken)
   echo "Authorization:Bearer${token}"
 }
 
@@ -65,14 +74,12 @@ function init {
   mongo_purge
 }
 
-ARGS=${*:2}
-
 case "$1" in
  stop)
   stop
   ;;
  token)
-  token "${ARGS[@]}"
+  token ${@:2}
   ;;
  start)
   start
@@ -81,7 +88,7 @@ case "$1" in
   init
   ;;
  dump_on_local)
-  dump_on_local "${ARGS[@]}"
+  dump_on_local ${@:2}
   ;;
  *)
   # else

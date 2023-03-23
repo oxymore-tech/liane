@@ -63,9 +63,9 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             paddingVertical: 2,
             borderRadius: 4,
             alignItems: "center",
-            backgroundColor: item.driver ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
+            backgroundColor: item.driver.canDrive ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
           }}>
-          <AppCustomIcon name={item.driver ? "car-check-mark" : "car-strike-through"} />
+          <AppCustomIcon name={item.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
         </Row>
         <Row
           style={{
@@ -86,7 +86,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 
 const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
   const isRequest = isResolvedJoinLianeRequest(item);
-  //console.log(isRequest);
+  //console.log(JSON.stringify(item));
   if (!isRequest) {
     return renderLianeItem({ item, index, section });
   }
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
 });
 
 const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return item.targetLiane !== undefined;
+  return item.liane !== undefined;
 };
 
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): TripSection[] =>

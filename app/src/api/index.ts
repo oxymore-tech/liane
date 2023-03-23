@@ -1,5 +1,6 @@
 import { TimeInSeconds } from "@/util/datetime";
 import { GeoJSON } from "geojson";
+
 export type Identity = Readonly<{
   id?: string;
 }>;
@@ -100,7 +101,7 @@ export type Liane = Entity &
     returnTime?: UTCDateTime;
     wayPoints: WayPoint[];
     members: LianeMember[];
-    driver?: Ref<User>;
+    driver: { user: Ref<User>; canDrive: boolean };
     group: Ref<ConversationGroup>;
   }>;
 
@@ -119,9 +120,6 @@ export type LianeMember = Readonly<{
 
 // A date time in ISO 8601 format
 export type UTCDateTime = string;
-
-// A time in ISO 8601 format
-export type UTCTimeOnly = string;
 
 export type PointDisplay = Readonly<{
   rallyingPoint: RallyingPoint;
@@ -211,12 +209,41 @@ export type Notification = Readonly<{
 
 export type NotificationPayload<T> = Readonly<
   {
-    event: T;
+    content: T;
     createdAt: UTCDateTime;
+    createdBy: User;
     seen: boolean;
+    needsAnswer: boolean;
     type: string;
   } & Identity
 >;
+
+export type LianeEvent = Readonly<{ liane: Ref<Liane>; type: string }>;
+
+export type JoinRequest = Readonly<
+  {
+    type: "JoinRequest";
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    seats: number;
+    takeReturnTrip: boolean;
+    message: string;
+  } & LianeEvent
+>;
+
+export type MemberAccepted = Readonly<
+  {
+    type: "MemberAccepted";
+    member: Ref<User>;
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    seats: number;
+    takeReturnTrip: boolean;
+  } & LianeEvent
+>;
+
+export type MemberRejected = Readonly<{ type: "MemberRejected"; member: Ref<User> } & LianeEvent>;
+export type MemberHasLeft = Readonly<{ type: "MemberHasLeft" } & LianeEvent>;
 
 export type NewConversationMessage = Readonly<{
   conversationId: string;
@@ -224,20 +251,15 @@ export type NewConversationMessage = Readonly<{
   message: ChatMessage;
 }>;
 
-export type JoinLianeRequest = Readonly<
-  {
-    from: Ref<RallyingPoint>;
-    to: Ref<RallyingPoint>;
-    targetLiane: Ref<Liane>;
-    seats: number;
-    takeReturnTrip: boolean;
-    message: string;
-    accepted?: boolean;
-  } & Entity
->;
+export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
+  return isLianeEvent(notification) && notification.content.type === "JoinRequest";
+};
 
-export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinLianeRequest> => {
-  return notification.type === "JoinLianeRequest";
+export const isLianeEvent = (notification: NotificationPayload<any>): notification is NotificationPayload<LianeEvent> => {
+  return notification.type === "LianeEvent";
+};
+export const isJoinRequestAccepted = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
+  return isLianeEvent(notification) && notification.content.type === "NewMember";
 };
 
 export type JoinLianeRequestDetailed = Readonly<
