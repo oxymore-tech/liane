@@ -11,9 +11,8 @@ import { AppPressable } from "@/components/base/AppPressable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getNotificationNavigation, useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
-import { useQueryClient } from "react-query";
 
-const NotificationQueryKey = "notification";
+export const NotificationQueryKey = "notification";
 
 const NoNotificationView = () => {
   return (
@@ -28,10 +27,6 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
     const { services } = useContext(AppContext);
-    const queryClient = useQueryClient();
-    services.chatHub.subscribeToNotifications(async (n: Notification) => {
-      await queryClient.invalidateQueries(NotificationQueryKey); //TODO just add received notification
-    });
 
     const renderItem = ({ item }: { item: Notification }) => {
       const datetime = toRelativeTimeString(new Date(item.payload.createdAt!));
@@ -63,18 +58,15 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
       );
     };
     return (
-      <View>
-        <FlatList
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-          keyExtractor={i => i.payload.id!}
-          data={data}
-          renderItem={renderItem}
-          ItemSeparatorComponent={() => (
-            <View style={{ borderBottomWidth: 1, borderBottomColor: AppColorPalettes.gray[200], marginHorizontal: 24 }} />
-          )}
-          style={{ marginBottom: 80 + insets.bottom }}
-        />
-      </View>
+      <FlatList
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+        keyExtractor={i => i.payload.id!}
+        data={data}
+        renderItem={renderItem}
+        ItemSeparatorComponent={() => <View style={{ borderBottomWidth: 1, borderBottomColor: AppColorPalettes.gray[200], marginHorizontal: 24 }} />}
+        contentContainerStyle={{ flexGrow: 1 }}
+        style={{ marginBottom: 80 + insets.bottom }}
+      />
     );
   },
   repo => repo.notification.list(),

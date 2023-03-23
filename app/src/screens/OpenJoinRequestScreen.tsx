@@ -16,6 +16,8 @@ import { formatDuration } from "@/util/datetime";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { TripCard } from "@/components/TripCard";
 import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
+import { useQueryClient } from "react-query";
+import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -23,13 +25,16 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
 
   const { services } = useContext(AppContext);
   const request = route.params.request;
+  const queryClient = useQueryClient();
 
   const acceptRequest = async () => {
     await services.liane.answer(true, request);
+    await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();
   };
   const refuseRequest = async () => {
     await services.liane.answer(false, request);
+    await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();
   };
   return (

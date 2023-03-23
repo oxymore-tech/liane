@@ -1,5 +1,4 @@
 import { UTCDateTime } from "@/api";
-import { formatMonthDay, formatTime } from "@/api/i18n";
 export type TimeInSeconds = number;
 export const toTimeInSeconds = (datetime: Date) => {
   return (datetime.getUTCHours() * 60 + datetime.getUTCMinutes()) * 60 + datetime.getUTCSeconds();

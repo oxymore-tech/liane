@@ -5,7 +5,7 @@ import { Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import NotificationScreen from "@/screens/notifications/NotificationScreen";
+import NotificationScreen, { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppText } from "@/components/base/AppText";
@@ -29,6 +29,8 @@ import { useObservable } from "@/util/hooks/subscription";
 import { getNotificationNavigation, RootNavigation } from "@/api/navigation";
 import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
 import { LianeJoinRequestDetailScreen } from "@/screens/search/LianeJoinRequestDetailScreen";
+import { useQueryClient } from "react-query";
+import { Notification } from "@/api";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -69,6 +71,10 @@ function Home() {
       {makeTab(
         "Notifications",
         ({ focused }) => {
+          const queryClient = useQueryClient();
+          services.chatHub.subscribeToNotifications(async (n: Notification) => {
+            await queryClient.invalidateQueries(NotificationQueryKey); //TODO just add received notification
+          });
           return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
         },
         NotificationScreen

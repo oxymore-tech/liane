@@ -70,9 +70,10 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
           <RallyingPointInput placeholder="Chercher une adresse" onChange={updateValue} value={value} trailing={locationButton} />
         </View>
         {!value && (
-          <View style={{ flexGrow: 1, backgroundColor: WithAlpha(AppColors.white, 0.6), width: "100%", borderRadius: 16, paddingVertical: 16 }}>
+          <View style={{ flexGrow: 1, backgroundColor: WithAlpha(AppColors.white, 0.6), width: "100%", borderRadius: 16, paddingVertical: 12 }}>
             <AppText style={[styles.bold, { paddingHorizontal: 16 }]}>Recherches récentes</AppText>
             <FlatList
+              style={{ flex: 1, paddingVertical: 4 }}
               data={recentLocations}
               keyExtractor={r => r.id!}
               renderItem={({ item }) => (

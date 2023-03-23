@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
 });
 
 const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return item.liane !== undefined;
+  return item.targetLiane !== undefined;
 };
 
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): TripSection[] =>
@@ -281,4 +281,3 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): Trip
 export const LianeQueryKey = "getLianes";
 export const JoinRequestsQueryKey = "getJoinRequests";
 export default MyTripsScreen;
-//export default WithFetchResource(MyTripsScreen, repository => repository.liane.list(), LianeQueryKey);

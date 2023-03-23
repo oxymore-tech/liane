@@ -15,6 +15,8 @@ import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
 import { JoinRequest } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
+import { useQueryClient } from "react-query";
+import { JoinRequestsQueryKey } from "@/screens/MyTripsScreen";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"RequestJoin">();
@@ -24,6 +26,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const keyboardIsVisible = useKeyboardState();
   const request = route.params.request;
   const [message, setMessage] = useState("");
+  const queryClient = useQueryClient();
 
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =
@@ -41,6 +44,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     };
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
+    await queryClient.invalidateQueries(JoinRequestsQueryKey);
     navigation.navigate("Home", { screen: "Mes trajets" });
   };
   const headerDate = (

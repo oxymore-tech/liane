@@ -259,7 +259,7 @@ export const isLianeEvent = (notification: NotificationPayload<any>): notificati
   return notification.type === "LianeEvent";
 };
 export const isJoinRequestAccepted = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
-  return isLianeEvent(notification) && notification.content.type === "NewMember";
+  return isLianeEvent(notification) && notification.content.type === "MemberAccepted";
 };
 
 export type JoinLianeRequestDetailed = Readonly<
