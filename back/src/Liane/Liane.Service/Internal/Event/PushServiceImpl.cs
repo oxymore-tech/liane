@@ -54,7 +54,7 @@ public sealed class PushServiceImpl : IPushService, IEventListener
   public async Task OnEvent(Api.Event.Event @event, Api.Event.Event? answersToEvent)
   {
     var notification = await notificationService.Get(@event); 
-    Task.WhenAll(@event.Recipients.Select(r => Notify(r.User, notification)));
+    await Task.WhenAll(@event.Recipients.Select(r => Notify(r.User, notification)));
   }
 
   private async Task SendTo(Ref<Api.User.User> receiver, Notification notification)
