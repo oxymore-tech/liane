@@ -33,8 +33,7 @@ export const LianeMatchView = (props: LianeMatchViewProps) => {
   // For now only show segment from 1 point before departure to arrival
   const tripMatch = getTripMatch(props.to, props.from, props.originalTrip, props.departureTime, props.newTrip);
 
-  console.log(JSON.stringify(props));
-  return (
+return (
     <WayPointsView
       wayPoints={tripMatch.wayPoints}
       departureTime={tripMatch.departureTime}

@@ -251,15 +251,14 @@ export type NewConversationMessage = Readonly<{
 }>;
 
 export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
-  console.debug("join is req", JSON.stringify(notification));
-  return isLianeEvent(notification.content) && notification.content.type === "JoinRequest";
+  return isLianeEvent(notification) && notification.content.type === "JoinRequest";
 };
 
 export const isLianeEvent = (notification: NotificationPayload<any>): notification is NotificationPayload<LianeEvent> => {
   return notification.type === "LianeEvent";
 };
 export const isJoinRequestAccepted = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
-  return isLianeEvent(notification.content) && notification.content.type === "NewMember";
+  return isLianeEvent(notification) && notification.content.type === "NewMember";
 };
 
 export type JoinLianeRequestDetailed = Readonly<

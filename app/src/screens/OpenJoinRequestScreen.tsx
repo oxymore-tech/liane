@@ -107,7 +107,9 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
       </Column>
     );
   },
-  (repository, params) => repository.liane.getDetailedJoinRequest(params.request.id),
+  (repository, params) => {
+    return repository.liane.getDetailedJoinRequest(params.request.id);
+  },
   params => DetailedRequestQueryKey + params.request.id
 );
 

@@ -36,7 +36,6 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const renderItem = ({ item }: { item: Notification }) => {
       const datetime = toRelativeTimeString(new Date(item.payload.createdAt!));
       const navigate = getNotificationNavigation(item.payload);
-      console.log(item);
       return (
         <AppPressable
           key={item.payload.id}

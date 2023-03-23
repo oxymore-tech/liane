@@ -96,7 +96,7 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
   public async Task MarkAsRead(Ref<Api.Event.Event> id)
   {
     var e = await Mongo.GetCollection<Api.Event.Event>()
-      .Find(n => n.Id! == id)
+      .Find(n => n.Id! == id.Id)
       .FirstOrDefaultAsync();
 
     if (e is null)
@@ -114,7 +114,7 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
 
     var memberIndex = e.Recipients.FindIndex(r => r.User.Id == userId);
     await Mongo.GetCollection<Api.Event.Event>()
-      .UpdateOneAsync(n => n.Id! == id,
+      .UpdateOneAsync(n => n.Id! == id.Id,
         Builders<Api.Event.Event>.Update.Set(n => n.Recipients[memberIndex].SeenAt, DateTime.Now)
       );
   }

@@ -62,7 +62,14 @@ export class LianeServiceClient implements LianeService {
   async answer(joinRequestId: string, accept: boolean, joinRequest: JoinRequest) {
     let lianeEvent: LianeEvent;
     if (accept) {
-      lianeEvent = <NewMember>{ ...joinRequest, type: "NewMember" };
+      lianeEvent = <NewMember>{
+        type: "NewMember",
+        liane: joinRequest.liane,
+        to: joinRequest.to,
+        from: joinRequest.from,
+        seats: joinRequest.seats,
+        takeReturnTrip: joinRequest.takeReturnTrip
+      };
     } else {
       lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: joinRequest.liane };
     }

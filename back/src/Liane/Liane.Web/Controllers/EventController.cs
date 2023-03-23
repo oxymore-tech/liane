@@ -47,25 +47,25 @@ public sealed class EventController : ControllerBase
     return await lianeRequestService.Get(id);
   }
 
-  [HttpGet("event/{id}")]
+  [HttpGet("{id}")]
   public async Task<Event> Get([FromRoute] string id)
   {
     return await eventService.Get(id);
   }
 
-  [HttpPost("event/{id}")]
+  [HttpPost("{id}")]
   public async Task<Event> Answer([FromRoute] string id, [FromQuery] LianeEvent lianeEvent)
   {
     return await eventService.Answer(id, lianeEvent);
   }
 
-  [HttpGet("event")]
+  [HttpGet("")]
   public async Task<PaginatedResponse<Event>> ListForCurrentUser([FromQuery] Pagination pagination)
   {
     return await eventService.List(new EventFilter(true, null, null), pagination);
   }
 
-  [HttpPut("event/{id}")]
+  [HttpPatch("{id}")]
   public Task MarkAsRead([FromRoute] string id)
   {
     return eventService.MarkAsRead(id);

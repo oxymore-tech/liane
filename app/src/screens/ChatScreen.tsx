@@ -77,7 +77,7 @@ export const ChatScreen = () => {
   };
 
   const fetchNextPage = async () => {
-    console.log(paginationCursor);
+    //console.log(paginationCursor);
     if (paginationCursor) {
       const paginatedResult = await services.chatHub.list(groupId, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
