@@ -1152,15 +1152,15 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/mobile-react-native@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-native/-/mobile-react-native-1.4.0.tgz#cd3d4af9edfe3b1bddff0871a825034e2c24d7fc"
-  integrity sha512-reeovnVHtz0SMtTxFrF2Th1l0pUhqZXRtmVvPzndSlp6KqGA9BccgNc36DLm/AhY30CEOa8bGVzzTw7KRAD6mA==
+"@datadog/mobile-react-native@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-native/-/mobile-react-native-1.2.1.tgz#14f6c03ced2faa7eb583993ad0e8c1fcba85226e"
+  integrity sha512-DwCQfOY7l8P9uiwmRbecw1UJ5+H4/zZPZOw9uAs1faH75OEacc3NcY0B6wucIyw5leeeBsO5XZaFgaYN0dMnqQ==
 
-"@datadog/mobile-react-navigation@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-navigation/-/mobile-react-navigation-1.4.0.tgz#6da124c895f754c0cfb353f5031a1ef1ed164030"
-  integrity sha512-ZI7tjDoPWU9YcHG/1e14BrAi3YjvAEVZGGuD1IVC3K65sz3LIxy42+HJL/GbcnzuBsc/3slQVG0miR34FZ8qdA==
+"@datadog/mobile-react-navigation@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-navigation/-/mobile-react-navigation-1.2.1.tgz#ea6e3bcd64ebc2cc74b77be36d914331e48c4b3e"
+  integrity sha512-AbcBJbpA9RVxsvCR3nFgKzwEjmJ/hGc5kW4A+9BYUGuokYdL7XkZ0FgKngJtgKiPZJ4l2Ap98PX4NZK4mgLkcw==
 
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
