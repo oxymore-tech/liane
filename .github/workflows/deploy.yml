@@ -17,6 +17,7 @@ jobs:
     environment: production
     concurrency: production
     steps:
+      - uses: actions/checkout@v3
 
       - name: Set variables
         run: |
@@ -55,13 +56,13 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           source: "/tmp/${{ env.project }}-test/test-results.trx"
-          target: "test-results.trx"
+          target: "/tmp/test-results.trx"
 
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: DotNET Tests
-          path: "test-results.trx"
+          path: "/tmp/test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
