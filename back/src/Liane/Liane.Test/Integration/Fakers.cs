@@ -24,7 +24,7 @@ public class Fakers
     {
       var memberUsers = f.PickRandom(FakeDbUsers, f.Random.Int(2, 3));
       var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now, null));
-      return new ConversationGroup(members.ToImmutableList(), ObjectId.GenerateNewId().ToString(), f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
+      return new ConversationGroup(members.ToImmutableList(), null, f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
     });
 
   public static readonly Faker<ChatMessage> MessageFaker = new Faker<ChatMessage>()
