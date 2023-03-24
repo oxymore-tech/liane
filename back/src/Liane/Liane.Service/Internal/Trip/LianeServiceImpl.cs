@@ -280,6 +280,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
+      .SortBy(l => l.DepartureTime)
       .SelectAsync(MapEntity);
 
     var rawLianeSegments = await lianes.GroupBy(l => l.WayPoints)
@@ -289,9 +290,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         return new LianeSegment(route.Coordinates, g.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
       });
 
-    var lianeSegments = TruncateOverlappingSegments(rawLianeSegments);
+    var lianeSegments = TruncateOverlappingSegments(rawLianeSegments).Where(s => s.Coordinates.Count > 1).ToImmutableList();
 
-    return new LianeDisplay(ImmutableList<PointDisplay>.Empty, lianeSegments, lianes);
+    return new LianeDisplay(lianeSegments, lianes);
   }
 
   internal readonly struct LianeSet

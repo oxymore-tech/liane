@@ -1,12 +1,13 @@
 import { LatLng } from "@/api/index";
-import * as d from "@/assets/map-style-test.json";
+import { MAPTILER_KEY } from "@env";
 
 const DEFAULT_BLAJOUX = {
   lat: 44.3593807,
   lng: 3.4336323
 };
 
-export const MapStyle = JSON.stringify({
+const MapStyleUrl = "https://api.maptiler.com/maps/bright-v2/style.json?key=" + MAPTILER_KEY;
+const MapStyle = JSON.stringify({
   version: 8,
   sources: {
     osm: {
@@ -25,6 +26,7 @@ export const MapStyle = JSON.stringify({
     }
   ]
 });
+export const MapStyleProps = MAPTILER_KEY ? { styleURL: MapStyleUrl } : { styleJSON: MapStyle };
 
 export async function getLastKnownLocation(): Promise<LatLng> {
   /* try {

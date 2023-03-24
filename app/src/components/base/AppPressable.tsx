@@ -1,10 +1,11 @@
-import { Pressable, PressableProps, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { ColorValue, Pressable, PressableProps, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import React, { PropsWithChildren, ReactNode, useMemo } from "react";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { AppColors, WithAlpha } from "@/theme/colors";
 
 export interface AppPressableProps extends PressableProps, PropsWithChildren {
   backgroundStyle?: StyleProp<ViewStyle>;
-  foregroundStyle?: StyleProp<ViewStyle>;
+  foregroundColor?: ColorValue;
   children: ReactNode | undefined;
   clickable?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -13,7 +14,7 @@ export interface AppPressableProps extends PressableProps, PropsWithChildren {
 /**
  * Pressable with an overlay when pressed
  */
-export function AppPressable({ backgroundStyle, foregroundStyle, children, style, clickable = true, ...props }: AppPressableProps) {
+export function AppPressable({ backgroundStyle, foregroundColor, children, style, clickable = true, ...props }: AppPressableProps) {
   const opacitySv = useSharedValue(0);
   const opacityStyle = useAnimatedStyle(() => {
     return {
@@ -21,9 +22,6 @@ export function AppPressable({ backgroundStyle, foregroundStyle, children, style
     };
   }, []);
   const foreground = useMemo(() => {
-    if (foregroundStyle) {
-      return foregroundStyle;
-    }
     if (backgroundStyle) {
       // Get border radius from background shape
       const styles = StyleSheet.flatten(backgroundStyle);
@@ -42,10 +40,11 @@ export function AppPressable({ backgroundStyle, foregroundStyle, children, style
       );
     }
     return {};
-  }, [backgroundStyle, foregroundStyle]);
+  }, [backgroundStyle]);
 
   const contentView = useMemo(() => <View style={style}>{children}</View>, [children, style]);
 
+  const overlayColor = foregroundColor ? { backgroundColor: foregroundColor } : styles.pressedDefault;
   return (
     <Pressable
       {...props}
@@ -61,7 +60,7 @@ export function AppPressable({ backgroundStyle, foregroundStyle, children, style
       }}>
       <View>
         {contentView}
-        {clickable && <Animated.View style={[styles.pressedDefault, foreground, styles.pressedFixed, opacityStyle]} />}
+        {clickable && <Animated.View style={[overlayColor, foreground, styles.pressedFixed, opacityStyle]} />}
       </View>
     </Pressable>
   );
@@ -69,7 +68,7 @@ export function AppPressable({ backgroundStyle, foregroundStyle, children, style
 
 const styles = StyleSheet.create({
   pressedDefault: {
-    backgroundColor: "rgba(0,0,0,0.3)"
+    backgroundColor: WithAlpha(AppColors.black, 0.3)
   },
   pressedFixed: {
     position: "absolute",

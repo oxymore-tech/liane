@@ -5,6 +5,10 @@ export type UserTrip = {
   wayPoints: WayPoint[];
   departureTime: UTCDateTime;
 };
+
+export const getTotalDuration = (trip: WayPoint[]) => {
+  return trip.map(w => w.duration).reduce((d, acc) => d + acc, 0);
+};
 export const getTrip = (liane: Liane, user: User) => {
   const member = liane.members.find(m => m.user === user!.id);
   let departureIndex = 0;
