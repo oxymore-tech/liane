@@ -14,7 +14,6 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
 using MongoDB.Driver;
-using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -23,7 +22,6 @@ using LngLatTuple = Tuple<double, double>;
 public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, LianeDb, Api.Trip.Liane>, ILianeService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
-  private const int DefaultRadiusInMeters = 10_000; // 10km
   private const int LianeMatchPageDeltaInHours = 24;
 
   private readonly ICurrentContext currentContext;
@@ -63,21 +61,16 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ThenByDescending(l => l.Match is Match.Exact ? 0 : ((Match.Compatible)l.Match).DeltaInSeconds)
       .ToImmutableList());
   }
-
-
-  public async Task<IFindFluent<LianeDb, LianeDb>> Filter(Filter filter, int geographicalRadius = DefaultRadiusInMeters)
+  
+  public async Task<IFindFluent<LianeDb, LianeDb>> Filter(Filter filter)
   {
     // Get Liane near both From and To 
     var from = await filter.From.Resolve(rallyingPointService.Get);
     var to = await filter.To.Resolve(rallyingPointService.Get);
-    var nearFrom = Builders<LianeDb>.Filter.Near(
-      l => l.Geometry,
-      GeoJson.Point(GeoJson.Geographic(from.Location.Lng, from.Location.Lat)), maxDistance: geographicalRadius);
 
-    // Use geoIntersect as Mongo only supports one $near filter per query
-    var nearTo = Builders<LianeDb>.Filter.GeoIntersects(
+    var intersects = Builders<LianeDb>.Filter.GeoIntersects(
       l => l.Geometry,
-      Geometry.GetApproxCircle(to.Location, geographicalRadius)
+      Geometry.GetOrientedBoundingBox(from.Location, to.Location)
     );
 
     // Filter departureTime
@@ -102,7 +95,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     // l => l.TotalSeatCount + filter.AvailableSeats > 0
     var hasAvailableSeats = Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -filter.AvailableSeats);
 
-    var f = nearFrom & timeFilter & isDriverSearch & hasAvailableSeats & nearTo;
+    var f = timeFilter & isDriverSearch & hasAvailableSeats & intersects;
     return Mongo.GetCollection<LianeDb>()
       .Find(f);
   }
@@ -228,11 +221,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public new async Task<Api.Trip.Liane> Create(LianeRequest obj, string ownerId)
   {
     var created = await base.Create(obj, ownerId);
-    await UpdateGeographyAsync(created); //TODO index async ?
+    await UpdateGeography(created); //TODO index async ?
     return created;
   }
 
-  private async Task UpdateGeographyAsync(Api.Trip.Liane liane)
+  private async Task UpdateGeography(Api.Trip.Liane liane)
   {
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
     var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates.ToLatLng());

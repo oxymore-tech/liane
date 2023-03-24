@@ -19,7 +19,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
-using Filter = Liane.Api.Trip.Filter;
 
 namespace Liane.Test.Integration;
 
@@ -39,7 +38,6 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
-  
   }
 
   [Test]
@@ -190,7 +188,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var mendePointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.Mende.Id)!;
     Assert.AreEqual(1, mendePointDisplay.Lianes.Count);
     Assert.AreEqual(liane1Id, mendePointDisplay.Lianes[0].Id);
-    
+
     var lanuejolsPointDisplay = actual.Points.Find(p => p.RallyingPoint.Id == LabeledPositions.LanuejolsParkingEglise.Id)!;
     Assert.AreEqual(1, lanuejolsPointDisplay.Lianes.Count);
     Assert.AreEqual(liane2Id, lanuejolsPointDisplay.Lianes[0].Id);
@@ -198,12 +196,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     AssertJson.AreEqual("Segment.mende-valdonnez-beauzile-lanuejols.json", actual.Segments);
   }
 
-  private async Task InsertLiane(string id, DateTime now, string userA, Ref<RallyingPoint> From, Ref<RallyingPoint> To)
+  private async Task InsertLiane(string id, DateTime now, string userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
   {
     var departureTime = now.Date.AddDays(1).AddHours(9);
 
     var lianeMembers = ImmutableList.Create(
-      new LianeMember(userA, From, To, false, 3)
+      new LianeMember(userA, from, to, false, 3)
     );
 
     await Db.GetCollection<LianeDb>()
@@ -259,7 +257,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.IsInstanceOf<Match.Compatible>(results.First(m => m.Liane.Id == expected.Id).Match);
   }
 
-  private LianeRequest[] CreateBaseLianeRequests()
+  private static LianeRequest[] CreateBaseLianeRequests()
   {
     var tomorrow = DateTime.Now.AddDays(1);
     // Create fake Liane in database
@@ -271,7 +269,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       (LabeledPositions.VillefortParkingGare, LabeledPositions.Mende),
     };
     var requests = new LianeRequest[baseLianes.Length];
-    for (int i = 0; i < baseLianes.Length; i++)
+    for (var i = 0; i < baseLianes.Length; i++)
     {
       var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
       requests[i] = lianeRequest;
@@ -298,8 +296,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       LabeledPositions.ChamperbouxEglise,
       new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
     );
-    var radius1 = 10000;
-    var resultCursor = await testedService.Filter(filter1, radius1);
+    var resultCursor = await testedService.Filter(filter1);
     var resultIds1 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
     Assert.AreEqual(3, resultIds1.Count);
     Assert.Contains(createdLianes[0].Id, resultIds1);
@@ -312,20 +309,19 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       LabeledPositions.BalsiegeParkingEglise,
       new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
     );
-    var radius2 = 500;
-    resultCursor = await testedService.Filter(filter2, radius2);
+    resultCursor = await testedService.Filter(filter2);
     var resultIds2 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
-    Assert.AreEqual(2, resultIds2.Count);
+    Assert.AreEqual(3, resultIds2.Count);
     Assert.Contains(createdLianes[0].Id, resultIds2);
+    Assert.Contains(createdLianes[1].Id, resultIds2);
     Assert.Contains(createdLianes[2].Id, resultIds2);
-
-
+    
     var filter3 = new Filter(
       LabeledPositions.GorgesDuTarnCausses,
       LabeledPositions.BalsiegeParkingEglise,
       new DepartureOrArrivalTime(DateTime.Now.AddDays(2), Direction.Departure)
     );
-    resultCursor = await testedService.Filter(filter3, radius2);
+    resultCursor = await testedService.Filter(filter3);
     var resultIds3 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
     Assert.AreEqual(0, resultIds3.Count);
   }
@@ -338,20 +334,17 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Create fake Liane in database
     var baseLianesRequests = CreateBaseLianeRequests();
     var createdLianes = new List<Api.Trip.Liane>();
-    for (int i = 0; i < baseLianesRequests.Length; i++)
+    for (var i = 0; i < baseLianesRequests.Length; i++)
     {
       createdLianes.Add(await testedService.Create(baseLianesRequests[i] with { AvailableSeats = i + 1 }, userA));
     }
-
-
-    const int radius = 10000;
 
     var filter1 = new Filter(
       LabeledPositions.GorgesDuTarnCausses,
       LabeledPositions.ChamperbouxEglise,
       new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure)
     );
-    var resultCursor = await testedService.Filter(filter1, radius);
+    var resultCursor = await testedService.Filter(filter1);
     var resultIds1 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
     Assert.AreEqual(3, resultIds1.Count);
     Assert.Contains(createdLianes[0].Id, resultIds1);
@@ -364,7 +357,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       new DepartureOrArrivalTime(DateTime.Now.AddHours(20), Direction.Departure),
       AvailableSeats: -2
     );
-    resultCursor = await testedService.Filter(filter2, radius);
+    resultCursor = await testedService.Filter(filter2);
     var resultIds2 = resultCursor.ToEnumerable().Select(l => l.Id).ToImmutableList();
     Assert.AreEqual(2, resultIds2.Count);
     Assert.Contains(createdLianes[1].Id, resultIds1);
@@ -401,13 +394,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var userB = Fakers.FakeDbUsers[1].Id;
     var lianeA = Fakers.LianeRequestFaker.Generate();
     var createdLiane = await testedService.Create(lianeA, userA);
-    
+
     var resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.NotNull(resolvedLianeA);
 
     await testedService.AddMember(createdLiane, new LianeMember(userB, lianeA.From, lianeA.To));
 
-     resolvedLianeA = await testedService.Get(createdLiane.Id);
+    resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.AreEqual(createdLiane.Members.Count + 1, resolvedLianeA.Members.Count);
   }
 }
