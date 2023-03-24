@@ -11,6 +11,8 @@ function source_env() {
 function test_compose {
   PROJECT=$(get_project)
   
+  export PROJECT
+  
   docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
 }
 
