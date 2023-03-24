@@ -58,13 +58,13 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           source: "/tmp/${{ env.project }}-test/test-results.trx"
-          target: "back/src/Liane/Liane.Test/obj/test-results.trx"
+          target: "test-results.trx"
 
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: DotNET Tests
-          path: "back/src/Liane/Liane.Test/obj/test-results.trx"
+          path: "test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
