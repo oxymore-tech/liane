@@ -6,7 +6,6 @@ namespace Liane.Service.Internal.Osrm;
 
 public interface IOsrmService
 {
-    //Task<Response.Routing> Route(LatLng start, LatLng end);
     
     /// <summary>
     /// Find the fastest route between coordinates in the supplied order.
