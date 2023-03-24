@@ -52,6 +52,7 @@ jobs:
         if: always()
         with:
           direction: download
+          insecure_ignore_fingerprint: true
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
