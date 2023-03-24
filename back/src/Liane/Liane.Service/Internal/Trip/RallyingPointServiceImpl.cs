@@ -22,10 +22,9 @@ using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed partial class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
+public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
 {
-  [GeneratedRegex("[^a-zA-Z0-9]+")]
-  private static partial Regex NonAlphanumeric();
+  private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]+");
 
   private static readonly string[] AccentedChars =
   {
@@ -99,7 +98,7 @@ public sealed partial class RallyingPointServiceImpl : MongoCrudService<Rallying
 
   private static string ToSearchPattern(string search)
   {
-    var words = NonAlphanumeric().Replace(search, " ")
+    var words = NonAlphanumeric.Replace(search, " ")
       .Trim()
       .ToLower()
       .Split();

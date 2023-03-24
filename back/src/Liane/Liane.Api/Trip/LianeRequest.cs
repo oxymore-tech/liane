@@ -10,4 +10,4 @@ public sealed record LianeRequest(
   int AvailableSeats,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To
-);
+) : IIdentity;

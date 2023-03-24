@@ -61,7 +61,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ThenByDescending(l => l.Match is Match.Exact ? 0 : ((Match.Compatible)l.Match).DeltaInSeconds)
       .ToImmutableList());
   }
-  
+
   public async Task<IFindFluent<LianeDb, LianeDb>> Filter(Filter filter)
   {
     // Get Liane near both From and To 
@@ -70,7 +70,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var intersects = Builders<LianeDb>.Filter.GeoIntersects(
       l => l.Geometry,
-      Geometry.GetOrientedBoundingBox(from.Location, to.Location)
+      Geometry.GetBoundingBox(from.Location, to.Location)
     );
 
     // Filter departureTime
@@ -272,26 +272,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
   {
-    var rallyingPoints = await rallyingPointService.List(pos, pos2);
-
-    var rallyingPointRefs = rallyingPoints.Select(r => r.Id!)
-      .ToImmutableList();
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, DateTime.UtcNow)
-                 & (Builders<LianeDb>.Filter.In("Members.From", rallyingPointRefs) | Builders<LianeDb>.Filter.In("Members.To", rallyingPointRefs));
+                 & Builders<LianeDb>.Filter.GeoIntersects(
+                   l => l.Geometry,
+                   Geometry.GetBoundingBox(pos, pos2)
+                 );
+
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
       .SelectAsync(MapEntity);
-
-    var pointsWithLianes = lianes.SelectMany(l => l.Members.SelectMany(m => ImmutableList.Create((m.From, l), (m.To, l))))
-      .GroupBy(t => t.Item1)
-      .ToImmutableDictionary(g => g.Key.Id, g => g.Select(e => e.Item2).ToImmutableList());
-
-    var pointDisplays = rallyingPoints.Select(r =>
-      {
-        var pointLianes = pointsWithLianes.GetValueOrDefault(r.Id!, ImmutableList<Api.Trip.Liane>.Empty);
-        return new PointDisplay(r, pointLianes);
-      })
-      .ToImmutableList();
 
     var rawLianeSegments = await lianes.GroupBy(l => l.WayPoints)
       .SelectAsync(async g =>
@@ -302,7 +291,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var lianeSegments = TruncateOverlappingSegments(rawLianeSegments);
 
-    return new LianeDisplay(pointDisplays, lianeSegments);
+    return new LianeDisplay(ImmutableList<PointDisplay>.Empty, lianeSegments, lianes);
   }
 
   internal readonly struct LianeSet

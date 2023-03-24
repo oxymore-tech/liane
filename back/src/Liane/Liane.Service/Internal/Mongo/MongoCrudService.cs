@@ -102,7 +102,7 @@ public abstract class MongoCrudService<T> : MongoCrudService<T, T, T> where T : 
   }
 }
 
-public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudEntityService<TIn, TOut> where TIn : class where TDb : class, IIdentity where TOut : class, IEntity
+public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudEntityService<TIn, TOut> where TIn : class, IIdentity where TDb : class, IIdentity where TOut : class, IEntity
 {
   protected MongoCrudEntityService(IMongoDatabase mongo) : base(mongo)
   {
@@ -110,8 +110,7 @@ public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudServ
 
   public async Task<TOut> Create(TIn obj, string ownerId)
   {
-    var id = ObjectId.GenerateNewId()
-      .ToString();
+    var id = obj.Id ?? ObjectId.GenerateNewId().ToString();
     var createdAt = DateTime.UtcNow;
     var created = ToDb(obj, id, createdAt, ownerId);
     await Mongo.GetCollection<TDb>().InsertOneAsync(

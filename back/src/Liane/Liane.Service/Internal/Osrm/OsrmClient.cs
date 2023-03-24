@@ -41,7 +41,11 @@ public sealed class OsrmClient : IOsrmService
       continue_straight = continueStraight
     });
 
-    return routeCache.GetOrCreateAsync(url, _ => GetRouteInternal(url))!;
+    return routeCache.GetOrCreateAsync(url, e =>
+    {
+      e.Size = 1;
+      return GetRouteInternal(url);
+    })!;
   }
 
   public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, string roundtrip = "false", string source = "first", string destination = "last", string geometries = "geojson",

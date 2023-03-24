@@ -29,7 +29,11 @@ public static class Geometry
     return polygon;
   }
 
-  public static GeoJsonPolygon<GeoJson2DGeographicCoordinates> GetOrientedBoundingBox(LatLng from, LatLng to) => GetOrientedBoundingBox(ImmutableList.Create(from, to));
+  public static GeoJsonPolygon<GeoJson2DGeographicCoordinates> GetBoundingBox(LatLng from, LatLng to)
+  {
+    var boundingBox = GetBoundingBox(ImmutableList.Create(from, to));
+    return PointsToPolygon(boundingBox.Select(c => new GeoJson2DGeographicCoordinates(c.Lng, c.Lat)).ToList());
+  }
 
   public static GeoJsonPolygon<GeoJson2DGeographicCoordinates> GetOrientedBoundingBox(ImmutableList<LatLng> coordinates)
   {
