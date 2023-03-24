@@ -45,3 +45,22 @@ jobs:
             git pull
             ./liane test
             ./liane start
+
+      - name: Copy test results
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          source: "/tmp/${{ env.project }}-test/test-results.trx"
+          target: "test-results.trx"
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: DotNET Tests
+          path: "test-results.trx"
+          reporter: dotnet-trx
+          fail-on-error: true

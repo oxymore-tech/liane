@@ -20,6 +20,8 @@ services:
     environment:
       OSRM_URL: "http://osrm:5000"
       MONGO_HOST: "mongo"
+    volumes:
+      - "/tmp/${PROJECT}-test:/app/results"
     depends_on:
       - mongo
       - osrm

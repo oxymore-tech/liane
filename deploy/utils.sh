@@ -14,7 +14,7 @@ function test_compose {
   docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
 }
 
-function liane_compose {  
+function liane_compose {
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
   MONGO_HOST_PORT=$(get_mongo_host_port)
@@ -27,6 +27,8 @@ function liane_compose {
 }
 
 function run_it_tests {
+  PROJECT=$(get_project)
+  
   test_compose build
   test_compose run test
   test_compose down

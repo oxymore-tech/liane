@@ -18,7 +18,7 @@ COPY src/ ./src/
 
 RUN dotnet restore
 
-ENTRYPOINT [ "dotnet" , "test" ]
+ENTRYPOINT [ "dotnet", "test", "--logger", "trx;LogFileName=/app/results/test-results.trx" ]
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 EXPOSE 5000
