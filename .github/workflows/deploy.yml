@@ -48,9 +48,10 @@ jobs:
             ./liane start
 
       - name: Copy test results
-        uses: appleboy/scp-action@master
+        uses: nicklasfrahm/scp-action@main
         if: always()
         with:
+          direction: download
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
