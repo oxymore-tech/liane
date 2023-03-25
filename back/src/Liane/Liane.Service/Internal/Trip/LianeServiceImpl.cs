@@ -39,8 +39,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
   {
-    var from = (await filter.From.Resolve(rallyingPointService.Get));
-    var to = (await filter.To.Resolve(rallyingPointService.Get));
+    var from = await filter.From.Resolve(rallyingPointService.Get);
+    var to = await filter.To.Resolve(rallyingPointService.Get);
     var resolvedFilter = filter with { From = from, To = to };
     // Filter Lianes in database 
     var lianesCursor = await Filter(resolvedFilter);

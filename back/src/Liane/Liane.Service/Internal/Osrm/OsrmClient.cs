@@ -15,7 +15,11 @@ namespace Liane.Service.Internal.Osrm;
 public sealed class OsrmClient : IOsrmService
 {
   private static readonly JsonSerializerOptions JsonOptions = new()
-    { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new LngLatTupleJsonConverter() } };
+  {
+    PropertyNamingPolicy = new SnakeCaseNamingPolicy(),
+    PropertyNameCaseInsensitive = true,
+    Converters = { new LngLatTupleJsonConverter() }
+  };
 
   private readonly MemoryCache routeCache = new(new MemoryCacheOptions { SizeLimit = 50 });
   private readonly HttpClient client;
@@ -40,7 +44,7 @@ public sealed class OsrmClient : IOsrmService
       annotations,
       continue_straight = continueStraight
     });
-
+    
     return routeCache.GetOrCreateAsync(url, e =>
     {
       e.Size = 1;

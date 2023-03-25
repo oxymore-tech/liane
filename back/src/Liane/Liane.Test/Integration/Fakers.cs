@@ -23,7 +23,7 @@ public class Fakers
     .CustomInstantiator(f =>
     {
       var memberUsers = f.PickRandom(FakeDbUsers, f.Random.Int(2, 3));
-      var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now, null));
+      var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now));
       return new ConversationGroup(members.ToImmutableList(), null, f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
     });
 
