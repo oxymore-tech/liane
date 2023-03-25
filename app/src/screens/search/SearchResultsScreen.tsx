@@ -16,6 +16,7 @@ import { InternalLianeSearchFilter, toUnresolved } from "@/util/ref";
 import { useAppNavigation } from "@/api/navigation";
 import { formatDateTime } from "@/api/i18n";
 import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
+import { getTotalDuration } from "@/components/trip/trip";
 
 export const SearchResultsScreen = () => {
   const { route, navigation } = useAppNavigation<"SearchResults">();
@@ -63,7 +64,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
     const filter = route.params!.filter;
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
       const isExactMatch = item.match.type === "Exact";
-      const tripDuration = item.wayPoints.map(w => w.duration).reduce((d, acc) => d + acc, 0);
+      const tripDuration = getTotalDuration(item.wayPoints);
       const departureDatetime = formatDateTime(new Date(item.liane.departureTime));
       // console.log(item, tripDuration);
       return (

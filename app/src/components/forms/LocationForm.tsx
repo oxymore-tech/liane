@@ -5,7 +5,6 @@ import MapLibreGL from "@maplibre/maplibre-react-native";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { MapStyle } from "@/api/location";
 import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointInput } from "@/components/RallyingPointInput";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -15,6 +14,7 @@ import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { FormComponent } from "@/screens/lianeWizard/Forms";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
 import { AppPressable } from "@/components/base/AppPressable";
+import { MapStyleProps } from "@/api/location";
 
 export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormController(
   ({ value, onChange, fieldState: { error, invalid } }: BaseFormComponentProps<RallyingPoint | undefined>) => {
@@ -111,7 +111,7 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
             <MapLibreGL.MapView
               ref={mapRef}
               style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
-              styleJSON={MapStyle}
+              {...MapStyleProps}
               logoEnabled={false}
               zoomEnabled={false}
               pitchEnabled={false}

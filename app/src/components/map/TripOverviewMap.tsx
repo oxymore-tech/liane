@@ -1,5 +1,4 @@
 import MapLibreGL from "@maplibre/maplibre-react-native";
-import { MapStyle } from "@/api/location";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
 import { Liane, WayPoint } from "@/api";
 import React from "react";
@@ -7,6 +6,7 @@ import { getBoundingBox } from "@/util/geometry";
 import { View } from "react-native";
 import { Route } from "@/api/service/routing";
 import { AppIcon } from "@/components/base/AppIcon";
+import { MapStyleProps } from "@/api/location";
 
 const TripMapView = ({ data, params }: { data: Route; params: { liane: Liane } }) => {
   const boundingBox = getBoundingBox(data.geometry.coordinates.flat(), 24);
@@ -18,7 +18,7 @@ const TripMapView = ({ data, params }: { data: Route; params: { liane: Liane } }
   return (
     <MapLibreGL.MapView
       style={{ height: 160, width: "100%" }}
-      styleJSON={MapStyle}
+      {...MapStyleProps}
       logoEnabled={false}
       rotateEnabled={false}
       scrollEnabled={false}
@@ -26,7 +26,7 @@ const TripMapView = ({ data, params }: { data: Route; params: { liane: Liane } }
       attributionEnabled={false}>
       <MapLibreGL.Camera bounds={boundingBox} animationMode={"moveTo"} />
       <MapLibreGL.ShapeSource id="line1" shape={data.geometry}>
-        <MapLibreGL.LineLayer id="tripLayer" style={{ lineColor: "red", lineWidth: 2 }} />
+        <MapLibreGL.LineLayer belowLayerID="place" id="tripLayer" style={{ lineColor: "red", lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
       {displayedWayPoints.map(point => {
         return (
@@ -64,13 +64,13 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
   const boundingBox = getBoundingBox(data.newRoute.geometry.coordinates.flat(), 24);
 
   const destinationWayPoint = params.newWayPoints[params.newWayPoints.length - 1];
-  const departureWayPoint = params.newWayPoints[0];
+  //const departureWayPoint = params.newWayPoints[0];
   const displayedWayPoints = params.newWayPoints.slice(0, params.newWayPoints.length - 1);
 
   return (
     <MapLibreGL.MapView
       style={{ height: 160, width: "100%" }}
-      styleJSON={MapStyle}
+      {...MapStyleProps}
       logoEnabled={false}
       rotateEnabled={false}
       scrollEnabled={false}
@@ -78,10 +78,10 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
       attributionEnabled={false}>
       <MapLibreGL.Camera bounds={boundingBox} animationMode={"moveTo"} />
       <MapLibreGL.ShapeSource id="line1" shape={data.originalRoute.geometry}>
-        <MapLibreGL.LineLayer id="tripLayer" style={{ lineColor: "gray", lineWidth: 2 }} />
+        <MapLibreGL.LineLayer belowLayerID="place" id="tripLayer" style={{ lineColor: "gray", lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
       <MapLibreGL.ShapeSource id="line2" shape={data.newRoute.geometry}>
-        <MapLibreGL.LineLayer id="changeLayer" style={{ lineColor: "red", lineDasharray: [4, 2], lineWidth: 2 }} />
+        <MapLibreGL.LineLayer belowLayerID="place" id="changeLayer" style={{ lineColor: "red", lineDasharray: [4, 2], lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
       {displayedWayPoints.map(point => {
         return (

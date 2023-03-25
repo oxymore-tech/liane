@@ -132,8 +132,8 @@ export type LianeSegment = Readonly<{
 }>;
 
 export type LianeDisplay = Readonly<{
-  points: PointDisplay[];
   segments: LianeSegment[];
+  lianes: Liane[];
 }>;
 
 export type ChatMessage = Readonly<

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import React from "react";
-import AppMapView from "@/components/AppMapView";
+import AppMapView from "@/components/map/AppMapView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppStyles } from "@/theme/styles";

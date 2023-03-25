@@ -10,4 +10,4 @@ public sealed record PointDisplay(RallyingPoint RallyingPoint, ImmutableList<Lia
 
 public sealed record LianeSegment(ImmutableList<LngLatTuple> Coordinates, ImmutableList<Ref<Liane>> Lianes);
 
-public sealed record LianeDisplay(ImmutableList<PointDisplay> Points, ImmutableList<LianeSegment> Segments, ImmutableList<Liane> Lianes);
+public sealed record LianeDisplay(ImmutableList<LianeSegment> Segments, ImmutableList<Liane> Lianes);

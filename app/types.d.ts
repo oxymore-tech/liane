@@ -12,4 +12,5 @@ declare module "@env" {
   export const APP_ENV: string;
   export const APP_VERSION: string;
   export const API_URL: string | null;
+  export const MAPTILER_KEY: string;
 }
