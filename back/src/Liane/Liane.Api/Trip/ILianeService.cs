@@ -18,4 +18,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination);
 
   Task<LianeDisplay> Display(LatLng pos, LatLng pos2);
+
+  Task UpdateAllGeometries();
 }

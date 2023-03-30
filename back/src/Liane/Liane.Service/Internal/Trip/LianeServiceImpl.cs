@@ -233,6 +233,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     await UpdateGeometry(created); //TODO index async ?
     return created;
   }
+  
+  public async Task UpdateAllGeometries()
+  {
+    await Mongo.GetCollection<LianeDb>().Find(FilterDefinition<LianeDb>.Empty).SelectAsync(async l => UpdateGeometry(await MapEntity(l)));
+  }
 
   private async Task UpdateGeometry(Api.Trip.Liane liane)
   {
@@ -282,7 +287,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
   {
-    var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, DateTime.UtcNow)
+    var now = DateTime.UtcNow;
+    var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, now)
+                 & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, now.AddHours(24))
                  & Builders<LianeDb>.Filter.GeoIntersects(
                    l => l.Geometry,
                    Geometry.GetBoundingBox(pos, pos2)
