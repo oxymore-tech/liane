@@ -1,6 +1,6 @@
 import { Liane } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -14,7 +14,7 @@ import { DetailedWayPointView } from "@/components/trip/WayPointsView";
 import { TripOverview } from "@/components/map/TripOverviewMap";
 
 const LianeDetail = ({ liane }: { liane: Liane }) => {
-  const { user } = useContext(AppContext);
+  const { user, services } = useContext(AppContext);
   const { navigation } = useAppNavigation<"LianeDetail">();
   const currentUserIsOwner = liane.createdBy === user!.id;
   const dateTime = formatDateTime(new Date(liane.departureTime));
@@ -87,6 +87,20 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
               backgroundStyle={[styles.rowActionContainer]}
               onPress={() => {
                 // TODO
+                Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer cette liane ?", [
+                  {
+                    text: "Annuler",
+                    onPress: () => {},
+                    style: "cancel"
+                  },
+                  {
+                    text: "Supprimer",
+                    onPress: async () => {
+                      await services.liane.delete(liane.id!);
+                    },
+                    style: "default"
+                  }
+                ]);
               }}>
               <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
                 <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />

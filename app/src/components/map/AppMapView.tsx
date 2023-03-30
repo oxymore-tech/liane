@@ -1,8 +1,8 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 import MapLibreGL, { Logger, RegionPayload } from "@maplibre/maplibre-react-native";
 import { AppContext } from "@/components/ContextProvider";
-import { Liane, LianeDisplay, LianeSegment } from "@/api";
+import { LatLng, Liane, LianeDisplay, LianeMatch, LianeSegment } from "@/api";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { GeoJSON } from "geojson";
 import { bboxToLatLng } from "@/api/geo";
@@ -14,6 +14,7 @@ import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { Column, Row } from "@/components/base/AppLayout";
 import { MapStyleProps } from "@/api/location";
+import { InternalLianeSearchFilter } from "@/util/ref";
 
 MapLibreGL.setAccessToken(null);
 
@@ -27,19 +28,14 @@ Logger.setLogCallback(log => {
   );
 });
 
-const AppMapView = () => {
+const AppMapView = ({ position }: { position: LatLng }) => {
   const { services } = useContext(AppContext);
   const [lianeDisplay, setLianeDisplay] = useState<LianeDisplay>();
   const [loadingDisplay, setLoadingDisplay] = useState<boolean>(false);
 
-  const position = services.location.getLastKnownLocation();
   const regionCallbackRef = useRef<number | undefined>();
 
-  const { navigation } = useAppNavigation();
-
-  if (!position) {
-    return <></>;
-  }
+  const { navigation } = useAppNavigation<"LianeMatchDetail">();
 
   const center = [position.lng, position.lat];
   const onRegionChange = async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
@@ -71,22 +67,42 @@ const AppMapView = () => {
   };
 
   const displayedSegments = lianeDisplay?.segments ?? [];
+  const features = useMemo(() => toFeatureCollection(displayedSegments), [lianeDisplay]);
   const displayedLianes = lianeDisplay?.lianes ?? [];
   return (
     <View style={styles.map}>
-      <MapLibreGL.MapView onRegionDidChange={onRegionChange} style={styles.map} {...MapStyleProps} logoEnabled={false} attributionEnabled={false}>
+      <MapLibreGL.MapView
+        onRegionDidChange={onRegionChange}
+        rotateEnabled={false}
+        style={styles.map}
+        {...MapStyleProps}
+        logoEnabled={false}
+        attributionEnabled={false}>
         <MapLibreGL.Camera maxZoomLevel={15} minZoomLevel={5} zoomLevel={10} centerCoordinate={center} />
-        <LianeSegmentLayer lianeSegments={displayedSegments} />
+        <MapLibreGL.ShapeSource id="segments" shape={features}>
+          <MapLibreGL.LineLayer
+            belowLayerID="place"
+            id="segmentLayer"
+            style={{ lineColor: AppColorPalettes.orange[500], lineWidth: ["get", "width"] }}
+          />
+        </MapLibreGL.ShapeSource>
       </MapLibreGL.MapView>
       {!loadingDisplay && lianeDisplay && (
-        <Column style={[styles.lianeListContainer, styles.shadow, { maxHeight: 150 }]} spacing={8}>
+        <Column style={[styles.lianeListContainer, styles.shadow]} spacing={8}>
           {displayedLianes.length > 0 && (
             <AppText style={[styles.bold, { paddingHorizontal: 24 }]}>
               {displayedLianes.length} résultat{displayedLianes.length > 1 ? "s" : ""}
             </AppText>
           )}
           {displayedLianes.length === 0 && <AppText style={[{ paddingHorizontal: 24, alignSelf: "center" }]}>Aucune liane dans cette zone.</AppText>}
-          <FlatList data={displayedLianes} renderItem={({ item }) => renderLianeOverview(item, navigation)} />
+          <FlatList
+            style={{
+              maxHeight: 56 * 2
+            }}
+            data={displayedLianes}
+            keyExtractor={i => i.id!}
+            renderItem={({ item }) => renderLianeOverview(item, navigation)}
+          />
         </Column>
       )}
       {loadingDisplay && (
@@ -99,32 +115,39 @@ const AppMapView = () => {
   );
 };
 
-type LianeSegmentLayerProps = {
-  lianeSegments: LianeSegment[];
-};
 const renderLianeOverview = (liane: Liane, navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => {
+  const freeSeatsCount = liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0);
   return (
     <AppPressable
       foregroundColor={WithAlpha(AppColors.black, 0.1)}
       style={{ paddingHorizontal: 24, paddingVertical: 8 }}
       onPress={() => {
-        navigation.navigate("LianeDetail", { liane });
+        let y: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter } = {
+          lianeMatch: { liane, wayPoints: liane.wayPoints, match: { type: "Exact" }, freeSeatsCount },
+          filter: {
+            from: liane.wayPoints[0].rallyingPoint,
+            to: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint,
+            targetTime: { dateTime: liane.departureTime, direction: "Departure" },
+            availableSeats: freeSeatsCount
+          }
+        };
+        navigation.navigate("LianeMatchDetail", y);
       }}>
       <TripSegmentView
         departureTime={liane.departureTime}
         duration={getTotalDuration(liane.wayPoints)}
         from={liane.wayPoints[0].rallyingPoint}
         to={liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint}
+        freeSeatsCount={freeSeatsCount}
       />
     </AppPressable>
   );
 };
 
-const LianeSegmentLayer = ({ lianeSegments }: LianeSegmentLayerProps) => {
-  const features: GeoJSON.FeatureCollection = {
+const toFeatureCollection = (lianeSegments: LianeSegment[]): GeoJSON.FeatureCollection => {
+  return {
     type: "FeatureCollection",
     features: lianeSegments.map(s => {
-      console.log(s.lianes.length);
       return {
         type: "Feature",
         properties: {
@@ -137,16 +160,6 @@ const LianeSegmentLayer = ({ lianeSegments }: LianeSegmentLayerProps) => {
       };
     })
   };
-  /*const shape: GeoJSON.MultiLineString = {
-    type: "MultiLineString",
-    coordinates: lianeSegments.filter(s => s.coordinates.length > 1).map(s => s.coordinates)
-  };*/
-
-  return (
-    <MapLibreGL.ShapeSource id="segments" shape={features}>
-      <MapLibreGL.LineLayer belowLayerID="place" id="segmentLayer" style={{ lineColor: AppColorPalettes.orange[500], lineWidth: ["get", "width"] }} />
-    </MapLibreGL.ShapeSource>
-  );
 };
 
 export default AppMapView;
@@ -182,6 +195,7 @@ const styles = StyleSheet.create({
     bottom: 80 - 26,
     left: 24,
     right: 24,
+    flexShrink: 1,
     paddingVertical: 16,
     backgroundColor: AppColorPalettes.gray[100],
     alignSelf: "center",

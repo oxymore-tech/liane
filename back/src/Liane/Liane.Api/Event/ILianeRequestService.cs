@@ -8,6 +8,8 @@ namespace Liane.Api.Event;
 public interface ILianeRequestService
 {
   Task<PaginatedResponse<JoinLianeRequest>> List(Pagination pagination);
-  
+
   Task<JoinLianeRequest> Get(Ref<Event> id);
+
+  Task Delete(Ref<Event> id);
 }

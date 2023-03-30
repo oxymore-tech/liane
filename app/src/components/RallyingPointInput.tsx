@@ -3,7 +3,7 @@ import { RallyingPoint } from "@/api";
 import { AppAutocomplete } from "@/components/base/AppAutocomplete";
 import { AppContext } from "@/components/ContextProvider";
 import { AppText } from "@/components/base/AppText";
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { Column } from "@/components/base/AppLayout";
 
 const ResultView = ({ item }: { item: RallyingPoint }) => {

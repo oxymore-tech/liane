@@ -37,6 +37,13 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
+  [HttpDelete("{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Liane))]
+  public async Task  Delete([FromRoute] string id)
+  {
+     await lianeService.Delete(id);
+  }
+
   [HttpGet("display")]
   public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2)
   {

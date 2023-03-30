@@ -39,8 +39,8 @@ export const DatetimeForm = WithFormController(
     };
 
     const handleConfirm = (v: Date) => {
-      onChange(v);
       hideDatePicker();
+      onChange(v);
     };
 
     return (
@@ -56,7 +56,6 @@ export const DatetimeForm = WithFormController(
             isVisible={isDatePickerVisible}
             mode={mode}
             date={value}
-            minuteInterval={5}
             display={isIOS && mode === "date" ? "inline" : undefined}
             onConfirm={handleConfirm}
             onCancel={hideDatePicker}

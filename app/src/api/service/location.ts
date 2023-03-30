@@ -11,6 +11,7 @@ export interface LocationService {
 
 const cacheSize = 5;
 const rallyingPointsKey = "rallyingPoints";
+const lastKnownLocationKey = "last_known_loc";
 
 export class LocationServiceClient implements LocationService {
   // Default location
@@ -18,6 +19,14 @@ export class LocationServiceClient implements LocationService {
     lat: 44.3593807,
     lng: 3.4336323
   };
+
+  constructor() {
+    retrieveAsync<LatLng>(lastKnownLocationKey).then(res => {
+      if (res) {
+        this.lastKnownLocation = res;
+      }
+    });
+  }
   private hasPermissionIOS = async () => {
     const openSetting = () => {
       Linking.openSettings().catch(() => {
@@ -103,6 +112,7 @@ export class LocationServiceClient implements LocationService {
         Geolocation.getCurrentPosition(
           position => {
             this.lastKnownLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+            storeAsync<LatLng>(lastKnownLocationKey, this.lastKnownLocation);
             resolve(this.lastKnownLocation);
           },
           error => {

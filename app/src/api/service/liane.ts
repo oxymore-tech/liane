@@ -13,7 +13,7 @@ import {
   PaginatedResponse,
   NotificationPayload
 } from "@/api";
-import { get, postAs } from "@/api/http";
+import { get, postAs, del } from "@/api/http";
 
 export interface LianeService {
   list(): Promise<PaginatedResponse<Liane>>;
@@ -25,9 +25,14 @@ export interface LianeService {
   answer(accept: boolean, event: NotificationPayload<JoinRequest>): Promise<void>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
+  delete(lianeId: string): Promise<void>;
+  deleteJoinRequest(id: string): Promise<void>;
 }
 
 export class LianeServiceClient implements LianeService {
+  async delete(lianeId: string): Promise<void> {
+    await del(`/liane/${lianeId}`);
+  }
   async list() {
     const lianes = await get<PaginatedResponse<Liane>>("/liane/");
     console.debug(JSON.stringify(lianes));
@@ -78,5 +83,8 @@ export class LianeServiceClient implements LianeService {
       lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: event.content.liane, member: event.createdBy.id };
     }
     await postAs("/event/" + event.id!, { body: lianeEvent });
+  }
+  async deleteJoinRequest(id: string): Promise<void> {
+    await del(`/event/join_request/${id}`);
   }
 }

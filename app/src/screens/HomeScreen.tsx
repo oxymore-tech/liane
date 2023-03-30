@@ -1,21 +1,27 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import React from "react";
+import React, { useContext, useState } from "react";
 import AppMapView from "@/components/map/AppMapView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppStyles } from "@/theme/styles";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes } from "@/theme/colors";
+import { PositionButton } from "@/components/map/PositionButton";
+import { LatLng } from "@/api";
+import { AppContext } from "@/components/ContextProvider";
 
 const HomeScreen = ({ navigation }: { navigation: any }) => {
   const insets = useSafeAreaInsets();
   const navigateToSearch = () => {
     navigation.navigate("Search");
   };
+  const { services } = useContext(AppContext);
+  const [position, setCurrentPosition] = useState<LatLng>(services.location.getLastKnownLocation());
+
   return (
     <View style={styles.page}>
       <View style={styles.container}>
-        <AppMapView />
+        <AppMapView position={position} />
       </View>
 
       <View style={[styles.floatingSearchBar, { marginTop: insets.top }]}>
@@ -23,6 +29,13 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
           <AppTextInput
             style={AppStyles.input}
             leading={<AppIcon name={"search-outline"} color={AppColorPalettes.gray[400]} />}
+            trailing={
+              <PositionButton
+                onPosition={currentLocation => {
+                  setCurrentPosition(currentLocation);
+                }}
+              />
+            }
             editable={false}
             placeholder={"Trouver une Liane"}
             onPressIn={navigateToSearch}

@@ -1,6 +1,6 @@
 import { Compatible, JoinLianeRequestDetailed } from "@/api";
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import React, { useContext } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -12,6 +12,7 @@ import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
 import { AppPressable } from "@/components/base/AppPressable";
+import { AppContext } from "@/components/ContextProvider";
 
 const formatSeatCount = (seatCount: number) => {
   let count = seatCount;
@@ -29,6 +30,7 @@ const formatSeatCount = (seatCount: number) => {
 
 export const LianeJoinRequestDetailScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeJoinRequestDetail">();
+  const { services } = useContext(AppContext);
   const request: JoinLianeRequestDetailed = route.params!.request;
   const insets = useSafeAreaInsets();
   const isExactMatch = request.match.type === "Exact";
@@ -107,6 +109,20 @@ export const LianeJoinRequestDetailScreen = () => {
             backgroundStyle={[styles.rowActionContainer]}
             onPress={() => {
               // TODO
+              Alert.alert("Annuler la demande", "Voulez-vous vraiment annuler votre demande ?", [
+                {
+                  text: "Annuler",
+                  onPress: () => {},
+                  style: "cancel"
+                },
+                {
+                  text: "Confirmer",
+                  onPress: async () => {
+                    await services.liane.deleteJoinRequest(request.id!);
+                  },
+                  style: "default"
+                }
+              ]);
             }}>
             <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
               <AppIcon name={"close-outline"} color={ContextualColors.redAlert.text} />

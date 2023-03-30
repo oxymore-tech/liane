@@ -34,6 +34,11 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     return await Resolve(await eventService.Get(e));
   }
 
+  public async Task Delete(Ref<Api.Event.Event> id)
+  {
+    await eventService.Delete(id);
+  }
+
   private async Task<JoinLianeRequest> Resolve(Api.Event.Event e)
   {
     var joinRequest = (LianeEvent.JoinRequest)e.LianeEvent;

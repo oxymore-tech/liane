@@ -76,23 +76,25 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
     );
 
   return (
-    <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : borderRadius, borderBottomLeftRadius: open ? 0 : borderRadius }]}>
-      <AppTextInput
-        ref={inputRef}
-        style={styles.input}
-        leading={leading}
-        trailing={trailingIcon}
-        blurOnSubmit={false}
-        value={search ?? value?.label ?? undefined}
-        onChangeText={setSearch}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onTouchCancel={onBlur}
-        {...props}
-      />
+    <View style={styles.container}>
+      <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : borderRadius, borderBottomLeftRadius: open ? 0 : borderRadius }]}>
+        <AppTextInput
+          ref={inputRef}
+          style={styles.input}
+          leading={leading}
+          trailing={trailingIcon}
+          blurOnSubmit={false}
+          value={search ?? value?.label ?? undefined}
+          onChangeText={setSearch}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onTouchCancel={onBlur}
+          {...props}
+        />
+      </View>
 
       {open && (
-        <View style={{ zIndex: 100, position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
+        <View style={{ position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
           <View style={[styles.itemsContainer, { maxHeight: items.length > 3 ? `${Math.floor((100 * 3) / items.length)}%` : "100%" }]}>
             <ItemList items={items} loading={false} onSelect={onSelect} renderItem={renderItem} />
           </View>
@@ -140,6 +142,10 @@ const AutocompleteItem = ({ itemView, onPress }: AutocompleteItemProps) => (
 );
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexShrink: 1
+  },
   input: {
     fontSize: 18,
     paddingVertical: 4,
@@ -151,6 +157,7 @@ const styles = StyleSheet.create({
   },
   itemsContainer: {
     width: "100%",
+    flexGrow: 1,
     backgroundColor: AppColorPalettes.gray[100],
     borderRadius,
     borderTopLeftRadius: 0,

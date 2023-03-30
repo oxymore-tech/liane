@@ -8,13 +8,14 @@ import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointInput } from "@/components/RallyingPointInput";
 import { Column, Row } from "@/components/base/AppLayout";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { FormComponent } from "@/screens/lianeWizard/Forms";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
 import { AppPressable } from "@/components/base/AppPressable";
 import { MapStyleProps } from "@/api/location";
+import { PositionButton } from "@/components/map/PositionButton";
 
 export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormController(
   ({ value, onChange, fieldState: { error, invalid } }: BaseFormComponentProps<RallyingPoint | undefined>) => {
@@ -42,34 +43,23 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
 
     const locationButton = useMemo(
       () => (
-        <Pressable
-          style={{ height: "100%", width: 36, justifyContent: "center", alignItems: "center" }}
-          onPress={async () => {
-            try {
-              const currentLocation = await services.location.currentLocation();
-              if (__DEV__) {
-                console.log(currentLocation);
-              }
-              const closestPoint = await services.rallyingPoint.snap(currentLocation);
-              setCurrentPosition(closestPoint.location);
-              updateValue(closestPoint);
-            } catch (e) {
-              console.error("location error :", e);
-              // TODO show message to user
-            }
-          }}>
-          <AppCustomIcon name={"position"} color={AppColors.blue} />
-        </Pressable>
+        <PositionButton
+          onPosition={async currentLocation => {
+            const closestPoint = await services.rallyingPoint.snap(currentLocation);
+            setCurrentPosition(closestPoint.location);
+            updateValue(closestPoint);
+          }}
+        />
       ),
       [services]
     );
 
     return (
       <Column style={{ flex: 1, padding: 16, width: "100%" }} spacing={8}>
-        <View style={{ width: "100%", zIndex: 5 }}>
+        <View style={{ width: "100%", zIndex: 5, flex: 1 }}>
           <RallyingPointInput placeholder="Chercher une adresse" onChange={updateValue} value={value} trailing={locationButton} />
         </View>
-        {!value && (
+        {!value && false && (
           <View style={{ flexGrow: 1, backgroundColor: WithAlpha(AppColors.white, 0.6), width: "100%", borderRadius: 16, paddingVertical: 12 }}>
             <AppText style={[styles.bold, { paddingHorizontal: 16 }]}>Recherches récentes</AppText>
             <FlatList
