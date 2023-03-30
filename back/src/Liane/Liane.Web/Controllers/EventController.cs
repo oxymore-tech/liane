@@ -51,7 +51,7 @@ public sealed class EventController : ControllerBase
   [HttpDelete("join_request/{id}")]
   public async Task Delete([FromRoute] string id)
   {
-    return await lianeRequestService(id);
+     await lianeRequestService.Delete(id);
   }
 
 
