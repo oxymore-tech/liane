@@ -13,6 +13,7 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
@@ -28,13 +29,21 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
   private readonly IChatService chatService;
+  private readonly ILogger<LianeServiceImpl> logger;
 
-  public LianeServiceImpl(IMongoDatabase mongo, IRoutingService routingService, ICurrentContext currentContext, IRallyingPointService rallyingPointService, IChatService chatService) : base(mongo)
+  public LianeServiceImpl(
+    IMongoDatabase mongo,
+    IRoutingService routingService,
+    ICurrentContext currentContext,
+    IRallyingPointService rallyingPointService,
+    IChatService chatService,
+    ILogger<LianeServiceImpl> logger) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
     this.rallyingPointService = rallyingPointService;
     this.chatService = chatService;
+    this.logger = logger;
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
@@ -221,16 +230,17 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public new async Task<Api.Trip.Liane> Create(LianeRequest obj, string ownerId)
   {
     var created = await base.Create(obj, ownerId);
-    await UpdateGeography(created); //TODO index async ?
+    await UpdateGeometry(created); //TODO index async ?
     return created;
   }
 
-  private async Task UpdateGeography(Api.Trip.Liane liane)
+  private async Task UpdateGeometry(Api.Trip.Liane liane)
   {
     var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
-    var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates.ToLatLng());
+    var simplified = Simplifyer.Simplify(route.Coordinates.ToLatLng(), 0.004D);
+    logger.LogDebug("Liane geometry simplified {0} => {1}", route.Coordinates.Count, simplified.Count);
     await Mongo.GetCollection<LianeDb>()
-      .UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
+      .UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, simplified.ToGeoJson()));
   }
 
   public async Task<(ImmutableSortedSet<WayPoint> wayPoints, Match matchType)?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)

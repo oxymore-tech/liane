@@ -32,4 +32,6 @@ public sealed class Positions
     public static readonly LatLng SeveracDAveyronRondPoint = new (44.33196510821739, 3.043660819530487);
     public static readonly LatLng VillefortParkingGare = new (44.440593118222026, 3.926348984241486);
     public static readonly LatLng RodezMacDrive = new (44.36054915873126, 2.569950520992279);
+    public static readonly LatLng Alan = new (44.36054915873126, 2.569950520992279);
+    public static readonly LatLng BassoCambo = new (44.36054915873126, 2.569950520992279);
 }

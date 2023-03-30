@@ -41,7 +41,25 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
   }
+  
+  [Test]
+  public async Task ShouldSimplifyLianeGeometry()
+  {
+    var userA = Fakers.FakeDbUsers[0];
 
+    var now = DateTime.UtcNow;
+
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.BassoCambo, LabeledPositions.Alan);
+
+    var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
+    Assert.IsNotNull(actual);
+
+    CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id), actual.Lianes.Select(l => l.Id));
+
+    AssertJson.AreEqual("Segment.cocures-mende.json", actual.Segments);
+  }
+
+  
   [Test]
   public async Task ShouldDisplayLiane()
   {
@@ -333,5 +351,17 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.AreEqual(createdLiane.Members.Count + 1, resolvedLianeA.Members.Count);
+  }
+  
+  [Test]
+  public async Task JbShouldMatchAugustinsLiane()
+  {
+    var augustin = Fakers.FakeDbUsers[0].Id;
+    var jb = Fakers.FakeDbUsers[1].Id;
+
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival), -1), new Pagination());
+
+    Assert.IsNotNull(actual);
   }
 }

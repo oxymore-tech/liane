@@ -21,6 +21,12 @@ public static class MongoFactory
 {
   private static bool _init;
 
+  public static IMongoDatabase CreateForTest(IServiceProvider sp, MongoSettings settings, string databaseName)
+  {
+    var logger = sp.GetRequiredService<ILogger<IMongoDatabase>>();
+    return GetDatabase(settings, logger, databaseName);
+  }
+
   public static IMongoDatabase Create(IServiceProvider sp)
   {
     var settings = sp.GetRequiredService<MongoSettings>();

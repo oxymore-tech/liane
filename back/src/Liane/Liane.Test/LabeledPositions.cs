@@ -41,6 +41,8 @@ public sealed class LabeledPositions
   public static readonly RallyingPoint LanuejolsParkingEglise = new("Lanuejols_Parking_Eglise_fakeId", "Lanuejols_Parking_Eglise", Positions.LanuejolsParkingEglise, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint RodezMacDrive = new("Rodez_Mac_Drive_fakeId", "Rodez_Mac_Drive", Positions.RodezMacDrive, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint VillefortParkingGare = new("Villefort_Parking_Gare_fakeId", "Villefort_Parking_Gare", Positions.VillefortParkingGare, LocationType.CarpoolArea, "", "48000", "", null, true);
+  public static readonly RallyingPoint Alan = new("Alan", "Alan", Positions.Alan, LocationType.CarpoolArea, "", "48000", "", null, true);
+  public static readonly RallyingPoint BassoCambo = new("BassoCambo", "BassoCambo", Positions.BassoCambo, LocationType.CarpoolArea, "", "48000", "", null, true);
 
   public static readonly IImmutableSet<RallyingPoint> RallyingPoints = ImmutableHashSet.Create(
     Mende,

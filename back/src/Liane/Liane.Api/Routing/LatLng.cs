@@ -36,7 +36,7 @@ public readonly struct LatLng
     var values = s.Split(",");
     if (values.Length == 2)
     {
-      return new (double.Parse(values[1]), double.Parse(values[0]));
+      return new(double.Parse(values[1]), double.Parse(values[0]));
     }
 
     throw new FormatException();
@@ -54,6 +54,10 @@ public readonly struct LatLng
              Math.Cos(d1) * Math.Cos(d2) * Math.Pow(Math.Sin(num2 / 2.0), 2.0);
     return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
   }
+
+  public static bool operator ==(LatLng a, LatLng b) => a.Equals(b);
+
+  public static bool operator !=(LatLng a, LatLng b) => !a.Equals(b);
 
   public bool Equals(LatLng other)
   {
