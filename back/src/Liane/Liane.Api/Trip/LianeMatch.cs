@@ -4,6 +4,8 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
+public sealed record PickupPoint(int DeltaInSeconds, RallyingPoint Point, ImmutableSortedSet<WayPoint> WayPoints);
+
 [Union]
 public abstract record Match
 {
@@ -11,14 +13,13 @@ public abstract record Match
   {
   }
 
-  public sealed record Exact : Match;
+  public sealed record Exact() : Match;
 
-  public sealed record Compatible(int DeltaInSeconds) : Match;
+  public sealed record Compatible(ImmutableList<PickupPoint> PickupPoints) : Match;
 }
 
 public sealed record LianeMatch(
   Liane Liane,
-  ImmutableSortedSet<WayPoint> WayPoints,
   int FreeSeatsCount,
   Match Match
 );

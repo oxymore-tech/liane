@@ -53,9 +53,6 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
       throw new ArgumentException("This request is no longer compatible with target Liane");
     }
 
-    var wayPoints = match.Value.wayPoints;
-    var matchType = match.Value.matchType;
-
-    return new JoinLianeRequest(e.Id!, from, to, liane, createdBy, e.CreatedAt!, joinRequest.Seats, joinRequest.TakeReturnTrip, joinRequest.Message, false, matchType, wayPoints);
+    return new JoinLianeRequest(e.Id!, from, to, liane, createdBy, e.CreatedAt!, joinRequest.Seats, joinRequest.TakeReturnTrip, joinRequest.Message, false, match);
   }
 }

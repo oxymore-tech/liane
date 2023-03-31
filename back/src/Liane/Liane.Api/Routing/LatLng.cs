@@ -73,4 +73,94 @@ public readonly struct LatLng
   {
     return HashCode.Combine(Lat, Lng);
   }
+
+  ///  
+  /// Returns the cross product: vector1.X*vector2.Y - vector1.Y*vector2.X 
+  /// 
+  ///  The second Vector 
+  public double CrossProduct(LatLng vector2)
+  {
+    return Lng * vector2.Lat - Lat * vector2.Lng;
+  }
+
+  #region Public Operators
+
+  /// 
+  /// Operator -LatLng (unary negation) 
+  /// 
+  public static LatLng operator -(LatLng vector)
+  {
+    return new LatLng(-vector.Lat, -vector.Lng);
+  }
+
+  /// 
+  /// Negates the values of X and Y on this LatLng
+  /// 
+  public LatLng Negate()
+  {
+    return new LatLng(-Lat, -Lng);
+  }
+
+  /// 
+  /// Operator LatLng + LatLng
+  /// 
+  public static LatLng operator +(LatLng vector1, LatLng vector2)
+  {
+    return new LatLng(vector1.Lat + vector2.Lat, vector1.Lng + vector2.Lng);
+  }
+
+  /// 
+  /// Operator LatLng - LatLng
+  /// 
+  public static LatLng operator -(LatLng vector1, LatLng vector2)
+  {
+    return new LatLng(vector1.Lat - vector2.Lat, vector1.Lng - vector2.Lng);
+  }
+
+  /// 
+  /// Operator LatLng * double 
+  /// 
+  public static LatLng operator *(LatLng vector, double scalar)
+  {
+    return new LatLng(vector.Lat * scalar, vector.Lng * scalar);
+  }
+
+  /// 
+  /// Operator double * LatLng 
+  /// 
+  public static LatLng operator *(double scalar, LatLng vector)
+  {
+    return new LatLng(vector.Lat * scalar, vector.Lng * scalar);
+  }
+
+  /// 
+  /// Operator LatLng / double 
+  /// 
+  public static LatLng operator /(LatLng vector, double scalar)
+  {
+    return vector * (1.0 / scalar);
+  }
+
+  /// 
+  /// Operator LatLng * LatLng, interpreted as their dot product
+  /// 
+  public static double operator *(LatLng vector1, LatLng vector2)
+  {
+    return vector1.Lng * vector2.Lng + vector1.Lat * vector2.Lat;
+  }
+
+  /// 
+  /// Determinant - Returns the determinant det(vector1, vector2)
+  /// 
+  ///  
+  /// Returns the determinant: vector1.X*vector2.Y - vector1.Y*vector2.X
+  ///  
+  ///  The first LatLng 
+  ///  The second LatLng 
+  public static double Determinant(LatLng vector1, LatLng vector2)
+  {
+    return vector1.Lng * vector2.Lat - vector1.Lat * vector2.Lng;
+  }
+
+  #endregion Public Operators
 }

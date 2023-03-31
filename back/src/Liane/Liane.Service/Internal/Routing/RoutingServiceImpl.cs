@@ -7,7 +7,9 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing;
@@ -18,11 +20,13 @@ public sealed class RoutingServiceImpl : IRoutingService
 {
   private readonly IOsrmService osrmService;
   private readonly IRallyingPointService rallyingPointService;
+  private readonly ILogger<RoutingServiceImpl> logger;
 
-  public RoutingServiceImpl(IOsrmService osrmService, IRallyingPointService rallyingPointService)
+  public RoutingServiceImpl(IOsrmService osrmService, IRallyingPointService rallyingPointService, ILogger<RoutingServiceImpl> logger)
   {
     this.osrmService = osrmService;
     this.rallyingPointService = rallyingPointService;
+    this.logger = logger;
   }
 
   public async Task<Route> GetRoute(RoutingQuery query)
@@ -38,6 +42,14 @@ public sealed class RoutingServiceImpl : IRoutingService
     var duration = routeResponse.Routes[0].Duration;
     var distance = routeResponse.Routes[0].Distance;
     return new Route(geojson.Coordinates, duration, distance);
+  }
+  
+  public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates)
+  {
+    var route = await GetRoute(coordinates);
+    var geometry = Simplifier.Simplify(route);
+    logger.LogDebug("Liane geometry simplified {0} => {1}", route.Coordinates.Count, geometry.Count);
+    return geometry;
   }
 
   public async Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query)

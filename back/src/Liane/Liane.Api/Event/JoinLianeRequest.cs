@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Immutable;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 
 namespace Liane.Api.Event;
@@ -16,6 +14,5 @@ public sealed record JoinLianeRequest(
   bool TakeReturnTrip,
   string Message,
   bool? Accepted,
-  Match Match,
-  ImmutableSortedSet<WayPoint> WayPoints
+  Match Match
 );

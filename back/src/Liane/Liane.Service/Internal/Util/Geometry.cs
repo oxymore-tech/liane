@@ -14,7 +14,13 @@ public static class Geometry
     var geoJson2DGeographicCoordinatesList = coordinates.Select(c => new GeoJson2DGeographicCoordinates(c.Lng, c.Lat));
     return new GeoJsonLineString<GeoJson2DGeographicCoordinates>(new GeoJsonLineStringCoordinates<GeoJson2DGeographicCoordinates>(geoJson2DGeographicCoordinatesList));
   }
-  
+
+  public static ImmutableList<LatLng> ToLatLng(this GeoJsonLineString<GeoJson2DGeographicCoordinates> lineString)
+  {
+    return lineString.Coordinates.Positions.Select(c => new LatLng(c.Latitude, c.Longitude))
+      .ToImmutableList();
+  }
+
   public static GeoJsonPolygon<GeoJson2DGeographicCoordinates> GetApproxCircle(LatLng center, double radiusInMeters)
   {
     // Calculate the vertices of a regular 8-sided polygon inscribed in the sphere

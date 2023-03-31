@@ -10,6 +10,9 @@ public interface IRoutingService
 {
     Task<Route> GetRoute(RoutingQuery routingQuery);
     Task<Route> GetRoute(ImmutableList<LatLng> coordinates);
+
+    Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates);
+    
     Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query);
     Task<ImmutableList<Route>> GetAlternatives(RoutingQuery routingQuery);
     Task<DeltaRoute> CrossAWayPoint(RoutingWithPointQuery routingWithPointQuery);

@@ -3,10 +3,25 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Liane.Api.Routing;
 
-namespace Liane.Service.Internal.Trip;
+namespace Liane.Service.Internal.Routing;
 
-public sealed class Simplifyer
+public sealed class Simplifier
 {
+  public static ImmutableList<LatLng> Simplify(Route route) => Simplify(route.Coordinates.ToLatLng(), 0.003D);
+
+  public static ImmutableList<LatLng> Simplify(ImmutableList<LatLng> points, double tolerance = 1.0, bool highestQuality = false)
+  {
+    if (points.Count <= 2)
+    {
+      return points;
+    }
+
+    var sqTolerance = tolerance * tolerance;
+    points = highestQuality ? points : SimplifyRadialDist(points, sqTolerance);
+    points = SimplifyDouglasPeucker(points, sqTolerance);
+    return points;
+  }
+
   private static double GetSqDist(LatLng p1, LatLng p2)
   {
     var num1 = p1.Lng - p2.Lng;
@@ -116,18 +131,5 @@ public sealed class Simplifyer
     SimplifyDpStep(points, 0, num, sqTolerance, simplified);
     simplified.Add(points[num]);
     return simplified.ToImmutableList();
-  }
-
-  public static ImmutableList<LatLng> Simplify(ImmutableList<LatLng> points, double tolerance = 1.0, bool highestQuality = false)
-  {
-    if (points.Count <= 2)
-    {
-      return points;
-    }
-
-    var sqTolerance = tolerance * tolerance;
-    points = highestQuality ? points : SimplifyRadialDist(points, sqTolerance);
-    points = SimplifyDouglasPeucker(points, sqTolerance);
-    return points;
   }
 }
