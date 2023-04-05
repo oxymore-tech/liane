@@ -213,7 +213,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   
   public async Task UpdateAllGeometries()
   {
-    await Mongo.GetCollection<LianeDb>().Find(FilterDefinition<LianeDb>.Empty).SelectAsync(async l => UpdateGeometry(await MapEntity(l)));
+    await Mongo.GetCollection<LianeDb>().Find(FilterDefinition<LianeDb>.Empty).SelectAsync(async l => UpdateGeometry((await MapEntity(l)).WayPoints));
   }
 
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)

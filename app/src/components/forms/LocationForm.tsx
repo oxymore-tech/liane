@@ -2,7 +2,6 @@ import { LatLng, RallyingPoint } from "@/api";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import MapLibreGL from "@maplibre/maplibre-react-native";
-import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import LocationPin from "@/assets/location_pin.svg";
@@ -16,6 +15,7 @@ import { BaseFormComponentProps, WithFormController } from "@/components/forms/W
 import { AppPressable } from "@/components/base/AppPressable";
 import { MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
+import { useKeyboardState } from "@/util/hooks/keyboardState";
 
 export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormController(
   ({ value, onChange, fieldState: { error, invalid } }: BaseFormComponentProps<RallyingPoint | undefined>) => {
@@ -56,11 +56,18 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
 
     return (
       <Column style={{ flex: 1, padding: 16, width: "100%" }} spacing={8}>
-        <View style={{ width: "100%", zIndex: 5, flex: 1 }}>
-          <RallyingPointInput placeholder="Chercher une adresse" onChange={updateValue} value={value} trailing={locationButton} />
-        </View>
-        {!value && false && (
-          <View style={{ flexGrow: 1, backgroundColor: WithAlpha(AppColors.white, 0.6), width: "100%", borderRadius: 16, paddingVertical: 12 }}>
+        <RallyingPointInput placeholder="Chercher une adresse" onChange={updateValue} value={value} trailing={locationButton} />
+        {!value && !keyboardsIsVisible && (
+          <View
+            style={{
+              flex: 1,
+              flexGrow: 1,
+              zIndex: -1,
+              backgroundColor: WithAlpha(AppColors.white, 0.6),
+              width: "100%",
+              borderRadius: 16,
+              paddingVertical: 12
+            }}>
             <AppText style={[styles.bold, { paddingHorizontal: 16 }]}>Recherches récentes</AppText>
             <FlatList
               style={{ flex: 1, paddingVertical: 4 }}
@@ -69,7 +76,7 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
               renderItem={({ item }) => (
                 <AppPressable key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
                   <Column>
-                    <AppText style={styles.bold}>{item.label}</AppText>
+                    <AppText style={[styles.bold, { flex: 1 }]}>{item.label}</AppText>
                     <AppText numberOfLines={1}>{item.address}</AppText>
                     <AppText numberOfLines={1}>{item.zipCode + ", " + item.city}</AppText>
                   </Column>
@@ -78,7 +85,6 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
             />
           </View>
         )}
-
         {!keyboardsIsVisible && invalid && (
           <Row
             spacing={16}
@@ -95,9 +101,15 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
             </AppText>
           </Row>
         )}
-
         {value && (
-          <View style={{ flex: 1, backgroundColor: AppColorPalettes.gray[400], width: "100%", borderRadius: 16, overflow: "hidden" }}>
+          <View
+            style={{
+              flex: keyboardsIsVisible ? 0 : 1,
+              backgroundColor: AppColorPalettes.gray[400],
+              width: "100%",
+              borderRadius: 16,
+              overflow: "hidden"
+            }}>
             <MapLibreGL.MapView
               ref={mapRef}
               style={{ backfaceVisibility: "hidden", flex: 1, width: "100%" }}
