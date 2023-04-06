@@ -1,6 +1,6 @@
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Liane, RallyingPoint, WayPoint } from "@/api";
+import { Liane, WayPoint } from "@/api";
 import React from "react";
 import { getBoundingBox } from "@/util/geometry";
 import { View } from "react-native";
@@ -25,6 +25,37 @@ const TripMapView = ({ data, params }: { data: Route; params: { liane: Liane } }
       zoomEnabled={false}
       attributionEnabled={false}>
       <MapLibreGL.Camera bounds={boundingBox} animationMode={"moveTo"} />
+      <MapLibreGL.ShapeSource
+        id="rp_l"
+        shape={{
+          type: "FeatureCollection",
+          features: params.liane.wayPoints.map(wp => {
+            return {
+              type: "Feature",
+              properties: {
+                name: wp.rallyingPoint.city
+              },
+              geometry: {
+                type: "Point",
+                coordinates: [wp.rallyingPoint.location.lng, wp.rallyingPoint.location.lat]
+              }
+            };
+          })
+        }}>
+        <MapLibreGL.SymbolLayer
+          id={"rp_labels"}
+          style={{
+            textFont: ["Open Sans Regular", "Noto Sans Regular"],
+            textSize: 12,
+            textField: "{name}",
+            visibility: "visible",
+            textMaxWidth: 8,
+            textColor: "hsl(0,0%,20%)",
+            textHaloColor: "hsla(0,0%,100%,0.8)",
+            textHaloWidth: 1.2
+          }}
+        />
+      </MapLibreGL.ShapeSource>
       <MapLibreGL.ShapeSource id="line1" shape={data.geometry}>
         <MapLibreGL.LineLayer belowLayerID="place" id="tripLayer" style={{ lineColor: "red", lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
@@ -75,6 +106,38 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
       zoomEnabled={false}
       attributionEnabled={false}>
       <MapLibreGL.Camera bounds={boundingBox} animationMode={"moveTo"} />
+
+      <MapLibreGL.ShapeSource
+        id="rp_l"
+        shape={{
+          type: "FeatureCollection",
+          features: params.newWayPoints.map(wp => {
+            return {
+              type: "Feature",
+              properties: {
+                name: wp.rallyingPoint.city
+              },
+              geometry: {
+                type: "Point",
+                coordinates: [wp.rallyingPoint.location.lng, wp.rallyingPoint.location.lat]
+              }
+            };
+          })
+        }}>
+        <MapLibreGL.SymbolLayer
+          id={"rp_labels"}
+          style={{
+            textFont: ["Open Sans Regular", "Noto Sans Regular"],
+            textSize: 12,
+            textField: "{name:latin}",
+            visibility: "visible",
+            textMaxWidth: 8,
+            textColor: "hsl(0,0%,20%)",
+            textHaloColor: "hsla(0,0%,100%,0.8)",
+            textHaloWidth: 1.2
+          }}
+        />
+      </MapLibreGL.ShapeSource>
       <MapLibreGL.ShapeSource id="line1" shape={data.originalRoute.geometry}>
         <MapLibreGL.LineLayer belowLayerID="place" id="tripLayer" style={{ lineColor: "gray", lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
