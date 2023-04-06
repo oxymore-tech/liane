@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.User;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Mongo;
@@ -12,10 +11,15 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
-using Liane.Service.Internal.Util;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using NLog.Config;
+using NLog.Layouts;
+using NLog.Targets;
+using NLog.Targets.Wrappers;
+using NLog.Web;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
@@ -31,7 +35,7 @@ public abstract class BaseIntegrationTest
   public async Task SetupMockData()
   {
     var settings = GetMongoSettings();
-    var client = MongoFactory.GetMongoClient(settings, new TestLogger<IMongoDatabase>());
+    var client = MongoFactory.GetMongoClient(settings, Moq.Mock.Of<ILogger<IMongoDatabase>>());
 
     var databases = (await client.ListDatabaseNamesAsync())
       .ToEnumerable()
@@ -46,20 +50,35 @@ public abstract class BaseIntegrationTest
   public void EnsureSchema()
   {
     var settings = GetMongoSettings();
-    Db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), GetUniqueDbName());
 
     var services = new ServiceCollection();
     var osrmClient = GetOsrmClient();
-    services.AddService(new RallyingPointServiceImpl(Db, new TestLogger<RallyingPointServiceImpl>()));
+    services.AddService<RallyingPointServiceImpl>();
     services.AddService<IOsrmService>(osrmClient);
-    services.AddService(Db);
+
+    var dbName = GetUniqueDbName();
+    services.AddSingleton(sp => MongoFactory.CreateForTest(sp, settings, dbName));
+
     services.AddTransient<IRoutingService, RoutingServiceImpl>();
-    
+    services.AddLogging(builder =>
+    {
+      builder.SetMinimumLevel(LogLevel.Debug);
+      Layout devLayout = new SimpleLayout(
+        "${longdate} | ${uppercase:${level:padding=5}} | ${threadid:padding=3} | ${logger:padding=40:fixedLength=true:alignmentOnTruncation=right} | ${message} ${exception:format=ToString}");
+      var coloredConsoleTarget = new ColoredConsoleTarget { Layout = devLayout };
+      var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
+      var loggingConfiguration = new LoggingConfiguration();
+      loggingConfiguration.AddTarget(consoleTarget);
+      loggingConfiguration.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, consoleTarget);
+      builder.AddNLog(loggingConfiguration);
+    });
+
     services.AddService<MockCurrentContext>();
     SetupServices(services);
-    
+
     ServiceProvider = services.BuildServiceProvider();
 
+    Db = ServiceProvider.GetRequiredService<IMongoDatabase>();
     Db.Drop();
     // Init services in child class 
     Setup(Db);
@@ -71,18 +90,9 @@ public abstract class BaseIntegrationTest
 
   protected virtual void SetupServices(IServiceCollection services)
   {
-    
   }
 
   protected abstract void Setup(IMongoDatabase db);
-
-  /// <summary>
-  /// Clears given Collection. Should be called in ClearTestedCollections
-  /// </summary>
-  protected void DropTestedCollection<T>()
-  {
-    Db.DropCollection<T>();
-  }
 
   private static MongoSettings GetMongoSettings()
   {

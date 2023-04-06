@@ -13,12 +13,11 @@ public abstract record Match
 
   public sealed record Exact : Match;
 
-  public sealed record Compatible(int DeltaInSeconds) : Match;
+  public sealed record Compatible(int DeltaInSeconds, RallyingPoint Pickup, RallyingPoint Deposit, ImmutableSortedSet<WayPoint> WayPoints) : Match;
 }
 
 public sealed record LianeMatch(
   Liane Liane,
-  ImmutableSortedSet<WayPoint> WayPoints,
   int FreeSeatsCount,
   Match Match
 );

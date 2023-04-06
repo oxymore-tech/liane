@@ -12,6 +12,7 @@ using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Util;
 using MongoDB.Driver;
 
@@ -29,7 +30,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IRallyingPointService rallyingPointService;
   private readonly IChatService chatService;
 
-  public LianeServiceImpl(IMongoDatabase mongo, IRoutingService routingService, ICurrentContext currentContext, IRallyingPointService rallyingPointService, IChatService chatService) : base(mongo)
+  public LianeServiceImpl(
+    IMongoDatabase mongo,
+    IRoutingService routingService,
+    ICurrentContext currentContext,
+    IRallyingPointService rallyingPointService,
+    IChatService chatService) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -41,12 +47,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var from = await filter.From.Resolve(rallyingPointService.Get);
     var to = await filter.To.Resolve(rallyingPointService.Get);
-    var resolvedFilter = filter with { From = from, To = to };
-    // Filter Lianes in database 
-    var lianesCursor = await Filter(resolvedFilter);
 
-    // Select lazily while under limit 
-    var lianes = await lianesCursor.SelectAsync(l => MatchLiane(l, from, to, filter));
+    var targetRoute = Simplifier.Simplify(await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location)));
+
+    var lianes = await Mongo.GetCollection<LianeDb>()
+      .Find(BuilderLianeFilter(targetRoute, filter.TargetTime, filter.AvailableSeats))
+      .SelectAsync(l => MatchLiane(l, from, to, filter, targetRoute));
 
     Cursor? nextCursor = null; //TODO
     return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor, lianes
@@ -60,44 +66,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       })
       .ThenByDescending(l => l.Match is Match.Exact ? 0 : ((Match.Compatible)l.Match).DeltaInSeconds)
       .ToImmutableList());
-  }
-
-  public async Task<IFindFluent<LianeDb, LianeDb>> Filter(Filter filter)
-  {
-    // Get Liane near both From and To 
-    var from = await filter.From.Resolve(rallyingPointService.Get);
-    var to = await filter.To.Resolve(rallyingPointService.Get);
-
-    var intersects = Builders<LianeDb>.Filter.GeoIntersects(
-      l => l.Geometry,
-      Geometry.GetBoundingBox(from.Location, to.Location)
-    );
-
-    // Filter departureTime
-    DateTime lowerBound, upperBound;
-    if (filter.TargetTime.Direction == Direction.Departure)
-    {
-      lowerBound = filter.TargetTime.DateTime;
-      upperBound = filter.TargetTime.DateTime.AddHours(LianeMatchPageDeltaInHours);
-    }
-    else
-    {
-      lowerBound = filter.TargetTime.DateTime.AddHours(-LianeMatchPageDeltaInHours);
-      upperBound = filter.TargetTime.DateTime;
-    }
-
-    var timeFilter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, lowerBound)
-                     & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, upperBound);
-
-    // If search is passenger search, fetch Liane with driver only
-    var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, filter.AvailableSeats <= 0);
-
-    // l => l.TotalSeatCount + filter.AvailableSeats > 0
-    var hasAvailableSeats = Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -filter.AvailableSeats);
-
-    var f = timeFilter & isDriverSearch & hasAvailableSeats & intersects;
-    return Mongo.GetCollection<LianeDb>()
-      .Find(f);
   }
 
   public async Task<PaginatedResponse<Api.Trip.Liane>> ListForCurrentUser(Pagination pagination)
@@ -123,14 +91,24 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public async Task<Api.Trip.Liane> AddMember(Ref<Api.Trip.Liane> liane, LianeMember newMember)
   {
     var toUpdate = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == liane.Id
-      ).FirstOrDefaultAsync();
-    if (toUpdate is null) throw ResourceNotFoundException.For(liane);
-    if (toUpdate.Members.Exists(m => m.User == newMember.User)) throw new ArgumentException(newMember.User.Id + " already is a member of liane " + liane.Id);
+      .Find(l => l.Id == liane.Id)
+      .FirstOrDefaultAsync();
+
+    if (toUpdate is null)
+    {
+      throw ResourceNotFoundException.For(liane);
+    }
+
+    if (toUpdate.Members.Exists(m => m.User == newMember.User))
+    {
+      throw new ArgumentException(newMember.User.Id + " already is a member of liane " + liane.Id);
+    }
+
+    var updateDef = (await UpdateGeometry(toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
+      .Push(l => l.Members, newMember)
+      .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
 
     // If Liane now has 2 users, create a conversation
-    var updateDef = Builders<LianeDb>.Update.Push(l => l.Members, newMember)
-      .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
     if (toUpdate.Conversation is null)
     {
       var conv = await chatService.Create(ConversationGroup.CreateWithMembers(new[]
@@ -144,9 +122,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var updated = await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id,
         updateDef,
-        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
 
-    return await MapEntity(updated!);
+    return await MapEntity(updated);
   }
 
   public async Task<Api.Trip.Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<Api.User.User> member)
@@ -200,7 +179,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var (driverSegment, segments) = ExtractRouteSegments(driver, lianeMembers);
     var result = await routingService.GetTrip(driverSegment, segments);
-    if (result == null) throw new NullReferenceException();
+    if (result == null)
+    {
+      throw new NullReferenceException();
+    }
+
     return result;
   }
 
@@ -221,58 +204,48 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public new async Task<Api.Trip.Liane> Create(LianeRequest obj, string ownerId)
   {
     var created = await base.Create(obj, ownerId);
-    await UpdateGeography(created); //TODO index async ?
+    var updateDefinition = await UpdateGeometry(created.WayPoints);
+    await Mongo.GetCollection<LianeDb>()
+      .UpdateOneAsync(l => l.Id == created.Id, updateDefinition);
     return created;
   }
 
-  private async Task UpdateGeography(Api.Trip.Liane liane)
+  public async Task UpdateAllGeometries()
   {
-    var route = await routingService.GetRoute(liane.WayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
-    var boundingBox = Geometry.GetOrientedBoundingBox(route.Coordinates.ToLatLng());
-    await Mongo.GetCollection<LianeDb>()
-      .UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.Geometry, boundingBox));
+    await Mongo.GetCollection<LianeDb>().Find(FilterDefinition<LianeDb>.Empty).SelectAsync(async l => UpdateGeometry((await MapEntity(l)).WayPoints));
   }
 
-  public async Task<(ImmutableSortedSet<WayPoint> wayPoints, Match matchType)?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
+  public async Task<Match?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
   {
-    Match match;
-    ImmutableSortedSet<WayPoint> newWayPoints;
     var resolved = await liane.Resolve(Get);
     var (driverSegment, segments) = ExtractRouteSegments(resolved.Driver.User, resolved.Members);
     var wayPoints = (await routingService.GetTrip(driverSegment, segments))!;
     var initialTripDuration = wayPoints.TotalDuration();
     if (wayPoints.IncludesSegment((from, to)))
     {
-      newWayPoints = wayPoints;
-      match = new Match.Exact();
+      return new Match.Exact();
     }
-    else
+
+    // If match for a driver, use the candidate segment as driverSegment
+    var matchDriverSegment = isDriverSegment ? (from, to) : driverSegment;
+    var matchSegments = isDriverSegment ? segments : segments.Append((from, to));
+    var tripIntent = await routingService.GetTrip(matchDriverSegment, matchSegments);
+    if (tripIntent is null)
     {
-      // If match for a driver, use the candidate segment as driverSegment
-      var matchDriverSegment = isDriverSegment ? (from, to) : driverSegment;
-      var matchSegments = isDriverSegment ? segments : segments.Append((from, to));
-      var tripIntent = await routingService.GetTrip(matchDriverSegment, matchSegments);
-      if (tripIntent is null)
-      {
-        return null;
-      }
-
-      newWayPoints = tripIntent;
-      var delta = newWayPoints.TotalDuration() - initialTripDuration;
-      if (delta > MaxDeltaInSeconds)
-      {
-        return null;
-      }
-
-      match = new Match.Compatible(delta);
+      return null;
     }
 
-    return (newWayPoints, match);
+    var delta = tripIntent.TotalDuration() - initialTripDuration;
+    return delta > MaxDeltaInSeconds
+      ? null
+      : new Match.Compatible(delta, from, to, tripIntent);
   }
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
   {
-    var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, DateTime.UtcNow)
+    var now = DateTime.UtcNow;
+    var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, now)
+                 & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, now.AddHours(24))
                  & Builders<LianeDb>.Filter.GeoIntersects(
                    l => l.Geometry,
                    Geometry.GetBoundingBox(pos, pos2)
@@ -290,33 +263,35 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         return new LianeSegment(route.Coordinates, g.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
       });
 
-    var lianeSegments = TruncateOverlappingSegments(rawLianeSegments).Where(s => s.Coordinates.Count > 1).ToImmutableList();
+    var lianeSegments = RouteOptimizer.TruncateOverlappingSegments(rawLianeSegments);
 
     return new LianeDisplay(lianeSegments, lianes);
   }
 
-  internal readonly struct LianeSet
+  private async Task<UpdateDefinition<LianeDb>> UpdateGeometry(Ref<Api.User.User> driver, IEnumerable<LianeMember> members)
   {
-    public LianeSet(IEnumerable<Ref<Api.Trip.Liane>> lianes)
-    {
-      HashKey = string.Join("_", lianes.Select(r => r.Id).Distinct().Order());
-    }
-
-    public ImmutableList<Ref<Api.Trip.Liane>> Lianes => HashKey.Split("_").Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
-    public string HashKey { get; }
-
-    public LianeSet Merge(LianeSet other)
-    {
-      return new LianeSet(other.Lianes.Concat(Lianes));
-    }
+    var wayPoints = await GetWayPoints(driver, members);
+    return await UpdateGeometry(wayPoints);
   }
 
-  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter)
+  private async Task<UpdateDefinition<LianeDb>> UpdateGeometry(ImmutableSortedSet<WayPoint> wayPoints)
+  {
+    var simplifiedRoute = await routingService.GetSimplifiedRoute(wayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
+    return Builders<LianeDb>.Update.Set(l => l.Geometry, simplifiedRoute.ToGeoJson());
+  }
+
+  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter, ImmutableList<LatLng> targetRoute)
   {
     var matchForDriver = filter.AvailableSeats > 0;
     var defaultDriver = lianeDb.Driver.User;
     var (driverSegment, segments) = ExtractRouteSegments(defaultDriver, lianeDb.Members);
-    var wayPoints = (await routingService.GetTrip(driverSegment, segments))!;
+    var wayPoints = await routingService.GetTrip(driverSegment, segments);
+
+    if (wayPoints is null)
+    {
+      return null;
+    }
+
     var initialTripDuration = wayPoints.TotalDuration();
 
     if (filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.DateTime)
@@ -325,98 +300,85 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return null;
     }
 
-    ImmutableSortedSet<WayPoint> newWayPoints;
+    var route = lianeDb.Geometry!.ToLatLng();
+
+    var (pickupPoint, depositPoint) = await MatchBestIntersectionPoints(from, to, targetRoute, route);
+
     Match match;
-    if (wayPoints.IncludesSegment((from, to)))
+    if (wayPoints.IncludesSegment((pickupPoint, depositPoint)))
     {
-      newWayPoints = wayPoints;
       match = new Match.Exact();
     }
     else
     {
       // If match for a driver, use the candidate segment as driverSegment
-      var matchDriverSegment = matchForDriver ? (from, to) : driverSegment;
-      var matchSegments = matchForDriver ? segments.Append(driverSegment) : segments.Append((from, to));
-      var tripIntent = await routingService.GetTrip(matchDriverSegment, matchSegments);
-      if (tripIntent is null)
+      var matchDriverSegment = matchForDriver ? (pickupPoint, depositPoint) : driverSegment;
+      var matchSegments = matchForDriver ? segments.Append(driverSegment) : segments.Append((pickupPoint, depositPoint));
+      var newWayPoints = await routingService.GetTrip(matchDriverSegment, matchSegments);
+      if (newWayPoints is null)
       {
         return null;
       }
 
-      newWayPoints = tripIntent;
       var delta = newWayPoints.TotalDuration() - initialTripDuration;
       if (delta > MaxDeltaInSeconds)
       {
         return null;
       }
 
-      match = new Match.Compatible(delta);
+      match = new Match.Compatible(delta, pickupPoint, depositPoint, newWayPoints);
     }
 
     var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, lianeDb.Driver);
-    return new LianeMatch(originalLiane, newWayPoints, lianeDb.TotalSeatCount, match);
+    return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
   }
 
-  private static ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
+  private async Task<(RallyingPoint Pickup, RallyingPoint Deposit)> MatchBestIntersectionPoints(RallyingPoint from, RallyingPoint to, ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
   {
-    var cutCoordinate = new LngLatTuple(-1, -1);
-    var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
-    var orderedCoordinates = new List<LngLatTuple>();
-    foreach (var lianeSegment in raw)
+    var firstIntersection = targetRoute.GetFirstIntersection(route);
+    var lastIntersection = targetRoute.GetLastIntersection(route);
+
+    var pickup = await SnapOrDefault(firstIntersection, from);
+    var deposit = await SnapOrDefault(lastIntersection, to);
+
+    return (pickup, deposit);
+  }
+
+  private async Task<RallyingPoint> SnapOrDefault(LatLng? intersection, RallyingPoint defaultPoint)
+  {
+    if (intersection is null)
     {
-      var lianeSet = new LianeSet(lianeSegment.Lianes.ToHashSet());
-      foreach (var coordinate in lianeSegment.Coordinates)
-      {
-        if (groupedCoordinates.TryGetValue(coordinate, out var currentLianeSet))
-        {
-          groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
-          orderedCoordinates.Add(cutCoordinate);
-        }
-        else
-        {
-          groupedCoordinates[coordinate] = lianeSet;
-          orderedCoordinates.Add(coordinate);
-        }
-      }
+      return defaultPoint;
     }
 
-    var lianeSegments = new List<LianeSegment>();
-    var coordinates = new List<LngLatTuple>();
-    LianeSet? previousLianeSet = null;
-    foreach (var coordinate in orderedCoordinates)
+    return await rallyingPointService.Snap(intersection.Value, 1000) ?? defaultPoint;
+  }
+
+  private static FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
+  {
+    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToGeoJson());
+
+    DateTime lowerBound, upperBound;
+    if (time.Direction == Direction.Departure)
     {
-      if (coordinate.Equals(cutCoordinate))
-      {
-        // Special case the route is already truncated because is crossing another route
-        if (previousLianeSet != null)
-        {
-          var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-          lianeSegments.Add(lianeSegment);
-        }
-
-        coordinates.Clear();
-        previousLianeSet = null;
-        continue;
-      }
-
-      var currentLianeSet = groupedCoordinates[coordinate];
-      if (previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
-      {
-        var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-        lianeSegments.Add(lianeSegment);
-        coordinates.Clear();
-      }
-
-      coordinates.Add(coordinate);
-      previousLianeSet = currentLianeSet;
+      lowerBound = time.DateTime;
+      upperBound = time.DateTime.AddHours(LianeMatchPageDeltaInHours);
+    }
+    else
+    {
+      lowerBound = time.DateTime.AddHours(-LianeMatchPageDeltaInHours);
+      upperBound = time.DateTime;
     }
 
-    if (coordinates.Count > 0 && previousLianeSet != null)
-    {
-      var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-      lianeSegments.Add(lianeSegment);
-    }
+    var timeFilter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, lowerBound)
+                     & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, upperBound);
 
-    return lianeSegments.ToImmutableList();
+    // If search is passenger search, fetch Liane with driver only
+    var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, availableSeats <= 0);
+
+    // l => l.TotalSeatCount + availableSeats > 0
+    var hasAvailableSeats = Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -availableSeats);
+
+    return timeFilter & isDriverSearch & hasAvailableSeats & intersects;
   }
 }

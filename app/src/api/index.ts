@@ -190,16 +190,19 @@ export type LianeSearchFilter = Readonly<{
 }>;
 
 export type Exact = { type: "Exact" };
-export type Compatible = { type: "Compatible"; deltaInSeconds: TimeInSeconds };
+export type Compatible = { type: "Compatible"; pickup: RallyingPoint; deposit: RallyingPoint; wayPoints: WayPoint[]; deltaInSeconds: number };
 export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{
   liane: Liane;
-  wayPoints: WayPoint[];
+  //   wayPoints: WayPoint[];
   match: Match;
   freeSeatsCount: number;
 }>;
 
+export const isExactMatch = (match: Match): match is Exact => {
+  return match.type === "Exact";
+};
 // Notifications
 export type Notification = Readonly<{
   title: string;
@@ -272,7 +275,7 @@ export type JoinLianeRequestDetailed = Readonly<
     message: string;
     accepted?: boolean;
     match: Match;
-    wayPoints: WayPoint[];
+    //wayPoints: WayPoint[];
     createdBy?: User;
     createdAt?: UTCDateTime;
   } & Identity

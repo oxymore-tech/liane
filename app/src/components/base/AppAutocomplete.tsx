@@ -20,7 +20,15 @@ export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppT
 export type BasicItem = Readonly<{ id?: string; label: string }>;
 
 const borderRadius = 24;
-export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, onChange, renderItem, trailing, ...props }: AppAutocompleteProps<T>) {
+export const AppAutocomplete = <T extends BasicItem>({
+  value,
+  items,
+  onSearch,
+  onChange,
+  renderItem,
+  trailing,
+  ...props
+}: AppAutocompleteProps<T>) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>();
   const debouncedSearch = useDebounce(search);
@@ -76,7 +84,7 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
     );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { maxHeight: open ? undefined : 2 * borderRadius }]}>
       <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : borderRadius, borderBottomLeftRadius: open ? 0 : borderRadius }]}>
         <AppTextInput
           ref={inputRef}
@@ -102,7 +110,7 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
       )}
     </View>
   );
-}
+};
 
 type ItemListProps<T extends Identity> = Readonly<{
   items: T[];
@@ -158,6 +166,8 @@ const styles = StyleSheet.create({
   itemsContainer: {
     width: "100%",
     flexGrow: 1,
+    zIndex: 10,
+    flexShrink: 1,
     backgroundColor: AppColorPalettes.gray[100],
     borderRadius,
     borderTopLeftRadius: 0,

@@ -1,7 +1,7 @@
 import { StyleSheet, Switch, View } from "react-native";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import DatePicker from "react-native-date-picker";
-import { ControllerFieldState, useController } from "react-hook-form";
+import { ControllerFieldState, useController, useFormContext, useWatch } from "react-hook-form";
 import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -14,6 +14,8 @@ import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { WizardFormData, WizardFormDataKey } from "@/screens/lianeWizard/WizardContext";
 import { AppDimensions } from "@/theme/dimensions";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
+import { TimeView } from "@/components/TimeView";
+import { AppContext } from "@/components/ContextProvider";
 
 export interface BaseFormProps<T> {
   name: LianeWizardFormKey;
@@ -68,6 +70,31 @@ export const DateForm: FormComponent<Date> = WithFormContext(({ value, onChange 
   );
 });
 
+export const DurationEstimate = () => {
+  const { getValues } = useFormContext();
+  const { services } = useContext(AppContext);
+  const [duration, setDuration] = useState<number>();
+  const departureTime = useWatch({ name: "departureTime" }) ?? getValues("departureTime");
+  useEffect(() => {
+    const from = getValues("from");
+    const to = getValues("to");
+    services.routing.duration(from, to).then(d => {
+      setDuration(d);
+    });
+  }, [getValues, services]);
+
+  return duration && departureTime ? (
+    <Row style={{ alignItems: "center", padding: 16, alignSelf: "center" }} spacing={8}>
+      <AppIcon name={"clock-outline"} size={18} />
+      <AppText>
+        Arrivée estimée à <TimeView value={departureTime + duration} />
+      </AppText>
+    </Row>
+  ) : (
+    <View />
+  );
+};
+
 export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, onChange }: InternalBaseFormProps<TimeInSeconds>) => {
   if (!value) {
     useEffect(() => {
@@ -83,6 +110,7 @@ export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, 
         fadeToColor="none"
         textColor={AppColors.black}
       />
+      <DurationEstimate />
     </View>
   );
 });

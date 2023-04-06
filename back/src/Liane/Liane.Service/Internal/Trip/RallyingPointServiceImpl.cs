@@ -15,6 +15,7 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip.Import;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -38,11 +39,17 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   };
 
   private readonly ILogger<RallyingPointServiceImpl> logger;
+  private readonly MemoryCache pointCache = new(new MemoryCacheOptions());
 
   public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger)
     : base(mongo)
   {
     this.logger = logger;
+  }
+
+  public override Task<RallyingPoint> Get(Ref<RallyingPoint> reference)
+  {
+    return pointCache.GetOrCreateAsync(reference, _ => base.Get(reference))!;
   }
 
   public async Task Generate()

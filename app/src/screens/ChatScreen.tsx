@@ -12,7 +12,7 @@ import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
-import { getTrip } from "@/components/trip/trip";
+import { getTripFromLiane } from "@/components/trip/trip";
 const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
   const sender = message.createdBy === currentUser.id;
   return (
@@ -37,7 +37,7 @@ const MessageBubble = ({ message, currentUser }: { message: ChatMessage; current
 };
 
 const AttachedLianeOverview = ({ liane, user }: { liane: Liane; user: User }) => {
-  const { wayPoints, departureTime } = getTrip(liane, user);
+  const { wayPoints, departureTime } = getTripFromLiane(liane, user);
 
   return (
     <View style={{ paddingLeft: 56, paddingTop: 8, paddingRight: 16 }}>

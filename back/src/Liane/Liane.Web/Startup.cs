@@ -151,8 +151,7 @@ public static class Startup
     loggingConfiguration.AddTarget(consoleTarget);
     loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
     var logFactory = NLogBuilder.ConfigureNLog(loggingConfiguration);
-    var logger = logFactory.GetCurrentClassLogger();
-    return logger;
+    return logFactory.GetCurrentClassLogger();
   }
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)

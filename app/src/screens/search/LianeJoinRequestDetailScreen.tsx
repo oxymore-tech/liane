@@ -1,4 +1,4 @@
-import { Compatible, JoinLianeRequestDetailed } from "@/api";
+import { Compatible, isExactMatch, JoinLianeRequestDetailed } from "@/api";
 import React, { useContext } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -33,7 +33,8 @@ export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const request: JoinLianeRequestDetailed = route.params!.request;
   const insets = useSafeAreaInsets();
-  const isExactMatch = request.match.type === "Exact";
+  const reqIsExactMatch = isExactMatch(request.match);
+  const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
 
   const formattedDepartureTime = formatDateTime(new Date(request.targetLiane.departureTime));
   const formattedSeatCount = formatSeatCount(request.seats);
@@ -54,7 +55,7 @@ export const LianeJoinRequestDetailScreen = () => {
             to={request.to}
             departureTime={request.targetLiane.departureTime}
             originalTrip={request.targetLiane.wayPoints}
-            newTrip={request.wayPoints}
+            newTrip={wayPoints}
           />
         </View>
         <View style={styles.separator} />
@@ -82,10 +83,10 @@ export const LianeJoinRequestDetailScreen = () => {
             <AppText style={{ fontSize: 16 }}>{formattedSeatCount}</AppText>
           </Row>
 
-          {isExactMatch && <TripOverview params={{ liane: request.targetLiane }} />}
-          {!isExactMatch && (
+          {reqIsExactMatch && <TripOverview params={{ liane: request.targetLiane }} />}
+          {!reqIsExactMatch && (
             <Column>
-              <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: request.wayPoints }} />
+              <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: wayPoints }} />
               <AppText>Ce trajet fait faire un détour de {formatDuration((request.match as Compatible).deltaInSeconds)} à John Doe</AppText>
             </Column>
           )}

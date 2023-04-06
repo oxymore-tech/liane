@@ -9,18 +9,28 @@ export type UserTrip = {
 export const getTotalDuration = (trip: WayPoint[]) => {
   return trip.map(w => w.duration).reduce((d, acc) => d + acc, 0);
 };
-export const getTrip = (liane: Liane, user: User) => {
+export const getTripFromLiane = (liane: Liane, user: User) => {
   const member = liane.members.find(m => m.user === user!.id);
+  return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
+};
+
+export const getTrip = (departureTime: UTCDateTime, wayPoints: WayPoint[], to?: string, from?: string) => {
   let departureIndex = 0;
-  let arrivalIndex = liane.wayPoints.length - 1;
-  if (member) {
-    departureIndex = liane.wayPoints.findIndex(w => w.rallyingPoint.id === member.from);
-    arrivalIndex = liane.wayPoints.findIndex(w => w.rallyingPoint.id === member.to);
+  let arrivalIndex = wayPoints.length - 1;
+
+  if (from) {
+    departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === from);
   }
-  const dStart = liane.wayPoints[departureIndex].duration;
-  const departure = new Date(liane.departureTime);
+  if (to) {
+    arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === to);
+  }
+
+  const dStart = getTotalDuration(wayPoints.slice(0, departureIndex + 1));
+  const departure = new Date(departureTime);
+  const newWayPoints = wayPoints.slice(departureIndex, arrivalIndex + 1);
+  newWayPoints[0] = { ...newWayPoints[0], duration: 0 };
   return <UserTrip>{
-    wayPoints: liane.wayPoints.slice(departureIndex, arrivalIndex + 1).map(v => ({ ...v, duration: v.duration - dStart })),
+    wayPoints: newWayPoints,
     departureTime: addSeconds(departure, dStart).toISOString()
   };
 };

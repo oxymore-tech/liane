@@ -9,12 +9,24 @@ namespace Liane.Service.Internal.Util;
 
 public static class Geometry
 {
+  public static GeoJsonLineString<GeoJson2DGeographicCoordinates> ToGeoJson(this ImmutableList<LatLng> coordinates)
+  {
+    var geoJson2DGeographicCoordinatesList = coordinates.Select(c => new GeoJson2DGeographicCoordinates(c.Lng, c.Lat));
+    return new GeoJsonLineString<GeoJson2DGeographicCoordinates>(new GeoJsonLineStringCoordinates<GeoJson2DGeographicCoordinates>(geoJson2DGeographicCoordinatesList));
+  }
+
+  public static ImmutableList<LatLng> ToLatLng(this GeoJsonLineString<GeoJson2DGeographicCoordinates> lineString)
+  {
+    return lineString.Coordinates.Positions.Select(c => new LatLng(c.Latitude, c.Longitude))
+      .ToImmutableList();
+  }
+
   public static GeoJsonPolygon<GeoJson2DGeographicCoordinates> GetApproxCircle(LatLng center, double radiusInMeters)
   {
-// Calculate the vertices of a regular 8-sided polygon inscribed in the sphere
+    // Calculate the vertices of a regular 8-sided polygon inscribed in the sphere
     const int approx = 8;
     var polygonVertices = new List<GeoJson2DGeographicCoordinates>();
-    for (int i = 0; i < approx; i++)
+    for (var i = 0; i < approx; i++)
     {
       var angle = Math.PI * 2.0 / approx * i;
       var x = Math.Cos(angle) * radiusInMeters;
@@ -25,8 +37,7 @@ public static class Geometry
       ));
     }
 
-    var polygon = PointsToPolygon(polygonVertices);
-    return polygon;
+    return PointsToPolygon(polygonVertices);
   }
 
   public static GeoJsonPolygon<GeoJson2DGeographicCoordinates> GetBoundingBox(LatLng from, LatLng to)
