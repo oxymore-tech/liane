@@ -7,7 +7,7 @@ export interface JoinRequestSegmentOverviewProps {
 }
 
 export const JoinRequestSegmentOverview = ({ request }: JoinRequestSegmentOverviewProps) => {
-  const wayPoints = isExactMatch(request.match) ? request.targetLiane.wayPoints : request.match.pickupPoints[0].wayPoints;
+  const wayPoints = isExactMatch(request.match) ? request.targetLiane.wayPoints : request.match.wayPoints;
   const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
   const arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
   const dStart = wayPoints[departureIndex].duration;

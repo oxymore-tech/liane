@@ -111,6 +111,35 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
               </Row>
             </AppPressable>
           )}
+          {!currentUserIsOwner && (
+            <AppPressable
+              backgroundStyle={[styles.rowActionContainer]}
+              onPress={() => {
+                // TODO
+                Alert.alert("Quitter la liane", "Voulez-vous vraiment quitter cette liane ?", [
+                  {
+                    text: "Annuler",
+                    onPress: () => {},
+                    style: "cancel"
+                  },
+                  {
+                    text: "Supprimer",
+                    onPress: async () => {
+                      //TODO
+                    },
+                    style: "default"
+                  }
+                ]);
+              }}>
+              <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
+                <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
+                <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Quitter la liane</AppText>
+                <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
+                  <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
+                </View>
+              </Row>
+            </AppPressable>
+          )}
         </Column>
       </Column>
     </ScrollView>

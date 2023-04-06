@@ -34,7 +34,7 @@ export const LianeJoinRequestDetailScreen = () => {
   const request: JoinLianeRequestDetailed = route.params!.request;
   const insets = useSafeAreaInsets();
   const reqIsExactMatch = isExactMatch(request.match);
-  const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.pickupPoints[0].wayPoints;
+  const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
 
   const formattedDepartureTime = formatDateTime(new Date(request.targetLiane.departureTime));
   const formattedSeatCount = formatSeatCount(request.seats);
@@ -87,9 +87,7 @@ export const LianeJoinRequestDetailScreen = () => {
           {!reqIsExactMatch && (
             <Column>
               <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: wayPoints }} />
-              <AppText>
-                Ce trajet fait faire un détour de {formatDuration((request.match as Compatible).pickupPoints[0].deltaInSeconds)} à John Doe
-              </AppText>
+              <AppText>Ce trajet fait faire un détour de {formatDuration((request.match as Compatible).deltaInSeconds)} à John Doe</AppText>
             </Column>
           )}
         </Column>

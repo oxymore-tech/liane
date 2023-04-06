@@ -129,7 +129,7 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
           style={{
             textFont: ["Open Sans Regular", "Noto Sans Regular"],
             textSize: 12,
-            textField: "{name:latin}",
+            textField: "{name}",
             visibility: "visible",
             textMaxWidth: 8,
             textColor: "hsl(0,0%,20%)",

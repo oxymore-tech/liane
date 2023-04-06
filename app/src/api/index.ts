@@ -189,10 +189,8 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type PickupPoint = { deltaInSeconds: TimeInSeconds; point: RallyingPoint; wayPoints: WayPoint[] };
-
 export type Exact = { type: "Exact" };
-export type Compatible = { type: "Compatible"; pickupPoints: PickupPoint[] };
+export type Compatible = { type: "Compatible"; pickup: RallyingPoint; deposit: RallyingPoint; wayPoints: WayPoint[]; deltaInSeconds: number };
 export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{

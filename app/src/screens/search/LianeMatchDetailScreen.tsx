@@ -39,7 +39,7 @@ export const LianeMatchDetailScreen = () => {
   const formattedSeatCount = formatSeatCount(liane.freeSeatsCount);
   const matchLabel = lianeIsExactMatch ? "Trajet exact" : "Trajet compatible";
   const driverLabel = liane.liane.driver.canDrive ? "John Doe" : "Aucun conducteur";
-  const wayPoints = lianeIsExactMatch ? liane.liane.wayPoints : liane.match.pickupPoints[0].wayPoints;
+  const wayPoints = lianeIsExactMatch ? liane.liane.wayPoints : liane.match.wayPoints;
   console.log(JSON.stringify(liane));
   return (
     <View style={styles.page}>
@@ -52,8 +52,8 @@ export const LianeMatchDetailScreen = () => {
       <ScrollView>
         <View style={styles.section}>
           <LianeDetailedMatchView
-            from={lianeIsExactMatch ? filter.from : liane.match.pickupPoints[0].point}
-            to={filter.to}
+            from={lianeIsExactMatch ? filter.from : liane.match.pickup}
+            to={lianeIsExactMatch ? filter.to : liane.match.deposit}
             departureTime={liane.liane.departureTime}
             originalTrip={liane.liane.wayPoints}
             newTrip={wayPoints}
@@ -91,9 +91,12 @@ export const LianeMatchDetailScreen = () => {
                 newWayPoints: wayPoints.slice(
                   Math.max(
                     0,
-                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.pickupPoints[0].point.id)
+                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.pickup.id)
                   ),
-                  wayPoints.length
+                  Math.max(
+                    wayPoints.length,
+                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.deposit.id)
+                  )
                 )
               }}
             />

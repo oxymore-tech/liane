@@ -32,8 +32,9 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const peopleDescription =
     request.seats > 0 ? `Conducteur (${Math.abs(request.seats)} place${plural})` : Math.abs(request.seats) + " passager" + plural;
   const dateTime = `${formatMonthDay(new Date(request.targetLiane.departureTime))} à ${formatTime(new Date(request.targetLiane.departureTime))}`;
-  const fromPoint = isExactMatch(request.match) ? request.from : request.match.pickupPoints[0].point;
-  const wayPoints = isExactMatch(request.match) ? request.targetLiane.wayPoints : request.match.pickupPoints[0].wayPoints;
+  const fromPoint = isExactMatch(request.match) ? request.from : request.match.pickup;
+  const toPoint = isExactMatch(request.match) ? request.to : request.match.deposit;
+  const wayPoints = isExactMatch(request.match) ? request.targetLiane.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
@@ -42,7 +43,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
       seats: request.seats,
       takeReturnTrip: request.takeReturnTrip,
       liane: request.targetLiane.id!,
-      to: request.to.id!
+      to: toPoint.id!
     };
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
