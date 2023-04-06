@@ -7,8 +7,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Trip;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Route = Liane.Api.Routing.Route;
 
@@ -294,22 +292,20 @@ public sealed class RoutingServiceImpl : IRoutingService
   /// <returns>The matrix composed of tuples (duration, distance)</returns>
   private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double duration, double distance)>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
   {
-    var table = (await osrmService.Table(keys.Select(rp => rp.Location)));
-    var durationTable = table.Durations;
+    var (durations, distances) = await osrmService.Table(keys.Select(rp => rp.Location));
     var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double, double)>>();
 
-    for (int i = 0; i < durationTable.Length; i++)
+    for (var i = 0; i < durations.Length; i++)
     {
       matrix[keys[i]] = new Dictionary<RallyingPoint, (double, double)>();
-      for (int j = 0; j < durationTable[i].Length; j++)
+      for (var j = 0; j < durations[i].Length; j++)
       {
-        matrix[keys[i]][keys[j]] = (durationTable[i][j], table.Distances[i][j]);
+        matrix[keys[i]][keys[j]] = (durations[i][j], distances[i][j]);
       }
     }
 
     return matrix;
   }
-
 
   public async Task<ImmutableSortedSet<WayPoint>?> GetTrip(RouteSegment extremities, IEnumerable<RouteSegment> segments)
   {

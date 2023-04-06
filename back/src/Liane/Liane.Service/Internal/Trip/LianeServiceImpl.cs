@@ -14,7 +14,6 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Util;
-using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
@@ -65,7 +64,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         var hourDeltaScore = (filter.TargetTime.DateTime - l.Liane.DepartureTime).Hours;
         return hourDeltaScore * 2 + exactMatchScore;
       })
-      .ThenByDescending(l => l.Match is Match.Exact ? 0 : ((Match.Compatible)l.Match).PickupPoints[0].DeltaInSeconds)
+      .ThenByDescending(l => l.Match is Match.Exact ? 0 : ((Match.Compatible)l.Match).DeltaInSeconds)
       .ToImmutableList());
   }
 
@@ -210,7 +209,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .UpdateOneAsync(l => l.Id == created.Id, updateDefinition);
     return created;
   }
-  
+
   public async Task UpdateAllGeometries()
   {
     await Mongo.GetCollection<LianeDb>().Find(FilterDefinition<LianeDb>.Empty).SelectAsync(async l => UpdateGeometry((await MapEntity(l)).WayPoints));
@@ -239,7 +238,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var delta = tripIntent.TotalDuration() - initialTripDuration;
     return delta > MaxDeltaInSeconds
       ? null
-      : new Match.Compatible(ImmutableList.Create(new PickupPoint(delta, from, tripIntent)));
+      : new Match.Compatible(delta, from, to, tripIntent);
   }
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2)
@@ -287,6 +286,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var defaultDriver = lianeDb.Driver.User;
     var (driverSegment, segments) = ExtractRouteSegments(defaultDriver, lianeDb.Members);
     var wayPoints = await routingService.GetTrip(driverSegment, segments);
+
+    if (wayPoints is null)
+    {
+      return null;
+    }
+
     var initialTripDuration = wayPoints.TotalDuration();
 
     if (filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.DateTime)
@@ -295,61 +300,58 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return null;
     }
 
+    var route = lianeDb.Geometry!.ToLatLng();
+
+    var (pickupPoint, depositPoint) = await MatchBestIntersectionPoints(from, to, targetRoute, route);
+
     Match match;
-    if (wayPoints.IncludesSegment((from, to)))
+    if (wayPoints.IncludesSegment((pickupPoint, depositPoint)))
     {
       match = new Match.Exact();
     }
     else
     {
-      var route = lianeDb.Geometry!.ToLatLng();
-
-      var intersection = targetRoute.GetFirstIntersection(route);
-
-      if (intersection is null)
+      // If match for a driver, use the candidate segment as driverSegment
+      var matchDriverSegment = matchForDriver ? (pickupPoint, depositPoint) : driverSegment;
+      var matchSegments = matchForDriver ? segments.Append(driverSegment) : segments.Append((pickupPoint, depositPoint));
+      var newWayPoints = await routingService.GetTrip(matchDriverSegment, matchSegments);
+      if (newWayPoints is null)
       {
         return null;
       }
 
-      var pickupPoints = await rallyingPointService.List(intersection, null, 1000);
-
-      if (pickupPoints.IsEmpty)
-      {
-        // Proposer un parking proche comme point de ralliement
-        return null;
-      }
-
-      var matchingPickupPoints = new List<PickupPoint>();
-      foreach (var pickupPoint in pickupPoints)
-      {
-        // If match for a driver, use the candidate segment as driverSegment
-        var matchDriverSegment = matchForDriver ? (pickupPoint, to) : driverSegment;
-        var matchSegments = matchForDriver ? segments.Append(driverSegment) : segments.Append((pickupPoint, to));
-        var newWayPoints = await routingService.GetTrip(matchDriverSegment, matchSegments);
-        if (newWayPoints is null)
-        {
-          return null;
-        }
-
-        var delta = newWayPoints.TotalDuration() - initialTripDuration;
-        if (delta > MaxDeltaInSeconds)
-        {
-          continue;
-        }
-
-        matchingPickupPoints.Add(new PickupPoint(delta, pickupPoint, newWayPoints));
-      }
-
-      if (matchingPickupPoints.IsNullOrEmpty())
+      var delta = newWayPoints.TotalDuration() - initialTripDuration;
+      if (delta > MaxDeltaInSeconds)
       {
         return null;
       }
 
-      match = new Match.Compatible(matchingPickupPoints.ToImmutableList());
+      match = new Match.Compatible(delta, pickupPoint, depositPoint, newWayPoints);
     }
 
     var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, lianeDb.Driver);
     return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
+  }
+
+  private async Task<(RallyingPoint Pickup, RallyingPoint Deposit)> MatchBestIntersectionPoints(RallyingPoint from, RallyingPoint to, ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
+  {
+    var firstIntersection = targetRoute.GetFirstIntersection(route);
+    var lastIntersection = targetRoute.GetLastIntersection(route);
+
+    var pickup = await SnapOrDefault(firstIntersection, from);
+    var deposit = await SnapOrDefault(lastIntersection, to);
+
+    return (pickup, deposit);
+  }
+
+  private async Task<RallyingPoint> SnapOrDefault(LatLng? intersection, RallyingPoint defaultPoint)
+  {
+    if (intersection is null)
+    {
+      return defaultPoint;
+    }
+
+    return await rallyingPointService.Snap(intersection.Value, 1000) ?? defaultPoint;
   }
 
   private static FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)

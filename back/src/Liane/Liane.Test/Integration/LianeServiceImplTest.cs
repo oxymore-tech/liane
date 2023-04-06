@@ -178,16 +178,28 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var resultsMatchIds = results.Select(r => r.Liane.Id).ToImmutableList();
     TestContext.Out.WriteLine((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency);
     // Check results only contain expected matches
-    Assert.AreEqual(2, results.Count);
+    Assert.AreEqual(3, results.Count);
     // Check exact matches
     var expected = createdLianes[4];
     Assert.Contains(expected.Id, resultsMatchIds);
     Assert.IsInstanceOf<Match.Exact>(results.First(m => m.Liane.Id == expected.Id).Match);
 
     // Check compatible matches
+    expected = createdLianes[0];
+    Assert.Contains(expected.Id, resultsMatchIds);
+    var compatible = results.First(m => m.Liane.Id == expected.Id).Match;
+    Assert.IsInstanceOf<Match.Compatible>(compatible);
+    Assert.AreEqual(294,((Match.Compatible)compatible).DeltaInSeconds);
+    Assert.AreEqual("SaintEnimie_Parking_fakeId",((Match.Compatible)compatible).Pickup.Id);
+    Assert.AreEqual("Champerboux_Eglise_fakeId",((Match.Compatible)compatible).Deposit.Id);
+    
     expected = createdLianes[2];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<Match.Compatible>(results.First(m => m.Liane.Id == expected.Id).Match);
+    compatible = results.First(m => m.Liane.Id == expected.Id).Match;
+    Assert.IsInstanceOf<Match.Compatible>(compatible);
+    Assert.AreEqual(550,((Match.Compatible)compatible).DeltaInSeconds);
+    Assert.AreEqual("SaintEnimie_Parking_fakeId",((Match.Compatible)compatible).Pickup.Id);
+    Assert.AreEqual("Champerboux_Eglise_fakeId",((Match.Compatible)compatible).Deposit.Id);
   }
 
   private async Task<Api.Trip.Liane> InsertLiane(string id, DateTime now, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
@@ -237,6 +249,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     );
     var actual = await testedService.Match(filter1, new Pagination());
     CollectionAssert.AreEquivalent(ImmutableList.Create(
+      createdLianes[0].Id,
       createdLianes[2].Id
     ), actual.Data.Select(l => l.Liane.Id));
 
@@ -268,6 +281,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     );
     var actual = await testedService.Match(filter1, new Pagination());
     CollectionAssert.AreEquivalent(ImmutableList.Create(
+      createdLianes[0].Id,
       createdLianes[2].Id
     ), actual.Data.Select(l => l.Liane.Id));
 
@@ -327,7 +341,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var augustin = Fakers.FakeDbUsers[0].Id;
 
     var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
-    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival), -1),
+    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival)),
       new Pagination());
 
     Assert.AreEqual(1, actual.Data.Count);
@@ -336,9 +350,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.IsInstanceOf<Match.Compatible>(actual.Data[0].Match);
     var compatible = (Match.Compatible)actual.Data[0].Match;
 
-    Assert.AreEqual(1, compatible.PickupPoints.Count);
-
-    Assert.IsTrue(compatible.PickupPoints[0].DeltaInSeconds < 15 * 60);
-    Assert.AreEqual("Quezac_Parking_fakeId", compatible.PickupPoints[0].Point.Id);
+    Assert.IsTrue(compatible.DeltaInSeconds < 15 * 60);
+    Assert.AreEqual("Quezac_Parking_fakeId", compatible.Pickup.Id);
+    Assert.AreEqual("Mende_fakeId", compatible.Deposit.Id);
   }
 }

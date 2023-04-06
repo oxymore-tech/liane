@@ -3,7 +3,6 @@ using System.Text.Json;
 using DeepEqual.Syntax;
 using Liane.Api.Event;
 using Liane.Api.Routing;
-using Liane.Api.Trip;
 using Liane.Web.Internal.Json;
 using NUnit.Framework;
 
@@ -17,7 +16,7 @@ public sealed class UnionTypeJsonTest
   [Test]
   public void ShouldSerializeMatchType()
   {
-    var match = new Api.Trip.Match.Compatible(ImmutableList.Create(new PickupPoint(0, LabeledPositions.QuezacParking, ImmutableSortedSet<WayPoint>.Empty)));
+    var match = new Api.Trip.Match.Compatible(0, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, ImmutableSortedSet<WayPoint>.Empty);
     var json = JsonSerializer.Serialize<Api.Trip.Match>(match, options);
     Assert.IsTrue(json.Contains("\"type\":\"Compatible\""));
     var actual = JsonSerializer.Deserialize<Api.Trip.Match>(json, options);

@@ -7,6 +7,7 @@ namespace Liane.Api.Routing;
 
 public static class LatLngExtensions
 {
+  
   public static LatLng? GetFirstIntersection(this ImmutableList<LatLng> route1, ImmutableList<LatLng> route2)
   {
     if (route1.Count < 2 || route2.Count < 2)
@@ -22,6 +23,31 @@ public static class LatLngExtensions
       {
         var c = route2[j - 1];
         var d = route2[j];
+        if (LineSegmentsIntersect(a, b, c, d, out var intersection))
+        {
+          return intersection;
+        }
+      }
+    }
+
+    return null;
+  }
+  
+  public static LatLng? GetLastIntersection(this ImmutableList<LatLng> route1, ImmutableList<LatLng> route2)
+  {
+    if (route1.Count < 2 || route2.Count < 2)
+    {
+      return null;
+    }
+
+    for (var i = route1.Count - 1; i > 1; i--)
+    {
+      var a = route1[i];
+      var b = route1[i - 1];
+      for (var j = route2.Count - 1; j < 1; j--)
+      {
+        var c = route2[j];
+        var d = route2[j - 1];
         if (LineSegmentsIntersect(a, b, c, d, out var intersection))
         {
           return intersection;
