@@ -1,4 +1,4 @@
-import { JoinLianeRequestDetailed, LianeMatch, RallyingPoint } from "@/api";
+import { isExactMatch, JoinLianeRequestDetailed, LianeMatch, RallyingPoint } from "@/api";
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 import { toTimeInSeconds } from "@/util/datetime";
@@ -64,7 +64,6 @@ export const toJoinLianeRequest = (filter: InternalLianeSearchFilter, match: Lia
     takeReturnTrip: false, //TODO
     message,
     seats: filter.availableSeats,
-    match: match.match,
-    wayPoints: match.wayPoints
+    match: match.match
   };
 };

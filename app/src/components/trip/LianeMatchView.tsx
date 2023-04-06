@@ -14,7 +14,7 @@ export interface LianeMatchViewProps {
 
   newTrip: WayPoint[];
 
-  showAll?: boolean;
+  showAsSegment?: boolean;
 }
 
 export const LianeDetailedMatchView = ({ to, from, originalTrip, departureTime, newTrip }: LianeMatchViewProps) => {
@@ -33,12 +33,13 @@ export const LianeMatchView = (props: LianeMatchViewProps) => {
   // For now only show segment from 1 point before departure to arrival
   const tripMatch = getTripMatch(props.to, props.from, props.originalTrip, props.departureTime, props.newTrip);
 
-return (
+  return (
     <WayPointsView
       wayPoints={tripMatch.wayPoints}
       departureTime={tripMatch.departureTime}
       departureIndex={tripMatch.departureIndex}
       arrivalIndex={tripMatch.arrivalIndex}
+      showSegmentOnly={!!props.showAsSegment}
     />
   );
 };

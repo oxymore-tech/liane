@@ -13,7 +13,7 @@ import { formatMonthDay, formatTime } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
-import { JoinRequest } from "@/api";
+import { isExactMatch, JoinRequest } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
 import { JoinRequestsQueryKey } from "@/screens/MyTripsScreen";
@@ -32,10 +32,12 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const peopleDescription =
     request.seats > 0 ? `Conducteur (${Math.abs(request.seats)} place${plural})` : Math.abs(request.seats) + " passager" + plural;
   const dateTime = `${formatMonthDay(new Date(request.targetLiane.departureTime))} à ${formatTime(new Date(request.targetLiane.departureTime))}`;
+  const fromPoint = isExactMatch(request.match) ? request.from : request.match.pickupPoints[0].point;
+  const wayPoints = isExactMatch(request.match) ? request.targetLiane.wayPoints : request.match.pickupPoints[0].wayPoints;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
-      from: request.from.id!,
+      from: fromPoint.id!,
       message,
       seats: request.seats,
       takeReturnTrip: request.takeReturnTrip,
@@ -55,11 +57,12 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   );
   const tripContent = (
     <LianeMatchView
-      from={request.from}
+      from={fromPoint}
       to={request.to}
       departureTime={request.targetLiane.departureTime}
       originalTrip={request.targetLiane.wayPoints}
-      newTrip={request.wayPoints}
+      newTrip={wayPoints}
+      showAsSegment={true}
     />
   );
 

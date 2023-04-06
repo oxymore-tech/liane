@@ -1,4 +1,4 @@
-import { Compatible, LianeMatch } from "@/api";
+import { isExactMatch, LianeMatch } from "@/api";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -10,7 +10,6 @@ import { formatDateTime } from "@/api/i18n";
 import { LianeDetailedMatchView } from "@/components/trip/LianeMatchView";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { AppButton } from "@/components/base/AppButton";
-import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { toJoinLianeRequest } from "@/screens/search/SearchFormData";
 import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
@@ -33,14 +32,15 @@ export const LianeMatchDetailScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeMatchDetail">();
   const liane: LianeMatch = route.params!.lianeMatch;
   const insets = useSafeAreaInsets();
-  const isExactMatch = liane.match.type === "Exact";
+  const lianeIsExactMatch = isExactMatch(liane.match);
   const filter = route.params!.filter;
 
   const formattedDepartureTime = formatDateTime(new Date(liane.liane.departureTime));
   const formattedSeatCount = formatSeatCount(liane.freeSeatsCount);
-  const matchLabel = isExactMatch ? "Trajet exact" : "Trajet compatible";
+  const matchLabel = lianeIsExactMatch ? "Trajet exact" : "Trajet compatible";
   const driverLabel = liane.liane.driver.canDrive ? "John Doe" : "Aucun conducteur";
-
+  const wayPoints = lianeIsExactMatch ? liane.liane.wayPoints : liane.match.pickupPoints[0].wayPoints;
+  console.log(JSON.stringify(liane));
   return (
     <View style={styles.page}>
       <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
@@ -52,11 +52,11 @@ export const LianeMatchDetailScreen = () => {
       <ScrollView>
         <View style={styles.section}>
           <LianeDetailedMatchView
-            from={filter.from}
+            from={lianeIsExactMatch ? filter.from : liane.match.pickupPoints[0].point}
             to={filter.to}
             departureTime={liane.liane.departureTime}
             originalTrip={liane.liane.wayPoints}
-            newTrip={liane.wayPoints}
+            newTrip={wayPoints}
           />
         </View>
         <View style={styles.separator} />
@@ -83,27 +83,37 @@ export const LianeMatchDetailScreen = () => {
             <AppIcon name={"people-outline"} />
             <AppText style={{ fontSize: 16 }}>{formattedSeatCount}</AppText>
           </Row>
-          {isExactMatch && <TripOverview params={{ liane: liane.liane }} />}
-          {!isExactMatch && <TripChangeOverview params={{ liane: liane.liane, newWayPoints: liane.wayPoints }} />}
-          {isExactMatch && (
-            <Row spacing={8} style={[styles.tag, isExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg]}>
-              {isExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
+          {lianeIsExactMatch && <TripOverview params={{ liane: liane.liane }} />}
+          {!lianeIsExactMatch && (
+            <TripChangeOverview
+              params={{
+                liane: liane.liane,
+                newWayPoints: wayPoints.slice(
+                  Math.max(
+                    0,
+                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.pickupPoints[0].point.id)
+                  ),
+                  wayPoints.length
+                )
+              }}
+            />
+          )}
+          {lianeIsExactMatch && (
+            <Row spacing={8} style={[styles.tag, lianeIsExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg]}>
+              {lianeIsExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
               <AppText style={{ fontSize: 16 }}>{matchLabel}</AppText>
             </Row>
-          )}
-          {!isExactMatch && (
-            <AppText>Ce trajet fait faire un détour de {formatDuration((liane.match as Compatible).deltaInSeconds)} à John Doe</AppText>
           )}
         </Column>
         <View style={styles.separator} />
         <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
           <View
             style={{
-            backgroundColor: liane.liane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+              backgroundColor: liane.liane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
               padding: 12,
               borderRadius: 52
             }}>
-          <AppCustomIcon name={liane.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={36} />
+            <AppCustomIcon name={liane.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={36} />
           </View>
           <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
         </Row>

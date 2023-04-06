@@ -13,6 +13,7 @@ export interface WayPointsViewProps {
   wayPoints: WayPoint[];
   departureIndex?: number;
   arrivalIndex?: number;
+  showSegmentOnly?: boolean;
 }
 
 const NewLianeSymbol = ({ color }: { color: ColorValue }) => (
@@ -126,11 +127,16 @@ export const DetailedWayPointView = ({ wayPoints, departureTime, departureIndex,
   );
 };
 
-export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arrivalIndex }: WayPointsViewProps) => {
+export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arrivalIndex, showSegmentOnly = false }: WayPointsViewProps) => {
   if (departureIndex === undefined) {
     departureIndex = 0;
   }
   if (arrivalIndex === undefined) {
+    arrivalIndex = wayPoints.length - 1;
+  }
+  if (showSegmentOnly) {
+    wayPoints = wayPoints.slice(departureIndex, arrivalIndex + 1);
+    departureIndex = 0;
     arrivalIndex = wayPoints.length - 1;
   }
 
@@ -152,7 +158,7 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
           style={[styles.intermediateWayPointLabel, index + 1 === departureIndex ? styles.intermediateFromWayPointLabelColor : {}]}
           value={wayPoint.time}
         />{" "}
-        - {wayPoint.wayPoint.rallyingPoint.label}
+        - {wayPoint.wayPoint.rallyingPoint.city}
       </AppText>
     );
   };
@@ -175,13 +181,13 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
 
       <Column style={[styles.column, styles.shrink]}>
         <AppText style={[styles.mainWayPointLabel, departureIndex === 0 ? styles.fromLabel : styles.overallFromLabel]}>
-          {from.wayPoint.rallyingPoint.label}
+          {from.wayPoint.rallyingPoint.city}
         </AppText>
 
         {steps.length <= 3 && steps.map((_, i) => intermediateWayPoint(i))}
         {steps.length > 3 && [intermediateWayPoint(0), <AppText>{steps.length - 2} étapes</AppText>, intermediateWayPoint(steps.length - 1)]}
 
-        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>{to.wayPoint.rallyingPoint.label}</AppText>
+        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>{to.wayPoint.rallyingPoint.city}</AppText>
       </Column>
     </Row>
   );

@@ -4,12 +4,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Compatible, JoinLianeRequestDetailed } from "@/api";
+import { Compatible, isExactMatch, JoinLianeRequestDetailed } from "@/api";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { formatDuration } from "@/util/datetime";
@@ -38,21 +38,23 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
     navigation.goBack();
   };
   return (
-    <Column style={{ flexGrow: 1, marginBottom: insets.bottom }}>
+    <ScrollView style={{ flexGrow: 1, flex: 1, marginBottom: insets.bottom }}>
       <Column
         spacing={8}
         style={{
+          flex: 1,
           paddingHorizontal: 12,
           paddingTop: 8,
           paddingBottom: 20
         }}>
         <DetailedRequestView params={{ request }} />
       </Column>
-      <Row style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
+
+      <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
         <AppRoundedButton color={defaultTextColor(AppColors.white)} onPress={refuseRequest} backgroundColor={AppColors.white} text={"Refuser"} />
         <AppRoundedButton color={defaultTextColor(AppColors.orange)} onPress={acceptRequest} backgroundColor={AppColors.orange} text={"Accepter"} />
       </Row>
-    </Column>
+    </ScrollView>
   );
 }, "");
 
@@ -60,7 +62,8 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
   ({ data }) => {
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
-    const isExactMatch = data.match.type === "Exact";
+    const reqIsExactMatch = isExactMatch(data.match);
+    const wayPoints = reqIsExactMatch ? data.targetLiane.wayPoints : data.match.pickupPoints[0].wayPoints;
     const dateTime = `${formatMonthDay(new Date(data.targetLiane.departureTime))} à ${formatTime(new Date(data.targetLiane.departureTime))}`;
     const headerDate = (
       <Row spacing={8}>
@@ -74,7 +77,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
         to={data.to}
         departureTime={data.targetLiane.departureTime}
         originalTrip={data.targetLiane.wayPoints}
-        newTrip={data.wayPoints}
+        newTrip={wayPoints}
       />
     );
     return (
@@ -84,8 +87,8 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
         </AppText>
         <TripCard header={headerDate} content={tripContent} />
         <View style={{ backgroundColor: AppColorPalettes.gray[400], borderRadius: 16, overflow: "hidden" }}>
-          {isExactMatch && <TripOverview params={{ liane: data.targetLiane }} />}
-          {!isExactMatch && <TripChangeOverview params={{ liane: data.targetLiane, newWayPoints: data.wayPoints }} />}
+          {reqIsExactMatch && <TripOverview params={{ liane: data.targetLiane }} />}
+          {!reqIsExactMatch && <TripChangeOverview params={{ liane: data.targetLiane, newWayPoints: wayPoints }} />}
         </View>
         {data.message.length > 0 && (
           <Row spacing={12} style={[styles.card, { alignItems: "center" }]}>
@@ -96,9 +99,11 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           </Row>
         )}
         <Row spacing={16} style={{ alignItems: "center" }}>
-          <AppIcon name={isExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} color={AppColors.white} />
+          <AppIcon name={reqIsExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} color={AppColors.white} />
           <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
-            {isExactMatch ? "Votre trajet reste inchangé" : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).deltaInSeconds)}
+            {reqIsExactMatch
+              ? "Votre trajet reste inchangé"
+              : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).pickupPoints[0].deltaInSeconds)}
           </AppText>
         </Row>
         {data.seats > 0 && !data.targetLiane.driver.canDrive && (

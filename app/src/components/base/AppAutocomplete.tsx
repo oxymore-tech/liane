@@ -152,8 +152,7 @@ const AutocompleteItem = ({ itemView, onPress }: AutocompleteItemProps) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexShrink: 1,
-    backgroundColor: "red"
+    flexShrink: 1
   },
   input: {
     fontSize: 18,

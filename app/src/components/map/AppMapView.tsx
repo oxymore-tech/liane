@@ -46,11 +46,11 @@ const AppMapView = ({ position }: { position: LatLng }) => {
     regionCallbackRef.current = setTimeout(async () => {
       const initialRef = regionCallbackRef.current;
       const { from, to } = bboxToLatLng(feature.properties.visibleBounds);
-      if (feature.properties.zoomLevel < 9) {
+      /*if (feature.properties.zoomLevel < 9) {
         setLianeDisplay(undefined);
         setLoadingDisplay(false);
         return;
-      }
+      }*/
       try {
         const r = await services.liane.display(from, to);
         if (regionCallbackRef.current === initialRef) {
@@ -123,7 +123,7 @@ const renderLianeOverview = (liane: Liane, navigation: NavigationProp<any> | Nav
       style={{ paddingHorizontal: 24, paddingVertical: 8 }}
       onPress={() => {
         let y: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter } = {
-          lianeMatch: { liane, wayPoints: liane.wayPoints, match: { type: "Exact" }, freeSeatsCount },
+          lianeMatch: { liane, match: { type: "Exact" }, freeSeatsCount },
           filter: {
             from: liane.wayPoints[0].rallyingPoint,
             to: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint,

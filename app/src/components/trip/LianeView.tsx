@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Liane } from "@/api";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { AppContext } from "@/components/ContextProvider";
-import { getTrip } from "@/components/trip/trip";
+import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeViewProps {
   liane: Liane;
@@ -10,5 +10,5 @@ export interface LianeViewProps {
 
 export const LianeView = ({ liane }: LianeViewProps) => {
   const { user } = useContext(AppContext);
-  return <WayPointsView {...getTrip(liane, user!)} />;
+  return <WayPointsView {...getTripFromLiane(liane, user!)} />;
 };

@@ -1,6 +1,6 @@
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Liane, WayPoint } from "@/api";
+import { Liane, RallyingPoint, WayPoint } from "@/api";
 import React from "react";
 import { getBoundingBox } from "@/util/geometry";
 import { View } from "react-native";
@@ -60,12 +60,10 @@ export const TripOverview = WithFetchResource(
 /** Liane Match overview **/
 
 const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; params: { liane: Liane; newWayPoints: WayPoint[] } }) => {
-  console.log(data);
   const boundingBox = getBoundingBox(data.newRoute.geometry.coordinates.flat(), 24);
 
   const destinationWayPoint = params.newWayPoints[params.newWayPoints.length - 1];
-  //const departureWayPoint = params.newWayPoints[0];
-  const displayedWayPoints = params.newWayPoints.slice(0, params.newWayPoints.length - 1);
+  const departureWayPoint = params.newWayPoints[0];
 
   return (
     <MapLibreGL.MapView
@@ -81,15 +79,17 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
         <MapLibreGL.LineLayer belowLayerID="place" id="tripLayer" style={{ lineColor: "gray", lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
       <MapLibreGL.ShapeSource id="line2" shape={data.newRoute.geometry}>
-        <MapLibreGL.LineLayer belowLayerID="place" id="changeLayer" style={{ lineColor: "red", lineDasharray: [4, 2], lineWidth: 2 }} />
+        <MapLibreGL.LineLayer belowLayerID="place" id="changeLayer" style={{ lineColor: "red", lineWidth: 2 }} />
       </MapLibreGL.ShapeSource>
-      {displayedWayPoints.map(point => {
+      {params.newWayPoints.map(point => {
+        const isMain =
+          point.rallyingPoint.id === departureWayPoint.rallyingPoint.id || point.rallyingPoint.id === destinationWayPoint.rallyingPoint.id;
         return (
           <MapLibreGL.MarkerView
             coordinate={[point.rallyingPoint.location.lng, point.rallyingPoint.location.lat]}
             key={point.rallyingPoint.id!}
             id={point.rallyingPoint.id!}>
-            <View style={{ backgroundColor: "red", width: 6, height: 6, borderRadius: 6 }} />
+            <View style={{ backgroundColor: "red", width: isMain ? 8 : 6, height: isMain ? 8 : 6, borderRadius: 6 }} />
           </MapLibreGL.MarkerView>
         );
       })}
@@ -98,8 +98,8 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
         key={destinationWayPoint.rallyingPoint.id!}
         coordinate={[destinationWayPoint.rallyingPoint.location.lng, destinationWayPoint.rallyingPoint.location.lat]}
         id={destinationWayPoint.rallyingPoint.id!}>
-        <View style={{ position: "absolute", paddingLeft: 12, paddingBottom: 12 }}>
-          <AppIcon name={"flag"} color={"red"} size={24} />
+        <View style={{ position: "absolute", paddingLeft: 8, paddingBottom: 18 }}>
+          <AppIcon name={"flag"} color={"red"} size={20} />
         </View>
       </MapLibreGL.MarkerView>
     </MapLibreGL.MapView>
