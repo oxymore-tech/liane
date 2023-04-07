@@ -33,8 +33,11 @@ public sealed class BestMatchComparer : IComparer<LianeMatch>
       return 1;
     }
 
-    var h1 = (targetTime.DateTime - x.Liane.DepartureTime).Hours / 2;
-    var h2 = (targetTime.DateTime - y.Liane.DepartureTime).Hours / 2;
+    var deltaTime1 = x.Liane.DepartureTime - targetTime.DateTime;
+    var deltaTime2 = y.Liane.DepartureTime - targetTime.DateTime;
+
+    var h1 = deltaTime1.Hours / 2;
+    var h2 = deltaTime2.Hours / 2;
 
     var hourDelta = h1 - h2;
 
@@ -45,7 +48,14 @@ public sealed class BestMatchComparer : IComparer<LianeMatch>
 
     var distance1 = GetDistanceScore(x.Match);
     var distance2 = GetDistanceScore(y.Match);
-    return distance1 - distance2;
+    var distanceDelta = distance1 - distance2;
+
+    if (distanceDelta == 0)
+    {
+      return (int)deltaTime1.TotalMilliseconds - (int)deltaTime2.TotalMilliseconds;
+    }
+
+    return distanceDelta;
   }
 
   private int GetDistanceScore(Match m)
