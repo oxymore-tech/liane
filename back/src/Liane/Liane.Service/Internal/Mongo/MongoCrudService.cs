@@ -108,11 +108,11 @@ public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudServ
   {
   }
 
-  public async Task<TOut> Create(TIn obj, string ownerId)
+  public async Task<TOut> Create(TIn lianeRequest, string ownerId)
   {
-    var id = obj.Id ?? ObjectId.GenerateNewId().ToString();
+    var id = lianeRequest.Id ?? ObjectId.GenerateNewId().ToString();
     var createdAt = DateTime.UtcNow;
-    var created = ToDb(obj, id, createdAt, ownerId);
+    var created = ToDb(lianeRequest, id, createdAt, ownerId);
     await Mongo.GetCollection<TDb>().InsertOneAsync(
       created);
     return await MapEntity(created);

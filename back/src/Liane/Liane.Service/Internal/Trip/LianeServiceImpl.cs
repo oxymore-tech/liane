@@ -104,7 +104,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       throw new ArgumentException(newMember.User.Id + " already is a member of liane " + liane.Id);
     }
 
-    var updateDef = (await UpdateGeometry(toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
+    var updateDef = (await UpdateGeometry(toUpdate.Id, toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
       .Push(l => l.Members, newMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
 
@@ -175,13 +175,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return ((from, to), segments.ToImmutableList());
   }
 
-  private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
+  private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(string lianeId, Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
   {
     var (driverSegment, segments) = ExtractRouteSegments(driver, lianeMembers);
     var result = await routingService.GetTrip(driverSegment, segments);
     if (result == null)
     {
-      throw new NullReferenceException();
+      throw new NullReferenceException($"Liane {lianeId} malformed");
     }
 
     return result;
@@ -189,7 +189,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   protected override async Task<Api.Trip.Liane> MapEntity(LianeDb liane)
   {
-    var wayPoints = await GetWayPoints(liane.Driver.User, liane.Members);
+    var wayPoints = await GetWayPoints(liane.Id, liane.Driver.User, liane.Members);
     return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, liane.Driver, liane.Conversation);
   }
 
@@ -201,9 +201,14 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       lianeRequest.ReturnTime, members.ToImmutableList(), driverData);
   }
 
-  public new async Task<Api.Trip.Liane> Create(LianeRequest obj, string ownerId)
+  public new async Task<Api.Trip.Liane> Create(LianeRequest lianeRequest, string ownerId)
   {
-    var created = await base.Create(obj, ownerId);
+    if (lianeRequest.From == lianeRequest.To)
+    {
+      throw new ValidationException("To", ValidationMessage.MalFormed);
+    }
+
+    var created = await base.Create(lianeRequest, ownerId);
     var updateDefinition = await UpdateGeometry(created.WayPoints);
     await Mongo.GetCollection<LianeDb>()
       .UpdateOneAsync(l => l.Id == created.Id, updateDefinition);
@@ -212,7 +217,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task UpdateAllGeometries()
   {
-    await Mongo.GetCollection<LianeDb>().Find(FilterDefinition<LianeDb>.Empty).SelectAsync(async l => UpdateGeometry((await MapEntity(l)).WayPoints));
+    await Mongo.GetCollection<LianeDb>()
+      .Find(FilterDefinition<LianeDb>.Empty)
+      .SelectAsync(async l => UpdateGeometry((await MapEntity(l)).WayPoints));
   }
 
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
@@ -268,9 +275,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new LianeDisplay(lianeSegments, lianes);
   }
 
-  private async Task<UpdateDefinition<LianeDb>> UpdateGeometry(Ref<Api.User.User> driver, IEnumerable<LianeMember> members)
+  private async Task<UpdateDefinition<LianeDb>> UpdateGeometry(string lianeId, Ref<Api.User.User> driver, IEnumerable<LianeMember> members)
   {
-    var wayPoints = await GetWayPoints(driver, members);
+    var wayPoints = await GetWayPoints(lianeId, driver, members);
     return await UpdateGeometry(wayPoints);
   }
 

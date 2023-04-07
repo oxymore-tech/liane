@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -34,7 +35,7 @@ public static class MongoFactory
     return GetDatabase(settings, logger);
   }
 
-  public static IMongoDatabase GetDatabase(MongoSettings settings, ILogger<IMongoDatabase> logger, string databaseName = "liane")
+  private static IMongoDatabase GetDatabase(MongoSettings settings, ILogger<IMongoDatabase> logger, string databaseName = "liane")
   {
     var mongo = GetMongoClient(settings, logger);
     var db = mongo.GetDatabase(databaseName);
@@ -91,6 +92,8 @@ public static class MongoFactory
 
   public static void InitSchema(IMongoDatabase db)
   {
+    CreateIndex(db, "version_index", Builders<SchemaVersion>.IndexKeys.Ascending(l => l.Version));
+
     CreateIndex(db, "geometry_index", Builders<LianeDb>.IndexKeys.Geo2DSphere(l => l.Geometry));
 
     CreateIndex(db, "created_at_index", Builders<DbChatMessage>.IndexKeys.Descending(l => l.CreatedAt));

@@ -9,6 +9,7 @@ using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -56,6 +57,7 @@ public static class Startup
     services.AddSettings<NominatimSettings>(context);
 
     services.AddSettings<MongoSettings>(context);
+    services.AddService<MigrationService>();
 
     services.AddService<CurrentContextImpl>();
     services.AddSettings<TwilioSettings>(context);
@@ -280,5 +282,11 @@ public static class Startup
     });
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
+    var migrationService = app.ApplicationServices.GetRequiredService<MigrationService>();
+
+    migrationService.Execute()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
   }
 }

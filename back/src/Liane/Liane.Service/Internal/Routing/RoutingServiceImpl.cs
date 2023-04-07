@@ -41,7 +41,7 @@ public sealed class RoutingServiceImpl : IRoutingService
     var distance = routeResponse.Routes[0].Distance;
     return new Route(geojson.Coordinates, duration, distance);
   }
-  
+
   public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates)
   {
     var route = await GetRoute(coordinates);
@@ -340,6 +340,11 @@ public sealed class RoutingServiceImpl : IRoutingService
     pointsDictionary[end] = pointsDictionary.Keys.Except(new[] { start, end }).ToHashSet();
 
     // Get distance matrix for points
+    if (pointsDictionary.Keys.Count < 2)
+    {
+      return null;
+    }
+
     var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
 
     // Start trip and add starting point directly

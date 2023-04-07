@@ -30,7 +30,7 @@ public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOu
 {
   Task<bool> Delete(Ref<TOut> reference);
 
-  Task<TOut> Create(TIn obj, string ownerId);
+  Task<TOut> Create(TIn lianeRequest, string ownerId);
 }
 
 public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity
