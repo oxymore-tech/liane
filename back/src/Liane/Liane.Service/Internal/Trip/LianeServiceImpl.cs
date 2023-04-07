@@ -321,8 +321,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var route = lianeDb.Geometry!.ToLatLng();
 
-    var (pickupPoint, depositPoint) = await MatchBestIntersectionPoints(from, to, targetRoute, route);
-    
+    var bestMatch = await MatchBestIntersectionPoints(targetRoute, route);
+
+    if (bestMatch is null)
+    {
+      return null;
+    }
+
+    var (pickupPoint, depositPoint) = bestMatch.Value;
+
     if (pickupPoint == depositPoint)
     {
       return null;
@@ -357,25 +364,38 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
   }
 
-  private async Task<(RallyingPoint Pickup, RallyingPoint Deposit)> MatchBestIntersectionPoints(RallyingPoint from, RallyingPoint to, ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
+  private async Task<(RallyingPoint Pickup, RallyingPoint Deposit)?> MatchBestIntersectionPoints(ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
   {
     var firstIntersection = targetRoute.GetFirstIntersection(route);
     var lastIntersection = targetRoute.GetLastIntersection(route);
 
-    var pickup = await SnapOrDefault(firstIntersection, from);
-    var deposit = await SnapOrDefault(lastIntersection, to);
+    if (firstIntersection is null || lastIntersection is null)
+    {
+      return null;
+    }
+
+    var (firstCoordinate, firstIndex) = firstIntersection.Value;
+    var (lastCoordinate, lastIndex) = lastIntersection.Value;
+
+    if (lastIndex - firstIndex < targetRoute.Count / 2)
+    {
+      return null;
+    }
+
+    var pickup = await SnapOrDefault(firstCoordinate);
+    var deposit = await SnapOrDefault(lastCoordinate);
+
+    if (pickup is null || deposit is null)
+    {
+      return null;
+    }
 
     return (pickup, deposit);
   }
 
-  private async Task<RallyingPoint> SnapOrDefault(LatLng? intersection, RallyingPoint defaultPoint)
+  private async Task<RallyingPoint?> SnapOrDefault(LatLng intersection)
   {
-    if (intersection is null)
-    {
-      return defaultPoint;
-    }
-
-    return await rallyingPointService.Snap(intersection.Value, 1000) ?? defaultPoint;
+    return await rallyingPointService.Snap(intersection, 1000);
   }
 
   private static FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
