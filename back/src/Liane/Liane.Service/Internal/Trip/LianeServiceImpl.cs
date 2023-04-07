@@ -58,6 +58,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor, lianes
       .Where(l => l is not null)
       .Cast<LianeMatch>()
+      .Order(new BestMatchComparer(from, to, filter.TargetTime))
       .OrderBy(l =>
       {
         var exactMatchScore = l.Match is Match.Exact ? 0 : 1;
@@ -321,6 +322,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var route = lianeDb.Geometry!.ToLatLng();
 
     var (pickupPoint, depositPoint) = await MatchBestIntersectionPoints(from, to, targetRoute, route);
+    
+    if (pickupPoint == depositPoint)
+    {
+      return null;
+    }
 
     Match match;
     if (wayPoints.IncludesSegment((pickupPoint, depositPoint)))
