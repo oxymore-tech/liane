@@ -52,7 +52,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(BuilderLianeFilter(targetRoute, filter.TargetTime, filter.AvailableSeats))
-      .SelectAsync(l => MatchLiane(l, from, to, filter, targetRoute));
+      .SelectAsync(l => MatchLiane(l, filter, targetRoute));
 
     Cursor? nextCursor = null; //TODO
     return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor, lianes
@@ -299,7 +299,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return Builders<LianeDb>.Update.Set(l => l.Geometry, simplifiedRoute.ToGeoJson());
   }
 
-  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, RallyingPoint from, RallyingPoint to, Filter filter, ImmutableList<LatLng> targetRoute)
+  private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, Filter filter, ImmutableList<LatLng> targetRoute)
   {
     var matchForDriver = filter.AvailableSeats > 0;
     var defaultDriver = lianeDb.Driver.User;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LngLatTuple = System.Tuple<double, double>;
@@ -10,13 +9,34 @@ internal sealed class LngLatTupleJsonConverter : JsonConverter<LngLatTuple>
 {
   public override LngLatTuple Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
   {
-    var array = JsonSerializer.Deserialize<ImmutableArray<double>>(ref reader, options);
-    if (array.Length != 2)
+    if (reader.TokenType != JsonTokenType.StartArray)
+    {
+      ThrowJsonException();
+    }
+
+    if (!reader.Read())
+    {
+      ThrowJsonException();
+    }
+
+    var lng = reader.GetDouble();
+    if (!reader.Read())
+    {
+      ThrowJsonException();
+    }
+
+    var lat = reader.GetDouble();
+    if (!reader.Read())
+    {
+      ThrowJsonException();
+    }
+
+    if (reader.TokenType != JsonTokenType.EndArray)
     {
       throw new JsonException("LngLatTuple must deserialize from an array of length 2");
     }
 
-    return new LngLatTuple(array[0], array[1]);
+    return new LngLatTuple(lng, lat);
   }
 
   public override void Write(Utf8JsonWriter writer, LngLatTuple value, JsonSerializerOptions options)
@@ -25,5 +45,10 @@ internal sealed class LngLatTupleJsonConverter : JsonConverter<LngLatTuple>
     JsonSerializer.Serialize(writer, value.Item1, options);
     JsonSerializer.Serialize(writer, value.Item2, options);
     writer.WriteEndArray();
+  }
+
+  private static void ThrowJsonException()
+  {
+    throw new JsonException("LngLatTuple must deserialize from an array of length 2");
   }
 }
