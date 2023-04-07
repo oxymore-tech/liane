@@ -44,7 +44,7 @@ public static class LatLngExtensions
     {
       var a = route1[i];
       var b = route1[i - 1];
-      for (var j = route2.Count - 1; j < 1; j--)
+      for (var j = route2.Count - 1; j > 1; j--)
       {
         var c = route2[j];
         var d = route2[j - 1];
@@ -78,8 +78,7 @@ public static class LatLngExtensions
   /// <param name="considerCollinearOverlapAsIntersect">Do we consider overlapping lines as intersecting?
   /// </param>
   /// <returns>True if an intersection point was found.</returns>
-  public static bool LineSegmentsIntersect(LatLng p, LatLng p2, LatLng q, LatLng q2,
-    out LatLng intersection, bool considerCollinearOverlapAsIntersect = false)
+  public static bool LineSegmentsIntersect(LatLng p, LatLng p2, LatLng q, LatLng q2, out LatLng intersection, bool considerCollinearOverlapAsIntersect = true)
   {
     intersection = new LatLng();
 
@@ -98,7 +97,14 @@ public static class LatLngExtensions
         return false;
       }
 
-      return (0 <= (q - p) * r && (q - p) * r <= r * r) || (0 <= (p - q) * s && (p - q) * s <= s * s);
+      var lineSegmentsIntersect = (0 <= (q - p) * r && (q - p) * r <= r * r) || (0 <= (p - q) * s && (p - q) * s <= s * s);
+      
+      if (lineSegmentsIntersect)
+      {
+        intersection = p;
+      }
+      
+      return lineSegmentsIntersect;
       // 2. If neither 0 <= (q - p) * r = r * r nor 0 <= (p - q) * s <= s * s
       // then the two lines are collinear but disjoint.
       // No need to implement this expression, as it follows from the expression above.

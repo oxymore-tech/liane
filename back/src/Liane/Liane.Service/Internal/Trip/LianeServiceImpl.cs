@@ -395,7 +395,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private async Task<RallyingPoint?> SnapOrDefault(LatLng intersection)
   {
-    return await rallyingPointService.Snap(intersection, 1000);
+    return await rallyingPointService.Snap(intersection, 1500);
   }
 
   private static FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)

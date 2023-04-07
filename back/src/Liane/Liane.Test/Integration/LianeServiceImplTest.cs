@@ -59,9 +59,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-    var now = DateTime.UtcNow;
 
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -76,9 +75,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-    var now = DateTime.UtcNow;
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", now, userA, LabeledPositions.Cocures, LabeledPositions.Florac);
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -93,10 +91,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-    var now = DateTime.UtcNow;
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", now, userA, LabeledPositions.Cocures, LabeledPositions.Florac);
-    var liane3 = await InsertLiane("6408a644437b60cfd3b15876", now, userA, LabeledPositions.LeCrouzet, LabeledPositions.LesBondonsParking);
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
+    var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.LeCrouzet, LabeledPositions.LesBondonsParking);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -111,10 +108,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-    var now = DateTime.UtcNow;
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", now, userA, LabeledPositions.Cocures, LabeledPositions.Florac);
-    var liane3 = await InsertLiane("6408a644437b60cfd3b15876", now, userA, LabeledPositions.LeCrouzet, LabeledPositions.Rampon);
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
+    var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.LeCrouzet, LabeledPositions.Rampon);
 
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679));
     Assert.IsNotNull(actual);
@@ -129,9 +125,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-    var now = DateTime.UtcNow.AddHours(1);
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", now, userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
 
     var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
     Console.WriteLine("BB {0}", box.ToJson());
@@ -189,22 +184,22 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.Contains(expected.Id, resultsMatchIds);
     var compatible = results.First(m => m.Liane.Id == expected.Id).Match;
     Assert.IsInstanceOf<Match.Compatible>(compatible);
-    Assert.AreEqual(294,((Match.Compatible)compatible).DeltaInSeconds);
-    Assert.AreEqual("SaintEnimie_Parking_fakeId",((Match.Compatible)compatible).Pickup.Id);
-    Assert.AreEqual("Champerboux_Eglise_fakeId",((Match.Compatible)compatible).Deposit.Id);
-    
+    Assert.AreEqual(294, ((Match.Compatible)compatible).DeltaInSeconds);
+    Assert.AreEqual("SaintEnimie_Parking_fakeId", ((Match.Compatible)compatible).Pickup.Id);
+    Assert.AreEqual("Champerboux_Eglise_fakeId", ((Match.Compatible)compatible).Deposit.Id);
+
     expected = createdLianes[2];
     Assert.Contains(expected.Id, resultsMatchIds);
     compatible = results.First(m => m.Liane.Id == expected.Id).Match;
     Assert.IsInstanceOf<Match.Compatible>(compatible);
-    Assert.AreEqual(550,((Match.Compatible)compatible).DeltaInSeconds);
-    Assert.AreEqual("SaintEnimie_Parking_fakeId",((Match.Compatible)compatible).Pickup.Id);
-    Assert.AreEqual("Champerboux_Eglise_fakeId",((Match.Compatible)compatible).Deposit.Id);
+    Assert.AreEqual(550, ((Match.Compatible)compatible).DeltaInSeconds);
+    Assert.AreEqual("SaintEnimie_Parking_fakeId", ((Match.Compatible)compatible).Pickup.Id);
+    Assert.AreEqual("Champerboux_Eglise_fakeId", ((Match.Compatible)compatible).Deposit.Id);
   }
 
-  private async Task<Api.Trip.Liane> InsertLiane(string id, DateTime now, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
+  private async Task<Api.Trip.Liane> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
   {
-    var departureTime = now.Date.AddHours(9);
+    var departureTime = DateTime.UtcNow.AddHours(9);
     currentContext.SetCurrentUser(userA);
     return await testedService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
   }
