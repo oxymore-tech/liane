@@ -52,6 +52,20 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     this.logger = logger;
   }
 
+  public async Task<LianeStatus> GetStatus(string id)
+  {
+    var lianeDb = await Mongo.GetCollection<LianeDb>()
+      .Find(l => l.Id == id)
+      .FirstOrDefaultAsync();
+
+    if (lianeDb is null)
+    {
+      throw ResourceNotFoundException.For((Ref<Api.Trip.Liane>)id);
+    }
+
+    return lianeDb.Status;
+  }
+
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
   {
     var from = await rallyingPointService.Get(filter.From);
@@ -207,7 +221,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.ReturnTime is not null, lianeRequest.AvailableSeats) };
     var driverData = new Driver(createdBy, lianeRequest.AvailableSeats > 0);
     return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime,
-      lianeRequest.ReturnTime, members.ToImmutableList(), driverData);
+      lianeRequest.ReturnTime, members.ToImmutableList(), driverData, new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty));
   }
 
   public new async Task<Api.Trip.Liane> Create(LianeRequest lianeRequest, string ownerId)

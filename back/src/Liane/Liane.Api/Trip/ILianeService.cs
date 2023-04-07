@@ -11,6 +11,8 @@ namespace Liane.Api.Trip;
 
 public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
+  Task<LianeStatus> GetStatus(string id);
+
   Task<PaginatedResponse<Liane>> ListForCurrentUser(Pagination pagination);
   Task<PaginatedResponse<Liane>> ListAll(Pagination pagination);
   Task<Liane> AddMember(Ref<Liane> liane, LianeMember newMember);

@@ -7,6 +7,26 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
+public enum LianeState
+{
+  NotStarted,
+  Started,
+  Finished,
+  Cancelled
+}
+
+public sealed record LianeStatus(
+  LianeState State,
+  ImmutableList<UserPing> Pings
+);
+
+public sealed record UserPing(
+  Ref<User.User> User,
+  DateTime At,
+  TimeSpan Delay,
+  LatLng? Coordinate
+);
+
 public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,
@@ -30,5 +50,6 @@ public sealed record Liane(
   ImmutableSortedSet<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,
-  Ref<ConversationGroup>? Group = null
+  Ref<ConversationGroup>? Group = null,
+  LianeState State = LianeState.NotStarted
 ) : IEntity, ISharedResource<LianeMember>;

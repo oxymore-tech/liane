@@ -1,3 +1,5 @@
+using System;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
@@ -36,4 +38,10 @@ public abstract record LianeEvent
   ) : LianeEvent;
 
   public sealed record MemberHasLeft(Ref<Trip.Liane> Liane) : LianeEvent;
+
+  public sealed record MemberPing(
+    Ref<Trip.Liane> Liane,
+    TimeSpan Delay,
+    LatLng? Coordinate
+  ) : LianeEvent;
 }

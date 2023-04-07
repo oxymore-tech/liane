@@ -21,8 +21,9 @@ namespace Liane.Test.Integration;
 
 public class EventServiceImplTest : BaseIntegrationTest
 {
-  private IEventService testedService;
-  private ILianeService lianeService;
+  private IEventService testedService = null!;
+  private ILianeService lianeService = null!;
+
   protected override void Setup(IMongoDatabase db)
   {
     testedService = ServiceProvider.GetRequiredService<IEventService>();
@@ -49,7 +50,8 @@ public class EventServiceImplTest : BaseIntegrationTest
     );
 
     await Db.GetCollection<LianeDb>()
-      .InsertOneAsync(new LianeDb(liane.Id, user.Id,  DateTime.Now, departureTime, null, lianeMembers, new Driver(user.Id, true)));
+      .InsertOneAsync(new LianeDb(liane.Id, user.Id, DateTime.Now, departureTime, null, lianeMembers, new Driver(user.Id, true),
+        new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty)));
   }
 
   [Test]
@@ -61,24 +63,23 @@ public class EventServiceImplTest : BaseIntegrationTest
     var currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     currentContext.SetCurrentUser(userB);
     await CreateLiane(lianeId, userB.Id);
-    var joinRequestLianeEvent = new LianeEvent.JoinRequest(lianeId ,LabeledPositions.Cocures, LabeledPositions.Mende, -1, false, "");
+    var joinRequestLianeEvent = new LianeEvent.JoinRequest(lianeId, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false, "");
     currentContext.SetCurrentUser(userA);
     var joinEvent = await testedService.Create(joinRequestLianeEvent);
-    var newMemberLianeEvent = new LianeEvent.MemberAccepted(lianeId , userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false);
+    var newMemberLianeEvent = new LianeEvent.MemberAccepted(lianeId, userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false);
     currentContext.SetCurrentUser(userB);
     var newMemberEvent = await testedService.Answer(joinEvent.Id!, newMemberLianeEvent);
-    
-    Assert.AreEqual(joinEvent.CreatedBy.Id,  userA.Id);
-    
+
+    Assert.AreEqual(joinEvent.CreatedBy.Id, userA.Id);
+
     // Assert original id points to latest event
     Assert.ThrowsAsync<ResourceNotFoundException>(() => testedService.Get(joinEvent.Id!));
     var createdEvent = await testedService.Get(newMemberEvent.Id!);
     Assert.IsInstanceOf<LianeEvent.MemberAccepted>(createdEvent.LianeEvent);
-    Assert.AreEqual(createdEvent.CreatedBy.Id,  userB.Id);
-    
+    Assert.AreEqual(createdEvent.CreatedBy.Id, userB.Id);
+
     // Assert member was added to liane
     var updatedLiane = await lianeService.Get(lianeId);
     Assert.AreEqual(2, updatedLiane.Members.Count);
-
   }
 }

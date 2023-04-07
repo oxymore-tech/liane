@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Trip;
@@ -9,16 +9,14 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 1;
+  private const int Version = 2;
 
   private readonly IMongoDatabase db;
-  private readonly ILianeService lianeService;
   private readonly ILogger<MigrationService> logger;
 
-  public MigrationService(IMongoDatabase db, ILianeService lianeService, ILogger<MigrationService> logger)
+  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
   {
     this.db = db;
-    this.lianeService = lianeService;
     this.logger = logger;
   }
 
@@ -34,11 +32,8 @@ public sealed class MigrationService
 
     logger.LogInformation("Start migration {Version}", Version);
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty, Builders<LianeDb>.Update.Unset(l => l.Geometry));
+      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty, Builders<LianeDb>.Update.Set(l => l.Status, new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty)));
 
-    await lianeService.UpdateAllGeometries();
-    await db.GetCollection<SchemaVersion>()
-      .InsertOneAsync(new SchemaVersion(Version, DateTime.Now));
     logger.LogInformation("Migration {Version} done", Version);
   }
 }

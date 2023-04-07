@@ -18,6 +18,7 @@ public sealed record LianeDb(
   DateTime? ReturnTime,
   ImmutableList<LianeMember> Members,
   Driver Driver,
+  LianeStatus Status,
   Ref<ConversationGroup>? Conversation = null,
   GeoJsonLineString<GeoJson2DGeographicCoordinates>? Geometry = null
 ) : IIdentity, ISharedResource<LianeMember>
