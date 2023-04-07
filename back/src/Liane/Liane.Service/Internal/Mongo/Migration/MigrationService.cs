@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Trip;
@@ -10,7 +9,7 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  const int Version = 1;
+  private const int Version = 1;
 
   private readonly IMongoDatabase db;
   private readonly ILianeService lianeService;
@@ -26,7 +25,7 @@ public sealed class MigrationService
   public async Task Execute()
   {
     var schemaVersion = await db.GetCollection<SchemaVersion>()
-      .Find(v => v.Version == Version)
+      .Find(v => v.Id == Version)
       .FirstOrDefaultAsync();
     if (schemaVersion is not null)
     {

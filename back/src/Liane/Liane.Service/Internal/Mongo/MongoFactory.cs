@@ -92,8 +92,6 @@ public static class MongoFactory
 
   public static void InitSchema(IMongoDatabase db)
   {
-    CreateIndex(db, "version_index", Builders<SchemaVersion>.IndexKeys.Ascending(l => l.Version));
-
     CreateIndex(db, "geometry_index", Builders<LianeDb>.IndexKeys.Geo2DSphere(l => l.Geometry));
 
     CreateIndex(db, "created_at_index", Builders<DbChatMessage>.IndexKeys.Descending(l => l.CreatedAt));

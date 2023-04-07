@@ -104,7 +104,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       throw new ArgumentException(newMember.User.Id + " already is a member of liane " + liane.Id);
     }
 
-    var updateDef = (await UpdateGeometry(toUpdate.Id, toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
+    var updateDef = (await GetGeometryUpdate(toUpdate.Id, toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
       .Push(l => l.Members, newMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
 
@@ -209,7 +209,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
 
     var created = await base.Create(lianeRequest, ownerId);
-    var updateDefinition = await UpdateGeometry(created.WayPoints);
+    var updateDefinition = await GetGeometryUpdate(created.WayPoints);
     await Mongo.GetCollection<LianeDb>()
       .UpdateOneAsync(l => l.Id == created.Id, updateDefinition);
     return created;
@@ -217,9 +217,20 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task UpdateAllGeometries()
   {
-    await Mongo.GetCollection<LianeDb>()
+    var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(FilterDefinition<LianeDb>.Empty)
-      .SelectAsync(async l => UpdateGeometry((await MapEntity(l)).WayPoints));
+      .ToListAsync();
+
+    var bulks = new List<WriteModel<LianeDb>>();
+    foreach (var db in lianes)
+    {
+      var liane = await MapEntity(db);
+      var update = await GetGeometryUpdate(liane.WayPoints);
+      bulks.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id), update));
+    }
+
+    await Mongo.GetCollection<LianeDb>()
+      .BulkWriteAsync(bulks);
   }
 
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
@@ -275,13 +286,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new LianeDisplay(lianeSegments, lianes);
   }
 
-  private async Task<UpdateDefinition<LianeDb>> UpdateGeometry(string lianeId, Ref<Api.User.User> driver, IEnumerable<LianeMember> members)
+  private async Task<UpdateDefinition<LianeDb>> GetGeometryUpdate(string lianeId, Ref<Api.User.User> driver, IEnumerable<LianeMember> members)
   {
     var wayPoints = await GetWayPoints(lianeId, driver, members);
-    return await UpdateGeometry(wayPoints);
+    return await GetGeometryUpdate(wayPoints);
   }
 
-  private async Task<UpdateDefinition<LianeDb>> UpdateGeometry(ImmutableSortedSet<WayPoint> wayPoints)
+  private async Task<UpdateDefinition<LianeDb>> GetGeometryUpdate(ImmutableSortedSet<WayPoint> wayPoints)
   {
     var simplifiedRoute = await routingService.GetSimplifiedRoute(wayPoints.Select(w => w.RallyingPoint.Location).ToImmutableList());
     return Builders<LianeDb>.Update.Set(l => l.Geometry, simplifiedRoute.ToGeoJson());
