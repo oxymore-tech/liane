@@ -129,7 +129,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-    var now = DateTime.UtcNow;
+    var now = DateTime.UtcNow.AddHours(1);
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", now, userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", now, userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
 
@@ -204,7 +204,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   private async Task<Api.Trip.Liane> InsertLiane(string id, DateTime now, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
   {
-    var departureTime = now.Date.AddDays(1).AddHours(9);
+    var departureTime = now.Date.AddHours(9);
     currentContext.SetCurrentUser(userA);
     return await testedService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
   }
