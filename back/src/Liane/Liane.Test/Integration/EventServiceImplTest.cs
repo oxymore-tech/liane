@@ -32,7 +32,6 @@ public sealed class EventServiceImplTest : BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
-    services.AddService<EventDispatcher>();
     services.AddService<EventServiceImpl>();
     services.AddService<LianeMemberAcceptedHandler>();
   }

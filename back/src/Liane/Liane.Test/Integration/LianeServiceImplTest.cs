@@ -42,6 +42,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
+    services.AddService<PushServiceImpl>();
   }
 
   [Test]

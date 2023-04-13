@@ -10,7 +10,6 @@ using Google.Apis.Auth.OAuth2;
 using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.User;
-using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using Notification = Liane.Api.Event.Notification;
@@ -87,7 +86,8 @@ public sealed class PushServiceImpl : IPushService, IEventListener
 
     if (receiverUser.PushToken is null)
     {
-      throw new ValidationException("pushToken", ValidationMessage.IsRequired);
+      logger.LogWarning("Unable to send push notification to user {receiver} : no push token", receiver.Id);
+      return;
     }
 
     try

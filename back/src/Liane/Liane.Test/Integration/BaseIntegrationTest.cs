@@ -9,12 +9,14 @@ using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Internal.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -81,6 +83,13 @@ public abstract class BaseIntegrationTest
     });
 
     services.AddService<MockCurrentContext>();
+    services.AddService(JsonSerializerSettings.TestJsonOptions());
+    services.AddService(new FirebaseSettings(null));
+    services.AddService<NotificationServiceImpl>();
+    services.AddService<PushServiceImpl>();
+    services.AddService(Moq.Mock.Of<IHubService>());
+    services.AddService<EventServiceImpl>();
+    
     SetupServices(services);
 
     ServiceProvider = services.BuildServiceProvider();
