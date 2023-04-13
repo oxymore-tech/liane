@@ -71,14 +71,14 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
         <View style={styles.separator} />
 
         <Column spacing={8} style={styles.actionsContainer}>
-          {liane.group && (
+          {liane.conversation && (
             <ActionItem
               onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}
               iconName={"message-circle-outline"}
               text={"Aller à la conversation"}
             />
           )}
-          {!liane.group && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
+          {!liane.conversation && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
           {currentUserIsDriver && <ActionItem onPress={() => {}} iconName={"clock-outline"} text={"Modifier l'horaire"} />}
           {currentUserIsOwner && (
             <ActionItem

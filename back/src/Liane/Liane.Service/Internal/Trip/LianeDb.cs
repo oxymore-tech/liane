@@ -19,8 +19,8 @@ public sealed record LianeDb(
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeStatus Status,
-  Ref<ConversationGroup>? Conversation = null,
-  GeoJsonLineString<GeoJson2DGeographicCoordinates>? Geometry = null
+  GeoJsonLineString<GeoJson2DGeographicCoordinates> Geometry,
+  Ref<ConversationGroup>? Conversation
 ) : IIdentity, ISharedResource<LianeMember>
 {
   [BsonElement] public int TotalSeatCount => Members.Aggregate(0, (sum, v) => sum + v.SeatCount);

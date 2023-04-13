@@ -102,7 +102,7 @@ export type Liane = Entity &
     wayPoints: WayPoint[];
     members: LianeMember[];
     driver: { user: Ref<User>; canDrive: boolean };
-    group: Ref<ConversationGroup>;
+    conversation: Ref<ConversationGroup>;
   }>;
 
 export type WayPoint = Readonly<{

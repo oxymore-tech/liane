@@ -1,25 +1,21 @@
 using System;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
-using Liane.Api.User;
 using Liane.Api.Util.Exception;
-using Liane.Api.Util.Ref;
 using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
-using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
 
-public class EventServiceImplTest : BaseIntegrationTest
+[TestFixture]
+public sealed class EventServiceImplTest : BaseIntegrationTest
 {
   private IEventService testedService = null!;
   private ILianeService lianeService = null!;
@@ -41,32 +37,18 @@ public class EventServiceImplTest : BaseIntegrationTest
     services.AddService<LianeMemberAcceptedHandler>();
   }
 
-  private async Task CreateLiane(Ref<Api.Trip.Liane> liane, Ref<User> user)
-  {
-    var departureTime = DateTime.Now.Date.AddDays(1).AddHours(9);
-
-    var lianeMembers = ImmutableList.Create(
-      new LianeMember(user.Id, LabeledPositions.Cocures, LabeledPositions.Mende, false, 3)
-    );
-
-    await Db.GetCollection<LianeDb>()
-      .InsertOneAsync(new LianeDb(liane.Id, user.Id, DateTime.Now, departureTime, null, lianeMembers, new Driver(user.Id, true),
-        new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty)));
-  }
-
   [Test]
   public async Task TestNewMember()
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    var lianeId = ObjectId.GenerateNewId().ToString();
     var currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     currentContext.SetCurrentUser(userB);
-    await CreateLiane(lianeId, userB.Id);
-    var joinRequestLianeEvent = new LianeEvent.JoinRequest(lianeId, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false, "");
+    var liane = await lianeService.Create(new LianeRequest(null, DateTime.UtcNow, null, 3, LabeledPositions.Cocures, LabeledPositions.Mende));
+    var joinRequestLianeEvent = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false, "");
     currentContext.SetCurrentUser(userA);
     var joinEvent = await testedService.Create(joinRequestLianeEvent);
-    var newMemberLianeEvent = new LianeEvent.MemberAccepted(lianeId, userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false);
+    var newMemberLianeEvent = new LianeEvent.MemberAccepted(liane.Id, userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende, -1, false);
     currentContext.SetCurrentUser(userB);
     var newMemberEvent = await testedService.Answer(joinEvent.Id!, newMemberLianeEvent);
 
@@ -79,7 +61,7 @@ public class EventServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(createdEvent.CreatedBy.Id, userB.Id);
 
     // Assert member was added to liane
-    var updatedLiane = await lianeService.Get(lianeId);
+    var updatedLiane = await lianeService.Get(liane.Id);
     Assert.AreEqual(2, updatedLiane.Members.Count);
   }
 }

@@ -29,7 +29,7 @@ export class LianeServiceMock implements LianeService {
 
 const MockLianes: Liane[] = [
   {
-    group: "11",
+    conversation: "11",
     departureTime: "2023-01-05T10:05:00Z",
     wayPoints: [
       {
@@ -85,7 +85,7 @@ const MockLianes: Liane[] = [
     members: []
   },
   {
-    group: "22",
+    conversation: "22",
     departureTime: "2023-01-06T15:05:00Z",
     wayPoints: [
       {
@@ -140,7 +140,7 @@ const MockLianes: Liane[] = [
     members: []
   },
   {
-    group: "33",
+    conversation: "33",
     departureTime: "2023-01-06T10:05:00Z",
     wayPoints: [
       {

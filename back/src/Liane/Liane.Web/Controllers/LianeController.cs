@@ -41,9 +41,9 @@ public sealed class LianeController : ControllerBase
 
   [HttpDelete("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Liane))]
-  public async Task  Delete([FromRoute] string id)
+  public async Task Delete([FromRoute] string id)
   {
-     await lianeService.Delete(id);
+    await lianeService.Delete(id);
   }
 
   [HttpPatch("{id}")]
@@ -106,7 +106,7 @@ public sealed class LianeController : ControllerBase
   [HttpPost("")]
   public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
   {
-    return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
+    return lianeService.Create(lianeRequest);
   }
 
   [HttpGet("all")]

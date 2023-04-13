@@ -78,7 +78,6 @@ public sealed class HubServiceImpl : IHubService
     currentConnectionsCache.Set(user.Id, true);
   }
 
-
   public async Task RemoveUser(Ref<User> user, string connectionId)
   {
     currentConnectionsCache.Remove(user.Id);

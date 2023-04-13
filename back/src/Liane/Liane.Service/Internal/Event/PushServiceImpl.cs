@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
@@ -51,9 +53,27 @@ public sealed class PushServiceImpl : IPushService, IEventListener
     await SendTo(receiver, notification);
   }
 
+  public async Task SendChatMessage(ImmutableList<Ref<Api.User.User>> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  {
+    var tasks = receiver.Select(r => SendChatMessage(r, conversation, message));
+    await Task.WhenAll(tasks);
+  }
+
+  public async Task SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  {
+    if (await hubService.TrySendChatMessage(receiver, conversation, message))
+    {
+      return;
+    }
+
+    // User is not connected so send detailed notification  
+    // var authorUser = await userService.Get(author);
+    //TODO await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, authorUser, sent));
+  }
+
   public async Task OnEvent(Api.Event.Event @event, Api.Event.Event? answersToEvent)
   {
-    var notification = await notificationService.Get(@event); 
+    var notification = await notificationService.Get(@event);
     await Task.WhenAll(@event.Recipients.Select(r => Notify(r.User, notification)));
   }
 
@@ -85,7 +105,7 @@ public sealed class PushServiceImpl : IPushService, IEventListener
     var firebaseMessage = new Message
     {
       Token = deviceToken,
-      Notification = new FirebaseAdmin.Messaging.Notification()
+      Notification = new FirebaseAdmin.Messaging.Notification
       {
         Title = notification.Title,
         Body = notification.Message

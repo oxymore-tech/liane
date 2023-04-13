@@ -4,6 +4,7 @@ using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Api.Trip;
 
@@ -12,7 +13,7 @@ public enum LianeState
   NotStarted,
   Started,
   Finished,
-  Cancelled
+  Canceled
 }
 
 public sealed record LianeStatus(
@@ -50,6 +51,6 @@ public sealed record Liane(
   ImmutableSortedSet<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,
-  Ref<ConversationGroup>? Group = null,
-  LianeState State = LianeState.NotStarted
+  LianeStatus Status,
+  Ref<ConversationGroup>? Group
 ) : IEntity, ISharedResource<LianeMember>;
