@@ -54,7 +54,7 @@ public sealed class MockServiceImpl : IMockService
         var departure = f.Date.Between(start, end).ToUniversalTime();
         DateTime? returnTrip = f.Random.Bool(0.2f) ? f.Date.SoonOffset(1, departure).DateTime.ToUniversalTime() : null;
         var from = f.PickRandom(departureSet);
-        var to = f.PickRandom(destinationSet);
+        var to = f.PickRandom(destinationSet.Where(d => d != from));
 
         return new LianeRequest(null, departure, returnTrip, seatCount, from, to);
       });

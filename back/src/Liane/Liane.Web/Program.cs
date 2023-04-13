@@ -1,9 +1,11 @@
+using System.Threading.Tasks;
+
 namespace Liane.Web;
 
 public sealed class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        Startup.StartCurrentModule(args);
+        await Startup.StartCurrentModule(args);
     }
 }

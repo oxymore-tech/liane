@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
@@ -20,6 +21,12 @@ public sealed class MigrationService
     this.logger = logger;
   }
 
+  private async Task Migrate()
+  {
+    await db.GetCollection<LianeDb>()
+      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty, Builders<LianeDb>.Update.Set(l => l.Status, new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty)));
+  }
+
   public async Task Execute()
   {
     var schemaVersion = await db.GetCollection<SchemaVersion>()
@@ -31,9 +38,10 @@ public sealed class MigrationService
     }
 
     logger.LogInformation("Start migration {Version}", Version);
-    await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty, Builders<LianeDb>.Update.Set(l => l.Status, new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty)));
+    await Migrate();
 
+    await db.GetCollection<SchemaVersion>()
+      .InsertOneAsync(new SchemaVersion(Version, DateTime.UtcNow));
     logger.LogInformation("Migration {Version} done", Version);
   }
 }

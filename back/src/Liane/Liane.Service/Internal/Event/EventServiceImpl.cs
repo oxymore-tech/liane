@@ -8,6 +8,7 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Event;
@@ -15,43 +16,53 @@ namespace Liane.Service.Internal.Event;
 public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEventService
 {
   private readonly ICurrentContext currentContext;
-  private readonly ILianeService lianeService;
-  private readonly EventDispatcher eventDispatcher;
+  private readonly IServiceProvider serviceProvider;
 
-  public EventServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, ILianeService lianeService, EventDispatcher eventDispatcher) : base(mongo)
+  public EventServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IServiceProvider serviceProvider) : base(mongo)
   {
     this.currentContext = currentContext;
-    this.lianeService = lianeService;
-    this.eventDispatcher = eventDispatcher;
+    this.serviceProvider = serviceProvider;
   }
 
-  public new async Task<Api.Event.Event> Create(Api.Event.Event obj)
+  public new Task<Api.Event.Event> Create(Api.Event.Event obj) => InternalCreate(obj, null);
+
+  private async Task<Api.Event.Event> InternalCreate(Api.Event.Event obj, Api.Event.Event? answersToEvent)
   {
     var created = await base.Create(obj);
-    await eventDispatcher.Dispatch(created,null);
+    await Dispatch(created, answersToEvent);
     return created;
+  }
+
+  private async Task Dispatch(Api.Event.Event created, Api.Event.Event? answersToEvent)
+  {
+    var listeners = serviceProvider.GetServices<IEventListener>();
+    foreach (var eventListener in listeners)
+    {
+      await eventListener.OnEvent(created, answersToEvent);
+    }
   }
 
   public async Task<Api.Event.Event> Create(LianeEvent lianeEvent)
   {
     var currentUser = currentContext.CurrentUser();
-    var resolved = await lianeService.Get(lianeEvent.Liane);
+    var lianeService = serviceProvider.GetService<ILianeService>();
+    var resolved = await lianeEvent.Liane.Resolve(lianeService!.Get);
     var needsAnswer = NeedsAnswer(lianeEvent);
-    return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.Now, needsAnswer, lianeEvent));
+    return await InternalCreate(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.Now, needsAnswer, lianeEvent), null);
   }
 
   public async Task<Api.Event.Event> Answer(Ref<Api.Event.Event> id, LianeEvent lianeEvent)
   {
     var currentUser = currentContext.CurrentUser();
-    var e = await Get(id);
+    var answerToEvent = await Get(id);
     await Delete(id);
-    return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(e.CreatedBy, null)), currentUser.Id, DateTime.Now, false, lianeEvent));
+    return await InternalCreate(new Api.Event.Event(null, ImmutableList.Create(new Recipient(answerToEvent.CreatedBy, null)), currentUser.Id, DateTime.Now, false, lianeEvent), answerToEvent);
   }
 
   public async Task<PaginatedResponse<Api.Event.Event>> List(EventFilter eventFilter, Pagination pagination)
   {
     var filter = Builders<Api.Event.Event>.Filter.Empty;
-      var currentUser = currentContext.CurrentUser();
+    var currentUser = currentContext.CurrentUser();
     if (eventFilter.AsRecipient)
     {
       filter &= Builders<Api.Event.Event>.Filter.ElemMatch(r => r.Recipients, r => r.User == currentUser.Id);

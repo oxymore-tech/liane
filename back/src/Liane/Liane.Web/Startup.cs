@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
 using Liane.Mock;
@@ -70,7 +71,6 @@ public static class Startup
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
-    services.AddService<EventDispatcher>();
     services.AddService<EventServiceImpl>();
     services.AddService<NotificationServiceImpl>();
 
@@ -82,15 +82,17 @@ public static class Startup
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddHostedService<LianeMockCronService>();
+    services.AddService<MockServiceImpl>();
+    
+    services.AddService<LianeMockCronService>();
   }
 
-  public static void StartCurrentModule(string[] args)
+  public static async Task StartCurrentModule(string[] args)
   {
     var logger = ConfigureLogger();
     try
     {
-      StartCurrentModuleWeb(args);
+      await StartCurrentModuleWeb(args);
     }
     catch (Exception e)
     {
@@ -158,7 +160,6 @@ public static class Startup
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
   {
-    ConfigureLianeServices(context, services);
     services.AddService<FileStreamResultExecutor>();
     services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
       .AddJsonOptions(options => { JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions); });
@@ -206,18 +207,17 @@ public static class Startup
     // For Resource access level
     services.AddService<MongoAccessLevelContextFactory>();
 
-    // For Mock data generation
-    services.AddService<MockServiceImpl>();
-
     // For services using json serialization (notifications)
     var jsonSerializerOptions = new JsonSerializerOptions();
     JsonSerializerSettings.ConfigureOptions(jsonSerializerOptions);
     services.AddSingleton(jsonSerializerOptions);
+    
+    ConfigureLianeServices(context, services);
   }
 
-  private static void StartCurrentModuleWeb(string[] args)
+  private static Task StartCurrentModuleWeb(string[] args)
   {
-    WebHost.CreateDefaultBuilder(args)
+    return WebHost.CreateDefaultBuilder(args)
       .ConfigureLogging(logging =>
       {
         logging.ClearProviders();
@@ -246,7 +246,7 @@ public static class Startup
       .UseUrls("http://*:5000")
       .UseKestrel()
       .Build()
-      .Run();
+      .RunAsync();
   }
 
   private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
@@ -283,7 +283,7 @@ public static class Startup
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
     var migrationService = app.ApplicationServices.GetRequiredService<MigrationService>();
-
+    
     migrationService.Execute()
       .ConfigureAwait(false)
       .GetAwaiter()
