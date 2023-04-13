@@ -6,13 +6,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Mock;
 
-public sealed class LianeMockCronService : CronJobService
+public sealed class LianeMockGenerator : CronJobService
 {
   private const string CronExpression = "0 22 * * *";
   private readonly IMockService mockService;
-  private readonly ILogger<LianeMockCronService> logger;
+  private readonly ILogger<LianeMockGenerator> logger;
 
-  public LianeMockCronService(ILogger<LianeMockCronService> logger, IMockService mockService) : base(logger, CronExpression, true)
+  public LianeMockGenerator(ILogger<LianeMockGenerator> logger, IMockService mockService) : base(logger, CronExpression, false)
   {
     this.logger = logger;
     this.mockService = mockService;

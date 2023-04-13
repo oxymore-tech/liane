@@ -84,7 +84,7 @@ public static class Startup
 
     services.AddService<MockServiceImpl>();
     
-    services.AddService<LianeMockCronService>();
+    services.AddService<LianeMockGenerator>();
   }
 
   public static async Task StartCurrentModule(string[] args)

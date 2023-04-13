@@ -47,7 +47,7 @@ public abstract class CronJobService : IHostedService, IDisposable
         await ScheduleJob(cancellationToken);
       }
 
-      logger.LogInformation("{job} : will run at {at}", GetType().Name, next.Value);
+      logger.LogInformation("{job} : will run at '{at}'", GetType().Name, next.Value);
       timer = new Timer(delay.TotalMilliseconds);
       timer.Elapsed += async (_, _) =>
       {
@@ -72,7 +72,7 @@ public abstract class CronJobService : IHostedService, IDisposable
 
   public virtual async Task StopAsync(CancellationToken cancellationToken)
   {
-    logger.LogInformation("{job} stoped", GetType().Name);
+    logger.LogInformation("{job} stopped", GetType().Name);
     timer?.Stop();
     await Task.CompletedTask;
   }
