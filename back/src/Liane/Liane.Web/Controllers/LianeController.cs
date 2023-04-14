@@ -24,7 +24,7 @@ public sealed class LianeController : ControllerBase
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;

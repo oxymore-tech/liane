@@ -4,7 +4,6 @@ using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Api.Trip;
 

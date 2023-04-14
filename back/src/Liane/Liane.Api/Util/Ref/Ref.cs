@@ -52,7 +52,7 @@ public abstract record Ref<T>
 
     public override string ToString()
     {
-      return $"{nameof(T)} {{ {nameof(Id)} = {Id} }}";
+      return Id;
     }
   }
 
@@ -70,7 +70,7 @@ public abstract record Ref<T>
 
     public override string ToString()
     {
-      return Value.ToString()!;
+      return Id;
     }
   }
 }

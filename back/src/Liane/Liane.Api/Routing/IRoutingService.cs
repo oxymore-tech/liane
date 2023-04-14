@@ -10,6 +10,7 @@ public interface IRoutingService
 {
   Task<Route> GetRoute(RoutingQuery routingQuery);
   Task<Route> GetRoute(ImmutableList<LatLng> coordinates);
+  Task<LatLng?> SnapToRoad(LatLng coordinates);
 
   Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates);
 

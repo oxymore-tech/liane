@@ -7,6 +7,7 @@ using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;

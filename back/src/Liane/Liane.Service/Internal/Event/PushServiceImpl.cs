@@ -72,6 +72,11 @@ public sealed class PushServiceImpl : IPushService, IEventListener
 
   public async Task OnEvent(Api.Event.Event @event, Api.Event.Event? answersToEvent)
   {
+    if (@event.Recipients.IsEmpty)
+    {
+      return;
+    }
+
     var notification = await notificationService.Get(@event);
     await Task.WhenAll(@event.Recipients.Select(r => Notify(r.User, notification)));
   }

@@ -14,6 +14,7 @@ using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -77,13 +78,14 @@ public static class Startup
     services.AddSettings<FirebaseSettings>(context);
     services.AddService<PushServiceImpl>();
 
-    services.AddService<LianeMemberAcceptedHandler>();
     services.AddService<LianeRequestServiceImpl>();
+    services.AddService<LianeMemberAcceptedHandler>();
+    services.AddService<LianeMemberPingHandler>();
 
     services.AddSingleton(MongoFactory.Create);
 
     services.AddService<MockServiceImpl>();
-    
+
     services.AddService<LianeMockGenerator>();
   }
 
@@ -211,7 +213,7 @@ public static class Startup
     var jsonSerializerOptions = new JsonSerializerOptions();
     JsonSerializerSettings.ConfigureOptions(jsonSerializerOptions);
     services.AddSingleton(jsonSerializerOptions);
-    
+
     ConfigureLianeServices(context, services);
   }
 
@@ -283,7 +285,7 @@ public static class Startup
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
     var migrationService = app.ApplicationServices.GetRequiredService<MigrationService>();
-    
+
     migrationService.Execute()
       .ConfigureAwait(false)
       .GetAwaiter()

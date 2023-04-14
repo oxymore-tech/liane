@@ -42,6 +42,12 @@ public sealed class RoutingServiceImpl : IRoutingService
     return new Route(geojson.Coordinates, duration, distance);
   }
 
+  public async Task<LatLng?> SnapToRoad(LatLng coordinates)
+  {
+    var nearest = await osrmService.Nearest(coordinates);
+    return nearest.Waypoints.FirstOrDefault()?.Location.ToLatLng();
+  }
+
   public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates)
   {
     if (coordinates.IsEmpty)

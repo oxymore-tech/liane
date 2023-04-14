@@ -28,6 +28,12 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
 
   private async Task<Api.Event.Event> InternalCreate(Api.Event.Event obj, Api.Event.Event? answersToEvent)
   {
+    if (obj.Recipients.IsEmpty)
+    {
+      await Dispatch(obj, answersToEvent);
+      return obj;
+    }
+
     var created = await base.Create(obj);
     await Dispatch(created, answersToEvent);
     return created;
@@ -48,7 +54,7 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
     var lianeService = serviceProvider.GetService<ILianeService>();
     var resolved = await lianeEvent.Liane.Resolve(lianeService!.Get);
     var needsAnswer = NeedsAnswer(lianeEvent);
-    return await InternalCreate(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.Now, needsAnswer, lianeEvent), null);
+    return await InternalCreate(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.UtcNow, needsAnswer, lianeEvent), null);
   }
 
   public async Task<Api.Event.Event> Answer(Ref<Api.Event.Event> id, LianeEvent lianeEvent)
@@ -56,7 +62,7 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
     var currentUser = currentContext.CurrentUser();
     var answerToEvent = await Get(id);
     await Delete(id);
-    return await InternalCreate(new Api.Event.Event(null, ImmutableList.Create(new Recipient(answerToEvent.CreatedBy, null)), currentUser.Id, DateTime.Now, false, lianeEvent), answerToEvent);
+    return await InternalCreate(new Api.Event.Event(null, ImmutableList.Create(new Recipient(answerToEvent.CreatedBy, null)), currentUser.Id, DateTime.UtcNow, false, lianeEvent), answerToEvent);
   }
 
   public async Task<PaginatedResponse<Api.Event.Event>> List(EventFilter eventFilter, Pagination pagination)

@@ -54,7 +54,6 @@ public sealed class EventController : ControllerBase
      await lianeRequestService.Delete(id);
   }
 
-
   [HttpGet("{id}")]
   public async Task<Event> Get([FromRoute] string id)
   {

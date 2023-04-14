@@ -19,6 +19,7 @@ public interface IOsrmService
         string annotations = "false",
         string continueStraight = "default");
    
+    Task<Response.Nearest> Nearest(LatLng coordinates, int number = 0);
     
     /// <summary>
     /// Sort a list of WayPoints (Traveling Salesman Problem).

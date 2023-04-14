@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
 
-namespace Liane.Service.Internal.Trip;
+namespace Liane.Service.Internal.Trip.Event;
 
 public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.MemberAccepted>
 {
