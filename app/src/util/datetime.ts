@@ -20,3 +20,12 @@ export const addSeconds = (date: Date, seconds: number) => {
 export const extractDatePart = (isoDatetime: UTCDateTime) => {
   return isoDatetime.slice(0, isoDatetime.indexOf("T"));
 };
+
+export const withOffsetHours = (offset: number, date?: Date | undefined) => {
+  return new Date((date?.valueOf() ?? new Date().valueOf()) + offset * (3600 * 1000));
+};
+
+export const isToday = (date: Date) => {
+  const now = new Date();
+  return date.getUTCMonth() === now.getUTCMonth() && date.getUTCFullYear() === now.getUTCFullYear() && date.getUTCDate() === now.getUTCDate();
+};

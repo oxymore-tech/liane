@@ -104,7 +104,7 @@ export const AppAutocomplete = <T extends BasicItem>({
       {open && (
         <View style={{ position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
           <View style={[styles.itemsContainer, { maxHeight: items.length > 3 ? `${Math.floor((100 * 3) / items.length)}%` : "100%" }]}>
-            <ItemList items={items} loading={false} onSelect={onSelect} renderItem={renderItem} />
+            <ItemList items={items} loading={debouncedSearch !== undefined} onSelect={onSelect} renderItem={renderItem} />
           </View>
         </View>
       )}

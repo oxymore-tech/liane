@@ -11,10 +11,12 @@ public abstract record Match
   {
   }
 
-  public sealed record Exact : Match;
+  public sealed record Exact(Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit) : Match;
 
-  public sealed record Compatible(int DeltaInSeconds, RallyingPoint Pickup, RallyingPoint Deposit, ImmutableSortedSet<WayPoint> WayPoints) : Match;
+  public sealed record Compatible(Delta Delta, Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, ImmutableSortedSet<WayPoint> WayPoints) : Match;
 }
+
+public sealed record Delta(int TotalInSeconds, int TotalInMeters, int PickupInSeconds = 0, int PickupInMeters = 0, int DepositInSeconds = 0, int DepositInMeters = 0);
 
 public sealed record LianeMatch(
   Liane Liane,

@@ -20,6 +20,7 @@ export interface LianeMatchViewProps {
 export const LianeDetailedMatchView = ({ to, from, originalTrip, departureTime, newTrip }: LianeMatchViewProps) => {
   const tripMatch = getTripMatch(to, from, originalTrip, departureTime, newTrip);
 
+  //console.log(tripMatch);
   return (
     <DetailedWayPointView
       wayPoints={tripMatch.wayPoints}

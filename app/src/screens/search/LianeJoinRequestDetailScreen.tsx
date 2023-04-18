@@ -42,7 +42,7 @@ export const LianeJoinRequestDetailScreen = () => {
 
   return (
     <View style={styles.page}>
-      <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
+      <Row style={[styles.footerContainer, { paddingTop: insets.top + 12 }]}>
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
           <AppIcon name={"arrow-ios-back-outline"} size={24} color={defaultTextColor(AppColors.yellow)} />
         </Pressable>
@@ -87,7 +87,7 @@ export const LianeJoinRequestDetailScreen = () => {
           {!reqIsExactMatch && (
             <Column>
               <TripChangeOverview params={{ liane: request.targetLiane, newWayPoints: wayPoints }} />
-              <AppText>Ce trajet fait faire un détour de {formatDuration((request.match as Compatible).deltaInSeconds)} à John Doe</AppText>
+              <AppText>Ce trajet fait faire un détour de {formatDuration((request.match as Compatible).delta.totalInSeconds)} à John Doe</AppText>
             </Column>
           )}
         </Column>
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: "flex-start"
   },
-  headerContainer: {
+  footerContainer: {
     backgroundColor: AppColors.yellow,
     paddingVertical: 12,
     alignItems: "center"

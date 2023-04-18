@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 16
   },
-  headerContainer: {
+  footerContainer: {
     backgroundColor: AppColors.darkBlue,
     paddingVertical: 12
   },

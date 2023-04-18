@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
@@ -43,13 +45,21 @@ public sealed class LianeController : ControllerBase
   {
      await lianeService.Delete(id);
   }
+  
+  [HttpPatch("{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task  UpdateDeparture([FromRoute] string id, [FromBody] DateTime departureTime)
+  {
+    await lianeService.UpdateDepartureTime(id, departureTime);
+  }
 
   [HttpGet("display")]
-  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2)
+  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
   {
     var from = new LatLng(lat, lng);
     var to = new LatLng(lat2, lng2);
-    return await lianeService.Display(from, to);
+    var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
+    return await lianeService.Display(from, to, dateTime);
   }
 
   [HttpPost("match")]
@@ -59,6 +69,21 @@ public sealed class LianeController : ControllerBase
     return lianeService.Match(filter, pagination);
   }
 
+  [HttpPost("match_display")] //TODO use query option
+  [DebugRequest]
+  public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination)
+  {
+    return lianeService.MatchWithDisplay(filter, pagination);
+  }
+  
+  [HttpGet("links")] 
+  [DebugRequest]
+  public Task<Dictionary<string, PickupDestinations>> GetDestinations([FromQuery] string pickup, [FromQuery] long? after)
+  {
+    var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
+    return lianeService.GetDestinations(pickup, dateTime);
+  }
+  
   [HttpGet("")]
   public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination)
   {

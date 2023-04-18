@@ -1,4 +1,4 @@
-import { Liane, RallyingPoint, User, UTCDateTime, WayPoint } from "@/api";
+import { Liane, LianeMatch, RallyingPoint, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
 
 export type UserTrip = {

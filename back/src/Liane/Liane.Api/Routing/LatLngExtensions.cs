@@ -25,7 +25,7 @@ public static class LatLngExtensions
         var d = route2[j];
         if (LineSegmentsIntersect(a, b, c, d, out var intersection))
         {
-          return (intersection, i);
+          return (intersection, i-1);
         }
       }
     }
@@ -139,7 +139,7 @@ public static class LatLngExtensions
     // 5. Otherwise, the two line segments are not parallel but do not intersect.
   }
 
-  private const double Epsilon = 1e-10;
+  private const double Epsilon = 1e-5;
 
   public static bool IsZero(this double d)
   {

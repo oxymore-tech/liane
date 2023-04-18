@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
@@ -15,8 +17,12 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<Match?> GetNewTrip(Ref<Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
 
   Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination);
+   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination);
 
-  Task<LianeDisplay> Display(LatLng pos, LatLng pos2);
+   Task<Dictionary<string, PickupDestinations>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime);
+
+  Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime);
 
   Task UpdateAllGeometries();
+  Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
 }

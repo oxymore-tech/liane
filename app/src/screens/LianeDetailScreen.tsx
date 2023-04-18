@@ -7,16 +7,17 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatDateTime } from "@/api/i18n";
-import { AppPressable } from "@/components/base/AppPressable";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
 import { DetailedWayPointView } from "@/components/trip/WayPointsView";
 import { TripOverview } from "@/components/map/TripOverviewMap";
+import { ActionItem } from "@/components/ActionItem";
 
 const LianeDetail = ({ liane }: { liane: Liane }) => {
   const { user, services } = useContext(AppContext);
   const { navigation } = useAppNavigation<"LianeDetail">();
   const currentUserIsOwner = liane.createdBy === user!.id;
+  const currentUserIsDriver = liane.driver.user === user!.id;
   const dateTime = formatDateTime(new Date(liane.departureTime));
   return (
     <ScrollView>
@@ -71,20 +72,16 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
 
         <Column spacing={8} style={styles.actionsContainer}>
           {liane.group && (
-            <AppPressable backgroundStyle={styles.rowActionContainer} onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}>
-              <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-                <AppIcon name={"message-circle-outline"} />
-                <AppText style={{ fontSize: 16 }}>Aller à la conversation</AppText>
-                <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-                  <AppIcon name={"arrow-ios-forward-outline"} />
-                </View>
-              </Row>
-            </AppPressable>
+            <ActionItem
+              onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}
+              iconName={"message-circle-outline"}
+              text={"Aller à la conversation"}
+            />
           )}
           {!liane.group && <AppText>Cette liane est en attente de nouveaux membres.</AppText>}
+          {currentUserIsDriver && <ActionItem onPress={() => {}} iconName={"clock-outline"} text={"Modifier l'horaire"} />}
           {currentUserIsOwner && (
-            <AppPressable
-              backgroundStyle={[styles.rowActionContainer]}
+            <ActionItem
               onPress={() => {
                 // TODO
                 Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer cette liane ?", [
@@ -101,19 +98,14 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
                     style: "default"
                   }
                 ]);
-              }}>
-              <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-                <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
-                <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Supprimer l'annonce</AppText>
-                <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-                  <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
-                </View>
-              </Row>
-            </AppPressable>
+              }}
+              color={ContextualColors.redAlert.text}
+              iconName={"trash-outline"}
+              text={"Supprimer l'annonce"}
+            />
           )}
           {!currentUserIsOwner && (
-            <AppPressable
-              backgroundStyle={[styles.rowActionContainer]}
+            <ActionItem
               onPress={() => {
                 // TODO
                 Alert.alert("Quitter la liane", "Voulez-vous vraiment quitter cette liane ?", [
@@ -130,15 +122,11 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
                     style: "default"
                   }
                 ]);
-              }}>
-              <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-                <AppIcon name={"trash-outline"} color={ContextualColors.redAlert.text} />
-                <AppText style={{ fontSize: 16, color: ContextualColors.redAlert.text }}>Quitter la liane</AppText>
-                <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-                  <AppIcon color={ContextualColors.redAlert.text} name={"arrow-ios-forward-outline"} />
-                </View>
-              </Row>
-            </AppPressable>
+              }}
+              color={ContextualColors.redAlert.text}
+              iconName={"log-out-outline"}
+              text={"Quitter la liane"}
+            />
           )}
         </Column>
       </Column>
@@ -161,7 +149,7 @@ export const LianeDetailScreen = () => {
 
   return (
     <View style={styles.page}>
-      <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
+      <Row style={[styles.footerContainer, { paddingTop: insets.top + 12 }]}>
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
           <AppIcon name={"arrow-ios-back-outline"} size={24} color={defaultTextColor(AppColors.yellow)} />
         </Pressable>
@@ -204,7 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: "flex-start"
   },
-  headerContainer: {
+  footerContainer: {
     backgroundColor: AppColors.yellow,
     paddingVertical: 12,
     alignItems: "center"

@@ -9,15 +9,75 @@ import { BaseFormComponentProps, WithFormController } from "@/components/forms/W
 export interface SwitchProps {
   unselectedColor: ColorValue;
   color: ColorValue;
-  values: [string, string];
   padding?: number;
   trueLabel: string;
   falseLabel: string;
-
   trueIcon?: JSX.Element;
   falseIcon?: JSX.Element;
+
+  isHeaderStyle?: boolean;
 }
 
+export const SwitchToggle = ({
+  unselectedColor,
+  color,
+  trueLabel,
+  falseLabel,
+  trueIcon,
+  falseIcon,
+  value,
+  onChange,
+  padding = 12,
+  isHeaderStyle = true
+}: SwitchProps & { value: boolean; onChange: () => void }) => {
+  const unselectedPadding = padding - 2;
+  return (
+    <Row>
+      <AppPressable
+        onPress={!value ? onChange : undefined}
+        clickable={!value}
+        style={{
+          padding: value ? padding : unselectedPadding
+        }}
+        backgroundStyle={{
+          backgroundColor: value ? color : unselectedColor,
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: value ? 4 : 0,
+          borderBottomLeftRadius: isHeaderStyle ? 0 : 16,
+          width: "50%",
+          alignSelf: "flex-end"
+        }}>
+        <Column style={styles.column} spacing={4}>
+          {trueIcon}
+          <AppText
+            style={[{ textDecorationLine: value ? "underline" : undefined, textAlign: "center", color: defaultTextColor(color) }, styles.switch]}>
+            {trueLabel}
+          </AppText>
+        </Column>
+      </AppPressable>
+      <AppPressable
+        onPress={value ? onChange : undefined}
+        clickable={value}
+        style={{ padding: !value ? padding : unselectedPadding }}
+        backgroundStyle={{
+          backgroundColor: !value ? color : unselectedColor,
+          borderTopRightRadius: 16,
+          borderTopLeftRadius: !value ? 4 : 0,
+          borderBottomRightRadius: isHeaderStyle ? 0 : 16,
+          alignSelf: "flex-end",
+          width: "50%"
+        }}>
+        <Column style={styles.column} spacing={4}>
+          {falseIcon}
+          <AppText
+            style={[{ textDecorationLine: !value ? "underline" : undefined, textAlign: "center", color: defaultTextColor(color) }, styles.switch]}>
+            {falseLabel}
+          </AppText>
+        </Column>
+      </AppPressable>
+    </Row>
+  );
+};
 export const SwitchToggleForm = WithFormController(
   ({
     unselectedColor,

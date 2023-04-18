@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
@@ -13,22 +14,29 @@ internal static class RouteOptimizer
 {
   public static ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
   {
-    var cutCoordinate = new LngLatTuple(-1, -1);
+    var cutCoordinate = new LngLatTuple(-1000, -1000);
     var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
     var orderedCoordinates = new List<LngLatTuple>();
     foreach (var lianeSegment in raw)
     {
+      orderedCoordinates.Add(cutCoordinate);
       var lianeSet = new LianeSet(lianeSegment.Lianes.ToHashSet());
-      foreach (var coordinate in lianeSegment.Coordinates)
+      for (var index = 0; index < lianeSegment.Coordinates.Count; index++)
       {
+        var coordinate = lianeSegment.Coordinates[index];
         if (groupedCoordinates.TryGetValue(coordinate, out var currentLianeSet))
         {
           groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
-          orderedCoordinates.Add(cutCoordinate);
+          if (!orderedCoordinates.Last().Equals(cutCoordinate))
+          {
+            if (index < lianeSegment.Coordinates.Count-1) orderedCoordinates.Add(lianeSegment.Coordinates[index+1]);
+            orderedCoordinates.Add(cutCoordinate);
+          }
         }
         else
         {
           groupedCoordinates[coordinate] = lianeSet;
+          if (index > 0 && orderedCoordinates.Last().Equals(cutCoordinate))orderedCoordinates.Add(lianeSegment.Coordinates[index-1]);
           orderedCoordinates.Add(coordinate);
         }
       }
@@ -37,8 +45,9 @@ internal static class RouteOptimizer
     var lianeSegments = new List<LianeSegment>();
     var coordinates = new List<LngLatTuple>();
     LianeSet? previousLianeSet = null;
-    foreach (var coordinate in orderedCoordinates)
+    for (var index = 0; index < orderedCoordinates.Count; index++)
     {
+      var coordinate = orderedCoordinates[index];
       if (coordinate.Equals(cutCoordinate))
       {
         // Special case the route is already truncated because is crossing another route
@@ -54,8 +63,9 @@ internal static class RouteOptimizer
       }
 
       var currentLianeSet = groupedCoordinates[coordinate];
-      if (previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
+      if (coordinates.Count > 1 && previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
       {
+        if (index < orderedCoordinates.Count - 1 && !orderedCoordinates[index + 1].Equals(cutCoordinate)) coordinates.Add(orderedCoordinates[index + 1]);
         var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
         lianeSegments.Add(lianeSegment);
         coordinates.Clear();
@@ -65,13 +75,13 @@ internal static class RouteOptimizer
       previousLianeSet = currentLianeSet;
     }
 
-    if (coordinates.Count > 0 && previousLianeSet != null)
+    if (coordinates.Count > 1 && previousLianeSet != null)
     {
       var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
       lianeSegments.Add(lianeSegment);
     }
 
-    return lianeSegments.Where(s => s.Coordinates.Count > 1)
+    return lianeSegments//.Where(s => s.Coordinates.Count > 1)
       .ToImmutableList();
   }
 

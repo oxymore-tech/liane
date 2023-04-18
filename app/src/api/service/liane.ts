@@ -11,15 +11,21 @@ import {
   MemberRejected,
   MemberAccepted,
   PaginatedResponse,
-  NotificationPayload
+  NotificationPayload,
+  UTCDateTime,
+  LianeMatchDisplay,
+  RallyingPoint,
+  Ref
 } from "@/api";
-import { get, postAs, del } from "@/api/http";
+import { get, postAs, del, patch } from "@/api/http";
 
 export interface LianeService {
   list(): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
-  display(from: LatLng, to: LatLng): Promise<LianeDisplay>;
+  match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
+  links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<any>;
+  display(from: LatLng, to: LatLng, afterDate?: Date): Promise<LianeDisplay>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   answer(accept: boolean, event: NotificationPayload<JoinRequest>): Promise<void>;
@@ -27,6 +33,7 @@ export interface LianeService {
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
+  updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void>;
 }
 
 export class LianeServiceClient implements LianeService {
@@ -55,8 +62,13 @@ export class LianeServiceClient implements LianeService {
     return postAs<PaginatedResponse<LianeMatch>>("/liane/match", { body: filter });
   }
 
-  display(from: LatLng, to: LatLng) {
-    return get<LianeDisplay>("/liane/display", { params: { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng } });
+  display(from: LatLng, to: LatLng, afterDate?: Date) {
+    const params = { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng };
+    if (afterDate) {
+      // @ts-ignore
+      params.after = afterDate.valueOf();
+    }
+    return get<LianeDisplay>("/liane/display", { params });
   }
 
   join(joinRequest: JoinRequest) {
@@ -86,5 +98,22 @@ export class LianeServiceClient implements LianeService {
   }
   async deleteJoinRequest(id: string): Promise<void> {
     await del(`/event/join_request/${id}`);
+  }
+
+  async updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void> {
+    await patch(`/liane/${id}`, { body: departureTime });
+  }
+
+  match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
+    return postAs<LianeMatchDisplay>("/liane/match_display", { body: filter });
+  }
+
+  links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<any> {
+    const params = { pickup };
+    if (afterDate) {
+      // @ts-ignore
+      params.after = afterDate.valueOf();
+    }
+    return get<LianeDisplay>("/liane/links", { params });
   }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Linq;
 using Liane.Api.Routing;
 using MongoDB.Driver.GeoJsonObjectModel;
@@ -108,5 +109,11 @@ public static class Geometry
         new GeoJsonLinearRingCoordinates<GeoJson2DGeographicCoordinates>
           (points.Append(new GeoJson2DGeographicCoordinates(points[0].Longitude, points[0].Latitude)))));
     return polygon;
+  }
+
+  public static bool IsWithin(this LatLng coordinate, LatLng pos, LatLng pos2)
+  {
+    return coordinate.Lat >= Math.Min(pos.Lat, pos2.Lat) && coordinate.Lat <= Math.Max(pos.Lat, pos2.Lat)
+                                                         && coordinate.Lng >= Math.Min(pos.Lng, pos2.Lng) && coordinate.Lng <= Math.Max(pos.Lng, pos2.Lng);
   }
 }

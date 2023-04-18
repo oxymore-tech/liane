@@ -11,3 +11,7 @@ public sealed record PointDisplay(RallyingPoint RallyingPoint, ImmutableList<Lia
 public sealed record LianeSegment(ImmutableList<LngLatTuple> Coordinates, ImmutableList<Ref<Liane>> Lianes);
 
 public sealed record LianeDisplay(ImmutableList<LianeSegment> Segments, ImmutableList<Liane> Lianes);
+
+public sealed record LianeMatchDisplay(ImmutableList<LianeSegment> Segments, ImmutableList<LianeMatch> LianeMatches);
+
+public sealed record PickupDestinations(RallyingPoint Deposit, ImmutableList<DateTime> Hours); //TODO move
