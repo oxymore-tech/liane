@@ -13,7 +13,7 @@ public sealed class LianeMockCronService : BackgroundService
 
   private readonly ILogger<LianeMockCronService> logger;
   private readonly IMockService mockService;
-  private bool runImmediatly = false;
+  private bool runImmediately = false;
 
   public LianeMockCronService(ILogger<LianeMockCronService> logger, IMockService mockService)
   {
@@ -42,9 +42,9 @@ public sealed class LianeMockCronService : BackgroundService
 
   private async Task WaitForNextSchedule()
   {
-    if (runImmediatly)
+    if (runImmediately)
     {
-      runImmediatly = false;
+      runImmediately = false;
       logger.LogInformation("Job {0} will run now", nameof(LianeMockCronService));
       return;
     }

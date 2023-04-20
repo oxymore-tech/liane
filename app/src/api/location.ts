@@ -8,8 +8,8 @@ export const DEFAULT_TLS = {
 };
 
 export const FR_BBOX: BoundingBox = {
-  from: { lat: 41.2632185, lng: -5.4534286 },
-  to: { lat: 51.268318, lng: 9.8678344 }
+  from: { lat: 41.172856, lng: -5.818786 },
+  to: { lat: 51.577228, lng: 10.331117 }
 };
 
 const MapStyleUrl = "https://api.maptiler.com/maps/bright-v2/style.json?key=" + MAPTILER_KEY;

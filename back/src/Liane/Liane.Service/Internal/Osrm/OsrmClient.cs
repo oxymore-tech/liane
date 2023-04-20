@@ -79,9 +79,8 @@ public sealed class OsrmClient : IOsrmService
 
   public async Task<Response.Table> Table(IEnumerable<LatLng> coordinates)
   {
-    // TODO check if we'll use distance matrix 
     var uri = $"/table/v1/driving/{Format(coordinates)}?annotations=duration,distance";
-    var result = await client.GetFromJsonAsync<Response.Table>(uri);
+    var result = await client.GetFromJsonAsync<Response.Table>(uri, JsonOptions);
     if (result == null)
     {
       throw new ResourceNotFoundException("Osrm response");
@@ -89,6 +88,21 @@ public sealed class OsrmClient : IOsrmService
 
     return result;
   }
+
+  public async  Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null)
+  {
+    var uri = $"/nearest/v1/driving/{coordinate.ToString()}?number={number}";
+    var result = await client.GetFromJsonAsync<Response.Nearest>(uri, JsonOptions);
+    if (result == null)
+    {
+      throw new ResourceNotFoundException("Osrm response");
+    }
+
+    if (result.Code == "Ok" && (radius == null || result.Waypoints[0].Distance <= radius)) return result.Waypoints[0].Location;
+    
+    return null;
+  }
+
 
   private static string Format(IEnumerable<LatLng> coordinates)
   {

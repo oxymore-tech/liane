@@ -90,7 +90,7 @@ function Navigation() {
         navigate(RootNavigation);
       }
     }
-  }, [user, services]);
+  }, [user?.id, services.notification]);
 
   if (user) {
     return (

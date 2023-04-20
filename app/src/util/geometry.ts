@@ -24,5 +24,5 @@ export const getBoundingBox = (coordinates: GeoJSON.Position[], padding: number 
 };
 
 export const fromBoundingBox = (bbox: BoundingBox): { ne: [number, number]; sw: [number, number] } => {
-  return { ne: [bbox.from.lng, bbox.from.lat], sw: [bbox.to.lng, bbox.to.lat] };
+  return { sw: [bbox.from.lng, bbox.from.lat], ne: [bbox.to.lng, bbox.to.lat] };
 };

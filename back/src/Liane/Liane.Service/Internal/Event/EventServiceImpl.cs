@@ -35,7 +35,7 @@ public sealed class EventServiceImpl : MongoCrudService<Api.Event.Event>, IEvent
   public async Task<Api.Event.Event> Create(LianeEvent lianeEvent)
   {
     var currentUser = currentContext.CurrentUser();
-    var resolved = await lianeEvent.Liane.Resolve(lianeService.Get);
+    var resolved = await lianeService.Get(lianeEvent.Liane);
     var needsAnswer = NeedsAnswer(lianeEvent);
     return await Create(new Api.Event.Event(null, ImmutableList.Create(new Recipient(resolved.Driver.User, null)), currentUser.Id, DateTime.Now, needsAnswer, lianeEvent));
   }

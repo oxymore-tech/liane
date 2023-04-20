@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Identity } from "@/api";
-import { useDebounce } from "@/util/hooks/debounce";
+import { useDebounceValue } from "@/util/hooks/debounce";
 
 export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;
@@ -31,7 +31,7 @@ export const AppAutocomplete = <T extends BasicItem>({
 }: AppAutocompleteProps<T>) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>();
-  const debouncedSearch = useDebounce(search);
+  const debouncedSearch = useDebounceValue(search);
   const [focused, setFocused] = useState(false);
 
   const inputRef = useRef<TextInput>(null);

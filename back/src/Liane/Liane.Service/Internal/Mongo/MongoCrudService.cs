@@ -33,6 +33,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
 
   public virtual async Task<TOut> Get(Ref<TOut> reference)
   {
+    if (reference is Ref<TOut>.Resolved resolved1) return resolved1.Value;
     var resolved = await ResolveRef<TDb>(reference);
     if (resolved is null) throw new ResourceNotFoundException(nameof(TOut)+ " not found : " + reference.Id);
     return await MapEntity(resolved); 

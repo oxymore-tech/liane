@@ -14,8 +14,7 @@ import {
   NotificationPayload,
   UTCDateTime,
   LianeMatchDisplay,
-  RallyingPoint,
-  Ref
+  NearestLinks
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
 
@@ -24,7 +23,8 @@ export interface LianeService {
   post(liane: LianeRequest): Promise<Liane>;
   match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
-  links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<any>;
+  // links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<NearestLinks>;
+  nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
   display(from: LatLng, to: LatLng, afterDate?: Date): Promise<LianeDisplay>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
@@ -71,6 +71,15 @@ export class LianeServiceClient implements LianeService {
     return get<LianeDisplay>("/liane/display", { params });
   }
 
+  nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks> {
+    const params = { lat: center.lat, lng: center.lng, radius: radius };
+    if (afterDate) {
+      // @ts-ignore
+      params.after = afterDate.valueOf();
+    }
+    return get("/liane/links", { params });
+  }
+
   join(joinRequest: JoinRequest) {
     return postAs<JoinRequest>(`/event`, { body: joinRequest });
   }
@@ -106,14 +115,5 @@ export class LianeServiceClient implements LianeService {
 
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
     return postAs<LianeMatchDisplay>("/liane/match_display", { body: filter });
-  }
-
-  links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<any> {
-    const params = { pickup };
-    if (afterDate) {
-      // @ts-ignore
-      params.after = afterDate.valueOf();
-    }
-    return get<LianeDisplay>("/liane/links", { params });
   }
 }

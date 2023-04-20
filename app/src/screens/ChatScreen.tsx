@@ -105,7 +105,7 @@ export const ChatScreen = () => {
         }
       });
     };
-  }, [route, services]);
+  }, [route.params.conversationId, services.chatHub]);
 
   const sendButton = (
     <Pressable

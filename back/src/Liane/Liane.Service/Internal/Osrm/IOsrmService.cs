@@ -36,6 +36,10 @@ public interface IOsrmService
     
     Task<Response.Table> Table(IEnumerable<LatLng> coordinates);
     
+    Task<LatLng?> Nearest(LatLng coordinate,
+      int number = 1,
+      int? radius = null);
+    
     
 }
 

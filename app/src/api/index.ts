@@ -301,3 +301,6 @@ export type JoinLianeRequestDetailed = Readonly<
     createdAt?: UTCDateTime;
   } & Identity
 >;
+
+export type RallyingPointLink = { deposit: RallyingPoint; hours: UTCDateTime[] };
+export type NearestLinks = { pickup: RallyingPoint; destinations: RallyingPointLink[] }[];

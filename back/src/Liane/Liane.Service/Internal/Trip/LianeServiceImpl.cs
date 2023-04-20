@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
@@ -14,7 +15,9 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -30,24 +33,26 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
   private readonly IChatService chatService;
+  private readonly ILogger<LianeServiceImpl> logger;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
     IRoutingService routingService,
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
-    IChatService chatService) : base(mongo)
+    IChatService chatService, ILogger<LianeServiceImpl> logger) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
     this.rallyingPointService = rallyingPointService;
     this.chatService = chatService;
+    this.logger = logger;
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
   {
-    var from = await filter.From.Resolve(rallyingPointService.Get);
-    var to = await filter.To.Resolve(rallyingPointService.Get);
+    var from = await rallyingPointService.Get(filter.From);
+    var to = await rallyingPointService.Get(filter.To);
 
     var targetRoute = Simplifier.Simplify(await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location)));
 
@@ -236,7 +241,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
   {
-    var resolved = await liane.Resolve(Get);
+    var resolved = await Get(liane);
     var (driverSegment, segments) = ExtractRouteSegments(resolved.Driver.User, resolved.Members);
     var wayPoints = (await routingService.GetTrip(driverSegment, segments))!;
     var initialTripDuration = wayPoints.TotalDuration();
@@ -261,31 +266,54 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   }
 
 
-  public async Task<Dictionary<string, PickupDestinations>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime)
+  public async Task<ImmutableList<ClosestPickups>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime, int availableSeats = -1)
+  {
+    var from = await rallyingPointService.Get(pickup);
+
+
+    return await GetNearestLinks(from.Location, dateTime, availableSeats);
+  }
+
+
+  public async Task<ImmutableList<ClosestPickups>> GetNearestLinks(LatLng pos, DateTime dateTime, int radius = 30,int availableSeats = -1)
   {
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, dateTime)
                  & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, dateTime.AddHours(24))
-                 & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.From == pickup || m.To == pickup);
+                 & Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, availableSeats <= 0)
+                 & Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -availableSeats)
+                 & Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry,  Geometry.GetApproxCircle(pos, radius));
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
-      .SelectAsync(MapEntity);
+      .SelectAsync(MapEntity, parallel: true);
 
-    return lianes.SelectMany(l => l.WayPoints
-      .SkipWhile(w => w.RallyingPoint.Id != pickup.Id)
-      .Skip(1)
-      .Select(w => new { w, l }))
-      .GroupBy(p => p.w.RallyingPoint)
-      .ToDictionary(gr => gr.Key.Id!, gr => new PickupDestinations(
-        gr.Key,
-        gr.Select(p => p.l.DepartureTime.AddSeconds(p.l.WayPoints.Take(p.w.Order).ToImmutableSortedSet().TotalDuration())).Order().ToImmutableList()
-        ));
+    var points = lianes
+      .SelectMany(l => l.WayPoints.Select(w => new { WayPoint = w, Liane = l }))
+      .GroupBy(e => e.WayPoint.RallyingPoint)
+      .OrderBy(e => e.Key.Location.Distance(pos))
+      .TakeWhile(e => e.Key.Location.Distance(pos) < radius);
+
+    return points
+      .Select(g => new ClosestPickups(g.Key, GetDestinations(g.Key, lianes)))
+      .Where(p => p.Destinations.Count > 0)
+      .ToImmutableList();
   }
 
-  private async Task<ImmutableList<Api.Trip.Liane>> FilterRelevant(IEnumerable<Api.Trip.Liane> lianes, LatLng pos, LatLng pos2)
+
+  private ImmutableList<RallyingPointLink> GetDestinations(Ref<RallyingPoint> pickup,ImmutableList<Api.Trip.Liane> lianes)
   {
-    return lianes.Where(l => l.WayPoints.Any(w => w.RallyingPoint.Location.IsWithin(pos, pos2))).ToImmutableList();
+    return lianes
+      .SelectMany(l => l.WayPoints.SkipWhile(w => w.RallyingPoint.Id != pickup.Id).Skip(1).Select(w => new { WayPoint = w, Liane = l })
+      )
+      .GroupBy(p => p.WayPoint.RallyingPoint)
+      .Select(gr => new RallyingPointLink(
+        gr.Key,
+        gr.Select(p => p.Liane.DepartureTime.AddSeconds(p.Liane.WayPoints.Take(p.WayPoint.Order).ToImmutableSortedSet().TotalDuration())).Order().ToImmutableList()
+      ))
+      .ToImmutableList();
   }
+
+
 
 
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime)
@@ -293,39 +321,54 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, dateTime)
                  & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, dateTime.AddHours(24))
+                 & Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, true)
                  & Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry,  Geometry.GetBoundingBox(pos, pos2));
+
+    var timer = new Stopwatch();
+    timer.Start();
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
       .SortBy(l => l.DepartureTime)
-      .SelectAsync(MapEntity);
-
+      .ToEnumerable()
+      .SelectAsync(MapEntity, parallel: true);
+    timer.Stop();
+    logger.LogDebug("Fetching {Count} Liane objects : {Elapsed}", lianes.Count, timer.Elapsed);
     var lianeSegments = await GetLianeSegments(lianes);
-    
-     // Filter Lianes for suggestions
-    return new LianeDisplay(lianeSegments, !currentContext.CurrentUser().IsAdmin ? await FilterRelevant(lianes, pos, pos2) : lianes);
+
+    return new LianeDisplay(lianeSegments, currentContext.CurrentUser().IsAdmin ? lianes : ImmutableList<Api.Trip.Liane>.Empty);
   }
 
   private async Task<ImmutableList<LianeSegment>> GetLianeSegments(IEnumerable<Api.Trip.Liane> lianes)
   {
-    var segments = lianes.SelectMany(l => l.WayPoints.Skip(1).Select(w => new
+
+    var segments =   lianes.SelectMany(l => l.WayPoints.Skip(1).Select(w => new
     {
-      from = l.WayPoints[w.Order-1].RallyingPoint, 
-      to = w.RallyingPoint, 
+      from = l.WayPoints[w.Order-1].RallyingPoint,
+      to = w.RallyingPoint,
       liane = l
-    }));
-    var rawLianeSegments = await segments.GroupBy(s => new
+    }))
+      .GroupBy(s => new
       {
-        s.from, 
+        s.from,
         s.to
-      })
-      .SelectAsync(async g =>
+      });
+
+    var timer = new Stopwatch();
+    timer.Start();
+     var rawWayPointsSegments = await segments.SelectAsync(async g =>
       {
         // Fetch route's individual segments for better caching
         var route = await routingService.GetRoute(ImmutableList.Create(g.Key.from.Location, g.Key.to.Location));
         return new LianeSegment(route.Coordinates, g.Select(s => (Ref<Api.Trip.Liane>)s.liane.Id).ToImmutableList());
-      });
-    var lianeSegments = RouteOptimizer.TruncateOverlappingSegments(rawLianeSegments);
+      }, parallel: true);
+
+     timer.Stop();
+     logger.LogDebug("Fetching waypoints segments : {Elapsed}", timer.Elapsed);
+     timer.Restart();
+     var lianeSegments = RouteOptimizer.TruncateOverlappingSegments(rawWayPointsSegments);
+     timer.Stop();
+     logger.LogDebug("Computing overlap : {Elapsed}", timer.Elapsed);
     return lianeSegments;
   }
 
@@ -471,7 +514,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
     else
     {
-      lowerBound = time.DateTime.AddHours(-LianeMatchPageDeltaInHours);
+      lowerBound = time.DateTime.AddHours(-LianeMatchPageDeltaInHours); //TODO use liane duration here (save trip in DB?)
       upperBound = time.DateTime;
     }
 

@@ -59,9 +59,15 @@ public readonly struct LatLng
 
   public static bool operator !=(LatLng a, LatLng b) => !a.Equals(b);
 
-  public bool Equals(LatLng other)
+  private static bool AreVeryClose(double a, double b)
   {
-    return Lat.Equals(other.Lat) && Lng.Equals(other.Lng);
+    // 0.000001 in lon/lat is approximately  11 cm
+    return Math.Abs(a - b) < 0.000001;
+  }
+
+  private bool Equals(LatLng other)
+  {
+    return AreVeryClose(Lat, other.Lat) && AreVeryClose(Lng, other.Lng); //Lat.Equals(other.Lat) && Lng.Equals(other.Lng);
   }
 
   public override bool Equals(object? obj)
@@ -71,7 +77,7 @@ public readonly struct LatLng
 
   public override int GetHashCode()
   {
-    return HashCode.Combine(Lat, Lng);
+    return HashCode.Combine(Math.Round(Lat, 6), Math.Round(Lng, 6));
   }
 
   ///  

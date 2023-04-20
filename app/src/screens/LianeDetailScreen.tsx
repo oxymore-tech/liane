@@ -145,7 +145,7 @@ export const LianeDetailScreen = () => {
     if (typeof lianeParam === "string") {
       services.liane.get(lianeParam).then(l => setLiane(l));
     }
-  }, [lianeParam, services]);
+  }, [lianeParam, services.liane]);
 
   return (
     <View style={styles.page}>

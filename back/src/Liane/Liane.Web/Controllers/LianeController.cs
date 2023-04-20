@@ -45,7 +45,7 @@ public sealed class LianeController : ControllerBase
   {
      await lianeService.Delete(id);
   }
-  
+
   [HttpPatch("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task  UpdateDeparture([FromRoute] string id, [FromBody] DateTime departureTime)
@@ -75,15 +75,19 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.MatchWithDisplay(filter, pagination);
   }
-  
-  [HttpGet("links")] 
-  [DebugRequest]
-  public Task<Dictionary<string, PickupDestinations>> GetDestinations([FromQuery] string pickup, [FromQuery] long? after)
+
+
+  [HttpGet("links")]
+  public async Task<ImmutableList<ClosestPickups>> GetNear([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] int? radius, [FromQuery] long? after = null)
   {
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return lianeService.GetDestinations(pickup, dateTime);
+
+    var from = new LatLng(lat!.Value, lng!.Value);
+    return await lianeService.GetNearestLinks(from, dateTime, radius ?? 30_000);
+
+
   }
-  
+
   [HttpGet("")]
   public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination)
   {

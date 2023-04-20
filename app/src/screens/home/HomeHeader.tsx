@@ -1,9 +1,9 @@
 import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import { AppIcon } from "@/components/base/AppIcon";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { RallyingPoint } from "@/api";
@@ -11,14 +11,85 @@ import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointItem } from "@/screens/home/ItinerarySearchForm";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { Observable } from "rxjs";
+import { useBottomBarStyle } from "@/components/Navigation";
+import { useObservable } from "@/util/hooks/subscription";
 
 export interface ItineraryFormHeaderProps {
   editable?: boolean;
   onChangeFrom?: (value: string | undefined) => void;
   onChangeTo?: (value: string | undefined) => void;
   onBackPressed?: () => void;
+  onRequestFocus?: (field: "to" | "from") => void;
 }
+
+const RallyingPointField = forwardRef(
+  (
+    {
+      onChange,
+      value,
+      editable,
+      onFocus,
+      showTrailing,
+      icon,
+      placeholder
+    }: {
+      onChange: (v: string | undefined) => void;
+      value: string;
+      editable: boolean;
+      onFocus: () => void;
+      showTrailing: boolean;
+      icon: JSX.Element;
+      placeholder: string;
+    },
+    ref
+  ) => {
+    const inputRef = useRef<TextInput>(null);
+    useImperativeHandle(ref, () => inputRef.current);
+
+    const field = (
+      <View style={styles.inputContainer} pointerEvents={editable ? undefined : "none"}>
+        <AppTextInput
+          trailing={
+            showTrailing ? (
+              <Pressable
+                style={{ marginRight: 12 }}
+                onPress={() => {
+                  inputRef.current?.clear();
+                  onChange(undefined);
+                  inputRef.current?.focus();
+                }}>
+                <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+              </Pressable>
+            ) : undefined
+          }
+          ref={inputRef}
+          editable={editable}
+          style={AppStyles.input}
+          leading={icon}
+          placeholder={placeholder}
+          value={value}
+          onChangeText={v => {
+            onChange(v);
+          }}
+          onFocus={onFocus}
+        />
+      </View>
+    );
+
+    return editable ? (
+      field
+    ) : (
+      <Pressable
+        onPress={() => {
+          onFocus();
+        }}>
+        {field}
+      </Pressable>
+    );
+  }
+);
 
 export const ItineraryFormHeader = ({ onChangeFrom = () => {}, onChangeTo = () => {}, onBackPressed, editable = true }: ItineraryFormHeaderProps) => {
   const insets = useSafeAreaInsets();
@@ -36,15 +107,21 @@ export const ItineraryFormHeader = ({ onChangeFrom = () => {}, onChangeTo = () =
       if (!to) {
         inputRefTo.current?.focus();
       }
+      if (focused === "from") {
+        //inputRefFrom.current?.focus();
+      }
       setSearchFrom(from?.label);
     }
     if (to) {
       if (!from) {
         inputRefFrom.current?.focus();
       }
+      if (focused === "to") {
+        //  inputRefFrom.current?.focus();
+      }
       setSearchTo(to?.label);
     }
-  }, [from, to, inputRefFrom, inputRefTo, searchFrom, searchTo]);
+  }, [from, to, inputRefFrom, inputRefTo, searchFrom, searchTo, focused]);
 
   return (
     <Animated.View
@@ -64,88 +141,47 @@ export const ItineraryFormHeader = ({ onChangeFrom = () => {}, onChangeTo = () =
           </Pressable>
         </Row>
         <Column spacing={6}>
-          <View style={styles.inputContainer}>
-            <AppTextInput
-              trailing={
-                focused === "from" && (from || (searchFrom && searchFrom.length > 0)) ? (
-                  <Pressable
-                    style={{ marginRight: 12 }}
-                    onPress={() => {
-                      inputRefFrom.current?.clear();
-                      setSearchFrom(undefined);
-                      onChangeFrom(undefined);
-                      inputRefFrom.current?.focus();
-                    }}>
-                    <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
-                  </Pressable>
-                ) : undefined
-              }
-              ref={inputRefFrom}
-              editable={editable}
-              onPressIn={
-                editable || Platform.OS === "android"
-                  ? undefined
-                  : () =>
-                      onChangeFrom(
-                        undefined
-                      ) /* This fixes onPressIn event not fired if editable set to false in Android : see https://github.com/facebook/react-native/issues/33649 */
-              }
-              onTouchEnd={editable || Platform.OS === "ios" ? undefined : () => onChangeFrom(undefined)}
-              style={AppStyles.input}
-              leading={<AppIcon name={"pin"} color={AppColors.orange} />}
-              placeholder={"Départ"}
-              value={from?.label || searchFrom}
-              onChangeText={v => {
-                setSearchFrom(v);
-                onChangeFrom(v);
-              }}
-              onFocus={() => {
-                setFocused("from");
+          <RallyingPointField
+            ref={inputRefFrom}
+            onChange={v => {
+              setSearchFrom(v);
+              onChangeFrom(v);
+            }}
+            value={from?.label || searchFrom}
+            onFocus={() => {
+              setFocused("from");
+              if (!editable) {
+                //onRequestFocus("from");
+                onChangeFrom(undefined);
+              } else {
                 onChangeFrom(searchFrom);
-              }}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <AppTextInput
-              trailing={
-                focused === "to" && (to || (searchTo && searchTo.length > 0)) ? (
-                  <Pressable
-                    style={{ marginRight: 12 }}
-                    onPress={() => {
-                      inputRefTo.current?.clear();
-                      setSearchTo(undefined);
-                      onChangeTo(undefined);
-                      inputRefTo.current?.focus();
-                    }}>
-                    <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
-                  </Pressable>
-                ) : undefined
               }
-              ref={inputRefTo}
-              editable={editable}
-              onPressIn={
-                editable || Platform.OS === "android"
-                  ? undefined
-                  : () =>
-                      onChangeTo(
-                        undefined
-                      ) /* This fixes onPressIn event not fired if editable set to false in Android : see https://github.com/facebook/react-native/issues/33649 */
-              }
-              onTouchEnd={editable || Platform.OS === "ios" ? undefined : () => onChangeTo(undefined)}
-              style={AppStyles.input}
-              leading={<AppIcon name={"flag"} color={AppColors.pink} />}
-              placeholder={"Arrivée"}
-              value={to?.label || searchTo}
-              onChangeText={v => {
-                setSearchTo(v);
-                onChangeTo(v);
-              }}
-              onFocus={() => {
-                setFocused("to");
+            }}
+            editable={editable}
+            placeholder={"Départ"}
+            icon={<AppIcon name={"pin"} color={AppColors.orange} />}
+            showTrailing={(focused === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
+          />
+          <RallyingPointField
+            ref={inputRefTo}
+            onChange={v => {
+              setSearchTo(v);
+              onChangeTo(v);
+            }}
+            value={to?.label || searchTo}
+            onFocus={() => {
+              setFocused("to");
+              if (!editable) {
+                onChangeTo(undefined);
+              } else {
                 onChangeTo(searchTo);
-              }}
-            />
-          </View>
+              }
+            }}
+            editable={editable}
+            placeholder={"Arrivée"}
+            icon={<AppIcon name={"flag"} color={AppColors.pink} />}
+            showTrailing={focused === "to" && (to || (searchTo && searchTo.length > 0)) === true}
+          />
 
           <View style={{ position: "absolute", right: -12, height: "100%", justifyContent: "center" }}>
             <Pressable
@@ -157,6 +193,7 @@ export const ItineraryFormHeader = ({ onChangeFrom = () => {}, onChangeTo = () =
                 if (!to) {
                   setSearchFrom(undefined);
                 }
+
                 machine.send("UPDATE", { data: { from: to, to: from } });
               }}>
               <AppIcon name={"flip-outline"} color={AppColors.white} />
@@ -165,27 +202,6 @@ export const ItineraryFormHeader = ({ onChangeFrom = () => {}, onChangeTo = () =
         </Column>
       </Column>
     </Animated.View>
-  );
-};
-
-export const HomeHeader = (props: { onPress: () => void }) => {
-  const insets = useSafeAreaInsets();
-  /* const { navigation } = useAppNavigation();
-  const navigateToSearch = () => {
-    navigation.navigate("Search");
-  };*/
-  return (
-    <View style={[styles.floatingSearchBar, { marginTop: insets.top }]}>
-      <Pressable style={AppStyles.inputBar} onPress={props.onPress}>
-        <AppTextInput
-          style={AppStyles.input}
-          leading={<AppIcon name={"search-outline"} color={AppColorPalettes.gray[400]} />}
-          editable={false}
-          placeholder={"Trouver une Liane"}
-          onPressIn={props.onPress}
-        />
-      </Pressable>
-    </View>
   );
 };
 
@@ -247,6 +263,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 52
   },
+
   smallActionButton: {
     padding: 8,
     borderRadius: 52

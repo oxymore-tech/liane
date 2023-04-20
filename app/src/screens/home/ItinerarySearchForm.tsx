@@ -10,7 +10,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { AppPressable } from "@/components/base/AppPressable";
 import { AppCustomIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { useDebounce } from "@/util/hooks/debounce";
+import { useDebounceValue } from "@/util/hooks/debounce";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
@@ -22,7 +22,7 @@ const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
     services.location.getRecentTrips().then(r => {
       setRecentTrips(r);
     });
-  }, [services]);
+  }, [services.location]);
 
   return (
     <View style={styles.page}>
@@ -62,7 +62,7 @@ const CachedLocationsView = (props: { onSelect: (r: RallyingPoint) => void }) =>
     services.location.getRecentLocations().then(r => {
       setRecentLocations(r);
     });
-  }, [services]);
+  }, [services.location]);
 
   const updateValue = (v: RallyingPoint) => {
     props.onSelect(v);
@@ -128,7 +128,7 @@ const RallyingPointSuggestions = (props: { currentSearch: string | undefined; on
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
 
-  const debouncedSearch = useDebounce(props.currentSearch);
+  const debouncedSearch = useDebounceValue(props.currentSearch);
   const [loading, setLoading] = useState(false);
 
   const updateValue = async (v: RallyingPoint) => {
@@ -210,7 +210,7 @@ export const ItinerarySearchForm = (props: { onSelectTrip: (trip: Trip) => void 
           }}
         />
       )}
-      {currentPoint !== undefined && (currentSearch === undefined || currentSearch.length === 0) && (
+      {currentPoint !== undefined && (currentSearch === undefined || currentSearch.trim().length === 0) && (
         <CachedLocationsView
           onSelect={async rp => {
             machine.send("UPDATE", { data: { [currentPoint]: rp } });
@@ -219,7 +219,7 @@ export const ItinerarySearchForm = (props: { onSelectTrip: (trip: Trip) => void 
         />
       )}
 
-      {currentPoint !== undefined && (currentSearch?.length ?? 0) > 0 && (
+      {currentPoint !== undefined && (currentSearch?.trim()?.length ?? 0) > 0 && (
         <RallyingPointSuggestions
           fieldName={currentPoint}
           currentSearch={currentSearch}

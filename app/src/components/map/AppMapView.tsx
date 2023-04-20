@@ -19,8 +19,6 @@ import PointAnnotation = MapLibreGL.PointAnnotation;
 import MarkerView = MapLibreGL.MarkerView;
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
-import { TouchableProps } from "react-native-svg";
-import { GenericTouchableProps } from "react-native-gesture-handler/lib/typescript/components/touchables/GenericTouchable";
 
 MapLibreGL.setAccessToken(null);
 
@@ -56,6 +54,26 @@ export interface AppMapViewProps extends PropsWithChildren {
   bounds?: DisplayBoundingBox | undefined;
 }
 
+export const PotentialLianeLayer = ({ from, to }: { from: RallyingPoint; to: RallyingPoint }) => {
+  const { services } = useContext(AppContext);
+  const { data } = useQuery(["match", from.id!, to.id!, undefined], () => {
+    return services.routing.getRoute([from.location, to.location]);
+  });
+  return (
+    data && (
+      <ShapeSource id={"potential_trip_source"} shape={data.geometry}>
+        <LineLayer
+          id={"potential_route_display"}
+          style={{
+            lineColor: AppColorPalettes.gray[400],
+            lineWidth: 3
+          }}
+        />
+      </ShapeSource>
+    )
+  );
+};
+
 export const LianeMatchRouteLayer = () => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -80,7 +98,7 @@ export const LianeMatchRouteLayer = () => {
     return trip.wayPoints.slice(trip.departureIndex, trip.arrivalIndex + 1);
   }, [fromPoint, match, toPoint]);
 
-  const { data, isLoading } = useQuery(`match_${from?.id!}_${to?.id!}_#${match.liane.id!}`, () => {
+  const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.liane.id!], () => {
     const wp = [...(isSamePickup ? [] : [from!.location]), ...wayPoints.map(w => w.rallyingPoint.location), ...(isSameDeposit ? [] : [to!.location])];
     return services.routing.getRoute(wp);
   });
@@ -205,7 +223,6 @@ export const RallyingPointsDisplayLayer = ({
             name: rp.label,
             id: rp.id,
             index: i
-            //  color: selected === rp.id ? AppColors.blue : AppColors.orange
           },
           geometry: {
             type: "Point",
@@ -221,7 +238,7 @@ export const RallyingPointsDisplayLayer = ({
       id="rp_l"
       shape={feature}
       cluster={true}
-      clusterMaxZoomLevel={11}
+      clusterMaxZoomLevel={10}
       clusterRadius={35}
       onPress={async f => {
         console.debug("clc", f, f.features[0]!.properties);
@@ -240,7 +257,7 @@ export const RallyingPointsDisplayLayer = ({
         id="rp_circles_clustered"
         filter={["has", "point_count"]}
         style={{
-          circleColor: AppColors.blue,
+          circleColor: AppColorPalettes.orange[400],
           circleRadius: 16,
           circleRadius: ["step", ["get", "point_count"], 14, 3, 16, 10, 18],
           circleStrokeColor: AppColors.white,
@@ -264,7 +281,7 @@ export const RallyingPointsDisplayLayer = ({
         id="rp_circles"
         filter={["!", ["has", "point_count"]]}
         style={{
-          circleColor: ["step", ["zoom"], AppColors.blue, 12, AppColors.orange],
+          circleColor: ["step", ["zoom"], AppColorPalettes.orange[400], 12, AppColors.orange],
           circleRadius: ["step", ["zoom"], 5, 12, 10],
           circleStrokeColor: AppColors.white,
           circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
@@ -314,7 +331,7 @@ export const RallyingPointsDisplay = ({
         style={{
           height: 20,
           width: 20,
-          backgroundColor: selected ? AppColors.blue : AppColors.orange,
+          backgroundColor: selected ? AppColorPalettes.orange[400] : AppColors.orange,
           borderRadius: 48,
           borderColor: AppColors.white,
           borderWidth: 2
@@ -405,6 +422,7 @@ const AppMapView = forwardRef(
       fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
         cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration)
     };
+
     useImperativeHandle(ref, () => controller);
 
     return (
@@ -448,7 +466,7 @@ const AppMapView = forwardRef(
             bounds={bounds}
             maxBounds={fromBoundingBox(FR_BBOX)}
             animationMode={animated ? "flyTo" : "moveTo"}
-            maxZoomLevel={15}
+            maxZoomLevel={18}
             minZoomLevel={5}
             zoomLevel={10}
             ref={cameraRef}

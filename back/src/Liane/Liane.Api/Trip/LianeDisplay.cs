@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Liane.Api.Util.Ref;
 
@@ -14,4 +15,5 @@ public sealed record LianeDisplay(ImmutableList<LianeSegment> Segments, Immutabl
 
 public sealed record LianeMatchDisplay(ImmutableList<LianeSegment> Segments, ImmutableList<LianeMatch> LianeMatches);
 
-public sealed record PickupDestinations(RallyingPoint Deposit, ImmutableList<DateTime> Hours); //TODO move
+public sealed record RallyingPointLink(RallyingPoint Deposit, ImmutableList<DateTime> Hours); 
+public sealed record ClosestPickups(RallyingPoint Pickup, ImmutableList<RallyingPointLink> Destinations); 

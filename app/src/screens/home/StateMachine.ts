@@ -1,4 +1,4 @@
-import { assign, createMachine, Interpreter, raise, StateMachine, StateNodeConfig, TransitionsConfig } from "xstate";
+import { assign, createMachine, Interpreter, raise, StateMachine, StateNodeConfig, TransitionConfigOrTarget, TransitionsConfig } from "xstate";
 import { LianeDisplay, LianeMatch, LianeMatchDisplay, LianeSearchFilter, RallyingPoint, TargetTimeDirection } from "@/api";
 
 import React from "react";
@@ -41,7 +41,7 @@ type InternalLianeMatchFilter = {
 type ReloadCause = "display" | "retry" | undefined;
 export type HomeMapContext = {
   filter: Partial<InternalLianeMatchFilter>;
-  matches: LianeMatch[];
+  matches: LianeMatch[] | undefined;
   selectedMatch: LianeMatch | undefined;
   lianeDisplay: LianeDisplay | undefined;
   error?: any | undefined;
@@ -74,7 +74,7 @@ export type HomeStateMachineInterpreter = Interpreter<HomeMapContext, Schema, Ev
 
 const createState = <T>(
   //  id: string,
-  idleState: { on: TransitionsConfig<HomeMapContext, Event> | undefined },
+  idleState: { on: TransitionsConfig<HomeMapContext, Event> | undefined; always?: TransitionConfigOrTarget<HomeMapContext, Event> },
   //  onBack?: TransitionConfigOrTarget<HomeMapContext, Event>,
   load?: {
     src: (context: HomeMapContext, event: Event) => Promise<T>;
@@ -82,8 +82,10 @@ const createState = <T>(
     autoLoadCond?: (context: HomeMapContext, event: Event) => boolean;
   }
 ) => {
+  const trueCondition = () => true;
   let state: StateNodeConfig<HomeMapContext, any, Event> = {
     initial: "init",
+    ...idleState,
     on: {
       RELOAD: {
         target: ".init",
@@ -92,7 +94,7 @@ const createState = <T>(
       ...idleState.on
     },
     states: {
-      init: { always: [...(load ? [{ target: "load", cond: load.autoLoadCond }] : []), { target: "idle" }] },
+      init: { always: [...(load ? [{ target: "load", cond: load.autoLoadCond || trueCondition }] : []), { target: "idle" }] },
       load: {},
       failed: {},
       idle: {}
@@ -108,7 +110,7 @@ const createState = <T>(
 
       onDone: {
         target: "idle",
-        actions: [() => console.log("loaded"), assign(load.assign)]
+        actions: [() => console.log("loading done"), assign(load.assign)]
       },
       onError: {
         target: "failed",
@@ -122,14 +124,15 @@ export const HomeMapMachine = (services: {
   match: (ctx: HomeMapContext) => Promise<LianeMatchDisplay>;
   display: (ctx: HomeMapContext) => Promise<LianeDisplay | undefined>;
   cacheRecentTrip: (trip: Trip) => void;
+  cacheRecentPoint: (rp: RallyingPoint) => void;
 }): HomeStateMachine =>
   createMachine(
     {
       id: "homeMap",
       predictableActionArguments: true,
       context: <HomeMapContext>{
-        filter: { from: undefined, to: undefined },
-        matches: [],
+        filter: { from: undefined, to: undefined, targetTime: { dateTime: new Date(), direction: "Departure" }, availableSeats: -1 },
+        matches: undefined,
         lianeDisplay: undefined,
         selectedMatch: undefined,
         displayBounds: undefined
@@ -165,22 +168,31 @@ export const HomeMapMachine = (services: {
 
           {
             src: (context, _) => services.display(context),
-            assign: (context, event) => ({
-              ...context,
-              matches: (event.data?.lianes ?? []).map(liane => ({
-                liane,
-                match: {
-                  type: "Exact",
-                  pickup: liane.wayPoints[0].rallyingPoint.id!,
-                  deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
-                },
-                freeSeatsCount: liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
-              })),
-              lianeDisplay: event.data || context.lianeDisplay // Keep previous display if undefined
-            })
+            assign: (context, event) => {
+              console.debug(event.data?.lianes);
+              return {
+                ...context,
+                matches: (event.data?.lianes ?? []).map(liane => ({
+                  liane,
+                  match: {
+                    type: "Exact",
+                    pickup: liane.wayPoints[0].rallyingPoint.id!,
+                    deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
+                  },
+                  freeSeatsCount: liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
+                })),
+                lianeDisplay: event.data || context.lianeDisplay // Keep previous display if undefined
+              };
+            }
           }
         ),
         form: createState({
+          always: {
+            cond: (context, _) => {
+              return filterHasFullTrip(context.filter);
+            },
+            target: "#homeMap.match"
+          },
           on: {
             BACK: {
               target: "#homeMap.map",
@@ -219,7 +231,7 @@ export const HomeMapMachine = (services: {
                 }
               },
               {
-                actions: ["resetTrip", "updateTrip"],
+                actions: ["resetTrip", "updateTrip", (context, event) => services.cacheRecentPoint(event.data.from || event.data.to)],
                 target: "#homeMap.form"
               }
             ],
@@ -251,11 +263,14 @@ export const HomeMapMachine = (services: {
           {
             src: (context, _) => services.match(context),
             autoLoadCond: (context, _) => !context.matches,
-            assign: (context, event) => ({
-              ...context,
-              matches: event.data.lianeMatches,
-              lianeDisplay: { segments: event.data.segments, lianes: event.data.lianeMatches.map(lm => lm.liane) }
-            })
+            assign: (context, event) => {
+              console.log("rellllll", event.data);
+              return {
+                ...context,
+                matches: event.data.lianeMatches,
+                lianeDisplay: { segments: event.data.segments, lianes: event.data.lianeMatches.map(lm => lm.liane) }
+              };
+            }
           }
         ),
         detail: createState({
@@ -282,7 +297,7 @@ export const HomeMapMachine = (services: {
     },
     {
       actions: {
-        resetTrip: assign({ filter: { from: undefined, to: undefined } }),
+        resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),
         resetMatches: assign<HomeMapContext, MatchEvent>({ matches: undefined }),
         selectRallyingPoint: assign<HomeMapContext, SelectEvent>({
@@ -313,6 +328,7 @@ export const HomeMapMachine = (services: {
               // Ignore if to & from are set to same value
               return context.filter;
             }
+            console.log(newTrip);
             return newTrip;
           }
         })
