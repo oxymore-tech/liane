@@ -13,10 +13,11 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
-using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using NLog.Config;
 using NLog.Layouts;
 using NLog.Targets;
@@ -97,6 +98,28 @@ public abstract class BaseIntegrationTest
   }
 
   protected abstract void Setup(IMongoDatabase db);
+  
+  protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(RallyingPoint? from, RallyingPoint? to)
+  { 
+    var geometries = await Db.GetCollection<LianeDb>()
+      .Find(FilterDefinition<LianeDb>.Empty)
+      .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
+      .ToListAsync();
+
+    var points = await Db.GetCollection<RallyingPoint>()
+      .Find(FilterDefinition<RallyingPoint>.Empty)
+      .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
+      .ToListAsync();
+
+    if (from is not null)
+    {
+      
+    }
+    
+    var geoJson = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geometries.Concat(points));
+    Console.WriteLine("GEOJSON : {0}", geoJson.ToJson());
+    return geoJson;
+  }
 
   private static MongoSettings GetMongoSettings()
   {

@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Liane.Test.Util;
 
-public class AssertExtensions
+public static class AssertExtensions
 {
     public static Stream ReadTestResource(string expectedFile, Assembly assembly)
     {
