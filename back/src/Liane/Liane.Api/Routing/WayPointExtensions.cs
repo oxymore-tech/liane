@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -28,5 +29,7 @@ public static class WayPointExtensions
     return false;
   }
 
-  public static int TotalDuration(this ImmutableSortedSet<WayPoint> wayPoints) => wayPoints.Aggregate(0, (acc, w) => acc + w.Duration);
+  public static int TotalDuration(this IEnumerable<WayPoint> wayPoints) => wayPoints.Aggregate(0, (acc, w) => acc + w.Duration);
+  
+  public static int TotalDistance(this IEnumerable<WayPoint> wayPoints) => wayPoints.Aggregate(0, (acc, w) => acc + w.Distance);
 }

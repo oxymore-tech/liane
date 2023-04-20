@@ -81,7 +81,7 @@ export const DurationEstimate = () => {
     services.routing.duration(from, to).then(d => {
       setDuration(d);
     });
-  }, [getValues, services]);
+  }, [getValues, services.routing]);
 
   return duration && departureTime ? (
     <Row style={{ alignItems: "center", padding: 16, alignSelf: "center" }} spacing={8}>

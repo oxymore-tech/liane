@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Liane.Api.Trip;
 
 namespace Liane.Service.Internal.Trip;
@@ -48,26 +50,39 @@ public sealed class BestMatchComparer : IComparer<LianeMatch>
 
     var distance1 = GetDistanceScore(x.Match);
     var distance2 = GetDistanceScore(y.Match);
-    var distanceDelta = distance1 - distance2;
+    
+    var distanceToDelta = distance1.toDist - distance2.toDist;
+    var distanceFromDelta = distance1.fromDist - distance2.fromDist;
+    //var distanceDelta = distance1 - distance2;
 
-    if (distanceDelta == 0)
+    if (distanceToDelta + distanceFromDelta == 0)
     {
       return (int)deltaTime1.TotalMilliseconds - (int)deltaTime2.TotalMilliseconds;
     }
 
-    return distanceDelta;
+    if (distanceToDelta == 0)
+    {
+      return distanceFromDelta;
+    }
+    
+    if (distanceFromDelta == 0)
+    {
+      return distanceToDelta;
+    }
+
+    return distanceToDelta + distanceFromDelta;
   }
 
-  private int GetDistanceScore(Match m)
+  private (int fromDist, int toDist) GetDistanceScore(Match m)
   {
     if (m is not Match.Compatible c)
     {
-      return 0;
+      return (0,0);
     }
 
-    var fromDist = (int)from.Location.Distance(c.Pickup.Location) + 1;
-    var toDist = (int)to.Location.Distance(c.Deposit.Location) + 1;
+    var fromDist = (int)from.Location.Distance(c.WayPoints.First(w => w.RallyingPoint.Id == c.Pickup.Id).RallyingPoint.Location);
+    var toDist = (int)to.Location.Distance(c.WayPoints.First(w => w.RallyingPoint.Id == c.Deposit.Id).RallyingPoint.Location);
 
-    return fromDist * toDist;
+    return (fromDist, toDist);
   }
 }

@@ -7,7 +7,7 @@ namespace Liane.Service.Internal.Routing;
 
 public sealed class Simplifier
 {
-  public static ImmutableList<LatLng> Simplify(Route route) => Simplify(route.Coordinates.ToLatLng(), 0.003D);
+  public static ImmutableList<LatLng> Simplify(Route route) => Simplify(route.Coordinates.ToLatLng(), 0.001D);
 
   public static ImmutableList<LatLng> Simplify(ImmutableList<LatLng> points, double tolerance = 1.0, bool highestQuality = false)
   {

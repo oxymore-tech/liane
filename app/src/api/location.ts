@@ -1,9 +1,15 @@
 import { LatLng } from "@/api/index";
 import { MAPTILER_KEY } from "@env";
+import { BoundingBox } from "@/api/geo";
 
-const DEFAULT_BLAJOUX = {
-  lat: 44.3593807,
-  lng: 3.4336323
+export const DEFAULT_TLS = {
+  lat: 43.602173,
+  lng: 1.445083
+};
+
+export const FR_BBOX: BoundingBox = {
+  from: { lat: 41.172856, lng: -5.818786 },
+  to: { lat: 51.577228, lng: 10.331117 }
 };
 
 const MapStyleUrl = "https://api.maptiler.com/maps/bright-v2/style.json?key=" + MAPTILER_KEY;
@@ -41,5 +47,5 @@ export async function getLastKnownLocation(): Promise<LatLng> {
      } catch (_) {
        return DEFAULT_BLAJOUX;
      } */
-  return DEFAULT_BLAJOUX;
+  return DEFAULT_TLS;
 }

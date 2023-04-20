@@ -103,7 +103,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
             {reqIsExactMatch
               ? "Votre trajet reste inchangé"
-              : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).deltaInSeconds)}
+              : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).delta.totalInSeconds)}
           </AppText>
         </Row>
         {data.seats > 0 && !data.targetLiane.driver.canDrive && (

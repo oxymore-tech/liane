@@ -11,6 +11,7 @@ import MessageCircleFull from "@/assets/icons/message-circle-full.svg";
 import Car from "@/assets/icons/car.svg";
 import Position from "@/assets/icons/position.svg";
 import TwistingArrow from "@/assets/icons/twisting_arrow.svg";
+import DirectionsWalk from "@/assets/icons/directions_walk.svg";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
@@ -56,6 +57,8 @@ export const AppCustomIcon = ({ name, color = AppColorPalettes.gray[800], size =
       return <Car {...props} />;
     case "position":
       return <Position {...props} />;
+    case "directions-walk":
+      return <DirectionsWalk {...props} />;
     default:
       throw Error(name + " is not a valid icon name");
   }
@@ -68,7 +71,8 @@ const AppIconsNames = [
   "message-circle-full",
   "car",
   "position",
-  "twisting-arrow"
+  "twisting-arrow",
+  "directions-walk"
 ] as const;
 
 const EvaIconsNames = [

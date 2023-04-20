@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Identity } from "@/api";
-import { useDebounce } from "@/util/hooks/debounce";
+import { useDebounceValue } from "@/util/hooks/debounce";
 
 export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;
@@ -31,7 +31,7 @@ export const AppAutocomplete = <T extends BasicItem>({
 }: AppAutocompleteProps<T>) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>();
-  const debouncedSearch = useDebounce(search);
+  const debouncedSearch = useDebounceValue(search);
   const [focused, setFocused] = useState(false);
 
   const inputRef = useRef<TextInput>(null);
@@ -104,7 +104,7 @@ export const AppAutocomplete = <T extends BasicItem>({
       {open && (
         <View style={{ position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
           <View style={[styles.itemsContainer, { maxHeight: items.length > 3 ? `${Math.floor((100 * 3) / items.length)}%` : "100%" }]}>
-            <ItemList items={items} loading={false} onSelect={onSelect} renderItem={renderItem} />
+            <ItemList items={items} loading={debouncedSearch !== undefined} onSelect={onSelect} renderItem={renderItem} />
           </View>
         </View>
       )}

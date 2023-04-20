@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -17,7 +18,7 @@ namespace Liane.Service.Internal.Address;
 public sealed class AddressServiceNominatimImpl : IAddressService
 {
     private readonly HttpClient client;
-    private static readonly JsonSerializerOptions JsonOptions = new() {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), DefaultIgnoreCondition = JsonIgnoreCondition.Always, PropertyNameCaseInsensitive = true};
+    private static readonly JsonSerializerOptions JsonOptions = new() {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true};
 
     public AddressServiceNominatimImpl(NominatimSettings settings)
     {
@@ -78,7 +79,7 @@ public sealed class AddressServiceNominatimImpl : IAddressService
         var city = r.Address.Village ?? r.Address.City;
         var road = string.Join(", ", ImmutableList.Create(r.Address.Road, r.Address.Hamlet).Where(s => s != null));
         var street = r.Address.HouseNumber != null ? $"{r.Address.HouseNumber} {road}" : road;
-        var address = new Api.Address.Address(street, r.Address.Postcode!, city!, r.Address.Country, r.Address.CountryCode);
-        return new(new LatLng(Convert.ToDouble(r.Lat), Convert.ToDouble(r.Lon)), r.DisplayName, address);
+        var address = new Api.Address.Address(street, r.Address.Postcode!, city!, r.Address.County!, r.Address.State!, r.Address.Country, r.Address.CountryCode);
+        return new(new LatLng(Convert.ToDouble(r.Lat, CultureInfo.InvariantCulture), Convert.ToDouble(r.Lon, CultureInfo.InvariantCulture)), r.DisplayName, address);
     }
 }

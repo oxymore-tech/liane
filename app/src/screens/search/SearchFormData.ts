@@ -49,7 +49,7 @@ export const toLianeWizardFormData = (filter: InternalLianeSearchFilter): LianeW
   return {
     to: filter.to,
     from: filter.from,
-    departureDate: new Date(filter.targetTime.dateTime),
+    departureDate: new Date(filter.targetTime.dateTime), //TODO bug: use string or nb for param passing
     departureTime: toTimeInSeconds(new Date(filter.targetTime.dateTime)),
     returnTime: filter.returnTime,
     availableSeats: filter.availableSeats

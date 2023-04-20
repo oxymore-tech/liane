@@ -13,7 +13,7 @@ public sealed class LianeMockCronService : BackgroundService
 
   private readonly ILogger<LianeMockCronService> logger;
   private readonly IMockService mockService;
-  private bool runImmediatly = false;
+  private bool runImmediately = false;
 
   public LianeMockCronService(ILogger<LianeMockCronService> logger, IMockService mockService)
   {
@@ -42,9 +42,9 @@ public sealed class LianeMockCronService : BackgroundService
 
   private async Task WaitForNextSchedule()
   {
-    if (runImmediatly)
+    if (runImmediately)
     {
-      runImmediatly = false;
+      runImmediately = false;
       logger.LogInformation("Job {0} will run now", nameof(LianeMockCronService));
       return;
     }
@@ -70,7 +70,9 @@ public sealed class LianeMockCronService : BackgroundService
     logger.LogInformation("Generates lianes between Toulouse and Alan.");
     var toulouse = new LatLng(43.604652, 1.444209);
     var alan = new LatLng(43.217511, 0.9125478);
-    await mockService.GenerateLianes(80, toulouse, alan, 40_000);
+    await mockService.GenerateLianes(80, toulouse, alan, 30_000);
+    await mockService.GenerateLianes(80, toulouse, alan, 10_000);
+    await mockService.GenerateLianes(20, toulouse, alan, 65_000);
 
     logger.LogInformation("Generates lianes between Florac and Mende.");
     var florac = new LatLng(44.324014, 3.593714);

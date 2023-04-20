@@ -1,4 +1,4 @@
-import { isExactMatch, LianeMatch } from "@/api";
+import { getPoint, isExactMatch, LianeMatch } from "@/api";
 import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
@@ -25,7 +25,7 @@ export const SearchResultsScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
+      <Row style={[styles.footerContainer, { paddingTop: insets.top + 12 }]}>
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
           <AppIcon name={"arrow-ios-back-outline"} size={24} color={AppColors.white} />
         </Pressable>
@@ -67,8 +67,8 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
       const itemIsExactMatch = isExactMatch(item.match);
       const wayPoints = itemIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
-      const fromPoint = itemIsExactMatch ? filter.from : item.match.pickup;
-      const toPoint = itemIsExactMatch ? filter.to : item.match.deposit;
+      const fromPoint = getPoint(item, "pickup");
+      const toPoint = getPoint(item, "deposit");
       const tripDuration = getTotalDuration(getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id).wayPoints);
       const departureDatetime = formatDateTime(new Date(item.liane.departureTime));
 
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 16
   },
-  headerContainer: {
+  footerContainer: {
     backgroundColor: AppColors.darkBlue,
     paddingVertical: 12
   },

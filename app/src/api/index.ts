@@ -128,7 +128,7 @@ export type PointDisplay = Readonly<{
 
 export type LianeSegment = Readonly<{
   coordinates: GeoJSON.Position[];
-  lianes: Liane[];
+  lianes: Ref<Liane>[];
 }>;
 
 export type LianeDisplay = Readonly<{
@@ -136,6 +136,7 @@ export type LianeDisplay = Readonly<{
   lianes: Liane[];
 }>;
 
+export type LianeMatchDisplay = Readonly<{ segments: LianeSegment[]; lianeMatches: LianeMatch[] }>;
 export type ChatMessage = Readonly<
   {
     text: string;
@@ -189,8 +190,23 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type Exact = { type: "Exact" };
-export type Compatible = { type: "Compatible"; pickup: RallyingPoint; deposit: RallyingPoint; wayPoints: WayPoint[]; deltaInSeconds: number };
+export type Exact = { type: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
+export type Compatible = {
+  type: "Compatible";
+  pickup: Ref<RallyingPoint>;
+  deposit: Ref<RallyingPoint>;
+  wayPoints: WayPoint[];
+  // deltaInSeconds: number;
+
+  delta: {
+    totalInSeconds: number;
+    totalInMeters: number;
+    pickupInSeconds: number;
+    pickupInMeters: number;
+    depositInSeconds: number;
+    depositInMeters: number;
+  };
+};
 export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{
@@ -202,6 +218,11 @@ export type LianeMatch = Readonly<{
 
 export const isExactMatch = (match: Match): match is Exact => {
   return match.type === "Exact";
+};
+
+export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): RallyingPoint => {
+  const wp = isExactMatch(match.match) ? match.liane.wayPoints : match.match.wayPoints;
+  return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
 // Notifications
 export type Notification = Readonly<{
@@ -280,3 +301,6 @@ export type JoinLianeRequestDetailed = Readonly<
     createdAt?: UTCDateTime;
   } & Identity
 >;
+
+export type RallyingPointLink = { deposit: RallyingPoint; hours: UTCDateTime[] };
+export type NearestLinks = { pickup: RallyingPoint; destinations: RallyingPointLink[] }[];

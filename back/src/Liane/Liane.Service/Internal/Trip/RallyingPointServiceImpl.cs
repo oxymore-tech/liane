@@ -1,19 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Trip.Import;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -40,11 +42,15 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
   private readonly ILogger<RallyingPointServiceImpl> logger;
   private readonly MemoryCache pointCache = new(new MemoryCacheOptions());
+  private readonly IAddressService addressService;
+  private readonly IOsrmService osrmService;
 
-  public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger)
+  public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger, IAddressService addressService, IOsrmService osrmService)
     : base(mongo)
   {
     this.logger = logger;
+    this.addressService = addressService;
+    this.osrmService = osrmService;
   }
 
   public override Task<RallyingPoint> Get(Ref<RallyingPoint> reference)
@@ -52,17 +58,61 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     return pointCache.GetOrCreateAsync(reference, _ => base.Get(reference))!;
   }
 
+  
   public async Task Generate()
   {
+    logger.LogInformation("Generate rallying points...");
     await Mongo.GetCollection<RallyingPoint>()
       .DeleteManyAsync(_ => true);
 
-    var assembly = typeof(RallyingPointServiceImpl).Assembly;
 
-    var rallyingPoints = (await LoadCarpoolArea(assembly))
-      .Concat(await LoadTownHall(assembly))
-      .DistinctBy(p => p.Location)
-      .ToImmutableList();
+    logger.LogDebug("Loading carpool areas...");
+    IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();
+    logger.LogDebug("Loading town halls...");
+    rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
+    
+    logger.LogDebug("Clustering...");
+   
+    // Cluster points 
+    var grouped = new List<ImmutableList<RallyingPoint>>();
+    var list = rawRallyingPoints.ToHashSet();
+    while (list.Count > 0)
+    {
+      var point = list.First();
+      var close = list.Where(r => r.Location.Distance(point.Location) <= 500);
+      close = close.Append(point);
+      grouped.Add(close.ToImmutableList());
+      list.ExceptWith(close);
+    }
+
+    var rallyingPointsMerger =
+ 
+      grouped.SelectAsync(async (g, i) =>
+      {
+        var selected = new List<RallyingPoint> { g.First() };
+        var count = g.Count();
+        if (count > 1)
+        {
+          // Group by real routing distance
+          var dict = g.Select((rp, index) => new { Id = rp.Id!, Index = index }).ToDictionary(rp => rp.Id, rp => rp.Index);
+          var table = await osrmService.Table(g.Select(rp => rp.Location));
+          foreach (var rp in g.Skip(1))
+          {
+            var i1 = dict[rp.Id!];
+            if (selected.All(rp1 => (table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500)))
+            {
+              selected.Add(rp);
+            }
+          }
+        }
+
+        if (i % (grouped.Count / 10) == 0)
+        {
+          logger.LogDebug("{Progress}%", 100 * i / grouped.Count);
+        }
+        return selected;
+      });
+    var rallyingPoints = (await rallyingPointsMerger).SelectMany(r => r).ToImmutableList();
     await Mongo.GetCollection<RallyingPoint>()
       .InsertManyAsync(rallyingPoints);
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
@@ -159,8 +209,11 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     return inputDto with { Id = id };
   }
 
-  private static async Task<ImmutableList<RallyingPoint>> LoadCarpoolArea(Assembly assembly)
+  private async Task<ImmutableList<RallyingPoint>> LoadCarpoolArea()
   {
+    
+    var assembly = typeof(RallyingPointServiceImpl).Assembly;
+    var zipCodes = (await LoadZipcodes()).DistinctBy(z => z.Insee).ToDictionary(z => z.Insee);
     await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.bnlc.csv");
     if (stream is null)
     {
@@ -173,7 +226,8 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
     var entries = csvReader.GetRecords<BnlcEntry>();
 
-    return entries.Select(e =>
+    var fullAddressRegex = new Regex("[^\"]+[.] (\\d{5}) [^\"]+");
+    var rp = await entries.SelectAsync( async e =>
       {
         var locationType = e.Type.ToLower() switch
         {
@@ -186,13 +240,61 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
           "auto-stop" => LocationType.AutoStop,
           _ => throw new ArgumentOutOfRangeException($"Location type {e.Type} unexpected")
         };
-        return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, new LatLng(e.YLat, e.XLong), locationType, e.AdLieu, e.Insee, e.ComLieu, e.NbrePl, true);
-      })
-      .ToImmutableList();
+        var address = e.AdLieu;
+        var location = new LatLng(e.YLat, e.XLong);
+        string zipCode;
+        if (fullAddressRegex.IsMatch(address))
+        {
+          // Remove 2nd part in addresses with with zipcode + city 
+          var match = fullAddressRegex.Match(address);
+          zipCode = match.Groups[1].Value;
+        }
+        else
+        {
+          if (zipCodes.TryGetValue(e.Insee, out var v))
+          {
+            zipCode = v.Zipcode;
+          }
+          else
+          {
+            try
+            {
+              var foundAddress = await addressService.GetDisplayName(location);
+              zipCode = foundAddress.Address.ZipCode;
+              address = foundAddress.Address.Street;
+            }
+            catch (Exception error)
+            {
+              logger.LogError("Could not import {Name}: {Error}", e.NomLieu, error.Message);
+              return null;
+            }
+          }
+          
+        }
+        return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, location, locationType, address, zipCode, e.ComLieu, e.NbrePl, true); //TODO format com lieu
+      });
+      return rp.Where(p => p != null).Cast<RallyingPoint>().ToImmutableList();
   }
 
-  private static async Task<ImmutableList<RallyingPoint>> LoadTownHall(Assembly assembly)
+  private static async Task<ImmutableList<ZipCodeEntry>> LoadZipcodes()
   {
+    var assembly = typeof(RallyingPointServiceImpl).Assembly;
+    await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.cities_fr.csv");
+    if (stream is null)
+    {
+      throw new ResourceNotFoundException("Unable to find cities_fr.csv");
+    }
+
+    using var reader = new StreamReader(stream);
+    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = (args) => args.Header.NormalizeToCamelCase() ,Delimiter = ";", HeaderValidated = null};
+    using var csvReader = new CsvReader(reader, configuration);
+
+    return csvReader.GetRecords<ZipCodeEntry>().ToImmutableList();
+  }
+
+  private async Task<ImmutableList<RallyingPoint>> LoadTownHall()
+  {
+    var assembly = typeof(RallyingPointServiceImpl).Assembly;
     await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.mairies.csv");
     if (stream is null)
     {

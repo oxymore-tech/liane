@@ -44,6 +44,11 @@ public sealed class RoutingServiceImpl : IRoutingService
 
   public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates)
   {
+    if (coordinates.IsEmpty)
+    {
+      return ImmutableList<LatLng>.Empty;
+    }
+
     var route = await GetRoute(coordinates);
     var geometry = Simplifier.Simplify(route);
     logger.LogDebug("Liane geometry simplified {0} => {1}", route.Coordinates.Count, geometry.Count);
@@ -290,14 +295,14 @@ public sealed class RoutingServiceImpl : IRoutingService
   /// Get the matrix of durations between each pair of rallying points as a dictionary
   /// </summary>
   /// <returns>The matrix composed of tuples (duration, distance)</returns>
-  private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double duration, double distance)>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
+  private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double? duration, double? distance)>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
   {
     var (durations, distances) = await osrmService.Table(keys.Select(rp => rp.Location));
-    var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double, double)>>();
+    var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double?, double?)>>();
 
     for (var i = 0; i < durations.Length; i++)
     {
-      matrix[keys[i]] = new Dictionary<RallyingPoint, (double, double)>();
+      matrix[keys[i]] = new Dictionary<RallyingPoint, (double?, double?)>();
       for (var j = 0; j < durations[i].Length; j++)
       {
         matrix[keys[i]][keys[j]] = (durations[i][j], distances[i][j]);
@@ -309,8 +314,8 @@ public sealed class RoutingServiceImpl : IRoutingService
 
   public async Task<ImmutableSortedSet<WayPoint>?> GetTrip(RouteSegment extremities, IEnumerable<RouteSegment> segments)
   {
-    var start = await extremities.From.Resolve(rallyingPointService.Get);
-    var end = await extremities.To.Resolve(rallyingPointService.Get);
+    var start = await rallyingPointService.Get(extremities.From);
+    var end = await rallyingPointService.Get(extremities.To);
     // A dictionary holding each point's constraints
     // The HashSet contains all points that must be visited before this point can be added to the trip.
     // If the hashset of a given point P contains P, it indicates this point is no longer visitable.
@@ -320,8 +325,8 @@ public sealed class RoutingServiceImpl : IRoutingService
     foreach (var member in segments)
     {
       // TODO optimize ref resolving
-      var resolvedFrom = await member.From.Resolve(rallyingPointService.Get);
-      var resolvedTo = await member.To.Resolve(rallyingPointService.Get);
+      var resolvedFrom = await rallyingPointService.Get(member.From);
+      var resolvedTo = await rallyingPointService.Get(member.To);
       pointsDictionary.TryAdd(resolvedFrom, new HashSet<RallyingPoint>());
       pointsDictionary.TryAdd(resolvedTo, new HashSet<RallyingPoint>());
       // Add precedence constraints
@@ -363,6 +368,7 @@ public sealed class RoutingServiceImpl : IRoutingService
       var selected = nextPointData.Key;
 
       // Append to trip
+      if (nextPointData.Value.duration is null || nextPointData.Value.distance is null) return null;
       trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value.duration, (int)nextPointData.Value.distance));
 
       // Update constraints and visitable points

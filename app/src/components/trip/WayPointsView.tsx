@@ -7,6 +7,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { UTCDateTime, WayPoint } from "@/api";
 import { TimeInSeconds, toTimeInSeconds } from "@/util/datetime";
+import { AppIcon } from "@/components/base/AppIcon";
 
 export interface WayPointsViewProps {
   departureTime: UTCDateTime;
@@ -58,13 +59,14 @@ const extractData = (wayPoints: WayPoint[], departureTime: UTCDateTime) => {
   const steps = wayPoints.slice(1, -1);
   const fromDate = new Date(departureTime);
   const fromTime = toTimeInSeconds(fromDate) + from.duration;
+
   const stepsTimes = steps.map(
     (
       acc => val =>
-        acc + val.duration
+        (acc += val.duration)
     )(fromTime)
   );
-
+  //console.log(fromTime, stepsTimes);
   const toTime = (steps.length > 0 ? stepsTimes[steps.length - 1] : fromTime) + to.duration;
 
   return {
@@ -80,11 +82,63 @@ const extractData = (wayPoints: WayPoint[], departureTime: UTCDateTime) => {
   };
 };
 
+export const DetailedLianeMatchView = ({ wayPoints, departureTime }) => {
+  const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
+
+  const renderItem = (wayPoint: TimedWayPoint, style: "from" | "to" | "step", last: boolean = false) => (
+    <Row spacing={12} key={wayPoint.wayPoint.rallyingPoint.id!}>
+      <Column style={{ position: "relative", top: -2 }}>
+        {style !== "step" && (
+          <View style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 16, padding: 4 }}>
+            <AppIcon name={style === "from" ? "pin" : "flag"} color={style === "from" ? AppColors.orange : AppColors.pink} size={20} />
+          </View>
+        )}
+        {style === "step" && <View style={{ backgroundColor: AppColorPalettes.gray[400], width: 8, height: 8, borderRadius: 16, margin: 8 }} />}
+        {!last && <View style={[styles.waypointLine, { flexGrow: 1, minHeight: 0, marginVertical: 8 }]} />}
+      </Column>
+      <Column spacing={2} style={{ flex: 1 }}>
+        <Row style={{ justifyContent: "space-between" }}>
+          <AppText style={[styles.mainWayPointLabel, style === "from" ? styles.fromLabel : styles.toLabel, { flexGrow: 1, flexShrink: 1 }]}>
+            {wayPoint.wayPoint.rallyingPoint.city}
+          </AppText>
+          <TimeView
+            style={[styles.mainWayPointTime, { alignSelf: "flex-start", paddingVertical: 4, textAlignVertical: "center" }]}
+            value={wayPoint.time}
+          />
+        </Row>
+        <Column style={{ paddingLeft: 2, position: "relative", marginBottom: 12 }}>
+          <AppText>{wayPoint.wayPoint.rallyingPoint.label}</AppText>
+
+          <AppText>{wayPoint.wayPoint.rallyingPoint.address}</AppText>
+        </Column>
+      </Column>
+    </Row>
+  );
+
+  const getStyle = (i: number) => {
+    if (i === 0) {
+      return "from";
+    } else if (i === wayPoints.length - 1) {
+      return "to";
+    } else {
+      return styles.overallFromLabel;
+    }
+  };
+
+  return (
+    <Column>
+      {renderItem(from, getStyle(0))}
+      {steps.map((_, i) => renderItem(steps[i], getStyle(i + 1)))}
+      {renderItem(to, getStyle(wayPoints.length - 1), true)}
+    </Column>
+  );
+};
+
 export const DetailedWayPointView = ({ wayPoints, departureTime, departureIndex, arrivalIndex }: WayPointsViewProps) => {
   const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
 
   const renderItem = (wayPoint: TimedWayPoint, labelStyle: any, last: boolean = false) => (
-    <Row spacing={12}>
+    <Row spacing={12} key={wayPoint.wayPoint.rallyingPoint.id!}>
       <Column>
         <TimeView
           style={[styles.mainWayPointTime, { alignSelf: "flex-start", paddingVertical: 4, textAlignVertical: "center" }]}
@@ -102,22 +156,18 @@ export const DetailedWayPointView = ({ wayPoints, departureTime, departureIndex,
     </Row>
   );
 
-  if (departureIndex === undefined) {
-    departureIndex = 0;
-  }
-  if (arrivalIndex === undefined) {
-    arrivalIndex = wayPoints.length - 1;
-  }
-
+  const di = departureIndex ?? 0;
+  const ai = arrivalIndex ?? wayPoints.length - 1;
   const getStyle = (i: number) => {
-    if (i === departureIndex) {
+    if (i === di) {
       return styles.fromLabel;
-    } else if (i === arrivalIndex) {
+    } else if (i === ai) {
       return styles.toLabel;
     } else {
       return styles.overallFromLabel;
     }
   };
+
   return (
     <Column>
       {renderItem(from, getStyle(0))}
@@ -128,34 +178,25 @@ export const DetailedWayPointView = ({ wayPoints, departureTime, departureIndex,
 };
 
 export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arrivalIndex, showSegmentOnly = false }: WayPointsViewProps) => {
-  if (departureIndex === undefined) {
-    departureIndex = 0;
-  }
-  if (arrivalIndex === undefined) {
-    arrivalIndex = wayPoints.length - 1;
-  }
+  let di = departureIndex ?? 0;
+  let ai = arrivalIndex ?? wayPoints.length - 1;
   if (showSegmentOnly) {
-    wayPoints = wayPoints.slice(departureIndex, arrivalIndex + 1);
-    departureIndex = 0;
-    arrivalIndex = wayPoints.length - 1;
+    wayPoints = wayPoints.slice(di, ai + 1);
+    di = 0;
+    ai = wayPoints.length - 1;
   }
 
   const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
 
   const lianeSymbolView = (index: number) =>
-    index + 1 === departureIndex ? <NewLianeSymbol color={AppColors.orange} /> : <LianeSymbol color={AppColorPalettes.gray[500]} />;
+    index + 1 === di ? <NewLianeSymbol color={AppColors.orange} /> : <LianeSymbol color={AppColorPalettes.gray[500]} />;
 
   const intermediateWayPoint = (index: number) => {
     const wayPoint = steps[index];
     return (
-      <AppText
-        style={[
-          { paddingVertical: 7 },
-          styles.intermediateWayPointLabel,
-          index + 1 === departureIndex ? styles.intermediateFromWayPointLabelColor : {}
-        ]}>
+      <AppText style={[{ paddingVertical: 7 }, styles.intermediateWayPointLabel, index + 1 === di ? styles.intermediateFromWayPointLabelColor : {}]}>
         <TimeView
-          style={[styles.intermediateWayPointLabel, index + 1 === departureIndex ? styles.intermediateFromWayPointLabelColor : {}]}
+          style={[styles.intermediateWayPointLabel, index + 1 === di ? styles.intermediateFromWayPointLabelColor : {}]}
           value={wayPoint.time}
         />{" "}
         - {wayPoint.wayPoint.rallyingPoint.city}
@@ -180,7 +221,7 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
       </Column>
 
       <Column style={[styles.column, styles.shrink]}>
-        <AppText style={[styles.mainWayPointLabel, departureIndex === 0 ? styles.fromLabel : styles.overallFromLabel]}>
+        <AppText style={[styles.mainWayPointLabel, di === 0 ? styles.fromLabel : styles.overallFromLabel]}>
           {from.wayPoint.rallyingPoint.city}
         </AppText>
 

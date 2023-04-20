@@ -27,14 +27,16 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const request = route.params.request;
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
+  const exactMatch = isExactMatch(request.match);
 
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =
     request.seats > 0 ? `Conducteur (${Math.abs(request.seats)} place${plural})` : Math.abs(request.seats) + " passager" + plural;
   const dateTime = `${formatMonthDay(new Date(request.targetLiane.departureTime))} à ${formatTime(new Date(request.targetLiane.departureTime))}`;
-  const fromPoint = isExactMatch(request.match) ? request.from : request.match.pickup;
-  const toPoint = isExactMatch(request.match) ? request.to : request.match.deposit;
-  const wayPoints = isExactMatch(request.match) ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const fromPoint = exactMatch ? request.from : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.pickup)!.rallyingPoint;
+  const toPoint = exactMatch ? request.to : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.deposit)!.rallyingPoint;
+
+  const wayPoints = exactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",

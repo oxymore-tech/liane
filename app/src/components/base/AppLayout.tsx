@@ -43,7 +43,7 @@ const LinearLayout = ({ spacing = 0, children, direction = "row", style }: _Line
   if (spacing > 0 && children && React.Children.count(children) > 0) {
     const spacingStyle = direction === "row" ? { width: spacing } : { height: spacing };
     const items = React.Children.toArray(children);
-    lineChildren = Array(2 * items.length - 1);
+    lineChildren = Array(Math.max(2 * items.length - 1, 0));
     // Set even indexes as actual children and odd indexes as spaces
     for (let i = 0; i < lineChildren.length; i++) {
       lineChildren[i] = i % 2 === 0 ? items[i / 2] : <View key={i} style={spacingStyle} />;

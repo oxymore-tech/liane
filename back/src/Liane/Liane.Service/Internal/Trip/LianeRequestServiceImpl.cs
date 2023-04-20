@@ -42,10 +42,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   private async Task<JoinLianeRequest> Resolve(Api.Event.Event e)
   {
     var joinRequest = (LianeEvent.JoinRequest)e.LianeEvent;
-    var from = await joinRequest.From.Resolve(rallyingPointService.Get);
-    var to = await joinRequest.To.Resolve(rallyingPointService.Get);
-    var liane = await joinRequest.Liane.Resolve(lianeService.Get);
-    var createdBy = await e.CreatedBy.Resolve(userService.Get);
+    var from = await rallyingPointService.Get(joinRequest.From);
+    var to = await rallyingPointService.Get(joinRequest.To);
+    var liane = await lianeService.Get(joinRequest.Liane);
+    var createdBy = await userService.Get(e.CreatedBy);
 
     var match = await lianeService.GetNewTrip(liane, from, to, joinRequest.Seats > 0);
     if (match is null)

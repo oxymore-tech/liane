@@ -1,4 +1,4 @@
-import { isExactMatch, LianeMatch } from "@/api";
+import { getPoint, isExactMatch, LianeMatch } from "@/api";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -40,10 +40,13 @@ export const LianeMatchDetailScreen = () => {
   const matchLabel = lianeIsExactMatch ? "Trajet exact" : "Trajet compatible";
   const driverLabel = liane.liane.driver.canDrive ? "John Doe" : "Aucun conducteur";
   const wayPoints = lianeIsExactMatch ? liane.liane.wayPoints : liane.match.wayPoints;
-  console.log(JSON.stringify(liane));
+
+  const fromPoint = getPoint(liane, "pickup");
+  const toPoint = getPoint(liane, "deposit");
+  //console.log(JSON.stringify(liane));
   return (
     <View style={styles.page}>
-      <Row style={[styles.headerContainer, { paddingTop: insets.top + 12 }]}>
+      <Row style={[styles.footerContainer, { paddingTop: insets.top + 12 }]}>
         <Pressable style={{ paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => navigation.goBack()}>
           <AppIcon name={"arrow-ios-back-outline"} size={24} color={defaultTextColor(AppColors.yellow)} />
         </Pressable>
@@ -52,8 +55,8 @@ export const LianeMatchDetailScreen = () => {
       <ScrollView>
         <View style={styles.section}>
           <LianeDetailedMatchView
-            from={lianeIsExactMatch ? filter.from : liane.match.pickup}
-            to={lianeIsExactMatch ? filter.to : liane.match.deposit}
+            from={fromPoint}
+            to={toPoint}
             departureTime={liane.liane.departureTime}
             originalTrip={liane.liane.wayPoints}
             newTrip={wayPoints}
@@ -91,11 +94,11 @@ export const LianeMatchDetailScreen = () => {
                 newWayPoints: wayPoints.slice(
                   Math.max(
                     0,
-                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.pickup.id)
+                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.pickup)
                   ),
                   Math.max(
                     wayPoints.length,
-                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.deposit.id)
+                    wayPoints.findIndex(w => w.rallyingPoint.id === liane.match.deposit)
                   )
                 )
               }}
@@ -164,7 +167,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: "flex-start"
   },
-  headerContainer: {
+  footerContainer: {
     backgroundColor: AppColors.yellow,
     paddingVertical: 12,
     alignItems: "center"

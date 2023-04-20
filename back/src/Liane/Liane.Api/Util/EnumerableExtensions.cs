@@ -31,16 +31,30 @@ public static class EnumerableExtensions
     if (batch.Count > 0) yield return new Batch<T>(batch.ToImmutableList(), index);
   }
 
-  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer)
+  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer, bool parallel = false)
   {
     var outs = ImmutableList.CreateBuilder<TOut>();
-    foreach (var r in enumerable)
+   
+    foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
     {
-      outs.Add(await transformer(r));
+      outs.Add(await task);
     }
 
     return outs.ToImmutableList();
   }
+  
+  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, int, Task<TOut>> transformer, bool parallel = false)
+  {
+    var outs = ImmutableList.CreateBuilder<TOut>();
+
+    foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
+    {
+      outs.Add(await task);
+    }
+
+    return outs.ToImmutableList();
+  }
+
 
   public static PaginatedResponse<T> Paginate<T>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
     where T : IIdentity

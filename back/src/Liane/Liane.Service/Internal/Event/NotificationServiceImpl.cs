@@ -30,7 +30,7 @@ public sealed class NotificationServiceImpl : INotificationService
   {
     var currentUser = currentContext.CurrentUser();
     var (title, message) = WriteNotificationFr(e);
-    var createdBy = await e.CreatedBy.Resolve(userService.Get);
+    var createdBy = await userService.Get(e.CreatedBy);
 
     var currentRecipient = e.Recipients.FirstOrDefault(r => r.User == currentUser.Id);
     var seen = currentRecipient?.SeenAt != null;

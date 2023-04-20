@@ -95,10 +95,10 @@ public static class MongoDatabaseExtensions
     return cursor.ToFilter(sortAsc, indexedField);
   }
 
-  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer)
+  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer, bool parallel = false)
   {
     return await (await source.ToListAsync())
-      .SelectAsync(transformer);
+      .SelectAsync(transformer, parallel);
   }
 
   public static IMongoCollection<T> GetCollection<T>(this IMongoDatabase mongoDatabase)

@@ -1,20 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
+using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
-using Liane.Test.Util;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using NLog.Config;
 using NLog.Layouts;
 using NLog.Targets;
@@ -53,8 +58,10 @@ public abstract class BaseIntegrationTest
 
     var services = new ServiceCollection();
     var osrmClient = GetOsrmClient();
+    var nominatimClient = GetNominatimClient();
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<IOsrmService>(osrmClient);
+    services.AddService<IAddressService>(nominatimClient);
 
     var dbName = GetUniqueDbName();
     services.AddSingleton(sp => MongoFactory.CreateForTest(sp, settings, dbName));
@@ -94,6 +101,36 @@ public abstract class BaseIntegrationTest
 
   protected abstract void Setup(IMongoDatabase db);
 
+  protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(params RallyingPoint[] testedPoints)
+  {
+    var geoJson = new List<GeoJsonFeature<GeoJson2DGeographicCoordinates>>();
+
+    var geometries = await Db.GetCollection<LianeDb>()
+      .Find(FilterDefinition<LianeDb>.Empty)
+      .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
+      .ToListAsync();
+
+    var points = await Db.GetCollection<RallyingPoint>()
+      .Find(FilterDefinition<RallyingPoint>.Empty)
+      .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
+      .ToListAsync();
+
+
+    geoJson.AddRange(geometries);
+    geoJson.AddRange(points);
+
+    if (testedPoints.Length > 0)
+    {
+      var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
+      var simplifiedRoute = new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetSimplifiedRoute(testedPoints.Select(p => p.Location).ToImmutableList())).ToGeoJson());
+      geoJson.Add(simplifiedRoute);
+    }
+
+    var collection = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geoJson);
+    Console.WriteLine("GEOJSON : {0}", collection.ToJson());
+    return collection;
+  }
+
   private static MongoSettings GetMongoSettings()
   {
     var mongoHost = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
@@ -105,6 +142,13 @@ public abstract class BaseIntegrationTest
   {
     var osrmUrl = Environment.GetEnvironmentVariable("OSRM_URL") ?? "http://liane.gjini.co:5000";
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri(osrmUrl)));
+    return osrmClient;
+  }
+
+  private static AddressServiceNominatimImpl GetNominatimClient()
+  {
+    var osrmUrl = Environment.GetEnvironmentVariable("NOMINATIM_URL") ?? "http://liane.gjini.co:7070";
+    var osrmClient = new AddressServiceNominatimImpl(new NominatimSettings(new Uri(osrmUrl)));
     return osrmClient;
   }
 

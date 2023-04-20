@@ -36,20 +36,15 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Home() {
-  const insets = useSafeAreaInsets();
   const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
   const iconSize = 24;
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarStyle: [
-          styles.bottomBar,
-          {
-            marginBottom: insets.bottom + AppDimensions.bottomBar.marginVertical
-          }
-        ],
-        tabBarShowLabel: false
+        tabBarStyle: useBottomBarStyle(),
+        tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true
       }}>
       {makeTab(
         "Rechercher",
@@ -95,7 +90,7 @@ function Navigation() {
         navigate(RootNavigation);
       }
     }
-  }, [user, services]);
+  }, [user?.id, services.notification]);
 
   if (user) {
     return (
@@ -190,17 +185,29 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
   );
 };
 
+const BottomBarStyle = {
+  backgroundColor: AppColorPalettes.blue[700],
+  position: "absolute",
+  overflow: "hidden",
+  alignItems: "stretch",
+  height: AppDimensions.bottomBar.height,
+  marginHorizontal: AppDimensions.bottomBar.marginHorizontal,
+  borderRadius: AppDimensions.bottomBar.borderRadius,
+  paddingBottom: 0 // ios layout
+} as const;
+
+export const useBottomBarStyle = () => {
+  const insets = useSafeAreaInsets();
+  return [
+    styles.bottomBar,
+    {
+      marginBottom: insets.bottom + AppDimensions.bottomBar.marginVertical
+    }
+  ];
+};
+
 const styles = StyleSheet.create({
-  bottomBar: {
-    backgroundColor: AppColorPalettes.blue[700],
-    position: "absolute",
-    overflow: "hidden",
-    alignItems: "stretch",
-    height: AppDimensions.bottomBar.height,
-    marginHorizontal: AppDimensions.bottomBar.marginHorizontal,
-    borderRadius: AppDimensions.bottomBar.borderRadius,
-    paddingBottom: 0 // ios layout
-  },
+  bottomBar: BottomBarStyle,
   tabLabel: {
     fontSize: AppDimensions.textSize.small,
     fontWeight: "400",

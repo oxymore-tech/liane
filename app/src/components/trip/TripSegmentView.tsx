@@ -21,15 +21,15 @@ export const TripSegmentView = ({ from, to, departureTime, duration, freeSeatsCo
   return (
     <Column spacing={4}>
       <Row spacing={4}>
-        <AppText style={[styles.mainWayPointLabel, styles.fromLabel]}>{from.city}</AppText>
-        <View style={styles.line} />
-        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>{to.city}</AppText>
+        <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.fromLabel]}>{from.city}</AppText>
+        <View style={TripViewStyles.line} />
+        <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.toLabel]}>{to.city}</AppText>
       </Row>
       <Row style={{ justifyContent: "space-between" }}>
         <Row style={{ justifyContent: "flex-start" }}>
-          <TimeView style={styles.mainWayPointTime} value={startTime} />
+          <TimeView style={TripViewStyles.mainWayPointTime} value={startTime} />
           <AppText> - </AppText>
-          <TimeView style={styles.mainWayPointTime} value={startTime + duration} />
+          <TimeView style={TripViewStyles.mainWayPointTime} value={startTime + duration} />
         </Row>
         <Row style={{ alignItems: "center" }}>
           <AppText style={{ fontSize: 14 }}>{Math.abs(freeSeatsCount)}</AppText>
@@ -40,7 +40,7 @@ export const TripSegmentView = ({ from, to, departureTime, duration, freeSeatsCo
   );
 };
 
-const styles = StyleSheet.create({
+export const TripViewStyles = StyleSheet.create({
   toLabel: {
     color: AppColorPalettes.pink[500]
   },

@@ -17,6 +17,38 @@ export interface DatetimeFormProps {
   mode: DatetimeFormMode;
 }
 
+//TODO picker as dialog for departuretime change
+export const DateTimePicker = ({ value, onChange, mode }: BaseFormComponentProps<Date | undefined> & DatetimeFormProps) => {
+  const isIOS = Platform.OS === "ios";
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  useEffect(() => {
+    if (!value) {
+      onChange(new Date());
+    }
+  });
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (v: Date) => {
+    hideDatePicker();
+    onChange(v);
+  };
+
+  return (
+    <DateTimePickerModal
+      isVisible={isDatePickerVisible}
+      mode={mode}
+      date={value}
+      display={isIOS && mode === "date" ? "spinner" : undefined}
+      onConfirm={handleConfirm}
+      onCancel={hideDatePicker}
+      cancelTextIOS={"Annuler"}
+      confirmTextIOS={"Valider"}
+    />
+  );
+};
 export const DatetimeForm = WithFormController(
   ({ value, onChange, backgroundStyle, mode }: BaseFormComponentProps<Date | undefined> & DatetimeFormProps) => {
     const isIOS = Platform.OS === "ios";
