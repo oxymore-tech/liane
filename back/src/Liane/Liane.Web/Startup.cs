@@ -15,6 +15,7 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Trip.Event;
+using Liane.Service.Internal.Trip.Live;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -87,7 +88,8 @@ public static class Startup
 
     services.AddService<MockServiceImpl>();
 
-    services.AddService<LianeMockGenerator>();
+    services.AddHostedService<LianeMockGenerator>();
+    services.AddHostedService<LianeReminder>();
   }
 
   public static async Task StartCurrentModule(string[] args)

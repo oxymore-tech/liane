@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
@@ -24,6 +25,8 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 
   Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false);
   Task<FeatureCollection> DisplayGeoJSON(LatLng pos, LatLng pos2, DateTime dateTime);
+  
+  Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers);
 
   Task UpdateAllGeometries();
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);

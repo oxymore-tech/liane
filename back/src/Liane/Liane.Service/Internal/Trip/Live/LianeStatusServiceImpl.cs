@@ -7,7 +7,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;
 
-namespace Liane.Service.Internal.Trip;
+namespace Liane.Service.Internal.Trip.Live;
 
 public sealed class LianeStatusServiceImpl : ILianeStatusService
 {
@@ -35,20 +35,13 @@ public sealed class LianeStatusServiceImpl : ILianeStatusService
     {
       LianeState.NotStarted => await ComputeNotStartedStatus(lianeDb, now),
       LianeState.Started => await ComputeStartedStatus(lianeDb, now),
-      LianeState.Canceled => ComputeCanceledStatus(lianeDb, now),
-      LianeState.Finished => ComputeFinishedStatus(lianeDb, now),
-      _ => throw new ArgumentOutOfRangeException($"Status {lianeDb.State} not supported")
+      var s => ComputeStatus(lianeDb, now)
     };
   }
 
-  private LianeStatus ComputeFinishedStatus(LianeDb lianeDb, DateTime now)
+  private static LianeStatus ComputeStatus(LianeDb lianeDb, DateTime now)
   {
-    return new LianeStatus(now, LianeState.Finished, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
-  }
-
-  private LianeStatus ComputeCanceledStatus(LianeDb lianeDb, DateTime now)
-  {
-    return new LianeStatus(now, LianeState.Canceled, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
+    return new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
   }
 
   private Task<LianeStatus> ComputeStartedStatus(LianeDb lianeDb, DateTime now)

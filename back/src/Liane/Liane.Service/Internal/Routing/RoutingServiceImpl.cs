@@ -330,13 +330,15 @@ public sealed class RoutingServiceImpl : IRoutingService
 
     foreach (var member in segments)
     {
-      // TODO optimize ref resolving
-      var resolvedFrom = await rallyingPointService.Get(member.From);
-      var resolvedTo = await rallyingPointService.Get(member.To);
+      var resolvedFrom = await member.From.Resolve(rallyingPointService.Get);
+      var resolvedTo = await member.To.Resolve(rallyingPointService.Get);
       pointsDictionary.TryAdd(resolvedFrom, new HashSet<RallyingPoint>());
       pointsDictionary.TryAdd(resolvedTo, new HashSet<RallyingPoint>());
       // Add precedence constraints
-      if (resolvedFrom != start) pointsDictionary[resolvedTo].Add(resolvedFrom);
+      if (resolvedFrom != start)
+      {
+        pointsDictionary[resolvedTo].Add(resolvedFrom);
+      }
     }
 
     // Add start and end point
