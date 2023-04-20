@@ -339,7 +339,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival)),
       new Pagination());
 
-    await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
+    // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
     
     Assert.AreEqual(1, actual.Data.Count);
 

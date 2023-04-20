@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Address;
@@ -13,6 +14,7 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -98,9 +100,9 @@ public abstract class BaseIntegrationTest
   }
 
   protected abstract void Setup(IMongoDatabase db);
-  
-  protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(RallyingPoint? from, RallyingPoint? to)
-  { 
+
+  protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(params RallyingPoint[] testedPoints)
+  {
     var geometries = await Db.GetCollection<LianeDb>()
       .Find(FilterDefinition<LianeDb>.Empty)
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
@@ -111,12 +113,10 @@ public abstract class BaseIntegrationTest
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
       .ToListAsync();
 
-    if (from is not null)
-    {
-      
-    }
-    
-    var geoJson = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geometries.Concat(points));
+    var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
+    var simplifiedRoute = new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetSimplifiedRoute(testedPoints.Select(p => p.Location).ToImmutableList())).ToGeoJson());
+
+    var geoJson = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geometries.Concat(points).Concat(new[] { simplifiedRoute }));
     Console.WriteLine("GEOJSON : {0}", geoJson.ToJson());
     return geoJson;
   }
@@ -134,7 +134,7 @@ public abstract class BaseIntegrationTest
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri(osrmUrl)));
     return osrmClient;
   }
-  
+
   private static AddressServiceNominatimImpl GetNominatimClient()
   {
     var osrmUrl = Environment.GetEnvironmentVariable("NOMINATIM_URL") ?? "http://liane.gjini.co:7070";
