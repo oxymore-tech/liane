@@ -447,7 +447,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       var dDeposit = await routingService.GetRoute(ImmutableList.Create(targetRoute.Last(), depositPoint.Location));
 
       var f = newWayPoints.SkipWhile(w => w.RallyingPoint.Id != pickupPoint.Id).TakeWhile(w => w.RallyingPoint.Id != depositPoint.Id);
-      if (dPickup.Duration > f.TotalDuration() * 0.65
+      if (dPickup.Distance > f.TotalDistance() * 0.65
           || dDeposit.Distance > SnapDistanceInMeters)
       {
         // Too far for current user
