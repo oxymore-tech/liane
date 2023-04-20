@@ -437,7 +437,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       }
 
       var delta = newWayPoints.TotalDuration() - initialTripDuration;
-      if (delta > initialTripDuration * 0.25 || delta > MaxDeltaInSeconds)
+      if (delta > (initialTripDuration * 0.25 + 60) || delta > MaxDeltaInSeconds)
       {
         // Too far for driver
         return null;

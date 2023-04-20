@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Startup;
+using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
@@ -53,8 +55,10 @@ public abstract class BaseIntegrationTest
 
     var services = new ServiceCollection();
     var osrmClient = GetOsrmClient();
+    var nominatimClient = GetNominatimClient();
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<IOsrmService>(osrmClient);
+    services.AddService<IAddressService>(nominatimClient);
 
     var dbName = GetUniqueDbName();
     services.AddSingleton(sp => MongoFactory.CreateForTest(sp, settings, dbName));
@@ -105,6 +109,13 @@ public abstract class BaseIntegrationTest
   {
     var osrmUrl = Environment.GetEnvironmentVariable("OSRM_URL") ?? "http://liane.gjini.co:5000";
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri(osrmUrl)));
+    return osrmClient;
+  }
+  
+  private static AddressServiceNominatimImpl GetNominatimClient()
+  {
+    var osrmUrl = Environment.GetEnvironmentVariable("NOMINATIM_URL") ?? "http://liane.gjini.co:7070";
+    var osrmClient = new AddressServiceNominatimImpl(new NominatimSettings(new Uri(osrmUrl)));
     return osrmClient;
   }
 
