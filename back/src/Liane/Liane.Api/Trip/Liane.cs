@@ -15,17 +15,23 @@ public enum LianeState
   Canceled
 }
 
+public enum PassengerState
+{
+  Moving,
+  Stationary
+}
+
+public sealed record PassengerStatus(PassengerState State, DateTime NextEta);
+
 public sealed record LianeStatus(
+  DateTime At,
   LianeState State,
-  ImmutableList<UserPing> Pings
+  Ref<RallyingPoint>? LastPoint,
+  ImmutableHashSet<Ref<User.User>> Carpoolers,
+  DateTime NextEta,
+  ImmutableDictionary<Ref<User.User>, PassengerStatus> NextPassengers
 );
 
-public sealed record UserPing(
-  Ref<User.User> User,
-  DateTime At,
-  TimeSpan Delay,
-  LatLng? Coordinate
-);
 
 public sealed record LianeMember(
   Ref<User.User> User,
@@ -50,6 +56,6 @@ public sealed record Liane(
   ImmutableSortedSet<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,
-  LianeStatus Status,
+  LianeState State,
   Ref<ConversationGroup>? Group
 ) : IEntity, ISharedResource<LianeMember>;

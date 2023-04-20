@@ -51,20 +51,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     this.logger = logger;
   }
 
-  public async Task<LianeStatus> GetStatus(string id)
-  {
-    var lianeDb = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == id)
-      .FirstOrDefaultAsync();
-
-    if (lianeDb is null)
-    {
-      throw ResourceNotFoundException.For((Ref<Api.Trip.Liane>)id);
-    }
-
-    return lianeDb.Status;
-  }
-
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
   {
     var from = await rallyingPointService.Get(filter.From);
@@ -212,7 +198,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   protected override async Task<Api.Trip.Liane> MapEntity(LianeDb liane)
   {
     var wayPoints = await GetWayPoints(liane.Id, liane.Driver.User, liane.Members);
-    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, liane.Driver, liane.Status, liane.Conversation);
+    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, liane.Driver, liane.State, liane.Conversation);
   }
 
   protected override async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
@@ -228,7 +214,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var driverData = new Driver(createdBy, lianeRequest.AvailableSeats > 0);
     var geometry = await GetGeometry(ImmutableList.Create(from.Location, to.Location));
     return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime, lianeRequest.ReturnTime, members.ToImmutableList(), driverData,
-      new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty), geometry, null);
+      LianeState.NotStarted, ImmutableList<UserPing>.Empty, geometry, null);
   }
 
   public async Task UpdateAllGeometries()
@@ -442,7 +428,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return null;
     }
 
-    var route = lianeDb.Geometry.ToLatLng();
+    var route = lianeDb.Geometry!.ToLatLng();
 
     var bestMatch = await MatchBestIntersectionPoints(targetRoute, route);
 
@@ -519,8 +505,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         ), pickupPoint.Id!, depositPoint.Id!, newWayPoints);
     }
 
-    var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, lianeDb.Driver, lianeDb.Status,
-      lianeDb.Conversation);
+    var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, lianeDb.Driver,
+      lianeDb.State, lianeDb.Conversation);
     return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
   }
 

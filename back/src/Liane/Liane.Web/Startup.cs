@@ -81,6 +81,7 @@ public static class Startup
     services.AddService<LianeRequestServiceImpl>();
     services.AddService<LianeMemberAcceptedHandler>();
     services.AddService<LianeMemberPingHandler>();
+    services.AddService<LianeStatusServiceImpl>();
 
     services.AddSingleton(MongoFactory.Create);
 

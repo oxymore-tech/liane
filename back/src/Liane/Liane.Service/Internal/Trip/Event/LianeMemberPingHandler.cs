@@ -23,13 +23,14 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
   public async Task OnEvent(Api.Event.Event e, LianeEvent.MemberPing memberPing, Api.Event.Event? answersToEvent)
   {
     var coordinate = await memberPing.Coordinate.GetOrDefault(async l => await routingService.SnapToRoad(l));
-    var filter = Builders<LianeDb>.Filter.Where(l => l.Id == memberPing.Liane && l.Status.State == LianeState.NotStarted | l.Status.State == LianeState.Started)
+    var filter = Builders<LianeDb>.Filter.Where(l => l.Id == memberPing.Liane && l.State == LianeState.NotStarted | l.State == LianeState.Started)
                  & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == e.CreatedBy);
     
     var liane = await mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync(filter,
-        Builders<LianeDb>.Update.AddToSet(l => l.Status.Pings, new UserPing(e.CreatedBy, e.CreatedAt!.Value, memberPing.Delay, coordinate))
-          .Set(l => l.Status.State, LianeState.Started),
+        Builders<LianeDb>.Update.AddToSet(l => l.Pings, new UserPing(e.CreatedBy, e.CreatedAt!.Value, memberPing.Delay, coordinate))
+          .Set(l => l.State, LianeState.Started)
+          .Set(l => l.Geometry, null),
         new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
       );
 
