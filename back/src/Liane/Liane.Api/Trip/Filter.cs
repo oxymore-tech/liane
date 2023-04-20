@@ -18,5 +18,7 @@ public sealed record Filter(
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   DepartureOrArrivalTime TargetTime,
-  int AvailableSeats = -1 // Passenger
+  int AvailableSeats = -1, // Passenger
+  int? MaxDeltaInSeconds = null,
+  int? MaxDeltaInMeters = null
 );

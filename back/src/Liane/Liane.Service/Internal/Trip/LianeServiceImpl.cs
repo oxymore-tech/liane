@@ -437,7 +437,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       }
 
       var delta = newWayPoints.TotalDuration() - initialTripDuration;
-      if (delta > (initialTripDuration * 0.25 + 60) || delta > MaxDeltaInSeconds)
+      var maxBound = filter.MaxDeltaInSeconds ?? Math.Min(initialTripDuration * 0.25 + 60, MaxDeltaInSeconds);
+      if (delta > maxBound)
       {
         // Too far for driver
         return null;
@@ -452,7 +453,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       trip.RemoveRange(0, trip.FindIndex(w => w.RallyingPoint.Id == depositPoint.Id));
       
       var t = trip.TotalDistance();
-      if (dPickup.Distance > t * 0.65
+      var maxBoundPickup = filter.MaxDeltaInMeters ?? t * 0.65;
+      if (dPickup.Distance > maxBoundPickup
           || dDeposit.Distance > SnapDistanceInMeters)
       {
         // Too far for current user
