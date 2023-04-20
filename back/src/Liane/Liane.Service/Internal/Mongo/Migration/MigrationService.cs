@@ -24,7 +24,10 @@ public sealed class MigrationService
   private async Task Migrate()
   {
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty, Builders<LianeDb>.Update.Set(l => l.Status, new LianeStatus(LianeState.NotStarted, ImmutableList<UserPing>.Empty)));
+      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty,
+        Builders<LianeDb>.Update.Set(l => l.State, LianeState.NotStarted)
+          .Set(l => l.Pings, ImmutableList<UserPing>.Empty)
+      );
   }
 
   public async Task Execute()
