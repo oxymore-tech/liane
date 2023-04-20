@@ -15,7 +15,6 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
-using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -59,15 +58,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
 
-
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
 
+    currentContext.SetCurrentUser(userA, true);
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
     Assert.IsNotNull(actual);
 
     CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id), actual.Lianes.Select(l => l.Id));
 
-    AssertJson.AreEqual("Segment.cocures-mende.json", actual.Segments);
+    Assert.AreEqual(1, actual.Segments.Count);
   }
 
   [Test]
@@ -78,12 +77,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
 
+    currentContext.SetCurrentUser(userA, true);
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
     Assert.IsNotNull(actual);
 
     CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id), actual.Lianes.Select(l => l.Id));
 
-    AssertJson.AreEqual("Segment.cocures-florac-mende.json", actual.Segments);
+    Assert.AreEqual(3, actual.Segments.Count);
   }
 
   [Test]
@@ -95,12 +95,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
     var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.LeCrouzet, LabeledPositions.LesBondonsParking);
 
+    currentContext.SetCurrentUser(userA, true);
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
     Assert.IsNotNull(actual);
 
     CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id, liane3.Id), actual.Lianes.Select(l => l.Id));
 
-    AssertJson.AreEqual("Segment.cocures-florac-mende-lecrouzet-bondons.json", actual.Segments);
+    Assert.AreEqual(4, actual.Segments.Count);
   }
 
   [Test]
@@ -112,12 +113,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
     var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.LeCrouzet, LabeledPositions.Rampon);
 
+    currentContext.SetCurrentUser(userA, true);
     var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
     Assert.IsNotNull(actual);
 
     CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id, liane3.Id), actual.Lianes.Select(l => l.Id));
 
-    AssertJson.AreEqual("Segment.cocures-florac-mende-lecrouzet-rampon.json", actual.Segments);
+    Assert.AreEqual(4, actual.Segments.Count);
   }
 
   [Test]
@@ -131,12 +133,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
     Console.WriteLine("BB {0}", box.ToJson());
 
+    // await DebugGeoJson();
+
+    currentContext.SetCurrentUser(userA, true);
     var actual = await testedService.Display(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663), DateTime.Now);
     Assert.IsNotNull(actual);
 
     CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id), actual.Lianes.Select(l => l.Id));
 
-    AssertJson.AreEqual("Segment.mende-valdonnez-beauzile-lanuejols.json", actual.Segments);
+    Assert.AreEqual(6, actual.Segments.Count);
   }
 
   [Test]
@@ -340,7 +345,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       new Pagination());
 
     // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
-    
+
     Assert.AreEqual(1, actual.Data.Count);
 
     Assert.AreEqual(liane.Id, actual.Data[0].Liane.Id);

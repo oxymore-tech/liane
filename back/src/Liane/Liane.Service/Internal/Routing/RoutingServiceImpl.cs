@@ -44,6 +44,11 @@ public sealed class RoutingServiceImpl : IRoutingService
 
   public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates)
   {
+    if (coordinates.IsEmpty)
+    {
+      return ImmutableList<LatLng>.Empty;
+    }
+
     var route = await GetRoute(coordinates);
     var geometry = Simplifier.Simplify(route);
     logger.LogDebug("Liane geometry simplified {0} => {1}", route.Coordinates.Count, geometry.Count);

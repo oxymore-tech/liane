@@ -6,19 +6,19 @@ using Liane.Service.Internal.Util;
 
 namespace Liane.Test.Integration;
 
-public class MockCurrentContext: ICurrentContext
+public sealed class MockCurrentContext: ICurrentContext
 {
 
-  private AuthUser? currentAuthUser { get; set; }
+  private AuthUser? CurrentAuthUser { get; set; }
 
   public AuthUser CurrentUser()
   {
-    return currentAuthUser ?? new AuthUser(Fakers.FakeDbUsers[2].Id, Fakers.FakeDbUsers[2].Phone, false);
+    return CurrentAuthUser ?? new AuthUser(Fakers.FakeDbUsers[2].Id, Fakers.FakeDbUsers[2].Phone, false);
   }
 
-  public void SetCurrentUser(DbUser user)
+  public void SetCurrentUser(DbUser user, bool isAdmin = false)
   {
-    currentAuthUser = new AuthUser(user.Id, user.Phone, false);
+    CurrentAuthUser = new AuthUser(user.Id, user.Phone, isAdmin);
   }
 
   public T? CurrentResource<T>() where T : class, IIdentity

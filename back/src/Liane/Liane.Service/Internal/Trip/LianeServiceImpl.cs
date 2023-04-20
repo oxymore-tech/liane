@@ -313,9 +313,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ToImmutableList();
   }
 
-
-
-
   public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime)
   {
 

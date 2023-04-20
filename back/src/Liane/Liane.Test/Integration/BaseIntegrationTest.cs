@@ -103,6 +103,8 @@ public abstract class BaseIntegrationTest
 
   protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(params RallyingPoint[] testedPoints)
   {
+    var geoJson = new List<GeoJsonFeature<GeoJson2DGeographicCoordinates>>();
+
     var geometries = await Db.GetCollection<LianeDb>()
       .Find(FilterDefinition<LianeDb>.Empty)
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
@@ -113,12 +115,20 @@ public abstract class BaseIntegrationTest
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
       .ToListAsync();
 
-    var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
-    var simplifiedRoute = new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetSimplifiedRoute(testedPoints.Select(p => p.Location).ToImmutableList())).ToGeoJson());
 
-    var geoJson = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geometries.Concat(points).Concat(new[] { simplifiedRoute }));
-    Console.WriteLine("GEOJSON : {0}", geoJson.ToJson());
-    return geoJson;
+    geoJson.AddRange(geometries);
+    geoJson.AddRange(points);
+
+    if (testedPoints.Length > 0)
+    {
+      var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
+      var simplifiedRoute = new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetSimplifiedRoute(testedPoints.Select(p => p.Location).ToImmutableList())).ToGeoJson());
+      geoJson.Add(simplifiedRoute);
+    }
+
+    var collection = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geoJson);
+    Console.WriteLine("GEOJSON : {0}", collection.ToJson());
+    return collection;
   }
 
   private static MongoSettings GetMongoSettings()
