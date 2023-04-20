@@ -278,7 +278,6 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
   private static async Task<ImmutableList<ZipCodeEntry>> LoadZipcodes()
   {
-    
     var assembly = typeof(RallyingPointServiceImpl).Assembly;
     await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.cities_fr.csv");
     if (stream is null)
