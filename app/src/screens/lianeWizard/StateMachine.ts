@@ -5,24 +5,37 @@ export type StatesKeys = "wizard" | "overview" | "submitting"; //TODO| "submitte
 export const WizardStateSequence = ["from", "to", "date", "time", "vehicle"] as const;
 export type WizardStepsKeys = (typeof WizardStateSequence)[number];
 
-const createStateSequence = <T extends unknown>(stateKeys: readonly Partial<T>[], nextState: T) => {
+const createStateSequence = <T, K extends string>(stateKeys: { key: K; validation?: (context: T) => boolean }[], nextState: string) => {
   const states = [
-    [stateKeys[0], createState(stateKeys[1])],
-    ...stateKeys.slice(1, stateKeys.length - 1).map((key, shiftedIndex) => [key, createState(stateKeys[shiftedIndex + 2], stateKeys[shiftedIndex])]),
-    [stateKeys[stateKeys.length - 1], createState(nextState, stateKeys[stateKeys.length - 2])]
+    [stateKeys[0].key, createState(stateKeys[1].key, stateKeys[0].validation)],
+    ...stateKeys
+      .slice(1, stateKeys.length - 1)
+      .map((key, shiftedIndex) => [key.key, createState(stateKeys[shiftedIndex + 2].key, key.validation, stateKeys[shiftedIndex].key)]),
+    [stateKeys[stateKeys.length - 1].key, createState(nextState, stateKeys[stateKeys.length - 1].validation, stateKeys[stateKeys.length - 2].key)]
   ];
 
   return Object.fromEntries(states);
 };
 
 // TODO add validity conditions
-const createState = <T extends unknown>(nextTarget: T, previousTarget?: T) => ({
-  on: {
-    NEXT: {
-      target: nextTarget,
-      actions: ["set"]
+const createState = <T>(nextTarget: string, nextCondition?: (context: T) => boolean, previousTarget?: string) => ({
+  initial: "fill",
+  states: {
+    fill: {
+      on: {
+        NEXT: {
+          target: "#lianeWizard.wizard." + nextTarget,
+          actions: ["set"]
+        },
+        PREV: previousTarget ? { target: "#lianeWizard.wizard." + previousTarget } : undefined
+      }
     },
-    PREV: previousTarget ? { target: previousTarget } : undefined
+    enter: {
+      always: {
+        target: "#lianeWizard.wizard." + nextTarget + ".enter",
+        cond: nextCondition ? nextCondition : () => true
+      }
+    }
   }
 });
 
@@ -46,9 +59,15 @@ const defaultContext: LianeWizardFormData = {};
 const states: { [name in StatesKeys]: any } = {
   wizard: {
     initial: WizardStateSequence[0],
-    states: createStateSequence(WizardStateSequence, "#lianeWizard.overview")
+    states: createStateSequence<LianeWizardFormData, WizardStepsKeys>(
+      WizardStateSequence.map(s => ({ key: s, validation: context => !!context[s] })),
+      "#lianeWizard.overview"
+    )
   },
   overview: {
+    states: {
+      enter: {}
+    },
     on: {
       UPDATE: {
         actions: ["set"]

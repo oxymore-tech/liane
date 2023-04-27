@@ -70,13 +70,14 @@ public sealed class LianeMockCronService : BackgroundService
     logger.LogInformation("Generates lianes between Toulouse and Alan.");
     var toulouse = new LatLng(43.604652, 1.444209);
     var alan = new LatLng(43.217511, 0.9125478);
-    await mockService.GenerateLianes(80, toulouse, alan, 30_000);
-    await mockService.GenerateLianes(80, toulouse, alan, 10_000);
+    await mockService.GenerateLianes(40, toulouse, alan, 30_000);
+    await mockService.GenerateLianes(40, toulouse, alan, 10_000);
     await mockService.GenerateLianes(20, toulouse, alan, 65_000);
 
     logger.LogInformation("Generates lianes between Florac and Mende.");
     var florac = new LatLng(44.324014, 3.593714);
     var mende = new LatLng(44.5167, 3.5);
-    await mockService.GenerateLianes(80, florac, mende, 40_000);
+    await mockService.GenerateLianes(40, florac, mende, 40_000);
+    await mockService.GenerateLianes(40, toulouse, alan, 10_000);
   }
 }

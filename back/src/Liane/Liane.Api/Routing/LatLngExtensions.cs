@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using LngLatTuple = System.Tuple<double, double>;
@@ -58,9 +59,9 @@ public static class LatLngExtensions
     return null;
   }
 
-  public static ImmutableList<LatLng> ToLatLng(this ImmutableList<LngLatTuple> coordinates) => coordinates.Select(t => (LatLng)t).ToImmutableList();
+  public static ImmutableList<LatLng> ToLatLng(this IEnumerable<LngLatTuple> coordinates) => coordinates.Select(t => (LatLng)t).ToImmutableList();
 
-  public static ImmutableList<LngLatTuple> ToLngLatTuple(this ImmutableList<LatLng> coordinates) => coordinates.Select(t => (LngLatTuple)t).ToImmutableList();
+  public static ImmutableList<LngLatTuple> ToLngLatTuple(this IEnumerable<LatLng> coordinates) => coordinates.Select(t => (LngLatTuple)t).ToImmutableList();
 
   public static LngLatTuple ToLngLatTuple(this LatLng latLng) => new(latLng.Lng, latLng.Lng);
 

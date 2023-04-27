@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -75,18 +76,26 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
    
     // Cluster points 
     var grouped = new List<ImmutableList<RallyingPoint>>();
-    var list = rawRallyingPoints.ToHashSet();
+    var list = rawRallyingPoints.OrderBy(r => r.Location.Lng).ToList();
     while (list.Count > 0)
     {
-      var point = list.First();
-      var close = list.Where(r => r.Location.Distance(point.Location) <= 500);
-      close = close.Append(point);
+      var point = list.Last();
+      var close = new List<RallyingPoint>();
+      for (var i = list.Count - 1; i >= 0; i--)
+      {
+        var r = list[i];
+        if (Math.Abs(point.Location.Lng - r.Location.Lng) > 0.01) break; // Points are too far anyways 
+        if(r.Location.Distance(point.Location) <= 500)
+        {
+          close.Add(r);
+          list.RemoveAt(i);
+        }
+      }
       grouped.Add(close.ToImmutableList());
-      list.ExceptWith(close);
     }
-
+    
+    var pool = new Semaphore(initialCount: 8, maximumCount: 8);
     var rallyingPointsMerger =
- 
       grouped.SelectAsync(async (g, i) =>
       {
         var selected = new List<RallyingPoint> { g.First() };
@@ -95,7 +104,9 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
         {
           // Group by real routing distance
           var dict = g.Select((rp, index) => new { Id = rp.Id!, Index = index }).ToDictionary(rp => rp.Id, rp => rp.Index);
+          pool.WaitOne();
           var table = await osrmService.Table(g.Select(rp => rp.Location));
+          pool.Release();
           foreach (var rp in g.Skip(1))
           {
             var i1 = dict[rp.Id!];
@@ -105,13 +116,9 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
             }
           }
         }
-
-        if (i % (grouped.Count / 10) == 0)
-        {
-          logger.LogDebug("{Progress}%", 100 * i / grouped.Count);
-        }
+        
         return selected;
-      });
+      }, true);
     var rallyingPoints = (await rallyingPointsMerger).SelectMany(r => r).ToImmutableList();
     await Mongo.GetCollection<RallyingPoint>()
       .InsertManyAsync(rallyingPoints);
@@ -121,6 +128,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   public async Task<ImmutableList<RallyingPoint>> List(LatLng? from, LatLng? to, int? distance = null, string? search = null, int? limit = null)
   {
     var filter = FilterDefinition<RallyingPoint>.Empty;
+    var isLimitedBoxSearch = from is not null && to is not null && limit is not null;
 
     if (search is not null)
     {
@@ -145,12 +153,24 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       }
     }
 
-    return (await Mongo.GetCollection<RallyingPoint>()
+    var results = (await Mongo.GetCollection<RallyingPoint>()
         .Find(filter)
-        .Limit(limit)
+        .Limit(isLimitedBoxSearch ? null : limit)
         .ToCursorAsync())
-      .ToEnumerable()
-      .ToImmutableList();
+      .ToEnumerable();
+    
+    if (isLimitedBoxSearch)
+    {
+      // Limit manually to get those closest to center
+      var center = new LatLng((from!.Value.Lat + to!.Value.Lat) / 2, (from.Value.Lng + to.Value.Lng) / 2);
+      return results
+        .OrderBy(rp => rp.Location.Distance(center))
+        .Take(limit!.Value)
+        .ToImmutableList();
+ 
+    }
+
+    return results.ToImmutableList();
   }
 
   private static string ToSearchPattern(string search)
@@ -187,6 +207,25 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       .Find(filter)
       .FirstOrDefaultAsync();
   }
+  
+  public async Task<RallyingPoint?> SnapViaRoute(LatLng position, int radius = 100)
+  {
+    var builder = Builders<RallyingPoint>.Filter;
+    var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(position.Lng, position.Lat));
+    var filter = builder.Near(x => x.Location, point, radius);
+
+    var results = await Mongo.GetCollection<RallyingPoint>()
+      .Find(filter)
+      .ToCursorAsync();
+    var list = results.ToEnumerable().ToImmutableList();
+    if (list.Count < 1) return null;
+    
+    var table = await osrmService.Table(new List<LatLng>{position}.Concat(list.Select(rp => rp.Location)));
+    // Get closest point via road network 
+    var closest = list.Select((l, i) => (Point: l, Distance: table.Distances[0][i + 1])).MinBy(r => r.Distance);
+    return closest.Distance <= radius ? closest.Point : null;
+  }
+
 
   public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
   {
@@ -227,6 +266,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     var entries = csvReader.GetRecords<BnlcEntry>();
 
     var fullAddressRegex = new Regex("[^\"]+[.] (\\d{5}) [^\"]+");
+    var pool = new Semaphore(initialCount: 8, maximumCount: 8);
     var rp = await entries.SelectAsync( async e =>
       {
         var locationType = e.Type.ToLower() switch
@@ -241,6 +281,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
           _ => throw new ArgumentOutOfRangeException($"Location type {e.Type} unexpected")
         };
         var address = e.AdLieu;
+        var city = e.ComLieu;
         var location = new LatLng(e.YLat, e.XLong);
         string zipCode;
         if (fullAddressRegex.IsMatch(address))
@@ -257,22 +298,27 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
           }
           else
           {
+            
             try
             {
+              pool.WaitOne();
               var foundAddress = await addressService.GetDisplayName(location);
               zipCode = foundAddress.Address.ZipCode;
               address = foundAddress.Address.Street;
+              pool.Release();
             }
             catch (Exception error)
             {
-              logger.LogError("Could not import {Name}: {Error}", e.NomLieu, error.Message);
+              logger.LogError("Could not import {Name}: {Error}", e.NomLieu, error.Message);   
+              pool.Release();
               return null;
             }
+
           }
           
         }
-        return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, location, locationType, address, zipCode, e.ComLieu, e.NbrePl, true); //TODO format com lieu
-      });
+        return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, location, locationType, address, zipCode, city, e.NbrePl, true); //TODO format com lieu
+      }, parallel: true);
       return rp.Where(p => p != null).Cast<RallyingPoint>().ToImmutableList();
   }
 

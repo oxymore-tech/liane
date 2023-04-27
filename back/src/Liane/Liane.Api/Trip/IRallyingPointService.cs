@@ -18,6 +18,8 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
   Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto);
 
   Task<RallyingPoint?> Snap(LatLng position, int radius = 100);
+  
+  Task<RallyingPoint?> SnapViaRoute(LatLng position, int radius = 100);
 
   Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> pos);
 }

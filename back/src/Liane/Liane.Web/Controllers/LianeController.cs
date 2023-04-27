@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
@@ -53,13 +53,22 @@ public sealed class LianeController : ControllerBase
     await lianeService.UpdateDepartureTime(id, departureTime);
   }
 
-  [HttpGet("display")]
+  [HttpGet("display")] // Rename to filter ? + return FeatureCollection instead of Segments ?
   public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
   {
     var from = new LatLng(lat, lng);
     var to = new LatLng(lat2, lng2);
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
     return await lianeService.Display(from, to, dateTime);
+  }
+  
+  [HttpGet("display/geojson")]
+  public async Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
+  {
+    var from = new LatLng(lat, lng);
+    var to = new LatLng(lat2, lng2);
+    var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
+    return await lianeService.DisplayGeoJSON(from, to, dateTime);
   }
 
   [HttpPost("match")]
@@ -69,7 +78,7 @@ public sealed class LianeController : ControllerBase
     return lianeService.Match(filter, pagination);
   }
 
-  [HttpPost("match_display")] //TODO use query option
+  [HttpPost("match/geojson")] //TODO use query option
   [DebugRequest]
   public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination)
   {

@@ -17,7 +17,7 @@ import { formatMonthDay } from "@/api/i18n";
 import { JoinLianeRequestDetailed, Liane, UTCDateTime } from "@/api";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppButton } from "@/components/base/AppButton";
 import { useAppNavigation } from "@/api/navigation";
 import { useQueries } from "react-query";
@@ -25,6 +25,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
 import { extractDatePart } from "@/util/datetime";
+import { capitalize } from "@/util/strings";
 
 interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -49,7 +50,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
           <Pressable
             onPress={() => navigation.navigate("Chat", { conversationId: item.group, liane: item })}
             style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
-            <AppCustomIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
+            <AppIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
           </Pressable>
         )}
       </View>
@@ -63,9 +64,9 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             paddingVertical: 2,
             borderRadius: 4,
             alignItems: "center",
-            backgroundColor: item.driver.canDrive ? ContextualColors.greenValid.bg : AppColorPalettes.gray[100]
+            backgroundColor: item.driver.canDrive ? ContextualColors.greenValid.light : AppColorPalettes.gray[100]
           }}>
-          <AppCustomIcon name={item.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
+          <AppIcon name={item.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
         </Row>
         <Row
           style={{
@@ -127,7 +128,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 };
 const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
   <View style={[styles.header, styles.grayBorder]}>
-    <AppText style={styles.headerTitle}>{formatMonthDay(new Date(date))}</AppText>
+    <AppText style={styles.headerTitle}>{capitalize(formatMonthDay(new Date(date)))}</AppText>
   </View>
 );
 const MyTripsScreen = ({ navigation }) => {
@@ -197,7 +198,7 @@ const MyTripsScreen = ({ navigation }) => {
         icon="plus-outline"
         title="Nouvelle Liane"
         onPress={() => {
-          navigation.navigate("LianeWizard");
+          navigation.navigate("Publish");
         }}
       />
 
@@ -212,7 +213,7 @@ const MyTripsScreen = ({ navigation }) => {
         }
         sections={sections}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id!}
         renderSectionHeader={renderSectionHeader}
         renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 + insets.bottom : 24 }} />}
       />
@@ -268,7 +269,7 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): Trip
       if (!tmp[group]) {
         tmp[group] = [item];
       } else {
-        tmp[group].push(item);
+        tmp[group].unshift(item);
       }
       // add this item to its group
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
@@ -21,7 +22,8 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 
    Task<ImmutableList<ClosestPickups>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime, int availableSeats = -1); //TODO remove
 
-  Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime);
+  Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false);
+  Task<FeatureCollection> DisplayGeoJSON(LatLng pos, LatLng pos2, DateTime dateTime);
 
   Task UpdateAllGeometries();
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);

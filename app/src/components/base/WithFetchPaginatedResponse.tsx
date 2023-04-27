@@ -102,7 +102,10 @@ export const WithFetchPaginatedResponse = <T,>(
 
       if (dataList.length === 0) {
         return (
-          <ScrollView contentContainerStyle={{ flex: 1 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
+          <ScrollView
+            scrollEnabled={false}
+            contentContainerStyle={{ flex: 1 }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
             <EmptyResponseComponent />
           </ScrollView>
         );

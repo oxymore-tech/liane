@@ -69,3 +69,4 @@ export const CreateAppOptionToggle =
   };
 
 export const AppSwitchToggle = CreateAppOptionToggle<boolean>(option => (option ? "Oui" : "Non"));
+export const AppToggle = CreateAppOptionToggle<string>(option => option);

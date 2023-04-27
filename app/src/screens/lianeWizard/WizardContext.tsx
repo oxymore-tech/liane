@@ -4,6 +4,7 @@ import { AppColors } from "@/theme/colors";
 import { WizardStateMachineInterpreter, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
 import { LocationForm } from "@/components/forms/LocationForm";
+import { LocationForm as L } from "@/screens/lianeWizard/Forms";
 
 export interface WizardStepData {
   forms: (() => JSX.Element)[];
@@ -28,7 +29,7 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
   },
   to: {
     forms: [
-      WithName(LocationForm, "to", {
+      WithName(L, "to", {
         rules: {
           validate: (v, formValues) => {
             return v === undefined || formValues.from === undefined || formValues.from.id !== v.id || rallyingPointsMustBeDifferent;
@@ -41,7 +42,7 @@ export const WizardFormData: { [name in WizardFormDataKey]: WizardStepData } = {
   },
   from: {
     forms: [
-      WithName(LocationForm, "from", {
+      WithName(L, "from", {
         rules: {
           validate: (v, formValues) => {
             return v === undefined || formValues.to === undefined || formValues.to.id !== v.id || rallyingPointsMustBeDifferent;

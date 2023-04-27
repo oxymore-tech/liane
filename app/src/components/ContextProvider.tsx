@@ -8,6 +8,7 @@ import { initializeNotification, initializePushNotification } from "@/api/servic
 import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
+import { RootNavigation } from "@/api/navigation";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -102,6 +103,7 @@ interface ContextProviderState {
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
+  private unsubscribeToUserInteraction: (() => void) | undefined = undefined;
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
@@ -119,7 +121,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   }
 
   private initContext() {
-    initContext(SERVICES).then(async p =>
+    initContext(SERVICES).then(async p => {
       this.setState(prev => ({
         ...prev,
         user: p.user,
@@ -127,15 +129,25 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         position: p.position,
         appLoaded: true,
         status: p.online ? "online" : "offline"
-      }))
-    );
+      }));
+    });
   }
 
   componentDidMount() {
     this.initContext();
+    this.unsubscribeToUserInteraction = RootNavigation.addListener("state", e => {
+      // Try to reload on user interaction
+      if (this.state.status === "offline") {
+        console.debug("Try to reload...");
+        this.initContext();
+      }
+    });
   }
 
   componentWillUnmount() {
+    if (this.unsubscribeToUserInteraction) {
+      this.unsubscribeToUserInteraction();
+    }
     destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
   }
 
@@ -147,6 +159,13 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       }));
     } else if (error instanceof NetworkUnavailable) {
       console.log("Error : no network");
+
+      this.setState(prev => ({
+        ...prev,
+        status: "offline"
+      }));
+    } else {
+      console.error("Error :", error);
     }
   }
 

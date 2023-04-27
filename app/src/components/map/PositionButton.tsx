@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Pressable } from "react-native";
-import { AppCustomIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import { AppContext } from "@/components/ContextProvider";
 import { LatLng } from "@/api";
@@ -26,7 +26,7 @@ export const PositionButton = ({ onPosition }: PositionButtonProps) => {
           // TODO show message to user
         }
       }}>
-      <AppCustomIcon name={"position"} color={AppColors.blue} />
+      <AppIcon name={"position"} color={AppColors.blue} />
     </Pressable>
   );
 };

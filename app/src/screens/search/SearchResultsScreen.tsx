@@ -5,7 +5,7 @@ import React from "react";
 import { Row } from "@/components/base/AppLayout";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { NoItemPlaceholder } from "@/components/NoItemPlaceholder";
 import { toLianeWizardFormData } from "@/screens/search/SearchFormData";
@@ -118,7 +118,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
                   },
                   itemIsExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg
                 ]}>
-                {itemIsExactMatch ? <AppIcon name={"arrow-upward-outline"} size={20} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
+                {itemIsExactMatch ? <AppIcon name={"arrow-upward-outline"} size={20} /> : <AppIcon name={"twisting-arrow"} size={20} />}
                 <AppText style={{ fontSize: 16 }}>{itemIsExactMatch ? "Trajet exact" : "Trajet compatible"}</AppText>
               </Row>
               <View style={{ flexGrow: 1 }} />
@@ -130,7 +130,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
                   alignItems: "center",
                   backgroundColor: AppColorPalettes.gray[100]
                 }}>
-                <AppCustomIcon name={item.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
+                <AppIcon name={item.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
               </Row>
               <Row
                 spacing={4}
@@ -194,10 +194,10 @@ const styles = StyleSheet.create({
     borderColor: AppColorPalettes.gray[200]
   },
   exactMatchBg: {
-    backgroundColor: ContextualColors.greenValid.bg
+    backgroundColor: ContextualColors.greenValid.light
   },
   compatibleMatchBg: {
-    backgroundColor: ContextualColors.orangeWarn.bg
+    backgroundColor: ContextualColors.orangeWarn.light
   },
   header: {
     paddingHorizontal: 16,

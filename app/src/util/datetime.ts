@@ -1,7 +1,7 @@
 import { UTCDateTime } from "@/api";
 export type TimeInSeconds = number;
 export const toTimeInSeconds = (datetime: Date) => {
-  return (datetime.getUTCHours() * 60 + datetime.getUTCMinutes()) * 60 + datetime.getUTCSeconds();
+  return (datetime.getHours() * 60 + datetime.getMinutes()) * 60 + datetime.getSeconds();
 };
 
 export const createDatetimeCursor = (datetime: Date, id?: string) => {
@@ -27,5 +27,5 @@ export const withOffsetHours = (offset: number, date?: Date | undefined) => {
 
 export const isToday = (date: Date) => {
   const now = new Date();
-  return date.getUTCMonth() === now.getUTCMonth() && date.getUTCFullYear() === now.getUTCFullYear() && date.getUTCDate() === now.getUTCDate();
+  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear() && date.getDate() === now.getDate();
 };

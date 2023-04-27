@@ -23,11 +23,12 @@ import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { useQueryClient } from "react-query";
 import { LianeQueryKey } from "@/screens/MyTripsScreen";
 import { useAppNavigation } from "@/api/navigation";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 //TODO animated component
 // const AnimatedLianeHouseVector = Animated.createAnimatedComponent(LianeHouseVector);
 const DynamicHouseVector = ({ snapPoint }: { snapPoint: number }) => {
-  const { height, width } = useWindowDimensions();
+  const { height, width } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
   const machineContext = useContext(WizardContext);
   // Get inner wizard step
@@ -181,8 +182,9 @@ const LianeWizard = () => {
       </BottomOptionBg>
     );
   } else if (isWizardStep) {
+    console.log(state.toStrings());
     // @ts-ignore
-    const step = state.value.wizard as WizardStepsKeys;
+    const step = state.toStrings()[1].split(".")[1] as WizardStepsKeys;
 
     title = WizardFormData[step].title;
 

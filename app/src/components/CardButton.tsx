@@ -18,6 +18,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppPressable } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 // @ts-ignore
 export interface LianeCardProps extends PressableProps {
@@ -65,7 +66,7 @@ type CardModalProps = {
   color: ColorValue;
 };
 const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }: CardModalProps) => {
-  const { height, width } = useWindowDimensions();
+  const { height, width } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
 
   const animState = useSharedValue(0);

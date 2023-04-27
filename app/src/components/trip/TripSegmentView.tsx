@@ -51,7 +51,7 @@ export const TripViewStyles = StyleSheet.create({
     color: AppColorPalettes.orange[500]
   },
   mainWayPointLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     textAlignVertical: "center",
     alignSelf: "center",
@@ -67,7 +67,7 @@ export const TripViewStyles = StyleSheet.create({
     minWidth: 32
   },
   mainWayPointTime: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     alignSelf: "center",
     color: AppColorPalettes.gray[700]

@@ -18,6 +18,61 @@ export interface SwitchProps {
   isHeaderStyle?: boolean;
 }
 
+export type SwitchIconToggle = Omit<Omit<SwitchProps, "trueLabel">, "falseLabel">;
+
+export const SwitchIconToggle = ({
+  unselectedColor,
+  color,
+  trueIcon,
+  falseIcon,
+  value,
+  onChange,
+  padding = 6,
+  isHeaderStyle = false
+}: SwitchIconToggle & { value: boolean; onChange: () => void }) => {
+  const unselectedPadding = padding - 2;
+  return (
+    <Row>
+      <AppPressable
+        onPress={onChange}
+        clickable={!value}
+        style={{
+          paddingVertical: value ? padding : unselectedPadding,
+          paddingHorizontal: (value ? padding : unselectedPadding) + 2
+        }}
+        backgroundStyle={{
+          backgroundColor: value ? color : unselectedColor,
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: value ? 4 : 0,
+          borderBottomRightRadius: value ? 4 : 0,
+          borderBottomLeftRadius: isHeaderStyle ? 0 : 12,
+          marginBottom: value ? 0 : 2,
+          alignSelf: "flex-end"
+        }}>
+        <Column style={styles.column} spacing={4}>
+          {trueIcon}
+        </Column>
+      </AppPressable>
+      <AppPressable
+        onPress={onChange}
+        clickable={value}
+        style={{ paddingVertical: !value ? padding : unselectedPadding, paddingHorizontal: (!value ? padding : unselectedPadding) + 2 }}
+        backgroundStyle={{
+          backgroundColor: !value ? color : unselectedColor,
+          borderTopRightRadius: 12,
+          borderTopLeftRadius: !value ? 4 : 0,
+          borderBottomLeftRadius: !value ? 4 : 0,
+          borderBottomRightRadius: isHeaderStyle ? 0 : 12,
+          marginBottom: !value ? 0 : 2,
+          alignSelf: "flex-end"
+        }}>
+        <Column style={styles.column} spacing={4}>
+          {falseIcon}
+        </Column>
+      </AppPressable>
+    </Row>
+  );
+};
 export const SwitchToggle = ({
   unselectedColor,
   color,

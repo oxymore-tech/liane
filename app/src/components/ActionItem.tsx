@@ -4,7 +4,7 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { ColorValue, StyleSheet, View } from "react-native";
 import React from "react";
-import { AppColorPalettes } from "@/theme/colors";
+import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 
 export interface ActionItemProps {
   onPress: () => void;
@@ -13,20 +13,33 @@ export interface ActionItemProps {
   text: string;
 }
 export const ActionItem = ({ onPress, color, iconName, text }: ActionItemProps) => (
-  <AppPressable backgroundStyle={styles.rowActionContainer} onPress={onPress}>
-    <Row style={{ alignItems: "center", padding: 16 }} spacing={8}>
-      <AppIcon name={iconName} color={color} />
-      <AppText style={{ fontSize: 16, color }}>{text}</AppText>
-      <View style={{ flexGrow: 1, alignItems: "flex-end" }}>
-        <AppIcon name={"arrow-ios-forward-outline"} />
+  <Item
+    onPress={onPress}
+    descriptionComponent={<AppText style={{ fontSize: 16, color, flexGrow: 1, flexShrink: 1, paddingVertical: 4 }}>{text}</AppText>}
+    leadingComponent={
+      <View style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+        <AppIcon name={iconName} color={color} />
       </View>
-    </Row>
-  </AppPressable>
+    }
+  />
 );
+
+export const Item = ({ leadingComponent, descriptionComponent, onPress }) => {
+  return (
+    <AppPressable foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress}>
+      <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
+        {leadingComponent}
+        {descriptionComponent}
+        <AppIcon name={"chevron-right-outline"} />
+      </Row>
+    </AppPressable>
+  );
+};
 
 const styles = StyleSheet.create({
   rowActionContainer: {
     backgroundColor: AppColorPalettes.gray[100],
     borderRadius: 8
-  }
+  },
+  section: { paddingVertical: 16, marginHorizontal: 24 }
 });

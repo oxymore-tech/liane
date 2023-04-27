@@ -14,6 +14,7 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="CsvHelper" Version="30.0.1" />
         <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
+        <PackageReference Include="GeoJSON.Text" Version="1.0.1" />
         <PackageReference Include="MongoDB.Bson" Version="2.17.1" />
         <PackageReference Include="MongoDB.Driver" Version="2.17.1" />
         <PackageReference Include="Twilio" Version="6.2.4" />

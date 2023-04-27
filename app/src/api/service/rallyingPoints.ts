@@ -21,6 +21,6 @@ export class RallyingPointClient implements RallyingPointService {
   }
 
   view(lowerLeft: LatLng, upperRight: LatLng): Promise<RallyingPoint[]> {
-    return get("/rallying_point", { params: { lng: lowerLeft.lng, lat: lowerLeft.lat, lng2: upperRight.lng, lat2: upperRight.lat, limit: 200 } });
+    return get("/rallying_point", { params: { lng: lowerLeft.lng, lat: lowerLeft.lat, lng2: upperRight.lng, lat2: upperRight.lat, limit: 100 } });
   }
 }

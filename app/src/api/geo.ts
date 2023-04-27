@@ -20,7 +20,7 @@ export function toLatLng(position: GeoJSON.Position): LatLng {
 }
 
 export function contains(bbox: BoundingBox, coordinate: LatLng) {
-  return coordinate.lat <= bbox.to.lat && coordinate.lat >= bbox.from.lat && coordinate.lng <= bbox.to.lng && coordinate.lng >= bbox.to.lng;
+  return coordinate.lat <= bbox.to.lat && coordinate.lat >= bbox.from.lat && coordinate.lng <= bbox.to.lng && coordinate.lng >= bbox.from.lng;
 }
 
 export function isWithinBox(bbox: BoundingBox, bbox2: BoundingBox) {

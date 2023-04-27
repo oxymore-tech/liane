@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatDateTime } from "@/api/i18n";
 import { LianeDetailedMatchView } from "@/components/trip/LianeMatchView";
@@ -106,7 +106,7 @@ export const LianeMatchDetailScreen = () => {
           )}
           {lianeIsExactMatch && (
             <Row spacing={8} style={[styles.tag, lianeIsExactMatch ? styles.exactMatchBg : styles.compatibleMatchBg]}>
-              {lianeIsExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppCustomIcon name={"twisting-arrow"} size={20} />}
+              {lianeIsExactMatch ? <AppIcon name={"arrow-upward-outline"} /> : <AppIcon name={"twisting-arrow"} size={20} />}
               <AppText style={{ fontSize: 16 }}>{matchLabel}</AppText>
             </Row>
           )}
@@ -115,11 +115,11 @@ export const LianeMatchDetailScreen = () => {
         <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
           <View
             style={{
-              backgroundColor: liane.liane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+              backgroundColor: liane.liane.driver.canDrive ? ContextualColors.greenValid.light : ContextualColors.redAlert.light,
               padding: 12,
               borderRadius: 52
             }}>
-            <AppCustomIcon name={liane.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={36} />
+            <AppIcon name={liane.liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={36} />
           </View>
           <AppText style={{ fontSize: 18 }}>{driverLabel} </AppText>
         </Row>
@@ -179,9 +179,9 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   exactMatchBg: {
-    backgroundColor: ContextualColors.greenValid.bg
+    backgroundColor: ContextualColors.greenValid.light
   },
   compatibleMatchBg: {
-    backgroundColor: ContextualColors.orangeWarn.bg
+    backgroundColor: ContextualColors.orangeWarn.light
   }
 });

@@ -48,10 +48,10 @@ const styles = StyleSheet.create({
     borderColor: AppColorPalettes.gray[200]
   },
   exactMatchBg: {
-    backgroundColor: ContextualColors.greenValid.bg
+    backgroundColor: ContextualColors.greenValid.light
   },
   compatibleMatchBg: {
-    backgroundColor: ContextualColors.orangeWarn.bg
+    backgroundColor: ContextualColors.orangeWarn.light
   },
   header: {
     paddingHorizontal: 16,

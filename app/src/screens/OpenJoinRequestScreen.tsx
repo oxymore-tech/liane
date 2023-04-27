@@ -11,7 +11,7 @@ import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
 import { Compatible, isExactMatch, JoinLianeRequestDetailed } from "@/api";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { formatDuration } from "@/util/datetime";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { TripCard } from "@/components/TripCard";
@@ -108,7 +108,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
         </Row>
         {data.seats > 0 && !data.targetLiane.driver.canDrive && (
           <Row spacing={16} style={{ alignItems: "center" }}>
-            <AppCustomIcon name={"car-check-mark"} color={AppColors.white} />
+            <AppIcon name={"car-check-mark"} color={AppColors.white} />
             <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
               Avec un conducteur, vous serez fin prêt pour le départ !
             </AppText>

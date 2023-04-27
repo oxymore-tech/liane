@@ -53,8 +53,8 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveNotification", this.receiveNotification);
       this.hub.onclose(err => {
         if (!alreadyClosed) {
-          if (__DEV__) {
-            console.log("Connection closed with error during initialization: ", err);
+          if (__DEV__ && err) {
+            console.log("Connection closed with error : ", err);
           }
           alreadyClosed = true;
           reject(err);

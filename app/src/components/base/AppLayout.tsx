@@ -1,28 +1,26 @@
-import React, { ReactNode } from "react";
-import { View } from "react-native";
+import React from "react";
+import { View, ViewProps } from "react-native";
 
 export type LinearLayoutProps = {
   spacing?: number;
 } & LayoutComponentProps;
 
-export type LayoutComponentProps = {
-  children: ReactNode;
+export type LayoutComponentProps = {} & ViewProps;
 
-  style?: any;
-};
-
-export const Center = ({ style, children }: LayoutComponentProps) => (
-  <View style={[{ alignItems: "center", justifyContent: "center" }, style]}>{children}</View>
+export const Center = ({ style, children, ...props }: LayoutComponentProps) => (
+  <View {...props} style={[{ alignItems: "center", justifyContent: "center" }, style]}>
+    {children}
+  </View>
 );
 
-export const Row = ({ spacing = 0, children, style }: LinearLayoutProps) => (
-  <LinearLayout direction="row" spacing={spacing} style={style}>
+export const Row = ({ spacing = 0, children, style, ...props }: LinearLayoutProps) => (
+  <LinearLayout {...props} direction="row" spacing={spacing} style={style}>
     {children}
   </LinearLayout>
 );
 
-export const Column = ({ spacing = 0, children, style }: LinearLayoutProps) => (
-  <LinearLayout direction="column" spacing={spacing} style={style}>
+export const Column = ({ spacing = 0, children, style, ...props }: LinearLayoutProps) => (
+  <LinearLayout {...props} direction="column" spacing={spacing} style={style}>
     {children}
   </LinearLayout>
 );
@@ -30,13 +28,9 @@ export const Column = ({ spacing = 0, children, style }: LinearLayoutProps) => (
 type _LinearLayoutProps = {
   spacing?: number;
 
-  children: ReactNode;
-
   direction: "row" | "column";
-
-  style?: any;
-};
-const LinearLayout = ({ spacing = 0, children, direction = "row", style }: _LinearLayoutProps) => {
+} & ViewProps;
+const LinearLayout = ({ spacing = 0, children, direction = "row", style, ...props }: _LinearLayoutProps) => {
   let lineChildren;
 
   // Insert spaces between items if necessary
@@ -52,5 +46,9 @@ const LinearLayout = ({ spacing = 0, children, direction = "row", style }: _Line
     lineChildren = children;
   }
 
-  return <View style={[style, { flexDirection: direction }]}>{lineChildren}</View>;
+  return (
+    <View {...props} style={[style, { flexDirection: direction }]}>
+      {lineChildren}
+    </View>
+  );
 };

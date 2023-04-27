@@ -2,6 +2,7 @@ import React, { ReactNode } from "react";
 import { StyleSheet, Text, TextProps } from "react-native";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppStyles } from "@/theme/styles";
 
 export interface AppTextProps extends TextProps {
   children?: ReactNode;
@@ -20,10 +21,9 @@ export function AppText({ style, children, numberOfLines = 1, ...props }: AppTex
 
 const styles = StyleSheet.create({
   text: {
+    ...AppStyles.body,
     flexWrap: "wrap",
     flexShrink: 1,
-    fontFamily: "Inter",
-    fontSize: AppDimensions.textSize.default,
     textAlignVertical: "center",
     color: defaultTextColor(AppColors.white) // default to text color on white bg
   }
