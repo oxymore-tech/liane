@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -19,7 +20,8 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   private readonly IUserService userService;
   private readonly IPushService pushService;
 
-  public ChatServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IUserService userService, IPushService pushService) : base(mongo, currentContext)
+  public ChatServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IUserService userService, IPushService pushService) : base(mongo,
+    currentContext)
   {
     this.userService = userService;
     this.pushService = pushService;
@@ -61,6 +63,16 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
           "$lastMessageAt"
         })
     }))).SelectAsync<ConversationGroup, Ref<ConversationGroup>>(g => Task.FromResult((Ref<ConversationGroup>)g.Id!));
+  }
+
+  public Task PostEvent(LianeEvent lianeEvent)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task PostAnswer(Ref<Notification> id, Answer answer)
+  {
+    throw new NotImplementedException();
   }
 
   public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)

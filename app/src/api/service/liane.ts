@@ -92,7 +92,7 @@ export class LianeServiceClient implements LianeService {
     let lianeEvent: LianeEvent;
     if (accept) {
       lianeEvent = <MemberAccepted>{
-        type: "MemberAccepted",
+        _t: "MemberAccepted",
         liane: event.content.liane,
         member: event.createdBy.id,
         to: event.content.to,

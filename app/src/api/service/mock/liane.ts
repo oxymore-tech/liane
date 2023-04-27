@@ -275,6 +275,6 @@ const LianeMatches: LianeMatch[] = [
     ],
     freeSeatsCount: 1,
     driver: "63f402f95a6215211468337d",
-    match: { type: "Compatible", deltaInSeconds: 500 }
+    match: { _t: "Compatible", deltaInSeconds: 500 }
   }
 ];

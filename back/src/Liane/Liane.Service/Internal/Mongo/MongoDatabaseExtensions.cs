@@ -3,11 +3,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Liane.Api.Event;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Mongo.Serialization;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -15,39 +13,38 @@ namespace Liane.Service.Internal.Mongo;
 
 public static class MongoDatabaseExtensions
 {
+  private const string Discriminator = "_t";
+
   public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> builder)
     where T : class
     where TExpected : class
   {
-    return new BsonDocument(PolymorphicTypeDiscriminatorConvention.Type, typeof(TExpected).Name);
+    return new BsonDocument(Discriminator, typeof(TExpected).Name);
   }
 
-  public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> field)
+  public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> _, Expression<Func<T, object?>> field)
     where T : class
     where TExpected : class
   {
     var prefix = string.Join(".", ExpressionHelper.GetMembers(field)
       .Select(m => m.Name.Uncapitalize())
       .Reverse());
-    return new BsonDocument($"{prefix}.{PolymorphicTypeDiscriminatorConvention.Type}", typeof(TExpected).Name);
+    return new BsonDocument($"{prefix}.{Discriminator}", typeof(TExpected).Name);
   }
 
-  public static FilterDefinition<T> IsInstanceOf<T, TTargetType>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> field, ITypeOf<TTargetType> typeOf)
-    where T : class
-    where TTargetType : class
-  {
-    return typeOf.Type == typeof(TTargetType)
-      ? Builders<T>.Filter.Empty
-      : IsInstanceOf(builder, field, typeOf.Type);
-  }
-
-  public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> field, Type targetType)
+  public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> fieldExpression, Type targetType)
     where T : class
   {
-    var prefix = string.Join(".", ExpressionHelper.GetMembers(field)
+    var field = string.Join(".", ExpressionHelper.GetMembers(fieldExpression)
       .Select(m => m.Name.Uncapitalize())
       .Reverse());
-    return new BsonDocument($"{prefix}.{PolymorphicTypeDiscriminatorConvention.Type}", targetType.Name);
+    return IsInstanceOf<T>(builder, field, targetType);
+  }
+
+  public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, string field, Type targetType)
+    where T : class
+  {
+    return builder.Eq($"{field}.{Discriminator}", targetType.Name);
   }
 
   public static async Task<T?> Get<T>(this IMongoDatabase mongo, string id) where T : class, IIdentity

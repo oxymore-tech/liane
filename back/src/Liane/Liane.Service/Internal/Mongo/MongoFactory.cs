@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -51,7 +49,7 @@ public static class MongoFactory
       var alwaysPack = new ConventionPack
       {
         new EnumRepresentationConvention(BsonType.String),
-        new CamelCaseElementNameConvention(),
+        new CamelCaseElementNameConvention()
       };
       var stringIdAsObjectIdPack = new ConventionPack
       {
@@ -69,7 +67,7 @@ public static class MongoFactory
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(LianeEvent), new PolymorphicTypeDiscriminatorConvention());
+      BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableHashSet<>), typeof(ImmutableHashSetSerializer<>));
       _init = true;
     }
 

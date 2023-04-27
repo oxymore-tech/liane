@@ -8,9 +8,10 @@ export class NotificationServiceMock extends AbstractNotificationService {
     for (let i = 0; i < unreadNotificationsCount; i++) {
       const message = "Initial_" + i;
       notifications.push({
+        _t: "Info",
         title: "Test",
         message,
-        payload: { type: "String", event: message, id: i.toString(), seen: false, createdAt: new Date().toISOString() }
+        payload: { event: message, id: i.toString(), seen: false, createdAt: new Date().toISOString() }
       });
     }
     this.notifications = notifications;

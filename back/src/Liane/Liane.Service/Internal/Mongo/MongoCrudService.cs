@@ -34,7 +34,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   {
     if (reference is Ref<TOut>.Resolved resolved1) return resolved1.Value;
     var resolved = await ResolveRef<TDb>(reference);
-    if (resolved is null) throw new ResourceNotFoundException(nameof(TOut) + " not found : " + reference.Id);
+    if (resolved is null) throw new ResourceNotFoundException(typeof(TOut).Name + " not found : " + reference.Id);
     return await MapEntity(resolved);
   }
 
@@ -71,7 +71,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   }
 }
 
-public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudService<TIn, TOut> where TIn : class where TDb : class, IIdentity where TOut : class, IIdentity
+public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudService<TIn, TOut> where TIn : class, IIdentity where TDb : class, IIdentity where TOut : class, IIdentity
 {
   protected MongoCrudService(IMongoDatabase mongo) : base(mongo)
   {
@@ -79,7 +79,7 @@ public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TD
 
   public async Task<TOut> Create(TIn obj)
   {
-    var id = ObjectId.GenerateNewId()
+    var id = obj.Id ?? ObjectId.GenerateNewId()
       .ToString();
     var created = ToDb(obj, id);
     await Mongo.GetCollection<TDb>()

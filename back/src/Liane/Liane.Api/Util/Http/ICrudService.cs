@@ -13,6 +13,7 @@ public interface IResourceResolverService<TOut> where TOut : class, IIdentity
   Task<TOut> Get(Ref<TOut> reference);
 
   Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references);
+  
 }
 
 public interface ICrudService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IIdentity

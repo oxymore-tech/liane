@@ -8,13 +8,13 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -42,7 +42,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
-    services.AddService<PushServiceImpl>();
+    services.AddService<FirebaseServiceImpl>();
   }
 
   [Test]
@@ -299,21 +299,25 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task TestListAccessLevel()
   {
-    var userA = Fakers.FakeDbUsers[0].Id;
-    var userB = Fakers.FakeDbUsers[1].Id;
+    var userA = Fakers.FakeDbUsers[0];
+    var userB = Fakers.FakeDbUsers[1];
     const int lianesACount = 3;
     const int lianesBCount = 1;
     var lianesA = Fakers.LianeRequestFaker.Generate(lianesACount);
     var lianeB = Fakers.LianeRequestFaker.Generate();
 
-    await testedService.Create(lianeB, userB);
+    await testedService.Create(lianeB, userB.Id);
     foreach (var l in lianesA)
     {
-      await testedService.Create(l, userA);
+      await testedService.Create(l, userA.Id);
     }
 
-    var resultsA = await testedService.ListForMemberUser(userA, new Pagination());
-    var resultsB = await testedService.ListForMemberUser(userB, new Pagination());
+    currentContext.SetCurrentUser(userA);
+    var resultsA = await testedService.ListForCurrentUser(new Pagination());
+
+    currentContext.SetCurrentUser(userB);
+    var resultsB = await testedService.ListForCurrentUser(new Pagination());
+
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);

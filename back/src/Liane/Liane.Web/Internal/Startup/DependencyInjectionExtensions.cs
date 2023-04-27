@@ -1,11 +1,15 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using Liane.Api.Event;
+using Liane.Api.Util;
+using Liane.Service.Internal.Event;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Liane.Api.Util.Startup;
+namespace Liane.Web.Internal.Startup;
 
 public static class DependencyInjectionExtensions
 {
@@ -25,14 +29,31 @@ public static class DependencyInjectionExtensions
     return services;
   }
 
+  public static IServiceCollection AddEventListeners(this IServiceCollection services)
+  {
+    foreach (var eventListener in Assembly.GetAssembly(typeof(EventDispatcher))!
+               .GetTypes()
+               .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(IEventListener))))
+    {
+      services.AddService(eventListener);
+    }
+
+    services.AddService<EventDispatcher>();
+    return services;
+  }
+
   public static IServiceCollection AddService<T>(this IServiceCollection services)
   {
     var type = typeof(T);
+    return services.AddService(type);
+  }
 
+  public static IServiceCollection AddService(this IServiceCollection services, Type type)
+  {
     services.AddSingleton(type);
     foreach (var i in type.GetInterfaces())
     {
-      services.AddSingleton(i, provider => provider.GetService<T>()!);
+      services.AddSingleton(i, provider => provider.GetService(type)!);
     }
 
     return services;

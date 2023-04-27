@@ -34,7 +34,7 @@ public static class EnumerableExtensions
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer, bool parallel = false)
   {
     var outs = ImmutableList.CreateBuilder<TOut>();
-   
+
     foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
     {
       outs.Add(await task);
@@ -42,7 +42,7 @@ public static class EnumerableExtensions
 
     return outs.ToImmutableList();
   }
-  
+
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, int, Task<TOut>> transformer, bool parallel = false)
   {
     var outs = ImmutableList.CreateBuilder<TOut>();
@@ -54,7 +54,6 @@ public static class EnumerableExtensions
 
     return outs.ToImmutableList();
   }
-
 
   public static PaginatedResponse<T> Paginate<T>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
     where T : IIdentity
@@ -85,7 +84,7 @@ public static class EnumerableExtensions
     return new PaginatedResponse<T>(limit, next, limited, totalCount);
   }
 
-  public static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)
+  private static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)
     where T : IIdentity
   {
     if (sortField is not null)

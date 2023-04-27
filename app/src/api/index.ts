@@ -1,6 +1,12 @@
 import { TimeInSeconds } from "@/util/datetime";
 import { FeatureCollection } from "geojson";
 
+export class UnionUtils {
+  static isInstanceOf<T extends { _t: string }>(notification: { _t: string }, type: T["_t"]): notification is T {
+    return notification._t === type;
+  }
+}
+
 export type Identity = Readonly<{
   id?: string;
 }>;
@@ -227,67 +233,12 @@ export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): Rallyin
   const wp = isExactMatch(match.match) ? match.liane.wayPoints : match.match.wayPoints;
   return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
-// Notifications
-export type Notification = Readonly<{
-  title: string;
-  message: string;
-  payload: NotificationPayload<any>;
-}>;
-
-export type NotificationPayload<T> = Readonly<
-  {
-    content: T;
-    createdAt: UTCDateTime;
-    createdBy: User;
-    seen: boolean;
-    needsAnswer: boolean;
-    type: string;
-  } & Identity
->;
-
-export type LianeEvent = Readonly<{ liane: Ref<Liane>; type: string }>;
-
-export type JoinRequest = Readonly<
-  {
-    type: "JoinRequest";
-    from: Ref<RallyingPoint>;
-    to: Ref<RallyingPoint>;
-    seats: number;
-    takeReturnTrip: boolean;
-    message: string;
-  } & LianeEvent
->;
-
-export type MemberAccepted = Readonly<
-  {
-    type: "MemberAccepted";
-    member: Ref<User>;
-    from: Ref<RallyingPoint>;
-    to: Ref<RallyingPoint>;
-    seats: number;
-    takeReturnTrip: boolean;
-  } & LianeEvent
->;
-
-export type MemberRejected = Readonly<{ type: "MemberRejected"; member: Ref<User> } & LianeEvent>;
-export type MemberHasLeft = Readonly<{ type: "MemberHasLeft" } & LianeEvent>;
 
 export type NewConversationMessage = Readonly<{
   conversationId: string;
   sender: User;
   message: ChatMessage;
 }>;
-
-export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
-  return isLianeEvent(notification) && notification.content.type === "JoinRequest";
-};
-
-export const isLianeEvent = (notification: NotificationPayload<any>): notification is NotificationPayload<LianeEvent> => {
-  return notification.type === "LianeEvent";
-};
-export const isJoinRequestAccepted = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinRequest> => {
-  return isLianeEvent(notification) && notification.content.type === "MemberAccepted";
-};
 
 export type JoinLianeRequestDetailed = Readonly<
   {

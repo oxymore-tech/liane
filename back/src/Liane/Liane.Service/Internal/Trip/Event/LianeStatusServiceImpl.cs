@@ -7,7 +7,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;
 
-namespace Liane.Service.Internal.Trip.Live;
+namespace Liane.Service.Internal.Trip.Event;
 
 public sealed class LianeStatusServiceImpl : ILianeStatusService
 {
@@ -35,7 +35,7 @@ public sealed class LianeStatusServiceImpl : ILianeStatusService
     {
       LianeState.NotStarted => await ComputeNotStartedStatus(lianeDb, now),
       LianeState.Started => await ComputeStartedStatus(lianeDb, now),
-      var s => ComputeStatus(lianeDb, now)
+      _ => ComputeStatus(lianeDb, now)
     };
   }
 
@@ -46,7 +46,8 @@ public sealed class LianeStatusServiceImpl : ILianeStatusService
 
   private Task<LianeStatus> ComputeStartedStatus(LianeDb lianeDb, DateTime now)
   {
-    throw new NotImplementedException();
+    return Task.FromResult(new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime,
+      ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty));
   }
 
   private async Task<LianeStatus> ComputeNotStartedStatus(LianeDb lianeDb, DateTime now)

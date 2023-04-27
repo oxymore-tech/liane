@@ -19,8 +19,6 @@ public interface IOsrmService
         string annotations = "false",
         string continueStraight = "default");
    
-    Task<Response.Nearest> Nearest(LatLng coordinates, int number = 0);
-    
     /// <summary>
     /// Sort a list of WayPoints (Traveling Salesman Problem).
     /// See parameters doc at : https://project-osrm.org/docs/v5.24.0/api/#trip-service
@@ -37,10 +35,7 @@ public interface IOsrmService
     
     Task<Response.Table> Table(IEnumerable<LatLng> coordinates);
     
-    Task<LatLng?> Nearest(LatLng coordinate,
-      int number = 1,
-      int? radius = null);
-    
+    Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null);
     
 }
 

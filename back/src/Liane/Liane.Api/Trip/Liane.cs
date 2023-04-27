@@ -33,7 +33,6 @@ public sealed record LianeStatus(
   ImmutableDictionary<Ref<User.User>, PassengerStatus> NextPassengers
 );
 
-
 public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,

@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Util;
-using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
@@ -15,7 +14,6 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Trip.Event;
-using Liane.Service.Internal.Trip.Live;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -24,6 +22,7 @@ using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
+using Liane.Web.Internal.Startup;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -73,16 +72,13 @@ public static class Startup
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
-    services.AddService<EventServiceImpl>();
+    services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
-    services.AddService<PushServiceImpl>();
+    services.AddService<FirebaseServiceImpl>();
 
-    services.AddService<LianeRequestServiceImpl>();
-    services.AddService<LianeMemberAcceptedHandler>();
-    services.AddService<LianeMemberPingHandler>();
-    services.AddService<LianeStatusServiceImpl>();
+    services.AddEventListeners();
 
     services.AddSingleton(MongoFactory.Create);
 

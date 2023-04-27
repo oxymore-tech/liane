@@ -59,13 +59,11 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     return pointCache.GetOrCreateAsync(reference, _ => base.Get(reference))!;
   }
 
-  
   public async Task Generate()
   {
     logger.LogInformation("Generate rallying points...");
     await Mongo.GetCollection<RallyingPoint>()
       .DeleteManyAsync(_ => true);
-
 
     logger.LogDebug("Loading carpool areas...");
     IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();

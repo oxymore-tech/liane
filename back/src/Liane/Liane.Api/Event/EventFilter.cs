@@ -1,26 +1,48 @@
 using System;
+using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
 
-public sealed record EventFilter(
-  bool AsRecipient,
+public sealed record NotificationFilter(
+  Ref<User.User>? Recipient,
+  Ref<User.User>? Sender,
   Ref<Trip.Liane>? Liane,
-  ITypeOf<LianeEvent>? Type
+  PayloadType? PayloadType
 );
 
-public interface ITypeOf<out T> where T : class
+public abstract record PayloadType
 {
-  Type Type { get; }
-}
-
-public sealed record TypeOf<T> : ITypeOf<T>
-  where T : class
-{
-  public static TypeOf<TT> From<TT>() where TT : class, T
+  public static PayloadType FromType(string type)
   {
-    return new TypeOf<TT>();
+    var payloadType = type.MatchSubType<PayloadType>();
+
+    if (payloadType is not null)
+    {
+      return (PayloadType)Activator.CreateInstance(payloadType)!;
+    }
+
+    var lianeEventType = type.MatchSubType<LianeEvent>();
+    if (lianeEventType is null)
+    {
+      throw new ArgumentException($"Unknown type {type}", nameof(type));
+    }
+
+    var makeGenericType = typeof(Event<>).MakeGenericType(lianeEventType);
+    return (PayloadType)Activator.CreateInstance(makeGenericType)!;
   }
 
-  public Type Type => typeof(T);
+  public sealed record Info : PayloadType;
+
+  public sealed record Reminder : PayloadType;
+
+  public record Event : PayloadType
+  {
+    public Type? SubType { get; } = null;
+  }
+
+  public sealed record Event<T> : Event where T : LianeEvent
+  {
+    public new Type SubType { get; } = typeof(T);
+  }
 }

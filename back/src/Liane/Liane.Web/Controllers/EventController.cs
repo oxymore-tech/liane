@@ -1,10 +1,8 @@
 using System.Threading.Tasks;
 using Liane.Api.Event;
-using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
-using Liane.Web.Internal.AccessLevel;
+using Liane.Service.Internal.Event;
 using Liane.Web.Internal.Auth;
-using Liane.Web.Internal.Debug;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -14,26 +12,19 @@ namespace Liane.Web.Controllers;
 [RequiresAuth]
 public sealed class EventController : ControllerBase
 {
-  private readonly IEventService eventService;
+  private readonly EventDispatcher eventDispatcher;
   private readonly ILianeRequestService lianeRequestService;
 
-  public EventController(IEventService eventService, ILianeRequestService lianeRequestService)
+  public EventController(ILianeRequestService lianeRequestService, EventDispatcher eventDispatcher)
   {
-    this.eventService = eventService;
     this.lianeRequestService = lianeRequestService;
+    this.eventDispatcher = eventDispatcher;
   }
 
   [HttpPost("")]
-  public async Task<Event> Create([FromBody] LianeEvent lianeEvent)
+  public Task Create([FromBody] LianeEvent lianeEvent)
   {
-    return await eventService.Create(lianeEvent);
-  }
-
-  [HttpGet("liane/{id}/{type}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<PaginatedResponse<Event>> ListForLiane([FromRoute] string id, [FromRoute] TypeOf<LianeEvent>? type, [FromQuery] Pagination pagination)
-  {
-    return await eventService.List(new EventFilter(true, id, type), pagination);
+    return eventDispatcher.Dispatch(lianeEvent);
   }
 
   [HttpGet("join_request")]
@@ -51,31 +42,6 @@ public sealed class EventController : ControllerBase
   [HttpDelete("join_request/{id}")]
   public async Task Delete([FromRoute] string id)
   {
-     await lianeRequestService.Delete(id);
-  }
-
-  [HttpGet("{id}")]
-  public async Task<Event> Get([FromRoute] string id)
-  {
-    return await eventService.Get(id);
-  }
-
-  [HttpPost("{id}")]
-  [DebugRequest]
-  public async Task<Event> Answer([FromRoute] string id, [FromBody] LianeEvent lianeEvent)
-  {
-    return await eventService.Answer(id, lianeEvent);
-  }
-
-  [HttpGet("")]
-  public async Task<PaginatedResponse<Event>> ListForCurrentUser([FromQuery] Pagination pagination)
-  {
-    return await eventService.List(new EventFilter(true, null, null), pagination);
-  }
-
-  [HttpPatch("{id}")]
-  public Task MarkAsRead([FromRoute] string id)
-  {
-    return eventService.MarkAsRead(id);
+    await lianeRequestService.Delete(id);
   }
 }
