@@ -10,17 +10,17 @@ import { isJoinLianeRequest, isJoinRequestAccepted, JoinLianeRequestDetailed, Jo
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
+import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 
 export type NavigationParamList = {
   Home: undefined;
-  Publish: undefined;
+  Publish: { initialValue?: Partial<InternalLianeRequest> };
   SignUp: {};
   SearchResults: { filter: InternalLianeSearchFilter };
   Search: { filter: InternalLianeSearchFilter };
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeWizard: { formData?: LianeWizardFormData };
   LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
-
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };

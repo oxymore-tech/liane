@@ -86,33 +86,35 @@ export const DetailedLianeMatchView = ({ wayPoints, departureTime }) => {
   const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
 
   const renderItem = (wayPoint: TimedWayPoint, style: "from" | "to" | "step", last: boolean = false) => (
-    <Row spacing={12} key={wayPoint.wayPoint.rallyingPoint.id!}>
-      <Column style={{ position: "relative", top: -2 }}>
+    <Column spacing={2}>
+      <Row spacing={10} key={wayPoint.wayPoint.rallyingPoint.id!} style={{ alignItems: "center" }}>
         {style !== "step" && (
           <View style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 16, padding: 4 }}>
             <AppIcon name={style === "from" ? "pin" : "flag"} color={style === "from" ? AppColors.orange : AppColors.pink} size={20} />
           </View>
         )}
         {style === "step" && <View style={{ backgroundColor: AppColorPalettes.gray[400], width: 8, height: 8, borderRadius: 16, margin: 8 }} />}
-        {!last && <View style={[styles.waypointLine, { flexGrow: 1, minHeight: 0, marginVertical: 8 }]} />}
-      </Column>
-      <Column spacing={2} style={{ flex: 1 }}>
-        <Row style={{ justifyContent: "space-between" }}>
-          <AppText style={[styles.mainWayPointLabel, style === "from" ? styles.fromLabel : styles.toLabel, { flexGrow: 1, flexShrink: 1 }]}>
-            {wayPoint.wayPoint.rallyingPoint.city}
-          </AppText>
-          <TimeView
-            style={[styles.mainWayPointTime, { alignSelf: "flex-start", paddingVertical: 4, textAlignVertical: "center" }]}
-            value={wayPoint.time}
-          />
-        </Row>
-        <Column style={{ paddingLeft: 2, position: "relative", marginBottom: 12 }}>
-          <AppText>{wayPoint.wayPoint.rallyingPoint.label}</AppText>
+        <AppText
+          style={[styles.mainWayPointLabel, style === "from" ? styles.fromLabel : styles.toLabel, { flexGrow: 1, flexShrink: 1, maxWidth: "70%" }]}>
+          {wayPoint.wayPoint.rallyingPoint.label}
+        </AppText>
+        <View style={{ flex: 1 }} />
+        <TimeView style={[styles.mainWayPointTime, { paddingVertical: 4, position: "relative", top: 2 }]} value={wayPoint.time} />
+      </Row>
 
-          <AppText>{wayPoint.wayPoint.rallyingPoint.address}</AppText>
-        </Column>
+      <Column
+        style={{
+          marginLeft: 14,
+          paddingLeft: 24,
+          marginTop: 4,
+          borderLeftColor: AppColorPalettes.gray[400],
+          borderLeftWidth: 1,
+          marginBottom: 12
+        }}>
+        <AppText>{wayPoint.wayPoint.rallyingPoint.address}</AppText>
+        <AppText>{wayPoint.wayPoint.rallyingPoint.city}</AppText>
       </Column>
-    </Row>
+    </Column>
   );
 
   const getStyle = (i: number) => {

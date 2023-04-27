@@ -1,6 +1,6 @@
 import { StyleSheet, Switch, View } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
-import DatePicker from "react-native-date-picker";
+//import DatePicker from "react-native-date-picker";
 import { ControllerFieldState, useController, useFormContext, useWatch } from "react-hook-form";
 import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
@@ -16,6 +16,9 @@ import { AppDimensions } from "@/theme/dimensions";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
 import { TimeView } from "@/components/TimeView";
 import { AppContext } from "@/components/ContextProvider";
+import { RallyingPoint } from "@/api";
+import { RallyingPointField } from "@/screens/home/HomeHeader";
+import { RallyingPointSuggestions } from "../ItinerarySearchForm";
 
 export interface BaseFormProps<T> {
   name: LianeWizardFormKey;
@@ -58,14 +61,14 @@ export const DateForm: FormComponent<Date> = WithFormContext(({ value, onChange 
   }
   return (
     <View style={{ backgroundColor: WithAlpha(AppColors.white, 0.4), borderRadius: 16, marginVertical: 16 }}>
-      <DatePicker
+      {/*<DatePicker
         mode="date"
         date={value || new Date()}
         onDateChange={onChange}
         fadeToColor="none"
         textColor={AppColors.black}
         minimumDate={new Date()}
-      />
+      />*/}
     </View>
   );
 });
@@ -103,17 +106,53 @@ export const TimeForm: FormComponent<TimeInSeconds> = WithFormContext(({ value, 
   }
   return (
     <View style={{ backgroundColor: WithAlpha(AppColors.white, 0.4), borderRadius: 16, marginVertical: 16 }}>
-      <DatePicker
+      {/*<DatePicker
         mode="time"
         date={value ? new Date(value * 1000) : new Date()}
         onDateChange={date => onChange(toTimeInSeconds(date))}
         fadeToColor="none"
         textColor={AppColors.black}
-      />
+      />*/}
       <DurationEstimate />
     </View>
   );
 });
+
+export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormController(
+  ({ value, onChange, fieldState: { error, invalid } }: BaseFormComponentProps<RallyingPoint | undefined>) => {
+    const [search, setSearch] = useState<string>("");
+    return (
+      <Column style={{ width: "100%", flex: 1 }} spacing={6}>
+        <View style={{ maxHeight: 40, minHeight: 40, width: "100%", flex: 1, marginVertical: 8 }}>
+          <RallyingPointField
+            onChange={v => {
+              if (value) {
+                onChange(undefined);
+              }
+              setSearch(v || "");
+            }}
+            value={search}
+            placeholder={"Chercher une adresse"}
+            icon={<AppIcon name={"pin"} color={AppColors.orange} />}
+            showTrailing={search.length > 0}
+          />
+        </View>
+        {!value && (search.trim()?.length ?? 0) > 0 && (
+          <View style={{ backgroundColor: WithAlpha(AppColors.white, 0.4), borderRadius: 8, flex: 1, paddingVertical: 8, marginHorizontal: 8 }}>
+            <RallyingPointSuggestions
+              fieldName={"from"}
+              currentSearch={search}
+              onSelect={rp => {
+                setSearch(rp?.label || "");
+                onChange(rp);
+              }}
+            />
+          </View>
+        )}
+      </Column>
+    );
+  }
+);
 
 export const RememberChoiceForm: FormComponent<boolean> = WithFormContext(({ value, onChange }: InternalBaseFormProps<boolean>) => (
   <Row style={{ alignItems: "center" }} spacing={8}>

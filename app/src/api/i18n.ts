@@ -36,7 +36,7 @@ export const scopedTranslate =
 
 // Load date formatter
 const monthDayFormatter = new Intl.DateTimeFormat(locale, {
-  weekday: "short",
+  weekday: "long",
   month: "long",
   day: "2-digit"
 });
@@ -59,30 +59,21 @@ const timeFormatter = new Intl.DateTimeFormat(locale, {
   minute: "2-digit"
 });
 
-export const toRelativeTimeString = (timestamp: Date) => {
-  let time, date;
-  /*  const delta = (new Date().getTime() - timestamp.getTime()) / 1000;
-  const minutes = Math.floor(delta / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+export const toRelativeDateString = (timestamp: Date, dateFormatterFunction: (date?: number | Date | undefined) => string = dateFormatter.format) => {
+  let date;
+  const now = new Date();
 
-  if (days <= 1) {
-    date = chatDatetimeFormatter.format(-days, "day");
+  if (now.getDate() === timestamp.getDate() && now.getMonth() === timestamp.getMonth() && now.getFullYear() === timestamp.getFullYear()) {
+    date = "aujourd'hui";
   } else {
-    date = dateFormatter.format(timestamp);
+    date = dateFormatterFunction(timestamp);
   }
 
-  if (hours > 0) {
-    time = timeFormatter.format(timestamp);
-  } else if (minutes > 0) {
-    time = chatDatetimeFormatter.format(-minutes, "minute");
-  } else {
-    time = chatDatetimeFormatter.format(-delta, "second");
-  }*/
+  return date;
+};
 
-  date = dateFormatter.format(timestamp);
-  time = timeFormatter.format(timestamp);
-  return date + ", " + time;
+export const toRelativeTimeString = (timestamp: Date, dateFormatterFunction: (date?: number | Date | undefined) => string = dateFormatter.format) => {
+  return toRelativeDateString(timestamp, dateFormatterFunction) + " à " + timeFormatter.format(timestamp);
 };
 
 // TODO https://formatjs.io/docs/polyfills/intl-relativetimeformat

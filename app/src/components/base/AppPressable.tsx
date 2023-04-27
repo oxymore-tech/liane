@@ -14,7 +14,16 @@ export interface AppPressableProps extends PressableProps, PropsWithChildren {
 /**
  * Pressable with an overlay when pressed
  */
-export function AppPressable({ backgroundStyle, foregroundColor, children, style, clickable = true, ...props }: AppPressableProps) {
+export function AppPressable({
+  backgroundStyle,
+  foregroundColor,
+  children,
+  style,
+  clickable = true,
+  disabled,
+  onPress,
+  ...props
+}: AppPressableProps) {
   const opacitySv = useSharedValue(0);
   const opacityStyle = useAnimatedStyle(() => {
     return {
@@ -48,6 +57,7 @@ export function AppPressable({ backgroundStyle, foregroundColor, children, style
   return (
     <Pressable
       {...props}
+      onPress={clickable && !disabled ? onPress : undefined}
       style={backgroundStyle}
       onTouchEnd={() => {
         opacitySv.value = 0;
@@ -60,7 +70,7 @@ export function AppPressable({ backgroundStyle, foregroundColor, children, style
       }}>
       <View>
         {contentView}
-        {clickable && <Animated.View style={[overlayColor, foreground, styles.pressedFixed, opacityStyle]} />}
+        {clickable && !disabled && <Animated.View style={[overlayColor, foreground, styles.pressedFixed, opacityStyle]} />}
       </View>
     </Pressable>
   );

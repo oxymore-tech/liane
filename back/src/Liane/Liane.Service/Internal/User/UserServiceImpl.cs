@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Mongo;
+using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
@@ -64,11 +66,11 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
   private static FullUser MapUser(DbUser dbUser)
   {
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, "" , "", Gender.Unspecified, null, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)
   {
-    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.Pseudo, dbUser.CreatedAt));
+    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt, "Utilisateur " + ObjectId.Parse(dbUser.Id).Increment, Gender.Unspecified, null));
   }
 }

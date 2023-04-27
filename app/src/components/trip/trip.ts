@@ -9,6 +9,9 @@ export type UserTrip = {
 export const getTotalDuration = (trip: WayPoint[]) => {
   return trip.map(w => w.duration).reduce((d, acc) => d + acc, 0);
 };
+export const getTotalDistance = (trip: WayPoint[]) => {
+  return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
+};
 export const getTripFromLiane = (liane: Liane, user: User) => {
   const member = liane.members.find(m => m.user === user!.id);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);

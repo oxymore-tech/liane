@@ -3,7 +3,6 @@ import {
   JoinRequest,
   LatLng,
   Liane,
-  LianeDisplay,
   LianeEvent,
   LianeMatch,
   LianeRequest,
@@ -17,6 +16,7 @@ import {
   NearestLinks
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
+import { FeatureCollection } from "geojson";
 
 export interface LianeService {
   list(): Promise<PaginatedResponse<Liane>>;
@@ -25,7 +25,7 @@ export interface LianeService {
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   // links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<NearestLinks>;
   nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
-  display(from: LatLng, to: LatLng, afterDate?: Date): Promise<LianeDisplay>;
+  display(from: LatLng, to: LatLng, afterDate?: Date): Promise<FeatureCollection>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   answer(accept: boolean, event: NotificationPayload<JoinRequest>): Promise<void>;
@@ -68,7 +68,7 @@ export class LianeServiceClient implements LianeService {
       // @ts-ignore
       params.after = afterDate.valueOf();
     }
-    return get<LianeDisplay>("/liane/display", { params });
+    return get<FeatureCollection>("/liane/display/geojson", { params });
   }
 
   nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks> {
@@ -114,6 +114,6 @@ export class LianeServiceClient implements LianeService {
   }
 
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
-    return postAs<LianeMatchDisplay>("/liane/match_display", { body: filter });
+    return postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
   }
 }

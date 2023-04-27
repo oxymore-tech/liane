@@ -1,5 +1,5 @@
 import { TimeInSeconds } from "@/util/datetime";
-import { GeoJSON } from "geojson";
+import { FeatureCollection } from "geojson";
 
 export type Identity = Readonly<{
   id?: string;
@@ -108,6 +108,7 @@ export type Liane = Entity &
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
   duration: TimeInSeconds;
+  distance: number;
   order: number;
 }>;
 
@@ -126,6 +127,7 @@ export type PointDisplay = Readonly<{
   lianes: Liane[];
 }>;
 
+/*
 export type LianeSegment = Readonly<{
   coordinates: GeoJSON.Position[];
   lianes: Ref<Liane>[];
@@ -135,8 +137,9 @@ export type LianeDisplay = Readonly<{
   segments: LianeSegment[];
   lianes: Liane[];
 }>;
+*/
 
-export type LianeMatchDisplay = Readonly<{ segments: LianeSegment[]; lianeMatches: LianeMatch[] }>;
+export type LianeMatchDisplay = Readonly<{ features: FeatureCollection; lianeMatches: LianeMatch[] }>;
 export type ChatMessage = Readonly<
   {
     text: string;

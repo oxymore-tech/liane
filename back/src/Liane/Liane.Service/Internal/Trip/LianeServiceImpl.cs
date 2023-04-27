@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
+using GeoJSON.Text.Geometry;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -17,7 +19,8 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using MongoDB.Driver.GeoJsonObjectModel;
+using Geometry = Liane.Service.Internal.Util.Geometry;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -72,7 +75,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var matches = await Match(filter, pagination);
     var segments = await GetLianeSegments(matches.Data.Select(m => m.Liane));
-    return new LianeMatchDisplay(segments, matches.Data);
+    return new LianeMatchDisplay(new FeatureCollection(segments.ToFeatures().ToList()), matches.Data);
   }
   public async Task<PaginatedResponse<Api.Trip.Liane>> ListForCurrentUser(Pagination pagination)
   {
@@ -281,7 +284,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
                  & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, dateTime.AddHours(24))
                  & Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, availableSeats <= 0)
                  & Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -availableSeats)
-                 & Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry,  Geometry.GetApproxCircle(pos, radius));
+                 & Builders<LianeDb>.Filter.Near(l => l.Geometry,  GeoJson.Point(new GeoJson2DGeographicCoordinates(pos.Lng, pos.Lat)), radius);
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
@@ -313,7 +316,26 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ToImmutableList();
   }
 
-  public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime)
+  public async Task<FeatureCollection> DisplayGeoJSON(LatLng pos, LatLng pos2, DateTime dateTime)
+  {
+    var displayed = await Display(pos, pos2, dateTime, true);
+
+    var lianeFeatures = displayed.Segments.ToFeatures();
+
+    // Select all rallying points that can be a pickup 
+    var rallyingPointsFeatures = displayed.Lianes
+      .Select(l => l.WayPoints.Take(l.WayPoints.Count-1))
+      .SelectMany(w => w)
+      .DistinctBy(w => w.RallyingPoint.Id)
+      .Select(w => new Feature(new Point(new Position(w.RallyingPoint.Location.Lat, w.RallyingPoint.Location.Lng)),
+        w.RallyingPoint.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(w.RallyingPoint, null))
+      ));
+    
+    return new FeatureCollection(lianeFeatures.Concat(rallyingPointsFeatures).ToList());
+  }
+  
+
+  public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false)
   {
 
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, dateTime)
@@ -326,14 +348,18 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
-      .SortBy(l => l.DepartureTime)
       .ToEnumerable()
       .SelectAsync(MapEntity, parallel: true);
     timer.Stop();
     logger.LogDebug("Fetching {Count} Liane objects : {Elapsed}", lianes.Count, timer.Elapsed);
     var lianeSegments = await GetLianeSegments(lianes);
 
-    return new LianeDisplay(lianeSegments, currentContext.CurrentUser().IsAdmin ? lianes : ImmutableList<Api.Trip.Liane>.Empty);
+    return new LianeDisplay(
+      lianeSegments, 
+      includeLianes || currentContext.CurrentUser().IsAdmin ? 
+        lianes.OrderBy(l => l.DepartureTime).ToImmutableList() 
+        : ImmutableList<Api.Trip.Liane>.Empty
+        );
   }
 
   private async Task<ImmutableList<LianeSegment>> GetLianeSegments(IEnumerable<Api.Trip.Liane> lianes)
@@ -410,12 +436,22 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return null;
     }
 
-    var (pickupPoint, depositPoint) = bestMatch.Value;
+    var (pickupLocation, depositLocation) = bestMatch.Value;
+    
+    // Try to find a close RallyingPoint
+    var pickupPoint = await SnapOrDefault(pickupLocation);
+    var depositPoint = await SnapOrDefault(depositLocation);
 
-    if (pickupPoint == depositPoint)
+
+    if (pickupPoint is not null && pickupPoint == depositPoint)
     {
+      // Trip is too short
       return null;
     }
+    
+    // Else reverse to request
+    if (pickupPoint is null) pickupPoint = await rallyingPointService.Get(filter.From);
+    if (depositPoint is null) depositPoint = await rallyingPointService.Get(filter.To);
 
     Match match;
     if (wayPoints.IncludesSegment((pickupPoint, depositPoint)))
@@ -472,7 +508,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
   }
 
-  private async Task<(RallyingPoint Pickup, RallyingPoint Deposit)?> MatchBestIntersectionPoints(ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
+  private async Task<(LatLng PickupPoint, LatLng DepositPoint)?> MatchBestIntersectionPoints(ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
   {
     var firstIntersection = targetRoute.GetFirstIntersection(route);
     var lastIntersection = targetRoute.GetLastIntersection(route);
@@ -490,20 +526,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return null;
     }
 
-    var pickup = await SnapOrDefault(firstCoordinate);
-    var deposit = await SnapOrDefault(lastCoordinate);
-
-    if (pickup is null || deposit is null)
-    {
-      return null;
-    }
-
-    return (pickup, deposit);
+    return (firstCoordinate, lastCoordinate);
   }
 
   private async Task<RallyingPoint?> SnapOrDefault(LatLng intersection)
   {
-    return await rallyingPointService.Snap(intersection, SnapDistanceInMeters);
+    return await rallyingPointService.SnapViaRoute(intersection, SnapDistanceInMeters);
   }
 
   private static FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)

@@ -16,7 +16,7 @@ export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => 
   const [value, setValue] = useState<T>(defaultValue);
   useEffect(() => {
     const sub = observable.subscribe(v => {
-      console.debug("def", v);
+      //  console.debug("rec observed value ->", v);
       setValue(v);
     });
     return () => {
@@ -36,6 +36,6 @@ export const useSubject = <T>() => {
 export const useBehaviorSubject = <T>(initialValue: T) => {
   const subject = useMemo(() => {
     return new BehaviorSubject<T>(initialValue);
-  }, []);
+  }, [initialValue]);
   return subject;
 };

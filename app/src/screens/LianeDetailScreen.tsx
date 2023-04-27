@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } fro
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatDateTime } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
@@ -57,11 +57,11 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
         <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
           <View
             style={{
-              backgroundColor: liane.driver.canDrive ? ContextualColors.greenValid.bg : ContextualColors.redAlert.bg,
+              backgroundColor: liane.driver.canDrive ? ContextualColors.greenValid.light : ContextualColors.redAlert.light,
               padding: 12,
               borderRadius: 52
             }}>
-            <AppCustomIcon name={liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={28} />
+            <AppIcon name={liane.driver.canDrive ? "car-check-mark" : "car-strike-through"} size={28} />
           </View>
           <Column spacing={2}>
             <AppText style={{ fontSize: 16 }}>{liane.driver.canDrive ? "John Doe" : "Aucun conducteur"} </AppText>

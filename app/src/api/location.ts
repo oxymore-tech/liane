@@ -12,7 +12,7 @@ export const FR_BBOX: BoundingBox = {
   to: { lat: 51.577228, lng: 10.331117 }
 };
 
-const MapStyleUrl = "https://api.maptiler.com/maps/bright-v2/style.json?key=" + MAPTILER_KEY;
+const MapStyleUrl = "https://api.maptiler.com/maps/streets-v2/style.json?key=" + MAPTILER_KEY; // "https://api.maptiler.com/maps/bright-v2/style.json?key=" + MAPTILER_KEY;
 const MapStyle = JSON.stringify({
   version: 8,
   sources: {

@@ -8,7 +8,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "re
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
-import { AppCustomIcon, AppIcon } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
@@ -87,7 +87,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
           <Column spacing={8}>
             <TripCard header={headerDate} content={tripContent} />
             <Row style={styles.card} spacing={8}>
-              {request.seats > 0 ? <AppCustomIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
+              {request.seats > 0 ? <AppIcon name={"car"} /> : <AppIcon name={"people-outline"} />}
               <AppText style={{ fontSize: 16 }}>{peopleDescription}</AppText>
             </Row>
           </Column>

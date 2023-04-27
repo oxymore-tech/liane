@@ -1,0 +1,104 @@
+import React, { PropsWithChildren, useContext, useEffect, useRef } from "react";
+import { HomeMapContext } from "@/screens/home/StateMachine";
+import { useActor } from "@xstate/react";
+import { useAppNavigation } from "@/api/navigation";
+import { useBottomBarStyle } from "@/components/Navigation";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
+import { ActivityIndicator, View } from "react-native";
+import { AppDimensions } from "@/theme/dimensions";
+import { Row } from "@/components/base/AppLayout";
+import { AppColorPalettes } from "@/theme/colors";
+import { AppText } from "@/components/base/AppText";
+
+export const HomeBottomSheetContainer = (
+  props: {
+    display?: "closed" | "full" | "none";
+    canScroll?: boolean;
+    onScrolled?: (y: number, isFull: boolean, isClosed: boolean) => void;
+  } & PropsWithChildren
+) => {
+  const machine = useContext(HomeMapContext);
+  const [state] = useActor(machine);
+  const isMapState = state.matches("map");
+  const isMatchState = state.matches("match");
+  const isPointState = state.matches("point");
+  const { navigation } = useAppNavigation<"Home">();
+
+  const bbStyle = useBottomBarStyle();
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: [...bbStyle, { display: isMapState ? undefined : "none" }] //{transform: [{translateY: state.matches("map") ? 0 : 80}]}]
+    });
+  });
+
+  const insets = useSafeAreaInsets();
+  const { height } = useAppWindowsDimensions();
+  const h = useBottomTabBarHeight();
+  const ref = useRef<BottomSheetRefProps>();
+
+  useEffect(() => {
+    if (props.display === "closed") {
+      ref.current?.scrollTo(0);
+    } else if (props.display === "full") {
+      ref.current?.scrollTo(1);
+    }
+  }, [props.display]);
+
+  //console.log(Platform.OS, h, insets, StatusBar.currentHeight, bottomSpace);
+
+  if (props.display === "none") {
+    return <View />;
+  }
+
+  const bottomSpace = insets.bottom + AppDimensions.bottomBar.marginVertical + h / 2;
+
+  let stops: number[];
+  let paddingTop: number;
+  if (isMapState) {
+    stops = [AppBottomSheetHandleHeight + h / 2 + 28, 0.3, 1];
+    paddingTop = 96;
+  } else if (isMatchState || isPointState) {
+    stops = [AppBottomSheetHandleHeight + h / 2 + 52, 0.35, 1];
+    paddingTop = 176;
+  } else {
+    stops = [0.35, 1];
+    paddingTop = 72;
+  }
+
+  return (
+    <AppBottomSheet
+      ref={ref}
+      stops={stops}
+      onScrolled={v => {
+        if (props.onScrolled) {
+          props.onScrolled(v <= 1 ? height * v : v, v === stops[stops.length - 1], v === stops[0]);
+        }
+      }}
+      canScroll={props.canScroll}
+      padding={{ top: paddingTop + insets.top }}
+      margins={{ right: isMapState ? 24 : 0, left: isMapState ? 24 : 0, bottom: isMapState ? bottomSpace : 0 }}>
+      {props.children}
+      <View style={{ height: h / 2 }} />
+    </AppBottomSheet>
+  );
+};
+
+export const TopRow = ({ loading = false, title }: { loading?: boolean; title: string }) => {
+  return (
+    <Row
+      style={{
+        borderBottomWidth: 1,
+        borderColor: AppColorPalettes.gray[200],
+        marginBottom: 16,
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+        justifyContent: "space-between"
+      }}>
+      <AppText style={{ fontWeight: "bold", alignSelf: "center", color: AppColorPalettes.gray[600] }}>{title}</AppText>
+      {loading && <ActivityIndicator size={12} color={"red"} />}
+    </Row>
+  );
+};

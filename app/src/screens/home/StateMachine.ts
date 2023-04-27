@@ -1,9 +1,22 @@
-import { assign, createMachine, Interpreter, raise, StateMachine, StateNodeConfig, TransitionConfigOrTarget, TransitionsConfig } from "xstate";
-import { LianeDisplay, LianeMatch, LianeMatchDisplay, LianeSearchFilter, RallyingPoint, TargetTimeDirection } from "@/api";
+import {
+  assign,
+  AssignAction,
+  createMachine,
+  Interpreter,
+  raise,
+  StateMachine,
+  StateNodeConfig,
+  TransitionConfigOrTarget,
+  TransitionsConfig
+} from "xstate";
+import { LianeMatch, LianeMatchDisplay, LianeSearchFilter, RallyingPoint, TargetTimeDirection } from "@/api";
 
 import React from "react";
 import { Trip } from "@/api/service/location";
 import { BoundingBox } from "@/api/geo";
+import { FeatureCollection } from "geojson";
+import { BehaviorSubject } from "rxjs";
+import { EmptyFeatureCollection } from "@/util/geometry";
 
 type Schema = {
   states: {
@@ -43,7 +56,7 @@ export type HomeMapContext = {
   filter: Partial<InternalLianeMatchFilter>;
   matches: LianeMatch[] | undefined;
   selectedMatch: LianeMatch | undefined;
-  lianeDisplay: LianeDisplay | undefined;
+  // lianeDisplay: LianeDisplay | undefined;
   error?: any | undefined;
   reloadCause?: ReloadCause;
 };
@@ -65,8 +78,6 @@ type Event =
   | ReloadEvent
   | SelectEvent
   | MatchEvent;
-// | UpdateFilterEvent
-// | UpdateDisplayEvent;
 
 export type HomeStateMachine = StateMachine<HomeMapContext, Schema, Event>;
 
@@ -78,7 +89,10 @@ const createState = <T>(
   //  onBack?: TransitionConfigOrTarget<HomeMapContext, Event>,
   load?: {
     src: (context: HomeMapContext, event: Event) => Promise<T>;
-    assign: (context: HomeMapContext, event: { type: "done.invoke"; data: T }) => HomeMapContext;
+    actions: ((
+      context: HomeMapContext,
+      event: { type: "done.invoke"; data: T }
+    ) => HomeMapContext | AssignAction<HomeMapContext, { type: "done.invoke"; data: T }>)[];
     autoLoadCond?: (context: HomeMapContext, event: Event) => boolean;
   }
 ) => {
@@ -110,7 +124,7 @@ const createState = <T>(
 
       onDone: {
         target: "idle",
-        actions: [() => console.log("loading done"), assign(load.assign)]
+        actions: [() => console.log("loading done"), ...load.actions]
       },
       onError: {
         target: "failed",
@@ -121,10 +135,15 @@ const createState = <T>(
   return state;
 };
 export const HomeMapMachine = (services: {
-  match: (ctx: HomeMapContext) => Promise<LianeMatchDisplay>;
-  display: (ctx: HomeMapContext) => Promise<LianeDisplay | undefined>;
-  cacheRecentTrip: (trip: Trip) => void;
-  cacheRecentPoint: (rp: RallyingPoint) => void;
+  services: {
+    match: (ctx: HomeMapContext) => Promise<LianeMatchDisplay>;
+    display: (ctx: HomeMapContext) => Promise<FeatureCollection | undefined>;
+    cacheRecentTrip: (trip: Trip) => void;
+    cacheRecentPoint: (rp: RallyingPoint) => void;
+  };
+  observables: {
+    displaySubject: BehaviorSubject<FeatureCollection>;
+  };
 }): HomeStateMachine =>
   createMachine(
     {
@@ -133,7 +152,7 @@ export const HomeMapMachine = (services: {
       context: <HomeMapContext>{
         filter: { from: undefined, to: undefined, targetTime: { dateTime: new Date(), direction: "Departure" }, availableSeats: -1 },
         matches: undefined,
-        lianeDisplay: undefined,
+        //    lianeDisplay: undefined,
         selectedMatch: undefined,
         displayBounds: undefined
       },
@@ -165,8 +184,16 @@ export const HomeMapMachine = (services: {
               }
             }
           },
-
           {
+            src: (context, _) => services.services.display(context),
+            autoLoadCond: () => true,
+            actions: [
+              (context, event) => {
+                services.observables.displaySubject.next(event.data || EmptyFeatureCollection);
+              }
+            ]
+          }
+          /*  {
             src: (context, _) => services.display(context),
             assign: (context, event) => {
               console.debug(event.data?.lianes);
@@ -184,7 +211,7 @@ export const HomeMapMachine = (services: {
                 lianeDisplay: event.data || context.lianeDisplay // Keep previous display if undefined
               };
             }
-          }
+          }*/
         ),
         form: createState({
           always: {
@@ -203,13 +230,16 @@ export const HomeMapMachine = (services: {
                 actions: [
                   "updateTrip",
                   (context, event) =>
-                    services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
+                    services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
                   "resetMatches"
                 ],
                 target: "#homeMap.match",
 
                 cond: (context, event: UpdateEvent) => {
-                  return filterHasFullTrip({ from: event.data.from || context.filter.from, to: event.data.to || context.filter.to });
+                  const newFrom = Object.hasOwn(event.data, "from") ? event.data.from : context.filter.from;
+                  const newTo = Object.hasOwn(event.data, "to") ? event.data.to : context.filter.to;
+                  console.debug(newFrom?.id, newTo?.id);
+                  return filterHasFullTrip({ from: newFrom, to: newTo });
                 }
               },
               { actions: ["updateTrip"] }
@@ -231,7 +261,7 @@ export const HomeMapMachine = (services: {
                 }
               },
               {
-                actions: ["resetTrip", "updateTrip", (context, event) => services.cacheRecentPoint(event.data.from || event.data.to)],
+                actions: ["resetTrip", "updateTrip", (context, event) => services.services.cacheRecentPoint((event.data.from || event.data.to)!)],
                 target: "#homeMap.form"
               }
             ],
@@ -261,16 +291,20 @@ export const HomeMapMachine = (services: {
           },
 
           {
-            src: (context, _) => services.match(context),
+            src: (context, _) => services.services.match(context),
             autoLoadCond: (context, _) => !context.matches,
-            assign: (context, event) => {
-              console.log("rellllll", event.data);
-              return {
-                ...context,
-                matches: event.data.lianeMatches,
-                lianeDisplay: { segments: event.data.segments, lianes: event.data.lianeMatches.map(lm => lm.liane) }
-              };
-            }
+            actions: [
+              assign((context, event) => {
+                return {
+                  ...context,
+                  matches: event.data.lianeMatches
+                  //lianeDisplay: { segments: event.data.segments, lianes: event.data.lianeMatches.map(lm => lm.liane) }
+                };
+              }),
+              (context, event) => {
+                services.observables.displaySubject.next(event.data.features);
+              }
+            ]
           }
         ),
         detail: createState({
@@ -311,10 +345,12 @@ export const HomeMapMachine = (services: {
         }),
         updateFilter: assign<HomeMapContext, UpdateFilterEvent>({
           filter: (context, event) => {
+            const availableSeats = (Object.hasOwn(event.data, "availableSeats") ? event.data.availableSeats : context.filter.availableSeats) || -1;
+            const targetTime = Object.hasOwn(event.data, "targetTime") ? event.data.targetTime : context.filter.targetTime;
             return {
               ...context.filter,
-              targetTime: { direction: event.data.targetTime?.direction || "Departure", dateTime: event.data.targetTime?.dateTime || new Date() },
-              availableSeats: event.data.availableSeats
+              targetTime: { direction: targetTime?.direction || "Departure", dateTime: targetTime?.dateTime || new Date() },
+              availableSeats
             };
           }
         }),
@@ -328,7 +364,7 @@ export const HomeMapMachine = (services: {
               // Ignore if to & from are set to same value
               return context.filter;
             }
-            console.log(newTrip);
+            // console.log(newTrip);
             return newTrip;
           }
         })

@@ -11,7 +11,6 @@ import { AppDimensions } from "@/theme/dimensions";
 import { AppText } from "@/components/base/AppText";
 import MyTripsScreen from "@/screens/MyTripsScreen";
 import LianeIcon from "@/assets/icon.svg";
-import { LianeDetailScreen } from "@/screens/LianeDetailScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
 import { Row } from "@/components/base/AppLayout";
@@ -19,7 +18,7 @@ import Avatar from "@/assets/avatar.svg";
 import { ProfileScreen } from "@/screens/ProfileScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
 import { SearchScreen } from "@/screens/search/SearchScreen";
-import HomeScreen from "@/screens/HomeScreen";
+import HomeScreen from "@/screens/home/HomeScreen";
 import { LianeWizardScreen } from "@/screens/lianeWizard/LianeWizardScreen";
 import { SearchResultsScreen } from "@/screens/search/SearchResultsScreen";
 import { LianeMatchDetailScreen } from "@/screens/search/LianeMatchDetailScreen";
@@ -31,16 +30,39 @@ import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
 import { LianeJoinRequestDetailScreen } from "@/screens/search/LianeJoinRequestDetailScreen";
 import { useQueryClient } from "react-query";
 import { Notification } from "@/api";
+import { PublishScreen } from "@/screens/publish/PublishScreen";
+import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+/*
+function AppTabBar(props: BottomTabBarProps) {
+  // const [show, setShow] = useState(true);
+  const style = props.descriptors[props.state.routes[props.state.index].key].options.tabBarStyle;
+  const display = !style || StyleSheet.flatten(style).display !== "none";
+  if (StyleSheet.flatten(style).display === "none") {
+    props.descriptors[props.state.routes[props.state.index].key].options.tabBarStyle = {
+      ...StyleSheet.flatten(style),
+      display: undefined
+    };
+  }
+  return (
+    display && (
+      <Animated.View exiting={SlideOutDown}>
+        <BottomTabBar {...props} />
+      </Animated.View>
+    )
+  );
+}
+*/
 function Home() {
   const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
   const iconSize = 24;
   return (
     <Tab.Navigator
+      // TODO tabBar={AppTabBar}
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: false,
@@ -96,6 +118,7 @@ function Navigation() {
     return (
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
+        <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeWizard" component={LianeWizardScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
