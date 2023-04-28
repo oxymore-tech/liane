@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, StyleSheet, View } from "react-native";
 import AppMapView, { LianeMatchRouteLayer, WayPointDisplay } from "@/components/map/AppMapView";
-import { AppBottomSheet, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
+import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Center, Column } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
@@ -13,11 +13,10 @@ import { formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
-import { AppColors, ContextualColors } from "@/theme/colors";
+import { ContextualColors } from "@/theme/colors";
 import { ActionItem } from "@/components/ActionItem";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
-import { AppIcon } from "@/components/base/AppIcon";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export const LianeDetailScreen = () => {
   const ref = useRef<BottomSheetRefProps>();
@@ -35,45 +34,47 @@ export const LianeDetailScreen = () => {
   const match = useMemo(() => (liane ? toLianeMatch(liane) : undefined), [liane]);
 
   return (
-    <View style={styles.page}>
-      <AppMapView
-        //TODO bounds={mapBounds}
-        showGeolocation={false}>
-        {match && <LianeMatchRouteLayer match={match} />}
-        {match &&
-          match.liane.wayPoints.map((w, i) => {
-            let type: "to" | "from" | "step";
-            if (i === 0) {
-              type = "from";
-            } else if (i === match.liane.wayPoints.length - 1) {
-              type = "to";
-            } else {
-              type = "step";
-            }
-            return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
-          })}
-      </AppMapView>
-      <AppBottomSheet ref={ref} stops={[0.35, 0.7, 1]}>
-        {match && (
-          <AppBottomSheetScrollView>
-            <LianeDetailView liane={match} />
-            <LianeActionsView liane={match.liane} />
-          </AppBottomSheetScrollView>
-        )}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.page}>
+        <AppMapView
+          //TODO bounds={mapBounds}
+          showGeolocation={false}>
+          {match && <LianeMatchRouteLayer match={match} />}
+          {match &&
+            match.liane.wayPoints.map((w, i) => {
+              let type: "to" | "from" | "step";
+              if (i === 0) {
+                type = "from";
+              } else if (i === match.liane.wayPoints.length - 1) {
+                type = "to";
+              } else {
+                type = "step";
+              }
+              return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
+            })}
+        </AppMapView>
+        <AppBottomSheet ref={ref} stops={[AppBottomSheetHandleHeight + 96, 0.7, 1]} padding={{ top: 72 }} initialStop={1}>
+          {match && (
+            <AppBottomSheetScrollView>
+              <LianeDetailView liane={match} />
+              <LianeActionsView liane={match.liane} />
+            </AppBottomSheetScrollView>
+          )}
 
-        {!match && (
-          <Center>
-            <ActivityIndicator />
-          </Center>
-        )}
-      </AppBottomSheet>
+          {!match && (
+            <Center>
+              <ActivityIndicator />
+            </Center>
+          )}
+        </AppBottomSheet>
 
-      <FloatingBackButton
-        onPress={() => {
-          navigation.goBack();
-        }}
-      />
-    </View>
+        <FloatingBackButton
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -113,6 +114,7 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           }
         }}
       />
+      <LineSeparator />
       {currentUserIsOwner && (
         <ActionItem
           onPress={() => {

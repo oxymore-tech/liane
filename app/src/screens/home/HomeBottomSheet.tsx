@@ -57,21 +57,26 @@ export const HomeBottomSheetContainer = (
 
   let stops: number[];
   let paddingTop: number;
+  let initialIndex: number;
   if (isMapState) {
     stops = [AppBottomSheetHandleHeight + h / 2 + 28, 0.3, 1];
     paddingTop = 96;
+    initialIndex = 1;
   } else if (isMatchState || isPointState) {
     stops = [AppBottomSheetHandleHeight + h / 2 + 52, 0.35, 1];
     paddingTop = 176;
+    initialIndex = 1;
   } else {
     stops = [0.35, 1];
     paddingTop = 72;
+    initialIndex = 0;
   }
 
   return (
     <AppBottomSheet
       ref={ref}
       stops={stops}
+      initialStop={initialIndex}
       onScrolled={v => {
         if (props.onScrolled) {
           props.onScrolled(v <= 1 ? height * v : v, v === stops[stops.length - 1], v === stops[0]);

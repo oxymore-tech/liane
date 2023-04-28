@@ -34,12 +34,13 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, canScroll, stops, margins, padding }, ref) => {
+  ({ onScrolled, children, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
     const { height, width } = useAppWindowsDimensions();
     const fillLimit = padding?.top || 0;
+    const currentStop = useRef<number>(initialStop);
 
     const getPixelValue = (v: number) => {
       "worklet";
@@ -48,7 +49,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
 
     const pStops = stops.map(s => getPixelValue(s));
 
-    const h = useSharedValue(pStops[0]);
+    const h = useSharedValue(pStops[currentStop.current]);
 
     const context = useSharedValue({ y: 0 });
     const margin = useSharedValue({ bottom: marginBottom, left: margins?.left || 0, right: margins?.right || 0 });
@@ -61,6 +62,10 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
 
     const notifyExpanded = (v: boolean) => {
       expanded.next(v);
+    };
+
+    const updateCurrentStop = (index: boolean) => {
+      currentStop.current = index;
     };
 
     const isExpanded = () => {
@@ -87,13 +92,9 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
         const b = pStops[i] - value;
         if (a >= 0 && b >= 0) {
           const ratio = a / b;
-          console.log(value, ratio, direction, a, b);
           if (direction < 0) {
-            //TODO direction is wrong when bsheet is expanded
-            console.log("a");
             return ratio < 0.2 && a <= PanThreshHold ? i - 1 : i;
           } else {
-            console.log("b");
             return ratio < 0.8 || b > PanThreshHold ? i - 1 : i;
           }
         }
@@ -120,7 +121,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
         // Scroll to the closest stop
 
         const stopIndex = findClosestStop(h.value, event.translationY);
-
+        runOnJS(updateCurrentStop)(stopIndex);
         const value = pStops[stopIndex];
         scrollTo(value);
         if (onScrolled) {
@@ -213,7 +214,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 onEndScroll: offset => {
                   "worklet";
                   const stopIndex = findClosestStop(h.value, -offset);
-
+                  runOnJS(updateCurrentStop)(stopIndex);
                   const value = pStops[stopIndex];
                   scrollTo(value);
                   if (onScrolled) {
