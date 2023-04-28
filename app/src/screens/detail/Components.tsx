@@ -6,7 +6,6 @@ import { UserPicture } from "@/components/UserPicture";
 import { ColorValue, Pressable, StyleSheet, View } from "react-native";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
 import { Item } from "@/components/ActionItem";
 
 export const InfoItem = (props: { icon: IconName | CustomIconName; value: string }) => {
@@ -30,7 +29,7 @@ export const DriverInfo = () => {
       }
       leadingComponent={
         <View>
-          <UserPicture user={{ undefined }} />
+          <UserPicture />
           <View style={{ backgroundColor: AppColorPalettes.blue[300], borderRadius: 40, padding: 4, position: "absolute", left: 24, top: 24 }}>
             <AppIcon name={"car"} size={20} />
           </View>

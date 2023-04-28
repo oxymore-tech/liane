@@ -36,7 +36,7 @@ export type Reminder = Readonly<{
   payload: Reminder;
 }>;
 
-export type Event = Readonly<{
+export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
   _t: "Event";
   id?: string;
   sender?: Ref<User>;
@@ -45,5 +45,5 @@ export type Event = Readonly<{
   answers: Answer[];
   title: string;
   message: string;
-  payload: LianeEvent;
+  payload: T;
 }>;

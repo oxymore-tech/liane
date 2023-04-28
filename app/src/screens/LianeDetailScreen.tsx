@@ -73,7 +73,7 @@ const LianeDetail = ({ liane }: { liane: Liane }) => {
         <Column spacing={8} style={styles.actionsContainer}>
           {liane.conversation && (
             <ActionItem
-              onPress={() => navigation.navigate("Chat", { conversationId: liane.group })}
+              onPress={() => navigation.navigate("Chat", { conversationId: liane.conversation })}
               iconName={"message-circle-outline"}
               text={"Aller à la conversation"}
             />

@@ -68,7 +68,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
     if (notificationFilter.Liane is not null)
     {
-      filter &= Builders<Notification>.Filter.Eq("content.liane", notificationFilter.Liane);
+      filter &= Builders<Notification>.Filter.Eq("payload.liane", notificationFilter.Liane);
     }
 
     return await Mongo.Paginate(pagination, r => r.SentAt, filter, false);
@@ -84,7 +84,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
   private static FilterDefinition<Notification> BuildLianeEventTypeFilter(PayloadType.Event @event)
   {
-    var filter = Builders<Notification>.Filter.IsInstanceOf<Notification, LianeEvent>();
+    var filter = Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Event>();
     if (@event.SubType is null)
     {
       return filter;
@@ -98,7 +98,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     var answerToEvent = await Get(id);
     if (answerToEvent is Notification.Event lianeEvent)
     {
-      await eventDispatcher.DispatchAnswer(lianeEvent.Payload, answer);
+      await eventDispatcher.DispatchAnswer(lianeEvent, answer);
     }
 
     await Delete(id);

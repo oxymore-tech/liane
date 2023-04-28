@@ -1,37 +1,40 @@
-import { Notification, PaginatedResponse } from "@/api";
+import { PaginatedResponse } from "@/api";
 import { AbstractNotificationService } from "@/api/service/interfaces/notification";
+import { Notification } from "@/api/notification";
 
 export class NotificationServiceMock extends AbstractNotificationService {
   constructor(unreadNotificationsCount: number = 0) {
     super();
-    let notifications = [];
+    const notifications: Notification[] = [];
     for (let i = 0; i < unreadNotificationsCount; i++) {
       const message = "Initial_" + i;
       notifications.push({
         _t: "Info",
+        id: i.toString(),
         title: "Test",
         message,
-        payload: { event: message, id: i.toString(), seen: false, createdAt: new Date().toISOString() }
+        sentAt: new Date().toISOString(),
+        recipients: [],
+        answers: []
       });
     }
     this.notifications = notifications;
   }
   private notifications: Notification[] = [];
-  /*override receiveNotification = async (notification: Notification) => {
-    this.notifications.push(notification);
-    await super.receiveNotification(notification);
-  };*/
-  changeSeenStatus = async (notificationId: string) => {
+
+  async markAsRead(notification: Notification) {
     this.notifications = this.notifications.map(n => {
-      if (n.payload.id === notificationId) {
-        n = { ...n, payload: { ...n.payload, seen: true } };
+      if (n.id === notification.id) {
+        n = { ...n, recipients: n.recipients.map(r => ({ ...r, seenAt: new Date().toISOString() })) };
       }
       return n;
     });
-  };
-  list = async (): Promise<PaginatedResponse<Notification>> => {
+  }
+
+  async list(): Promise<PaginatedResponse<Notification>> {
     return { data: this.notifications, pageSize: this.notifications.length };
-  };
+  }
+
   checkInitialNotification(): Promise<void> {
     return Promise.resolve();
   }

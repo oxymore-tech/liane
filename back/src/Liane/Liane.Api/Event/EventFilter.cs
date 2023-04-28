@@ -38,11 +38,11 @@ public abstract record PayloadType
 
   public record Event : PayloadType
   {
-    public Type? SubType { get; } = null;
+    public virtual Type? SubType => null;
   }
 
   public sealed record Event<T> : Event where T : LianeEvent
   {
-    public new Type SubType { get; } = typeof(T);
+    public override Type SubType => typeof(T);
   }
 }

@@ -34,7 +34,6 @@ import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
-import { FloatingBackButton } from "@/screens/detail/Components";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -153,13 +152,12 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
 
 interface BottomSheetObservableMessage {
   expanded: boolean;
-
   top: number;
 }
 const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observable<BottomSheetObservableMessage> }) => {
   const insets = useSafeAreaInsets();
 
-  const { expanded } = useObservable(props.bottomSheetObservable, {});
+  const { expanded } = useObservable(props.bottomSheetObservable, { expanded: false, top: 0 });
   // console.log("bsheet expanded =", expanded);
   return (
     <View style={[styles.floatingSearchBar, { marginTop: insets.top }]}>
@@ -192,7 +190,7 @@ const HomeMap = ({
   const [state] = useActor(machine);
   const isMatchStateIdle = state.matches({ match: "idle" });
 
-  const { top: bSheetTop } = useObservable(bottomSheetObservable, { top: 52 });
+  const { top: bSheetTop } = useObservable(bottomSheetObservable, { expanded: false, top: 52 });
   const { height } = useAppWindowsDimensions();
   const { top: insetsTop } = useSafeAreaInsets();
   const lianeDisplay = useObservable(displaySource, EmptyFeatureCollection);
@@ -304,7 +302,7 @@ const HomeMap = ({
   }, [isDetailState, state.context.selectedMatch]);
 
   //const [movingDisplay, setMovingDisplay] = useState<boolean>();
-  const appMapRef = useRef<AppMapViewController>();
+  const appMapRef = useRef<AppMapViewController>(null);
 
   return (
     <AppMapView

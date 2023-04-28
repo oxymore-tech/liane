@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import { getPoint, isExactMatch, JoinRequest } from "@/api";
+import { Exact, getPoint, UnionUtils } from "@/api";
 import { getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatMonthDay } from "@/api/i18n";
@@ -21,6 +21,7 @@ import { JoinRequestsQueryKey } from "@/screens/MyTripsScreen";
 import { AppContext } from "@/components/ContextProvider";
 import { useQueryClient } from "react-query";
 import { DriverInfo, InfoItem } from "@/screens/detail/Components";
+import { JoinRequest } from "@/api/event";
 
 const formatSeatCount = (seatCount: number) => {
   let count = seatCount;
@@ -42,7 +43,7 @@ export const LianeMatchDetailView = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
   const liane = state.context.selectedMatch!;
-  const lianeIsExactMatch = isExactMatch(liane.match);
+  const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact");
 
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");
@@ -64,7 +65,7 @@ export const LianeMatchDetailView = () => {
 
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
-      type: "JoinRequest",
+      _t: "JoinRequest",
       from: fromPoint.id!,
       message,
       seats: seats,

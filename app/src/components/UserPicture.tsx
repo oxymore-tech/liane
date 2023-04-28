@@ -1,12 +1,9 @@
-import { User } from "@/api";
 import { AppColorPalettes } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import React from "react";
 import { Center } from "@/components/base/AppLayout";
 
 export interface UserPictureProps {
-  user: User;
-
   size?: number;
 }
 

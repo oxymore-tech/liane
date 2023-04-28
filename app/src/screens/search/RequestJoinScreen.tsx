@@ -13,10 +13,11 @@ import { formatMonthDay, formatTime } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
-import { isExactMatch, JoinRequest } from "@/api";
+import { Exact, UnionUtils } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
 import { JoinRequestsQueryKey } from "@/screens/MyTripsScreen";
+import { JoinRequest } from "@/api/event";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"RequestJoin">();
@@ -27,7 +28,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const request = route.params.request;
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
-  const exactMatch = isExactMatch(request.match);
+  const exactMatch = UnionUtils.isInstanceOf<Exact>(request.match, "Exact");
 
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =
@@ -39,7 +40,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const wayPoints = exactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
-      type: "JoinRequest",
+      _t: "JoinRequest",
       from: fromPoint.id!,
       message,
       seats: request.seats,

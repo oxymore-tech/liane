@@ -16,7 +16,6 @@ public abstract record LianeEvent
 
   public sealed record JoinRequest(
     Ref<Trip.Liane> Liane,
-    Ref<User.User> Member,
     Ref<RallyingPoint> From,
     Ref<RallyingPoint> To,
     int Seats,

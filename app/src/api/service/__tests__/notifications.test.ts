@@ -7,13 +7,14 @@ import { NotificationService } from "@/api/service/interfaces/notification";
 describe("notifications counter", () => {
   const initServices = async (): Promise<{ notification: NotificationService; chatHub: ChatHubService }> => {
     const services = {
-      notification: new NotificationServiceMock(1),
-      chatHub: new HubServiceMock(1, { delay: 200, count: 1 })
+      notification: new NotificationServiceMock(1) as NotificationService,
+      chatHub: new HubServiceMock(1, { delay: 200, count: 1 }) as ChatHubService
     };
     await services.chatHub.start();
     services.notification.initUnreadNotificationCount(services.chatHub.unreadNotificationCount);
     return services;
   };
+
   test("initial counter should be 1", async () => {
     const services = await initServices();
 
@@ -26,13 +27,13 @@ describe("notifications counter", () => {
     expect(notifications.pageSize).toEqual(1);
 
     // Read notification
-    const notification = notifications.data[0].payload;
-    await services.notification.read(notification);
+    const notification = notifications.data[0];
+    await services.notification.markAsRead(notification);
 
     await expect(firstValueFrom(services.notification.unreadNotificationCount)).resolves.toEqual(0);
 
     // Read same notification again
-    await services.notification.read(notification);
+    await services.notification.markAsRead(notification);
     await expect(firstValueFrom(services.notification.unreadNotificationCount)).resolves.toEqual(0);
   });
 

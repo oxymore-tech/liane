@@ -37,7 +37,7 @@ public sealed class LianeEventJsonTest
   [Test]
   public void ShouldDeserialize()
   {
-    var joinRequest = new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "augustin", "Aurillac", "Medon", 2, false, "Hey !");
+    var joinRequest = new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Aurillac", "Medon", 2, false, "Hey !");
     var actual = JsonSerializer.Deserialize<LianeEvent>(AssertExtensions.ReadTestResource("join-request.json"), options);
     Assert.AreEqual(joinRequest, actual);
   }

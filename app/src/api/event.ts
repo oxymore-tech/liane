@@ -10,7 +10,6 @@ export type LianeEvent = JoinRequest | MemberAccepted | MemberRejected | MemberH
 export type JoinRequest = Readonly<{
   _t: "JoinRequest";
   liane: Ref<Liane>;
-  member: Ref<User>;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seats: number;

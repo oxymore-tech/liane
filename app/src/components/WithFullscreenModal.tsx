@@ -1,6 +1,6 @@
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
-import { KeyboardAvoidingView, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React from "react";

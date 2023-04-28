@@ -1,4 +1,4 @@
-import { isExactMatch, JoinLianeRequestDetailed, LianeMatch, RallyingPoint } from "@/api";
+import { JoinLianeRequestDetailed, LianeMatch, RallyingPoint } from "@/api";
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 import { toTimeInSeconds } from "@/util/datetime";

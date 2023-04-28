@@ -1,5 +1,5 @@
 import React, { forwardRef, useContext, useEffect, useImperativeHandle, useState } from "react";
-import { ColorValue, GestureResponderEvent, Modal, Pressable, PressableProps, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ColorValue, GestureResponderEvent, Modal, Pressable, PressableProps, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   Extrapolation,
@@ -20,7 +20,6 @@ import { Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
-// @ts-ignore
 export interface LianeCardProps extends PressableProps {
   label?: string;
   value: string | JSX.Element;
@@ -250,8 +249,12 @@ const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }: Mod
   </Pressable>
 );
 
-export const CardButton = forwardRef(
-  ({ color, textColor, label, value, onCancel, extendedView, useOkButton = false, onCloseExtendedView }: LianeCardProps, ref) => {
+export type CardButtonElement = {
+  showModal: (fromX: number, fromY: number) => void;
+};
+
+export const CardButton = forwardRef<CardButtonElement, LianeCardProps>(
+  ({ color, textColor, label, value, onCancel, extendedView, useOkButton = false, onCloseExtendedView }, ref) => {
     let finalTextColor = textColor;
     if (!textColor) {
       finalTextColor = defaultTextColor(color);

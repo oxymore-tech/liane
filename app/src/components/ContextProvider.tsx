@@ -135,7 +135,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   componentDidMount() {
     this.initContext();
-    this.unsubscribeToUserInteraction = RootNavigation.addListener("state", e => {
+    this.unsubscribeToUserInteraction = RootNavigation.addListener("state", _ => {
       // Try to reload on user interaction
       if (this.state.status === "offline") {
         console.debug("Try to reload...");

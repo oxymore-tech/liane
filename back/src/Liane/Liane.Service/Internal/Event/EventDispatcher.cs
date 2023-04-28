@@ -23,7 +23,7 @@ public sealed class EventDispatcher
     }
   }
 
-  public async Task DispatchAnswer(LianeEvent e, Answer answer)
+  public async Task DispatchAnswer(Notification.Event e, Answer answer)
   {
     var eventListeners = serviceProvider.GetServices<IEventListener>();
     foreach (var eventListener in eventListeners)

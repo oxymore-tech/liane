@@ -5,7 +5,6 @@ import { AppPressable } from "@/components/base/AppPressable";
 
 export interface AppIconButtonProps {
   backgroundColor: ColorValue;
-
   onPress: () => void;
 }
 

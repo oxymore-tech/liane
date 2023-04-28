@@ -4,9 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Event;
+using Liane.Web.Binder;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using NLog.LayoutRenderers;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
@@ -16,11 +19,13 @@ public sealed class EventServiceImplTest : BaseIntegrationTest
 {
   private EventDispatcher eventDispatcher = null!;
   private ILianeService lianeService = null!;
+  private INotificationService notificationService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     eventDispatcher = ServiceProvider.GetRequiredService<EventDispatcher>();
     lianeService = ServiceProvider.GetRequiredService<ILianeService>();
+    notificationService = ServiceProvider.GetRequiredService<INotificationService>();
   }
 
   [Test]
@@ -30,10 +35,18 @@ public sealed class EventServiceImplTest : BaseIntegrationTest
     var userB = Fakers.FakeDbUsers[1];
     var liane = await lianeService.Create(new LianeRequest(null, DateTime.Now, null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
 
-    var joinRequest = new LianeEvent.JoinRequest(liane.Id, userB.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
+    CurrentContext.SetCurrentUser(userB);
+    var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
     await eventDispatcher.Dispatch(joinRequest);
 
-    await eventDispatcher.DispatchAnswer(joinRequest, Answer.Accept);
+    var notifications = await notificationService.List(new NotificationFilter(userA.Id, null, liane.Id, new PayloadType.Event<LianeEvent.JoinRequest>()), new Pagination());
+
+    Assert.AreEqual(notifications.Data.Count, 1);
+
+    var notification = notifications.Data[0];
+    Assert.AreEqual(userB.Id, notification.Sender!.Id);
+
+    await notificationService.Answer(notification.Id!, Answer.Accept);
 
     var actual = await lianeService.Get(liane.Id);
 

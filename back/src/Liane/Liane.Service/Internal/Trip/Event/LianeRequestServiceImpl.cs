@@ -37,12 +37,12 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     await notificationService.Notify("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
-  public async Task OnAnswer(LianeEvent.JoinRequest joinRequest, Answer answer)
+  public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer)
   {
     LianeEvent lianeEvent = answer switch
     {
-      Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, joinRequest.Member, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
-      Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, joinRequest.Member),
+      Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.Sender!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
+      Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.Sender!),
       _ => throw new ArgumentOutOfRangeException(nameof(answer), answer, null)
     };
     await eventDispatcher.Dispatch(lianeEvent);

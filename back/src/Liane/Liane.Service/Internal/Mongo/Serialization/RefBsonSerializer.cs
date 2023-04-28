@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Immutable;
+using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -5,37 +8,26 @@ using MongoDB.Bson.Serialization.Serializers;
 
 namespace Liane.Service.Internal.Mongo.Serialization;
 
-internal sealed class RefToStringBsonSerializer<T> : SerializerBase<Ref<T>?> where T : class, IIdentity
+internal static class RefBsonSerializer
 {
-  public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Ref<T>? value)
-  {
-    if (value is not null)
-    {
-      context.Writer.WriteString(value);
-    }
-    else
-    {
-      context.Writer.WriteNull();
-    }
-  }
-
-  public override Ref<T>? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
-  {
-    var bsonType = context.Reader.CurrentBsonType;
-    if (bsonType == BsonType.String) return context.Reader.ReadString();
-    else if (bsonType == BsonType.Document) return BsonSerializer.Deserialize<T>(context.Reader);
-    context.Reader.ReadNull();
-    return null;
-  }
+  internal static readonly ImmutableHashSet<Type> TypesWithStringId = ImmutableHashSet.Create(typeof(RallyingPoint));
 }
 
-internal sealed class RefToObjectIdBsonSerializer<T> : SerializerBase<Ref<T>?> where T : class, IIdentity
+internal sealed class RefBsonSerializer<T> : SerializerBase<Ref<T>?> where T : class, IIdentity
 {
+
   public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Ref<T>? value)
   {
     if (value is not null)
     {
-      context.Writer.WriteObjectId(ObjectId.Parse(value));
+      if (RefBsonSerializer.TypesWithStringId.Contains(typeof(T)))
+      {
+        context.Writer.WriteString(value);
+      }
+      else
+      {
+        context.Writer.WriteObjectId(ObjectId.Parse(value));
+      }
     }
     else
     {
@@ -46,9 +38,17 @@ internal sealed class RefToObjectIdBsonSerializer<T> : SerializerBase<Ref<T>?> w
   public override Ref<T>? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
   {
     var bsonType = context.Reader.CurrentBsonType;
-    if (bsonType == BsonType.ObjectId) return (Ref<T>)context.Reader.ReadObjectId().ToString();
-    else if (bsonType == BsonType.Document) return BsonSerializer.Deserialize<T>(context.Reader);
-    context.Reader.ReadNull();
-    return null;
+    switch (bsonType)
+    {
+      case BsonType.String:
+        return (Ref<T>)context.Reader.ReadString();
+      case BsonType.ObjectId:
+        return (Ref<T>)context.Reader.ReadObjectId().ToString();
+      case BsonType.Document:
+        return BsonSerializer.Deserialize<T>(context.Reader);
+      default:
+        context.Reader.ReadNull();
+        return null;
+    }
   }
 }

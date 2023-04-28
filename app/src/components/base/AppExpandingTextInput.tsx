@@ -1,7 +1,7 @@
 import { AppTextInput, AppTextInputProps } from "@/components/base/AppTextInput";
 import { useState } from "react";
 import { AppColors } from "@/theme/colors";
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 const margin = 16;

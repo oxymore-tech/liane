@@ -309,9 +309,10 @@ const WithBottomSheetContext =
 interface AppBottomSheetScrollRefProps {
   scrollTo: (y: number) => void;
 }
+
 export const AppBottomSheetFlatList = WithBottomSheetContext(
   forwardRef<AppBottomSheetScrollRefProps, FlatListProps<unknown>>((props: FlatListProps<unknown>, ref) => {
-    const fRef = useRef<FlatList>();
+    const fRef = useRef<FlatList>(null);
     useImperativeHandle(ref, () => ({
       scrollTo: y => fRef.current?.scrollToOffset({ offset: y, animated: false })
     }));
@@ -321,7 +322,7 @@ export const AppBottomSheetFlatList = WithBottomSheetContext(
 
 export const AppBottomSheetScrollView = WithBottomSheetContext(
   forwardRef<AppBottomSheetScrollRefProps, ScrollViewProps>((props: ScrollViewProps, ref) => {
-    const fRef = useRef<ScrollView>();
+    const fRef = useRef<ScrollView>(null);
     useImperativeHandle(ref, () => ({
       scrollTo: y => fRef.current?.scrollTo({ y, animated: false })
     }));

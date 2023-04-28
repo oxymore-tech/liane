@@ -1,4 +1,3 @@
-import { PublishStepsKeys } from "@/screens/publish/StateMachine";
 export const createStateSequence = <T, TKey extends string>(
   states: { [key: string]: { validation?: (context: T) => boolean } },
   nextState: string,

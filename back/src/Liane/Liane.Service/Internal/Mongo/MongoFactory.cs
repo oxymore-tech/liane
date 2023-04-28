@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.Trip;
@@ -53,8 +54,7 @@ public static class MongoFactory
       };
       var stringIdAsObjectIdPack = new ConventionPack
       {
-        new IdSerializationConvention(),
-        new RefSerializationConvention(new[] { typeof(RallyingPoint) }.ToImmutableList())
+        new IdSerializationConvention()
       };
 
       ConventionRegistry.Register("EnumStringConvention", alwaysPack, _ => true);
@@ -66,6 +66,7 @@ public static class MongoFactory
       BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
+      BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableHashSet<>), typeof(ImmutableHashSetSerializer<>));
       _init = true;

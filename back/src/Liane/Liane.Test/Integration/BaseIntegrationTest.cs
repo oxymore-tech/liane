@@ -39,6 +39,7 @@ public abstract class BaseIntegrationTest
 
   private IMongoDatabase mongo = null!;
   protected ServiceProvider ServiceProvider = null!;
+  protected MockCurrentContext CurrentContext = null!;
 
   [OneTimeSetUp]
   public async Task SetupMockData()
@@ -101,7 +102,9 @@ public abstract class BaseIntegrationTest
 
     ServiceProvider = services.BuildServiceProvider();
 
+    CurrentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
+
     mongo.Drop();
     // Init services in child class 
     Setup(mongo);

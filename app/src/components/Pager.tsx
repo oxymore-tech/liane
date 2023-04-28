@@ -1,10 +1,8 @@
 import React, { PropsWithChildren } from "react";
-import { BackHandler, Pressable, StyleSheet, View } from "react-native";
+import { BackHandler, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
-import { AppText } from "@/components/base/AppText";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
-import { useNavigation } from "@react-navigation/native";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
 export interface WizardPageProps extends PropsWithChildren {
@@ -55,7 +53,6 @@ export const WizardPager = ({ children, pageCount, color, onPageChange, currentP
   const { backgroundColor } = currentPageChild.props as WizardPageProps;
   const grayColor = defaultTextColor(backgroundColor);
   const keyboardIsVisible = useKeyboardState();
-  const navigation = useNavigation();
 
   React.useEffect(() => {
     const onGoBackListener = () => {

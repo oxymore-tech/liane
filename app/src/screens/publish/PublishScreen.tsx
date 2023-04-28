@@ -1,7 +1,7 @@
 import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import React, { useContext, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
-import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppStyles } from "@/theme/styles";
@@ -31,7 +31,6 @@ import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { AppPressable } from "@/components/base/AppPressable";
 import { formatMonthDay, toRelativeTimeString } from "@/api/i18n";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
-import { AppButton } from "@/components/base/AppButton";
 import { LianeQueryKey } from "@/screens/MyTripsScreen";
 import { useQueryClient } from "react-query";
 import { useAppNavigation } from "@/api/navigation";

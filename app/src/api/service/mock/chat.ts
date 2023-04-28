@@ -1,13 +1,15 @@
-import { ChatMessage, ConversationGroup, PaginatedRequestParams, PaginatedResponse, User, Ref } from "@/api";
+import { ChatMessage, ConversationGroup, PaginatedResponse, Ref, User } from "@/api";
 import { delay, interval, Subject, SubscriptionLike, take } from "rxjs";
 import { AbstractHubService } from "@/api/service/interfaces/hub";
 
 export class HubServiceMock extends AbstractHubService {
   private messages: ChatMessage[] = [];
   private messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
-  async list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>> {
+
+  async list(): Promise<PaginatedResponse<ChatMessage>> {
     return { pageSize: this.messages.length, data: this.messages };
   }
+
   readonly mockMe: User = {
     id: "00000",
     phone: "0600000000",
@@ -45,9 +47,12 @@ export class HubServiceMock extends AbstractHubService {
         const now = new Date();
         const msg = `This is the ${counter}th test.`;
         this.notificationSubject.next({
+          _t: "Info",
           title: "Test",
           message: msg,
-          payload: { type: "String", content: msg, id: counter.toString(), seen: false, createdAt: now.toISOString() }
+          sentAt: now.toISOString(),
+          recipients: [],
+          answers: []
         });
       });
 
@@ -75,4 +80,12 @@ export class HubServiceMock extends AbstractHubService {
     this.messages.push(reply);
     this.messageSubject.next(reply);
   };
+
+  postEvent(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
+
+  postAnswer(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 }

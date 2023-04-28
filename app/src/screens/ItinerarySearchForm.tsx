@@ -11,9 +11,8 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useDebounceValue } from "@/util/hooks/debounce";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
-import { OfflineWarning } from "@/components/OfflineWarning";
 
 export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
   const [recentTrips, setRecentTrips] = useState<Trip[]>([]);

@@ -6,7 +6,7 @@ namespace Liane.Api.Event;
 public interface IEventListener
 {
   Task OnEvent(LianeEvent e);
-  Task OnAnswer(LianeEvent e, Answer answer);
+  Task OnAnswer(Notification.Event e, Answer answer);
 }
 
 public interface IEventListener<in TEvent> : IEventListener
@@ -17,14 +17,14 @@ public interface IEventListener<in TEvent> : IEventListener
     return e.GetType().IsAssignableTo(typeof(TEvent)) ? OnEvent((TEvent)e) : Task.CompletedTask;
   }
 
-  Task IEventListener.OnAnswer(LianeEvent e, Answer answer)
+  Task IEventListener.OnAnswer(Notification.Event e, Answer answer)
   {
-    return e.GetType().IsAssignableTo(typeof(TEvent)) ? OnAnswer((TEvent)e, answer) : Task.CompletedTask;
+    return e.Payload.GetType().IsAssignableTo(typeof(TEvent)) ? OnAnswer(e, (TEvent)e.Payload, answer) : Task.CompletedTask;
   }
 
   Task OnEvent(TEvent lianeEvent);
 
-  Task OnAnswer(TEvent lianeEvent, Answer answer)
+  Task OnAnswer(Notification.Event e, TEvent lianeEvent, Answer answer)
   {
     throw new NotImplementedException();
   }

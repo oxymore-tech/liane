@@ -6,11 +6,13 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { isJoinLianeRequest, isJoinRequestAccepted, JoinLianeRequestDetailed, JoinRequest, Liane, LianeMatch, NotificationPayload } from "./index";
+import { JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils } from "./index";
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
+import { Event, Notification } from "@/api/notification";
+import { JoinRequest, MemberAccepted } from "@/api/event";
 
 export type NavigationParamList = {
   Home: undefined;
@@ -24,7 +26,7 @@ export type NavigationParamList = {
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
-  OpenJoinLianeRequest: { request: NotificationPayload<JoinRequest> };
+  OpenJoinLianeRequest: { request: Event<JoinRequest> };
 };
 
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
@@ -34,16 +36,22 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
   return { navigation, route };
 };
 
-export const getNotificationNavigation = (
-  payload: NotificationPayload<any>
-): ((navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void) => {
-  if (isJoinLianeRequest(payload)) {
-    return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload });
-  } else if (isJoinRequestAccepted(payload)) {
-    return navigation => navigation.navigate("LianeDetail", { liane: payload.content.liane });
+export function getNotificationNavigation(notification: Notification) {
+  if (!UnionUtils.isInstanceOf<Event>(notification, "Event")) {
+    return undefined;
   }
 
-  return () => {};
-};
+  if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("OpenJoinLianeRequest", { request: notification });
+  }
+
+  if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("LianeDetail", { liane: notification.payload.liane });
+  }
+
+  return undefined;
+}
 
 export const RootNavigation = createNavigationContainerRef<NavigationParamList>();

@@ -199,9 +199,9 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type Exact = { type: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
+export type Exact = { _t: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
 export type Compatible = {
-  type: "Compatible";
+  _t: "Compatible";
   pickup: Ref<RallyingPoint>;
   deposit: Ref<RallyingPoint>;
   wayPoints: WayPoint[];
@@ -225,12 +225,8 @@ export type LianeMatch = Readonly<{
   freeSeatsCount: number;
 }>;
 
-export const isExactMatch = (match: Match): match is Exact => {
-  return match.type === "Exact";
-};
-
 export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): RallyingPoint => {
-  const wp = isExactMatch(match.match) ? match.liane.wayPoints : match.match.wayPoints;
+  const wp = UnionUtils.isInstanceOf<Exact>(match.match, "Exact") ? match.liane.wayPoints : match.match.wayPoints;
   return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
 

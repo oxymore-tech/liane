@@ -1,6 +1,5 @@
 {
   "_t": "JoinRequest",
-  "member": "augustin",
   "from": "Aurillac",
   "message": "Hey !",
   "seats": 2,

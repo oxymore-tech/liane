@@ -1,5 +1,5 @@
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React from "react";
 import { Row } from "@/components/base/AppLayout";
 
