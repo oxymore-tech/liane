@@ -9,7 +9,7 @@ export class NotificationServiceMock extends AbstractNotificationService {
     for (let i = 0; i < unreadNotificationsCount; i++) {
       const message = "Initial_" + i;
       notifications.push({
-        _t: "Info",
+        type: "Info",
         id: i.toString(),
         title: "Test",
         message,

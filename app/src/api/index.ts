@@ -2,8 +2,8 @@ import { TimeInSeconds } from "@/util/datetime";
 import { FeatureCollection } from "geojson";
 
 export class UnionUtils {
-  static isInstanceOf<T extends { _t: string }>(notification: { _t: string }, type: T["_t"]): notification is T {
-    return notification._t === type;
+  static isInstanceOf<T extends { type: string }>(notification: { type: string }, type: T["type"]): notification is T {
+    return notification.type === type;
   }
 }
 
@@ -199,9 +199,9 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type Exact = { _t: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
+export type Exact = { type: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
 export type Compatible = {
-  _t: "Compatible";
+  type: "Compatible";
   pickup: Ref<RallyingPoint>;
   deposit: Ref<RallyingPoint>;
   wayPoints: WayPoint[];

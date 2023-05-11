@@ -23,7 +23,7 @@ export const ProfileScreen = () => {
         text={"Gen"}
         onPress={() =>
           services.notification.receiveNotification({
-            _t: "Info",
+            type: "Info",
             title: "Test",
             message: "Texte de la notification",
             sentAt: new Date().toISOString(),

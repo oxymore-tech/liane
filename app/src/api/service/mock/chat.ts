@@ -47,7 +47,7 @@ export class HubServiceMock extends AbstractHubService {
         const now = new Date();
         const msg = `This is the ${counter}th test.`;
         this.notificationSubject.next({
-          _t: "Info",
+          type: "Info",
           title: "Test",
           message: msg,
           sentAt: now.toISOString(),

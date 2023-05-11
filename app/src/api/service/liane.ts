@@ -76,7 +76,7 @@ export class LianeServiceClient implements LianeService {
   }
 
   join(joinRequest: JoinRequest) {
-    return postAs<JoinRequest>(`/event`, { body: joinRequest });
+    return postAs<JoinRequest>(`/event`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {

@@ -46,7 +46,7 @@ export abstract class AbstractHubService implements ChatHubService {
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage | null = null;
 
-  protected async receiveMessage(convId: string, message: ChatMessage) {
+  protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
     console.debug("received msg", convId, message, this.currentConversationId);
     if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
@@ -54,14 +54,14 @@ export abstract class AbstractHubService implements ChatHubService {
     } else if (!this.unreadConversations.getValue().includes(convId)) {
       this.unreadConversations.next([...this.unreadConversations.getValue(), convId]);
     }
-  }
+  };
 
-  protected async receiveUnreadOverview(unread: UnreadOverview) {
+  protected receiveUnreadOverview = async (unread: UnreadOverview) => {
     // Called when hub is started
     console.log("unread", unread);
     this.unreadConversations.next(unread.conversations);
     this.unreadNotificationCount.next(unread.notificationsCount);
-  }
+  };
 
   protected async receiveNotification(notification: Notification) {
     // Called on new notification
@@ -71,12 +71,12 @@ export abstract class AbstractHubService implements ChatHubService {
     this.notificationSubject.next(notification);
   }
 
-  protected async receiveLatestMessages(messages: PaginatedResponse<ChatMessage>) {
+  protected receiveLatestMessages = async (messages: PaginatedResponse<ChatMessage>) => {
     // Called after joining a conversation
     if (this.onReceiveLatestMessagesCallback) {
       await this.onReceiveLatestMessagesCallback(messages);
     }
-  }
+  };
 
   subscribeToNotifications = (callback: OnNotificationCallback) => this.notificationSubject.subscribe(callback);
 
@@ -85,11 +85,11 @@ export abstract class AbstractHubService implements ChatHubService {
   abstract start(): Promise<FullUser>;
   abstract stop(): Promise<void>;
 
-  async connectToChat(
+  connectToChat = async (
     conversationRef: Ref<ConversationGroup>,
     onReceiveLatestMessages: OnLatestMessagesCallback,
     onReceiveMessage: ConsumeMessage
-  ): Promise<ConversationGroup> {
+  ): Promise<ConversationGroup> => {
     if (this.currentConversationId) {
       await this.disconnectFromChat(this.currentConversationId);
     }
@@ -104,9 +104,9 @@ export abstract class AbstractHubService implements ChatHubService {
     }
 
     return conv;
-  }
+  };
 
-  async disconnectFromChat(_: Ref<ConversationGroup>): Promise<void> {
+  disconnectFromChat = async (_: Ref<ConversationGroup>): Promise<void> => {
     if (this.currentConversationId) {
       this.onReceiveLatestMessagesCallback = null;
       this.onReceiveMessageCallback = null;
@@ -116,9 +116,9 @@ export abstract class AbstractHubService implements ChatHubService {
     } else if (__DEV__) {
       console.log("Tried to leave an undefined conversation.");
     }
-  }
+  };
 
-  async send(message: ChatMessage): Promise<void> {
+  send = async (message: ChatMessage): Promise<void> => {
     console.log("send");
     if (this.currentConversationId) {
       try {
@@ -131,7 +131,7 @@ export abstract class AbstractHubService implements ChatHubService {
     } else {
       throw new Error("Could not send message to undefined conversation");
     }
-  }
+  };
 
   abstract leaveGroupChat(): Promise<void>;
   abstract sendToGroup(message: ChatMessage): Promise<void>;

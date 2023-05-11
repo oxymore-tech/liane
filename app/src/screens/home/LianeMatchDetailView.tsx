@@ -65,7 +65,7 @@ export const LianeMatchDetailView = () => {
 
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
-      _t: "JoinRequest",
+      type: "JoinRequest",
       from: fromPoint.id!,
       message,
       seats: seats,

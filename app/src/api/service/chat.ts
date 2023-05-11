@@ -28,7 +28,7 @@ export class HubServiceClient extends AbstractHubService {
     this.hub = createChatConnection();
   }
 
-  start() {
+  start = () => {
     if (this.isStarted) {
       console.debug("hub already started");
       return new Promise<FullUser>(async (resolve, reject) => {
@@ -85,13 +85,13 @@ export class HubServiceClient extends AbstractHubService {
         }
       });
     });
-  }
+  };
 
-  stop() {
+  stop = () => {
     console.log("stop");
     // TODO close all observables
     return this.hub.stop();
-  }
+  };
 
   async list(id: Ref<ConversationGroup>, params: PaginatedRequestParams) {
     return get<PaginatedResponse<ChatMessage>>(`/conversation/${id}/message`, { params });

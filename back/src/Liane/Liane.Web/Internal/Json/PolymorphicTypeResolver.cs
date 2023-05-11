@@ -28,7 +28,7 @@ public sealed class PolymorphicTypeResolver : DefaultJsonTypeInfoResolver
 
     var polymorphismOptions = new JsonPolymorphismOptions
     {
-      TypeDiscriminatorPropertyName = "_t",
+      TypeDiscriminatorPropertyName = "type",
       IgnoreUnrecognizedTypeDiscriminators = true,
       UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor,
     };

@@ -9,14 +9,14 @@ import { Notification } from "@/api/notification";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
-    return await get("/api/notification");
+    return await get("/notification");
   }
 
   async markAsRead(notification: Notification): Promise<void> {
-    await patch(`/api/notification/${notification.id}`);
+    await patch(`/notification/${notification.id}`);
   }
 
-  async checkInitialNotification(): Promise<void> {
+  checkInitialNotification = async (): Promise<void> => {
     const m = await PushNotifications?.getInitialNotification();
     if (m && m.data?.jsonPayload) {
       console.debug("opened via", JSON.stringify(m));
@@ -28,7 +28,7 @@ export class NotificationServiceClient extends AbstractNotificationService {
       this.initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
       console.debug("opened via", JSON.stringify(n));
     }
-  }
+  };
 
   override async receiveNotification(notification: Notification): Promise<void> {
     await super.receiveNotification(notification);

@@ -40,7 +40,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const wayPoints = exactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
-      _t: "JoinRequest",
+      type: "JoinRequest",
       from: fromPoint.id!,
       message,
       seats: request.seats,

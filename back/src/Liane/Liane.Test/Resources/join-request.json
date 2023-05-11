@@ -1,5 +1,5 @@
 {
-  "_t": "JoinRequest",
+  "type": "JoinRequest",
   "from": "Aurillac",
   "message": "Hey !",
   "seats": 2,

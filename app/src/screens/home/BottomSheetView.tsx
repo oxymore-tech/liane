@@ -2,7 +2,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useMemo } from "react";
 import { ActivityIndicator, FlatList, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { getPoint, isExactMatch, Liane, LianeMatch, RallyingPoint, RallyingPointLink } from "@/api";
+import { Exact, getPoint, Liane, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
 import { AppPressable } from "@/components/base/AppPressable";
 import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip } from "@/components/trip/trip";
@@ -274,7 +274,7 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
   const data = useMemo(
     () =>
       (props.lianeList ?? []).map(item => {
-        const lianeIsExactMatch = isExactMatch(item.match);
+        const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
         const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
         const fromPoint = getPoint(item, "pickup");
         const toPoint = getPoint(item, "deposit");

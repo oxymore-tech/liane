@@ -14,7 +14,7 @@ export type Recipient = Readonly<{
 }>;
 
 export type Info = Readonly<{
-  _t: "Info";
+  type: "Info";
   id?: string;
   sender?: Ref<User>;
   sentAt: UTCDateTime;
@@ -25,7 +25,7 @@ export type Info = Readonly<{
 }>;
 
 export type Reminder = Readonly<{
-  _t: "Reminder";
+  type: "Reminder";
   id?: string;
   sender?: Ref<User>;
   sentAt: UTCDateTime;
@@ -37,7 +37,7 @@ export type Reminder = Readonly<{
 }>;
 
 export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
-  _t: "Event";
+  type: "Event";
   id?: string;
   sender?: Ref<User>;
   sentAt: UTCDateTime;

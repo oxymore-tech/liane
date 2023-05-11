@@ -1,6 +1,5 @@
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, TextProps } from "react-native";
-import { AppDimensions } from "@/theme/dimensions";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 

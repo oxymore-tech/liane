@@ -8,7 +8,7 @@ export type TimeSpan = `${Hours}:${Minutes}:${Seconds}`;
 export type LianeEvent = JoinRequest | MemberAccepted | MemberRejected | MemberHasLeft | MemberPing;
 
 export type JoinRequest = Readonly<{
-  _t: "JoinRequest";
+  type: "JoinRequest";
   liane: Ref<Liane>;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
@@ -18,7 +18,7 @@ export type JoinRequest = Readonly<{
 }>;
 
 export type MemberAccepted = Readonly<{
-  _t: "MemberAccepted";
+  type: "MemberAccepted";
   liane: Ref<Liane>;
   member: Ref<User>;
   from: Ref<RallyingPoint>;
@@ -28,18 +28,18 @@ export type MemberAccepted = Readonly<{
 }>;
 
 export type MemberRejected = Readonly<{
-  _t: "MemberRejected";
+  type: "MemberRejected";
   liane: Ref<Liane>;
   member: Ref<User>;
 }>;
 
 export type MemberHasLeft = Readonly<{
-  _t: "MemberHasLeft";
+  type: "MemberHasLeft";
   liane: Ref<Liane>;
 }>;
 
 export type MemberPing = Readonly<{
-  _t: "MemberPing";
+  type: "MemberPing";
   member: Ref<User>;
   liane: Ref<Liane>;
   delay: TimeSpan;

@@ -33,22 +33,22 @@ public abstract class CronJobService : IHostedService, IDisposable
   {
     if (runImmediately)
     {
-      logger.LogInformation("{job} : starts immediatly...", GetType().Name);
+      logger.LogInformation("{job} : starts immediately...", GetType().Name);
       await DoWork(cancellationToken);
     }
 
     var next = expression.GetNextOccurrence(DateTimeOffset.Now, timeZoneInfo);
     if (next.HasValue)
     {
-      var delay = next.Value - DateTimeOffset.Now;
-      if (delay.TotalMilliseconds <= 0) // prevent non-positive values from being passed into Timer
+      var delayMs = (next.Value - DateTimeOffset.Now).TotalMilliseconds;
+      if (delayMs <= 0) // prevent non-positive values from being passed into Timer
       {
         logger.LogInformation("{job} : starts...", GetType().Name);
         await ScheduleJob(cancellationToken);
       }
 
       logger.LogInformation("{job} : will run at '{at}'", GetType().Name, next.Value);
-      timer = new Timer(delay.TotalMilliseconds);
+      timer = new Timer(delayMs);
       timer.Elapsed += async (_, _) =>
       {
         timer.Dispose(); // reset and dispose timer

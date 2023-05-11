@@ -218,7 +218,7 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
                 <MonkeySmilingVector maxWidth={80} bodyColor={AppColorPalettes.blue[100]} />
               </View>
               <View style={{ marginHorizontal: 16 }}>
-                <SeatsForm seats={-seats} setSeats={setSeats} />
+                <SeatsForm seats={seats} setSeats={setSeats} />
               </View>
             </Column>
           </Animated.View>

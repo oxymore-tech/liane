@@ -57,5 +57,5 @@ public sealed record Liane(
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,
-  Ref<ConversationGroup>? Group
+  Ref<ConversationGroup>? Conversation
 ) : IEntity, ISharedResource<LianeMember>;

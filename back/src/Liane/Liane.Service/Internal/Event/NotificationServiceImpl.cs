@@ -117,12 +117,13 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
     var userId = currentContext.CurrentUser().Id;
 
-    if (!e.Answers.IsEmpty && e.Recipients.Where(r => r.User.Id != userId).All(r => r.SeenAt is not null))
+
+    if (e.Answers.IsEmpty && e.Recipients.Where(r => r.User.Id != userId).All(r => r.SeenAt is not null))
     {
       await Delete(id);
       return;
     }
-
+    
     var memberIndex = e.Recipients.FindIndex(r => r.User.Id == userId);
     await Mongo.GetCollection<Notification>()
       .UpdateOneAsync(n => n.Id! == id.Id,

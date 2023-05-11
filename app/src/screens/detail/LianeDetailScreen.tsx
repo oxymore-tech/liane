@@ -171,7 +171,7 @@ const toLianeMatch = (liane: Liane): LianeMatch => {
   return {
     liane,
     match: {
-      _t: "Exact",
+      type: "Exact",
       pickup: liane.wayPoints[0].rallyingPoint.id!,
       deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
     },
