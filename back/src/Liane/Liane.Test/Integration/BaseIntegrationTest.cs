@@ -89,7 +89,7 @@ public abstract class BaseIntegrationTest
     services.AddService(JsonSerializerSettings.TestJsonOptions());
     services.AddService(new FirebaseSettings(null));
     services.AddService<NotificationServiceImpl>();
-    services.AddService<FirebaseServiceImpl>();
+    services.AddService<FirebaseMessagingImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService<LianeServiceImpl>();
     services.AddService<UserServiceImpl>();

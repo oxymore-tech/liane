@@ -19,7 +19,7 @@ public sealed class UnionTypeJsonTest
   {
     var match = new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, ImmutableSortedSet<WayPoint>.Empty);
     var json = JsonSerializer.Serialize<Api.Trip.Match>(match, options);
-    Assert.IsTrue(json.Contains("\"_t\":\"Compatible\""));
+    Assert.IsTrue(json.Contains("\"type\":\"Compatible\""));
     var actual = JsonSerializer.Deserialize<Api.Trip.Match>(json, options);
     match.WithDeepEqual(actual)
       .Assert();
@@ -29,7 +29,7 @@ public sealed class UnionTypeJsonTest
   public void ShouldDeserializeLianeEvent()
   {
     var lianeEvent = new LianeEvent.MemberHasLeft("lianeId1", "augustin");
-    var actual = JsonSerializer.Deserialize<LianeEvent>("{\"_t\":\"MemberHasLeft\",\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options);
+    var actual = JsonSerializer.Deserialize<LianeEvent>("{\"type\":\"MemberHasLeft\",\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options);
     Assert.AreEqual(lianeEvent, actual);
   }
 }

@@ -76,7 +76,7 @@ public static class Startup
     services.AddService<NotificationServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
-    services.AddService<FirebaseServiceImpl>();
+    services.AddService<FirebaseMessagingImpl>();
 
     services.AddEventListeners();
 

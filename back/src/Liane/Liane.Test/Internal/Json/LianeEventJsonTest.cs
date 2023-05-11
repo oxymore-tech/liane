@@ -21,7 +21,7 @@ public sealed class LianeEventJsonTest
       new LianeEvent.MemberHasLeft("6408a644437b60cfd3b15874", "augustin"));
     var actual = JsonSerializer.Serialize(e, options);
     Assert.AreEqual(
-      "{\"id\":\"id\",\"sender\":\"augustin\",\"sentAt\":\"2023-03-03T00:00:00\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"_t\":\"MemberHasLeft\",\"liane\":\"6408a644437b60cfd3b15874\",\"member\":\"augustin\"}}",
+      "{\"id\":\"id\",\"sender\":\"augustin\",\"sentAt\":\"2023-03-03T00:00:00\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"type\":\"MemberHasLeft\",\"liane\":\"6408a644437b60cfd3b15874\",\"member\":\"augustin\"}}",
       actual);
   }
 

@@ -42,7 +42,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
-    services.AddService<FirebaseServiceImpl>();
+    services.AddService<FirebaseMessagingImpl>();
   }
 
   [Test]
@@ -131,9 +131,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
 
-    var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
-    Console.WriteLine("BB {0}", box.ToJson());
-
+    // var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
+    // Console.WriteLine("BB {0}", box.ToJson());
     // await DebugGeoJson();
 
     currentContext.SetCurrentUser(userA, true);

@@ -68,7 +68,7 @@ public sealed class LianeController : ControllerBase
     var from = new LatLng(lat, lng);
     var to = new LatLng(lat2, lng2);
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return await lianeService.DisplayGeoJSON(from, to, dateTime);
+    return await lianeService.DisplayGeoJson(from, to, dateTime);
   }
 
   [HttpPost("match")]

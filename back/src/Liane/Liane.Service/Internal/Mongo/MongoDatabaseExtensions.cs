@@ -38,7 +38,7 @@ public static class MongoDatabaseExtensions
     var field = string.Join(".", ExpressionHelper.GetMembers(fieldExpression)
       .Select(m => m.Name.Uncapitalize())
       .Reverse());
-    return IsInstanceOf<T>(builder, field, targetType);
+    return IsInstanceOf(builder, field, targetType);
   }
 
   public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, string field, Type targetType)
@@ -106,7 +106,7 @@ public static class MongoDatabaseExtensions
 
   public static string GetCollectionName<T>()
   {
-    var collectionName = typeof(T).Name.Replace("Db", "", StringComparison.OrdinalIgnoreCase);
+    var collectionName = typeof(T).FullName.Split(".").Last().Split("+")[0].Replace("Db", "", StringComparison.OrdinalIgnoreCase);
     return collectionName.ToSnakeCase();
   }
 }

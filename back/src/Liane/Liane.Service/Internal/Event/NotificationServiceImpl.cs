@@ -24,28 +24,51 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     this.eventDispatcher = eventDispatcher;
   }
 
-  public Task<Notification> Notify(string title, string message, Ref<Api.User.User> to) => Create(
+  public Task<Notification> SendInfo(string title, string message, Ref<Api.User.User> to) => Create(
     new Notification.Info(
       null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), ImmutableHashSet<Answer>.Empty, title, message)
   );
 
-  public Task<Notification> Notify(string title, string message, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
+  public Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
     new Notification.Event(
       null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
+  );
+
+  public Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder) => Create(
+    new Notification.Reminder(
+      null, currentContext.CurrentUser().Id, DateTime.UtcNow, to.Select(t => new Recipient(t, null)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder)
   );
 
   public new async Task<Notification> Create(Notification obj)
   {
     if (obj.Recipients.IsEmpty)
     {
-      throw new ArgumentException("Recipients must not be empty");
+      throw new ArgumentException("At least one recipient must be specified");
     }
 
-    var notification = await base.Create(obj);
+    var (created, notify) = obj switch
+    {
+      Notification.Reminder reminder => await CreateReminder(reminder),
+      _ => (await base.Create(obj), true)
+    };
 
-    await pushService.SendNotification(notification);
+    if (notify)
+    {
+      await Task.WhenAll(obj.Recipients.Select(r => pushService.SendNotification(r.User, created)));
+    }
 
-    return notification;
+    return created;
+  }
+
+  private async Task<(Notification, bool)> CreateReminder(Notification.Reminder reminder)
+  {
+    var existing = await Mongo.GetCollection<Notification.Reminder>()
+      .Find(Builders<Notification.Reminder>.Filter.IsInstanceOf<Notification.Reminder, Notification.Reminder>() & Builders<Notification.Reminder>.Filter.Where(n => n.Payload == reminder.Payload))
+      .FirstOrDefaultAsync();
+
+    return existing is not null
+      ? (existing, false)
+      : (await base.Create(reminder), true);
   }
 
   public async Task<PaginatedResponse<Notification>> List(NotificationFilter notificationFilter, Pagination pagination)
@@ -123,7 +146,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       await Delete(id);
       return;
     }
-    
+
     var memberIndex = e.Recipients.FindIndex(r => r.User.Id == userId);
     await Mongo.GetCollection<Notification>()
       .UpdateOneAsync(n => n.Id! == id.Id,

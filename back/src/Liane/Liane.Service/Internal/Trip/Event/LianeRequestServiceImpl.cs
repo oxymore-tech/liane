@@ -34,7 +34,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   {
     var liane = await lianeService.Get(joinRequest.Liane);
     var role = joinRequest.Seats > 0 ? "conducteur" : "passager";
-    await notificationService.Notify("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
+    await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer)

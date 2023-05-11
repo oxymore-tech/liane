@@ -45,6 +45,7 @@ public abstract class CronJobService : IHostedService, IDisposable
       {
         logger.LogInformation("{job} : starts...", GetType().Name);
         await ScheduleJob(cancellationToken);
+        return;
       }
 
       logger.LogInformation("{job} : will run at '{at}'", GetType().Name, next.Value);

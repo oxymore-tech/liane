@@ -19,6 +19,6 @@ public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.Membe
   {
     var member = new LianeMember(e.Member, e.From, e.To, e.TakeReturnTrip, e.Seats);
     await lianeService.AddMember(e.Liane, member);
-    await notificationService.Notify("Demande acceptée", "Vous avez rejoint une nouvelle Liane !", e.Member, e);
+    await notificationService.SendEvent("Demande acceptée", "Vous avez rejoint une nouvelle Liane !", e.Member, e);
   }
 }

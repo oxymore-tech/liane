@@ -4,18 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
-using Liane.Web.Binder;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
-using NLog.LayoutRenderers;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class EventServiceImplTest : BaseIntegrationTest
+public sealed class NotificationServiceImplTest : BaseIntegrationTest
 {
   private EventDispatcher eventDispatcher = null!;
   private ILianeService lianeService = null!;
@@ -51,5 +51,29 @@ public sealed class EventServiceImplTest : BaseIntegrationTest
     var actual = await lianeService.Get(liane.Id);
 
     CollectionAssert.AreEquivalent(actual.Members.Select(m => m.User.Id), ImmutableList.Create(userA.Id, userB.Id));
+  }
+
+  [Test]
+  public async Task ShouldNotSendSameReminderTwice()
+  {
+    var userA = Fakers.FakeDbUsers[0];
+    var userB = Fakers.FakeDbUsers[1];
+    var liane = await lianeService.Create(new LianeRequest(null, DateTime.Now, null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
+
+    CurrentContext.SetCurrentUser(userB);
+    var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
+    await eventDispatcher.Dispatch(joinRequest);
+
+    var now = DateTime.UtcNow;
+
+    var notification1 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.BlajouxParking, now));
+    var notification2 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.QuezacParking, now));
+    var notification3 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.BlajouxParking, now));
+
+    var actual = await notificationService.List(new NotificationFilter(null, null, null, new PayloadType.Reminder()), new Pagination());
+
+    Assert.AreEqual(actual.Data.Count, 2);
+    Assert.AreNotEqual(notification1.Id, notification2.Id);
+    Assert.AreEqual(notification1.Id, notification3.Id);
   }
 }

@@ -9,6 +9,7 @@ import { Observable, Subject } from "rxjs";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 export const AppBottomSheetHandleHeight = 24;
+
 export interface BottomSheetProps extends PropsWithChildren {
   stops: number[];
   initialStop?: number;

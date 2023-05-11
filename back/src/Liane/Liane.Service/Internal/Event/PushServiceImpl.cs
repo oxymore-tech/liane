@@ -18,24 +18,24 @@ public sealed class PushServiceImpl : IPushService
       .ToImmutableList();
   }
 
-  public Task SendNotification(Notification notification) => Task.WhenAll(notification.Recipients.Select(r => SendNotification(notification, r)));
-
-  public async Task SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
     foreach (var pushService in pushMiddlewares)
     {
       if (await pushService.SendChatMessage(receiver, conversation, message))
       {
-        return;
+        return true;
       }
     }
+
+    return false;
   }
 
-  private async Task<bool> SendNotification(Notification notification, Recipient recipient)
+  public async Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification)
   {
     foreach (var pushService in pushMiddlewares)
     {
-      if (await pushService.SendNotification(recipient.User, notification))
+      if (await pushService.SendNotification(receiver, notification))
       {
         return true;
       }

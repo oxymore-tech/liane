@@ -60,4 +60,4 @@ public abstract record Notification : IIdentity
   ) : Notification;
 }
 
-public sealed record Reminder(Ref<Trip.Liane> Liane, RallyingPoint RallyingPoint, DateTime At);
+public sealed record Reminder(Ref<Trip.Liane> Liane, Ref<RallyingPoint> RallyingPoint, DateTime At);

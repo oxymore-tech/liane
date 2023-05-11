@@ -24,8 +24,9 @@ public interface IPushMiddleware
 
 public interface IPushService
 {
-  Task SendNotification(Notification notification);
-  Task SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
+  Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification);
+
+  Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
 
   Task SendChatMessage(ImmutableList<Ref<Api.User.User>> receiver, Ref<ConversationGroup> conversation, ChatMessage message) =>
     Task.WhenAll(receiver.Select(r => SendChatMessage(r, conversation, message)));

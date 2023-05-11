@@ -14,13 +14,13 @@ using Notification = Liane.Api.Event.Notification;
 
 namespace Liane.Service.Internal.Event;
 
-public sealed class FirebaseServiceImpl : IPushMiddleware
+public sealed class FirebaseMessagingImpl : IPushMiddleware
 {
   private readonly IUserService userService;
-  private readonly ILogger<FirebaseServiceImpl> logger;
+  private readonly ILogger<FirebaseMessagingImpl> logger;
   private readonly JsonSerializerOptions jsonSerializerOptions;
 
-  public FirebaseServiceImpl(FirebaseSettings firebaseSettings, ILogger<FirebaseServiceImpl> logger, JsonSerializerOptions jsonSerializerOptions, IUserService userService)
+  public FirebaseMessagingImpl(FirebaseSettings firebaseSettings, ILogger<FirebaseMessagingImpl> logger, JsonSerializerOptions jsonSerializerOptions, IUserService userService)
   {
     this.logger = logger;
     this.jsonSerializerOptions = jsonSerializerOptions;
@@ -74,7 +74,7 @@ public sealed class FirebaseServiceImpl : IPushMiddleware
     var firebaseMessage = new Message
     {
       Token = deviceToken,
-      Notification = new FirebaseAdmin.Messaging.Notification()
+      Notification = new FirebaseAdmin.Messaging.Notification
       {
         Title = notification.Title,
         Body = notification.Message
