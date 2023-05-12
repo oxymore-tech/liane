@@ -33,6 +33,13 @@ public abstract record Ref<T>
     _ => null
   };
 
+  public bool Equals(Unresolved? other)
+  {
+    if (ReferenceEquals(null, other)) return false;
+    if (ReferenceEquals(this, other)) return true;
+    return Id == other.Id;
+  }
+
   public override int GetHashCode()
   {
     return Id.GetHashCode();

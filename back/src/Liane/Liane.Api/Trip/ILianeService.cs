@@ -2,7 +2,6 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
-using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
@@ -14,10 +13,13 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
   Task<PaginatedResponse<Liane>> ListForCurrentUser(Pagination pagination);
   Task<PaginatedResponse<Liane>> ListAll(Pagination pagination);
-  Task<ImmutableDictionary<Appointment, ImmutableList<Ref<Api.User.User>>>> GetNextAppointments(DateTime from, TimeSpan window);
+  Task<ImmutableDictionary<Appointment, ImmutableList<Ref<User.User>>>> GetNextAppointments(DateTime from, TimeSpan window);
 
   Task<Liane> AddMember(Ref<Liane> liane, LianeMember newMember);
   Task<Liane?> RemoveMember(Ref<Liane> liane, Ref<User.User> member);
+  
+  Task<LianeStatus> GetStatus(string id);
+  
   Task<Match?> GetNewTrip(Ref<Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
 
   Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination);

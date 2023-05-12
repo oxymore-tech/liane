@@ -360,4 +360,19 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("Quezac_Parking_fakeId", compatible.Pickup.Id);
     Assert.AreEqual("Mende_fakeId", compatible.Deposit.Id);
   }
+  
+  [Test]
+  public async Task ShouldGetNextAppointments()
+  {
+    var augustin = Fakers.FakeDbUsers[0].Id;
+
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-05-12T08:00:00+02:00"), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    await testedService.AddMember(liane.Id, new LianeMember(Fakers.FakeDbUsers[1].Id, LabeledPositions.BlajouxParking, LabeledPositions.Mende));
+    await testedService.AddMember(liane.Id, new LianeMember(Fakers.FakeDbUsers[2].Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+
+    var actual = await testedService.GetNextAppointments(DateTime.Parse("2023-05-12T07:56:00+02:00"), TimeSpan.FromMinutes(5));
+
+    Assert.AreEqual(1, actual.Count);
+  }
+  
 }

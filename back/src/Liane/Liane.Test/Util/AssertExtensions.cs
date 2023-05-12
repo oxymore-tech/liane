@@ -29,8 +29,8 @@ public static class AssertExtensions
 
   private const int PrecisionInMilliseconds = 1000;
 
-  public static void AreMongoEquals(DateTime dateTime, DateTime mongoDateTime)
+  public static void AreMongoEquals(DateTime expected, DateTime actual)
   {
-    Assert.IsTrue(Math.Abs((dateTime - mongoDateTime).TotalMilliseconds) < PrecisionInMilliseconds);
+    Assert.IsTrue(Math.Abs((expected - actual).TotalMilliseconds) < PrecisionInMilliseconds);
   }
 }

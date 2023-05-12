@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
-using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip.Event;
 
-public sealed class LianeStatusServiceImpl : ILianeStatusService
+public sealed class LianeStatusServiceImpl
 {
   private readonly IMongoDatabase mongo;
 
@@ -18,17 +18,8 @@ public sealed class LianeStatusServiceImpl : ILianeStatusService
     this.mongo = mongo;
   }
 
-  public async Task<LianeStatus> GetStatus(string id)
+  public async Task<LianeStatus> GetStatus(LianeDb lianeDb)
   {
-    var lianeDb = await mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == id)
-      .FirstOrDefaultAsync();
-
-    if (lianeDb is null)
-    {
-      throw ResourceNotFoundException.For((Ref<Api.Trip.Liane>)id);
-    }
-
     var now = DateTime.UtcNow;
 
     return lianeDb.State switch
@@ -46,16 +37,25 @@ public sealed class LianeStatusServiceImpl : ILianeStatusService
 
   private Task<LianeStatus> ComputeStartedStatus(LianeDb lianeDb, DateTime now)
   {
-    return Task.FromResult(new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime,
-      ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty));
+    var carpoolers = lianeDb.Pings.Where(p => p.User == lianeDb.Driver.User)
+      .Select(p => p.User)
+      .ToImmutableHashSet();
+    // TODO find last point based on time interpolation on waypoints
+    return Task.FromResult(new LianeStatus(now, lianeDb.State, null, carpoolers, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty));
   }
 
   private async Task<LianeStatus> ComputeNotStartedStatus(LianeDb lianeDb, DateTime now)
   {
     var delay = lianeDb.DepartureTime - now;
-    if (delay <= TimeSpan.FromHours(1))
+
+    if (delay < TimeSpan.Zero)
     {
       return new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime + delay, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
+    }
+
+    if (delay <= TimeSpan.FromHours(1))
+    {
+      return new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
     }
 
     await mongo.GetCollection<LianeDb>()
