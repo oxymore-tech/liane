@@ -44,8 +44,9 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
 
     Assert.AreEqual(LianeState.NotStarted, actual.State);
     CollectionAssert.IsEmpty(actual.Carpoolers);
-    Assert.IsNull(actual.LastPoint);
-    AssertExtensions.AreMongoEquals(departureTime, actual.NextEta);
+    Assert.IsNotNull(actual.NextEta);
+    Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
+    AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
   }
 
   [Test]
@@ -66,8 +67,9 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
 
     Assert.AreEqual(LianeState.Started, actual.State);
     CollectionAssert.AreEquivalent(ImmutableHashSet.Create((Ref<User>)userA.Id), actual.Carpoolers);
-    Assert.IsNull(actual.LastPoint);
-    AssertExtensions.AreMongoEquals(departureTime, actual.NextEta);
+    Assert.IsNotNull(actual.NextEta);
+    Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
+    AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
   }
 
   [Test]
@@ -88,8 +90,9 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
 
     Assert.AreEqual(LianeState.Started, actual.State);
     CollectionAssert.AreEquivalent(ImmutableHashSet.Create((Ref<User>)userA.Id), actual.Carpoolers);
-    Assert.IsNull(actual.LastPoint);
-    AssertExtensions.AreMongoEquals(departureTime, actual.NextEta);
+    Assert.IsNotNull(actual.NextEta);
+    Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
+    AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
   }
 
   private async Task<Api.Trip.Liane> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to, DateTime departureTime)

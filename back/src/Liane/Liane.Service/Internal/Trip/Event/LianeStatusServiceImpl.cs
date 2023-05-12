@@ -18,48 +18,49 @@ public sealed class LianeStatusServiceImpl
     this.mongo = mongo;
   }
 
-  public async Task<LianeStatus> GetStatus(LianeDb lianeDb)
+  public async Task<LianeStatus> GetStatus(Api.Trip.Liane liane, ImmutableList<UserPing> pings)
   {
     var now = DateTime.UtcNow;
 
-    return lianeDb.State switch
+    return liane.State switch
     {
-      LianeState.NotStarted => await ComputeNotStartedStatus(lianeDb, now),
-      LianeState.Started => await ComputeStartedStatus(lianeDb, now),
-      _ => ComputeStatus(lianeDb, now)
+      LianeState.NotStarted => await ComputeNotStartedStatus(liane, now),
+      LianeState.Started => await ComputeStartedStatus(liane, pings, now),
+      _ => ComputeStatus(liane, now)
     };
   }
 
-  private static LianeStatus ComputeStatus(LianeDb lianeDb, DateTime now)
+  private static LianeStatus ComputeStatus(Api.Trip.Liane liane, DateTime now)
   {
-    return new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
+    return new LianeStatus(now, liane.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
   }
 
-  private Task<LianeStatus> ComputeStartedStatus(LianeDb lianeDb, DateTime now)
+  private Task<LianeStatus> ComputeStartedStatus(Api.Trip.Liane liane, ImmutableList<UserPing> pings, DateTime now)
   {
-    var carpoolers = lianeDb.Pings.Where(p => p.User == lianeDb.Driver.User)
+    var carpoolers = pings.Where(p => p.User == liane.Driver.User)
       .Select(p => p.User)
       .ToImmutableHashSet();
-    // TODO find last point based on time interpolation on waypoints
-    return Task.FromResult(new LianeStatus(now, lianeDb.State, null, carpoolers, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty));
+
+    var nextEta = liane.WayPoints
+      .Select(w => new NextEta(w.RallyingPoint, liane.DepartureTime.AddSeconds(w.Duration)))
+      .FirstOrDefault(e => e.Eta > now);
+
+    return Task.FromResult(new LianeStatus(now, liane.State, nextEta, carpoolers, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty));
   }
 
-  private async Task<LianeStatus> ComputeNotStartedStatus(LianeDb lianeDb, DateTime now)
+  private async Task<LianeStatus> ComputeNotStartedStatus(Api.Trip.Liane liane, DateTime now)
   {
-    var delay = lianeDb.DepartureTime - now;
+    var nextEta = liane.WayPoints
+      .Select(w => new NextEta(w.RallyingPoint, liane.DepartureTime.AddSeconds(w.Duration)))
+      .FirstOrDefault(e => e.Eta > now);
 
-    if (delay < TimeSpan.Zero)
+    if (nextEta is not null)
     {
-      return new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime + delay, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
-    }
-
-    if (delay <= TimeSpan.FromHours(1))
-    {
-      return new LianeStatus(now, lianeDb.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
+      return new LianeStatus(now, liane.State, nextEta, ImmutableHashSet<Ref<Api.User.User>>.Empty, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
     }
 
     await mongo.GetCollection<LianeDb>()
-      .UpdateOneAsync(l => l.Id == lianeDb.Id, Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled));
-    return new LianeStatus(now, LianeState.Canceled, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, lianeDb.DepartureTime, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
+      .UpdateOneAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled));
+    return new LianeStatus(now, LianeState.Canceled, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
   }
 }

@@ -187,7 +187,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       throw ResourceNotFoundException.For((Ref<Api.Trip.Liane>)id);
     }
 
-    return await lianeStatusService.GetStatus(lianeDb);
+    var liane = await MapEntity(lianeDb);
+
+    return await lianeStatusService.GetStatus(liane, lianeDb.Pings);
   }
 
   private async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)

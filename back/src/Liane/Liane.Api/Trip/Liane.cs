@@ -24,12 +24,13 @@ public enum PassengerState
 
 public sealed record PassengerStatus(PassengerState State, DateTime NextEta);
 
+public sealed record NextEta(Ref<RallyingPoint> RallyingPoint, DateTime Eta);
+
 public sealed record LianeStatus(
   DateTime At,
   LianeState State,
-  Ref<RallyingPoint>? LastPoint,
+  NextEta? NextEta,
   ImmutableHashSet<Ref<User.User>> Carpoolers,
-  DateTime NextEta,
   ImmutableDictionary<Ref<User.User>, PassengerStatus> NextPassengers
 );
 
