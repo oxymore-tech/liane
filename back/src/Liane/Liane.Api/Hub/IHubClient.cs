@@ -17,4 +17,5 @@ public interface IHubClient
   Task ReceiveLatestMessages(PaginatedResponse<ChatMessage> messages);
 
   Task Me(FullUser user);
+  
 }

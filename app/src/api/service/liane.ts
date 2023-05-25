@@ -1,22 +1,18 @@
 import {
   JoinLianeRequestDetailed,
-  JoinRequest,
   LatLng,
   Liane,
-  LianeEvent,
   LianeMatch,
   LianeRequest,
   LianeSearchFilter,
-  MemberRejected,
-  MemberAccepted,
   PaginatedResponse,
-  NotificationPayload,
   UTCDateTime,
   LianeMatchDisplay,
   NearestLinks
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
 import { FeatureCollection } from "geojson";
+import { JoinRequest } from "@/api/event";
 
 export interface LianeService {
   list(): Promise<PaginatedResponse<Liane>>;
@@ -28,7 +24,6 @@ export interface LianeService {
   display(from: LatLng, to: LatLng, afterDate?: Date): Promise<FeatureCollection>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
-  answer(accept: boolean, event: NotificationPayload<JoinRequest>): Promise<void>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
   delete(lianeId: string): Promise<void>;
@@ -81,30 +76,13 @@ export class LianeServiceClient implements LianeService {
   }
 
   join(joinRequest: JoinRequest) {
-    return postAs<JoinRequest>(`/event`, { body: joinRequest });
+    return postAs<JoinRequest>(`/event`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
     return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }
 
-  async answer(accept: boolean, event: NotificationPayload<JoinRequest>) {
-    let lianeEvent: LianeEvent;
-    if (accept) {
-      lianeEvent = <MemberAccepted>{
-        type: "MemberAccepted",
-        liane: event.content.liane,
-        member: event.createdBy.id,
-        to: event.content.to,
-        from: event.content.from,
-        seats: event.content.seats,
-        takeReturnTrip: event.content.takeReturnTrip
-      };
-    } else {
-      lianeEvent = <MemberRejected>{ type: "MemberRejected", liane: event.content.liane, member: event.createdBy.id };
-    }
-    await postAs("/event/" + event.id!, { body: lianeEvent });
-  }
   async deleteJoinRequest(id: string): Promise<void> {
     await del(`/event/join_request/${id}`);
   }

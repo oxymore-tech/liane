@@ -1,24 +1,28 @@
-import { Notification, NotificationPayload, PaginatedResponse } from "@/api";
+import { PaginatedResponse } from "@/api";
 import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
+import { Notification } from "@/api/notification";
+
 export interface NotificationService {
-  receiveNotification: (notification: Notification) => Promise<void>;
+  receiveNotification(notification: Notification): Promise<void>;
 
-  checkInitialNotification: () => Promise<void>;
+  checkInitialNotification(): Promise<void>;
 
-  initialNotification: () => NotificationPayload<any> | null | undefined;
+  getInitialNotification(): Notification | undefined;
 
-  list: () => Promise<PaginatedResponse<Notification>>;
+  list(): Promise<PaginatedResponse<Notification>>;
 
-  read: (notification: NotificationPayload<any>) => Promise<boolean>;
-  initUnreadNotificationCount: (initialCount: Observable<number>) => void;
+  markAsRead(notification: Notification): Promise<void>;
+
+  initUnreadNotificationCount(initialCount: Observable<number>): void;
+
   unreadNotificationCount: Observable<number>;
 }
 
 export abstract class AbstractNotificationService implements NotificationService {
-  protected _initialNotification = undefined;
+  protected initialNotification?: Notification;
 
-  protected _readNotifications: string[] = [];
-  initialNotification = () => this._initialNotification;
+  getInitialNotification = () => this.initialNotification;
+
   unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
 
   protected _sub?: SubscriptionLike;
@@ -31,22 +35,16 @@ export abstract class AbstractNotificationService implements NotificationService
       this.unreadNotificationCount.next(count);
     });
   };
-  receiveNotification = async (_: Notification) => {
-    // Increment counter
+
+  async receiveNotification(_: Notification) {
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
-  };
+  }
+
   abstract checkInitialNotification(): Promise<void>;
+
   abstract list(): Promise<PaginatedResponse<Notification>>;
 
-  read = async (notification: NotificationPayload<any>): Promise<boolean> => {
-    if (!notification.seen && !this._readNotifications.includes(notification.id!)) {
-      this._readNotifications.push(notification.id!);
-      await this.changeSeenStatus(notification.id!);
-      // Decrement counter
-      this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
-      return true;
-    }
-    return false;
-  };
-  abstract changeSeenStatus(notificationId: string): Promise<void>;
+  async markAsRead(_: Notification) {
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
+  }
 }

@@ -3,11 +3,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Util;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -16,12 +18,13 @@ namespace Liane.Service.Internal.Chat;
 public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>, IChatService
 {
   private readonly IUserService userService;
-  private readonly IHubService hubService;
+  private readonly IPushService pushService;
 
-  public ChatServiceImpl(IMongoDatabase mongo, IUserService userService, IHubService hubService) : base(mongo)
+  public ChatServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IUserService userService, IPushService pushService) : base(mongo,
+    currentContext)
   {
     this.userService = userService;
-    this.hubService = hubService;
+    this.pushService = pushService;
   }
 
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
@@ -62,6 +65,16 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     }))).SelectAsync<ConversationGroup, Ref<ConversationGroup>>(g => Task.FromResult((Ref<ConversationGroup>)g.Id!));
   }
 
+  public Task PostEvent(LianeEvent lianeEvent)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task PostAnswer(Ref<Notification> id, Answer answer)
+  {
+    throw new NotImplementedException();
+  }
+
   public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)
   {
     var createdAt = DateTime.UtcNow;
@@ -74,20 +87,10 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
         new FindOneAndUpdateOptions<ConversationGroup> { ReturnDocument = ReturnDocument.After }
       );
     // Send notification asynchronously to other conversation members
-    var _ = Task.Run(() =>
-    {
-      Parallel.ForEach(conversation!.Members, async info =>
-      {
-        if (info.User == author) return;
-        if (await hubService.TrySendChatMessage(info.User, groupId, sent))
-        {
-          return;
-        }
-        // User is not connected so send detailed notification  
-        // var authorUser = await userService.Get(author);
-        //TODO await notificationService.SendTo(info.User, nameof(NewConversationMessage), new NewConversationMessage(groupId, authorUser, sent));
-      });
-    });
+    var receivers = conversation!.Members.Select(m => m.User)
+      .Where(u => u != author)
+      .ToImmutableList();
+    await pushService.SendChatMessage(receivers, groupId, sent);
     return sent;
   }
 
@@ -103,12 +106,12 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return messages.Select(MapMessage);
   }
 
-  protected override ConversationGroup ToDb(ConversationGroup inputDto, string originalId, DateTime createdAt, string createdBy)
+  protected override Task<ConversationGroup> ToDb(ConversationGroup inputDto, string originalId, DateTime createdAt, string createdBy)
   {
-    return inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy };
+    return Task.FromResult(inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy });
   }
 
-  private ChatMessage MapMessage(DbChatMessage m)
+  private static ChatMessage MapMessage(DbChatMessage m)
   {
     return new ChatMessage(m.Id, m.CreatedBy, m.CreatedAt, m.Text);
   }

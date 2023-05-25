@@ -4,6 +4,8 @@ import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signal
 import { getAccessToken, getCurrentUser, getRefreshToken, storeCurrentUser } from "@/api/storage";
 import { NetworkUnavailable } from "@/api/exception";
 import { AbstractHubService } from "@/api/service/interfaces/hub";
+import { LianeEvent } from "@/api/event";
+import { Answer } from "@/api/notification";
 
 function createChatConnection(): HubConnection {
   return new HubConnectionBuilder()
@@ -16,6 +18,7 @@ function createChatConnection(): HubConnection {
     .withAutomaticReconnect()
     .build();
 }
+
 export class HubServiceClient extends AbstractHubService {
   private hub: HubConnection;
 
@@ -89,20 +92,34 @@ export class HubServiceClient extends AbstractHubService {
     // TODO close all observables
     return this.hub.stop();
   };
-  list = async (id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>> =>
-    get(`/conversation/${id}/message`, { params });
 
-  async leaveGroupChat(): Promise<void> {
+  async list(id: Ref<ConversationGroup>, params: PaginatedRequestParams) {
+    return get<PaginatedResponse<ChatMessage>>(`/conversation/${id}/message`, { params });
+  }
+
+  async leaveGroupChat() {
     await this.checkConnection();
     await this.hub.invoke("LeaveGroupChat", this.currentConversationId);
   }
-  async joinGroupChat(conversationId: Ref<ConversationGroup>): Promise<ConversationGroup> {
+
+  async joinGroupChat(conversationId: Ref<ConversationGroup>) {
     await this.checkConnection();
-    return this.hub.invoke("JoinGroupChat", conversationId);
+    return this.hub.invoke<ConversationGroup>("JoinGroupChat", conversationId);
   }
-  async sendToGroup(message: ChatMessage): Promise<void> {
+
+  async sendToGroup(message: ChatMessage) {
     await this.checkConnection();
     await this.hub.invoke("SendToGroup", message, this.currentConversationId);
+  }
+
+  async postEvent(lianeEvent: LianeEvent) {
+    await this.checkConnection();
+    await this.hub.invoke("PostEvent", lianeEvent);
+  }
+
+  async postAnswer(notificationId: string, answer: Answer) {
+    await this.checkConnection();
+    await this.hub.invoke("PostAnswer", notificationId, answer);
   }
 
   private checkConnection = async () => {

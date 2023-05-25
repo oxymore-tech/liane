@@ -7,14 +7,18 @@ using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
-using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Internal.Json;
+using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -33,8 +37,9 @@ public abstract class BaseIntegrationTest
 {
   private static readonly HashSet<string> DbNames = new();
 
-  protected IMongoDatabase Db = null!;
+  private IMongoDatabase mongo = null!;
   protected ServiceProvider ServiceProvider = null!;
+  protected MockCurrentContext CurrentContext = null!;
 
   [OneTimeSetUp]
   public async Task SetupMockData()
@@ -81,18 +86,32 @@ public abstract class BaseIntegrationTest
     });
 
     services.AddService<MockCurrentContext>();
+    services.AddService(JsonSerializerSettings.TestJsonOptions());
+    services.AddService(new FirebaseSettings(null));
+    services.AddService<NotificationServiceImpl>();
+    services.AddService<FirebaseMessagingImpl>();
+    services.AddService(Moq.Mock.Of<IHubService>());
+    services.AddService<LianeServiceImpl>();
+    services.AddService<UserServiceImpl>();
+    services.AddService<PushServiceImpl>();
+    services.AddService<ChatServiceImpl>();
+    services.AddService<LianeStatusServiceImpl>();
+    services.AddEventListeners();
+
     SetupServices(services);
 
     ServiceProvider = services.BuildServiceProvider();
 
-    Db = ServiceProvider.GetRequiredService<IMongoDatabase>();
-    Db.Drop();
+    CurrentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
+    mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
+
+    mongo.Drop();
     // Init services in child class 
-    Setup(Db);
+    Setup(mongo);
     // Insert mock users & rallying points
-    Db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
-    Db.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
-    MongoFactory.InitSchema(Db);
+    mongo.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
+    mongo.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
+    MongoFactory.InitSchema(mongo);
   }
 
   protected virtual void SetupServices(IServiceCollection services)
@@ -105,12 +124,12 @@ public abstract class BaseIntegrationTest
   {
     var geoJson = new List<GeoJsonFeature<GeoJson2DGeographicCoordinates>>();
 
-    var geometries = await Db.GetCollection<LianeDb>()
+    var geometries = await mongo.GetCollection<LianeDb>()
       .Find(FilterDefinition<LianeDb>.Empty)
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
       .ToListAsync();
 
-    var points = await Db.GetCollection<RallyingPoint>()
+    var points = await mongo.GetCollection<RallyingPoint>()
       .Find(FilterDefinition<RallyingPoint>.Empty)
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
       .ToListAsync();

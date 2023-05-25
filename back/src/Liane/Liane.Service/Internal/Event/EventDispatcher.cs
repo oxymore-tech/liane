@@ -14,12 +14,21 @@ public sealed class EventDispatcher
     this.serviceProvider = serviceProvider;
   }
 
-  public async Task Dispatch(Api.Event.Event e, Api.Event.Event? answersToEvent)
+  public async Task Dispatch(LianeEvent e)
   {
-    var listeners = serviceProvider.GetServices<IEventListener>();
-    foreach (var eventListener in listeners)
+    var eventListeners = serviceProvider.GetServices<IEventListener>();
+    foreach (var eventListener in eventListeners)
     {
-       await eventListener.OnEvent(e, answersToEvent);
+      await eventListener.OnEvent(e);
+    }
+  }
+
+  public async Task DispatchAnswer(Notification.Event e, Answer answer)
+  {
+    var eventListeners = serviceProvider.GetServices<IEventListener>();
+    foreach (var eventListener in eventListeners)
+    {
+      await eventListener.OnAnswer(e, answer);
     }
   }
 }

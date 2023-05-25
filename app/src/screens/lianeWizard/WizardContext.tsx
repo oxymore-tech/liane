@@ -3,7 +3,6 @@ import { BaseFormProps, CarForm, DateForm, FormComponent, TimeForm } from "@/scr
 import { AppColors } from "@/theme/colors";
 import { WizardStateMachineInterpreter, WizardStepsKeys } from "@/screens/lianeWizard/StateMachine";
 import { LianeWizardFormKey } from "@/screens/lianeWizard/LianeWizardFormData";
-import { LocationForm } from "@/components/forms/LocationForm";
 import { LocationForm as L } from "@/screens/lianeWizard/Forms";
 
 export interface WizardStepData {

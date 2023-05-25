@@ -1,9 +1,9 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
@@ -19,11 +19,9 @@ public sealed class PolymorphicTypeResolver : DefaultJsonTypeInfoResolver
       return jsonTypeInfo;
     }
 
-    var candidateDerivedTypes = jsonTypeInfo.Type.GetNestedTypes()
-      .Where(t => t.IsAssignableTo(jsonTypeInfo.Type))
-      .ToArray();
+    var subTypes = jsonTypeInfo.Type.GetSubTypes();
 
-    if (candidateDerivedTypes.Length == 0)
+    if (subTypes.IsEmpty)
     {
       return jsonTypeInfo;
     }
@@ -35,9 +33,9 @@ public sealed class PolymorphicTypeResolver : DefaultJsonTypeInfoResolver
       UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor,
     };
 
-    foreach (var jsonDerivedType in candidateDerivedTypes)
+    foreach (var (subTypeName, subType) in subTypes)
     {
-      polymorphismOptions.DerivedTypes.Add(new JsonDerivedType(jsonDerivedType, jsonDerivedType.Name));
+      polymorphismOptions.DerivedTypes.Add(new JsonDerivedType(subType, subTypeName));
     }
 
     jsonTypeInfo.PolymorphismOptions = polymorphismOptions;

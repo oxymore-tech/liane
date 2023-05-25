@@ -1,35 +1,63 @@
 using System;
-using System.Text.Json.Serialization;
+using System.Collections.Immutable;
+using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
 
-public sealed record Notification(
-  string Title,
-  string Message,
-  INotificationPayload? Payload
+public sealed record Recipient(
+  Ref<User.User> User,
+  DateTime? SeenAt
 );
 
-public interface INotificationPayload
+public enum Answer
 {
-  string? Id { get; }
-  bool Seen { get; }
-  User.User CreatedBy { get; }
-  DateTime CreatedAt { get; }
-  bool NeedsAnswer { get; }
-  LianeEvent Content { get; }
-  string Type { get; }
+  Accept,
+  Reject
 }
 
-public sealed record NotificationPayload<T>(
-  string? Id,
-  User.User CreatedBy,
-  DateTime CreatedAt,
-  bool Seen,
-  bool NeedsAnswer,
-  LianeEvent Content) : INotificationPayload
-  where T : class
+[Union]
+public abstract record Notification : IIdentity
 {
-  //object INotificationPayload.Content => Content;
+  public abstract string? Id { get; init; }
+  public abstract Ref<User.User>? Sender { get; init; }
+  public abstract DateTime SentAt { get; init; }
+  public abstract ImmutableList<Recipient> Recipients { get; init; }
+  public abstract ImmutableHashSet<Answer> Answers { get; init; }
+  public abstract string Title { get; init; }
+  public abstract string Message { get; init; }
 
-  public string Type => typeof(T).Name;
+  public sealed record Info(
+    string? Id,
+    Ref<User.User>? Sender,
+    DateTime SentAt,
+    ImmutableList<Recipient> Recipients,
+    ImmutableHashSet<Answer> Answers,
+    string Title,
+    string Message
+  ) : Notification;
+
+  public sealed record Reminder(
+    string? Id,
+    Ref<User.User>? Sender,
+    DateTime SentAt,
+    ImmutableList<Recipient> Recipients,
+    ImmutableHashSet<Answer> Answers,
+    string Title,
+    string Message,
+    Api.Event.Reminder Payload
+  ) : Notification;
+
+  public sealed record Event(
+    string? Id,
+    Ref<User.User>? Sender,
+    DateTime SentAt,
+    ImmutableList<Recipient> Recipients,
+    ImmutableHashSet<Answer> Answers,
+    string Title,
+    string Message,
+    LianeEvent Payload
+  ) : Notification;
 }
+
+public sealed record Reminder(Ref<Trip.Liane> Liane, Ref<RallyingPoint> RallyingPoint, DateTime At);

@@ -1,4 +1,4 @@
-import { getPoint, isExactMatch, LianeMatch } from "@/api";
+import { Exact, getPoint, LianeMatch, UnionUtils } from "@/api";
 import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
@@ -65,7 +65,7 @@ const ResultsView = WithFetchPaginatedResponse<LianeMatch>(
 
     console.debug(JSON.stringify(data));
     const renderMatchItem = ({ item }: ListRenderItemInfo<LianeMatch>) => {
-      const itemIsExactMatch = isExactMatch(item.match);
+      const itemIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
       const wayPoints = itemIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
       const fromPoint = getPoint(item, "pickup");
       const toPoint = getPoint(item, "deposit");

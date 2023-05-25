@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Liane.Api.Util;
-using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
@@ -13,6 +13,7 @@ using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -21,6 +22,7 @@ using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
+using Liane.Web.Internal.Startup;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -69,28 +71,30 @@ public static class Startup
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
+    services.AddService<LianeStatusServiceImpl>();
 
-    services.AddService<EventDispatcher>();
-    services.AddService<EventServiceImpl>();
+    services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
-    services.AddService<PushServiceImpl>();
+    services.AddService<FirebaseMessagingImpl>();
 
-    services.AddService<LianeMemberAcceptedHandler>();
-    services.AddService<LianeRequestServiceImpl>();
+    services.AddEventListeners();
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddHostedService<LianeMockCronService>();
+    services.AddService<MockServiceImpl>();
+
+    services.AddHostedService<LianeMockGenerator>();
+    services.AddHostedService<LianeReminder>();
   }
 
-  public static void StartCurrentModule(string[] args)
+  public static async Task StartCurrentModule(string[] args)
   {
     var logger = ConfigureLogger();
     try
     {
-      StartCurrentModuleWeb(args);
+      await StartCurrentModuleWeb(args);
     }
     catch (Exception e)
     {
@@ -158,7 +162,6 @@ public static class Startup
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
   {
-    ConfigureLianeServices(context, services);
     services.AddService<FileStreamResultExecutor>();
     services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
       .AddJsonOptions(options => { JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions); });
@@ -206,18 +209,17 @@ public static class Startup
     // For Resource access level
     services.AddService<MongoAccessLevelContextFactory>();
 
-    // For Mock data generation
-    services.AddService<MockServiceImpl>();
-
     // For services using json serialization (notifications)
     var jsonSerializerOptions = new JsonSerializerOptions();
     JsonSerializerSettings.ConfigureOptions(jsonSerializerOptions);
     services.AddSingleton(jsonSerializerOptions);
+
+    ConfigureLianeServices(context, services);
   }
 
-  private static void StartCurrentModuleWeb(string[] args)
+  private static Task StartCurrentModuleWeb(string[] args)
   {
-    WebHost.CreateDefaultBuilder(args)
+    return WebHost.CreateDefaultBuilder(args)
       .ConfigureLogging(logging =>
       {
         logging.ClearProviders();
@@ -246,7 +248,7 @@ public static class Startup
       .UseUrls("http://*:5000")
       .UseKestrel()
       .Build()
-      .Run();
+      .RunAsync();
   }
 
   private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)

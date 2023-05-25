@@ -27,15 +27,13 @@ export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => 
 };
 
 export const useSubject = <T>() => {
-  const subject = useMemo(() => {
+  return useMemo(() => {
     return new Subject<T>();
   }, []);
-  return subject;
 };
 
 export const useBehaviorSubject = <T>(initialValue: T) => {
-  const subject = useMemo(() => {
+  return useMemo(() => {
     return new BehaviorSubject<T>(initialValue);
   }, [initialValue]);
-  return subject;
 };

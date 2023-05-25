@@ -6,7 +6,7 @@ import { Center, Column } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { DriverInfo, FloatingBackButton, InfoItem } from "@/screens/detail/Components";
-import { getPoint, isExactMatch, Liane, LianeMatch } from "@/api";
+import { Exact, getPoint, Liane, LianeMatch, UnionUtils } from "@/api";
 import { getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatMonthDay } from "@/api/i18n";
@@ -19,7 +19,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export const LianeDetailScreen = () => {
-  const ref = useRef<BottomSheetRefProps>();
+  const ref = useRef<BottomSheetRefProps>(null);
   const { services } = useContext(AppContext);
   const { route, navigation } = useAppNavigation<"LianeDetail">();
   const lianeParam = route.params!.liane;
@@ -181,11 +181,10 @@ const toLianeMatch = (liane: Liane): LianeMatch => {
 
 const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
   // TODO mutualize with other detail screen
-  const lianeIsExactMatch = isExactMatch(liane.match);
 
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");
-  const wayPoints = lianeIsExactMatch ? liane.liane.wayPoints : liane.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
 
   const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
 

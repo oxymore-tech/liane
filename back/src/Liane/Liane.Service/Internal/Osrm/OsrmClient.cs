@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
+using Liane.Service.Internal.Osrm.Response;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -51,6 +52,23 @@ public sealed class OsrmClient : IOsrmService
       return GetRouteInternal(url);
     })!;
   }
+  
+  public async Task<Nearest> Nearest(LatLng coordinates, int number = 0)
+  {
+    var uri = $"/nearest/v1/driving/{coordinates.Lng},{coordinates.Lat}";
+
+    var result = await client.GetFromJsonAsync<Nearest>(uri.WithParams(new
+    {
+      number
+    }), JsonOptions);
+
+    if (result == null)
+    {
+      throw new ResourceNotFoundException("Osrm response");
+    }
+
+    return result;
+  }
 
   public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, string roundtrip = "false", string source = "first", string destination = "last", string geometries = "geojson",
     string overview = "false",
@@ -77,7 +95,7 @@ public sealed class OsrmClient : IOsrmService
     return result;
   }
 
-  public async Task<Response.Table> Table(IEnumerable<LatLng> coordinates)
+  public async Task<Table> Table(IEnumerable<LatLng> coordinates)
   {
     var uri = $"/table/v1/driving/{Format(coordinates)}?annotations=duration,distance";
     var result = await client.GetFromJsonAsync<Response.Table>(uri, JsonOptions);

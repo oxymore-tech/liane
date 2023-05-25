@@ -88,7 +88,6 @@ public sealed class OsrmServiceTest
     Assert.IsNotNull(route.Routes[0].Duration);
   }
 
-
   [Test]
   public async Task ShouldGetRouteWithAnnotations()
   {
@@ -107,7 +106,6 @@ public sealed class OsrmServiceTest
   public async Task ShouldGetRouteWithNoOverview()
   {
     var result = await tested.Route(coordinates, overview: "false");
-    Console.WriteLine(result.ToString());
     Assert.IsNull(result.Routes[0].Geometry);
   }
 }

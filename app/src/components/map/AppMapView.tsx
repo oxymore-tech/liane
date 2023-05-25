@@ -1,7 +1,7 @@
 import React, { ForwardedRef, forwardRef, PropsWithChildren, useContext, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { ColorValue, Platform, StyleSheet, ToastAndroid, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Logger } from "@maplibre/maplibre-react-native";
-import { getPoint, isExactMatch, LatLng, LianeMatch, RallyingPoint } from "@/api";
+import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, UnionUtils } from "@/api";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { FeatureCollection, GeoJSON } from "geojson";
 import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
@@ -11,8 +11,6 @@ import { DisplayBoundingBox, fromBoundingBox, isFeatureCollection } from "@/util
 import { AppIcon } from "@/components/base/AppIcon";
 import { contains } from "@/api/geo";
 import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
-import { HomeMapContext } from "@/screens/home/StateMachine";
-import { useActor } from "@xstate/react";
 import { useQuery } from "react-query";
 import { getTripMatch } from "@/components/trip/trip";
 import PointAnnotation = MapLibreGL.PointAnnotation;
@@ -84,7 +82,7 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   const isSameDeposit = !to || to.id === toPoint.id;
 
   const wayPoints = useMemo(() => {
-    const isCompatibleMatch = !isExactMatch(match.match);
+    const isCompatibleMatch = !UnionUtils.isInstanceOf<Exact>(match.match, "Exact");
     const trip = getTripMatch(
       toPoint,
       fromPoint,

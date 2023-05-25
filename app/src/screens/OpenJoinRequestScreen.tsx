@@ -9,7 +9,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Compatible, isExactMatch, JoinLianeRequestDetailed } from "@/api";
+import { Compatible, Exact, JoinLianeRequestDetailed, UnionUtils } from "@/api";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { formatDuration } from "@/util/datetime";
@@ -18,6 +18,7 @@ import { TripCard } from "@/components/TripCard";
 import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
 import { useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
+import { Answer } from "@/api/notification";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -28,12 +29,12 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const queryClient = useQueryClient();
 
   const acceptRequest = async () => {
-    await services.liane.answer(true, request);
+    await services.chatHub.postAnswer(request.id!, Answer.Accept);
     await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();
   };
   const refuseRequest = async () => {
-    await services.liane.answer(false, request);
+    await services.chatHub.postAnswer(request.id!, Answer.Reject);
     await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();
   };
@@ -62,7 +63,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
   ({ data }) => {
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
-    const reqIsExactMatch = isExactMatch(data.match);
+    const reqIsExactMatch = UnionUtils.isInstanceOf<Exact>(data.match, "Exact");
     const wayPoints = reqIsExactMatch ? data.targetLiane.wayPoints : data.match.wayPoints;
     const dateTime = `${formatMonthDay(new Date(data.targetLiane.departureTime))} à ${formatTime(new Date(data.targetLiane.departureTime))}`;
     const headerDate = (

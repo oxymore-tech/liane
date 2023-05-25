@@ -1,5 +1,5 @@
 import { CameraPadding } from "@maplibre/maplibre-react-native";
-import { Feature, FeatureCollection, GeoJSON, GeoJsonProperties, Geometry } from "geojson";
+import { FeatureCollection, GeoJSON } from "geojson";
 import { BoundingBox } from "@/api/geo";
 
 export type DisplayBoundingBox = Required<CameraPadding> & { ne: GeoJSON.Position; sw: GeoJSON.Position };

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Event;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -13,4 +14,6 @@ public interface IChatService : ICrudEntityService<ConversationGroup>
   Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group);
   Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp);
   Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user);
+  Task PostEvent(LianeEvent lianeEvent);
+  Task PostAnswer(Ref<Notification> id, Answer answer);
 }

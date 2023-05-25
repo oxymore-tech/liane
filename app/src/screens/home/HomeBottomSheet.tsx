@@ -37,7 +37,7 @@ export const HomeBottomSheetContainer = (
   const insets = useSafeAreaInsets();
   const { height } = useAppWindowsDimensions();
   const h = useBottomTabBarHeight();
-  const ref = useRef<BottomSheetRefProps>();
+  const ref = useRef<BottomSheetRefProps>(null);
 
   useEffect(() => {
     if (props.display === "closed") {

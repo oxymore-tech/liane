@@ -46,9 +46,9 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         <View style={{ flexGrow: 1, marginRight: 40 }}>
           <LianeView liane={item} />
         </View>
-        {item.group && (
+        {item.conversation && (
           <Pressable
-            onPress={() => navigation.navigate("Chat", { conversationId: item.group, liane: item })}
+            onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })}
             style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
             <AppIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
           </Pressable>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
 });
 
 const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return item.targetLiane !== undefined;
+  return (item as JoinLianeRequestDetailed).targetLiane !== undefined;
 };
 
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): TripSection[] =>

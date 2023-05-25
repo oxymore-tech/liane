@@ -20,9 +20,9 @@ public sealed class BindersProvider : IModelBinderProvider
       return new BinderTypeModelBinder(typeof(PaginationModelBinder));
     }
 
-    if (context.Metadata.ModelType == typeof(TypeOf<>))
+    if (context.Metadata.ModelType == typeof(PayloadType))
     {
-      return new BinderTypeModelBinder(typeof(TypeOfBinder));
+      return new BinderTypeModelBinder(typeof(PayloadTypeBinder));
     }
 
     return null;

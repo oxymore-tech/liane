@@ -8,8 +8,9 @@ using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Event;
 using Liane.Service.Internal.User;
+using Liane.Web.Internal.Startup;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -22,7 +23,13 @@ public sealed class ChatServiceImplTest : BaseIntegrationTest
 
   protected override void Setup(IMongoDatabase db)
   {
-    testedService = new ChatServiceImpl(db, new UserServiceImpl(db), Moq.Mock.Of<IHubService>());
+    testedService = ServiceProvider.GetRequiredService<IChatService>();
+  }
+
+  protected override void SetupServices(IServiceCollection services)
+  {
+    services.AddService<UserServiceImpl>();
+    services.AddService<ChatServiceImpl>();
   }
 
   [Test]
@@ -70,7 +77,6 @@ public sealed class ChatServiceImplTest : BaseIntegrationTest
 
     return conversation1;
   }
-
 
   [Test]
   public async Task TestReadConversation()

@@ -1,15 +1,15 @@
 using System.Threading.Tasks;
-using Liane.Api.Util.Http;
+using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
 
-public interface ILianeRequestService
+public interface ILianeRequestService : IEventListener<LianeEvent.JoinRequest>
 {
   Task<PaginatedResponse<JoinLianeRequest>> List(Pagination pagination);
 
-  Task<JoinLianeRequest> Get(Ref<Event> id);
+  Task<JoinLianeRequest> Get(Ref<Notification> id);
 
-  Task Delete(Ref<Event> id);
+  Task Delete(Ref<Notification> id);
 }

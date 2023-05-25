@@ -13,8 +13,10 @@ import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
+import { capitalize } from "@/util/strings";
 const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
   const sender = message.createdBy === currentUser.id;
+  const date = capitalize(toRelativeTimeString(new Date(message.createdAt!)));
   return (
     <Column
       spacing={4}
@@ -31,7 +33,7 @@ const MessageBubble = ({ message, currentUser }: { message: ChatMessage; current
       <AppText numberOfLines={-1} style={{ fontSize: 14 }}>
         {message.text}
       </AppText>
-      <AppText style={{ fontSize: 10, alignSelf: sender ? "flex-end" : "flex-start" }}>{toRelativeTimeString(new Date(message.createdAt!))}</AppText>
+      <AppText style={{ fontSize: 10, alignSelf: sender ? "flex-end" : "flex-start" }}>{date}</AppText>
     </Column>
   );
 };

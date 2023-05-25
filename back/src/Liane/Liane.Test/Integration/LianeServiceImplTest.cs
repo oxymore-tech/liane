@@ -8,13 +8,13 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Liane.Api.Util.Startup;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -42,6 +42,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
+    services.AddService<FirebaseMessagingImpl>();
   }
 
   [Test]
@@ -130,9 +131,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
 
-    var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
-    Console.WriteLine("BB {0}", box.ToJson());
-
+    // var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
+    // Console.WriteLine("BB {0}", box.ToJson());
     // await DebugGeoJson();
 
     currentContext.SetCurrentUser(userA, true);
@@ -298,21 +298,25 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task TestListAccessLevel()
   {
-    var userA = Fakers.FakeDbUsers[0].Id;
-    var userB = Fakers.FakeDbUsers[1].Id;
+    var userA = Fakers.FakeDbUsers[0];
+    var userB = Fakers.FakeDbUsers[1];
     const int lianesACount = 3;
     const int lianesBCount = 1;
     var lianesA = Fakers.LianeRequestFaker.Generate(lianesACount);
     var lianeB = Fakers.LianeRequestFaker.Generate();
 
-    await testedService.Create(lianeB, userB);
+    await testedService.Create(lianeB, userB.Id);
     foreach (var l in lianesA)
     {
-      await testedService.Create(l, userA);
+      await testedService.Create(l, userA.Id);
     }
 
-    var resultsA = await testedService.ListForMemberUser(userA, new Pagination());
-    var resultsB = await testedService.ListForMemberUser(userB, new Pagination());
+    currentContext.SetCurrentUser(userA);
+    var resultsA = await testedService.ListForCurrentUser(new Pagination());
+
+    currentContext.SetCurrentUser(userB);
+    var resultsB = await testedService.ListForCurrentUser(new Pagination());
+
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
     Assert.AreEqual(lianesBCount, resultsB.Data.Count);
@@ -356,4 +360,19 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("Quezac_Parking_fakeId", compatible.Pickup.Id);
     Assert.AreEqual("Mende_fakeId", compatible.Deposit.Id);
   }
+  
+  [Test]
+  public async Task ShouldGetNextAppointments()
+  {
+    var augustin = Fakers.FakeDbUsers[0].Id;
+
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-05-12T08:00:00+02:00"), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    await testedService.AddMember(liane.Id, new LianeMember(Fakers.FakeDbUsers[1].Id, LabeledPositions.BlajouxParking, LabeledPositions.Mende));
+    await testedService.AddMember(liane.Id, new LianeMember(Fakers.FakeDbUsers[2].Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+
+    var actual = await testedService.GetNextAppointments(DateTime.Parse("2023-05-12T07:56:00+02:00"), TimeSpan.FromMinutes(5));
+
+    Assert.AreEqual(1, actual.Count);
+  }
+  
 }

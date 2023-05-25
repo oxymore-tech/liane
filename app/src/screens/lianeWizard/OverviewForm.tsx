@@ -6,7 +6,7 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { CardButton } from "@/components/CardButton";
+import { CardButton, CardButtonElement } from "@/components/CardButton";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppDimensions } from "@/theme/dimensions";
 import { WizardContext, WizardFormData, WizardFormDataKey } from "@/screens/lianeWizard/WizardContext";
@@ -22,10 +22,9 @@ const ReturnTrip = ({ onSubmit, onReset }: FormComponentProps<"returnTime">) => 
   const state = useState<NativeTouchEvent | null>(null);
   const [showPopup, setShowPopup] = state;
   const machine = useContext(WizardContext);
-  const value: LianeWizardFormData["returnTime"] = useSelector(machine, state => state.context.returnTime);
+  const value: LianeWizardFormData["returnTime"] = useSelector(machine, s => s.context.returnTime);
 
-  // TODO fix add types
-  const ref = useRef(null);
+  const ref = useRef<CardButtonElement>(null);
 
   useEffect(() => {
     if (state[0]) {

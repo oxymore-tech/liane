@@ -1,4 +1,4 @@
-import { getPoint, isExactMatch, LianeMatch } from "@/api";
+import { Exact, getPoint, LianeMatch, UnionUtils } from "@/api";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -32,7 +32,7 @@ export const LianeMatchDetailScreen = () => {
   const { route, navigation } = useAppNavigation<"LianeMatchDetail">();
   const liane: LianeMatch = route.params!.lianeMatch;
   const insets = useSafeAreaInsets();
-  const lianeIsExactMatch = isExactMatch(liane.match);
+  const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact");
   const filter = route.params!.filter;
 
   const formattedDepartureTime = formatDateTime(new Date(liane.liane.departureTime));

@@ -13,17 +13,22 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
   Task<PaginatedResponse<Liane>> ListForCurrentUser(Pagination pagination);
   Task<PaginatedResponse<Liane>> ListAll(Pagination pagination);
+  Task<ImmutableDictionary<Appointment, ImmutableList<Ref<User.User>>>> GetNextAppointments(DateTime from, TimeSpan window);
+
   Task<Liane> AddMember(Ref<Liane> liane, LianeMember newMember);
   Task<Liane?> RemoveMember(Ref<Liane> liane, Ref<User.User> member);
+  
+  Task<LianeStatus> GetStatus(string id);
+  
   Task<Match?> GetNewTrip(Ref<Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
 
   Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination);
-   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination);
+  Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination);
 
-   Task<ImmutableList<ClosestPickups>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime, int availableSeats = -1); //TODO remove
+  Task<ImmutableList<ClosestPickups>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime, int availableSeats = -1); //TODO remove
 
   Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false);
-  Task<FeatureCollection> DisplayGeoJSON(LatLng pos, LatLng pos2, DateTime dateTime);
+  Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime);
 
   Task UpdateAllGeometries();
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);

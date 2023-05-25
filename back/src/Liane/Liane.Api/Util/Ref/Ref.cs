@@ -33,6 +33,13 @@ public abstract record Ref<T>
     _ => null
   };
 
+  public bool Equals(Unresolved? other)
+  {
+    if (ReferenceEquals(null, other)) return false;
+    if (ReferenceEquals(this, other)) return true;
+    return Id == other.Id;
+  }
+
   public override int GetHashCode()
   {
     return Id.GetHashCode();
@@ -52,7 +59,7 @@ public abstract record Ref<T>
 
     public override string ToString()
     {
-      return $"{nameof(T)} {{ {nameof(Id)} = {Id} }}";
+      return Id;
     }
   }
 
@@ -70,7 +77,7 @@ public abstract record Ref<T>
 
     public override string ToString()
     {
-      return Value.ToString()!;
+      return Id;
     }
   }
 }

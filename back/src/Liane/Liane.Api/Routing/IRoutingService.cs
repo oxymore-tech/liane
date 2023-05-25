@@ -17,6 +17,7 @@ public interface IRoutingService
   Task<ImmutableList<Route>> GetAlternatives(RoutingQuery routingQuery);
   Task<DeltaRoute> CrossAWayPoint(RoutingWithPointQuery routingWithPointQuery);
   Task<DeltaRoute> MakeADetour(RoutingWithPointQuery routingWithPointQuery);
+
   Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to);
   Task<ImmutableSortedSet<WayPoint>> GetTrip(Ref<RallyingPoint> from, Ref<RallyingPoint> to, ImmutableHashSet<Ref<RallyingPoint>> wayPoints);
 

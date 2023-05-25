@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
-using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -51,12 +51,11 @@ public static class MongoFactory
       var alwaysPack = new ConventionPack
       {
         new EnumRepresentationConvention(BsonType.String),
-        new CamelCaseElementNameConvention(),
+        new CamelCaseElementNameConvention()
       };
       var stringIdAsObjectIdPack = new ConventionPack
       {
-        new IdSerializationConvention(),
-        new RefSerializationConvention(new[] { typeof(RallyingPoint) }.ToImmutableList())
+        new IdSerializationConvention()
       };
 
       ConventionRegistry.Register("EnumStringConvention", alwaysPack, _ => true);
@@ -68,8 +67,9 @@ public static class MongoFactory
       BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
+      BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(LianeEvent), new PolymorphicTypeDiscriminatorConvention());
+      BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableHashSet<>), typeof(ImmutableHashSetSerializer<>));
       _init = true;
     }
 
@@ -120,6 +120,22 @@ public static class MongoFactory
           { nameof(RallyingPoint.Address), 1 },
         })
       }));
+
+    db.GetCollection<Notification.Reminder>()
+      .Indexes
+      .CreateOne(new CreateIndexModel<Notification.Reminder>(
+        Builders<Notification.Reminder>.IndexKeys.Combine(
+          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.RallyingPoint),
+          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.Liane),
+          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.At)
+        ),
+        new CreateIndexOptions<Notification.Reminder>
+        {
+          Unique = true,
+          Name = "reminder_index",
+          PartialFilterExpression = Builders<Notification.Reminder>.Filter.IsInstanceOf<Notification.Reminder, Notification.Reminder>()
+        }
+      ));
   }
 
   private static void CreateIndex<T>(IMongoDatabase db, string name, IndexKeysDefinition<T> indexKey, CreateIndexOptions? options = null)

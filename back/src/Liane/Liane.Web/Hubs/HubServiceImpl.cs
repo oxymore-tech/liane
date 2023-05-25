@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Hubs;
 
-public sealed class HubServiceImpl : IHubService
+public sealed class HubServiceImpl : IHubService, IPushMiddleware
 {
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
@@ -24,33 +24,31 @@ public sealed class HubServiceImpl : IHubService
     this.logger = logger;
   }
 
+  public Priority Priority => Priority.High;
+
   public bool IsConnected(Ref<User> user)
   {
     return currentConnectionsCache.Get(user.Id) is not null;
   }
 
-  public async Task<bool> TrySendNotification(Ref<User> receiver, Notification notification)
+  public async Task<bool> SendNotification(Ref<User> recipient, Notification notification)
   {
-    if (!IsConnected(receiver))
-    {
-      return false;
-    }
-
     try
     {
-      await hubContext.Clients.Group(receiver.Id).ReceiveNotification(notification);
+      await hubContext.Clients.Group(recipient)
+        .ReceiveNotification(notification);
       return true;
     }
     catch (Exception e)
     {
       // TODO handle retry 
-      logger.LogWarning(e, "Could not send notification to user {receiver} : {error}", receiver, e.Message);
+      logger.LogWarning(e, "Could not send notification to user {receiver} : {error}", recipient, e.Message);
     }
 
     return false;
   }
 
-  public async Task<bool> TrySendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task<bool> SendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
     if (IsConnected(receiver))
     {
@@ -77,7 +75,6 @@ public sealed class HubServiceImpl : IHubService
     await hubContext.Groups.AddToGroupAsync(connectionId, user.Id);
     currentConnectionsCache.Set(user.Id, true);
   }
-
 
   public async Task RemoveUser(Ref<User> user, string connectionId)
   {

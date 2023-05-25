@@ -1,33 +1,35 @@
 import notifee, { EventType } from "@notifee/react-native";
-import { FullUser, Notification, PaginatedResponse } from "@/api";
+import { FullUser, PaginatedResponse } from "@/api";
 import { get, patch } from "@/api/http";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { AuthService } from "@/api/service/auth";
 import { Platform } from "react-native";
 import { AbstractNotificationService } from "@/api/service/interfaces/notification";
+import { Notification } from "@/api/notification";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
-    return await get(`/user/notification`);
+    return await get("/notification");
   }
 
-  async changeSeenStatus(notificationId: string): Promise<void> {
-    await patch("/event/" + notificationId);
+  async markAsRead(notification: Notification): Promise<void> {
+    await patch(`/notification/${notification.id}`);
   }
 
-  async checkInitialNotification(): Promise<void> {
+  checkInitialNotification = async (): Promise<void> => {
     const m = await PushNotifications?.getInitialNotification();
     if (m && m.data?.jsonPayload) {
       console.debug("opened via", JSON.stringify(m));
-      this._initialNotification = JSON.parse(m.data!.jsonPayload);
+      this.initialNotification = JSON.parse(m.data!.jsonPayload);
       return;
     }
     const n = await notifee.getInitialNotification();
     if (n && n.notification.data?.jsonPayload) {
-      this._initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
+      this.initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
       console.debug("opened via", JSON.stringify(n));
     }
-  }
+  };
+
   override async receiveNotification(notification: Notification): Promise<void> {
     await super.receiveNotification(notification);
     await displayNotifeeNotification(notification);

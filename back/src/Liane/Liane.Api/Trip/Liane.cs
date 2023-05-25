@@ -7,6 +7,33 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
+public enum LianeState
+{
+  NotStarted,
+  Started,
+  Finished, // en theorie tout le monde est arrivée
+  Archived, // on a eu une confirmation que le trajet ce soit bien passé
+  Canceled
+}
+
+public enum PassengerState
+{
+  Moving,
+  Stationary
+}
+
+public sealed record PassengerStatus(PassengerState State, DateTime NextEta);
+
+public sealed record NextEta(Ref<RallyingPoint> RallyingPoint, DateTime Eta);
+
+public sealed record LianeStatus(
+  DateTime At,
+  LianeState State,
+  NextEta? NextEta,
+  ImmutableHashSet<Ref<User.User>> Carpoolers,
+  ImmutableDictionary<Ref<User.User>, PassengerStatus> NextPassengers
+);
+
 public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,
@@ -30,5 +57,6 @@ public sealed record Liane(
   ImmutableSortedSet<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,
-  Ref<ConversationGroup>? Group = null
+  LianeState State,
+  Ref<ConversationGroup>? Conversation
 ) : IEntity, ISharedResource<LianeMember>;

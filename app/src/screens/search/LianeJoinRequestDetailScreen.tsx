@@ -1,4 +1,4 @@
-import { Compatible, isExactMatch, JoinLianeRequestDetailed } from "@/api";
+import { Compatible, Exact, JoinLianeRequestDetailed, UnionUtils } from "@/api";
 import React, { useContext } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -33,7 +33,7 @@ export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const request: JoinLianeRequestDetailed = route.params!.request;
   const insets = useSafeAreaInsets();
-  const reqIsExactMatch = isExactMatch(request.match);
+  const reqIsExactMatch = UnionUtils.isInstanceOf<Exact>(request.match, "Exact");
   const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
 
   const formattedDepartureTime = formatDateTime(new Date(request.targetLiane.departureTime));

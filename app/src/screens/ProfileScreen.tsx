@@ -21,7 +21,16 @@ export const ProfileScreen = () => {
       <AppRoundedButton
         backgroundColor={AppColors.orange}
         text={"Gen"}
-        onPress={() => services.notification.receiveNotification({ type: "test", event: {} })}
+        onPress={() =>
+          services.notification.receiveNotification({
+            type: "Info",
+            title: "Test",
+            message: "Texte de la notification",
+            sentAt: new Date().toISOString(),
+            recipients: [],
+            answers: []
+          })
+        }
       />
     </View>
   );

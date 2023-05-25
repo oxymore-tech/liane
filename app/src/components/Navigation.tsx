@@ -29,9 +29,9 @@ import { getNotificationNavigation, RootNavigation } from "@/api/navigation";
 import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
 import { LianeJoinRequestDetailScreen } from "@/screens/search/LianeJoinRequestDetailScreen";
 import { useQueryClient } from "react-query";
-import { Notification } from "@/api";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { Notification } from "@/api/notification";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -58,7 +58,7 @@ function AppTabBar(props: BottomTabBarProps) {
 */
 function Home() {
   const { services } = useContext(AppContext);
-  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount);
+  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
   const iconSize = 24;
   return (
     <Tab.Navigator
@@ -89,7 +89,7 @@ function Home() {
         "Notifications",
         ({ focused }) => {
           const queryClient = useQueryClient();
-          services.chatHub.subscribeToNotifications(async (n: Notification) => {
+          services.chatHub.subscribeToNotifications(async (_: Notification) => {
             await queryClient.invalidateQueries(NotificationQueryKey); //TODO just add received notification
           });
           return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
@@ -104,7 +104,7 @@ function Navigation() {
   const { user, services } = useContext(AppContext);
 
   useEffect(() => {
-    const initialNotification = services.notification.initialNotification();
+    const initialNotification = services.notification.getInitialNotification();
     if (user && initialNotification) {
       // check if app was opened by a notification
       const navigate = getNotificationNavigation(initialNotification);
@@ -112,7 +112,7 @@ function Navigation() {
         navigate(RootNavigation);
       }
     }
-  }, [user?.id, services.notification]);
+  }, [services.notification, user]);
 
   if (user) {
     return (

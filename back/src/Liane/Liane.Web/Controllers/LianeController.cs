@@ -39,16 +39,23 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
+  [HttpGet("{id}/status")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task<LianeStatus> GetStatus([FromRoute] string id)
+  {
+    return await lianeService.GetStatus(id);
+  }
+
   [HttpDelete("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Liane))]
-  public async Task  Delete([FromRoute] string id)
+  public async Task Delete([FromRoute] string id)
   {
-     await lianeService.Delete(id);
+    await lianeService.Delete(id);
   }
 
   [HttpPatch("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task  UpdateDeparture([FromRoute] string id, [FromBody] DateTime departureTime)
+  public async Task UpdateDeparture([FromRoute] string id, [FromBody] DateTime departureTime)
   {
     await lianeService.UpdateDepartureTime(id, departureTime);
   }
@@ -61,14 +68,14 @@ public sealed class LianeController : ControllerBase
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
     return await lianeService.Display(from, to, dateTime);
   }
-  
+
   [HttpGet("display/geojson")]
   public async Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
   {
     var from = new LatLng(lat, lng);
     var to = new LatLng(lat2, lng2);
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return await lianeService.DisplayGeoJSON(from, to, dateTime);
+    return await lianeService.DisplayGeoJson(from, to, dateTime);
   }
 
   [HttpPost("match")]
@@ -93,8 +100,6 @@ public sealed class LianeController : ControllerBase
 
     var from = new LatLng(lat!.Value, lng!.Value);
     return await lianeService.GetNearestLinks(from, dateTime, radius ?? 30_000);
-
-
   }
 
   [HttpGet("")]
@@ -106,7 +111,7 @@ public sealed class LianeController : ControllerBase
   [HttpPost("")]
   public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
   {
-    return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
+    return lianeService.Create(lianeRequest);
   }
 
   [HttpGet("all")]
