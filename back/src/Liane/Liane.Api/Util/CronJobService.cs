@@ -24,9 +24,16 @@ public abstract class CronJobService : IHostedService, IDisposable
     timeZoneInfo = TimeZoneInfo.Local;
   }
 
-  public virtual Task StartAsync(CancellationToken cancellationToken)
+  public virtual async Task StartAsync(CancellationToken cancellationToken)
   {
-    return ScheduleJob(cancellationToken);
+    try
+    {
+      await ScheduleJob(cancellationToken);
+    }
+    catch (System.Exception e)
+    {
+      logger.LogError(e, "{job} : job failed", GetType().Name);
+    }
   }
 
   private async Task ScheduleJob(CancellationToken cancellationToken)
