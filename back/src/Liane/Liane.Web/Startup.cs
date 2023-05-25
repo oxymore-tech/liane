@@ -13,7 +13,6 @@ using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -71,7 +70,6 @@ public static class Startup
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
-    services.AddService<LianeStatusServiceImpl>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
@@ -86,7 +84,7 @@ public static class Startup
     services.AddService<MockServiceImpl>();
 
     services.AddHostedService<LianeMockGenerator>();
-    services.AddHostedService<LianeReminder>();
+    services.AddHostedService<LianeStatusUpdate>();
   }
 
   public static async Task StartCurrentModule(string[] args)

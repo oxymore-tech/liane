@@ -34,10 +34,10 @@ public static class ExpressionHelper
 
     if (memberExpression is null)
     {
-      throw new ArgumentException($"Must have at least one member");
+      throw new ArgumentException("Must have at least one member");
     }
 
-    return memberExpression!;
+    return memberExpression;
   }
 
   internal static Expression GetValueExpression(object? value, Type targetType)

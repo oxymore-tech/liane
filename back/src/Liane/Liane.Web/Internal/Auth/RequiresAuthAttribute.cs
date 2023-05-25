@@ -1,6 +1,5 @@
 using System;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Internal.Auth;
 

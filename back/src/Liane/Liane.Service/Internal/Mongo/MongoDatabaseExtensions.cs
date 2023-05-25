@@ -106,7 +106,7 @@ public static class MongoDatabaseExtensions
 
   public static string GetCollectionName<T>()
   {
-    var collectionName = typeof(T).FullName.Split(".").Last().Split("+")[0].Replace("Db", "", StringComparison.OrdinalIgnoreCase);
+    var collectionName = typeof(T).FullName!.Split(".").Last().Split("+")[0].Replace("Db", "", StringComparison.OrdinalIgnoreCase);
     return collectionName.ToSnakeCase();
   }
 }

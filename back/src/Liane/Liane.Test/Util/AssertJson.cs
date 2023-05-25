@@ -3,8 +3,6 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Json;
 using NUnit.Framework;
 

@@ -39,13 +39,6 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
-  [HttpGet("{id}/status")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<LianeStatus> GetStatus([FromRoute] string id)
-  {
-    return await lianeService.GetStatus(id);
-  }
-
   [HttpDelete("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Liane))]
   public async Task Delete([FromRoute] string id)

@@ -16,24 +16,6 @@ public enum LianeState
   Canceled
 }
 
-public enum PassengerState
-{
-  Moving,
-  Stationary
-}
-
-public sealed record PassengerStatus(PassengerState State, DateTime NextEta);
-
-public sealed record NextEta(Ref<RallyingPoint> RallyingPoint, DateTime Eta);
-
-public sealed record LianeStatus(
-  DateTime At,
-  LianeState State,
-  NextEta? NextEta,
-  ImmutableHashSet<Ref<User.User>> Carpoolers,
-  ImmutableDictionary<Ref<User.User>, PassengerStatus> NextPassengers
-);
-
 public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,

@@ -1,9 +1,7 @@
 using System;
 using Liane.Api.Routing;
-using Liane.Api.Trip;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
-using Liane.Service.Internal.Trip;
 using Liane.Test.Mock;
 using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;

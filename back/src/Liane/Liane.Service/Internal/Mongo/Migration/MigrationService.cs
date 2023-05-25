@@ -24,6 +24,8 @@ public sealed class MigrationService
 
   private async Task Migrate()
   {
+    await db.DropCollectionAsync("event");
+
     await db.GetCollection<LianeDb>()
       .UpdateManyAsync(l => l.State == LianeState.NotStarted && l.DepartureTime < DateTime.UtcNow,
         Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled)

@@ -69,9 +69,9 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();
     logger.LogDebug("Loading town halls...");
     rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
-    
+
     logger.LogDebug("Clustering...");
-   
+
     // Cluster points 
     var grouped = new List<ImmutableList<RallyingPoint>>();
     var list = rawRallyingPoints.OrderBy(r => r.Location.Lng).ToList();
@@ -83,38 +83,41 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       {
         var r = list[i];
         if (Math.Abs(point.Location.Lng - r.Location.Lng) > 0.01) break; // Points are too far anyways 
-        if(r.Location.Distance(point.Location) <= 500)
+        if (r.Location.Distance(point.Location) <= 500)
         {
           close.Add(r);
           list.RemoveAt(i);
         }
       }
+
       grouped.Add(close.ToImmutableList());
     }
-    
+
     var pool = new Semaphore(initialCount: 8, maximumCount: 8);
     var rallyingPointsMerger =
-      grouped.SelectAsync(async (g, i) =>
+      grouped.SelectAsync(async g =>
       {
         var selected = new List<RallyingPoint> { g.First() };
-        var count = g.Count();
-        if (count > 1)
+        var count = g.Count;
+        if (count <= 1)
         {
-          // Group by real routing distance
-          var dict = g.Select((rp, index) => new { Id = rp.Id!, Index = index }).ToDictionary(rp => rp.Id, rp => rp.Index);
-          pool.WaitOne();
-          var table = await osrmService.Table(g.Select(rp => rp.Location));
-          pool.Release();
-          foreach (var rp in g.Skip(1))
+          return selected;
+        }
+
+        // Group by real routing distance
+        var dict = g.Select((rp, index) => new { Id = rp.Id!, Index = index }).ToDictionary(rp => rp.Id, rp => rp.Index);
+        pool.WaitOne();
+        var table = await osrmService.Table(g.Select(rp => rp.Location));
+        pool.Release();
+        foreach (var rp in g.Skip(1))
+        {
+          var i1 = dict[rp.Id!];
+          if (selected.All(rp1 => (table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500)))
           {
-            var i1 = dict[rp.Id!];
-            if (selected.All(rp1 => (table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500)))
-            {
-              selected.Add(rp);
-            }
+            selected.Add(rp);
           }
         }
-        
+
         return selected;
       }, true);
     var rallyingPoints = (await rallyingPointsMerger).SelectMany(r => r).ToImmutableList();
@@ -156,7 +159,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
         .Limit(isLimitedBoxSearch ? null : limit)
         .ToCursorAsync())
       .ToEnumerable();
-    
+
     if (isLimitedBoxSearch)
     {
       // Limit manually to get those closest to center
@@ -165,7 +168,6 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
         .OrderBy(rp => rp.Location.Distance(center))
         .Take(limit!.Value)
         .ToImmutableList();
- 
     }
 
     return results.ToImmutableList();
@@ -205,7 +207,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       .Find(filter)
       .FirstOrDefaultAsync();
   }
-  
+
   public async Task<RallyingPoint?> SnapViaRoute(LatLng position, int radius = 100)
   {
     var builder = Builders<RallyingPoint>.Filter;
@@ -217,8 +219,8 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       .ToCursorAsync();
     var list = results.ToEnumerable().ToImmutableList();
     if (list.Count < 1) return null;
-    
-    var table = await osrmService.Table(new List<LatLng>{position}.Concat(list.Select(rp => rp.Location)));
+
+    var table = await osrmService.Table(new List<LatLng> { position }.Concat(list.Select(rp => rp.Location)));
     // Get closest point via road network 
     var closest = list.Select((l, i) => (Point: l, Distance: table.Distances[0][i + 1])).MinBy(r => r.Distance);
     return closest.Distance <= radius ? closest.Point : null;
@@ -248,7 +250,6 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
   private async Task<ImmutableList<RallyingPoint>> LoadCarpoolArea()
   {
-    
     var assembly = typeof(RallyingPointServiceImpl).Assembly;
     var zipCodes = (await LoadZipcodes()).DistinctBy(z => z.Insee).ToDictionary(z => z.Insee);
     await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.bnlc.csv");
@@ -265,59 +266,57 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
 
     var fullAddressRegex = new Regex("[^\"]+[.] (\\d{5}) [^\"]+");
     var pool = new Semaphore(initialCount: 8, maximumCount: 8);
-    var rp = await entries.SelectAsync( async e =>
+    var rp = await entries.SelectAsync(async e =>
+    {
+      var locationType = e.Type.ToLower() switch
       {
-        var locationType = e.Type.ToLower() switch
+        "aire de covoiturage" => LocationType.CarpoolArea,
+        "sortie d'autoroute" => LocationType.HighwayExit,
+        "parking" => LocationType.Parking,
+        "supermarché" => LocationType.Supermarket,
+        "parking relais" => LocationType.RelayParking,
+        "délaissé routier" => LocationType.AbandonedRoad,
+        "auto-stop" => LocationType.AutoStop,
+        _ => throw new ArgumentOutOfRangeException($"Location type {e.Type} unexpected")
+      };
+      var address = e.AdLieu;
+      var city = e.ComLieu;
+      var location = new LatLng(e.YLat, e.XLong);
+      string zipCode;
+      if (fullAddressRegex.IsMatch(address))
+      {
+        // Remove 2nd part in addresses with with zipcode + city 
+        var match = fullAddressRegex.Match(address);
+        zipCode = match.Groups[1].Value;
+      }
+      else
+      {
+        if (zipCodes.TryGetValue(e.Insee, out var v))
         {
-          "aire de covoiturage" => LocationType.CarpoolArea,
-          "sortie d'autoroute" => LocationType.HighwayExit,
-          "parking" => LocationType.Parking,
-          "supermarché" => LocationType.Supermarket,
-          "parking relais" => LocationType.RelayParking,
-          "délaissé routier" => LocationType.AbandonedRoad,
-          "auto-stop" => LocationType.AutoStop,
-          _ => throw new ArgumentOutOfRangeException($"Location type {e.Type} unexpected")
-        };
-        var address = e.AdLieu;
-        var city = e.ComLieu;
-        var location = new LatLng(e.YLat, e.XLong);
-        string zipCode;
-        if (fullAddressRegex.IsMatch(address))
-        {
-          // Remove 2nd part in addresses with with zipcode + city 
-          var match = fullAddressRegex.Match(address);
-          zipCode = match.Groups[1].Value;
+          zipCode = v.Zipcode;
         }
         else
         {
-          if (zipCodes.TryGetValue(e.Insee, out var v))
+          try
           {
-            zipCode = v.Zipcode;
+            pool.WaitOne();
+            var foundAddress = await addressService.GetDisplayName(location);
+            zipCode = foundAddress.Address.ZipCode;
+            address = foundAddress.Address.Street;
+            pool.Release();
           }
-          else
+          catch (Exception error)
           {
-            
-            try
-            {
-              pool.WaitOne();
-              var foundAddress = await addressService.GetDisplayName(location);
-              zipCode = foundAddress.Address.ZipCode;
-              address = foundAddress.Address.Street;
-              pool.Release();
-            }
-            catch (Exception error)
-            {
-              logger.LogError("Could not import {Name}: {Error}", e.NomLieu, error.Message);   
-              pool.Release();
-              return null;
-            }
-
+            logger.LogError("Could not import {Name}: {Error}", e.NomLieu, error.Message);
+            pool.Release();
+            return null;
           }
-          
         }
-        return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, location, locationType, address, zipCode, city, e.NbrePl, true); //TODO format com lieu
-      }, parallel: true);
-      return rp.Where(p => p != null).Cast<RallyingPoint>().ToImmutableList();
+      }
+
+      return new RallyingPoint($"bnlc:{e.IdLieu}", e.NomLieu, location, locationType, address, zipCode, city, e.NbrePl, true); //TODO format com lieu
+    }, parallel: true);
+    return rp.Where(p => p != null).Cast<RallyingPoint>().ToImmutableList();
   }
 
   private static async Task<ImmutableList<ZipCodeEntry>> LoadZipcodes()
@@ -330,7 +329,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     }
 
     using var reader = new StreamReader(stream);
-    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = (args) => args.Header.NormalizeToCamelCase() ,Delimiter = ";", HeaderValidated = null};
+    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = (args) => args.Header.NormalizeToCamelCase(), Delimiter = ";", HeaderValidated = null };
     using var csvReader = new CsvReader(reader, configuration);
 
     return csvReader.GetRecords<ZipCodeEntry>().ToImmutableList();

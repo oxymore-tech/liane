@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Exception;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 

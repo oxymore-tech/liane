@@ -16,7 +16,6 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Routing;
-using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -36,7 +35,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IRallyingPointService rallyingPointService;
   private readonly IChatService chatService;
   private readonly ILogger<LianeServiceImpl> logger;
-  private readonly LianeStatusServiceImpl lianeStatusService;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -44,13 +42,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger, LianeStatusServiceImpl lianeStatusService) : base(mongo, currentContext)
+    ILogger<LianeServiceImpl> logger) : base(mongo, currentContext)
   {
     this.routingService = routingService;
     this.rallyingPointService = rallyingPointService;
     this.chatService = chatService;
     this.logger = logger;
-    this.lianeStatusService = lianeStatusService;
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
@@ -177,22 +174,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     await Delete(liane);
     return null;
-  }
-
-  public async Task<LianeStatus> GetStatus(string id)
-  {
-    var lianeDb = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == id)
-      .FirstOrDefaultAsync();
-
-    if (lianeDb is null)
-    {
-      throw ResourceNotFoundException.For((Ref<Api.Trip.Liane>)id);
-    }
-
-    var liane = await MapEntity(lianeDb);
-
-    return await lianeStatusService.GetStatus(liane, lianeDb.Pings);
   }
 
   private async Task<ImmutableList<WayPoint>> GetWayPoints(DateTime departureTime, Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)

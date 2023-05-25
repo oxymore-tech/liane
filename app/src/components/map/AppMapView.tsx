@@ -184,7 +184,7 @@ export const LianeDisplayLayer = ({
 
 export interface RallyingPointsDisplayLayerProps {
   rallyingPoints: RallyingPoint[] | FeatureCollection;
-  onSelect?: (r: RallyingPoint | undefined) => void;
+  onSelect?: (r?: RallyingPoint) => void;
   cluster?: boolean;
   interactive?: boolean;
 }

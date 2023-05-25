@@ -14,7 +14,6 @@ using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Json;
@@ -95,7 +94,7 @@ public abstract class BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<PushServiceImpl>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<LianeStatusServiceImpl>();
+    services.AddService<LianeStatusUpdate>();
     services.AddEventListeners();
 
     SetupServices(services);

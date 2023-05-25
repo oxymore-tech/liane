@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 

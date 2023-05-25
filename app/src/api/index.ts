@@ -115,7 +115,7 @@ export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
   duration: TimeInSeconds;
   distance: number;
-  order: number;
+  eta: UTCDateTime;
 }>;
 
 export type LianeMember = Readonly<{

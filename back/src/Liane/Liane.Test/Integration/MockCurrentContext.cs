@@ -1,3 +1,4 @@
+using System;
 using Liane.Api.User;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
@@ -6,9 +7,8 @@ using Liane.Service.Internal.Util;
 
 namespace Liane.Test.Integration;
 
-public sealed class MockCurrentContext: ICurrentContext
+public sealed class MockCurrentContext : ICurrentContext
 {
-
   private AuthUser? CurrentAuthUser { get; set; }
 
   public AuthUser CurrentUser()
@@ -21,13 +21,13 @@ public sealed class MockCurrentContext: ICurrentContext
     CurrentAuthUser = new AuthUser(user.Id, user.Phone, isAdmin);
   }
 
-  public T? CurrentResource<T>() where T : class, IIdentity
+  public T CurrentResource<T>() where T : class, IIdentity
   {
-    throw new System.NotImplementedException();
+    throw new NotImplementedException();
   }
 
   public ResourceAccessLevel CurrentResourceAccessLevel()
   {
-    throw new System.NotImplementedException();
+    throw new NotImplementedException();
   }
 }

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Mongo;
-using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
