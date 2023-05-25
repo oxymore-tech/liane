@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
@@ -25,6 +26,7 @@ public sealed class AuthServiceImpl : IAuthService
 
   private const string UserRole = "user";
   private const int KeySize = 64;
+  private static readonly Regex ValidPhoneNumber = new(@"^\+33|06|07");
 
   private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
   private readonly ILogger<AuthServiceImpl> logger;
@@ -46,6 +48,11 @@ public sealed class AuthServiceImpl : IAuthService
 
   public async Task SendSms(string phone)
   {
+    if (!ValidPhoneNumber.IsMatch(phone))
+    {
+      throw new ArgumentException("Invalid phone number");
+    }
+
     logger.LogDebug("start send sms ");
 
     if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
@@ -59,7 +66,7 @@ public sealed class AuthServiceImpl : IAuthService
 
       smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
 
-      if (twilioSettings is { Account: { }, Token: { } })
+      if (twilioSettings is { Account: not null, Token: not null })
       {
         TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
         var generator = new Random();
