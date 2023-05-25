@@ -78,7 +78,6 @@ public sealed class ChatServiceImplTest : BaseIntegrationTest
     return conversation1;
   }
 
-
   [Test]
   public async Task TestReadConversation()
   {

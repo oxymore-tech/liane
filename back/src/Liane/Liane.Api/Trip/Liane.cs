@@ -11,8 +11,8 @@ public enum LianeState
 {
   NotStarted,
   Started,
-  Finished,
-  Archived,
+  Finished, // en theorie tout le monde est arrivée
+  Archived, // on a eu une confirmation que le trajet ce soit bien passé
   Canceled
 }
 

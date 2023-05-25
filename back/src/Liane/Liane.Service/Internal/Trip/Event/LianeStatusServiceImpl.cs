@@ -35,7 +35,7 @@ public sealed class LianeStatusServiceImpl
     return new LianeStatus(now, liane.State, null, ImmutableHashSet<Ref<Api.User.User>>.Empty, ImmutableDictionary<Ref<Api.User.User>, PassengerStatus>.Empty);
   }
 
-  private Task<LianeStatus> ComputeStartedStatus(Api.Trip.Liane liane, ImmutableList<UserPing> pings, DateTime now)
+  private static Task<LianeStatus> ComputeStartedStatus(Api.Trip.Liane liane, ImmutableList<UserPing> pings, DateTime now)
   {
     var carpoolers = pings.Where(p => p.User == liane.Driver.User)
       .Select(p => p.User)
