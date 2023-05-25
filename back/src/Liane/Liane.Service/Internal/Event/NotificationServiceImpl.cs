@@ -36,7 +36,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
   public Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder) => Create(
     new Notification.Reminder(
-      null, currentContext.CurrentUser().Id, DateTime.UtcNow, to.Select(t => new Recipient(t, null)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder)
+      null, null, DateTime.UtcNow, to.Select(t => new Recipient(t, null)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder)
   );
 
   public new async Task<Notification> Create(Notification obj)
