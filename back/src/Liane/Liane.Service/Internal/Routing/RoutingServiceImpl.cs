@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
 using Microsoft.Extensions.Logging;
 using Route = Liane.Api.Routing.Route;
@@ -32,7 +31,7 @@ public sealed class RoutingServiceImpl : IRoutingService
     return await GetRoute(query.Coordinates);
   }
 
-  public async Task<Route> GetRoute(ImmutableList<LatLng> coordinates)
+  public async Task<Route> GetRoute(IEnumerable<LatLng> coordinates)
   {
     var routeResponse = await osrmService.Route(coordinates, overview: "full");
 
@@ -42,16 +41,11 @@ public sealed class RoutingServiceImpl : IRoutingService
     return new Route(geojson.Coordinates, duration, distance);
   }
 
-  public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(ImmutableList<LatLng> coordinates)
+  public async Task<ImmutableList<LatLng>> GetSimplifiedRoute(IEnumerable<LatLng> coordinates)
   {
-    if (coordinates.IsEmpty)
-    {
-      return ImmutableList<LatLng>.Empty;
-    }
-
     var route = await GetRoute(coordinates);
     var geometry = Simplifier.Simplify(route);
-    logger.LogDebug("Liane geometry simplified {0} => {1}", route.Coordinates.Count, geometry.Count);
+    logger.LogDebug("Liane geometry simplified {input} => {output}", route.Coordinates.Count, geometry.Count);
     return geometry;
   }
 
@@ -226,71 +220,6 @@ public sealed class RoutingServiceImpl : IRoutingService
     return new DeltaRoute(ImmutableList.Create(startIntersections[0].Location, endIntersections[0].Location), duration, distance, -4);
   }
 
-  public async Task<ImmutableSortedSet<WayPoint>> GetWayPoints(RallyingPoint from, RallyingPoint to)
-  {
-    var route = await GetRoute(new RoutingQuery(from.Location, to.Location));
-    var wayPoints = new HashSet<WayPoint>();
-    var rallyingPoints = new HashSet<RallyingPoint>();
-
-    var order = 0;
-    foreach (var wp in route.Coordinates)
-    {
-      var closestPoint = await rallyingPointService.Snap(wp.ToLatLng());
-
-      if (closestPoint == null || rallyingPoints.Contains(closestPoint))
-      {
-        continue;
-      }
-
-      wayPoints.Add(new WayPoint(closestPoint, order, 0, 0));
-      rallyingPoints.Add(closestPoint);
-      order++;
-    }
-
-    return wayPoints.ToImmutableSortedSet();
-  }
-
-  public async Task<ImmutableSortedSet<WayPoint>> GetTrip(Ref<RallyingPoint> from, Ref<RallyingPoint> to, ImmutableHashSet<Ref<RallyingPoint>> wayPoints)
-  {
-    // Get a list of coordinates from RallyingPoint references
-    var coordinates = new List<RallyingPoint> { await rallyingPointService.Get(from) };
-
-    foreach (var wayPoint in wayPoints)
-    {
-      coordinates.Add(await rallyingPointService.Get(wayPoint));
-    }
-
-    coordinates.Add(await rallyingPointService.Get(to));
-
-    // Get trip from coordinates
-    var rawTrip = await osrmService.Trip(coordinates.Select(rp => rp.Location));
-
-    // Get sorted WayPoints (map osrm waypoints to our rallying points)
-    var waypoints = coordinates.Select((rallyingPoint, i) =>
-    {
-      var waypoint = rawTrip.Waypoints[i];
-      if (waypoint.TripsIndex != 0)
-      {
-        throw new ArgumentException(); //TODO(improve) we should only have 1 trip in Trips array
-      }
-
-      var duration = 0;
-      var distance = 0;
-      if (i <= 0)
-      {
-        return new WayPoint(rallyingPoint, waypoint.WaypointIndex, duration, distance);
-      }
-
-      var routeLeg = rawTrip.Trips[0].Legs[i - 1];
-      duration = (int)Math.Ceiling(routeLeg.Duration);
-      distance = (int)Math.Ceiling(routeLeg.Distance);
-
-      return new WayPoint(rallyingPoint, waypoint.WaypointIndex, duration, distance);
-    }).ToImmutableSortedSet();
-
-    return waypoints;
-  }
-
   /// <summary>
   /// Get the matrix of durations between each pair of rallying points as a dictionary
   /// </summary>
@@ -312,7 +241,7 @@ public sealed class RoutingServiceImpl : IRoutingService
     return matrix;
   }
 
-  public async Task<ImmutableSortedSet<WayPoint>?> GetTrip(RouteSegment extremities, IEnumerable<RouteSegment> segments)
+  public async Task<ImmutableList<WayPoint>?> GetTrip(DateTime departureTime, RouteSegment extremities, IEnumerable<RouteSegment> segments)
   {
     var start = await rallyingPointService.Get(extremities.From);
     var end = await rallyingPointService.Get(extremities.To);
@@ -354,8 +283,10 @@ public sealed class RoutingServiceImpl : IRoutingService
 
     var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
 
+    var eta = departureTime;
+
     // Start trip and add starting point directly
-    trip.Add(new WayPoint(start, 0, 0, 0));
+    trip.Add(new WayPoint(start, 0, 0, eta));
     // Add a constraint to indicate this point has already been visited
     pointsDictionary[start].Add(start);
 
@@ -370,8 +301,15 @@ public sealed class RoutingServiceImpl : IRoutingService
       var selected = nextPointData.Key;
 
       // Append to trip
-      if (nextPointData.Value.duration is null || nextPointData.Value.distance is null) return null;
-      trip.Add(new WayPoint(selected, trip.Count, (int)nextPointData.Value.duration, (int)nextPointData.Value.distance));
+      if (nextPointData.Value.duration is null || nextPointData.Value.distance is null)
+      {
+        return null;
+      }
+
+      var duration = (int)nextPointData.Value.duration;
+      eta = eta.AddSeconds(duration);
+
+      trip.Add(new WayPoint(selected, duration, (int)nextPointData.Value.distance, eta));
 
       // Update constraints and visitable points
       foreach (var kv in pointsDictionary)
@@ -392,6 +330,6 @@ public sealed class RoutingServiceImpl : IRoutingService
       return null;
     }
 
-    return trip.ToImmutableSortedSet();
+    return trip.ToImmutableList();
   }
 }

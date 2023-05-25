@@ -13,10 +13,8 @@ using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
-using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -312,10 +310,10 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     }
 
     currentContext.SetCurrentUser(userA);
-    var resultsA = await testedService.ListForCurrentUser(new Pagination());
+    var resultsA = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
 
     currentContext.SetCurrentUser(userB);
-    var resultsB = await testedService.ListForCurrentUser(new Pagination());
+    var resultsB = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
 
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
@@ -360,7 +358,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("Quezac_Parking_fakeId", compatible.Pickup.Id);
     Assert.AreEqual("Mende_fakeId", compatible.Deposit.Id);
   }
-  
+
   [Test]
   public async Task ShouldGetNextAppointments()
   {
@@ -374,5 +372,4 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     Assert.AreEqual(1, actual.Count);
   }
-  
 }

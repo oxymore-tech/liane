@@ -11,6 +11,16 @@ namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
+  public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> input, T until) where T : notnull
+  {
+    bool found;
+    return input.TakeWhile(i =>
+    {
+      found = i.Equals(until);
+      return !found;
+    });
+  }
+
   public static async IAsyncEnumerable<Batch<T>> Batch<T>(this IAsyncEnumerable<T> input, int batchSize = 10_000)
   {
     var batch = new List<T>(batchSize);

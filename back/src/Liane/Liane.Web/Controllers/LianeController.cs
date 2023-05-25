@@ -105,7 +105,7 @@ public sealed class LianeController : ControllerBase
   [HttpGet("")]
   public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination)
   {
-    return lianeService.ListForCurrentUser(pagination);
+    return lianeService.List(new LianeFilter { ForCurrentUser = true }, pagination);
   }
 
   [HttpPost("")]
@@ -118,7 +118,7 @@ public sealed class LianeController : ControllerBase
   [RequiresAdminAuth]
   public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination)
   {
-    return lianeService.ListAll(pagination);
+    return lianeService.List(new LianeFilter(), pagination);
   }
 
   [HttpPost("generate")]

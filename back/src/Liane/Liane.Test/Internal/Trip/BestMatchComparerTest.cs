@@ -21,8 +21,8 @@ public sealed class BestMatchComparerTest
     var liane2 = new Api.Trip.Liane(null, null, null, new DateTime(2023, 04, 7, 14, 00, 0), null, null, null, null, LianeState.NotStarted, null);
 #pragma warning restore CS8625
 
-    var m1 = new LianeMatch(liane1, 2, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, ImmutableSortedSet<WayPoint>.Empty));
-    var m2 = new LianeMatch(liane2, 1, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, ImmutableSortedSet<WayPoint>.Empty));
+    var m1 = new LianeMatch(liane1, 2, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, ImmutableList<WayPoint>.Empty));
+    var m2 = new LianeMatch(liane2, 1, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, ImmutableList<WayPoint>.Empty));
 
     var actual = bestMatchComparer.Compare(m1, m2);
     Assert.IsTrue(actual > 0);

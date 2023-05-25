@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -10,6 +11,7 @@ using Liane.Api.Util.Http;
 using Liane.Service.Internal.Osrm.Response;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Liane.Service.Internal.Osrm;
 
@@ -34,7 +36,14 @@ public sealed class OsrmClient : IOsrmService
     string annotations = "false",
     string continueStraight = "default")
   {
-    var uri = $"/route/v1/driving/{Format(coordinates)}";
+    var format = Format(coordinates);
+
+    if (format.IsNullOrEmpty())
+    {
+      return Task.FromResult(new Response.Routing("Ok", ImmutableList<Waypoint>.Empty, ImmutableList<Route>.Empty));
+    }
+
+    var uri = $"/route/v1/driving/{format}";
 
     var url = uri.WithParams(new
     {
@@ -45,36 +54,26 @@ public sealed class OsrmClient : IOsrmService
       annotations,
       continue_straight = continueStraight
     });
-    
+
     return routeCache.GetOrCreateAsync(url, e =>
     {
       e.Size = 1;
       return GetRouteInternal(url);
     })!;
   }
-  
-  public async Task<Nearest> Nearest(LatLng coordinates, int number = 0)
-  {
-    var uri = $"/nearest/v1/driving/{coordinates.Lng},{coordinates.Lat}";
-
-    var result = await client.GetFromJsonAsync<Nearest>(uri.WithParams(new
-    {
-      number
-    }), JsonOptions);
-
-    if (result == null)
-    {
-      throw new ResourceNotFoundException("Osrm response");
-    }
-
-    return result;
-  }
 
   public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, string roundtrip = "false", string source = "first", string destination = "last", string geometries = "geojson",
     string overview = "false",
     string annotations = "false", string steps = "false")
   {
-    var uri = $"/trip/v1/driving/{Format(coordinates)}";
+    var format = Format(coordinates);
+
+    if (format.IsNullOrEmpty())
+    {
+      return new Response.Trip("Ok", ImmutableList<TripWaypoint>.Empty, ImmutableList<Route>.Empty);
+    }
+
+    var uri = $"/trip/v1/driving/{format}";
 
     var result = await client.GetFromJsonAsync<Response.Trip>(uri.WithParams(new
     {
@@ -98,7 +97,7 @@ public sealed class OsrmClient : IOsrmService
   public async Task<Table> Table(IEnumerable<LatLng> coordinates)
   {
     var uri = $"/table/v1/driving/{Format(coordinates)}?annotations=duration,distance";
-    var result = await client.GetFromJsonAsync<Response.Table>(uri, JsonOptions);
+    var result = await client.GetFromJsonAsync<Table>(uri, JsonOptions);
     if (result == null)
     {
       throw new ResourceNotFoundException("Osrm response");
@@ -107,20 +106,22 @@ public sealed class OsrmClient : IOsrmService
     return result;
   }
 
-  public async  Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null)
+  public async Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null)
   {
     var uri = $"/nearest/v1/driving/{coordinate.ToString()}?number={number}";
-    var result = await client.GetFromJsonAsync<Response.Nearest>(uri, JsonOptions);
+    var result = await client.GetFromJsonAsync<Nearest>(uri, JsonOptions);
     if (result == null)
     {
       throw new ResourceNotFoundException("Osrm response");
     }
 
-    if (result.Code == "Ok" && (radius == null || result.Waypoints[0].Distance <= radius)) return result.Waypoints[0].Location;
-    
+    if (result.Code == "Ok" && (radius == null || result.Waypoints[0].Distance <= radius))
+    {
+      return result.Waypoints[0].Location;
+    }
+
     return null;
   }
-
 
   private static string Format(IEnumerable<LatLng> coordinates)
   {

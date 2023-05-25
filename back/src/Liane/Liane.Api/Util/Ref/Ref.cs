@@ -45,6 +45,8 @@ public abstract record Ref<T>
     return Id.GetHashCode();
   }
 
+  public abstract T? Value { get; init; }
+
   public sealed record Unresolved(string RefId) : Ref<T>
   {
     public override async Task<T> Resolve(Func<Ref<T>, Task<T>> resolver)
@@ -60,6 +62,12 @@ public abstract record Ref<T>
     public override string ToString()
     {
       return Id;
+    }
+
+    public override T? Value
+    {
+      get => null;
+      init => throw new NotImplementedException();
     }
   }
 

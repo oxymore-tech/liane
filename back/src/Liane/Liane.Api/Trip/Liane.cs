@@ -54,7 +54,7 @@ public sealed record Liane(
   DateTime? CreatedAt,
   DateTime DepartureTime,
   DateTime? ReturnTime,
-  ImmutableSortedSet<WayPoint> WayPoints,
+  ImmutableList<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,

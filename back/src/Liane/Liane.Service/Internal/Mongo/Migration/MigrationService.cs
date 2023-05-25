@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Trip;
@@ -10,24 +9,27 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 2;
+  private const int Version = 3;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
+  private readonly ILianeService lianeService;
 
-  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
+  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger, ILianeService lianeService)
   {
     this.db = db;
     this.logger = logger;
+    this.lianeService = lianeService;
   }
 
   private async Task Migrate()
   {
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(FilterDefinition<LianeDb>.Empty,
-        Builders<LianeDb>.Update.Set(l => l.State, LianeState.NotStarted)
-          .Set(l => l.Pings, ImmutableList<UserPing>.Empty)
+      .UpdateManyAsync(l => l.State == LianeState.NotStarted && l.DepartureTime < DateTime.UtcNow,
+        Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled)
       );
+
+    await lianeService.UpdateAllGeometries();
   }
 
   public async Task Execute()

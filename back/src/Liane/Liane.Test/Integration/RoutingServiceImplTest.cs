@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
@@ -20,11 +21,13 @@ public sealed class RoutingServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ReverseTripShouldReturnNull()
   {
+    var departureTime = DateTime.Parse("2023-03-02T08:00:00+01:00");
+
     RouteSegment driver = (LabeledPositions.SaintEnimieParking, LabeledPositions.Mende);
-    var result = await tested.GetTrip(driver, new[] { (RouteSegment)(LabeledPositions.Mende, LabeledPositions.SaintEnimieParking) });
+    var result = await tested.GetTrip(departureTime, driver, new[] { (RouteSegment)(LabeledPositions.Mende, LabeledPositions.SaintEnimieParking) });
     Assert.Null(result);
 
-    var result2 = await tested.GetTrip(driver, new[]
+    var result2 = await tested.GetTrip(departureTime, driver, new[]
     {
       (RouteSegment)(LabeledPositions.ChamperbouxEglise, LabeledPositions.SaintEnimieParking),
       (LabeledPositions.Mende, LabeledPositions.ChamperbouxEglise)
@@ -44,7 +47,7 @@ public sealed class RoutingServiceImplTest : BaseIntegrationTest
       (LabeledPositions.BlajouxParking, LabeledPositions.Mende),
     };
 
-    var result = await tested.GetTrip(driver, segments);
+    var result = await tested.GetTrip(DateTime.Parse("2023-03-02T08:00:00+01:00"), driver, segments);
 
     // Assert solution exists
     Assert.NotNull(result);
@@ -52,6 +55,6 @@ public sealed class RoutingServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(driver.From.Id, result!.First().RallyingPoint.Id);
     Assert.AreEqual(driver.To.Id, result!.Last().RallyingPoint.Id);
     // Assert each "from" comes before its "to"
-    Assert.True(segments.All(s => result!.First(w => w.RallyingPoint.Id == s.From.Id).Order < result!.First(w => w.RallyingPoint.Id == s.To.Id).Order));
+    Assert.True(segments.All(s => result!.FindIndex(w => w.RallyingPoint.Id == s.From.Id) < result.FindIndex(w => w.RallyingPoint.Id == s.To.Id)));
   }
 }

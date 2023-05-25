@@ -18,6 +18,8 @@ public sealed record UserPing(
   LatLng? Coordinate
 );
 
+public sealed record WayPointDb(Ref<RallyingPoint> RallyingPoint, int Duration, int Distance, DateTime Eta);
+
 public sealed record LianeDb(
   string Id,
   Ref<Api.User.User>? CreatedBy,
@@ -27,6 +29,7 @@ public sealed record LianeDb(
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,
+  ImmutableList<WayPointDb>? WayPoints,
   ImmutableList<UserPing> Pings,
   GeoJsonLineString<GeoJson2DGeographicCoordinates>? Geometry,
   Ref<ConversationGroup>? Conversation
