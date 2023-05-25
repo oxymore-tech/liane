@@ -32,7 +32,7 @@ public abstract class CronJobService : IHostedService, IDisposable
     }
     catch (System.Exception e)
     {
-      logger.LogError(e, "{job} : job failed", GetType().Name);
+      logger.LogError(e, "{job} : job scheduling failed", GetType().Name);
     }
   }
 
@@ -64,7 +64,14 @@ public abstract class CronJobService : IHostedService, IDisposable
 
         if (!cancellationToken.IsCancellationRequested)
         {
-          await DoWork(cancellationToken);
+          try
+          {
+            await DoWork(cancellationToken);
+          }
+          catch (System.Exception e)
+          {
+            logger.LogError(e, "{job} : job execution failed", GetType().Name);
+          }
         }
 
         if (!cancellationToken.IsCancellationRequested)
