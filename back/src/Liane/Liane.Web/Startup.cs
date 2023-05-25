@@ -71,6 +71,7 @@ public static class Startup
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
+    services.AddService<LianeStatusServiceImpl>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();

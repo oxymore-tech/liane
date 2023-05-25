@@ -459,7 +459,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var route = lianeDb.Geometry!.ToLatLng();
 
-    var bestMatch = await MatchBestIntersectionPoints(targetRoute, route);
+    var bestMatch = MatchBestIntersectionPoints(targetRoute, route);
 
     if (bestMatch is null)
     {
@@ -539,7 +539,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
   }
 
-  private async Task<(LatLng PickupPoint, LatLng DepositPoint)?> MatchBestIntersectionPoints(ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
+  private (LatLng PickupPoint, LatLng DepositPoint)? MatchBestIntersectionPoints(ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)
   {
     var firstIntersection = targetRoute.GetFirstIntersection(route);
     var lastIntersection = targetRoute.GetLastIntersection(route);
