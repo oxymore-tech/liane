@@ -78,10 +78,10 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     {
       filter &= Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient);
     }
-    else
+
+    if (notificationFilter.Sender is not null)
     {
-      var currentUser = currentContext.CurrentUser();
-      filter &= Builders<Notification>.Filter.Eq(r => r.Sender, (Ref<Api.User.User>)currentUser.Id);
+      filter &= Builders<Notification>.Filter.Eq(r => r.Sender, notificationFilter.Sender);
     }
 
     if (notificationFilter.PayloadType is not null)
