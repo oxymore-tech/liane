@@ -22,7 +22,7 @@ export const formatDuration = (duration: TimeInSeconds) => {
 
 export const addSeconds = (date: Date, seconds: number) => {
   date.setSeconds(seconds + date.getUTCSeconds());
-  return date;
+  return new Date(date);
 };
 
 export const extractDatePart = (isoDatetime: UTCDateTime) => {

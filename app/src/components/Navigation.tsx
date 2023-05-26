@@ -27,10 +27,9 @@ import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { useObservable } from "@/util/hooks/subscription";
 import { getNotificationNavigation, RootNavigation } from "@/api/navigation";
 import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
-import { LianeJoinRequestDetailScreen } from "@/screens/search/LianeJoinRequestDetailScreen";
 import { useQueryClient } from "react-query";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
-import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
 import { Notification } from "@/api/notification";
 
 const Stack = createNativeStackNavigator();
@@ -123,7 +122,7 @@ function Navigation() {
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
@@ -148,6 +147,7 @@ type HomeScreenHeaderProp = {
 
 const HomeScreenHeader = ({ label, navigation }: HomeScreenHeaderProp) => {
   const insets = useSafeAreaInsets();
+  const { user } = useContext(AppContext);
   return (
     <Row
       style={{
@@ -162,7 +162,7 @@ const HomeScreenHeader = ({ label, navigation }: HomeScreenHeaderProp) => {
       <AppText style={{ fontSize: 22, fontWeight: "500", color: AppColors.darkBlue }}>{label}</AppText>
       <Pressable
         onPress={() => {
-          navigation.navigate("Profile");
+          navigation.navigate("Profile", { user });
         }}>
         <Avatar height={36} />
       </Pressable>

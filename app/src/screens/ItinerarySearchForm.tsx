@@ -37,32 +37,25 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
               onPress={async () => {
                 props.onSelect(item);
               }}>
-              <Row style={{ marginHorizontal: 20, flexWrap: "wrap", marginVertical: 12 }} spacing={4}>
-                <Column style={{ alignItems: "flex-start", flexShrink: 3, flexGrow: 3, marginVertical: 2 }}>
-                  <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.fromLabel, { alignSelf: "flex-start", maxWidth: undefined }]}>
-                    {item.from.label}
-                  </AppText>
-                  <AppText>{item.from.city}</AppText>
+              <Row style={{ marginHorizontal: 20, flexWrap: "wrap", marginVertical: 12 }} spacing={8}>
+                <Column style={{ paddingTop: 6, paddingBottom: 22 }}>
+                  <View style={{ height: 8, width: 8, backgroundColor: AppColorPalettes.gray[200], borderRadius: 8 }} />
+                  <View style={{ alignSelf: "center", flex: 1, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
+                  <View style={{ height: 8, width: 8, backgroundColor: AppColorPalettes.gray[200], borderRadius: 8 }} />
                 </Column>
-                <View style={{ flexGrow: 1, flexShrink: 3, marginHorizontal: 4 }}>
-                  <Row
-                    style={{
-                      position: "relative",
-                      left: -4,
-                      alignSelf: "flex-start",
-                      marginVertical: 8 + 2
-                    }}>
-                    <View style={[TripViewStyles.line, { minWidth: 32 }]} />
-                    <View style={{ position: "absolute", right: -8, alignSelf: "center" }}>
-                      <AppIcon name={"arrow-right"} color={AppColorPalettes.gray[400]} />
-                    </View>
-                  </Row>
-                </View>
-                <Column style={{ alignItems: "flex-start", flexShrink: 3, flexGrow: 3, marginVertical: 2 }}>
-                  <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.toLabel, { alignSelf: "flex-start", maxWidth: undefined }]}>
-                    {item.to.label}
-                  </AppText>
-                  <AppText>{item.to.city}</AppText>
+                <Column spacing={8}>
+                  <Column>
+                    <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.fromLabel, { alignSelf: "flex-start", maxWidth: undefined }]}>
+                      {item.from.label}
+                    </AppText>
+                    <AppText>{item.from.city}</AppText>
+                  </Column>
+                  <Column>
+                    <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.toLabel, { alignSelf: "flex-start", maxWidth: undefined }]}>
+                      {item.to.label}
+                    </AppText>
+                    <AppText>{item.to.city}</AppText>
+                  </Column>
                 </Column>
               </Row>
             </AppPressable>

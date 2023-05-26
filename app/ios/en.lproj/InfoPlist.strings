@@ -1,2 +1,4 @@
 NSLocationWhenInUseUsageDescription = "Liane needs to access your position to display it on a map.";
 NSLocationAlwaysAndWhenInUseUsageDescription = "Liane needs to access your position to display it on a map.";
+NSPhotoLibraryUsageDescription = "Allow access to your library to upload a new picture."
+NSCameraUsageDescription = "Allow access to your camera to upload a new picture."

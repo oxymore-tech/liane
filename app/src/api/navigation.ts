@@ -6,7 +6,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils } from "./index";
+import { JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, User } from "./index";
 import { InternalLianeSearchFilter } from "@/util/ref";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
@@ -26,6 +26,7 @@ export type NavigationParamList = {
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
+  Profile: { user: User };
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
 };
 

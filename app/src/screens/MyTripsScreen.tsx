@@ -131,8 +131,9 @@ const renderSectionHeader = ({ section: { date } }: { section: SectionListData<L
     <AppText style={styles.headerTitle}>{capitalize(formatMonthDay(new Date(date)))}</AppText>
   </View>
 );
-const MyTripsScreen = ({ navigation }) => {
+const MyTripsScreen = () => {
   const insets = useSafeAreaInsets();
+  const { navigation } = useAppNavigation();
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
@@ -141,7 +142,7 @@ const MyTripsScreen = ({ navigation }) => {
 
   const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
 
-  const error = queriesData[0].error || queriesData[1].error;
+  const error: any = queriesData[0].error || queriesData[1].error;
 
   const isFetching = queriesData[0].isFetching || queriesData[1].isFetching;
 

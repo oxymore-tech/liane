@@ -9,12 +9,10 @@ import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
-import { AppIcon } from "@/components/base/AppIcon";
+import { StyleSheet, View } from "react-native";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { formatDuration } from "@/util/datetime";
-import Modal from "react-native-modal/dist/modal";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/MyTripsScreen";
@@ -22,6 +20,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { useQueryClient } from "react-query";
 import { DriverInfo, InfoItem } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";
+import { SlideUpModal } from "@/components/modal/SlideUpModal";
 
 const formatSeatCount = (seatCount: number) => {
   let count = seatCount;
@@ -124,32 +123,14 @@ export const LianeMatchDetailView = () => {
           }}
         />
       </Row>
-      <Modal isVisible={modalVisible} onSwipeComplete={() => setModalVisible(false)} swipeDirection={["down"]} style={styles.modal}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
-          <View style={{ backgroundColor: AppColors.darkBlue, padding: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
-            <Column spacing={8}>
-              <Row>
-                <Pressable style={{ paddingBottom: 16 }} onPress={() => setModalVisible(false)}>
-                  <AppIcon name={"close-outline"} color={AppColors.white} />
-                </Pressable>
-              </Row>
-              <SeatsForm seats={-seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
-            </Column>
-            <View style={{ marginVertical: 24 }}>
-              <CardTextInput value={message} multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
-            </View>
-
-            <View style={{ justifyContent: "flex-end", paddingHorizontal: 24 }}>
-              <AppRoundedButton
-                color={defaultTextColor(AppColors.orange)}
-                onPress={requestJoin}
-                backgroundColor={AppColors.orange}
-                text={"Envoyer la demande"}
-              />
-            </View>
+      <SlideUpModal actionText={"Envoyer la demande"} onAction={requestJoin} visible={modalVisible} setVisible={setModalVisible}>
+        <Column>
+          <SeatsForm seats={-seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
+          <View style={{ marginVertical: 24 }}>
+            <CardTextInput value={message} multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </Column>
+      </SlideUpModal>
     </AppBottomSheetScrollView>
   );
 };

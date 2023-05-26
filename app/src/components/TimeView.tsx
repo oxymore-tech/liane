@@ -4,7 +4,7 @@ import { TimeInSeconds } from "@/util/datetime";
 import { locale } from "@/api/i18n";
 
 export interface TimeViewProps extends AppTextProps {
-  value?: TimeInSeconds;
+  value: TimeInSeconds;
 }
 const time24hFormatter = new Intl.DateTimeFormat(locale, {
   hour: "2-digit",

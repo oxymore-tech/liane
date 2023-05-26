@@ -88,7 +88,11 @@ export function patch(uri: string, options: QueryPostOptions<any> = {}) {
 
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
   const response = await fetchAndCheck(method, uri, options);
-  return response.status === 204 ? undefined : response.json();
+  try {
+    return response.status === 204 ? undefined : response.json();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function formatBody(body?: any, bodyAsJson: boolean = true) {

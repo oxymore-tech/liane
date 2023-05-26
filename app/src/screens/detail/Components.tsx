@@ -1,12 +1,13 @@
 import { AppIcon, CustomIconName, IconName } from "@/components/base/AppIcon";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import { ColorValue, Pressable, StyleSheet, View } from "react-native";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Item } from "@/components/ActionItem";
+import { AppPressable } from "@/components/base/AppPressable";
 
 export const InfoItem = (props: { icon: IconName | CustomIconName; value: string }) => {
   return (
@@ -39,6 +40,18 @@ export const DriverInfo = () => {
   );
 };
 
+export const ActionFAB = (props: { onPress: () => void; color: ColorValue; icon: IconName }) => {
+  return (
+    <Pressable
+      style={[styles.actionButton, { backgroundColor: props.color, padding: 8 }]}
+      onPress={() => {
+        props.onPress();
+      }}>
+      <AppIcon name={props.icon} color={defaultTextColor(props.color)} />
+    </Pressable>
+  );
+};
+
 export const FloatingBackButton = (props: { onPress: () => void; color?: ColorValue; iconColor?: ColorValue }) => {
   const insets = useSafeAreaInsets();
   return (
@@ -49,6 +62,24 @@ export const FloatingBackButton = (props: { onPress: () => void; color?: ColorVa
       }}>
       <AppIcon name={"arrow-ios-back-outline"} color={props.iconColor || AppColors.white} />
     </Pressable>
+  );
+};
+
+export const PassengerListView = (props: { members: any[] }) => {
+  return (
+    <Column spacing={12}>
+      <View style={{ paddingTop: 16, paddingHorizontal: 24 }}>
+        <AppText style={{ fontWeight: "bold", fontSize: 16 }}>Passagers ({props.members.length})</AppText>
+      </View>
+      {props.members.map(m => (
+        <AppPressable style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
+          <Row spacing={24} style={{ alignItems: "center" }}>
+            <UserPicture id={m.user} />
+            <AppText>{m.user}</AppText>
+          </Row>
+        </AppPressable>
+      ))}
+    </Column>
   );
 };
 

@@ -109,7 +109,10 @@ export type Liane = Entity &
     members: LianeMember[];
     driver: { user: Ref<User>; canDrive: boolean };
     conversation: Ref<ConversationGroup>;
+    state: LianeState;
   }>;
+
+export type LianeState = "NotStarted" | "Finished" | "Started" | "Cancelled" | "Archived";
 
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;

@@ -11,6 +11,7 @@ import Car from "@/assets/icons/car.svg";
 import Position from "@/assets/icons/position.svg";
 import TwistingArrow from "@/assets/icons/twisting_arrow.svg";
 import DirectionsWalk from "@/assets/icons/directions_walk.svg";
+import History from "@/assets/icons/history.svg";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
@@ -36,6 +37,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <TwistingArrow {...props} />;
     case "car":
       return <Car {...props} />;
+    case "history":
+      return <History {...props} />;
     case "position":
       return <Position {...props} />;
     case "directions-walk":
@@ -53,6 +56,7 @@ const AppIconsNames = [
   "car-strike-through",
   "message-circle-full",
   "car",
+  "history",
   "position",
   "twisting-arrow",
   "directions-walk"

@@ -59,6 +59,10 @@ const timeFormatter = new Intl.DateTimeFormat(locale, {
   minute: "2-digit"
 });
 
+const monthYearFormatter = new Intl.DateTimeFormat(locale, {
+  month: "long",
+  year: "numeric"
+});
 export const toRelativeDateString = (timestamp: Date, dateFormatterFunction: (date?: number | Date | undefined) => string = dateFormatter.format) => {
   let date;
   const now = new Date();
@@ -83,6 +87,7 @@ export const toRelativeTimeString = (timestamp: Date, dateFormatterFunction: (da
 });*/
 
 export const formatMonthDay = monthDayFormatter.format;
+export const formatMonthYear = monthYearFormatter.format;
 export const formatShortMonthDay = shortMonthDayFormatter.format;
 export const formatTime = (date?: number | Date | undefined) => {
   try {

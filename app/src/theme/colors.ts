@@ -49,6 +49,7 @@ export const defaultTextColor = (color: ColorValue) => {
   switch (color) {
     case AppColors.blue:
     case AppColors.orange:
+    case AppColors.darkBlue:
       return AppColors.white;
     default:
       return AppColorPalettes.gray[700];

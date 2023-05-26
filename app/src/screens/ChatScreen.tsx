@@ -1,7 +1,7 @@
 import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, User } from "@/api";
 import React, { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
-import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -14,6 +14,9 @@ import { useAppNavigation } from "@/api/navigation";
 import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
+import { SimpleModal } from "@/components/modal/SimpleModal";
+import { UserPicture } from "@/components/UserPicture";
+import { AppPressable } from "@/components/base/AppPressable";
 const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
   const sender = message.createdBy === currentUser.id;
   const date = capitalize(toRelativeTimeString(new Date(message.createdAt!)));
@@ -59,6 +62,7 @@ export const ChatScreen = () => {
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
+  const [showMoreModal, setShowMoreModal] = useState(false);
 
   const members = conversation
     ? conversation.members
@@ -184,12 +188,42 @@ export const ChatScreen = () => {
             marginTop: 8
           }}>
           <Row style={{ alignItems: "flex-end" }} spacing={16}>
-            <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
+            <AppButton
+              onPress={() => {
+                setShowMoreModal(true);
+              }}
+              icon="plus-outline"
+              color={AppColors.white}
+              kind="circular"
+              foregroundColor={AppColors.blue}
+            />
 
             <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
           </Row>
         </View>
       </KeyboardAvoidingView>
+      <SimpleModal visible={showMoreModal} setVisible={setShowMoreModal} backgroundColor={AppColors.white}>
+        <Column>
+          <AppPressable style={{ paddingVertical: 12 }}>
+            <Row spacing={24} style={{ alignItems: "center" }}>
+              <AppIcon name={"phone-call-outline"} />
+              <AppText>Appeler le conducteur</AppText>
+            </Row>
+          </AppPressable>
+          <AppPressable style={{ paddingVertical: 12 }}>
+            <Row spacing={24} style={{ alignItems: "center" }}>
+              <AppIcon name={"image-outline"} />
+              <AppText>Partager une image</AppText>
+            </Row>
+          </AppPressable>
+          <AppPressable style={{ paddingVertical: 12 }}>
+            <Row spacing={24} style={{ alignItems: "center" }}>
+              <AppIcon name={"pin-outline"} />
+              <AppText>Partager une position</AppText>
+            </Row>
+          </AppPressable>
+        </Column>
+      </SimpleModal>
     </View>
   ); // TODO loading screen
 };

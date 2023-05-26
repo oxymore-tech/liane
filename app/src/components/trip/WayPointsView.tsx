@@ -82,7 +82,15 @@ const extractData = (wayPoints: WayPoint[], departureTime: UTCDateTime) => {
   };
 };
 
-export const DetailedLianeMatchView = ({ wayPoints, departureTime }) => {
+export const DetailedLianeMatchView = ({
+  wayPoints,
+  departureTime,
+  renderWayPointAction
+}: {
+  wayPoints: WayPoint[];
+  departureTime: UTCDateTime;
+  renderWayPointAction?: (wp: WayPoint) => JSX.Element | undefined;
+}) => {
   const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
 
   const renderItem = (wayPoint: TimedWayPoint, style: "from" | "to" | "step", last: boolean = false) => (
@@ -113,6 +121,7 @@ export const DetailedLianeMatchView = ({ wayPoints, departureTime }) => {
         }}>
         <AppText>{wayPoint.wayPoint.rallyingPoint.address}</AppText>
         <AppText>{wayPoint.wayPoint.rallyingPoint.city}</AppText>
+        {renderWayPointAction && renderWayPointAction(wayPoint.wayPoint)}
       </Column>
     </Column>
   );

@@ -1,6 +1,6 @@
 import { AppPressable } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
-import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { AppIcon, CustomIconName, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { ColorValue, StyleSheet, View } from "react-native";
 import React from "react";
@@ -9,7 +9,7 @@ import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 export interface ActionItemProps {
   onPress: () => void;
   color?: ColorValue;
-  iconName: IconName;
+  iconName: IconName | CustomIconName;
   text: string;
 }
 export const ActionItem = ({ onPress, color, iconName, text }: ActionItemProps) => (
@@ -24,7 +24,15 @@ export const ActionItem = ({ onPress, color, iconName, text }: ActionItemProps) 
   />
 );
 
-export const Item = ({ leadingComponent, descriptionComponent, onPress }) => {
+export const Item = ({
+  leadingComponent,
+  descriptionComponent,
+  onPress
+}: {
+  leadingComponent: JSX.Element;
+  descriptionComponent: JSX.Element;
+  onPress: () => void;
+}) => {
   return (
     <AppPressable foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress}>
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>

@@ -102,7 +102,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
         <Row spacing={16} style={{ alignItems: "center" }}>
           <AppIcon name={reqIsExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} color={AppColors.white} />
           <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
-            {reqIsExactMatch
+            {reqIsExactMatch || (data.match as Compatible).delta.totalInSeconds <= 60
               ? "Votre trajet reste inchangé"
               : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).delta.totalInSeconds)}
           </AppText>
