@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo.Serialization;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -13,13 +14,11 @@ namespace Liane.Service.Internal.Mongo;
 
 public static class MongoDatabaseExtensions
 {
-  private const string Discriminator = "_t";
-
   public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> builder)
     where T : class
     where TExpected : class
   {
-    return new BsonDocument(Discriminator, typeof(TExpected).Name);
+    return new BsonDocument(UnionDiscriminatorConvention.Type, typeof(TExpected).Name);
   }
 
   public static FilterDefinition<T> IsInstanceOf<T, TExpected>(this FilterDefinitionBuilder<T> _, Expression<Func<T, object?>> field)
@@ -29,7 +28,7 @@ public static class MongoDatabaseExtensions
     var prefix = string.Join(".", ExpressionHelper.GetMembers(field)
       .Select(m => m.Name.Uncapitalize())
       .Reverse());
-    return new BsonDocument($"{prefix}.{Discriminator}", typeof(TExpected).Name);
+    return new BsonDocument($"{prefix}.{UnionDiscriminatorConvention.Type}", typeof(TExpected).Name);
   }
 
   public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, Expression<Func<T, object?>> fieldExpression, Type targetType)
@@ -44,7 +43,7 @@ public static class MongoDatabaseExtensions
   public static FilterDefinition<T> IsInstanceOf<T>(this FilterDefinitionBuilder<T> builder, string field, Type targetType)
     where T : class
   {
-    return builder.Eq($"{field}.{Discriminator}", targetType.Name);
+    return builder.Eq($"{field}.{UnionDiscriminatorConvention.Type}", targetType.Name);
   }
 
   public static async Task<T?> Get<T>(this IMongoDatabase mongo, string id) where T : class, IIdentity

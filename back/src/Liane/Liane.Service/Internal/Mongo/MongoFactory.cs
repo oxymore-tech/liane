@@ -15,6 +15,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
+using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Mongo;
 
@@ -70,6 +71,7 @@ public static class MongoFactory
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableHashSet<>), typeof(ImmutableHashSetSerializer<>));
+      UnionDiscriminatorConvention.Register();
       _init = true;
     }
 
@@ -85,7 +87,8 @@ public static class MongoFactory
           var command = json.Length < 50_000 ? json : "Big query not displayed";
           logger.LogDebug("{e.CommandName} - {command}", e.CommandName, command);
         });
-      }
+      },
+      LinqProvider = LinqProvider.V2
     });
     return mongo;
   }
