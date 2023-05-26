@@ -37,34 +37,90 @@ public sealed class LianeStatusUpdate : CronJobService
   public async Task Update(DateTime from, TimeSpan window)
   {
     var to = from.Add(window);
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted || l.State == LianeState.Started)
-                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= to);
-    await mongo.GetCollection<LianeDb>()
-      .Find(filter)
-      .ForEachAsync(l => SendReminder(l, from, to));
+    await UpdateActiveLianes(from, to);
+    await UpdateFinishedLianes(from);
   }
 
-  private async Task SendReminder(LianeDb liane, DateTime from, DateTime to)
+  private async Task UpdateFinishedLianes(DateTime from)
   {
-    if (liane.WayPoints is null)
+    var limit = from.AddHours(-1);
+    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted || l.State == LianeState.Started)
+                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta < limit);
+    var lianes = await mongo.GetCollection<LianeDb>()
+      .Find(filter)
+      .ToListAsync();
+
+    var finishedLianes = lianes
+      .Where(l => l.WayPoints is null || l.WayPoints.Last().Eta < limit)
+      .ToImmutableList();
+
+    if (finishedLianes.IsEmpty)
     {
       return;
     }
 
-    foreach (var wayPoint in liane.WayPoints.Where(w => w.Eta > from && w.Eta <= to))
+    await notificationService.CleanNotifications(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
+
+    await mongo.GetCollection<LianeDb>()
+      .BulkWriteAsync(finishedLianes
+        .Select(liane => new UpdateOneModel<LianeDb>(
+          Builders<LianeDb>.Filter.Where(l => l.Id == liane.Id),
+          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Finished))
+        ));
+  }
+
+  private async Task UpdateActiveLianes(DateTime from, DateTime to)
+  {
+    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted || l.State == LianeState.Started)
+                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= to);
+    var activeLianes = await mongo.GetCollection<LianeDb>()
+      .Find(filter)
+      .ToListAsync();
+    await UpdateLianeAndSendReminder(activeLianes, from, to);
+  }
+
+  private async Task UpdateLianeAndSendReminder(List<LianeDb> lianes, DateTime from, DateTime to)
+  {
+    var lianeUpdates = new List<WriteModel<LianeDb>>();
+    var reminders = new List<Notification.Reminder>();
+
+    foreach (var liane in lianes)
     {
-      var members = await GetRecipients(liane, wayPoint);
-      if (members.IsEmpty)
+      if (!liane.Pings.IsEmpty && liane.State == LianeState.NotStarted && liane.DepartureTime < DateTime.UtcNow)
       {
-        continue;
+        lianeUpdates.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id), Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)));
       }
 
-      var rallyingPoint = await wayPoint.RallyingPoint.Resolve(rallyingPointService.Get);
-      await notificationService.SendReminder("Départ dans 5 minutes",
-        $"Vous avez RDV dans 5 minutes à '{rallyingPoint.Label}'.",
-        members,
-        new Reminder(liane.Id, wayPoint.RallyingPoint, wayPoint.Eta));
+      if (liane.WayPoints is null)
+      {
+        return;
+      }
+
+      foreach (var wayPoint in liane.WayPoints.Where(w => w.Eta > from && w.Eta <= to))
+      {
+        var members = await GetRecipients(liane, wayPoint);
+        if (members.IsEmpty)
+        {
+          continue;
+        }
+
+        var rallyingPoint = await wayPoint.RallyingPoint.Resolve(rallyingPointService.Get);
+        reminders.Add(CreateReminder(from, "Départ dans 5 minutes", $"Vous avez RDV dans 5 minutes à '{rallyingPoint.Label}'.", members, new Reminder(liane.Id, wayPoint.RallyingPoint, wayPoint.Eta)));
+      }
     }
+
+    await notificationService.SendReminders(from, reminders);
+
+    if (lianeUpdates.Count > 0)
+    {
+      await mongo.GetCollection<LianeDb>()
+        .BulkWriteAsync(lianeUpdates);
+    }
+  }
+
+  private static Notification.Reminder CreateReminder(DateTime now, string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
+  {
+    return new Notification.Reminder(null, null, now, to.Select(t => new Recipient(t, null)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder);
   }
 
   private async Task<ImmutableList<Ref<Api.User.User>>> GetRecipients(LianeDb liane, WayPointDb wayPoint)

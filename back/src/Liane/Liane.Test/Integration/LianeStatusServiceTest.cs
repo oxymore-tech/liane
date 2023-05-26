@@ -29,25 +29,22 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldGetNotStartedStatus()
+  public async Task ShouldUpdateToFinished()
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
 
-    var departureTime = DateTime.UtcNow.AddMinutes(5);
+    var now = DateTime.UtcNow;
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-1));
 
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
-    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende, false));
+    await lianeStatusUpdate.Update(now, TimeSpan.FromMinutes(5));
 
-    await lianeStatusUpdate.Update(DateTime.UtcNow, TimeSpan.FromMinutes(5));
+    liane1 = await lianeService.Get(liane1.Id);
+    liane2 = await lianeService.Get(liane2.Id);
 
-    var actual = await lianeService.Get(liane1.Id);
-
-    Assert.AreEqual(LianeState.NotStarted, actual.State);
-    // CollectionAssert.IsEmpty(actual.Carpoolers);
-    // Assert.IsNotNull(actual.NextEta);
-    // Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
-    // AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
+    Assert.AreEqual(LianeState.Finished, liane1.State);
+    Assert.AreEqual(LianeState.NotStarted, liane2.State);
   }
 
   [Test]

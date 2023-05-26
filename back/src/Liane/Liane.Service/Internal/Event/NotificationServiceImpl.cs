@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,6 +39,41 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     new Notification.Reminder(
       null, null, DateTime.UtcNow, to.Select(t => new Recipient(t, null)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder)
   );
+
+  public async Task SendReminders(DateTime now, IEnumerable<Notification.Reminder> reminders)
+  {
+    var existing = await Mongo.GetCollection<Notification.Reminder>()
+      .Find(Builders<Notification.Reminder>.Filter.IsInstanceOf<Notification.Reminder, Notification.Reminder>())
+      .ToListAsync();
+
+    var payloads = existing.Select(r => r.Payload)
+      .ToImmutableHashSet();
+
+    var bulks = existing.Where(r => r.Payload.At >= now)
+      .Select(reminder => new DeleteOneModel<Notification.Reminder>(Builders<Notification.Reminder>.Filter.Eq(r => r.Id, reminder.Id)))
+      .Cast<WriteModel<Notification.Reminder>>()
+      .Concat(reminders.Where(r => payloads.Contains(r.Payload))
+        .Select(r => new InsertOneModel<Notification.Reminder>(r)))
+      .ToImmutableList();
+
+    if (bulks.IsEmpty)
+    {
+      return;
+    }
+
+    var result = await Mongo.GetCollection<Notification.Reminder>()
+      .BulkWriteAsync(bulks);
+
+    foreach (var reminder in result.Upserts.Select(u => ((InsertOneModel<Notification.Reminder>)bulks[u.Index]).Document with { Id = u.Id.AsString }))
+    {
+      if (reminder.Recipients.IsEmpty)
+      {
+        continue;
+      }
+
+      await Task.WhenAll(reminder.Recipients.Select(r => pushService.SendNotification(r.User, reminder)));
+    }
+  }
 
   public new async Task<Notification> Create(Notification obj)
   {
@@ -97,6 +133,20 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     return await Mongo.Paginate(pagination, r => r.SentAt, filter, false);
   }
 
+  public Task CleanJoinLianeRequests(ImmutableList<Ref<Api.Trip.Liane>> lianes)
+  {
+    var filter = Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, JoinLianeRequest>(n => n.Payload)
+                 & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
+    return Mongo.GetCollection<Notification.Event>()
+      .DeleteManyAsync(filter);
+  }
+
+  public Task CleanNotifications(ImmutableList<Ref<Api.Trip.Liane>> lianes)
+  {
+    return Mongo.GetCollection<Notification>()
+      .DeleteManyAsync(Builders<Notification>.Filter.In("Payload.Liane", lianes));
+  }
+
   private static FilterDefinition<Notification> BuildTypeFilter(PayloadType payloadType) => payloadType switch
   {
     PayloadType.Info => Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Info>(),
@@ -104,17 +154,6 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     PayloadType.Reminder => Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Reminder>(),
     _ => throw new ArgumentOutOfRangeException(nameof(payloadType))
   };
-
-  private static FilterDefinition<Notification> BuildLianeEventTypeFilter(PayloadType.Event @event)
-  {
-    var filter = Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Event>();
-    if (@event.SubType is null)
-    {
-      return filter;
-    }
-
-    return filter & Builders<Notification>.Filter.IsInstanceOf("payload", @event.SubType);
-  }
 
   public async Task Answer(Ref<Notification> id, Answer answer)
   {
@@ -162,6 +201,17 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       .Limit(100)
       .CountDocumentsAsync();
     return (int)unreadCount;
+  }
+
+  private static FilterDefinition<Notification> BuildLianeEventTypeFilter(PayloadType.Event @event)
+  {
+    var filter = Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Event>();
+    if (@event.SubType is null)
+    {
+      return filter;
+    }
+
+    return filter & Builders<Notification>.Filter.IsInstanceOf("payload", @event.SubType);
   }
 
   protected override Notification ToDb(Notification inputDto, string originalId)
