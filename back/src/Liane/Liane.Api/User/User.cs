@@ -35,6 +35,6 @@ public sealed record FullUser(
 {
   private static string ToPseudo(string firstName, string lastName)
   {
-    return firstName + " " + lastName.Take(1);
+    return firstName + " " + (lastName.Length > 0 ? lastName[1] : 'X'); //TODO
   }
 }

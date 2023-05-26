@@ -9,6 +9,7 @@ using GeoJSON.Text.Geometry;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
@@ -33,6 +34,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
+  private readonly IUserService userService;
   private readonly IChatService chatService;
   private readonly ILogger<LianeServiceImpl> logger;
 
@@ -42,12 +44,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger) : base(mongo, currentContext)
+    ILogger<LianeServiceImpl> logger, IUserService userService) : base(mongo, currentContext)
   {
     this.routingService = routingService;
     this.rallyingPointService = rallyingPointService;
     this.chatService = chatService;
     this.logger = logger;
+    this.userService = userService;
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
@@ -247,13 +250,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .Find(l => l.State == LianeState.NotStarted)
       .ToListAsync();
 
+
+    if (lianes.Count == 0) return;
     var bulks = new List<WriteModel<LianeDb>>();
     foreach (var db in lianes)
     {
       var update = await GetTripUpdate(db.DepartureTime, db.Driver.User, db.Members);
       bulks.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, db.Id), update));
     }
-
+    
     await Mongo.GetCollection<LianeDb>()
       .BulkWriteAsync(bulks);
   }

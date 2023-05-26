@@ -23,7 +23,7 @@ public sealed record WayPointDb(Ref<RallyingPoint> RallyingPoint, int Duration, 
 public sealed record LianeDb(
   string Id,
   Ref<Api.User.User>? CreatedBy,
-  DateTime CreatedAt,
+  DateTime? CreatedAt,
   DateTime DepartureTime,
   DateTime? ReturnTime,
   ImmutableList<LianeMember> Members,
@@ -33,7 +33,7 @@ public sealed record LianeDb(
   ImmutableList<UserPing> Pings,
   GeoJsonLineString<GeoJson2DGeographicCoordinates>? Geometry,
   Ref<ConversationGroup>? Conversation
-) : IIdentity, ISharedResource<LianeMember>
+) : IEntity, ISharedResource<LianeMember>
 {
   [BsonElement] public int TotalSeatCount => Members.Aggregate(0, (sum, v) => sum + v.SeatCount);
 }
