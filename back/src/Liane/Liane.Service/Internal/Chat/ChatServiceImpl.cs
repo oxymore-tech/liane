@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.User;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
@@ -114,5 +115,12 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   private static ChatMessage MapMessage(DbChatMessage m)
   {
     return new ChatMessage(m.Id, m.CreatedBy, m.CreatedAt, m.Text);
+  }
+
+  protected override async Task<ConversationGroup> MapEntity(ConversationGroup dbRecord)
+  {
+    var conversation = await base.MapEntity(dbRecord);
+    var users = await conversation.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
+    return conversation with { Members = users };
   }
 }

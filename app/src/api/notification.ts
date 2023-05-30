@@ -1,4 +1,4 @@
-import { Ref, User, UTCDateTime } from "@/api/index";
+import { Liane, RallyingPoint, Ref, User, UTCDateTime } from "@/api/index";
 import { LianeEvent } from "@/api/event";
 
 export type Notification = Info | Reminder | Event;
@@ -33,7 +33,11 @@ export type Reminder = Readonly<{
   answers: Answer[];
   title: string;
   message: string;
-  payload: Reminder;
+  payload: {
+    liane: Ref<Liane>;
+    rallyingPoint: RallyingPoint;
+    at: UTCDateTime;
+  };
 }>;
 
 export type Event<T extends LianeEvent = LianeEvent> = Readonly<{

@@ -21,6 +21,7 @@ import { useQueryClient } from "react-query";
 import { DriverInfo, InfoItem } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
+import { useAppNavigation } from "@/api/navigation";
 
 const formatSeatCount = (seatCount: number) => {
   let count = seatCount;
@@ -41,6 +42,7 @@ export const LianeMatchDetailView = () => {
   const [state] = useActor(machine);
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
+  const { navigation } = useAppNavigation();
   const liane = state.context.selectedMatch!;
   const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact");
 
@@ -60,7 +62,9 @@ export const LianeMatchDetailView = () => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [message, setMessage] = useState("");
-  const [seats, setSeats] = useState(1);
+  const [seats, setSeats] = useState(liane.freeSeatsCount > 0 ? -1 : 1);
+
+  const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
@@ -72,10 +76,12 @@ export const LianeMatchDetailView = () => {
       takeReturnTrip: false,
       to: toPoint.id!
     };
+
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
-    //  navigation.navigate("Home", { screen: "Mes trajets" });
+    setModalVisible(false);
+    navigation.navigate("Home", { screen: "Mes trajets" });
   };
 
   console.log(JSON.stringify(liane));
@@ -97,7 +103,7 @@ export const LianeMatchDetailView = () => {
 
       <LineSeparator />
 
-      {liane.liane.driver.canDrive && <DriverInfo />}
+      {liane.liane.driver.canDrive && <DriverInfo user={driver} />}
       <SectionSeparator />
 
       <Row
@@ -125,7 +131,7 @@ export const LianeMatchDetailView = () => {
       </Row>
       <SlideUpModal actionText={"Envoyer la demande"} onAction={requestJoin} visible={modalVisible} setVisible={setModalVisible}>
         <Column>
-          <SeatsForm seats={-seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
+          <SeatsForm seats={seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
           <View style={{ marginVertical: 24 }}>
             <CardTextInput value={message} multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
           </View>

@@ -1,5 +1,7 @@
-import { Liane, LianeMatch, RallyingPoint, User, UTCDateTime, WayPoint } from "@/api";
+import { Liane, LianeState, RallyingPoint, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
+import { ColorValue } from "react-native";
+import { AppColorPalettes, ContextualColors } from "@/theme/colors";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -13,7 +15,7 @@ export const getTotalDistance = (trip: WayPoint[]) => {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 };
 export const getTripFromLiane = (liane: Liane, user: User) => {
-  const member = liane.members.find(m => m.user === user!.id);
+  const member = liane.members.find(m => m.user.id === user!.id);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
 };
 
@@ -68,4 +70,65 @@ export const getTripMatch = (to: RallyingPoint, from: RallyingPoint, originalTri
     departureIndex,
     arrivalIndex
   };
+};
+
+export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
+
+export const getLianeStatus = (liane: Liane): LianeStatus => {
+  // @ts-ignore
+  const delta = (new Date(liane.departureTime) - new Date()) / 1000;
+
+  if (liane.state === "NotStarted") {
+    if (delta > 0 && delta < 3600 * 12) {
+      if (liane.members.length > 1) {
+        return "StartingSoon";
+      } else {
+        if (liane.driver.canDrive) {
+          return "AwaitingPassengers";
+        } else {
+          return "AwaitingDriver";
+        }
+      }
+    } else if (delta <= 0) {
+      return "Started";
+    }
+  }
+  return liane.state;
+};
+
+export const getLianeStatusStyle = (liane: Liane): [string | undefined, ColorValue] => {
+  const lianeStatus = getLianeStatus(liane);
+  let status;
+  let color: ColorValue = AppColorPalettes.gray[100];
+  switch (lianeStatus) {
+    case "StartingSoon":
+      status = "Départ imminent";
+      color = AppColorPalettes.yellow[100];
+      break;
+    case "Started":
+      status = "En cours";
+      color = ContextualColors.greenValid.light;
+      break;
+    case "Finished":
+      status = "Terminée";
+      color = AppColorPalettes.blue[100];
+      break;
+    case "Cancelled":
+      status = "Annulée";
+      color = ContextualColors.redAlert.light;
+      break;
+    case "AwaitingDriver":
+      status = "Sans conducteur";
+      color = ContextualColors.redAlert.light;
+      break;
+    case "AwaitingPassengers":
+      status = "En attente de passagers";
+      color = AppColorPalettes.gray[100];
+      break;
+    case "Archived":
+      status = "Archivée";
+      color = AppColorPalettes.gray[100];
+      break;
+  }
+  return [status, color];
 };

@@ -38,18 +38,26 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 };
 
 export function getNotificationNavigation(notification: Notification) {
-  if (!UnionUtils.isInstanceOf<Event>(notification, "Event")) {
+  console.debug(JSON.stringify(notification));
+  /* TODO no type returned if (!UnionUtils.isInstanceOf<Event>(notification, "Event")) {
+    return undefined;
+  }*/
+  if (!notification.payload) {
     return undefined;
   }
 
   if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("OpenJoinLianeRequest", { request: notification });
-  }
-
-  if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
+  } else if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("LianeDetail", { liane: notification.payload.liane });
+  } else if (notification.payload.at) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("LianeDetail", { liane: notification.payload.liane });
+  } else if (notification.conversation) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("Chat", { conversationId: notification.conversation });
   }
 
   return undefined;

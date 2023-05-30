@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
@@ -11,7 +12,40 @@ namespace Liane.Test.Internal.Json;
 [TestFixture]
 public sealed class RefJsonTest
 {
-    private readonly JsonSerializerOptions options = new() { PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true, Converters = { new RefJsonConverterFactory() } };
+    private readonly JsonSerializerOptions options = new() { 
+      PropertyNamingPolicy = new SnakeCaseNamingPolicy(),
+      PropertyNameCaseInsensitive = true, 
+      Converters = { new RefJsonConverterFactory() }, 
+      TypeInfoResolver = new DefaultJsonTypeInfoResolver
+    {
+      Modifiers = { RefJsonStrategy.CreateRefResolutionModifier(new SnakeCaseNamingPolicy()) }
+    }};
+
+    private record DummyDto(
+      Ref<RallyingPoint> rallyingPoint
+      );
+    private record DummyDtoWithResolvedRef(
+      [property: SerializeAsResolvedRef]
+      Ref<RallyingPoint> rallyingPoint
+    );
+    
+    [Test]
+    public void ShouldSerializeAnnotatedRefAsUnresolved()
+    {
+      var value = new DummyDto(LabeledPositions.Cocures);
+      var actual = JsonSerializer.Serialize(value, options);
+      Assert.AreEqual("{\"rallying_point\":\"Cocures_fakeId\"}", actual);
+    }
+    
+    [Test]
+    public void ShouldSerializeAnnotatedRefAsResolved()
+    {
+      var rallyingPoint = (Ref<RallyingPoint>)new RallyingPoint("33", "Mende", new LatLng(30.0, 12.0), LocationType.CarpoolArea, "", "15000", "", null, true);
+      var value = new DummyDtoWithResolvedRef(rallyingPoint);
+      var actual = JsonSerializer.Serialize(value, options);
+      Assert.AreEqual("{\"rallying_point\":{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":1,\"address\":\"\",\"zip_code\":\"15000\",\"city\":\"\",\"place_count\":null,\"is_active\":true}}", actual);
+    }
+
 
     [Test]
     public void ShouldSerializeUnresolvedRef()

@@ -5,6 +5,7 @@ import { Center } from "@/components/base/AppLayout";
 import { getUniqueColor } from "@/util/strings";
 
 export interface UserPictureProps {
+  url: string | null | undefined;
   size?: number;
   id?: string;
 }
@@ -14,7 +15,7 @@ export const UserPicture = ({ size = 48, id }: UserPictureProps) => {
     if (id) {
       const hue = (getUniqueColor(id) + 360) % 360;
       console.log(hue);
-      return `hsl(${hue}, 45%, 78%)`;
+      return `hsl(${hue}, 30%, 78%)`;
     }
     return AppColorPalettes.gray[200];
   }, [id]);

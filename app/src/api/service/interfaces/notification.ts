@@ -36,15 +36,15 @@ export abstract class AbstractNotificationService implements NotificationService
     });
   };
 
-  async receiveNotification(_: Notification) {
+  receiveNotification = async (_: Notification) => {
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
-  }
+  };
 
   abstract checkInitialNotification(): Promise<void>;
 
   abstract list(): Promise<PaginatedResponse<Notification>>;
 
-  async markAsRead(_: Notification) {
+  markAsRead = async (_: Notification) => {
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
-  }
+  };
 }

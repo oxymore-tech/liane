@@ -12,12 +12,11 @@ import {
 } from "react-native";
 import { LianeView } from "@/components/trip/LianeView";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { formatMonthDay } from "@/api/i18n";
 import { JoinLianeRequestDetailed, Liane, UTCDateTime } from "@/api";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppIcon } from "@/components/base/AppIcon";
 import { AppButton } from "@/components/base/AppButton";
 import { useAppNavigation } from "@/api/navigation";
 import { useQueries } from "react-query";
@@ -26,6 +25,10 @@ import { UnauthorizedError } from "@/api/exception";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
 import { extractDatePart } from "@/util/datetime";
 import { capitalize } from "@/util/strings";
+import { getLianeStatusStyle } from "@/components/trip/trip";
+import { UserPicture } from "@/components/UserPicture";
+import { AppIcon } from "@/components/base/AppIcon";
+import { useObservable } from "@/util/hooks/subscription";
 
 interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -33,6 +36,10 @@ interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
 
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
   const { navigation } = useAppNavigation();
+  const [statusText, color] = getLianeStatusStyle(item);
+  const { services } = useContext(AppContext);
+  const unread = useObservable(services.chatHub.unreadConversations, undefined);
+
   return (
     <Pressable
       onPress={() => {
@@ -51,35 +58,49 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })}
             style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
             <AppIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
+            {unread && unread.includes(item.conversation) && (
+              <View
+                style={{
+                  backgroundColor: AppColors.orange,
+                  borderRadius: 16,
+                  padding: 6,
+                  top: 4,
+                  right: 4,
+                  position: "absolute"
+                }}
+              />
+            )}
           </Pressable>
         )}
       </View>
-
       <Row
         style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
         spacing={8}>
-        <Row
-          style={{
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderRadius: 4,
-            alignItems: "center",
-            backgroundColor: item.driver.canDrive ? ContextualColors.greenValid.light : AppColorPalettes.gray[100]
-          }}>
-          <AppIcon name={item.driver.canDrive ? "car-check-mark" : "car-strike-through"} />
-        </Row>
-        <Row
-          style={{
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderRadius: 4,
-            alignItems: "center",
-            backgroundColor: AppColorPalettes.gray[100]
-          }}>
-          <AppText style={{ fontSize: 18 }}>{item.members.length}</AppText>
-          <AppIcon name={"people-outline"} />
+        {statusText && (
+          <Row
+            style={{
+              paddingHorizontal: 4,
+              paddingVertical: 2,
+              borderRadius: 4,
+              alignItems: "center",
+              backgroundColor: color
+            }}>
+            <AppText>{statusText}</AppText>
+          </Row>
+        )}
+        <View style={{ flex: 1 }} />
+        <Row style={{ position: "relative", left: 12 * (item.members.length - 1) }}>
+          {item.members.map((m, i) => {
+            return (
+              <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
+                <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
+              </View>
+            );
+          })}
         </Row>
       </Row>
+
+      {}
       <View style={{ position: "absolute", right: 16, top: -16 }} />
     </Pressable>
   );
@@ -87,7 +108,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 
 const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
   const isRequest = isResolvedJoinLianeRequest(item);
-  //console.log(JSON.stringify(item));
+  // console.debug(JSON.stringify(item));
   if (!isRequest) {
     return renderLianeItem({ item, index, section });
   }
@@ -199,6 +220,7 @@ const MyTripsScreen = () => {
         icon="plus-outline"
         title="Nouvelle Liane"
         onPress={() => {
+          // @ts-ignore
           navigation.navigate("Publish");
         }}
       />

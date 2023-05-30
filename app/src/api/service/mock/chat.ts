@@ -11,12 +11,16 @@ export class HubServiceMock extends AbstractHubService {
   }
 
   readonly mockMe: User = {
+    gender: "Unspecified",
+    pictureUrl: undefined,
     id: "00000",
     phone: "0600000000",
     pseudo: "John Doe"
   };
 
   readonly mockOther: User = {
+    gender: "Woman",
+    pictureUrl: undefined,
     id: "000002",
     phone: "0600000002",
     pseudo: "Jane Doe"

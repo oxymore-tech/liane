@@ -1,7 +1,7 @@
 import { RallyingPoint, UTCDateTime } from "@/api";
 import { StyleSheet, View } from "react-native";
 import { AppColorPalettes } from "@/theme/colors";
-import { TimeInSeconds, toTimeInSeconds } from "@/util/datetime";
+import { TimeInSeconds } from "@/util/datetime";
 import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import React from "react";
@@ -12,12 +12,12 @@ export interface TripSegmentViewProps {
   from: RallyingPoint;
   to: RallyingPoint;
   departureTime: UTCDateTime;
+  arrivalTime: UTCDateTime;
   duration: TimeInSeconds;
   freeSeatsCount: number;
 }
 
-export const TripSegmentView = ({ from, to, departureTime, duration, freeSeatsCount }: TripSegmentViewProps) => {
-  const startTime = toTimeInSeconds(new Date(departureTime));
+export const TripSegmentView = ({ from, to, departureTime, arrivalTime, duration, freeSeatsCount }: TripSegmentViewProps) => {
   return (
     <Column spacing={4}>
       <Row spacing={4}>
@@ -27,9 +27,9 @@ export const TripSegmentView = ({ from, to, departureTime, duration, freeSeatsCo
       </Row>
       <Row style={{ justifyContent: "space-between" }}>
         <Row style={{ justifyContent: "flex-start" }}>
-          <TimeView style={TripViewStyles.mainWayPointTime} value={startTime} />
+          <TimeView style={TripViewStyles.mainWayPointTime} value={departureTime} />
           <AppText> - </AppText>
-          <TimeView style={TripViewStyles.mainWayPointTime} value={startTime + duration} />
+          <TimeView style={TripViewStyles.mainWayPointTime} value={arrivalTime} />
         </Row>
         <Row style={{ alignItems: "center" }}>
           <AppText style={{ fontSize: 14 }}>{Math.abs(freeSeatsCount)}</AppText>

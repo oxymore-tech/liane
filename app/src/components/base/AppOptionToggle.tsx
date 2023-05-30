@@ -28,7 +28,7 @@ export const CreateAppOptionToggle =
         <View
           style={{
             height: 44,
-            width: 215,
+            minWidth: 216,
             backgroundColor: "white",
             borderRadius: 24,
             borderWidth: 1,

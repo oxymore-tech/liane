@@ -37,7 +37,8 @@ async function initContext(service: AppServices): Promise<{
   online: boolean;
 }> {
   // await SplashScreen.preventAutoHideAsync();
-  const authUser = await service.auth.authUser();
+  let authUser = await service.auth.authUser();
+
   let user;
   let online = true;
   //let notificationSubscription = undefined;
@@ -47,7 +48,7 @@ async function initContext(service: AppServices): Promise<{
 
   await initializeNotification();
 
-  if (authUser) {
+  if (authUser?.isSignedUp) {
     try {
       user = await service.chatHub.start();
       // Branch hub to notifications

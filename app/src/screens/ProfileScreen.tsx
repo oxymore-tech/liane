@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet } from "react-native";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
@@ -13,7 +13,7 @@ import { LineSeparator } from "@/components/Separator";
 import { useAppNavigation } from "@/api/navigation";
 import { User } from "@/api";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { formatMonthYear, toRelativeDateString } from "@/api/i18n";
+import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 
 export interface ProfileProps {
@@ -43,7 +43,7 @@ const ProfileView = WithFetchResource<User>(
             }}>
             <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
           </Pressable>
-          <UserPicture size={120} />
+          <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
           <Column style={{ marginVertical: 8, alignItems: "center" }}>
             <AppText style={styles.name}>{displayedUser.pseudo}</AppText>
           </Column>

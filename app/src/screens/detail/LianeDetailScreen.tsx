@@ -6,10 +6,10 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView } from "@/screens/detail/Components";
-import { Exact, getPoint, Liane, LianeMatch, LianeState, UnionUtils } from "@/api";
-import { getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
+import { Exact, getPoint, Liane, LianeMatch, UnionUtils } from "@/api";
+import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatMonthDay } from "@/api/i18n";
+import { formatDate, formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
@@ -109,7 +109,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
               <LianeStatusRow liane={match} />
               <LianeActionRow liane={match} />
               <LianeDetailView liane={match} />
-              <LianeActionsView liane={match.liane} />
+              {match.liane.state === "NotStarted" && <LianeActionsView liane={match.liane} />}
             </AppBottomSheetScrollView>
           )}
 
@@ -146,7 +146,7 @@ const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
 
 const LianeActionsView = ({ liane }: { liane: Liane }) => {
   const { user, services } = useContext(AppContext);
-  const currentUserIsMember = liane.members.filter(m => m.user === user!.id).length === 1;
+  const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
   const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
   const currentUserIsDriver = currentUserIsMember && liane.driver.user === user!.id;
   console.log(user, currentUserIsMember, liane.members);
@@ -154,9 +154,15 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const [date, setDate] = useState(new Date(liane.departureTime));
+  const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
 
   return (
     <Column>
+      <AppText numberOfLines={-1} style={{ paddingVertical: 4, paddingHorizontal: 24 }}>
+        Liane postée le <AppText style={{ fontWeight: "bold" }}>{formatDate(new Date(liane.createdAt!))}</AppText> par{" "}
+        <AppText style={{ fontWeight: "bold" }}>{user?.id === creator.id ? "moi" : creator.pseudo}</AppText>
+      </AppText>
+      {currentUserIsDriver && <LineSeparator />}
       {currentUserIsDriver && (
         <ActionItem
           onPress={() => {
@@ -178,7 +184,6 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
         </Column>
       </SlideUpModal>
-
       <LineSeparator />
       {currentUserIsOwner && (
         <ActionItem
@@ -274,33 +279,8 @@ const toLianeMatch = (liane: Liane): LianeMatch => {
   };
 };
 
-type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers";
-
-const getLianeStatus = (liane: Liane): LianeStatus => {
-  // @ts-ignore
-  const delta = (new Date(liane.departureTime) - new Date()) / 1000;
-
-  if (delta > 0 && delta < 3600 * 12) {
-    return liane.members.length > 1 ? "StartingSoon" : "AwaitingPassengers";
-  } else if (delta <= 0) {
-    return "Started";
-  }
-  return liane.state;
-};
 const LianeStatusRow = ({ liane }: { liane: LianeMatch }) => {
-  const lianeStatus = getLianeStatus(liane.liane);
-  let status;
-  let color: ColorValue | undefined;
-  switch (lianeStatus) {
-    case "StartingSoon":
-      status = "Départ imminent";
-      color = AppColorPalettes.yellow[100];
-      break;
-    case "Started":
-      status = "En cours";
-      color = ContextualColors.greenValid.light;
-      break;
-  }
+  const [status, color] = getLianeStatusStyle(liane.liane);
   return (
     <View>
       {!!status && (
@@ -328,6 +308,8 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
   const lianeStatus = getLianeStatus(liane.liane);
+
+  const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
   return (
     <Column>
@@ -388,9 +370,10 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
 
       <LineSeparator />
 
-      {liane.liane.driver.canDrive && <DriverInfo />}
+      {liane.liane.driver.canDrive && <DriverInfo user={driver} />}
       <SectionSeparator />
-      {liane.liane.members.length > 1 && <PassengerListView members={liane.liane.members.filter(m => m.user !== liane.liane.driver.user)} />}
+      {liane.liane.members.length > 1 && <PassengerListView members={liane.liane.members.filter(m => m.user.id !== liane.liane.driver.user)} />}
+
       {liane.liane.members.length > 1 && <SectionSeparator />}
     </Column>
   );

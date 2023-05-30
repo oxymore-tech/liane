@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.User;
@@ -26,15 +25,22 @@ public sealed record FullUser(
   string? Id,
   string Phone,
   DateTime? CreatedAt,
-  string FirstName, // TODO make non nullable
-  string LastName, // TODO make non nullable
+  string FirstName, 
+  string LastName,  
   Gender Gender,
   string? PictureUrl = null,
   string? PushToken = null
-) : User(Id, CreatedAt, ToPseudo(FirstName, LastName), Gender, PictureUrl)
+) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl)
 {
-  private static string ToPseudo(string firstName, string lastName)
+  public static string GetPseudo(string firstName, string lastName)
   {
-    return firstName + " " + (lastName.Length > 0 ? lastName[1] : 'X'); //TODO
+    return firstName + " " + lastName[0] + ".";
   }
 }
+
+public sealed record UserInfo(string FirstName,
+  string LastName,
+  string? PictureUrl,
+  Gender Gender);
+  
+public sealed record UserStats(int TotalTrips = 0, int TotalSavedCo2 = 0);

@@ -15,7 +15,7 @@ import { FeatureCollection } from "geojson";
 import { JoinRequest } from "@/api/event";
 
 export interface LianeService {
-  list(): Promise<PaginatedResponse<Liane>>;
+  list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
@@ -35,8 +35,10 @@ export class LianeServiceClient implements LianeService {
   async delete(lianeId: string): Promise<void> {
     await del(`/liane/${lianeId}`);
   }
-  async list() {
-    const lianes = await get<PaginatedResponse<Liane>>("/liane/");
+  async list(current: boolean = true, cursor: string | undefined = undefined, pageSize: number = 10) {
+    let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Cancelled";
+    //TODO cursor
+    const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
     console.debug(JSON.stringify(lianes));
     return lianes;
   }

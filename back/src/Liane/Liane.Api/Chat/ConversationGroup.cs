@@ -8,7 +8,7 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Chat;
 
 public sealed record GroupMemberInfo(
-  // TODO resolved ref
+  [property:SerializeAsResolvedRef]
   Ref<User.User> User,
   DateTime JoinedAt,
   DateTime? LastReadAt = null

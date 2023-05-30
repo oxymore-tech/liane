@@ -1,10 +1,10 @@
 import React from "react";
 import { AppText, AppTextProps } from "@/components/base/AppText";
-import { TimeInSeconds } from "@/util/datetime";
 import { locale } from "@/api/i18n";
+import { UTCDateTime } from "@/api";
 
 export interface TimeViewProps extends AppTextProps {
-  value: TimeInSeconds;
+  value: UTCDateTime;
 }
 const time24hFormatter = new Intl.DateTimeFormat(locale, {
   hour: "2-digit",
@@ -12,5 +12,5 @@ const time24hFormatter = new Intl.DateTimeFormat(locale, {
   hour12: false
 });
 export function TimeView({ value, ...props }: TimeViewProps) {
-  return <AppText {...props}>{value ? time24hFormatter.format(new Date(value! * 1000)) : "--:--"}</AppText>;
+  return <AppText {...props}>{value ? time24hFormatter.format(new Date(value)) : "--:--"}</AppText>;
 }

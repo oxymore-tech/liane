@@ -35,9 +35,12 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
   {
     try
     {
-      await hubContext.Clients.Group(recipient)
-        .ReceiveNotification(notification);
-      return true;
+      if (IsConnected(recipient)) // This is important as hub does not wait until message is received
+      {
+        await hubContext.Clients.Group(recipient)
+          .ReceiveNotification(notification);
+        return true;
+      }
     }
     catch (Exception e)
     {

@@ -82,10 +82,15 @@ const createState = <T>(nextTarget: string, nextCondition?: (context: T) => bool
         }
       },
       enter: {
-        always: {
-          target: "#publish." + nextTarget + ".enter",
-          cond: nextCondition ? nextCondition : () => true
-        }
+        always: [
+          {
+            target: "#publish." + nextTarget + ".enter",
+            cond: nextCondition ? nextCondition : () => true
+          },
+          {
+            target: "fill"
+          }
+        ]
       }
     }
   };

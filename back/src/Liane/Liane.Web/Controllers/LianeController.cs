@@ -96,9 +96,9 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter)
   {
-    return lianeService.List(new LianeFilter { ForCurrentUser = true }, pagination);
+    return lianeService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination);
   }
 
   [HttpPost("")]

@@ -31,7 +31,9 @@ public static class JsonSerializerSettings
       options.Converters.Add(converter);
     }
 
-    options.TypeInfoResolver = new PolymorphicTypeResolver();
+    options.TypeInfoResolver = new PolymorphicTypeResolver {
+       Modifiers = { RefJsonStrategy.CreateRefResolutionModifier(NamingPolicy) }
+    };
     options.PropertyNamingPolicy = NamingPolicy;
     options.PropertyNameCaseInsensitive = true;
   }

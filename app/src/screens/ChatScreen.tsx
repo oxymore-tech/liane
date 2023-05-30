@@ -1,7 +1,7 @@
-import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, User } from "@/api";
-import React, { useContext, useEffect, useState } from "react";
+import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@/api";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
-import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -15,28 +15,48 @@ import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { SimpleModal } from "@/components/modal/SimpleModal";
-import { UserPicture } from "@/components/UserPicture";
 import { AppPressable } from "@/components/base/AppPressable";
-const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
-  const sender = message.createdBy === currentUser.id;
+const MessageBubble = ({
+  message,
+  sender,
+  isSender,
+  previousSender
+}: {
+  message: ChatMessage;
+  sender: User;
+  isSender: boolean;
+  previousSender?: Ref<User> | undefined;
+}) => {
+  const firstBySender = previousSender !== sender.id;
   const date = capitalize(toRelativeTimeString(new Date(message.createdAt!)));
   return (
     <Column
-      spacing={4}
       style={{
-        backgroundColor: sender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
-        alignSelf: sender ? "flex-end" : "flex-start",
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        marginVertical: 6,
-        marginRight: sender ? 0 : 56,
-        marginLeft: sender ? 56 : 0
-      }}>
-      <AppText numberOfLines={-1} style={{ fontSize: 14 }}>
-        {message.text}
-      </AppText>
-      <AppText style={{ fontSize: 10, alignSelf: sender ? "flex-end" : "flex-start" }}>{date}</AppText>
+        marginBottom: 6,
+        marginTop: firstBySender ? 6 : 0
+      }}
+      spacing={2}>
+      {!isSender && firstBySender && (
+        <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 12, fontWeight: "500", color: AppColorPalettes.blue[700] }}>
+          {sender.pseudo}
+        </AppText>
+      )}
+      <Column
+        style={{
+          backgroundColor: isSender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
+          alignSelf: isSender ? "flex-end" : "flex-start",
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          borderRadius: 8,
+          marginRight: isSender ? 0 : 56,
+          marginLeft: isSender ? 56 : 0
+        }}
+        spacing={4}>
+        <AppText numberOfLines={-1} style={{ fontSize: 14 }}>
+          {message.text}
+        </AppText>
+        <AppText style={{ fontSize: 10, alignSelf: isSender ? "flex-end" : "flex-start" }}>{date}</AppText>
+      </Column>
     </Column>
   );
 };
@@ -64,12 +84,21 @@ export const ChatScreen = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [showMoreModal, setShowMoreModal] = useState(false);
 
-  const members = conversation
-    ? conversation.members
-        .filter(m => m.user.id !== user!.id)
-        .map(m => m.user.pseudo)
-        .join(", ")
-    : "";
+  const membersNames = useMemo(
+    () =>
+      conversation
+        ? conversation.members
+            .filter(m => m.user.id !== user!.id)
+            .map(m => m.user.pseudo)
+            .join(", ")
+        : "",
+    [conversation, user]
+  );
+
+  const members: { [k: string]: User } | undefined = useMemo(
+    () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
+    [conversation?.members]
+  );
 
   const appendMessage = (m: ChatMessage) => {
     // console.log([m, ...messages]);
@@ -125,6 +154,7 @@ export const ChatScreen = () => {
     </Pressable>
   );
 
+  console.debug(JSON.stringify(messages), conversation?.members);
   return (
     <View style={{ backgroundColor: AppColors.white, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (
@@ -132,7 +162,14 @@ export const ChatScreen = () => {
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
           keyExtractor={m => m.id!}
-          renderItem={({ item }) => <MessageBubble message={item} currentUser={user!} />}
+          renderItem={({ item, index }) => (
+            <MessageBubble
+              message={item}
+              sender={members![item.createdBy!]}
+              isSender={item.createdBy === user?.id}
+              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+            />
+          )}
           inverted={true}
           onEndReachedThreshold={0.2}
           onEndReached={() => fetchNextPage()}
@@ -156,7 +193,7 @@ export const ChatScreen = () => {
           left: 0,
           right: 0,
           paddingTop: 16 + insets.top,
-          paddingBottom: 16,
+          paddingBottom: 8,
           paddingHorizontal: 8
         }}>
         <Row spacing={8}>
@@ -168,7 +205,7 @@ export const ChatScreen = () => {
               style={{
                 justifyContent: "center"
               }}>
-              <AppText style={{ color: AppColors.white, fontSize: 16 }}>{members}</AppText>
+              <AppText style={{ color: AppColors.white, fontSize: 16, fontWeight: "bold" }}>{membersNames}</AppText>
             </View>
           )}
         </Row>

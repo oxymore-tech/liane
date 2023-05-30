@@ -26,6 +26,7 @@ export type AuthUser = Readonly<{
   id: string;
   phone: string;
   isAdmin: boolean;
+  isSignedUp: boolean;
 }>;
 
 export type AuthResponse = Readonly<{
@@ -42,10 +43,14 @@ export type AuthRequest = Readonly<{
   pushToken?: string;
 }>;
 
+export type UserInfo = Readonly<{ firstName: string; lastName: string; gender: "Man" | "Woman" | "Unspecified"; pictureUrl?: string }>;
+
 export type User = Readonly<
   {
     phone: string;
     pseudo: string;
+    pictureUrl: string | undefined | null;
+    gender: "Man" | "Woman" | "Unspecified";
   } & Entity
 >;
 
@@ -122,7 +127,7 @@ export type WayPoint = Readonly<{
 }>;
 
 export type LianeMember = Readonly<{
-  user: Ref<User>;
+  user: User;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seatCount: number;

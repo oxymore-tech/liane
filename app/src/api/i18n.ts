@@ -89,6 +89,7 @@ export const toRelativeTimeString = (timestamp: Date, dateFormatterFunction: (da
 export const formatMonthDay = monthDayFormatter.format;
 export const formatMonthYear = monthYearFormatter.format;
 export const formatShortMonthDay = shortMonthDayFormatter.format;
+export const formatDate = dateFormatter.format;
 export const formatTime = (date?: number | Date | undefined) => {
   try {
     return timeFormatter.format(date);

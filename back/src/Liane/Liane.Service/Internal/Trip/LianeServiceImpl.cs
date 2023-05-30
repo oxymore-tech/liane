@@ -88,13 +88,21 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private FilterDefinition<LianeDb> BuildFilter(LianeFilter lianeFilter)
   {
+    FilterDefinition<LianeDb> filter;
     if (lianeFilter.ForCurrentUser)
     {
       var currentUser = CurrentContext.CurrentUser();
-      return GetAccessLevelFilter(currentUser.Id, ResourceAccessLevel.Member);
+      filter = GetAccessLevelFilter(currentUser.Id, ResourceAccessLevel.Member);
     }
 
-    return FilterDefinition<LianeDb>.Empty;
+    else filter = FilterDefinition<LianeDb>.Empty;
+
+    if (lianeFilter.States?.Length > 0)
+    {
+      filter &= Builders<LianeDb>.Filter.In(l => l.State, lianeFilter.States);
+    }
+
+    return filter;
   }
 
   public async Task<ImmutableDictionary<Appointment, ImmutableList<Ref<Api.User.User>>>> GetNextAppointments(DateTime fromNow, TimeSpan window)
@@ -105,17 +113,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         || l.State == LianeState.Started
       )
       .SelectAsync(MapEntity);
-    return lianes.Select(l =>
+    return lianes.Where(l => l.State == LianeState.NotStarted).Select(l =>
       {
-        if (l.State != LianeState.NotStarted)
-        {
-          return (null, null);
-        }
-
         var rallyingPoint = l.WayPoints.First().RallyingPoint;
         return (new Appointment(l, rallyingPoint, l.DepartureTime), l.Members.Where(m => m.From == rallyingPoint).Select(m => m.User).ToImmutableList());
       })
-      .Where(e => e.Item1 is not null)
       .ToImmutableDictionary(e => e.Item1!, e => e.Item2)!;
   }
 
@@ -222,10 +224,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var wayPoints = await (liane.WayPoints ?? ImmutableList<WayPointDb>.Empty).SelectAsync(async w =>
     {
-      var rallyingPoint = await w.RallyingPoint.Resolve(rallyingPointService.Get);
+      var rallyingPoint = await rallyingPointService.Get(w.RallyingPoint);
       return new WayPoint(rallyingPoint, w.Duration, w.Distance, w.Eta);
     });
-    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, liane.Members, liane.Driver, liane.State, liane.Conversation);
+    var users = await liane.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
+    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
   }
 
   protected override async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
@@ -522,9 +525,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       ), pickupPoint.Id!, depositPoint.Id!, newWayPoints);
     }
 
-    var originalLiane = new Api.Trip.Liane(lianeDb.Id, lianeDb.CreatedBy!, lianeDb.CreatedAt, lianeDb.DepartureTime, lianeDb.ReturnTime, wayPoints, lianeDb.Members, lianeDb.Driver,
-      lianeDb.State, lianeDb.Conversation);
-    return new LianeMatch(originalLiane, lianeDb.TotalSeatCount, match);
+
+    return new LianeMatch(await MapEntity(lianeDb), lianeDb.TotalSeatCount, match);
   }
 
   private (LatLng PickupPoint, LatLng DepositPoint)? MatchBestIntersectionPoints(ImmutableList<LatLng> targetRoute, ImmutableList<LatLng> route)

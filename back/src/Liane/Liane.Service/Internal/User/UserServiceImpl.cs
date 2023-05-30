@@ -1,4 +1,6 @@
 using System;
+using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
@@ -34,6 +36,13 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     await UpdateField(id, u => u.PushToken, pushToken);
   }
 
+  public async Task UpdateInfo(string id, UserInfo info)
+  {
+    // Check fist and last name 
+    if (info.FirstName.Length < 2 || info.LastName.Length < 2) throw new ConstraintException("Given name is too short."); 
+    await UpdateField(id, u => u.UserInfo, info);
+  }
+
   public async Task<FullUser> GetByPhone(string phone)
   {
     var phoneNumber = phone.ToPhoneNumber();
@@ -65,11 +74,13 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
   private static FullUser MapUser(DbUser dbUser)
   {
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, "" , "", Gender.Unspecified, null, dbUser.PushToken);
+    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName ,  info.LastName, info.Gender, info.PictureUrl, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)
   {
-    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt, "Utilisateur " + ObjectId.Parse(dbUser.Id).Increment, Gender.Unspecified, null));
+    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
+    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt,  FullUser.GetPseudo(info.FirstName, info.LastName),  info.Gender, info.PictureUrl));
   }
 }

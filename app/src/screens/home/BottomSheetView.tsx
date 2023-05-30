@@ -1,6 +1,6 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useMemo } from "react";
-import { ActivityIndicator, FlatList, Platform, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, Liane, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
 import { AppPressable } from "@/components/base/AppPressable";
@@ -11,7 +11,6 @@ import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor, useSelector } from "@xstate/react";
 import { AppContext } from "@/components/ContextProvider";
 import { TimeView } from "@/components/TimeView";
-import { toTimeInSeconds } from "@/util/datetime";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { useAppNavigation } from "@/api/navigation";
@@ -260,7 +259,7 @@ const LianeDestinationView = (props: { onPress: () => void; item: RallyingPointL
           }}>
           <AppText style={TripViewStyles.mainWayPointTime}>Départ à </AppText>
           {props.item.hours.map(h => (
-            <TimeView key={h} style={TripViewStyles.mainWayPointTime} value={toTimeInSeconds(new Date(h))} />
+            <TimeView key={h} style={TripViewStyles.mainWayPointTime} value={h} />
           ))}
         </Row>
       </Column>
@@ -296,6 +295,7 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
           from={item.fromPoint}
           to={item.toPoint}
           departureTime={item.trip.departureTime}
+          arrivalTime={item.trip.wayPoints[item.trip.wayPoints.length - 1].eta}
           duration={item.tripDuration}
           freeSeatsCount={item.lianeMatch.freeSeatsCount}
         />
@@ -343,6 +343,7 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
   );
 };
 
+/*
 export const LianeListView = (props: { lianeList: Liane[] | undefined }) => {
   const displayedLianes = props.lianeList ?? [];
   const { send } = useContext(HomeMapContext);
@@ -367,7 +368,7 @@ export const LianeListView = (props: { lianeList: Liane[] | undefined }) => {
     </Column>
   );
 };
-
+*/
 const renderLianeOverview = (liane: Liane, onSelect: (lianeMatch: LianeMatch) => void) => {
   const freeSeatsCount = liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0);
 
@@ -388,6 +389,7 @@ const renderLianeOverview = (liane: Liane, onSelect: (lianeMatch: LianeMatch) =>
       }}>
       <TripSegmentView
         departureTime={liane.departureTime}
+        arrivalTime={liane.wayPoints[liane.wayPoints.length - 1].eta}
         duration={getTotalDuration(liane.wayPoints)}
         from={liane.wayPoints[0].rallyingPoint}
         to={liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint}

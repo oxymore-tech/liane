@@ -17,6 +17,7 @@ public enum LianeState
 }
 
 public sealed record LianeMember(
+  [property:SerializeAsResolvedRef]
   Ref<User.User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,

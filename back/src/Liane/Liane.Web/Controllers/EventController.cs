@@ -22,9 +22,10 @@ public sealed class EventController : ControllerBase
   }
 
   [HttpPost("")]
-  public Task Create([FromBody] LianeEvent lianeEvent)
+  public async Task<IActionResult> Create([FromBody] LianeEvent lianeEvent)
   {
-    return eventDispatcher.Dispatch(lianeEvent);
+    await eventDispatcher.Dispatch(lianeEvent);
+    return NoContent(); // TODO return event 
   }
 
   [HttpGet("join_request")]

@@ -8,6 +8,7 @@ import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Item } from "@/components/ActionItem";
 import { AppPressable } from "@/components/base/AppPressable";
+import { LianeMember, User } from "@/api";
 
 export const InfoItem = (props: { icon: IconName | CustomIconName; value: string }) => {
   return (
@@ -18,19 +19,19 @@ export const InfoItem = (props: { icon: IconName | CustomIconName; value: string
   );
 };
 
-export const DriverInfo = () => {
+export const DriverInfo = ({ user }: { user: User }) => {
   return (
     <Item
       onPress={() => console.log("TODO profile")}
       descriptionComponent={
         <Column style={{ flexGrow: 1, flexShrink: 1 }}>
-          <AppText style={{ fontSize: 16, fontWeight: "bold" }}>{"John D."} </AppText>
-          <AppText style={{ fontSize: 15 }}>Novice</AppText>
+          <AppText style={{ fontSize: 16, fontWeight: "bold" }}>{user.pseudo} </AppText>
+          <AppText style={{ fontSize: 15 }}>Jeune pousse</AppText>
         </Column>
       }
       leadingComponent={
         <View>
-          <UserPicture />
+          <UserPicture url={user.pictureUrl} id={user.id} />
           <View style={{ backgroundColor: AppColorPalettes.blue[300], borderRadius: 40, padding: 4, position: "absolute", left: 24, top: 24 }}>
             <AppIcon name={"car"} size={20} />
           </View>
@@ -65,7 +66,7 @@ export const FloatingBackButton = (props: { onPress: () => void; color?: ColorVa
   );
 };
 
-export const PassengerListView = (props: { members: any[] }) => {
+export const PassengerListView = (props: { members: LianeMember[] }) => {
   return (
     <Column spacing={12}>
       <View style={{ paddingTop: 16, paddingHorizontal: 24 }}>
@@ -74,8 +75,8 @@ export const PassengerListView = (props: { members: any[] }) => {
       {props.members.map(m => (
         <AppPressable style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
           <Row spacing={24} style={{ alignItems: "center" }}>
-            <UserPicture id={m.user} />
-            <AppText>{m.user}</AppText>
+            <UserPicture id={m.user.id} url={m.user.pictureUrl} />
+            <AppText>{m.user.pseudo}</AppText>
           </Row>
         </AppPressable>
       ))}

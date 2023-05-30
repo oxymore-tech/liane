@@ -2,6 +2,7 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
 import { ComponentType } from "react";
+import { AppIcon } from "@/components/base/AppIcon";
 
 export interface BadgeProps {
   value?: string | number | null;
@@ -19,6 +20,7 @@ export function WithBadge<T>(WrappedComponent: ComponentType<T>): ComponentType<
     </View>
   );
 }
+export const BadgedIcon = WithBadge(AppIcon);
 
 const styles = StyleSheet.create({
   badge: {

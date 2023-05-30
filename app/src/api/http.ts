@@ -86,12 +86,20 @@ export function patch(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("PATCH", uri, options);
 }
 
+// @ts-ignore
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
   const response = await fetchAndCheck(method, uri, options);
-  try {
-    return response.status === 204 ? undefined : response.json();
-  } catch (e) {
-    console.error(e);
+  if (response.status === 204) {
+    // Do not try parsing body
+    // @ts-ignore
+    return undefined;
+  } else {
+    try {
+      const res = await response.text();
+      return res ? JSON.parse(res) : undefined;
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
 

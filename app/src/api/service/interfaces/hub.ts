@@ -37,7 +37,7 @@ type UnreadOverview = Readonly<{
 export abstract class AbstractHubService implements ChatHubService {
   protected currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
-  protected notificationSubject: Subject<Notification> = new Subject<Notification>();
+  protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
 
   unreadNotificationCount = new BehaviorSubject<number>(0);
 
@@ -63,13 +63,13 @@ export abstract class AbstractHubService implements ChatHubService {
     this.unreadNotificationCount.next(unread.notificationsCount);
   };
 
-  protected async receiveNotification(notification: Notification) {
+  protected receiveNotification = async (notification: Notification) => {
     // Called on new notification
     if (__DEV__) {
-      console.log("received:", notification);
+      console.log("received:", notification, this.notificationSubject);
     }
     this.notificationSubject.next(notification);
-  }
+  };
 
   protected receiveLatestMessages = async (messages: PaginatedResponse<ChatMessage>) => {
     // Called after joining a conversation

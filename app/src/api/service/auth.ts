@@ -1,5 +1,5 @@
 import { patch, post, postAs } from "@/api/http";
-import { AuthRequest, AuthResponse, AuthUser, FullUser } from "@/api";
+import { AuthRequest, AuthResponse, AuthUser, FullUser, UserInfo } from "@/api";
 import { clearStorage, getCurrentUser, getUserSession, processAuthResponse } from "@/api/storage";
 
 export interface AuthService {
@@ -8,7 +8,7 @@ export interface AuthService {
   sendSms(phone: string): Promise<void>;
   logout(): Promise<void>;
   updatePushToken(token: string): Promise<void>;
-
+  updateUserInfo(info: UserInfo): Promise<void>;
   currentUser(): Promise<FullUser | undefined>;
 }
 
@@ -38,5 +38,9 @@ export class AuthServiceClient implements AuthService {
 
   async updatePushToken(token: string): Promise<void> {
     await patch("/user/push_token", { body: token });
+  }
+
+  async updateUserInfo(info: UserInfo): Promise<void> {
+    await patch("/user", { body: info });
   }
 }

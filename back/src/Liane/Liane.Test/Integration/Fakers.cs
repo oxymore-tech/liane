@@ -4,6 +4,7 @@ using System.Linq;
 using Bogus;
 using Liane.Api.Chat;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;
 
@@ -13,7 +14,8 @@ public class Fakers
 {
   private static Faker<DbUser> DbUserFaker => new Faker<DbUser>()
     .CustomInstantiator(f => new DbUser(
-        ObjectId.GenerateNewId().ToString(), false, f.Phone.PhoneNumber("0#########"), f.Name.FirstName(), null, null, null, DateTime.Today, null
+        ObjectId.GenerateNewId().ToString(), false, f.Phone.PhoneNumber("0#########"),  null, null, null, DateTime.Today, null, 
+        new UserInfo(f.Name.FirstName(null)+"-Bot","$",null, Gender.Unspecified)
       )
     );
 
