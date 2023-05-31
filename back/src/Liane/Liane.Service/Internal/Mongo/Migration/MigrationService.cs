@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
-using Liane.Service.Internal.Trip;
+using Liane.Api.User;
+using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -9,29 +11,37 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 3;
+  private const int Version = 4;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
-  private readonly ILianeService lianeService;
 
-  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger, ILianeService lianeService)
+  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
   {
     this.db = db;
     this.logger = logger;
-    this.lianeService = lianeService;
   }
 
+  private sealed record OldUserDb( string Id,
+    bool IsAdmin,
+    string Phone,
+    string? RefreshToken,
+    string? Salt,
+    string? Pseudo,
+    string? PushToken,
+    DateTime? CreatedAt,
+    DateTime? LastConnection,
+    UserInfo? UserInfo = null
+  ) : IIdentity;
   private async Task Migrate()
   {
     await db.DropCollectionAsync("event");
 
-    await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(l => l.State == LianeState.NotStarted && l.DepartureTime < DateTime.UtcNow,
-        Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled)
+    await db.GetCollection<OldUserDb>("user")
+      .UpdateManyAsync(l => true,
+        Builders<OldUserDb>.Update.Unset(l => l.Pseudo )
       );
 
-    await lianeService.UpdateAllGeometries();
   }
 
   public async Task Execute()
