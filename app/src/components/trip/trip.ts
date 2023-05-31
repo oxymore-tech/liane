@@ -79,7 +79,7 @@ export const getLianeStatus = (liane: Liane): LianeStatus => {
   const delta = (new Date(liane.departureTime) - new Date()) / 1000;
 
   if (liane.state === "NotStarted") {
-    if (delta > 0 && delta < 3600 * 12) {
+    if (delta > 0 && delta < 3600) {
       if (liane.members.length > 1) {
         return "StartingSoon";
       } else {
@@ -110,11 +110,11 @@ export const getLianeStatusStyle = (liane: Liane): [string | undefined, ColorVal
       color = ContextualColors.greenValid.light;
       break;
     case "Finished":
-      status = "Terminée";
+      status = "Terminé";
       color = AppColorPalettes.blue[100];
       break;
-    case "Cancelled":
-      status = "Annulée";
+    case "Canceled":
+      status = "Annulé";
       color = ContextualColors.redAlert.light;
       break;
     case "AwaitingDriver":
@@ -126,7 +126,7 @@ export const getLianeStatusStyle = (liane: Liane): [string | undefined, ColorVal
       color = AppColorPalettes.gray[100];
       break;
     case "Archived":
-      status = "Archivée";
+      status = "Archivé";
       color = AppColorPalettes.gray[100];
       break;
   }

@@ -8,7 +8,8 @@ import {
   PaginatedResponse,
   UTCDateTime,
   LianeMatchDisplay,
-  NearestLinks
+  NearestLinks,
+  Feedback
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
 import { FeatureCollection } from "geojson";
@@ -23,12 +24,14 @@ export interface LianeService {
   nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
   display(from: LatLng, to: LatLng, afterDate?: Date): Promise<FeatureCollection>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
+  leave(id: string, userId: string): Promise<void>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
   updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void>;
+  updateFeedback(id: string, feedback: Feedback): Promise<void>;
 }
 
 export class LianeServiceClient implements LianeService {
@@ -36,7 +39,7 @@ export class LianeServiceClient implements LianeService {
     await del(`/liane/${lianeId}`);
   }
   async list(current: boolean = true, cursor: string | undefined = undefined, pageSize: number = 10) {
-    let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Cancelled";
+    let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Canceled";
     //TODO cursor
     const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
     console.debug(JSON.stringify(lianes));
@@ -78,9 +81,12 @@ export class LianeServiceClient implements LianeService {
   }
 
   join(joinRequest: JoinRequest) {
-    return postAs<JoinRequest>(`/event`, { body: joinRequest }); // TODO now returns nothing ?
+    return postAs<JoinRequest>(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
+  async leave(id: string, userId: string) {
+    await del(`/liane/${id}/members/${userId}`);
+  }
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
     return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }
@@ -93,6 +99,9 @@ export class LianeServiceClient implements LianeService {
     await patch(`/liane/${id}`, { body: departureTime });
   }
 
+  async updateFeedback(id: string, feedback: Feedback): Promise<void> {
+    await postAs(`/liane/${id}/feedback`, { body: feedback });
+  }
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
     return postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
   }

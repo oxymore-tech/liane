@@ -16,7 +16,7 @@ import { TripCard } from "@/components/TripCard";
 import { Exact, UnionUtils } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
-import { JoinRequestsQueryKey } from "@/screens/MyTripsScreen";
+import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
 import { JoinRequest } from "@/api/event";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {

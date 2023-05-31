@@ -12,7 +12,7 @@ export interface ActionItemProps {
   iconName: IconName | CustomIconName;
   text: string;
 }
-export const ActionItem = ({ onPress, color, iconName, text }: ActionItemProps) => (
+export const ActionItem = ({ onPress, color = AppColorPalettes.gray[800], iconName, text }: ActionItemProps) => (
   <Item
     onPress={onPress}
     descriptionComponent={<AppText style={{ fontSize: 16, color, flexGrow: 1, flexShrink: 1, paddingVertical: 4 }}>{text}</AppText>}

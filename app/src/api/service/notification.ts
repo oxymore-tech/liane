@@ -12,9 +12,9 @@ export class NotificationServiceClient extends AbstractNotificationService {
     return await get("/notification");
   }
 
-  async markAsRead(notification: Notification): Promise<void> {
+  markAsRead = async (notification: Notification): Promise<void> => {
     await patch(`/notification/${notification.id}`);
-  }
+  };
 
   checkInitialNotification = async (): Promise<void> => {
     const m = await PushNotifications?.getInitialNotification();
@@ -30,10 +30,10 @@ export class NotificationServiceClient extends AbstractNotificationService {
     }
   };
 
-  override async receiveNotification(notification: Notification): Promise<void> {
+  override receiveNotification = async (notification: Notification): Promise<void> => {
     await super.receiveNotification(notification);
     await displayNotifeeNotification(notification);
-  }
+  };
 }
 
 const DefaultChannelId = "liane_default";

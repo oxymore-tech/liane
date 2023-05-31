@@ -128,7 +128,7 @@ export const LianeNearestLinks = () => {
               backgroundColor={AppColors.orange}
               text={"Proposer un trajet"}
               onPress={() => {
-                navigation.navigate("Publish");
+                navigation.navigate("Publish", {});
               }}
             />
           </Center>
@@ -317,13 +317,6 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
             text={"Ajouter une annonce"}
             onPress={() => {
               navigation.navigate("Publish", { initialValue: props.filter });
-              /*navigation.navigate("LianeWizard", {
-                formData: toLianeWizardFormData({
-                  ...getSearchFilter(props.filter),
-                  to: props.filter.to!,
-                  from: props.filter.from!
-                })
-              });*/
             }}
           />
         </Center>

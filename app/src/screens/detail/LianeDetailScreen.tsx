@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, ColorValue, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import AppMapView, { LianeMatchRouteLayer, WayPointDisplay } from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView } from "@/screens/detail/Components";
-import { Exact, getPoint, Liane, LianeMatch, UnionUtils } from "@/api";
+import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils } from "@/api";
 import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatDate, formatMonthDay } from "@/api/i18n";
@@ -20,13 +20,14 @@ import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "react-query";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/MyTripsScreen";
+import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { AppText } from "@/components/base/AppText";
 import { AppStyles } from "@/theme/styles";
 import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelector";
 import { showLocation } from "react-native-map-link";
 import { AppIcon } from "@/components/base/AppIcon";
+import { DebugIdView } from "@/components/base/DebugIdView";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -40,7 +41,8 @@ export const LianeJoinRequestDetailScreen = () => {
     }
   }, [lianeParam, services.liane]);
   const match = useMemo(() => (request ? { liane: request.targetLiane, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
-  return <LianeDetailPage match={match} />;
+
+  return <LianeDetailPage match={match} request={request} />;
 };
 export const LianeDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -55,10 +57,11 @@ export const LianeDetailScreen = () => {
   }, [lianeParam, services.liane]);
 
   const match = useMemo(() => (liane ? toLianeMatch(liane) : undefined), [liane]);
+
   return <LianeDetailPage match={match} />;
 };
 
-const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
+const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; request?: JoinLianeRequestDetailed }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
   const ref = useRef<BottomSheetRefProps>(null);
@@ -84,6 +87,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
         <AppMapView bounds={mapBounds} showGeolocation={false}>
           {match && <LianeMatchRouteLayer match={match} />}
           {match &&
+            !request &&
             match.liane.wayPoints.map((w, i) => {
               let type: "to" | "from" | "step";
               if (i === 0) {
@@ -94,6 +98,19 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
                 type = "step";
               }
               return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
+            })}
+          {request &&
+            match &&
+            [request.from, request.to].map((w, i) => {
+              let type: "to" | "from" | "step";
+              if (i === 0) {
+                type = "from";
+              } else if (i === match.liane.wayPoints.length - 1) {
+                type = "to";
+              } else {
+                type = "step";
+              }
+              return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} />;
             })}
         </AppMapView>
         <AppBottomSheet
@@ -106,10 +123,15 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           initialStop={1}>
           {match && (
             <AppBottomSheetScrollView>
-              <LianeStatusRow liane={match} />
-              <LianeActionRow liane={match} />
-              <LianeDetailView liane={match} />
-              {match.liane.state === "NotStarted" && <LianeActionsView liane={match.liane} />}
+              {!request && (
+                <Row>
+                  <LianeStatusRow liane={match} />
+                  <View style={{ flex: 1 }} />
+                  <LianeActionRow liane={match} />
+                </Row>
+              )}
+              <LianeDetailView liane={match} isRequest={!!request} />
+              <LianeActionsView match={match} request={request?.id} />
             </AppBottomSheetScrollView>
           )}
 
@@ -135,16 +157,19 @@ const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
 
   return (
     <Row style={{ justifyContent: "flex-end", paddingHorizontal: 24 }} spacing={8}>
-      <ActionFAB
-        onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
-        color={AppColors.blue}
-        icon={"message-circle-outline"}
-      />
+      {match.liane.state !== "Archived" && match.liane.state !== "Canceled" && (
+        <ActionFAB
+          onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
+          color={AppColors.blue}
+          icon={"message-circle"}
+        />
+      )}
     </Row>
   );
 };
 
-const LianeActionsView = ({ liane }: { liane: Liane }) => {
+const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
+  const liane = match.liane;
   const { user, services } = useContext(AppContext);
   const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
   const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
@@ -160,10 +185,11 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
     <Column>
       <AppText numberOfLines={-1} style={{ paddingVertical: 4, paddingHorizontal: 24 }}>
         Liane postée le <AppText style={{ fontWeight: "bold" }}>{formatDate(new Date(liane.createdAt!))}</AppText> par{" "}
-        <AppText style={{ fontWeight: "bold" }}>{user?.id === creator.id ? "moi" : creator.pseudo}</AppText>
+        <AppText style={{ fontWeight: "bold" }}>{creator.pseudo}</AppText>
       </AppText>
-      {currentUserIsDriver && <LineSeparator />}
-      {currentUserIsDriver && (
+      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} id={liane.id!} />
+      {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
+      {currentUserIsDriver && liane.state === "NotStarted" && (
         <ActionItem
           onPress={() => {
             setModalVisible(true);
@@ -184,11 +210,22 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
         </Column>
       </SlideUpModal>
-      <LineSeparator />
-      {currentUserIsOwner && (
+      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
         <ActionItem
           onPress={() => {
-            // TODO
+            const fromPoint = getPoint(match, "pickup");
+            const toPoint = getPoint(match, "deposit");
+            navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint } });
+          }}
+          iconName={"repeat"}
+          text={"Relancer ce trajet"}
+        />
+      )}
+
+      <LineSeparator />
+      {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1 && (
+        <ActionItem
+          onPress={() => {
             Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer cette liane ?", [
               {
                 text: "Annuler",
@@ -199,8 +236,8 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
                 text: "Supprimer",
                 onPress: async () => {
                   await services.liane.delete(liane.id!);
-                  navigation.goBack();
                   await queryClient.invalidateQueries(LianeQueryKey);
+                  navigation.goBack();
                 },
                 style: "default"
               }
@@ -211,10 +248,36 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           text={"Supprimer l'annonce"}
         />
       )}
-      {!currentUserIsMember && (
+
+      {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1 && (
         <ActionItem
           onPress={() => {
-            // TODO
+            Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
+              {
+                text: "Fermer",
+                onPress: () => {},
+                style: "cancel"
+              },
+              {
+                text: "Annuler",
+                onPress: async () => {
+                  //TODO
+                  await queryClient.invalidateQueries(LianeQueryKey);
+                  navigation.goBack();
+                },
+                style: "default"
+              }
+            ]);
+          }}
+          color={ContextualColors.redAlert.text}
+          iconName={"close-outline"}
+          text={"Annuler ce trajet"}
+        />
+      )}
+
+      {!currentUserIsMember && request && (
+        <ActionItem
+          onPress={() => {
             Alert.alert("Retirer la demande", "Voulez-vous vraiment retirer votre demande ?", [
               {
                 text: "Annuler",
@@ -224,9 +287,9 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
               {
                 text: "Retirer",
                 onPress: async () => {
-                  //TODO
-                  navigation.goBack();
+                  await services.liane.deleteJoinRequest(request);
                   await queryClient.invalidateQueries(JoinRequestsQueryKey);
+                  navigation.goBack();
                 },
                 style: "default"
               }
@@ -237,10 +300,9 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           text={"Retirer la demande"}
         />
       )}
-      {currentUserIsMember && !currentUserIsOwner && (
+      {currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner && (
         <ActionItem
           onPress={() => {
-            // TODO
             Alert.alert("Quitter la liane", "Voulez-vous vraiment quitter cette liane ?", [
               {
                 text: "Annuler",
@@ -248,7 +310,32 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
                 style: "cancel"
               },
               {
-                text: "Supprimer",
+                text: "Quitter",
+                onPress: async () => {
+                  await services.liane.leave(liane.id!, user!.id!);
+                  await queryClient.invalidateQueries(LianeQueryKey);
+                  navigation.goBack();
+                },
+                style: "default"
+              }
+            ]);
+          }}
+          color={ContextualColors.redAlert.text}
+          iconName={"log-out-outline"}
+          text={"Quitter la liane"}
+        />
+      )}
+      {currentUserIsMember && liane.state === "Started" && (
+        <ActionItem
+          onPress={() => {
+            Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
+              {
+                text: "Fermer",
+                onPress: () => {},
+                style: "cancel"
+              },
+              {
+                text: "Annuler",
                 onPress: async () => {
                   //TODO
                   navigation.goBack();
@@ -259,8 +346,18 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
             ]);
           }}
           color={ContextualColors.redAlert.text}
-          iconName={"log-out-outline"}
-          text={"Quitter la liane"}
+          iconName={"close-outline"}
+          text={"Annuler ce trajet"}
+        />
+      )}
+
+      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") && (
+        <ActionItem
+          onPress={() => {
+            // TODO
+          }}
+          iconName={"alert-circle-outline"}
+          text={"Assistance"}
         />
       )}
     </Column>
@@ -293,7 +390,7 @@ const LianeStatusRow = ({ liane }: { liane: LianeMatch }) => {
     </View>
   );
 };
-const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
+const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRequest?: boolean }) => {
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");
   const wayPoints = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
@@ -318,6 +415,9 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
           departureTime={liane.liane.departureTime}
           wayPoints={wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1)}
           renderWayPointAction={wayPoint => {
+            if (isRequest) {
+              return undefined;
+            }
             if (lianeStatus === "Started" || lianeStatus === "StartingSoon") {
               const nextPoint = liane.liane.wayPoints[0]; //TODO
               if (wayPoint.rallyingPoint.id !== nextPoint.rallyingPoint.id) {

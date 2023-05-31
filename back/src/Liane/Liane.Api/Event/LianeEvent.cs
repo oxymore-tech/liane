@@ -22,6 +22,12 @@ public abstract record LianeEvent
     bool TakeReturnTrip,
     string Message
   ) : LianeEvent;
+  
+  public sealed record ChangeDepartureTimeRequest(
+    Ref<Trip.Liane> Liane,
+    Ref<RallyingPoint> From,
+    DateTime At
+  ) : LianeEvent;
 
   public sealed record MemberAccepted(
     Ref<Trip.Liane> Liane,
@@ -34,7 +40,12 @@ public abstract record LianeEvent
 
   public sealed record MemberRejected(
     Ref<Trip.Liane> Liane,
-    Ref<User.User> Member
+    Ref<User.User> Member,
+    Ref<RallyingPoint> From,
+    Ref<RallyingPoint> To,
+    int Seats,
+    bool TakeReturnTrip,
+    string? Reason = null
   ) : LianeEvent;
 
   public sealed record MemberHasLeft(

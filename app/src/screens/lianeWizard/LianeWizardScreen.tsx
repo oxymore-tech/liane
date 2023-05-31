@@ -21,7 +21,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { BottomOptionBg } from "@/components/vectors/BottomOptionBg";
 import { useQueryClient } from "react-query";
-import { LianeQueryKey } from "@/screens/MyTripsScreen";
+import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useAppNavigation } from "@/api/navigation";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 

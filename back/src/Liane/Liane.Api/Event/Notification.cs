@@ -8,7 +8,8 @@ namespace Liane.Api.Event;
 
 public sealed record Recipient(
   Ref<User.User> User,
-  DateTime? SeenAt
+  DateTime? SeenAt = null,
+  Answer? Answer = null
 );
 
 public enum Answer

@@ -29,7 +29,7 @@ public sealed record LianeDb(
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,
-  ImmutableList<WayPointDb>? WayPoints,
+  ImmutableList<WayPointDb>? WayPoints, //TODO remove null
   ImmutableList<UserPing> Pings,
   GeoJsonLineString<GeoJson2DGeographicCoordinates>? Geometry,
   Ref<ConversationGroup>? Conversation

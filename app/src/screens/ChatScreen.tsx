@@ -16,6 +16,7 @@ import { getTripFromLiane } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppPressable } from "@/components/base/AppPressable";
+import { DebugIdView } from "@/components/base/DebugIdView";
 const MessageBubble = ({
   message,
   sender,
@@ -210,6 +211,7 @@ export const ChatScreen = () => {
           )}
         </Row>
         {attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />}
+        {conversation && <DebugIdView id={conversation.id!} />}
       </View>
 
       <KeyboardAvoidingView
