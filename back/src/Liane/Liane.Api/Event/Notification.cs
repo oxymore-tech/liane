@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using Liane.Api.Chat;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
@@ -37,6 +38,17 @@ public abstract record Notification : IIdentity
     string Message
   ) : Notification;
 
+  public sealed record NewMessage(
+    string? Id,
+    Ref<User.User>? Sender,
+    DateTime SentAt,
+    ImmutableList<Recipient> Recipients,
+    ImmutableHashSet<Answer> Answers,
+    string Title,
+    string Message,
+    Ref<ConversationGroup> Conversation
+  ) : Notification;
+  
   public sealed record Reminder(
     string? Id,
     Ref<User.User>? Sender,

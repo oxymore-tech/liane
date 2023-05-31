@@ -7,6 +7,7 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
@@ -64,9 +65,37 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     return false;
   }
 
-  public Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
-    return Task.FromResult(false);
+    var receiverUser = await userService.GetFullUser(receiver);
+    if (receiverUser.PushToken is null)
+    {
+      logger.LogWarning("Unable to send push notification to user {receiver} : no push token", receiver.Id);
+      return false;
+    }
+
+    var sender = await userService.Get(message.CreatedBy!);
+    var notification = new Notification.NewMessage(
+      null,
+      sender,
+      message.CreatedAt!.Value,
+      ImmutableList.Create(new Recipient(receiver, null)),
+      ImmutableHashSet<Answer>.Empty,
+      sender.Pseudo,
+      message.Text,
+      conversation.Id);
+
+    try
+    {
+      await Send(receiverUser.PushToken, notification);
+      return true;
+    }
+    catch (FirebaseMessagingException e)
+    {
+      logger.LogWarning(e, "Unable to send push notification using firebase to user {receiver}", receiver.Id);
+    }
+
+    return false;
   }
 
   private Task<string> Send(string deviceToken, Notification notification)
