@@ -464,14 +464,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return lianeSegments;
   }
 
-  public new Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
-  {
-    if (entity.DepartureTime <= DateTime.Now)
-    {
-      throw new ArgumentException("Cannot create Liane in the past");
-    }
-    return base.Create(entity, owner);
-  }
 
   private async Task<UpdateDefinition<LianeDb>> GetTripUpdate(DateTime departureTime, Ref<Api.User.User> driver, IEnumerable<LianeMember> members)
   {

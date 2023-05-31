@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip;
@@ -37,6 +38,7 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var now = DateTime.UtcNow;
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-1));
+    await lianeService.AddMember(liane1, new LianeMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
 
     await lianeStatusUpdate.Update(now, TimeSpan.FromMinutes(5));
 
