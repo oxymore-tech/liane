@@ -24,6 +24,7 @@ export interface LianeService {
   nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
   display(from: LatLng, to: LatLng, afterDate?: Date): Promise<FeatureCollection>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
+  leave(id: string, userId: string): Promise<void>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
@@ -83,6 +84,9 @@ export class LianeServiceClient implements LianeService {
     return postAs<JoinRequest>(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
+  async leave(id: string, userId: string) {
+    await del(`/liane/${id}/members/${userId}`);
+  }
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
     return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
   }

@@ -175,8 +175,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public async Task<Api.Trip.Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<Api.User.User> member)
   {
     var updated = await Mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id && l.Driver.User.Id != member.Id,
-        Builders<LianeDb>.Update.Pull("members.user", member)
+      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id && l.Driver.User != member.Id,
+        Builders<LianeDb>.Update.PullFilter(l => l.Members, m => m.User == member.Id)
         , new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
     if (updated is null)
     {
@@ -462,6 +462,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     timer.Stop();
     logger.LogDebug("Computing overlap : {Elapsed}", timer.Elapsed);
     return lianeSegments;
+  }
+
+  public new Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
+  {
+    if (entity.DepartureTime <= DateTime.Now)
+    {
+      throw new ArgumentException("Cannot create Liane in the past");
+    }
+    return base.Create(entity, owner);
   }
 
   private async Task<UpdateDefinition<LianeDb>> GetTripUpdate(DateTime departureTime, Ref<Api.User.User> driver, IEnumerable<LianeMember> members)

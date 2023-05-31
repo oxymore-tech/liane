@@ -16,7 +16,7 @@ export interface SlideUpModalProps extends PropsWithChildren {
 export const SlideUpModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children, actionText, onAction }: SlideUpModalProps) => {
   return (
     <Modal propagateSwipe isVisible={visible} onSwipeComplete={() => setVisible(false)} style={styles.modal}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
         <View style={{ backgroundColor, padding: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
           <Row style={{ marginBottom: 8 }}>
             <Pressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>

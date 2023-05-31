@@ -25,8 +25,8 @@ public sealed class LianeMemberHasLeftHandler : IEventListener<LianeEvent.Member
     var liane = await lianeService.RemoveMember(e.Liane, e.Member);
     if (liane is not null)
     {
-      var seatsLeft = -liane.Members.Sum(m => m.SeatCount);
-      await notificationService.SendEvent(user.Pseudo+" a quitté la liane", "Il reste maintenant "+ seatsLeft+" places passager.", liane.Driver.User, e);
+      var destination = liane.WayPoints.Last().RallyingPoint.Label;
+      await notificationService.SendEvent(user.Pseudo+" a quitté la liane", user.Pseudo+" a quitté la liane à destination de "+destination, liane.Driver.User, e);
     }
   }
 }

@@ -61,7 +61,7 @@ public sealed class LianeController : ControllerBase
   }
   
   [HttpDelete("{id}/members/{memberId}")]
-  public async Task Delete([FromRoute] string id, [FromRoute] Ref<User> memberId)
+  public async Task Delete([FromRoute] string id, [FromRoute] string memberId)
   {
     // For now only allow user himself 
     if (currentContext.CurrentUser().Id != memberId) throw new ForbiddenException();

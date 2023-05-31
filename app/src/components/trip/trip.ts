@@ -79,7 +79,7 @@ export const getLianeStatus = (liane: Liane): LianeStatus => {
   const delta = (new Date(liane.departureTime) - new Date()) / 1000;
 
   if (liane.state === "NotStarted") {
-    if (delta > 0 && delta < 3600 * 12) {
+    if (delta > 0 && delta < 3600) {
       if (liane.members.length > 1) {
         return "StartingSoon";
       } else {

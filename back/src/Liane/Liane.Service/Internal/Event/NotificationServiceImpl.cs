@@ -148,18 +148,10 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
   public async Task MarkAsRead(Ref<Notification> id)
   {
-    var e = await Mongo.GetCollection<Notification>()
-      .Find(n => n.Id! == id.Id)
-      .FirstOrDefaultAsync();
-
-    if (e is null)
-    {
-      return;
-    }
+    var e = await Get(id);
 
     var userId = currentContext.CurrentUser().Id;
-
-
+    
     if (e.Answers.IsEmpty && e.Recipients.Where(r => r.User.Id != userId).All(r => r.SeenAt is not null))
     {
       await Delete(id);
