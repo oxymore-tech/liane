@@ -33,6 +33,6 @@ public class MockPushServiceImpl : IPushMiddleware
   }
   public Task<bool> SendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
-    throw new System.NotImplementedException();
+    return Task.FromResult(true);
   }
 }
