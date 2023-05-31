@@ -21,8 +21,8 @@ public sealed class EventController : ControllerBase
     this.eventDispatcher = eventDispatcher;
   }
 
-  [HttpPost("")]
-  public async Task<IActionResult> Create([FromBody] LianeEvent lianeEvent)
+  [HttpPost("join_request")]
+  public async Task<IActionResult> Create([FromBody] LianeEvent.JoinRequest lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
     return NoContent(); // TODO return event 

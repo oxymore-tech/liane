@@ -16,6 +16,11 @@ public sealed record PaginatedResponse<TData>(
   {
     return new PaginatedResponse<TOut>(PageSize, Next, Data.Select(transformer).ToImmutableList(), TotalCount);
   }
+  
+  public PaginatedResponse<TData> Where(Func<TData, bool> filter)
+  {
+    return new PaginatedResponse<TData>(PageSize, Next, Data.Where(filter).ToImmutableList(), TotalCount);
+  }
 
   public async Task<PaginatedResponse<TOut>> SelectAsync<TOut>(Func<TData, Task<TOut>> transformer)
   {

@@ -16,13 +16,19 @@ public enum LianeState
   Canceled
 }
 
+public sealed record Feedback(
+  bool Canceled = false,
+  string? Comment = null
+);
+
 public sealed record LianeMember(
   [property:SerializeAsResolvedRef]
   Ref<User.User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   bool? TakesReturnTrip = null,
-  int SeatCount = -1 // Defaults to a passenger seat
+  int SeatCount = -1, // Defaults to a passenger seat
+  Feedback? Feedback = null
 ) : IResourceMember;
 
 public sealed record Driver

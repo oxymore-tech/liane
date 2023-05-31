@@ -117,7 +117,7 @@ export type Liane = Entity &
     state: LianeState;
   }>;
 
-export type LianeState = "NotStarted" | "Finished" | "Started" | "Cancelled" | "Archived";
+export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
 
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
@@ -141,6 +141,10 @@ export type PointDisplay = Readonly<{
   lianes: Liane[];
 }>;
 
+export type Feedback = Readonly<{
+  comment: string | null;
+  canceled: boolean;
+}>;
 /*
 export type LianeSegment = Readonly<{
   coordinates: GeoJSON.Position[];

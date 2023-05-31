@@ -31,7 +31,7 @@ import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { AppPressable } from "@/components/base/AppPressable";
 import { formatMonthDay, toRelativeTimeString } from "@/api/i18n";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
-import { LianeQueryKey } from "@/screens/MyTripsScreen";
+import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useQueryClient } from "react-query";
 import { useAppNavigation } from "@/api/navigation";
 import { SeatsForm } from "@/components/forms/SeatsForm";

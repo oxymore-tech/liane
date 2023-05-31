@@ -43,4 +43,4 @@ public sealed record UserInfo(string FirstName,
   string? PictureUrl,
   Gender Gender);
   
-public sealed record UserStats(int TotalTrips = 0, int TotalSavedCo2 = 0);
+public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0);

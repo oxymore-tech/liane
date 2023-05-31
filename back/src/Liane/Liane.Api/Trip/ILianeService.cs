@@ -29,5 +29,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 
   Task UpdateAllGeometries();
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
+  Task UpdateFeedback(Ref<Liane> liane, Feedback feedback);
   public Task<ImmutableList<ClosestPickups>> GetNearestLinks(LatLng pos, DateTime dateTime, int radius = 30_000, int availableSeats = -1);
 }

@@ -31,6 +31,11 @@ export type MemberRejected = Readonly<{
   type: "MemberRejected";
   liane: Ref<Liane>;
   member: Ref<User>;
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
+  seats: number;
+  takeReturnTrip: boolean;
+  reason: string | undefined;
 }>;
 
 export type MemberHasLeft = Readonly<{

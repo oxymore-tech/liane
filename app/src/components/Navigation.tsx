@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -9,13 +9,12 @@ import NotificationScreen, { NotificationQueryKey } from "@/screens/notification
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppText } from "@/components/base/AppText";
-import MyTripsScreen from "@/screens/MyTripsScreen";
+import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import LianeIcon from "@/assets/icon.svg";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
 import { Row } from "@/components/base/AppLayout";
-import Avatar from "@/assets/avatar.svg";
-import { ProfileScreen } from "@/screens/ProfileScreen";
+import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
 import { SearchScreen } from "@/screens/search/SearchScreen";
 import HomeScreen from "@/screens/home/HomeScreen";
@@ -25,12 +24,15 @@ import { LianeMatchDetailScreen } from "@/screens/search/LianeMatchDetailScreen"
 import { WithBadge } from "@/components/base/WithBadge";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { useObservable } from "@/util/hooks/subscription";
-import { getNotificationNavigation, RootNavigation } from "@/api/navigation";
-import { OpenJoinRequestScreen } from "@/screens/OpenJoinRequestScreen";
+import { getNotificationNavigation, RootNavigation, useAppNavigation } from "@/api/navigation";
+import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
 import { useQueryClient } from "react-query";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
 import { Notification } from "@/api/notification";
+import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
+import { UserPicture } from "@/components/UserPicture";
+import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -117,6 +119,7 @@ function Navigation() {
     return (
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
+        <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeWizard" component={LianeWizardScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
@@ -126,6 +129,7 @@ function Navigation() {
         <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
+        <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMatchDetail" component={LianeMatchDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
@@ -142,30 +146,44 @@ function Navigation() {
 
 type HomeScreenHeaderProp = {
   label: string;
-  navigation: any; //TODO
+  isRootHeader?: boolean;
 };
 
-const HomeScreenHeader = ({ label, navigation }: HomeScreenHeaderProp) => {
+const PageTitle = ({ title }: { title: string }) => <AppText style={{ fontSize: 22, fontWeight: "500", color: AppColors.darkBlue }}>{title}</AppText>;
+
+export const HomeScreenHeader = ({ label, isRootHeader = false }: HomeScreenHeaderProp) => {
   const insets = useSafeAreaInsets();
+  const { navigation } = useAppNavigation();
   const { user } = useContext(AppContext);
   return (
     <Row
       style={{
-        justifyContent: "space-between",
+        justifyContent: isRootHeader ? "space-between" : "flex-start",
         alignItems: "center",
-        paddingHorizontal: 24,
-        paddingTop: 8,
+        paddingHorizontal: isRootHeader ? 24 : 0,
+        paddingTop: isRootHeader ? 12 : 0,
         paddingBottom: 32,
         minHeight: 60,
         marginTop: insets.top
       }}>
-      <AppText style={{ fontSize: 22, fontWeight: "500", color: AppColors.darkBlue }}>{label}</AppText>
-      <Pressable
-        onPress={() => {
-          navigation.navigate("Profile", { user });
-        }}>
-        <Avatar height={36} />
-      </Pressable>
+      {!isRootHeader && (
+        <Pressable
+          style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+          onPress={() => {
+            navigation.goBack();
+          }}>
+          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.darkBlue} />
+        </Pressable>
+      )}
+      <PageTitle title={label} />
+      {isRootHeader && (
+        <Pressable
+          onPress={() => {
+            navigation.navigate("Profile", { user });
+          }}>
+          <UserPicture size={36} url={user?.pictureUrl} id={user?.id} />
+        </Pressable>
+      )}
     </Row>
   );
 };
@@ -198,7 +216,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       component={screen}
       options={({ navigation }) => ({
         headerShown,
-        header: () => <HomeScreenHeader label={label} navigation={navigation} />,
+        header: () => <HomeScreenHeader label={label} navigation={navigation} isRootHeader={true} />,
         tabBarLabel: ({ focused }) => (
           <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>
         ),
@@ -238,6 +256,4 @@ const styles = StyleSheet.create({
   }
 });
 
-// Wrap Component to allow bottom sheets scrolling on Android
-// gestureHandlerRootHOC(
 export default Navigation;

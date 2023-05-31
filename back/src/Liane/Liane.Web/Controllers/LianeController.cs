@@ -2,11 +2,16 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.User;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 using Liane.Mock;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
@@ -23,12 +28,14 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
+  private readonly EventDispatcher eventDispatcher;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
+    this.eventDispatcher = eventDispatcher;
   }
 
   [HttpGet("{id}")]
@@ -52,7 +59,24 @@ public sealed class LianeController : ControllerBase
   {
     await lianeService.UpdateDepartureTime(id, departureTime);
   }
+  
+  [HttpDelete("{id}/members/{memberId}")]
+  public async Task Delete([FromRoute] string id, [FromRoute] Ref<User> memberId)
+  {
+    // For now only allow user himself 
+    if (currentContext.CurrentUser().Id != memberId) throw new ForbiddenException();
+    await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
+  }
+  
+  [HttpPost("{id}/feedback")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task<IActionResult> SendFeedback([FromRoute] string id, [FromBody] Feedback feedback)
+  {
+    await lianeService.UpdateFeedback(id, feedback);
+    return NoContent();
+  }
 
+  
   [HttpGet("display")] // Rename to filter ? + return FeatureCollection instead of Segments ?
   public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
   {

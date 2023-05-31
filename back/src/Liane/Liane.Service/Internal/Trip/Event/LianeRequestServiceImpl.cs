@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
@@ -42,7 +43,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     LianeEvent lianeEvent = answer switch
     {
       Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.Sender!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
-      Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.Sender!),
+      Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.Sender!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
       _ => throw new ArgumentOutOfRangeException(nameof(answer), answer, null)
     };
     await eventDispatcher.Dispatch(lianeEvent);
@@ -50,8 +51,20 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
   public async Task<PaginatedResponse<JoinLianeRequest>> List(Pagination pagination)
   {
-    var paginated = await notificationService.List(new NotificationFilter(null, currentContext.CurrentUser().Id,  null, new PayloadType.Event<LianeEvent.JoinRequest>()), pagination);
-    return await paginated.SelectAsync(Resolve);
+    var paginated = await notificationService.List(new NotificationFilter(null, currentContext.CurrentUser().Id, null, new PayloadType.Event<LianeEvent.JoinRequest>()), pagination);
+    var resolved = await paginated.SelectAsync(async j =>
+    {
+      // For now we don't want to throw if one request has an error
+      try
+      {
+        return await Resolve(j);
+      }
+      catch (Exception e)
+      {
+        return null;
+      }
+    });
+    return resolved.Where(r => r is not null).Select<JoinLianeRequest>(r => r!);
   }
 
   public async Task<JoinLianeRequest> Get(Ref<Notification> id)
@@ -80,11 +93,16 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     var to = await rallyingPointService.Get(joinRequest.To);
     var liane = await lianeService.Get(joinRequest.Liane);
     var createdBy = await userService.Get(lianeEvent.Sender!);
+    
+    if (liane.State != LianeState.NotStarted)
+    {
+      throw new ConstraintException("This request is linked to a liane with state "+ liane.State);
+    }
 
     var match = await lianeService.GetNewTrip(liane, from, to, joinRequest.Seats > 0);
     if (match is null)
     {
-      throw new ArgumentException("This request is no longer compatible with target Liane");
+      throw new ConstraintException("This request is no longer compatible with target Liane");
     }
 
     return new JoinLianeRequest(lianeEvent.Id!, from, to, liane, createdBy, lianeEvent.SentAt, joinRequest.Seats, joinRequest.TakeReturnTrip, joinRequest.Message, false, match);

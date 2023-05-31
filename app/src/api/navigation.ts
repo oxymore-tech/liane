@@ -17,7 +17,7 @@ import { JoinRequest, MemberAccepted } from "@/api/event";
 export type NavigationParamList = {
   Home: undefined;
   Publish: { initialValue?: Partial<InternalLianeRequest> };
-  SignUp: {};
+  SignUp: undefined;
   SearchResults: { filter: InternalLianeSearchFilter };
   Search: { filter: InternalLianeSearchFilter };
   RequestJoin: { request: JoinLianeRequestDetailed };
@@ -28,6 +28,8 @@ export type NavigationParamList = {
   LianeDetail: { liane: Liane | string };
   Profile: { user: User };
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
+  ArchivedTrips: undefined;
+  OpenValidateTrip: { liane: Liane };
 };
 
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {

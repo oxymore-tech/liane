@@ -36,6 +36,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IRallyingPointService rallyingPointService;
   private readonly IUserService userService;
   private readonly IChatService chatService;
+  private readonly ICurrentContext currentContext;
   private readonly ILogger<LianeServiceImpl> logger;
 
   public LianeServiceImpl(
@@ -47,6 +48,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     ILogger<LianeServiceImpl> logger, IUserService userService) : base(mongo, currentContext)
   {
     this.routingService = routingService;
+    this.currentContext = currentContext;
     this.rallyingPointService = rallyingPointService;
     this.chatService = chatService;
     this.logger = logger;
@@ -83,6 +85,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var filter = BuildFilter(lianeFilter);
     var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter);
+    if (lianeFilter.ForCurrentUser && lianeFilter.States?.Length > 0)
+    {
+      // Return with user's version of liane state 
+      var result = paginatedLianes.Select(l => l with { State = GetUserState(l, currentContext.CurrentUser().Id) });
+      paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
+    }
     return await paginatedLianes.SelectAsync(MapEntity);
   }
 
@@ -99,7 +107,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     if (lianeFilter.States?.Length > 0)
     {
-      filter &= Builders<LianeDb>.Filter.In(l => l.State, lianeFilter.States);
+      filter &= (Builders<LianeDb>.Filter.In(l => l.State, lianeFilter.States) 
+                 // These will be filtered after fetching in db
+                 | Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.Started) 
+                 | Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.Finished));
     }
 
     return filter;
@@ -118,7 +129,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         var rallyingPoint = l.WayPoints.First().RallyingPoint;
         return (new Appointment(l, rallyingPoint, l.DepartureTime), l.Members.Where(m => m.From == rallyingPoint).Select(m => m.User).ToImmutableList());
       })
-      .ToImmutableDictionary(e => e.Item1!, e => e.Item2)!;
+      .ToImmutableDictionary(e => e.Item1, e => e.Item2);
   }
 
   public async Task<Api.Trip.Liane> AddMember(Ref<Api.Trip.Liane> liane, LianeMember newMember)
@@ -164,7 +175,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public async Task<Api.Trip.Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<Api.User.User> member)
   {
     var updated = await Mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id,
+      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id && l.Driver.User.Id != member.Id,
         Builders<LianeDb>.Update.Pull("members.user", member)
         , new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
     if (updated is null)
@@ -231,6 +242,25 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
   }
 
+  private LianeState GetUserState(LianeDb liane, Ref<Api.User.User> forUser)
+  {
+    var member = liane.Members.Find(m => m.User.Id == forUser.Id)!;
+    switch (liane.State)
+    {
+      case LianeState.Started:
+        // TODO adjust time delta
+        var pickupPoint = liane.WayPoints!.Find(w => w.RallyingPoint.Id == member.From);
+        if (pickupPoint!.Eta > DateTime.Now.AddSeconds(30)) return LianeState.NotStarted;
+        var depositPoint = liane.WayPoints!.Find(w => w.RallyingPoint.Id == member.From);
+        if (depositPoint!.Eta < DateTime.Now) return LianeState.Finished;
+        break;
+      case LianeState.Finished:
+        if (member.Feedback is not null) return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;
+        break;
+    }
+
+    return liane.State;
+  }
   protected override async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
   {
     if (lianeRequest.From == lianeRequest.To)
@@ -296,6 +326,28 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var from = await rallyingPointService.Get(pickup);
     return await GetNearestLinks(from.Location, dateTime, availableSeats);
+  }
+
+  public async Task UpdateFeedback(Ref<Api.Trip.Liane> liane, Feedback feedback)
+  {
+    var resolved = await Get(liane);
+    var sender =
+      currentContext.CurrentUser().Id;
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(
+        l => l.Id == liane, 
+        Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == sender ? m with { Feedback = feedback } : m)),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+        );
+    if (updated.Members.All(m => m.Feedback is not null))
+    {
+      await Mongo.GetCollection<LianeDb>()
+        .UpdateOneAsync(
+          l => l.Id == liane, 
+          Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? LianeState.Canceled : LianeState.Archived)
+        );
+    }
+   
   }
 
   public async Task<ImmutableList<ClosestPickups>> GetNearestLinks(LatLng pos, DateTime dateTime, int radius = 30, int availableSeats = -1)
@@ -555,24 +607,27 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return await rallyingPointService.SnapViaRoute(intersection, SnapDistanceInMeters);
   }
 
-  private static FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
+  private FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
   {
     var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToGeoJson());
 
     DateTime lowerBound, upperBound;
+    FilterDefinition<LianeDb> timeFilter;
     if (time.Direction == Direction.Departure)
     {
       lowerBound = time.DateTime;
       upperBound = time.DateTime.AddHours(LianeMatchPageDeltaInHours);
+      timeFilter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, lowerBound)
+                       & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, upperBound);
     }
     else
     {
-      lowerBound = time.DateTime.AddHours(-LianeMatchPageDeltaInHours); //TODO use liane duration here (save trip in DB?)
+      lowerBound = time.DateTime.AddHours(-LianeMatchPageDeltaInHours);
       upperBound = time.DateTime;
+      timeFilter = Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta >= lowerBound && w.Eta <= upperBound);
     }
 
-    var timeFilter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, lowerBound)
-                     & Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, upperBound);
+   
 
     // If search is passenger search, fetch Liane with driver only
     var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, availableSeats <= 0);
@@ -580,7 +635,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     // l => l.TotalSeatCount + availableSeats > 0
     var hasAvailableSeats = Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -availableSeats);
 
-    return timeFilter & isDriverSearch & hasAvailableSeats & intersects;
+    var userIsMember = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == currentContext.CurrentUser().Id);
+
+    return timeFilter & isDriverSearch & hasAvailableSeats & intersects & !userIsMember;
   }
 
   public async Task UpdateDepartureTime(Ref<Api.Trip.Liane> liane, DateTime departureTime)

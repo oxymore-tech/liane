@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, ColorValue, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import AppMapView, { LianeMatchRouteLayer, WayPointDisplay } from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -20,13 +20,14 @@ import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "react-query";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/MyTripsScreen";
+import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { AppText } from "@/components/base/AppText";
 import { AppStyles } from "@/theme/styles";
 import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelector";
 import { showLocation } from "react-native-map-link";
 import { AppIcon } from "@/components/base/AppIcon";
+import { DebugIdView } from "@/components/base/DebugIdView";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -106,10 +107,13 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           initialStop={1}>
           {match && (
             <AppBottomSheetScrollView>
-              <LianeStatusRow liane={match} />
-              <LianeActionRow liane={match} />
+              <Row>
+                <LianeStatusRow liane={match} />
+                <View style={{ flex: 1 }} />
+                <LianeActionRow liane={match} />
+              </Row>
               <LianeDetailView liane={match} />
-              {match.liane.state === "NotStarted" && <LianeActionsView liane={match.liane} />}
+              <LianeActionsView match={match} />
             </AppBottomSheetScrollView>
           )}
 
@@ -135,16 +139,19 @@ const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
 
   return (
     <Row style={{ justifyContent: "flex-end", paddingHorizontal: 24 }} spacing={8}>
-      <ActionFAB
-        onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
-        color={AppColors.blue}
-        icon={"message-circle-outline"}
-      />
+      {match.liane.state !== "Archived" && match.liane.state !== "Canceled" && (
+        <ActionFAB
+          onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
+          color={AppColors.blue}
+          icon={"message-circle"}
+        />
+      )}
     </Row>
   );
 };
 
-const LianeActionsView = ({ liane }: { liane: Liane }) => {
+const LianeActionsView = ({ match }: { match: LianeMatch }) => {
+  const liane = match.liane;
   const { user, services } = useContext(AppContext);
   const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
   const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
@@ -160,10 +167,11 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
     <Column>
       <AppText numberOfLines={-1} style={{ paddingVertical: 4, paddingHorizontal: 24 }}>
         Liane postée le <AppText style={{ fontWeight: "bold" }}>{formatDate(new Date(liane.createdAt!))}</AppText> par{" "}
-        <AppText style={{ fontWeight: "bold" }}>{user?.id === creator.id ? "moi" : creator.pseudo}</AppText>
+        <AppText style={{ fontWeight: "bold" }}>{creator.pseudo}</AppText>
       </AppText>
-      {currentUserIsDriver && <LineSeparator />}
-      {currentUserIsDriver && (
+      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} id={liane.id!} />
+      {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
+      {currentUserIsDriver && liane.state === "NotStarted" && (
         <ActionItem
           onPress={() => {
             setModalVisible(true);
@@ -184,8 +192,21 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
         </Column>
       </SlideUpModal>
+      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
+        <ActionItem
+          onPress={() => {
+            // TODO
+            const fromPoint = getPoint(match, "pickup");
+            const toPoint = getPoint(match, "deposit");
+            navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint } });
+          }}
+          iconName={"repeat"}
+          text={"Relancer ce trajet"}
+        />
+      )}
+
       <LineSeparator />
-      {currentUserIsOwner && (
+      {currentUserIsOwner && liane.state === "NotStarted" && (
         <ActionItem
           onPress={() => {
             // TODO
@@ -237,7 +258,7 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           text={"Retirer la demande"}
         />
       )}
-      {currentUserIsMember && !currentUserIsOwner && (
+      {currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner && (
         <ActionItem
           onPress={() => {
             // TODO
@@ -261,6 +282,42 @@ const LianeActionsView = ({ liane }: { liane: Liane }) => {
           color={ContextualColors.redAlert.text}
           iconName={"log-out-outline"}
           text={"Quitter la liane"}
+        />
+      )}
+      {currentUserIsMember && liane.state === "Started" && (
+        <ActionItem
+          onPress={() => {
+            // TODO
+            Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
+              {
+                text: "Fermer",
+                onPress: () => {},
+                style: "cancel"
+              },
+              {
+                text: "Annuler",
+                onPress: async () => {
+                  //TODO
+                  navigation.goBack();
+                  await queryClient.invalidateQueries(LianeQueryKey);
+                },
+                style: "default"
+              }
+            ]);
+          }}
+          color={ContextualColors.redAlert.text}
+          iconName={"log-out-outline"}
+          text={"Annuler ce trajet"}
+        />
+      )}
+
+      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") && (
+        <ActionItem
+          onPress={() => {
+            // TODO
+          }}
+          iconName={"alert-circle-outline"}
+          text={"Assistance"}
         />
       )}
     </Column>

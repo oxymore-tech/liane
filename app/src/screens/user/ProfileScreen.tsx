@@ -15,6 +15,7 @@ import { User } from "@/api";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
 import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
+import { DebugIdView } from "@/components/base/DebugIdView";
 
 export interface ProfileProps {
   user: User;
@@ -34,7 +35,7 @@ const ProfileView = WithFetchResource<User>(
     const { top: insetsTop } = useSafeAreaInsets();
     const isMyPage = user!.id === loggedUser!.id;
     return (
-      <ScrollView>
+      <ScrollView overScrollMode="never">
         <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
           <Pressable
             style={{ position: "absolute", left: 24, top: insetsTop + 24 }}
@@ -49,9 +50,10 @@ const ProfileView = WithFetchResource<User>(
           </Column>
         </Center>
         <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-          <AppText style={styles.data}>4 trajets effectués</AppText>
+          {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
           <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
           {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
+          <DebugIdView id={user.id!} />
         </Column>
         {isMyPage && <Actions />}
       </ScrollView>
@@ -63,11 +65,19 @@ const ProfileView = WithFetchResource<User>(
 
 const Actions = () => {
   const { services, setAuthUser } = useContext(AppContext);
+  const { navigation } = useAppNavigation();
   return (
     <Column>
       <ActionItem onPress={() => {}} iconName={"edit-outline"} text={"Mes informations"} />
       <ActionItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
-      <ActionItem onPress={() => {}} iconName={"history"} text={"Trajets archivés"} />
+      <ActionItem
+        onPress={() => {
+          // @ts-ignore
+          navigation.navigate("ArchivedTrips");
+        }}
+        iconName={"history"}
+        text={"Historique des trajets"}
+      />
       <LineSeparator />
       <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
       <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />

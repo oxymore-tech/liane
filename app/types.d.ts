@@ -13,4 +13,5 @@ declare module "@env" {
   export const APP_VERSION: string;
   export const API_URL: string | null;
   export const MAPTILER_KEY: string;
+  export const DEBUG_VIEWS: boolean | null;
 }
