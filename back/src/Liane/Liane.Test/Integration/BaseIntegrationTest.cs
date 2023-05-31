@@ -16,6 +16,7 @@ using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
+using Liane.Test.Mock;
 using Liane.Web.Internal.Json;
 using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,9 +87,8 @@ public abstract class BaseIntegrationTest
 
     services.AddService<MockCurrentContext>();
     services.AddService(JsonSerializerSettings.TestJsonOptions());
-    services.AddService(new FirebaseSettings(null));
     services.AddService<NotificationServiceImpl>();
-    services.AddService<FirebaseMessagingImpl>();
+    services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService<LianeServiceImpl>();
     services.AddService<UserServiceImpl>();

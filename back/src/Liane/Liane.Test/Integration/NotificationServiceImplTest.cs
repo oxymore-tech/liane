@@ -8,6 +8,7 @@ using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
+using Liane.Test.Mock;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -70,10 +71,12 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
     var notification2 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.QuezacParking, now));
     var notification3 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.BlajouxParking, now));
 
-    var actual = await notificationService.List(new NotificationFilter(null, null, null, new PayloadType.Reminder()), new Pagination());
+    
+    var mockPushService = ServiceProvider.GetRequiredService<MockPushServiceImpl>();
+    var actualA = mockPushService.GetSentNotifications(userA.Id).Where(n => n is Notification.Reminder);
+    var actualB = mockPushService.GetSentNotifications(userB.Id).Where(n => n is Notification.Reminder);
 
-    Assert.AreEqual(actual.Data.Count, 2);
-    Assert.AreNotEqual(notification1.Id, notification2.Id);
-    Assert.AreEqual(notification1.Id, notification3.Id);
+    Assert.AreEqual(2, actualA.Count());
+    Assert.AreEqual(2, actualB.Count());
   }
 }
