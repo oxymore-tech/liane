@@ -17,7 +17,7 @@ public sealed class UnionTypeJsonTest
   [Test]
   public void ShouldSerializeMatchType()
   {
-    var match = new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, ImmutableList<WayPoint>.Empty);
+    var match = new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.QuezacParking.Id!, LabeledPositions.BalsiegeParkingEglise.Id!, ImmutableList<WayPoint>.Empty);
     var json = JsonSerializer.Serialize<Api.Trip.Match>(match, options);
     Assert.IsTrue(json.Contains("\"type\":\"Compatible\""));
     var actual = JsonSerializer.Deserialize<Api.Trip.Match>(json, options);
