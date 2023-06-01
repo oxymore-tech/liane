@@ -11,7 +11,7 @@ import { InternalLianeSearchFilter } from "@/util/ref";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
-import { Event, Notification } from "@/api/notification";
+import { Event, NewMessage, Notification, Reminder } from "@/api/notification";
 import { JoinRequest, MemberAccepted } from "@/api/event";
 
 export type NavigationParamList = {
@@ -41,23 +41,18 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 
 export function getNotificationNavigation(notification: Notification) {
   console.debug(JSON.stringify(notification));
-  /* TODO no type returned if (!UnionUtils.isInstanceOf<Event>(notification, "Event")) {
-    return undefined;
-  }*/
-  if (!notification.payload) {
-    return undefined;
-  }
-
-  if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
-    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-      navigation.navigate("OpenJoinLianeRequest", { request: notification });
-  } else if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
+  if (UnionUtils.isInstanceOf<Event>(notification, "Event")) {
+    if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
+      return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+        navigation.navigate("OpenJoinLianeRequest", { request: notification });
+    } else if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
+      return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+        navigation.navigate("LianeDetail", { liane: notification.payload.liane });
+    }
+  } else if (UnionUtils.isInstanceOf<Reminder>(notification, "Reminder")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("LianeDetail", { liane: notification.payload.liane });
-  } else if (notification.payload.at) {
-    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-      navigation.navigate("LianeDetail", { liane: notification.payload.liane });
-  } else if (notification.conversation) {
+  } else if (UnionUtils.isInstanceOf<NewMessage>(notification, "NewMessage")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("Chat", { conversationId: notification.conversation });
   }

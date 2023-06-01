@@ -1,7 +1,7 @@
 import { ConversationGroup, Liane, RallyingPoint, Ref, User, UTCDateTime } from "@/api/index";
 import { LianeEvent } from "@/api/event";
 
-export type Notification = Info | Reminder | Event | NewMessage;
+export type Notification = (Info | Reminder | Event | NewMessage) & AbstractNotification;
 
 export enum Answer {
   Accept = "Accept",
@@ -14,6 +14,7 @@ export type Recipient = Readonly<{
 }>;
 
 type AbstractNotification = Readonly<{
+  type: string;
   id?: string;
   createdBy: Ref<User>;
   createdAt: UTCDateTime;
