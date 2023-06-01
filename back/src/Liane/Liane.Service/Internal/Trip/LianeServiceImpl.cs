@@ -450,7 +450,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .GroupBy(p => p.WayPoint.RallyingPoint)
       .Select(gr => new RallyingPointLink(
         gr.Key,
-        gr.Select(p => p.Liane.DepartureTime.AddSeconds(p.Liane.WayPoints.TakeUntil(p.WayPoint).ToImmutableSortedSet().TotalDuration())).Order().ToImmutableList()
+        gr.Select(p => p.Liane.DepartureTime.AddSeconds(p.Liane.WayPoints.TakeUntil(p.WayPoint).TotalDuration())).Order().ToImmutableList()
       ))
       .ToImmutableList();
   }
