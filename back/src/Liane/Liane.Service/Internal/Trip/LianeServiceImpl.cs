@@ -378,6 +378,19 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ToImmutableList();
   }
 
+  public async Task<string> GetContact(Ref<Api.Trip.Liane> id, Ref<Api.User.User> requester, Ref<Api.User.User> member)
+  {
+    var liane = await Get(id);
+    if ((requester.Id == liane.Driver.User.Id && liane.Members.Any(m => m.User.Id == member))
+        || (member.Id == liane.Driver.User.Id && liane.Members.Any(m => m.User.Id == requester)))
+    {
+      var m = await userService.GetFullUser(member);
+      return m.Phone;
+    }
+
+    throw new ForbiddenException();
+  }
+
   public async Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime)
   {
     var displayed = await Display(pos, pos2, dateTime, true);

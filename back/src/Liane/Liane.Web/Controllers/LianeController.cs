@@ -68,6 +68,13 @@ public sealed class LianeController : ControllerBase
     await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
   }
   
+  [HttpGet("{id}/members/{memberId}/contact")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)
+  {
+    return lianeService.GetContact(id, currentContext.CurrentUser().Id, memberId);
+  }
+  
   [HttpPost("{id}/feedback")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<IActionResult> SendFeedback([FromRoute] string id, [FromBody] Feedback feedback)
