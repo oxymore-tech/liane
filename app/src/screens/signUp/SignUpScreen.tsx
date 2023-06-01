@@ -68,7 +68,7 @@ const SignUpPage = () => {
       </View>
 
       <View>
-        <AppText style={styles.helperText}>
+        <AppText numberOfLines={-1} style={styles.helperText}>
           {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
         </AppText>
         {state.matches("phone") ? (

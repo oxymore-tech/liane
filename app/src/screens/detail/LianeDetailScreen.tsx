@@ -157,7 +157,7 @@ const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
 
   return (
     <Row style={{ justifyContent: "flex-end", paddingHorizontal: 24 }} spacing={8}>
-      {match.liane.state !== "Archived" && match.liane.state !== "Canceled" && (
+      {match.liane.state !== "Archived" && match.liane.state !== "Canceled" && match.liane.members.length > 1 && (
         <ActionFAB
           onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
           color={AppColors.blue}

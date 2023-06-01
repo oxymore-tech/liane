@@ -22,6 +22,7 @@ import { DriverInfo, InfoItem } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { useAppNavigation } from "@/api/navigation";
+import { AppText } from "@/components/base/AppText";
 
 const formatSeatCount = (seatCount: number) => {
   let count = seatCount;
@@ -40,7 +41,7 @@ const formatSeatCount = (seatCount: number) => {
 export const LianeMatchDetailView = () => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const queryClient = useQueryClient();
   const { navigation } = useAppNavigation();
   const liane = state.context.selectedMatch!;
@@ -66,6 +67,7 @@ export const LianeMatchDetailView = () => {
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
+  const userIsMember = liane.liane.members.findIndex(m => m.user.id === user!.id) >= 0;
   const requestJoin = async () => {
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
@@ -121,14 +123,17 @@ export const LianeMatchDetailView = () => {
         ]}>
         <InfoItem icon={"people-outline"} value={formattedSeatCount} />
 
-        <AppRoundedButton
-          backgroundColor={AppColors.orange}
-          text={"Rejoindre"}
-          onPress={() => {
-            setModalVisible(true);
-          }}
-        />
+        {!userIsMember && (
+          <AppRoundedButton
+            backgroundColor={AppColors.orange}
+            text={"Rejoindre"}
+            onPress={() => {
+              setModalVisible(true);
+            }}
+          />
+        )}
       </Row>
+      {userIsMember && <AppText style={{ marginHorizontal: 24 }}>Vous êtes membre de cette liane.</AppText>}
       <SlideUpModal actionText={"Envoyer la demande"} onAction={requestJoin} visible={modalVisible} setVisible={setModalVisible}>
         <Column>
           <SeatsForm seats={seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />

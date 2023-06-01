@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext, useState } from "react";
 import { AppContext } from "@/components/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
-import { ScrollView, View } from "react-native";
+import { ScrollView } from "react-native";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
@@ -37,26 +37,32 @@ export const OpenValidateTripScreen = WithFullscreenModal(() => {
   return (
     <ScrollView style={{ flexGrow: 1, flex: 1, marginBottom: insets.bottom }}>
       <Column
-        spacing={8}
+        spacing={24}
         style={{
           flex: 1,
           paddingHorizontal: 12,
           paddingTop: 8,
           paddingBottom: 20
         }}>
-        <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Le trajet s'est-il déroulé comme prévu ?</AppText>
-        <AppSwitchToggle
-          defaultSelectedValue={true}
-          options={[true, false]}
-          selectionColor={AppColors.darkBlue}
-          onSelectValue={() => setTripOk(!tripOk)}
-        />
-        <CardTextInput multiline={true} numberOfLines={5} placeholder={"Ajouter un commentaire..."} onChangeText={setComment} />
+        <Column spacing={8}>
+          <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Le trajet s'est-il déroulé comme prévu ?</AppText>
+          <AppSwitchToggle
+            defaultSelectedValue={true}
+            options={[true, false]}
+            selectionColor={AppColors.darkBlue}
+            onSelectValue={() => setTripOk(!tripOk)}
+          />
+        </Column>
+        <Column spacing={8}>
+          <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Une remarque ? </AppText>
+
+          <CardTextInput multiline={true} numberOfLines={5} placeholder={"Ajouter un commentaire..."} onChangeText={setComment} />
+        </Column>
       </Column>
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
         <AppRoundedButton color={defaultTextColor(AppColors.white)} onPress={refuseRequest} backgroundColor={AppColors.white} text={"Annuler"} />
-        <AppRoundedButton color={defaultTextColor(AppColors.orange)} onPress={acceptRequest} backgroundColor={AppColors.orange} text={"Valider"} />
+        <AppRoundedButton color={defaultTextColor(AppColors.orange)} onPress={acceptRequest} backgroundColor={AppColors.orange} text={"Envoyer"} />
       </Row>
     </ScrollView>
   );
