@@ -119,7 +119,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }
 
-  private IReadOnlyDictionary<string, string> BuildPayLoad(object payload)
+  private IReadOnlyDictionary<string, string> BuildPayLoad(Notification payload)
   {
     var jsonPayload = JsonSerializer.Serialize(payload, jsonSerializerOptions);
     return new Dictionary<string, string> { { "jsonPayload", jsonPayload } };
