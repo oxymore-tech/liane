@@ -13,12 +13,12 @@ public sealed class MockCurrentContext : ICurrentContext
 
   public AuthUser CurrentUser()
   {
-    return CurrentAuthUser ?? new AuthUser(Fakers.FakeDbUsers[2].Id, Fakers.FakeDbUsers[2].Phone, false);
+    return CurrentAuthUser ?? new AuthUser(Fakers.FakeDbUsers[2].Id, false);
   }
 
   public void SetCurrentUser(DbUser user, bool isAdmin = false)
   {
-    CurrentAuthUser = new AuthUser(user.Id, user.Phone, isAdmin);
+    CurrentAuthUser = new AuthUser(user.Id, isAdmin);
   }
 
   public T CurrentResource<T>() where T : class, IIdentity

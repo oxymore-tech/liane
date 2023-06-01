@@ -23,13 +23,10 @@ public sealed class CurrentContextImpl : ICurrentContext
 
   public T? CurrentResource<T>() where T : class, IIdentity
   {
-    if (httpContextAccessor.HttpContext != null)
+    var value = httpContextAccessor.HttpContext?.Items[CurrentResourceName];
+    if (value is T validValue)
     {
-      var value = httpContextAccessor.HttpContext?.Items[CurrentResourceName];
-      if (value is T validValue)
-      {
-        return validValue;
-      }
+      return validValue;
     }
 
     return null;
@@ -54,15 +51,14 @@ public sealed class CurrentContextImpl : ICurrentContext
     }
 
     var userId = httpContextAccessor.HttpContext.User.Identity?.Name;
-    var phone = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.MobilePhone)?.Value;
 
-    if (userId == null || phone == null)
+    if (userId == null)
     {
       throw new ForbiddenException();
     }
 
-    var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == AuthServiceImpl.AdminRole);
+    var isAdmin = httpContextAccessor.HttpContext.User.Claims.Any(c => c is { Type: ClaimTypes.Role, Value: AuthServiceImpl.AdminRole });
 
-    return new AuthUser(userId, phone, isAdmin);
+    return new AuthUser(userId, isAdmin);
   }
 }

@@ -24,7 +24,6 @@ export type WithResolvedRef<Key extends string, TRef extends Identity, T extends
 
 export type AuthUser = Readonly<{
   id: string;
-  phone: string;
   isAdmin: boolean;
   isSignedUp: boolean;
 }>;

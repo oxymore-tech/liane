@@ -108,7 +108,7 @@ public sealed class AuthServiceImpl : IAuthService
       .Set(p => p.PushToken, request.PushToken);
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
-    var authUser = new AuthUser(userId, number, dbUser?.IsAdmin ?? isAdmin, dbUser?.UserInfo is not null);
+    var authUser = new AuthUser(userId, dbUser?.IsAdmin ?? isAdmin, dbUser?.UserInfo is not null);
     return GenerateAuthResponse(authUser, refreshToken);
   }
 
@@ -158,7 +158,7 @@ public sealed class AuthServiceImpl : IAuthService
         .Set(p => p.RefreshToken, encryptedToken)
         .Set(p => p.Salt, salt));
 
-    var authUser = new AuthUser(request.UserId, dbUser.Phone, dbUser.IsAdmin, dbUser.UserInfo is not null);
+    var authUser = new AuthUser(request.UserId, dbUser.IsAdmin, dbUser.UserInfo is not null);
     return GenerateAuthResponse(authUser, newRefreshToken);
   }
 
@@ -225,7 +225,6 @@ public sealed class AuthServiceImpl : IAuthService
     var claims = new List<Claim>
     {
       new(ClaimTypes.Name, user.Id),
-      new(ClaimTypes.MobilePhone, user.Phone),
       new(ClaimTypes.Role, user.IsAdmin ? AdminRole : UserRole)
     };
 
