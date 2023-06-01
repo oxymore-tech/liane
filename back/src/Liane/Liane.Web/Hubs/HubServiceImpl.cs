@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
@@ -16,12 +17,14 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
 {
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
+  private readonly IUserService userService;
   private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
 
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService)
   {
     this.hubContext = hubContext;
     this.logger = logger;
+    this.userService = userService;
   }
 
   public Priority Priority => Priority.High;
@@ -57,7 +60,22 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
     {
       try
       {
-        await hubContext.Clients.Group(receiver.Id).ReceiveMessage(conversation, message);
+        var result = await hubContext.Clients.Group(receiver.Id).ReceiveMessage(conversation, message);
+        if (!result)
+        {
+          var sender = await userService.Get(message.CreatedBy!);
+          var notification = new Notification.NewMessage(
+            null,
+            sender,
+            message.CreatedAt!.Value,
+            ImmutableList.Create(new Recipient(receiver, null)),
+            ImmutableHashSet<Answer>.Empty,
+            sender.Pseudo,
+            message.Text,
+            conversation.Id);
+          await SendNotification(receiver, notification);
+        }
+
         return true;
       }
       catch (Exception e)

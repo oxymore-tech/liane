@@ -97,7 +97,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
     if (notificationFilter.Sender is not null)
     {
-      filter &= Builders<Notification>.Filter.Eq(r => r.Sender, notificationFilter.Sender);
+      filter &= Builders<Notification>.Filter.Eq(r => r.CreatedBy, notificationFilter.Sender);
     }
 
     if (notificationFilter.PayloadType is not null)
@@ -110,7 +110,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       filter &= Builders<Notification>.Filter.Eq("payload.liane", notificationFilter.Liane);
     }
 
-    return await Mongo.Paginate(pagination, r => r.SentAt, filter, false);
+    return await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);
   }
 
   public Task CleanJoinLianeRequests(ImmutableList<Ref<Api.Trip.Liane>> lianes)

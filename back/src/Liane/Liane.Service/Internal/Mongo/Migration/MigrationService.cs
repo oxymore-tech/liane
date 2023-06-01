@@ -3,13 +3,14 @@ using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 5;
+  private const int Version = 6;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
@@ -24,9 +25,9 @@ public sealed class MigrationService
 
   private async Task Migrate()
   {
-    await db.GetCollection<LianeDb>()
-      .DeleteManyAsync(l => l.DepartureTime < DateTime.UtcNow.AddMonths(-1));
-    await lianeService.UpdateMissingWaypoints();
+    await db.GetCollection<BsonDocument>("notification").UpdateManyAsync(f => true, Builders<BsonDocument>.Update.Rename("sentAt", "createdAt"));
+    await db.GetCollection<BsonDocument>("notification").UpdateManyAsync(f => true, Builders<BsonDocument>.Update.Rename("sender", "createdBy"));
+
   }
 
   public async Task Execute()

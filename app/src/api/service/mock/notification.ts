@@ -13,7 +13,8 @@ export class NotificationServiceMock extends AbstractNotificationService {
         id: i.toString(),
         title: "Test",
         message,
-        sentAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        createdBy: "me",
         recipients: [],
         answers: []
       });

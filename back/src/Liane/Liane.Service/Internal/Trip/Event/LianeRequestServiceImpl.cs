@@ -42,8 +42,8 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   {
     LianeEvent lianeEvent = answer switch
     {
-      Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.Sender!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
-      Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.Sender!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
+      Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
+      Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
       _ => throw new ArgumentOutOfRangeException(nameof(answer), answer, null)
     };
     await eventDispatcher.Dispatch(lianeEvent);
@@ -92,7 +92,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     var from = await rallyingPointService.Get(joinRequest.From);
     var to = await rallyingPointService.Get(joinRequest.To);
     var liane = await lianeService.Get(joinRequest.Liane);
-    var createdBy = await userService.Get(lianeEvent.Sender!);
+    var createdBy = await userService.Get(lianeEvent.CreatedBy!);
     
     if (liane.State != LianeState.NotStarted)
     {
@@ -105,6 +105,6 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
       throw new ConstraintException("This request is no longer compatible with target Liane");
     }
 
-    return new JoinLianeRequest(lianeEvent.Id!, from, to, liane, createdBy, lianeEvent.SentAt, joinRequest.Seats, joinRequest.TakeReturnTrip, joinRequest.Message, false, match);
+    return new JoinLianeRequest(lianeEvent.Id!, from, to, liane, createdBy, lianeEvent.CreatedAt, joinRequest.Seats, joinRequest.TakeReturnTrip, joinRequest.Message, false, match);
   }
 }

@@ -54,7 +54,8 @@ export class HubServiceMock extends AbstractHubService {
           type: "Info",
           title: "Test",
           message: msg,
-          sentAt: now.toISOString(),
+          createdAt: now.toISOString(),
+          createdBy: this.mockMe.id!,
           recipients: [],
           answers: []
         });
