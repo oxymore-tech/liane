@@ -2,7 +2,6 @@ import {
   JoinLianeRequestDetailed,
   LatLng,
   Liane,
-  LianeMatch,
   LianeRequest,
   LianeSearchFilter,
   PaginatedResponse,
@@ -18,7 +17,7 @@ import { JoinRequest } from "@/api/event";
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
-  match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
+  // match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   // links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<NearestLinks>;
   nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
@@ -34,7 +33,6 @@ export interface LianeService {
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   getContact(id: string, memberId: string): Promise<string>;
 }
-
 export class LianeServiceClient implements LianeService {
   async delete(lianeId: string): Promise<void> {
     await del(`/liane/${lianeId}`);
@@ -59,15 +57,11 @@ export class LianeServiceClient implements LianeService {
     return postAs<Liane>("/liane/", { body: liane });
   }
 
-  match(filter: LianeSearchFilter) {
-    return postAs<PaginatedResponse<LianeMatch>>("/liane/match", { body: filter });
-  }
-
   display(from: LatLng, to: LatLng, afterDate?: Date) {
     const params = { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng };
     if (afterDate) {
       // @ts-ignore
-      params.after = afterDate.valueOf();
+      params.after = new Date(afterDate.toDateString()).valueOf();
     }
     return get<FeatureCollection>("/liane/display/geojson", { params });
   }
@@ -76,7 +70,7 @@ export class LianeServiceClient implements LianeService {
     const params = { lat: center.lat, lng: center.lng, radius: radius };
     if (afterDate) {
       // @ts-ignore
-      params.after = afterDate.valueOf();
+      params.after = new Date(afterDate.toDateString()).valueOf();
     }
     return get("/liane/links", { params });
   }
