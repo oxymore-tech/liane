@@ -61,7 +61,6 @@ export function getNotificationNavigation(notification: Notification) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("Chat", { conversationId: notification.conversation });
   }
-
   return undefined;
 }
 

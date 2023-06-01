@@ -32,6 +32,7 @@ export interface LianeService {
   deleteJoinRequest(id: string): Promise<void>;
   updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
+  getContact(id: string, memberId: string): Promise<string>;
 }
 
 export class LianeServiceClient implements LianeService {
@@ -89,6 +90,9 @@ export class LianeServiceClient implements LianeService {
   }
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
     return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
+  }
+  getContact(id: string, memberId: string): Promise<string> {
+    return get<string>(`/liane/${id}/members/${memberId}/contact`);
   }
 
   async deleteJoinRequest(id: string): Promise<void> {

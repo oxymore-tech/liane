@@ -11,8 +11,9 @@ export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
     return await get("/notification");
   }
-
-  markAsRead = async (notification: Notification): Promise<void> => {
+  markAsRead = async (notification: Notification) => {
+    // TODO find out how to use super
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
     await patch(`/notification/${notification.id}`);
   };
 
@@ -30,8 +31,9 @@ export class NotificationServiceClient extends AbstractNotificationService {
     }
   };
 
-  override receiveNotification = async (notification: Notification): Promise<void> => {
-    await super.receiveNotification(notification);
+  override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
+    // TODO await super.receiveNotification(notification);
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
     await displayNotifeeNotification(notification);
   };
 }

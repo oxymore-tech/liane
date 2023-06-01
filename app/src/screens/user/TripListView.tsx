@@ -70,6 +70,7 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): Trip
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
   const { navigation } = useAppNavigation();
   const [statusText, color] = getLianeStatusStyle(item);
+
   const { services } = useContext(AppContext);
   const unread = useObservable(services.chatHub.unreadConversations, undefined);
 

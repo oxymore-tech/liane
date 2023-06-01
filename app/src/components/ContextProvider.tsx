@@ -1,14 +1,17 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, LatLng, LocationPermissionLevel, User } from "@/api";
+import { AuthUser, LatLng, LocationPermissionLevel, UnionUtils, User } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
 import { initializeNotification, initializePushNotification } from "@/api/service/notification";
-import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, Platform, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RootNavigation } from "@/api/navigation";
+import { MemberAccepted, MemberHasLeft, MemberRejected } from "@/api/event";
+import { QueryClient } from "react-query";
+import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -18,6 +21,7 @@ interface AppContextProps {
   setAuthUser: (authUser?: AuthUser) => void;
   services: AppServices;
   status: "online" | "offline";
+  appState: AppStateStatus;
 }
 
 const SERVICES = CreateAppServices();
@@ -27,7 +31,8 @@ export const AppContext = createContext<AppContextProps>({
   setLocationPermission: () => {},
   setAuthUser: () => {},
   services: SERVICES,
-  status: "offline"
+  status: "offline",
+  appState: "active"
 });
 
 async function initContext(service: AppServices): Promise<{
@@ -53,7 +58,6 @@ async function initContext(service: AppServices): Promise<{
       user = await service.chatHub.start();
       // Branch hub to notifications
       service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
-      service.chatHub.subscribeToNotifications(service.notification.receiveNotification);
     } catch (e) {
       if (__DEV__) {
         console.log("Could not start hub :", e);
@@ -101,10 +105,12 @@ interface ContextProviderState {
   position?: LatLng;
   user?: User;
   status: "online" | "offline";
+  appState: AppStateStatus;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
   private unsubscribeToUserInteraction: (() => void) | undefined = undefined;
+  private unsubscribeToStateChange: NativeEventSubscription | undefined = undefined;
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
@@ -112,7 +118,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       appLoaded: false,
       position: undefined,
       user: undefined,
-      status: "offline"
+      status: "offline",
+      appState: "active"
     };
   }
 
@@ -131,8 +138,21 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         appLoaded: true,
         status: p.online ? "online" : "offline"
       }));
+      if (p.online && p.user) {
+        SERVICES.chatHub.subscribeToNotifications(async n => {
+          console.debug("dbg", SERVICES.notification.receiveNotification.call);
+          await SERVICES.notification.receiveNotification(n, this.state.appState !== "active");
+        });
+      }
     });
   }
+
+  private handleAppStateChange = (appState: AppStateStatus) => {
+    this.setState(prev => ({
+      ...prev,
+      appState: appState
+    }));
+  };
 
   componentDidMount() {
     this.initContext();
@@ -143,11 +163,15 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         this.initContext();
       }
     });
+    this.unsubscribeToStateChange = AppState.addEventListener("change", this.handleAppStateChange);
   }
 
   componentWillUnmount() {
     if (this.unsubscribeToUserInteraction) {
       this.unsubscribeToUserInteraction();
+    }
+    if (this.unsubscribeToStateChange) {
+      this.unsubscribeToStateChange.remove();
     }
     destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
   }
@@ -195,7 +219,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   render() {
     const { children } = this.props;
-    const { appLoaded, locationPermission, position, user, status } = this.state;
+    const { appLoaded, locationPermission, position, user, status, appState } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
     if (!appLoaded) {
@@ -221,6 +245,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
           position,
           user,
           status,
+          appState,
           services: SERVICES
         }}>
         {children}

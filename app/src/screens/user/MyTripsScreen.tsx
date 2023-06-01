@@ -1,22 +1,41 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { useAppNavigation } from "@/api/navigation";
-import { useQueries } from "react-query";
+import { useQueries, useQueryClient } from "react-query";
 import { AppContext } from "@/components/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { TripListView } from "@/screens/user/TripListView";
+import { UnionUtils } from "@/api";
+import { MemberAccepted, MemberHasLeft, MemberRejected } from "@/api/event";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
+  const queryClient = useQueryClient();
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
     { queryKey: LianeQueryKey, queryFn: () => services.liane.list() }
   ]);
+  useEffect(() => {
+    const s = services.chatHub.subscribeToNotifications(async n => {
+      if (n.payload) {
+        if (
+          UnionUtils.isInstanceOf<MemberHasLeft>(n.payload, "MemberHasLeft") ||
+          UnionUtils.isInstanceOf<MemberAccepted>(n.payload, "MemberAccepted")
+        ) {
+          await queryClient.invalidateQueries(LianeQueryKey);
+        }
+        if (UnionUtils.isInstanceOf<MemberRejected>(n.payload, "MemberRejected")) {
+          await queryClient.invalidateQueries(JoinRequestsQueryKey);
+        }
+      }
+    });
+    return () => s.unsubscribe();
+  }, []);
 
   const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
 

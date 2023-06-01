@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
 import { Notification } from "@/api/notification";
 
 export interface NotificationService {
-  receiveNotification(notification: Notification): Promise<void>;
+  receiveNotification(notification: Notification, display?: boolean): Promise<void>;
 
   checkInitialNotification(): Promise<void>;
 

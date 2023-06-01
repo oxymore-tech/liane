@@ -45,7 +45,7 @@ export const LianeJoinRequestDetailScreen = () => {
   return <LianeDetailPage match={match} request={request} />;
 };
 export const LianeDetailScreen = () => {
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeDetail">();
   const lianeParam = route.params!.liane;
   const [liane, setLiane] = useState(typeof lianeParam === "string" ? undefined : lianeParam);
@@ -56,7 +56,7 @@ export const LianeDetailScreen = () => {
     }
   }, [lianeParam, services.liane]);
 
-  const match = useMemo(() => (liane ? toLianeMatch(liane) : undefined), [liane]);
+  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id) : undefined), [liane]);
 
   return <LianeDetailPage match={match} />;
 };
@@ -67,6 +67,8 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   const ref = useRef<BottomSheetRefProps>(null);
   const { top: insetsTop } = useSafeAreaInsets();
   const [bSheetTop, setBSheetTop] = useState<number>(0.7 * height);
+
+  const [fromPoint, toPoint] = match ? [getPoint(match, "pickup"), getPoint(match, "deposit")] : [undefined, undefined];
 
   const mapBounds = useMemo(() => {
     if (!match) {
@@ -90,9 +92,9 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             !request &&
             match.liane.wayPoints.map((w, i) => {
               let type: "to" | "from" | "step";
-              if (i === 0) {
+              if (w.rallyingPoint.id === fromPoint!.id) {
                 type = "from";
-              } else if (i === match.liane.wayPoints.length - 1) {
+              } else if (w.rallyingPoint.id === toPoint!.id) {
                 type = "to";
               } else {
                 type = "step";
@@ -262,8 +264,8 @@ const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: str
                 text: "Annuler",
                 onPress: async () => {
                   //TODO
-                  await queryClient.invalidateQueries(LianeQueryKey);
-                  navigation.goBack();
+                  //await queryClient.invalidateQueries(LianeQueryKey);
+                  //navigation.goBack();
                 },
                 style: "default"
               }
@@ -338,8 +340,8 @@ const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: str
                 text: "Annuler",
                 onPress: async () => {
                   //TODO
-                  navigation.goBack();
-                  await queryClient.invalidateQueries(LianeQueryKey);
+                  //navigation.goBack();
+                  //await queryClient.invalidateQueries(LianeQueryKey);
                 },
                 style: "default"
               }
@@ -364,13 +366,14 @@ const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: str
   );
 };
 
-const toLianeMatch = (liane: Liane): LianeMatch => {
+const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
+  const m = liane.members.find(m => m.user.id === memberId)!;
   return {
     liane,
     match: {
       type: "Exact",
-      pickup: liane.wayPoints[0].rallyingPoint.id!,
-      deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
+      pickup: liane.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id!,
+      deposit: liane.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
     },
     freeSeatsCount: liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
   };

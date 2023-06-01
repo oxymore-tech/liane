@@ -96,7 +96,11 @@ export const DetailedLianeMatchView = ({
         )}
         {style === "step" && <View style={{ backgroundColor: AppColorPalettes.gray[400], width: 8, height: 8, borderRadius: 16, margin: 8 }} />}
         <AppText
-          style={[styles.mainWayPointLabel, style === "from" ? styles.fromLabel : styles.toLabel, { flexGrow: 1, flexShrink: 1, maxWidth: "70%" }]}>
+          style={[
+            styles.mainWayPointLabel,
+            style === "from" ? styles.fromLabel : style === "to" ? styles.toLabel : styles.overallFromLabel,
+            { flexGrow: 1, flexShrink: 1, maxWidth: "70%" }
+          ]}>
           {wayPoint.rallyingPoint.label}
         </AppText>
         <View style={{ flex: 1 }} />

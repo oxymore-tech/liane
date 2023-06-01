@@ -90,11 +90,12 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
       match.liane.departureTime,
       isCompatibleMatch ? match.match.wayPoints : match.liane.wayPoints
     );
-    return trip.wayPoints.slice(trip.departureIndex, trip.arrivalIndex + 1);
+    return trip.wayPoints; //.slice(trip.departureIndex, trip.arrivalIndex + 1);
   }, [fromPoint, match, toPoint]);
 
   const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.liane.id!], () => {
     const wp = [...(isSamePickup ? [] : [from!.location]), ...wayPoints.map(w => w.rallyingPoint.location), ...(isSameDeposit ? [] : [to!.location])];
+
     return services.routing.getRoute(wp);
   });
 

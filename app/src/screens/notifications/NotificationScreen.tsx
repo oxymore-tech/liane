@@ -12,6 +12,8 @@ import { useAppNavigation, getNotificationNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
 import { Notification } from "@/api/notification";
 import { capitalize } from "@/util/strings";
+import { UnionUtils } from "@/api";
+import { MemberAccepted, MemberHasLeft } from "@/api/event";
 
 export const NotificationQueryKey = "notification";
 
@@ -40,8 +42,10 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
             if (navigate) {
               navigate(navigation);
             }
-            await services.notification.markAsRead(item);
-            refresh();
+            if (!seen) {
+              await services.notification.markAsRead(item);
+              refresh();
+            }
           }}>
           <Row style={{ paddingHorizontal: 24 }}>
             <View style={{ justifyContent: "center", padding: 4 }}>
@@ -52,7 +56,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
               <AppIcon name={"message-square-outline"} />
             </Center>
             <Column style={{ justifyContent: "space-evenly", paddingVertical: 16, paddingHorizontal: 8, flexShrink: 1 }} spacing={2}>
-              <AppText style={{ flexGrow: 1, fontSize: 14, fontWeight: seen ? "normal" : "bold" }} numberOfLines={2}>
+              <AppText style={{ flexGrow: 1, fontSize: 14, fontWeight: seen ? "normal" : "bold" }} numberOfLines={4}>
                 {item.message}
               </AppText>
               <AppText style={{ color: AppColorPalettes.gray[500] }}>{datetime}</AppText>

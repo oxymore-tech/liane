@@ -1,6 +1,6 @@
 import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@/api";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -75,7 +75,7 @@ const AttachedLianeOverview = ({ liane, user }: { liane: Liane; user: User }) =>
 export const ChatScreen = () => {
   const { navigation, route } = useAppNavigation<"Chat">();
   const groupId = route.params.conversationId;
-  const attachedLiane: Liane | undefined = undefined; //route.params.liane;
+  const attachedLiane: Liane | undefined = route.params.liane;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -210,7 +210,7 @@ export const ChatScreen = () => {
             </View>
           )}
         </Row>
-        {attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />}
+        {/* TODO attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />*/}
         {conversation && <DebugIdView id={conversation.id!} />}
       </View>
 
@@ -243,12 +243,14 @@ export const ChatScreen = () => {
       </KeyboardAvoidingView>
       <SimpleModal visible={showMoreModal} setVisible={setShowMoreModal} backgroundColor={AppColors.white}>
         <Column>
-          <AppPressable style={{ paddingVertical: 12 }}>
+          {/* TODO (attachedLiane && user!.id !== attachedLiane.driver.user) && <AppPressable style={{ paddingVertical: 12 }} onPress={() => {
+            Linking.openURL(`tel:${attachedLiane.members.}`)
+          }}>
             <Row spacing={24} style={{ alignItems: "center" }}>
               <AppIcon name={"phone-call-outline"} />
               <AppText>Appeler le conducteur</AppText>
             </Row>
-          </AppPressable>
+          </AppPressable>*/}
           <AppPressable style={{ paddingVertical: 12 }}>
             <Row spacing={24} style={{ alignItems: "center" }}>
               <AppIcon name={"image-outline"} />

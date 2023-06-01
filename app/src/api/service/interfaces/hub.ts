@@ -48,7 +48,7 @@ export abstract class AbstractHubService implements ChatHubService {
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
-    console.debug("received msg", convId, message, this.currentConversationId);
+    console.debug("received : msg", convId, message, this.currentConversationId);
     if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
       await this.onReceiveMessageCallback(message);
     } else if (!this.unreadConversations.getValue().includes(convId)) {
@@ -66,9 +66,10 @@ export abstract class AbstractHubService implements ChatHubService {
   protected receiveNotification = async (notification: Notification) => {
     // Called on new notification
     if (__DEV__) {
-      console.log("received:", notification, this.notificationSubject);
+      console.debug("received : notification");
     }
     this.notificationSubject.next(notification);
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
   };
 
   protected receiveLatestMessages = async (messages: PaginatedResponse<ChatMessage>) => {
