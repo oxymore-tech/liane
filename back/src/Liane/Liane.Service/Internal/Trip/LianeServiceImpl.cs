@@ -175,22 +175,42 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public async Task<Api.Trip.Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<Api.User.User> member)
   {
-    var updated = await Mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id && l.Driver.User != member.Id,
-        Builders<LianeDb>.Update.PullFilter(l => l.Members, m => m.User == member.Id)
-        , new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
-    if (updated is null)
+    var toUpdate = await Mongo.GetCollection<LianeDb>()
+      .Find(l => l.Id == liane.Id)
+      .FirstOrDefaultAsync();
+
+    if (toUpdate is null)
     {
       throw ResourceNotFoundException.For(liane);
     }
 
-    if (!updated.Members.IsEmpty)
+    var foundMember = toUpdate.Members.Find(m => m.User == member.Id);
+
+    if (foundMember is null)
     {
-      return await MapEntity(updated);
+      return null;
     }
 
-    await Delete(liane);
-    return null;
+    if (toUpdate.Driver.User == foundMember.User)
+    {
+      return null;
+    }
+
+    var newMembers = toUpdate.Members.Remove(foundMember);
+
+    if (newMembers.IsEmpty)
+    {
+      await Delete(liane);
+      return null;
+    }
+
+    var update = (await GetTripUpdate(toUpdate.DepartureTime, toUpdate.Driver.User, newMembers))
+      .Pull(l => l.Members, foundMember)
+      .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount - foundMember.SeatCount);
+    await Mongo.GetCollection<LianeDb>()
+      .UpdateOneAsync(l => l.Id == liane.Id, update);
+
+    return await MapEntity(toUpdate with { Members = newMembers });
   }
 
   private async Task<ImmutableList<WayPoint>> GetWayPoints(DateTime departureTime, Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
