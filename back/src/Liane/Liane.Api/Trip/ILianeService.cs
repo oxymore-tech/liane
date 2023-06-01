@@ -27,7 +27,7 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false);
   Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime);
 
-  Task UpdateAllGeometries();
+  Task UpdateMissingWaypoints();
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
   Task UpdateFeedback(Ref<Liane> liane, Feedback feedback);
   public Task<ImmutableList<ClosestPickups>> GetNearestLinks(LatLng pos, DateTime dateTime, int radius = 30_000, int availableSeats = -1);

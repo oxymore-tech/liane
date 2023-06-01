@@ -1,9 +1,7 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
-using Liane.Api.User;
-using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -11,37 +9,24 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 4;
+  private const int Version = 5;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
+  private readonly ILianeService lianeService;
 
-  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
+  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger, ILianeService lianeService)
   {
     this.db = db;
     this.logger = logger;
+    this.lianeService = lianeService;
   }
 
-  private sealed record OldUserDb( string Id,
-    bool IsAdmin,
-    string Phone,
-    string? RefreshToken,
-    string? Salt,
-    string? Pseudo,
-    string? PushToken,
-    DateTime? CreatedAt,
-    DateTime? LastConnection,
-    UserInfo? UserInfo = null
-  ) : IIdentity;
   private async Task Migrate()
   {
-    await db.DropCollectionAsync("event");
-
-    await db.GetCollection<OldUserDb>("user")
-      .UpdateManyAsync(l => true,
-        Builders<OldUserDb>.Update.Unset(l => l.Pseudo )
-      );
-
+    await db.GetCollection<LianeDb>()
+      .DeleteManyAsync(l => l.DepartureTime < DateTime.UtcNow.AddMonths(-1));
+    await lianeService.UpdateMissingWaypoints();
   }
 
   public async Task Execute()

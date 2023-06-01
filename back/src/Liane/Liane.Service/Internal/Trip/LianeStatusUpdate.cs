@@ -65,7 +65,7 @@ public sealed class LianeStatusUpdate : CronJobService
       .ToListAsync();
 
     var finishedLianes = lianes
-      .Where(l => l.WayPoints is null || l.WayPoints.Last().Eta < limit)
+      .Where(l => l.WayPoints.Last().Eta < limit)
       .ToImmutableList();
 
     if (finishedLianes.IsEmpty)
@@ -106,11 +106,6 @@ public sealed class LianeStatusUpdate : CronJobService
         lianeUpdates.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id), Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)));
       }
 
-      if (liane.WayPoints is null)
-      {
-        return;
-      }
-
       foreach (var wayPoint in liane.WayPoints.Where(w => w.Eta > from && w.Eta <= to))
       {
         var members = await GetRecipients(liane, wayPoint);
@@ -135,7 +130,7 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private static Notification.Reminder CreateReminder(DateTime now, string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
   {
-    return new Notification.Reminder(null, null, now, to.Select(t => new Recipient(t, null)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder);
+    return new Notification.Reminder(null, null, now, to.Select(t => new Recipient(t)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder);
   }
 
   private async Task<ImmutableList<Ref<Api.User.User>>> GetRecipients(LianeDb liane, WayPointDb wayPoint)

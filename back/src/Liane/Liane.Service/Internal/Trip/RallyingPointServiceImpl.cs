@@ -112,7 +112,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
         foreach (var rp in g.Skip(1))
         {
           var i1 = dict[rp.Id!];
-          if (selected.All(rp1 => (table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500)))
+          if (selected.All(rp1 => table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500))
           {
             selected.Add(rp);
           }
