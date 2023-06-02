@@ -40,19 +40,18 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
   public async Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
   {
-    
     if (memoryCache.TryGetValue(reminder, out var n))
     {
       return n as Notification;
     }
 
     var notification = new Notification.Reminder(
-        null, null, DateTime.UtcNow, 
-        to.Select(t => new Recipient(t, null)).ToImmutableList(), 
-        ImmutableHashSet<Answer>.Empty, 
-        title, 
-        message, 
-        reminder);
+      null, null, DateTime.UtcNow,
+      to.Select(t => new Recipient(t, null)).ToImmutableList(),
+      ImmutableHashSet<Answer>.Empty,
+      title,
+      message,
+      reminder);
     memoryCache.Set(reminder, notification, TimeSpan.FromMinutes(10));
     await Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));
     return notification;
@@ -66,9 +65,10 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       {
         return Task.CompletedTask;
       }
+
       memoryCache.Set(notification.Payload, notification, TimeSpan.FromMinutes(10));
       return Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));
-    }));   
+    }));
   }
 
   public new async Task<Notification> Create(Notification obj)
@@ -86,18 +86,18 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
     return created;
   }
-  
+
   public async Task<PaginatedResponse<Notification>> List(NotificationFilter notificationFilter, Pagination pagination)
   {
     var filter = Builders<Notification>.Filter.Empty;
     if (notificationFilter.Recipient is not null)
     {
-      filter &= Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient);
+      filter &= Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.SeenAt == null);
     }
 
     if (notificationFilter.Sender is not null)
     {
-      filter &= Builders<Notification>.Filter.Eq(r => r.Sender, notificationFilter.Sender);
+      filter &= Builders<Notification>.Filter.Eq(r => r.CreatedBy, notificationFilter.Sender);
     }
 
     if (notificationFilter.PayloadType is not null)
@@ -110,7 +110,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       filter &= Builders<Notification>.Filter.Eq("payload.liane", notificationFilter.Liane);
     }
 
-    return await Mongo.Paginate(pagination, r => r.SentAt, filter, false);
+    return await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);
   }
 
   public Task CleanJoinLianeRequests(ImmutableList<Ref<Api.Trip.Liane>> lianes)
@@ -151,12 +151,6 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     var e = await Get(id);
 
     var userId = currentContext.CurrentUser().Id;
-    
-    if (e.Answers.IsEmpty && e.Recipients.Where(r => r.User.Id != userId).All(r => r.SeenAt is not null))
-    {
-      await Delete(id);
-      return;
-    }
 
     var memberIndex = e.Recipients.FindIndex(r => r.User.Id == userId);
     await Mongo.GetCollection<Notification>()

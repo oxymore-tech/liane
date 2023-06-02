@@ -45,7 +45,7 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(notifications.Data.Count, 1);
 
     var notification = notifications.Data[0];
-    Assert.AreEqual(userB.Id, notification.Sender!.Id);
+    Assert.AreEqual(userB.Id, notification.CreatedBy!.Id);
 
     await notificationService.Answer(notification.Id!, Answer.Accept);
 

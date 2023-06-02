@@ -19,11 +19,11 @@ public enum Answer
 }
 
 [Union]
-public abstract record Notification : IIdentity
+public abstract record Notification : IEntity
 {
   public abstract string? Id { get; init; }
-  public abstract Ref<User.User>? Sender { get; init; }
-  public abstract DateTime SentAt { get; init; }
+  public abstract Ref<User.User>? CreatedBy { get; init; }
+  public abstract DateTime? CreatedAt { get; init; }
   public abstract ImmutableList<Recipient> Recipients { get; init; }
   public abstract ImmutableHashSet<Answer> Answers { get; init; }
   public abstract string Title { get; init; }
@@ -31,45 +31,49 @@ public abstract record Notification : IIdentity
 
   public sealed record Info(
     string? Id,
-    Ref<User.User>? Sender,
-    DateTime SentAt,
+    Ref<User.User>? CreatedBy,
+    DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
     string Title,
-    string Message
+    string Message,
+    DateTime? SeenAt = null
   ) : Notification;
 
   public sealed record NewMessage(
     string? Id,
-    Ref<User.User>? Sender,
-    DateTime SentAt,
+    Ref<User.User>? CreatedBy,
+    DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
     string Title,
     string Message,
-    Ref<ConversationGroup> Conversation
+    Ref<ConversationGroup> Conversation,
+    DateTime? SeenAt = null
   ) : Notification;
   
   public sealed record Reminder(
     string? Id,
-    Ref<User.User>? Sender,
-    DateTime SentAt,
+    Ref<User.User>? CreatedBy,
+    DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
     string Title,
     string Message,
-    Api.Event.Reminder Payload
+    Api.Event.Reminder Payload,
+    DateTime? SeenAt = null
   ) : Notification;
 
   public sealed record Event(
     string? Id,
-    Ref<User.User>? Sender,
-    DateTime SentAt,
+    Ref<User.User>? CreatedBy,
+    DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
     string Title,
     string Message,
-    LianeEvent Payload
+    LianeEvent Payload,
+    DateTime? SeenAt = null
   ) : Notification;
 }
 

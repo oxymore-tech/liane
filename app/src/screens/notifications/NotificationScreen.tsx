@@ -12,8 +12,6 @@ import { useAppNavigation, getNotificationNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
 import { Notification } from "@/api/notification";
 import { capitalize } from "@/util/strings";
-import { UnionUtils } from "@/api";
-import { MemberAccepted, MemberHasLeft } from "@/api/event";
 
 export const NotificationQueryKey = "notification";
 
@@ -33,7 +31,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
 
     const renderItem = ({ item }: { item: Notification }) => {
       const seen = !!item.recipients.find(r => r.user === user?.id)?.seenAt;
-      const datetime = capitalize(toRelativeTimeString(new Date(item.sentAt!)));
+      const datetime = capitalize(toRelativeTimeString(new Date(item.createdAt!)));
       const navigate = getNotificationNavigation(item);
       return (
         <AppPressable

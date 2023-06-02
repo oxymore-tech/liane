@@ -51,8 +51,10 @@ export abstract class AbstractHubService implements ChatHubService {
     console.debug("received : msg", convId, message, this.currentConversationId);
     if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
       await this.onReceiveMessageCallback(message);
+      return true;
     } else if (!this.unreadConversations.getValue().includes(convId)) {
       this.unreadConversations.next([...this.unreadConversations.getValue(), convId]);
+      return false;
     }
   };
 

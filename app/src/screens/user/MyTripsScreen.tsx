@@ -10,7 +10,7 @@ import { AppContext } from "@/components/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { TripListView } from "@/screens/user/TripListView";
 import { UnionUtils } from "@/api";
-import { MemberAccepted, MemberHasLeft, MemberRejected } from "@/api/event";
+import { Event } from "@/api/notification";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
@@ -22,16 +22,8 @@ const MyTripsScreen = () => {
   ]);
   useEffect(() => {
     const s = services.chatHub.subscribeToNotifications(async n => {
-      if (n.payload) {
-        if (
-          UnionUtils.isInstanceOf<MemberHasLeft>(n.payload, "MemberHasLeft") ||
-          UnionUtils.isInstanceOf<MemberAccepted>(n.payload, "MemberAccepted")
-        ) {
-          await queryClient.invalidateQueries(LianeQueryKey);
-        }
-        if (UnionUtils.isInstanceOf<MemberRejected>(n.payload, "MemberRejected")) {
-          await queryClient.invalidateQueries(JoinRequestsQueryKey);
-        }
+      if (UnionUtils.isInstanceOf<Event>(n, "Event")) {
+        await queryClient.invalidateQueries(LianeQueryKey);
       }
     });
     return () => s.unsubscribe();
@@ -102,7 +94,7 @@ const MyTripsScreen = () => {
 
       <TripListView
         data={data}
-        refreshing={isFetching}
+        isFetching={isFetching}
         onRefresh={() => {
           queriesData.forEach(q => q.refetch());
         }}

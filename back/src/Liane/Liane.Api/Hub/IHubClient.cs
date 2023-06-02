@@ -12,7 +12,7 @@ public interface IHubClient
 
   Task ReceiveNotification(Notification notification);
 
-  Task ReceiveMessage(string conversationId, ChatMessage message);
+  Task<bool> ReceiveMessage(string conversationId, ChatMessage message);
 
   Task ReceiveLatestMessages(PaginatedResponse<ChatMessage> messages);
 

@@ -84,6 +84,7 @@ export const ChatScreen = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
   const [showMoreModal, setShowMoreModal] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const membersNames = useMemo(
     () =>
@@ -148,7 +149,9 @@ export const ChatScreen = () => {
       style={{ alignSelf: "flex-end" }}
       onPress={async () => {
         if (inputValue && inputValue.length > 0) {
+          setIsSending(true);
           await services.chatHub.send({ text: inputValue });
+          setIsSending(false);
         }
       }}>
       <AppIcon name={"navigation-2-outline"} color={AppColors.blue} />
@@ -237,7 +240,13 @@ export const ChatScreen = () => {
               foregroundColor={AppColors.blue}
             />
 
-            <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
+            <AppExpandingTextInput
+              multiline={true}
+              trailing={!isSending ? sendButton : <ActivityIndicator />}
+              onChangeText={setInputValue}
+              value={inputValue}
+              clearButtonMode="always"
+            />
           </Row>
         </View>
       </KeyboardAvoidingView>

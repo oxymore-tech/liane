@@ -1,7 +1,7 @@
-import { Liane, RallyingPoint, Ref, User, UTCDateTime } from "@/api/index";
+import { ConversationGroup, Liane, RallyingPoint, Ref, User, UTCDateTime } from "@/api/index";
 import { LianeEvent } from "@/api/event";
 
-export type Notification = Info | Reminder | Event;
+export type Notification = (Info | Reminder | Event | NewMessage) & AbstractNotification;
 
 export enum Answer {
   Accept = "Accept",
@@ -13,41 +13,40 @@ export type Recipient = Readonly<{
   seenAt?: UTCDateTime;
 }>;
 
-export type Info = Readonly<{
-  type: "Info";
+type AbstractNotification = Readonly<{
+  type: string;
   id?: string;
-  sender?: Ref<User>;
-  sentAt: UTCDateTime;
+  createdBy: Ref<User>;
+  createdAt: UTCDateTime;
   recipients: Recipient[];
   answers: Answer[];
   title: string;
   message: string;
 }>;
 
+export type Info = Readonly<{
+  type: "Info";
+}> &
+  AbstractNotification;
+
 export type Reminder = Readonly<{
   type: "Reminder";
-  id?: string;
-  sender?: Ref<User>;
-  sentAt: UTCDateTime;
-  recipients: Recipient[];
-  answers: Answer[];
-  title: string;
-  message: string;
   payload: {
     liane: Ref<Liane>;
     rallyingPoint: RallyingPoint;
     at: UTCDateTime;
   };
-}>;
+}> &
+  AbstractNotification;
+
+export type NewMessage = Readonly<{
+  type: "NewMessage";
+  conversation: Ref<ConversationGroup>;
+}> &
+  AbstractNotification;
 
 export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
   type: "Event";
-  id?: string;
-  sender?: Ref<User>;
-  sentAt: UTCDateTime;
-  recipients: Recipient[];
-  answers: Answer[];
-  title: string;
-  message: string;
   payload: T;
-}>;
+}> &
+  AbstractNotification;
