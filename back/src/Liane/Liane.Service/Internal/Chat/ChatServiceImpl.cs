@@ -28,6 +28,25 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     this.pushService = pushService;
   }
 
+  public async Task AddMember(Ref<ConversationGroup> id, Ref<Api.User.User> user)
+  {
+    await Mongo.GetCollection<ConversationGroup>()
+      .UpdateOneAsync(g => g.Id == id.Id,
+        Builders<ConversationGroup>.Update.Push(g => g.Members, new GroupMemberInfo(user, DateTime.UtcNow))
+      );
+  }
+
+  public async Task<bool> RemoveMember(Ref<ConversationGroup> id, Ref<Api.User.User> user)
+  {
+    await Mongo.GetCollection<ConversationGroup>()
+      .UpdateOneAsync(g => g.Id == id.Id,
+        Builders<ConversationGroup>.Update.PullFilter(g => g.Members, m => m.User.Id == user.Id)
+      );
+    var deleteOneAsync = await Mongo.GetCollection<ConversationGroup>()
+      .DeleteOneAsync(g => g.Id == id.Id && g.Members.Count <= 1);
+    return deleteOneAsync.DeletedCount > 0;
+  }
+
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
   {
     // Retrieve conversation and user's membership data

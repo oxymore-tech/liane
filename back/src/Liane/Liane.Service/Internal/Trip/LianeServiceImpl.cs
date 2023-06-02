@@ -163,6 +163,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       }, DateTime.Now), toUpdate.CreatedBy!);
       updateDef = updateDef.Set<LianeDb, Ref<ConversationGroup>?>(l => l.Conversation, conv.Id!);
     }
+    else
+    {
+      await chatService.AddMember(toUpdate.Conversation, newMember.User);
+    }
 
     var updated = await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id,
@@ -198,6 +202,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var newMembers = toUpdate.Members.Remove(foundMember);
 
+    var groupDeleted = await chatService.RemoveMember(toUpdate.Conversation!, member);
+
     if (newMembers.IsEmpty)
     {
       await Delete(liane);
@@ -207,6 +213,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var update = (await GetTripUpdate(toUpdate.DepartureTime, toUpdate.Driver.User, newMembers))
       .Pull(l => l.Members, foundMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount - foundMember.SeatCount);
+    if (groupDeleted)
+    {
+      update = update.Set(l => l.Conversation, null);
+    }
+
     await Mongo.GetCollection<LianeDb>()
       .UpdateOneAsync(l => l.Id == liane.Id, update);
 
