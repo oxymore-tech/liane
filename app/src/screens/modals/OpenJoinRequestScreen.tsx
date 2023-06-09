@@ -19,7 +19,7 @@ import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewM
 import { useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 import { Answer } from "@/api/notification";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -33,6 +33,7 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
     await services.chatHub.postAnswer(request.id!, Answer.Accept);
     await queryClient.invalidateQueries(NotificationQueryKey);
     await queryClient.invalidateQueries(LianeQueryKey);
+    await queryClient.invalidateQueries(JoinRequestsQueryKey);
     navigation.goBack();
   };
   const refuseRequest = async () => {

@@ -43,6 +43,8 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const [state] = useActor(machine);
   const { status } = useContext(AppContext);
 
+  console.log("moving", movingDisplay);
+
   const backHandler = () => {
     if (state.can("BACK")) {
       // handle it

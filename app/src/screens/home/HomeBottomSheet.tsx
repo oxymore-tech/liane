@@ -69,7 +69,7 @@ export const HomeBottomSheetContainer = (
   } else {
     stops = [0.35, 1];
     paddingTop = 72;
-    initialIndex = 0;
+    initialIndex = 1;
   }
 
   return (

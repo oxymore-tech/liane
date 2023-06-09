@@ -51,6 +51,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
+    // @ts-ignore
     navigation.navigate("Home", { screen: "Mes trajets" });
   };
   const headerDate = (

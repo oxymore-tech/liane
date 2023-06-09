@@ -25,7 +25,7 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
 
   return (
     <Animated.View style={styles.page} entering={FadeIn}>
-      <AppText style={{ padding: 16, fontWeight: "bold" }}>Trajets récents</AppText>
+      <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Trajets récents</AppText>
 
       {recentTrips.length === 0 && <AppText style={{ padding: 16, alignSelf: "center", fontStyle: "italic" }}>Aucun trajet récent</AppText>}
       <FlatList

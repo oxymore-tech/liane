@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import AppMapView, { LianeMatchRouteLayer, WayPointDisplay } from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
@@ -6,7 +6,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView } from "@/screens/detail/Components";
-import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils } from "@/api";
+import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, WayPoint } from "@/api";
 import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatDate, formatMonthDay } from "@/api/i18n";
@@ -28,6 +28,7 @@ import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelect
 import { showLocation } from "react-native-map-link";
 import { AppIcon } from "@/components/base/AppIcon";
 import { DebugIdView } from "@/components/base/DebugIdView";
+import { UserPicture } from "@/components/UserPicture";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -393,6 +394,82 @@ const LianeStatusRow = ({ liane }: { liane: LianeMatch }) => {
     </View>
   );
 };
+
+const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; liane: Liane }) => {
+  const lianeStatus = getLianeStatus(liane);
+  const { user } = useContext(AppContext);
+  const lianeMember = liane.members.find(m => m.user.id === user!.id)!;
+
+  const isDriver = liane.driver.user === user?.id;
+  const started = lianeStatus === "Started" || lianeStatus === "StartingSoon";
+  //const nextPoint = isDriver ? liane.wayPoints.find(w => new Date(w.eta) > new Date()) : (lianeMember.);
+  const fromPoint = liane.wayPoints.findIndex(w => w.rallyingPoint.id === lianeMember.from);
+
+  const getNextPoint = useCallback(() => {
+    const now = new Date();
+    if (isDriver) {
+      return liane.wayPoints.find(w => new Date(w.eta) > now);
+    } else {
+      if (new Date(liane.wayPoints[fromPoint].eta) > now) {
+        return liane.wayPoints[fromPoint];
+      }
+    }
+    return null;
+  }, [fromPoint, isDriver, liane.wayPoints]);
+
+  let nextPoint = getNextPoint();
+  nextPoint = nextPoint?.rallyingPoint.id === wayPoint.rallyingPoint.id ? nextPoint : null;
+
+  return (
+    <Column>
+      {started && nextPoint && (
+        <Pressable
+          onPress={() => {
+            showLocation({
+              latitude: nextPoint!.rallyingPoint.location.lat,
+              longitude: nextPoint!.rallyingPoint.location.lng,
+              title: nextPoint!.rallyingPoint.label,
+              dialogTitle: "Se rendre au point de rendez-vous",
+              googleForceLatLon: true,
+              cancelText: "Annuler",
+              appsWhiteList: ["google-maps", "apple-maps", "waze"],
+              directionsMode: "walk"
+            });
+          }}>
+          <Row spacing={8} style={{ marginVertical: 4 }}>
+            <AppIcon name={"navigation-2-outline"} size={16} color={AppColors.blue} />
+            <AppText style={{ textDecorationLine: "underline", color: AppColors.blue, fontWeight: "500" }}>Démarrer la navigation</AppText>
+          </Row>
+        </Pressable>
+      )}
+      {lianeStatus === "NotStarted" &&
+        (isDriver ||
+          liane.wayPoints[fromPoint].rallyingPoint.id === wayPoint.rallyingPoint.id ||
+          liane.wayPoints.find(w => w.rallyingPoint.id === lianeMember.to)!.rallyingPoint.id === wayPoint.rallyingPoint.id) && (
+          <Pressable>
+            <Row spacing={8} style={{ marginVertical: 4 }}>
+              <AppIcon name={"edit-outline"} size={16} color={AppColorPalettes.gray[500]} />
+              <AppText style={{ textDecorationLine: "underline", color: AppColorPalettes.gray[500], fontWeight: "500" }}>
+                Changer de point de rendez-vous
+              </AppText>
+            </Row>
+          </Pressable>
+        )}
+
+      <Row style={{ position: "relative", left: 12 * (liane.members.length - 1), justifyContent: "flex-end" }}>
+        {liane.members
+          .filter(m => m.from === wayPoint.rallyingPoint.id)
+          .map((m, i) => {
+            return (
+              <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
+                <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
+              </View>
+            );
+          })}
+      </Row>
+    </Column>
+  );
+};
 const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRequest?: boolean }) => {
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");
@@ -407,8 +484,6 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
   const tripDuration = formatDuration(getTotalDuration(currentTrip));
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
-  const lianeStatus = getLianeStatus(liane.liane);
-
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
   return (
@@ -417,50 +492,7 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
         <DetailedLianeMatchView
           departureTime={liane.liane.departureTime}
           wayPoints={wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1)}
-          renderWayPointAction={wayPoint => {
-            if (isRequest) {
-              return undefined;
-            }
-            if (lianeStatus === "Started" || lianeStatus === "StartingSoon") {
-              const nextPoint = liane.liane.wayPoints[0]; //TODO
-              if (wayPoint.rallyingPoint.id !== nextPoint.rallyingPoint.id) {
-                return undefined;
-              }
-              return (
-                <Pressable
-                  onPress={() => {
-                    showLocation({
-                      latitude: nextPoint.rallyingPoint.location.lat,
-                      longitude: nextPoint.rallyingPoint.location.lng,
-                      title: nextPoint.rallyingPoint.label,
-                      dialogTitle: "Se rendre au point de rendez-vous",
-                      googleForceLatLon: true,
-                      cancelText: "Annuler",
-                      appsWhiteList: ["google-maps", "apple-maps", "waze"],
-                      directionsMode: "walk"
-                    });
-                  }}>
-                  <Row spacing={8} style={{ marginVertical: 4 }}>
-                    <AppIcon name={"navigation-2-outline"} size={16} color={AppColors.blue} />
-                    <AppText style={{ textDecorationLine: "underline", color: AppColors.blue, fontWeight: "500" }}>Démarrer la navigation</AppText>
-                  </Row>
-                </Pressable>
-              );
-            } else if (lianeStatus === "NotStarted") {
-              return (
-                <Pressable>
-                  <Row spacing={8} style={{ marginVertical: 4 }}>
-                    <AppIcon name={"edit-outline"} size={16} color={AppColorPalettes.gray[500]} />
-                    <AppText style={{ textDecorationLine: "underline", color: AppColorPalettes.gray[500], fontWeight: "500" }}>
-                      Changer de point de rendez-vous
-                    </AppText>
-                  </Row>
-                </Pressable>
-              );
-            }
-
-            return undefined;
-          }}
+          renderWayPointAction={wayPoint => (isRequest ? undefined : <WayPointActionView wayPoint={wayPoint} liane={liane.liane} />)}
         />
       </Column>
       <SectionSeparator />
