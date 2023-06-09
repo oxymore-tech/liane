@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
 using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Mock;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
@@ -82,40 +81,39 @@ public sealed class LianeController : ControllerBase
     await lianeService.UpdateFeedback(id, feedback);
     return NoContent();
   }
-
   
   [HttpGet("display")] // Rename to filter ? + return FeatureCollection instead of Segments ?
-  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
+  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after, CancellationToken cancellationToken)
   {
     var from = new LatLng(lat, lng);
     var to = new LatLng(lat2, lng2);
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return await lianeService.Display(from, to, dateTime);
+    return await lianeService.Display(from, to, dateTime, cancellationToken: cancellationToken);
   }
 
   [HttpGet("display/geojson")]
-  public async Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after)
+  public async Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after, CancellationToken cancellationToken)
   {
+    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
     var from = new LatLng(lat, lng);
     var to = new LatLng(lat2, lng2);
     var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return await lianeService.DisplayGeoJson(from, to, dateTime);
+    return await lianeService.DisplayGeoJson(from, to, dateTime, cancellationToken);
   }
 
   [HttpPost("match")]
   [DebugRequest]
-  public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
-    return lianeService.Match(filter, pagination);
+    return lianeService.Match(filter, pagination, cancellationToken);
   }
 
   [HttpPost("match/geojson")] //TODO use query option
   [DebugRequest]
-  public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination)
+  public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
-    return lianeService.MatchWithDisplay(filter, pagination);
+    return lianeService.MatchWithDisplay(filter, pagination, cancellationToken);
   }
-
 
   [HttpGet("links")]
   public async Task<ImmutableList<ClosestPickups>> GetNear([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] int? radius, [FromQuery] long? after = null)
@@ -127,9 +125,9 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter)
+  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
   {
-    return lianeService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination);
+    return lianeService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
   }
 
   [HttpPost("")]
@@ -140,9 +138,9 @@ public sealed class LianeController : ControllerBase
 
   [HttpGet("all")]
   [RequiresAdminAuth]
-  public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
-    return lianeService.List(new LianeFilter(), pagination);
+    return lianeService.List(new LianeFilter(), pagination, cancellationToken);
   }
 
   [HttpPost("generate")]

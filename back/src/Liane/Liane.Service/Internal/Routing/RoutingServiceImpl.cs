@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -26,12 +27,12 @@ public sealed class RoutingServiceImpl : IRoutingService
     this.logger = logger;
   }
 
-  public async Task<Route> GetRoute(RoutingQuery query)
+  public async Task<Route> GetRoute(RoutingQuery query, CancellationToken cancellationToken = default)
   {
-    return await GetRoute(query.Coordinates);
+    return await GetRoute(query.Coordinates, cancellationToken);
   }
 
-  public async Task<Route> GetRoute(IEnumerable<LatLng> coordinates)
+  public async Task<Route> GetRoute(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default)
   {
     var routeResponse = await osrmService.Route(coordinates, overview: "full");
 

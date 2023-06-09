@@ -1,20 +1,30 @@
 using System.Threading.Tasks;
 using Liane.Api.Util.Exception;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Exception;
 
-public class ExceptionFilter : IAsyncExceptionFilter
+public sealed class ExceptionFilter : IAsyncExceptionFilter
 {
-    public Task OnExceptionAsync(ExceptionContext context)
-    {
-        var objectResult = HttpExceptionMapping.Map(context.Exception, context.ModelState);
-        if (objectResult != null)
-        {
-            context.Result = objectResult;
-            context.ExceptionHandled = true;
-        }
+  private readonly ILogger<ExceptionFilter> logger;
 
-        return Task.CompletedTask;
+  public ExceptionFilter(ILogger<ExceptionFilter> logger)
+  {
+    this.logger = logger;
+  }
+
+  public Task OnExceptionAsync(ExceptionContext context)
+  {
+    var objectResult = HttpExceptionMapping.Map(context.Exception, context.ModelState, logger: logger);
+    if (objectResult == null)
+    {
+      return Task.CompletedTask;
     }
+
+    context.Result = objectResult;
+    context.ExceptionHandled = true;
+
+    return Task.CompletedTask;
+  }
 }

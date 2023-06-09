@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
@@ -11,7 +12,7 @@ namespace Liane.Api.Trip;
 
 public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 {
-  Task<PaginatedResponse<Liane>> List(LianeFilter filter, Pagination pagination);
+  Task<PaginatedResponse<Liane>> List(LianeFilter filter, Pagination pagination, CancellationToken cancellationToken = default);
   Task<ImmutableDictionary<Appointment, ImmutableList<Ref<User.User>>>> GetNextAppointments(DateTime from, TimeSpan window);
 
   Task<Liane> AddMember(Ref<Liane> liane, LianeMember newMember);
@@ -19,13 +20,13 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 
   Task<Match?> GetNewTrip(Ref<Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
 
-  Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination);
-  Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination);
+  Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
+  Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
 
   Task<ImmutableList<ClosestPickups>> GetDestinations(Ref<RallyingPoint> pickup, DateTime dateTime, int availableSeats = -1); //TODO remove
 
-  Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false);
-  Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime);
+  Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false, CancellationToken cancellationToken = default);
+  Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime, CancellationToken cancellationToken = default);
 
   Task UpdateMissingWaypoints();
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);

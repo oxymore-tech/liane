@@ -2,62 +2,68 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Logging;
 
 namespace Liane.Api.Util.Exception;
 
 public static class HttpExceptionMapping
 {
-    public static System.Exception Map(HttpStatusCode? code, string responseContent)
+  public static System.Exception Map(HttpStatusCode? code, string responseContent)
+  {
+    // ReSharper disable once SwitchStatementMissingSomeCases
+    switch (code)
     {
-        // ReSharper disable once SwitchStatementMissingSomeCases
-        switch (code)
-        {
-            case HttpStatusCode.NotFound:
-                return new ResourceNotFoundException(responseContent);
-            case HttpStatusCode.Unauthorized:
-                return new UnauthorizedAccessException(responseContent);
-            case HttpStatusCode.Forbidden:
-                return new ForbiddenException();
-            case HttpStatusCode.ExpectationFailed:
-                return new ExpectationFailedException(responseContent);
-        }
-
-        return new HttpRequestException($"{code} : {responseContent}");
+      case HttpStatusCode.NotFound:
+        return new ResourceNotFoundException(responseContent);
+      case HttpStatusCode.Unauthorized:
+        return new UnauthorizedAccessException(responseContent);
+      case HttpStatusCode.Forbidden:
+        return new ForbiddenException();
+      case HttpStatusCode.ExpectationFailed:
+        return new ExpectationFailedException(responseContent);
     }
 
-    public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null)
+    return new HttpRequestException($"{code} : {responseContent}");
+  }
+
+  public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null, ILogger? logger = null)
+  {
+    switch (exception)
     {
-        switch (exception)
-        {
-            case ValidationException e:
-            {
-                var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
-                foreach (var (field, message) in e.Errors) errors.AddModelError(field, message);
+      case TaskCanceledException e:
+        logger?.LogInformation("Request canceled");
+        return new BadRequestObjectResult("Request canceled");
 
-                var validationErrorResponse = new Dictionary<string, object> {["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred."};
-                return new BadRequestObjectResult(validationErrorResponse);
-            }
+      case ValidationException e:
+      {
+        var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
+        foreach (var (field, message) in e.Errors) errors.AddModelError(field, message);
 
-            case ResourceNotFoundException e:
-                return new NotFoundObjectResult(e.Message);
+        var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred." };
+        return new BadRequestObjectResult(validationErrorResponse);
+      }
 
-            case UnauthorizedAccessException _:
-                return new UnauthorizedResult();
+      case ResourceNotFoundException e:
+        return new NotFoundObjectResult(e.Message);
 
-            case ForbiddenException e:
-                return Result(e.Message, HttpStatusCode.Forbidden);
+      case UnauthorizedAccessException _:
+        return new UnauthorizedResult();
 
-            case ExpectationFailedException e:
-                return Result(e.Message, HttpStatusCode.ExpectationFailed);
-        }
+      case ForbiddenException e:
+        return Result(e.Message, HttpStatusCode.Forbidden);
 
-        return null;
+      case ExpectationFailedException e:
+        return Result(e.Message, HttpStatusCode.ExpectationFailed);
     }
 
-    private static ObjectResult Result(string message, HttpStatusCode code)
-    {
-        return new ObjectResult(message) {StatusCode = (int) code};
-    }
+    return null;
+  }
+
+  private static ObjectResult Result(string message, HttpStatusCode code)
+  {
+    return new ObjectResult(message) { StatusCode = (int)code };
+  }
 }

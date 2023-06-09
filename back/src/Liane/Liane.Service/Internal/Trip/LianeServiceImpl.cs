@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
@@ -55,16 +56,16 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     this.userService = userService;
   }
 
-  public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination)
+  public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
   {
     var from = await rallyingPointService.Get(filter.From);
     var to = await rallyingPointService.Get(filter.To);
 
-    var targetRoute = Simplifier.Simplify(await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location)));
+    var targetRoute = Simplifier.Simplify(await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location), cancellationToken));
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(BuilderLianeFilter(targetRoute, filter.TargetTime, filter.AvailableSeats))
-      .SelectAsync(l => MatchLiane(l, filter, targetRoute));
+      .SelectAsync(l => MatchLiane(l, filter, targetRoute), cancellationToken: cancellationToken);
 
     Cursor? nextCursor = null; //TODO
     return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor, lianes
@@ -74,17 +75,17 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ToImmutableList());
   }
 
-  public async Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination)
+  public async Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
   {
-    var matches = await Match(filter, pagination);
+    var matches = await Match(filter, pagination, cancellationToken);
     var segments = await GetLianeSegments(matches.Data.Select(m => m.Liane));
     return new LianeMatchDisplay(new FeatureCollection(segments.ToFeatures().ToList()), matches.Data);
   }
 
-  public async Task<PaginatedResponse<Api.Trip.Liane>> List(LianeFilter lianeFilter, Pagination pagination)
+  public async Task<PaginatedResponse<Api.Trip.Liane>> List(LianeFilter lianeFilter, Pagination pagination, CancellationToken cancellationToken = default)
   {
     var filter = BuildFilter(lianeFilter);
-    var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter);
+    var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
     if (lianeFilter is { ForCurrentUser: true, States.Length: > 0 })
     {
       // Return with user's version of liane state 
@@ -402,9 +403,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     throw new ForbiddenException();
   }
 
-  public async Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime)
+  public async Task<FeatureCollection> DisplayGeoJson(LatLng pos, LatLng pos2, DateTime dateTime, CancellationToken cancellationToken = default)
   {
-    var displayed = await Display(pos, pos2, dateTime, true);
+    var displayed = await Display(pos, pos2, dateTime, true, cancellationToken);
 
     var lianeFeatures = displayed.Segments.ToFeatures();
 
@@ -420,7 +421,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return new FeatureCollection(lianeFeatures.Concat(rallyingPointsFeatures).ToList());
   }
 
-  public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false)
+  public async Task<LianeDisplay> Display(LatLng pos, LatLng pos2, DateTime dateTime, bool includeLianes = false, CancellationToken cancellationToken = default)
   {
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, dateTime)
                  & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, dateTime.AddHours(24))
@@ -432,8 +433,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var lianes = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
-      .ToEnumerable()
-      .SelectAsync(MapEntity, parallel: true);
+      .SelectAsync(MapEntity, parallel: true, cancellationToken: cancellationToken);
     timer.Stop();
     logger.LogDebug("Fetching {Count} Liane objects : {Elapsed}", lianes.Count, timer.Elapsed);
     var lianeSegments = await GetLianeSegments(lianes);

@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Liane.Api.Routing;
 
 public interface IRoutingService
 {
-  Task<Route> GetRoute(RoutingQuery routingQuery);
-  Task<Route> GetRoute(IEnumerable<LatLng> coordinates);
+  Task<Route> GetRoute(RoutingQuery routingQuery, CancellationToken cancellationToken = default);
+  Task<Route> GetRoute(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default);
 
   Task<ImmutableList<LatLng>> GetSimplifiedRoute(IEnumerable<LatLng> coordinates);
 

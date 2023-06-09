@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
@@ -58,7 +59,8 @@ public static class MongoDatabaseExtensions
     Pagination pagination,
     Expression<Func<TData, object?>> paginationField,
     FilterDefinition<TData> baseFilter,
-    bool? sortAsc = null
+    bool? sortAsc = null,
+    CancellationToken cancellationToken = default
   ) where TData : IIdentity
   {
     var effectiveSortAsc = sortAsc ?? pagination.SortAsc;
@@ -75,8 +77,8 @@ public static class MongoDatabaseExtensions
     var find = collection.Find(filter)
       .Sort(sort)
       .Limit(pagination.Limit + 1);
-    var total = await find.CountDocumentsAsync();
-    var result = await find.ToListAsync();
+    var total = await find.CountDocumentsAsync(cancellationToken);
+    var result = await find.ToListAsync(cancellationToken: cancellationToken);
 
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
@@ -88,12 +90,13 @@ public static class MongoDatabaseExtensions
   private static FilterDefinition<TData> CreatePaginationFilter<TData>(Cursor cursor, bool sortAsc, Expression<Func<TData, object?>> indexedField)
     where TData : IIdentity
   {
+    
     return cursor.ToFilter(sortAsc, indexedField);
   }
 
-  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer, bool parallel = false)
+  public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer, bool parallel = false, CancellationToken cancellationToken = default)
   {
-    return await (await source.ToListAsync())
+    return await (await source.ToListAsync(cancellationToken))
       .SelectAsync(transformer, parallel);
   }
 

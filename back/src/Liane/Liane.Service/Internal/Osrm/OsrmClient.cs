@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Exception;
@@ -34,7 +35,7 @@ public sealed class OsrmClient : IOsrmService
 
   public Task<Response.Routing> Route(IEnumerable<LatLng> coordinates, string alternatives = "false", string steps = "false", string geometries = "geojson", string overview = "simplified",
     string annotations = "false",
-    string continueStraight = "default")
+    string continueStraight = "default", CancellationToken cancellationToken = default)
   {
     var format = Format(coordinates);
 
@@ -58,13 +59,14 @@ public sealed class OsrmClient : IOsrmService
     return routeCache.GetOrCreateAsync(url, e =>
     {
       e.Size = 1;
-      return GetRouteInternal(url);
+      return GetRouteInternal(url, cancellationToken);
     })!;
   }
 
   public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, string roundtrip = "false", string source = "first", string destination = "last", string geometries = "geojson",
     string overview = "false",
-    string annotations = "false", string steps = "false")
+    string annotations = "false", string steps = "false",
+    CancellationToken cancellationToken = default)
   {
     var format = Format(coordinates);
 
@@ -84,7 +86,7 @@ public sealed class OsrmClient : IOsrmService
       geometries,
       overview,
       annotations
-    }), JsonOptions);
+    }), JsonOptions, cancellationToken: cancellationToken);
 
     if (result == null)
     {
@@ -94,10 +96,10 @@ public sealed class OsrmClient : IOsrmService
     return result;
   }
 
-  public async Task<Table> Table(IEnumerable<LatLng> coordinates)
+  public async Task<Table> Table(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default)
   {
     var uri = $"/table/v1/driving/{Format(coordinates)}?annotations=duration,distance";
-    var result = await client.GetFromJsonAsync<Table>(uri, JsonOptions);
+    var result = await client.GetFromJsonAsync<Table>(uri, JsonOptions, cancellationToken: cancellationToken);
     if (result == null)
     {
       throw new ResourceNotFoundException("Osrm response");
@@ -106,10 +108,10 @@ public sealed class OsrmClient : IOsrmService
     return result;
   }
 
-  public async Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null)
+  public async Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null, CancellationToken cancellationToken = default)
   {
     var uri = $"/nearest/v1/driving/{coordinate.ToString()}?number={number}";
-    var result = await client.GetFromJsonAsync<Nearest>(uri, JsonOptions);
+    var result = await client.GetFromJsonAsync<Nearest>(uri, JsonOptions, cancellationToken: cancellationToken);
     if (result == null)
     {
       throw new ResourceNotFoundException("Osrm response");
@@ -128,9 +130,9 @@ public sealed class OsrmClient : IOsrmService
     return string.Join(";", coordinates.Select(c => c.ToString()));
   }
 
-  private async Task<Response.Routing> GetRouteInternal(string url)
+  private async Task<Response.Routing> GetRouteInternal(string url, CancellationToken cancellationToken = default)
   {
-    var result = await client.GetFromJsonAsync<Response.Routing>(url, JsonOptions);
+    var result = await client.GetFromJsonAsync<Response.Routing>(url, JsonOptions, cancellationToken: cancellationToken);
 
     if (result == null)
     {
