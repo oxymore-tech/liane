@@ -10,8 +10,15 @@ import { RallyingPoint } from "@/api";
 import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import { HomeMapContext } from "@/screens/home/StateMachine";
-import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
+import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
+import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
+import { Trip } from "@/api/service/location";
+import { FilterSelector } from "@/screens/home/BottomSheetView";
+import { AppText } from "@/components/base/AppText";
+import { ItineraryForm } from "@/components/forms/ItineraryForm";
+import { useAppBackController } from "@/components/AppBackContextProvider";
+import { RallyingPointInput } from "@/components/RallyingPointInput";
 
 export const RallyingPointField = forwardRef(
   (
@@ -81,6 +88,175 @@ export const RallyingPointField = forwardRef(
   }
 );
 
+export const RallyingPointField2 = forwardRef(
+  (
+    {
+      onChange,
+      value,
+      editable = true,
+      onFocus = () => {},
+      showTrailing,
+      icon,
+      placeholder
+    }: {
+      onChange: (v: string | undefined) => void;
+      value: string;
+      editable?: boolean;
+      onFocus?: () => void;
+      showTrailing: boolean;
+      icon: JSX.Element;
+      placeholder: string;
+    },
+    ref
+  ) => {
+    const inputRef = useRef<TextInput>(null);
+    useImperativeHandle(ref, () => inputRef.current);
+
+    const field = (
+      <View style={styles.inputContainer2} pointerEvents={editable ? undefined : "none"}>
+        <AppTextInput
+          trailing={
+            showTrailing ? (
+              <Pressable
+                style={{ marginRight: 0 }}
+                onPress={() => {
+                  if (editable) {
+                    inputRef.current?.clear();
+                  }
+                  onChange(undefined);
+                  if (editable) {
+                    inputRef.current?.focus();
+                  }
+                }}>
+                <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+              </Pressable>
+            ) : undefined
+          }
+          ref={inputRef}
+          editable={editable}
+          selection={editable ? undefined : { start: 0 }}
+          style={[AppStyles.input, { fontSize: 16 }]}
+          leading={icon}
+          placeholder={placeholder}
+          value={value}
+          onChangeText={v => {
+            onChange(v);
+          }}
+          onFocus={onFocus}
+        />
+      </View>
+    );
+
+    return editable ? (
+      field
+    ) : (
+      <Pressable
+        onPress={() => {
+          onFocus();
+        }}>
+        {field}
+      </Pressable>
+    );
+  }
+);
+
+export const RPFormHeader = ({
+  trip,
+  title,
+  animateEntry = true,
+  updateTrip,
+  canGoBack = false,
+  onRequestFocus
+}: {
+  updateTrip: (trip: Partial<Trip>) => void;
+  title?: string;
+  animateEntry?: boolean;
+  trip: Partial<Trip>;
+  canGoBack?: boolean;
+  onRequestFocus?: () => void;
+}) => {
+  const insets = useSafeAreaInsets();
+
+  const { to, from } = trip;
+  const { goBack } = useAppBackController();
+  //
+  return (
+    <Animated.View entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
+      <View
+        style={[
+          {
+            backgroundColor: AppColorPalettes.gray[100],
+            borderBottomLeftRadius: 16,
+            borderBottomRightRadius: 16,
+            paddingTop: 108
+          },
+          AppStyles.shadow
+        ]}>
+        <Column style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
+          <RallyingPointField2
+            icon={<AppIcon name={"pin"} color={AppColors.orange} />}
+            value={from?.label || ""}
+            placeholder={"Sélectionnez un point de départ"}
+            showTrailing={!!from && !to}
+            onChange={() => {
+              updateTrip({ from: undefined });
+            }}
+          />
+
+          {from && (
+            <View style={{ alignSelf: "flex-start", height: 8, marginLeft: 15, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
+          )}
+          {from && (
+            <RallyingPointField2
+              icon={<AppIcon name={"flag"} color={AppColors.pink} />}
+              value={to?.label || ""}
+              placeholder={"Sélectionnez un point d'arrivée"}
+              showTrailing={!!to}
+              onChange={() => {
+                updateTrip({ to: undefined });
+              }}
+            />
+          )}
+        </Column>
+      </View>
+      <View style={[styles.footerContainer, AppStyles.shadow, { paddingTop: insets.top + 4, paddingBottom: 8 }]}>
+        <Column>
+          <Row style={{ alignItems: "center", marginBottom: (title ? 4 : 0) + 8 }} spacing={16}>
+            {canGoBack && (
+              <Pressable
+                onPress={() => {
+                  goBack();
+                }}>
+                <AppIcon name={"arrow-ios-back-outline"} size={24} color={AppColors.white} />
+              </Pressable>
+            )}
+            {title && <AppText style={styles.title}>{title}</AppText>}
+            <Pressable onPress={onRequestFocus}>
+              <AppIcon name={"search-outline"} />
+            </Pressable>
+          </Row>
+          {/*
+          <ItineraryForm
+            from={from}
+            to={to}
+            onChangeFrom={undefined}
+            onChangeTo={undefined}
+            onValuesSwitched={(oldFrom, oldTo) => {
+              updateTrip({ from: oldTo, to: oldFrom });
+            }}
+            editable={false}
+            onRequestFocus={onRequestFocus}
+          />*/}
+          <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>
+            <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Départ: </AppText>
+            <FilterSelector shortFormat={true} />
+          </Row>
+        </Column>
+      </View>
+    </Animated.View>
+  );
+};
+
 export const RallyingPointHeader = ({ onBackPressed, rallyingPoint }: { rallyingPoint: RallyingPoint; onBackPressed?: () => void }) => {
   const insets = useSafeAreaInsets();
   const machine = useContext(HomeMapContext);
@@ -133,7 +309,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 52
   },
-  title: { color: AppColors.white, ...AppStyles.title },
+  title: { color: AppColors.white, ...AppStyles.title, paddingVertical: 4 },
   smallActionButton: {
     padding: 8,
     borderRadius: 52
@@ -155,9 +331,17 @@ const styles = StyleSheet.create({
   inputContainer: {
     backgroundColor: AppColorPalettes.gray[100],
     borderRadius: 8,
-    flex: 1,
+    //flex: 1,
     marginHorizontal: 8,
     paddingHorizontal: 12,
-    paddingVertical: 8
+    paddingVertical: 8,
+    minHeight: 36
+  },
+  inputContainer2: {
+    //backgroundColor: AppColors.white,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    minHeight: 32
   }
 });

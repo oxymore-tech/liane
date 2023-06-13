@@ -188,9 +188,16 @@ export interface RallyingPointsDisplayLayerProps {
   onSelect?: (r?: RallyingPoint) => void;
   cluster?: boolean;
   interactive?: boolean;
+  minZoomLevel?: number | undefined;
 }
 
-export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster = true, interactive = true }: RallyingPointsDisplayLayerProps) => {
+export const RallyingPointsDisplayLayer = ({
+  rallyingPoints,
+  onSelect,
+  cluster = true,
+  interactive = true,
+  minZoomLevel
+}: RallyingPointsDisplayLayerProps) => {
   const feature = useMemo(() => {
     if (isFeatureCollection(rallyingPoints)) {
       return {
@@ -213,6 +220,7 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
     };
   }, [rallyingPoints]);
   const controller = useContext<AppMapViewController>(MapControllerContext);
+
   return (
     <MapLibreGL.ShapeSource
       id="rp_l"
@@ -246,6 +254,7 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
           : undefined
       }>
       <MapLibreGL.CircleLayer
+        minZoomLevel={minZoomLevel}
         id="rp_circles_clustered"
         filter={["has", "point_count"]}
         style={{
@@ -257,6 +266,7 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
         }}
       />
       <MapLibreGL.SymbolLayer
+        minZoomLevel={minZoomLevel}
         id="rp_symbols_clustered"
         filter={["has", "point_count"]}
         style={{
@@ -270,6 +280,7 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
         }}
       />
       <MapLibreGL.CircleLayer
+        minZoomLevel={minZoomLevel}
         id="rp_circles"
         // belowLayerID="place"
         filter={["!", ["has", "point_count"]]}
@@ -284,7 +295,7 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
       <MapLibreGL.SymbolLayer
         id="rp_labels"
         filter={["!", ["has", "point_count"]]}
-        minZoomLevel={12}
+        minZoomLevel={minZoomLevel ? Math.max(12, minZoomLevel) : 12}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
@@ -425,7 +436,20 @@ const AppMapView = forwardRef(
       <View style={styles.map}>
         <MapLibreGL.MapView
           ref={mapRef}
+          onTouchStart={() => {
+            console.log("started");
+          }}
+          onTouchMove={() => {
+            console.log("moving");
+          }}
+          onTouchEnd={() => {
+            console.log("ended");
+          }}
+          onTouchCancel={() => {
+            console.log("c-ended");
+          }}
           onRegionWillChange={() => {
+            console.log("movingr");
             if (animated) {
               setShowActions(false);
               if (onStartMovingRegion) {

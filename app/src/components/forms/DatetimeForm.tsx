@@ -3,7 +3,7 @@ import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import React, { useEffect, useState } from "react";
 import { AppColors, defaultTextColor } from "@/theme/colors";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
@@ -76,7 +76,7 @@ export const DatetimeForm = WithFormController(
     };
 
     return (
-      <AppPressable onPress={showDatePicker} backgroundStyle={backgroundStyle}>
+      <AppPressableOverlay onPress={showDatePicker} backgroundStyle={backgroundStyle}>
         <Row
           spacing={16}
           style={{
@@ -95,7 +95,7 @@ export const DatetimeForm = WithFormController(
             confirmTextIOS={"Valider"}
           />
         </Row>
-      </AppPressable>
+      </AppPressableOverlay>
     );
   }
 );

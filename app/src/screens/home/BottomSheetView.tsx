@@ -3,7 +3,7 @@ import React, { useContext, useMemo } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, Liane, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
@@ -21,7 +21,7 @@ import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { useQuery } from "react-query";
 import { getCenter } from "@/api/geo";
-import { SwitchIconToggle } from "@/components/forms/SelectToggleForm";
+
 import { capitalize } from "@/util/strings";
 
 export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
@@ -31,7 +31,7 @@ export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
   console.log("state dbg", state.context.matches);
   return (
     <Column style={{ flex: 1 }} spacing={8}>
-      {["map", "point", "match"].some(state.matches) && <FilterSelector />}
+      {/*["map", "point", "match"].some(state.matches) && <FilterSelector />*/}
       {(loading || (state.matches("match") && !state.context.matches)) && <ActivityIndicator />}
       {!loading && state.matches("match") && state.context.matches && (
         <LianeMatchListView
@@ -65,7 +65,7 @@ export const LianeNearestLinks = () => {
   const [state] = useActor(machine);
   const { navigation } = useAppNavigation();
 
-  const mapCenter = state.context.filter.displayBounds ? getCenter(state.context.filter.displayBounds) : undefined;
+  const mapCenter = state.context.mapDisplay.displayBounds ? getCenter(state.context.mapDisplay.displayBounds) : undefined;
   console.log(["getClosestRP", mapCenter, state.context.filter.availableSeats, state.context.filter.targetTime?.dateTime.toISOString()]);
   const closestRallyingPointQuery = useQuery(["getClosestRP", mapCenter], () => services.rallyingPoint.snap(mapCenter!), {
     enabled: !!mapCenter
@@ -227,7 +227,10 @@ const LianeDestinationView = (props: { onPress: () => void; item: RallyingPointL
     return <View />;
   }
   return (
-    <AppPressable foregroundColor={WithAlpha(AppColors.black, 0.1)} style={{ paddingHorizontal: 24, paddingVertical: 8 }} onPress={props.onPress}>
+    <AppPressableOverlay
+      foregroundColor={WithAlpha(AppColors.black, 0.1)}
+      style={{ paddingHorizontal: 24, paddingVertical: 8 }}
+      onPress={props.onPress}>
       <Column spacing={4}>
         <Row style={{ alignItems: "center" }} spacing={4}>
           <AppIcon name={"pin"} color={AppColors.orange} size={18} />
@@ -263,7 +266,7 @@ const LianeDestinationView = (props: { onPress: () => void; item: RallyingPointL
           ))}
         </Row>
       </Column>
-    </AppPressable>
+    </AppPressableOverlay>
   );
 };
 
@@ -285,7 +288,7 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
   );
   const renderItem = ({ item }) => {
     return (
-      <AppPressable
+      <AppPressableOverlay
         foregroundColor={WithAlpha(AppColors.black, 0.1)}
         style={{ paddingHorizontal: 24, paddingVertical: 8 }}
         onPress={() => {
@@ -299,7 +302,7 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
           duration={item.tripDuration}
           freeSeatsCount={item.lianeMatch.freeSeatsCount}
         />
-      </AppPressable>
+      </AppPressableOverlay>
     );
   };
   return (
@@ -366,7 +369,7 @@ const renderLianeOverview = (liane: Liane, onSelect: (lianeMatch: LianeMatch) =>
   const freeSeatsCount = liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0);
 
   return (
-    <AppPressable
+    <AppPressableOverlay
       foregroundColor={WithAlpha(AppColors.black, 0.1)}
       style={{ paddingHorizontal: 24, paddingVertical: 8 }}
       onPress={() => {
@@ -388,7 +391,7 @@ const renderLianeOverview = (liane: Liane, onSelect: (lianeMatch: LianeMatch) =>
         to={liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint}
         freeSeatsCount={freeSeatsCount}
       />
-    </AppPressable>
+    </AppPressableOverlay>
   );
 };
 
@@ -416,8 +419,8 @@ export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelecto
       };
 
   return (
-    <Row style={{ justifyContent: "space-between", alignSelf: "center", marginBottom: 16, width: "100%" }}>
-      <View style={{ paddingHorizontal: 16 }}>
+    <Row style={{ justifyContent: "center", alignItems: "center", alignSelf: "center", flex: 1 }}>
+      {/*<View style={{ paddingHorizontal: 16 }}>
         <SwitchIconToggle
           color={AppColors.blue}
           unselectedColor={AppColorPalettes.gray[200]}
@@ -428,8 +431,9 @@ export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelecto
           trueIcon={<AppIcon name={"car"} color={driver ? AppColors.white : undefined} size={22} />}
           falseIcon={<AppIcon name={"car-strike-through"} color={!driver ? AppColors.white : undefined} size={22} />}
         />
-      </View>
+      </View>*/}
       <DatePagerSelector
+        color={AppColors.white}
         date={date}
         onSelectDate={d => {
           machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: d } } });

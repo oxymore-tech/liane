@@ -15,7 +15,7 @@ import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { SimpleModal } from "@/components/modal/SimpleModal";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
 const MessageBubble = ({
   message,
@@ -260,18 +260,18 @@ export const ChatScreen = () => {
               <AppText>Appeler le conducteur</AppText>
             </Row>
           </AppPressable>*/}
-          <AppPressable style={{ paddingVertical: 12 }}>
+          <AppPressableOverlay style={{ paddingVertical: 12 }}>
             <Row spacing={24} style={{ alignItems: "center" }}>
               <AppIcon name={"image-outline"} />
               <AppText>Partager une image</AppText>
             </Row>
-          </AppPressable>
-          <AppPressable style={{ paddingVertical: 12 }}>
+          </AppPressableOverlay>
+          <AppPressableOverlay style={{ paddingVertical: 12 }}>
             <Row spacing={24} style={{ alignItems: "center" }}>
               <AppIcon name={"pin-outline"} />
               <AppText>Partager une position</AppText>
             </Row>
-          </AppPressable>
+          </AppPressableOverlay>
         </Column>
       </SimpleModal>
     </View>

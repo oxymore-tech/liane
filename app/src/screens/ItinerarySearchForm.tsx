@@ -6,7 +6,7 @@ import { TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getKeyForTrip, Trip } from "@/api/service/location";
 import { RallyingPoint, Ref } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useDebounceValue } from "@/util/hooks/debounce";
@@ -33,7 +33,7 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
         keyExtractor={i => getKeyForTrip(i)}
         renderItem={({ item }) => {
           return (
-            <AppPressable
+            <AppPressableOverlay
               onPress={async () => {
                 props.onSelect(item);
               }}>
@@ -58,7 +58,7 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
                   </Column>
                 </Column>
               </Row>
-            </AppPressable>
+            </AppPressableOverlay>
           );
         }}
       />
@@ -89,7 +89,7 @@ export const CachedLocationsView = (props: { onSelect: (r: RallyingPoint) => voi
 
   return (
     <View style={styles.page}>
-      <AppPressable
+      <AppPressableOverlay
         onPress={async () => {
           const currentLocation = await services.location.currentLocation();
           const closestPoint = await services.rallyingPoint.snap(currentLocation);
@@ -99,16 +99,16 @@ export const CachedLocationsView = (props: { onSelect: (r: RallyingPoint) => voi
           <AppIcon name={"position"} color={AppColors.blue} />
           <AppText>Utiliser ma position</AppText>
         </Row>
-      </AppPressable>
+      </AppPressableOverlay>
       <AppText style={{ padding: 16, fontWeight: "bold" }}>Recherches récentes</AppText>
       <FlatList
         keyboardShouldPersistTaps="always"
         data={locationList}
         keyExtractor={r => r.id!}
         renderItem={({ item }) => (
-          <AppPressable key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+          <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
             <RallyingPointItem item={item} />
-          </AppPressable>
+          </AppPressableOverlay>
         )}
       />
     </View>
@@ -184,9 +184,9 @@ export const RallyingPointSuggestions = (props: {
       data={locationList}
       keyExtractor={i => i.id!}
       renderItem={({ item }) => (
-        <AppPressable key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+        <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
           <RallyingPointItem item={item} />
-        </AppPressable>
+        </AppPressableOverlay>
       )}
     />
   );

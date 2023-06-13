@@ -28,7 +28,7 @@ import { AppSwitchToggle, AppToggle } from "@/components/base/AppOptionToggle";
 import { useActor, useInterpret } from "@xstate/react";
 import { CreatePublishLianeMachine, PublishLianeContext } from "@/screens/publish/StateMachine";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { formatMonthDay, toRelativeTimeString } from "@/api/i18n";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
@@ -154,7 +154,7 @@ export const PublishScreenView = () => {
       />
       {(isOverviewStep || isSubmittingStep) && (
         <Animated.View entering={SlideInDown.springify().damping(20)} style={{ position: "absolute", bottom: 0, right: 0 }}>
-          <AppPressable
+          <AppPressableOverlay
             disabled={isSubmittingStep}
             onPress={() => {
               machine.send("PUBLISH");
@@ -167,7 +167,7 @@ export const PublishScreenView = () => {
               {isSubmittingStep && state.matches({ submitting: "pending" }) && <ActivityIndicator color={AppColors.white} />}
               {isSubmittingStep && state.matches({ submitting: "failure" }) && <AppIcon name={"refresh-outline"} color={AppColors.white} />}
             </Row>
-          </AppPressable>
+          </AppPressableOverlay>
         </Animated.View>
       )}
     </Column>
@@ -225,14 +225,14 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
         )}
         {editable && (
           <Row spacing={8} style={{ justifyContent: "flex-end", paddingHorizontal: 8 }}>
-            <AppPressable
+            <AppPressableOverlay
               backgroundStyle={{ borderRadius: 32 }}
               style={{ padding: 8 }}
               onPress={() => {
                 onChange(seats);
               }}>
               <AppIcon size={20} name={"checkmark-outline"} color={AppColors.white} />
-            </AppPressable>
+            </AppPressableOverlay>
           </Row>
         )}
       </Column>
@@ -312,14 +312,14 @@ const DateStepView = ({ editable, onChange, initialValue: initialDate, onRequest
 
         {editable && (
           <Row spacing={8} style={{ justifyContent: "flex-end", paddingHorizontal: 8 }}>
-            <AppPressable
+            <AppPressableOverlay
               backgroundStyle={{ borderRadius: 32 }}
               style={{ padding: 8 }}
               onPress={() => {
                 onChange(date);
               }}>
               <AppIcon size={20} name={"checkmark-outline"} />
-            </AppPressable>
+            </AppPressableOverlay>
           </Row>
         )}
       </Column>

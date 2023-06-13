@@ -12,7 +12,7 @@ import { AppText } from "@/components/base/AppText";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { FormComponent } from "@/screens/lianeWizard/Forms";
 import { BaseFormComponentProps, WithFormController } from "@/components/forms/WithFormController";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
@@ -74,13 +74,13 @@ export const LocationForm: FormComponent<RallyingPoint | undefined> = WithFormCo
               data={recentLocations}
               keyExtractor={r => r.id!}
               renderItem={({ item }) => (
-                <AppPressable key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+                <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
                   <Column>
                     <AppText style={[styles.bold, { flex: 1 }]}>{item.label}</AppText>
                     <AppText numberOfLines={1}>{item.address}</AppText>
                     <AppText numberOfLines={1}>{item.zipCode + ", " + item.city}</AppText>
                   </Column>
-                </AppPressable>
+                </AppPressableOverlay>
               )}
             />
           </View>

@@ -48,10 +48,13 @@ type InternalLianeMatchFilter = {
     direction: TargetTimeDirection;
   };
   availableSeats: number;
-  displayBounds: BoundingBox | undefined;
 };
 
 type ReloadCause = "display" | "retry" | undefined;
+type MapDisplayParams = {
+  displayBounds: BoundingBox | undefined;
+  displayAllPoints?: boolean | undefined;
+};
 export type HomeMapContext = {
   filter: Partial<InternalLianeMatchFilter>;
   matches: LianeMatch[] | undefined;
@@ -59,9 +62,10 @@ export type HomeMapContext = {
   // lianeDisplay: LianeDisplay | undefined;
   error?: any | undefined;
   reloadCause?: ReloadCause;
+  mapDisplay: MapDisplayParams;
 };
 
-type UpdateDisplayEvent = { type: "DISPLAY"; data: BoundingBox };
+type UpdateDisplayEvent = { type: "DISPLAY"; data: MapDisplayParams };
 type UpdateFilterEvent = { type: "FILTER"; data: Partial<InternalLianeMatchFilter> };
 type UpdateEvent = { type: "UPDATE"; data: Partial<Trip> };
 
@@ -154,7 +158,7 @@ export const HomeMapMachine = (services: {
         matches: undefined,
         //    lianeDisplay: undefined,
         selectedMatch: undefined,
-        displayBounds: undefined
+        mapDisplay: { displayBounds: undefined }
       },
       initial: "map",
       states: {
@@ -189,6 +193,7 @@ export const HomeMapMachine = (services: {
             autoLoadCond: () => true,
             actions: [
               (context, event) => {
+                console.log(services.observables.displaySubject);
                 services.observables.displaySubject.next(event.data || EmptyFeatureCollection);
               }
             ]
@@ -266,9 +271,9 @@ export const HomeMapMachine = (services: {
               }
             ],
             SELECT: {
-              target: "#homeMap.point",
-              actions: ["selectRallyingPoint"]
-            }
+              target: "#homeMap.match",
+              actions: ["selectRallyingPoint2"]
+            } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),
         match: createState(
@@ -285,7 +290,7 @@ export const HomeMapMachine = (services: {
               BACK: { target: "#homeMap.map", actions: ["resetTrip", "resetMatches"] },
               UPDATE: {
                 actions: ["updateTrip"],
-                target: "#homeMap.form"
+                target: "#homeMap.point" //  target: "#homeMap.form"
               }
             }
           },
@@ -339,6 +344,11 @@ export const HomeMapMachine = (services: {
             return { ...context.filter, from: event.data, to: undefined };
           }
         }),
+        selectRallyingPoint2: assign<HomeMapContext, SelectEvent>({
+          filter: (context, event) => {
+            return { ...context.filter, to: event.data };
+          }
+        }),
         selectMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: (context, event) => event.data }),
         setReloadCause: assign<HomeMapContext, ReloadEvent>({
           reloadCause: (context, event) => event.data
@@ -355,7 +365,7 @@ export const HomeMapMachine = (services: {
           }
         }),
         updateBounds: assign<HomeMapContext, UpdateDisplayEvent>({
-          filter: (context, event) => ({ ...context.filter, displayBounds: event.data })
+          mapDisplay: (context, event) => event.data
         }),
         updateTrip: assign<HomeMapContext, UpdateEvent>({
           filter: (context, event) => {

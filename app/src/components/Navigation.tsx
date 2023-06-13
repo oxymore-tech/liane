@@ -66,11 +66,11 @@ function Home() {
       // TODO tabBar={AppTabBar}
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarHideOnKeyboard: true
       }}>
       {makeTab(
-        "Rechercher",
+        "Recherche",
         ({ focused }) => (
           <TabIcon iconName={"search-outline"} focused={focused} size={iconSize} />
         ),
@@ -196,14 +196,18 @@ interface TabIconProps {
 }
 
 const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
-  return typeof iconName === "string" ? (
-    <AppIcon size={size} name={iconName} color={focused ? AppColors.white : AppColorPalettes.blue[400]} />
-  ) : (
-    iconName({
-      color: focused ? AppColors.white : AppColorPalettes.blue[400],
-      height: size,
-      width: size
-    })
+  return (
+    <View style={{ paddingHorizontal: 8 }}>
+      {typeof iconName === "string" ? (
+        <AppIcon size={size} name={iconName} color={focused ? AppColors.white : AppColorPalettes.blue[400]} />
+      ) : (
+        iconName({
+          color: focused ? AppColors.white : AppColorPalettes.blue[400],
+          height: size,
+          width: size
+        })
+      )}
+    </View>
   );
 };
 
@@ -252,7 +256,9 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: AppDimensions.textSize.small,
     fontWeight: "400",
-    marginBottom: 8
+    position: "relative",
+    bottom: 8
+    // marginBottom: 8
   }
 });
 
