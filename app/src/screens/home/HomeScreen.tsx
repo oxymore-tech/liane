@@ -34,6 +34,8 @@ import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
+import { useBottomBarStyle } from "@/components/Navigation";
+import { useAppNavigation } from "@/api/navigation";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -61,11 +63,20 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const loadingDisplay = isLoadingDisplay || (loading && state.context.reloadCause === "display");
   const loadingList = loading && !state.context.reloadCause;
   const offline = status === "offline";
+  const { navigation } = useAppNavigation<"Home">();
 
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
+  const isMapState = state.matches("map");
 
   const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay /*|| !lianeDisplay*/ ? "closed" : undefined;
+
+  const bbStyle = useBottomBarStyle();
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: [...bbStyle, { display: isMapState ? undefined : "none" }] //{transform: [{translateY: state.matches("map") ? 0 : 80}]}]
+    });
+  });
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -88,20 +99,18 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
           </Animated.View>
         )}
 
-        {!offline && (
+        {!offline && !state.matches("map") && (
           <HomeBottomSheetContainer
             onScrolled={(v, expanded) => {
               //setMapBottom(v);
               bottomSheetScroll.next({ expanded, top: v });
             }}
             display={bottomSheetDisplay}
-            canScroll={!state.matches("map") || (loadingDisplay && !movingDisplay)}>
-            {(state.matches("map") || state.matches("point")) && (
-              <TopRow loading={loadingList && !movingDisplay} title={state.matches("point") ? "Prochains départs" : "À proximité"} />
-            )}
-            {(state.matches("map") || state.matches("point")) && <FilterSelector shortFormat={true} />}
+            canScroll={loadingDisplay && !movingDisplay}>
+            {state.matches("point") && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs"} />}
+            {state.matches("point") && <FilterSelector shortFormat={true} />}
             {isMatchState && <FilterListView loading={loadingList} />}
-            {state.matches("map") && <LianeNearestLinks />}
+
             {state.matches("point") && <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
             {/*loadingList && isDetailState && <ActivityIndicator />*/}

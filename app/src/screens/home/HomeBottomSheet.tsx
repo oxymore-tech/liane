@@ -25,14 +25,6 @@ export const HomeBottomSheetContainer = (
   const isMapState = state.matches("map");
   const isMatchState = state.matches("match");
   const isPointState = state.matches("point");
-  const { navigation } = useAppNavigation<"Home">();
-
-  const bbStyle = useBottomBarStyle();
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: [...bbStyle, { display: isMapState ? undefined : "none" }] //{transform: [{translateY: state.matches("map") ? 0 : 80}]}]
-    });
-  });
 
   const insets = useSafeAreaInsets();
   const { height } = useAppWindowsDimensions();
