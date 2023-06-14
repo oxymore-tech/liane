@@ -189,6 +189,7 @@ export interface RallyingPointsDisplayLayerProps {
   cluster?: boolean;
   interactive?: boolean;
   minZoomLevel?: number | undefined;
+  color?: ColorValue;
 }
 
 export const RallyingPointsDisplayLayer = ({
@@ -196,6 +197,7 @@ export const RallyingPointsDisplayLayer = ({
   onSelect,
   cluster = true,
   interactive = true,
+  color = AppColors.orange,
   minZoomLevel
 }: RallyingPointsDisplayLayerProps) => {
   const feature = useMemo(() => {
@@ -221,6 +223,8 @@ export const RallyingPointsDisplayLayer = ({
   }, [rallyingPoints]);
   const controller = useContext<AppMapViewController>(MapControllerContext);
 
+  // @ts-ignore
+  const mainColor: string = color;
   return (
     <MapLibreGL.ShapeSource
       id="rp_l"
@@ -258,8 +262,7 @@ export const RallyingPointsDisplayLayer = ({
         id="rp_circles_clustered"
         filter={["has", "point_count"]}
         style={{
-          circleColor: AppColorPalettes.orange[400],
-          circleRadius: 16,
+          circleColor: mainColor,
           circleRadius: ["step", ["get", "point_count"], 14, 3, 16, 10, 18],
           circleStrokeColor: AppColors.white,
           circleStrokeWidth: 1
@@ -285,7 +288,7 @@ export const RallyingPointsDisplayLayer = ({
         // belowLayerID="place"
         filter={["!", ["has", "point_count"]]}
         style={{
-          circleColor: ["step", ["zoom"], AppColorPalettes.orange[400], 12, AppColors.orange],
+          circleColor: ["step", ["zoom"], mainColor, 12, mainColor],
           circleRadius: ["step", ["zoom"], 5, 12, 10],
           circleStrokeColor: AppColors.white,
           circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
@@ -299,7 +302,7 @@ export const RallyingPointsDisplayLayer = ({
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: AppColors.orange,
+          textColor: mainColor,
           textHaloColor: "#fff",
           textHaloWidth: 1.2,
           textField: "{label}",
@@ -401,7 +404,7 @@ export const WayPointDisplay = ({
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, onStartMovingRegion, children, showGeolocation = false, bounds, onMapLoaded }: AppMapViewProps,
+    { onRegionChanged, onStartMovingRegion, children, showGeolocation = false, bounds, onMapLoaded, onStopMovingRegion }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const { services } = useContext(AppContext);
@@ -432,33 +435,56 @@ const AppMapView = forwardRef(
     const scale = Platform.OS === "android" ? wd.scale : 1;
 
     useImperativeHandle(ref, () => controller);
+    const regionMoveCallbackRef = useRef<number | undefined>();
+    const moving = useRef<boolean>(false);
     return (
       <View style={styles.map}>
         <MapLibreGL.MapView
           ref={mapRef}
-          onTouchStart={() => {
-            console.log("started");
-          }}
           onTouchMove={() => {
-            console.log("moving");
+            if (!moving.current) {
+              moving.current = true;
+              if (animated) {
+                setShowActions(false);
+                if (onStartMovingRegion) {
+                  onStartMovingRegion();
+                }
+              }
+            }
           }}
           onTouchEnd={() => {
-            console.log("ended");
+            regionMoveCallbackRef.current = setTimeout(async () => {
+              moving.current = false;
+              if (onStopMovingRegion) {
+                onStopMovingRegion();
+              }
+            }, 300);
           }}
           onTouchCancel={() => {
-            console.log("c-ended");
+            regionMoveCallbackRef.current = setTimeout(async () => {
+              moving.current = false;
+              if (onStopMovingRegion) {
+                onStopMovingRegion();
+              }
+            }, 300);
           }}
           onRegionWillChange={() => {
-            console.log("movingr");
-            if (animated) {
+            if (regionMoveCallbackRef.current) {
+              clearTimeout(regionMoveCallbackRef.current);
+              regionMoveCallbackRef.current = undefined;
+            } else if (animated) {
               setShowActions(false);
-              if (onStartMovingRegion) {
+              /*if (onStartMovingRegion) {
                 onStartMovingRegion();
-              }
+              }*/
             }
           }}
           onRegionDidChange={feature => {
             if (animated) {
+              moving.current = false;
+              if (onStopMovingRegion) {
+                onStopMovingRegion();
+              }
               setShowActions(true);
               if (onRegionChanged) {
                 onRegionChanged(feature.properties);

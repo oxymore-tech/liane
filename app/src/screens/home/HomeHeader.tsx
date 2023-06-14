@@ -231,9 +231,12 @@ export const RPFormHeader = ({
               </Pressable>
             )}
             {title && <AppText style={styles.title}>{title}</AppText>}
-            <Pressable onPress={onRequestFocus}>
-              <AppIcon name={"search-outline"} />
-            </Pressable>
+            <View style={{ flex: 1 }} />
+            {onRequestFocus && (
+              <Pressable onPress={onRequestFocus}>
+                <AppIcon color={AppColors.white} name={"search-outline"} />
+              </Pressable>
+            )}
           </Row>
           {/*
           <ItineraryForm
@@ -249,6 +252,7 @@ export const RPFormHeader = ({
           />*/}
           <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>
             <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Départ: </AppText>
+            <View style={{ flex: 1 }} />
             <FilterSelector shortFormat={true} />
           </Row>
         </Column>

@@ -198,25 +198,6 @@ export const HomeMapMachine = (services: {
               }
             ]
           }
-          /*  {
-            src: (context, _) => services.display(context),
-            assign: (context, event) => {
-              console.debug(event.data?.lianes);
-              return {
-                ...context,
-                matches: (event.data?.lianes ?? []).map(liane => ({
-                  liane,
-                  match: {
-                    type: "Exact",
-                    pickup: liane.wayPoints[0].rallyingPoint.id!,
-                    deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
-                  },
-                  freeSeatsCount: liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
-                })),
-                lianeDisplay: event.data || context.lianeDisplay // Keep previous display if undefined
-              };
-            }
-          }*/
         ),
         form: createState({
           always: {
@@ -266,8 +247,11 @@ export const HomeMapMachine = (services: {
                 }
               },
               {
-                actions: ["resetTrip", "updateTrip", (context, event) => services.services.cacheRecentPoint((event.data.from || event.data.to)!)],
-                target: "#homeMap.form"
+                actions: ["resetTrip", "updateTrip"], //, (context, event) => services.services.cacheRecentPoint((event.data.from || event.data.to)!)],
+                target: "#homeMap.map",
+                cond: (context, event: UpdateEvent) => {
+                  return !event.data.to && !event.data.from;
+                }
               }
             ],
             SELECT: {

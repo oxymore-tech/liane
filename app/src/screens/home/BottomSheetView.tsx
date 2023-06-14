@@ -419,7 +419,7 @@ export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelecto
       };
 
   return (
-    <Row style={{ justifyContent: "center", alignItems: "center", alignSelf: "center", flex: 1 }}>
+    <Row style={{ justifyContent: "center", alignItems: "center", alignSelf: "center", flex: 1, paddingHorizontal: 8 }}>
       {/*<View style={{ paddingHorizontal: 16 }}>
         <SwitchIconToggle
           color={AppColors.blue}

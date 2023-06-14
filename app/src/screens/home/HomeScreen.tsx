@@ -71,8 +71,9 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const isDetailState = state.matches("detail");
   const isMapState = state.matches("map");
 
-  const bottomSheetDisplay = state.matches("form") ? "none" : undefined; // TODO fix moving movingDisplay /*|| !lianeDisplay*/ ? "closed" : undefined;
+  const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
+  console.debug(bottomSheetDisplay);
   const bbStyle = useBottomBarStyle();
   React.useLayoutEffect(() => {
     navigation.setOptions(
@@ -156,7 +157,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
         {state.matches("map") && (
           <RPFormHeader
             animateEntry={false}
-            onRequestFocus={() => machine.send("FORM")}
+            //onRequestFocus={() => machine.send("FORM")}
             title={"Visualiser les lianes"}
             updateTrip={() => {}}
             trip={state.context.filter}
@@ -170,7 +171,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             }}
           />*/
           <RPFormHeader
-            canGoBack={true}
             trip={state.context.filter}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             title={"Visualiser les lianes"}
@@ -179,7 +179,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
         )}
         {state.matches("match") && (
           <RPFormHeader
-            canGoBack={true}
             trip={state.context.filter}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             title={"Visualiser les lianes"}
@@ -238,7 +237,7 @@ const HomeMap = ({
   const { height } = useAppWindowsDimensions();
   const { top: insetsTop } = useSafeAreaInsets();
   const lianeDisplay = useObservable(displaySource, EmptyFeatureCollection);
-  const rpMinZoomLevel = 11.5;
+  const rpMinZoomLevel = 11;
   const { services } = useContext(AppContext);
 
   console.debug("display :", lianeDisplay.features.length);
@@ -391,12 +390,14 @@ const HomeMap = ({
       onRegionChanged={onRegionChange}
       onStopMovingRegion={() => {
         onMovingStateChanged(false);
+        console.log("stop moving");
         //  setMovingDisplay(false);
         //console.log("map touch end");
       }}
       onStartMovingRegion={() => {
         // setMovingDisplay(true);
         onMovingStateChanged(true);
+        console.log("start moving");
         // console.log("map moving");
       }}
       ref={appMapRef}
@@ -424,6 +425,7 @@ const HomeMap = ({
       {isMatchStateIdle && <RallyingPointsDisplayLayer rallyingPoints={pickupsDisplay} cluster={false} interactive={false} />}
       {["map", "point"].some(state.matches) && (
         <RallyingPointsDisplayLayer
+          color={AppColors.blue}
           minZoomLevel={rpMinZoomLevel}
           rallyingPoints={rpDisplay ? rpDisplay : lianeDisplay}
           onSelect={rp => {

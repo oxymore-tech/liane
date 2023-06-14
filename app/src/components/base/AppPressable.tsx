@@ -12,6 +12,7 @@ export interface AppPressableOverlayProps extends PressableProps, PropsWithChild
 }
 
 export function AppPressable(props: PressableProps) {
+  // @ts-ignore
   return <Pressable style={[props.style, { minHeight: 36, minWidth: 36, alignItems: "center", justifyContent: "center" }]} {...props} />;
 }
 
@@ -38,6 +39,7 @@ export function AppPressableOverlay({
     if (backgroundStyle) {
       // Get border radius from background shape
       const styles = StyleSheet.flatten(backgroundStyle);
+
       return Object.fromEntries(
         [
           "borderRadius",
@@ -49,7 +51,10 @@ export function AppPressableOverlay({
           "borderTopLeftRadius",
           "borderTopRightRadius",
           "borderTopStartRadius"
-        ].map(k => [k, styles[k]])
+        ].map(k => {
+          //@ts-ignore
+          return [k, styles[k]];
+        })
       );
     }
     return {};
