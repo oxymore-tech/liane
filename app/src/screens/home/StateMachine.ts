@@ -51,7 +51,7 @@ type InternalLianeMatchFilter = {
   availableSeats: number;
 };
 
-type ReloadCause = "display" | "retry" | undefined;
+type ReloadCause = "display" | "refresh";
 type MapDisplayParams = {
   displayBounds: BoundingBox | undefined;
   displayAllPoints?: boolean | undefined;
@@ -62,7 +62,7 @@ export type HomeMapContext = {
   selectedMatch: LianeMatch | undefined;
   // lianeDisplay: LianeDisplay | undefined;
   error?: any | undefined;
-  reloadCause?: ReloadCause;
+  reloadCause?: ReloadCause | undefined;
   mapDisplay: MapDisplayParams;
 };
 
@@ -127,7 +127,7 @@ const createState = <T>(
 
       onDone: {
         target: "idle",
-        actions: [() => console.log("loading done"), ...load.actions]
+        actions: [() => console.log("loading done"), "resetReloadCause", ...load.actions]
       },
       onError: {
         target: "failed",
@@ -167,9 +167,18 @@ export const HomeMapMachine = (services: {
               DISPLAY: {
                 actions: ["updateBounds", raise({ type: "RELOAD", data: "display" })]
               },
-              UPDATE: {
-                actions: ["updateTrip"]
-              },
+              UPDATE: [
+                {
+                  actions: ["resetTrip", "updateTrip"],
+                  target: "#homeMap.match",
+                  cond: (context, event: UpdateEvent) => {
+                    return filterHasFullTrip(event.data);
+                  }
+                },
+                {
+                  actions: ["updateTrip"]
+                }
+              ],
               FILTER: {
                 actions: ["updateFilter", raise("RELOAD")]
               },
@@ -262,7 +271,7 @@ export const HomeMapMachine = (services: {
           {
             on: {
               FILTER: {
-                actions: ["updateFilter", raise("RELOAD")]
+                actions: ["updateFilter", raise({ type: "RELOAD", data: "refresh" })]
               },
 
               DETAIL: {
@@ -278,8 +287,15 @@ export const HomeMapMachine = (services: {
           },
 
           {
-            src: (context, _) => services.services.match(context),
-            autoLoadCond: (context, _) => !context.matches,
+            src: (context, _) => {
+              console.debug("reloading");
+              return services.services.match(context);
+            },
+            autoLoadCond: (context, _) => {
+              const y = !context.matches || context.reloadCause === "refresh";
+              console.debug("will reload", y, context.reloadCause);
+              return y;
+            },
             actions: [
               assign((context, event) => {
                 return {
@@ -334,6 +350,9 @@ export const HomeMapMachine = (services: {
         selectMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: (context, event) => event.data }),
         setReloadCause: assign<HomeMapContext, ReloadEvent>({
           reloadCause: (context, event) => event.data
+        }),
+        resetReloadCause: assign<HomeMapContext, ReloadEvent>({
+          reloadCause: () => undefined
         }),
         updateFilter: assign<HomeMapContext, UpdateFilterEvent>({
           filter: (context, event) => {

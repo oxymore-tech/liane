@@ -70,6 +70,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
   const isMapState = state.matches("map");
+  const isPointState = state.matches("point");
 
   const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
@@ -103,7 +104,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
           </Animated.View>
         )}
 
-        {!offline && !state.matches("map") && (
+        {!offline && !isMapState && (
           <HomeBottomSheetContainer
             onScrolled={(v, expanded) => {
               //setMapBottom(v);
@@ -111,13 +112,11 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             }}
             display={bottomSheetDisplay}
             canScroll={loadingDisplay && !movingDisplay}>
-            {state.matches("point") && (
-              <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />
-            )}
+            {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
             {/*state.matches("point") && <FilterSelector shortFormat={true} />*/}
             {isMatchState && <FilterListView loading={loadingList} />}
 
-            {state.matches("point") && <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />}
+            {isPointState && <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
             {/*loadingList && isDetailState && <ActivityIndicator />*/}
           </HomeBottomSheetContainer>
@@ -153,36 +152,20 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             }}
           />
         )}
-
-        {state.matches("map") && (
+        {isMapState && (
           <RPFormHeader
-            animateEntry={false}
-            //onRequestFocus={() => machine.send("FORM")}
+            animateEntry={!state.history?.matches("point") && !state.history?.matches("match")}
             title={"Visualiser les lianes"}
-            updateTrip={() => {}}
+            updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
           />
         )}
-        {state.matches("point") && (
-          /* <RallyingPointHeader
-            rallyingPoint={state.context.filter.from!}
-            onBackPressed={() => {
-              machine.send("BACK");
-            }}
-          />*/
+        {(isMatchState || isPointState) && (
           <RPFormHeader
-            trip={state.context.filter}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
-            title={"Visualiser les lianes"}
             animateEntry={false}
-          />
-        )}
-        {state.matches("match") && (
-          <RPFormHeader
-            trip={state.context.filter}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
             title={"Visualiser les lianes"}
-            animateEntry={false}
+            updateTrip={t => machine.send("UPDATE", { data: t })}
+            trip={state.context.filter}
           />
         )}
       </View>

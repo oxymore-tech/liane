@@ -3,12 +3,12 @@ import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React, { forwardRef, useContext, useImperativeHandle, useRef } from "react";
+import React, { forwardRef, useContext, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { RallyingPoint } from "@/api";
 import LocationPin from "@/assets/location_pin.svg";
-import { RallyingPointItem } from "@/screens/ItinerarySearchForm";
+import { CachedTripsView, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
@@ -19,6 +19,7 @@ import { AppText } from "@/components/base/AppText";
 import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import { useAppBackController } from "@/components/AppBackContextProvider";
 import { RallyingPointInput } from "@/components/RallyingPointInput";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 
 export const RallyingPointField = forwardRef(
   (
@@ -179,46 +180,77 @@ export const RPFormHeader = ({
 
   const { to, from } = trip;
   const { goBack } = useAppBackController();
+  const [showHistory, setShowHistory] = useState(false);
   //
   return (
-    <Animated.View entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
-      <View
-        style={[
-          {
-            backgroundColor: AppColorPalettes.gray[100],
-            borderBottomLeftRadius: 16,
-            borderBottomRightRadius: 16,
-            paddingTop: 108
-          },
-          AppStyles.shadow
-        ]}>
-        <Column style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
-          <RallyingPointField2
-            icon={<AppIcon name={"pin"} color={AppColors.orange} />}
-            value={from?.label || ""}
-            placeholder={"Sélectionnez un point de départ"}
-            showTrailing={!!from && !to}
-            onChange={() => {
-              updateTrip({ from: undefined });
+    <Animated.View style={showHistory ? { flex: 1 } : undefined} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
+      {!showHistory && (
+        <View
+          style={[
+            {
+              backgroundColor: AppColorPalettes.gray[100],
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: 108
+            },
+            AppStyles.shadow
+          ]}>
+          <Column style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
+            <Row style={{ alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <RallyingPointField2
+                  icon={<AppIcon name={"pin"} color={AppColors.orange} />}
+                  value={from?.label || ""}
+                  placeholder={"Sélectionnez un point de départ"}
+                  showTrailing={!!from && !to}
+                  onChange={() => {
+                    updateTrip({ from: undefined });
+                  }}
+                />
+              </View>
+              {!from && (
+                <Pressable
+                  onPress={() => {
+                    setShowHistory(true);
+                  }}>
+                  <AppIcon name={"history"} />
+                </Pressable>
+              )}
+            </Row>
+            {from && (
+              <View style={{ alignSelf: "flex-start", height: 8, marginLeft: 15, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
+            )}
+            {from && (
+              <RallyingPointField2
+                icon={<AppIcon name={"flag"} color={AppColors.pink} />}
+                value={to?.label || ""}
+                placeholder={"Sélectionnez un point d'arrivée"}
+                showTrailing={!!to}
+                onChange={() => {
+                  updateTrip({ to: undefined });
+                }}
+              />
+            )}
+          </Column>
+        </View>
+      )}
+      {showHistory && (
+        <Column style={{ backgroundColor: AppColors.white, paddingTop: 108, flex: 1, paddingBottom: 92 }}>
+          <CachedTripsView
+            onSelect={t => {
+              updateTrip(t);
             }}
           />
-
-          {from && (
-            <View style={{ alignSelf: "flex-start", height: 8, marginLeft: 15, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
-          )}
-          {from && (
-            <RallyingPointField2
-              icon={<AppIcon name={"flag"} color={AppColors.pink} />}
-              value={to?.label || ""}
-              placeholder={"Sélectionnez un point d'arrivée"}
-              showTrailing={!!to}
-              onChange={() => {
-                updateTrip({ to: undefined });
-              }}
-            />
-          )}
+          <View style={{ position: "absolute", top: 116, right: 16 }}>
+            <Pressable
+              onPress={() => {
+                setShowHistory(false);
+              }}>
+              <AppIcon name={"close-outline"} />
+            </Pressable>
+          </View>
         </Column>
-      </View>
+      )}
       <View style={[styles.footerContainer, AppStyles.shadow, { paddingTop: insets.top + 4, paddingBottom: 8 }]}>
         <Column>
           <Row style={{ alignItems: "center", marginBottom: (title ? 4 : 0) + 8 }} spacing={16}>
@@ -238,18 +270,7 @@ export const RPFormHeader = ({
               </Pressable>
             )}
           </Row>
-          {/*
-          <ItineraryForm
-            from={from}
-            to={to}
-            onChangeFrom={undefined}
-            onChangeTo={undefined}
-            onValuesSwitched={(oldFrom, oldTo) => {
-              updateTrip({ from: oldTo, to: oldFrom });
-            }}
-            editable={false}
-            onRequestFocus={onRequestFocus}
-          />*/}
+
           <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>
             <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Départ: </AppText>
             <View style={{ flex: 1 }} />
