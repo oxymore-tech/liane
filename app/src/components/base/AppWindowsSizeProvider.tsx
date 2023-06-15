@@ -1,6 +1,5 @@
 import React, { PropsWithChildren, useContext, useState } from "react";
-import { Dimensions, Platform, StatusBar, useWindowDimensions, View } from "react-native";
-import { initialWindowMetrics } from "react-native-safe-area-context";
+import { Platform, useWindowDimensions, View } from "react-native";
 
 // @ts-ignore
 const AppWindowsDimensionsContext = React.createContext<{ width: number; height: number }>();
@@ -19,8 +18,8 @@ export const AppWindowsSizeProvider = (props: PropsWithChildren) => {
         Platform.OS === "android"
           ? event => {
               // Needed to correctly siez window on some android devices
-              var { width, height, x, y } = event.nativeEvent.layout;
-              console.debug("size", width, height, x, y);
+              const { width, height } = event.nativeEvent.layout;
+
               setDimensions({ ...dimensions, width, height });
             }
           : undefined

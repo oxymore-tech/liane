@@ -10,7 +10,7 @@ public interface IHubClient
 {
   Task ReceiveUnreadOverview(UnreadOverview unreadOverview);
 
-  Task ReceiveNotification(Notification notification);
+  Task<bool> ReceiveNotification(Notification notification);
 
   Task<bool> ReceiveMessage(string conversationId, ChatMessage message);
 

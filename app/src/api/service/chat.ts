@@ -30,7 +30,7 @@ export class HubServiceClient extends AbstractHubService {
 
   start = () => {
     if (this.isStarted) {
-      console.debug("hub already started");
+      console.debug("[HUB] already started");
       return new Promise<FullUser>(async (resolve, reject) => {
         const found = await getCurrentUser();
         if (found) {
@@ -40,14 +40,14 @@ export class HubServiceClient extends AbstractHubService {
         }
       });
     }
-    console.debug("start");
+    console.debug("[HUB] start");
     return new Promise<FullUser>((resolve, reject) => {
       let alreadyClosed = false;
       this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
       this.hub.on("ReceiveMessage", this.receiveMessage);
       this.hub.on("Me", async (me: FullUser) => {
         // Called when hub is started
-        console.log("me", me);
+        console.log("[HUB] me", me);
         this.isStarted = true;
         await storeCurrentUser(me);
         resolve(me);
@@ -57,14 +57,14 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.onclose(err => {
         if (!alreadyClosed) {
           if (__DEV__ && err) {
-            console.log("Connection closed with error : ", err);
+            console.log("[HUB] Connection closed with error : ", err);
           }
           alreadyClosed = true;
           reject(err);
         }
       });
       this.hub.start().catch(async (err: Error) => {
-        console.debug("Hub [start] error :", err, this.hub.state);
+        console.debug("[HUB] could not start :", err, this.hub.state);
         // Only reject if error happens before connection is established
         if (this.hub.state !== "Connected") {
           // Retry if err 401
@@ -88,7 +88,7 @@ export class HubServiceClient extends AbstractHubService {
   };
 
   stop = () => {
-    console.log("stop");
+    console.log("[HUB] stop");
     // TODO close all observables
     return this.hub.stop();
   };
@@ -125,7 +125,7 @@ export class HubServiceClient extends AbstractHubService {
 
   private checkConnection = async () => {
     if (this.hub.state !== "Connected") {
-      console.debug("Tried to join chat but state was ", this.hub.state);
+      console.debug("[HUB] Tried to join chat but state was ", this.hub.state);
       await this.hub.stop();
       await this.hub.start();
     }

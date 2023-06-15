@@ -29,20 +29,22 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
 
   public Priority Priority => Priority.High;
 
-  public bool IsConnected(Ref<User> user)
+  public string? GetConnectionId(Ref<User> user)
   {
-    return currentConnectionsCache.Get(user.Id) is not null;
+    currentConnectionsCache.TryGetValue(user.Id, out string? connectionId);
+    return connectionId;
   }
 
   public async Task<bool> SendNotification(Ref<User> recipient, Notification notification)
   {
     try
     {
-      if (IsConnected(recipient)) // This is important as hub does not wait until message is received
+      var connectionId = GetConnectionId(recipient);
+      if (connectionId is not null) 
       {
-        await hubContext.Clients.Group(recipient)
+        var result =  await hubContext.Clients.Client(connectionId)
           .ReceiveNotification(notification);
-        return true;
+        return result;
       }
     }
     catch (Exception e)
@@ -56,11 +58,12 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
 
   public async Task<bool> SendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
-    if (IsConnected(receiver))
+    var connectionId = GetConnectionId(receiver);
+    if (connectionId is not null) 
     {
       try
       {
-        var result = await hubContext.Clients.Group(receiver.Id).ReceiveMessage(conversation, message);
+        var result = await hubContext.Clients.Client(connectionId).ReceiveMessage(conversation, message);
         if (!result)
         {
           var sender = await userService.Get(message.CreatedBy!);
@@ -73,10 +76,11 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
             sender.Pseudo,
             message.Text,
             conversation.Id);
-          await SendNotification(receiver, notification);
+          return await SendNotification(receiver, notification);
         }
-
+        
         return true;
+
       }
       catch (Exception e)
       {
@@ -89,17 +93,22 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware
     return false;
   }
 
+  public bool IsConnected(Ref<User> user)
+  {
+    return GetConnectionId(user) is not null;
+  }
+
   public async Task AddConnectedUser(Ref<User> user, string connectionId)
   {
     // Make mono user group to map userId and connectionId 
     // https://learn.microsoft.com/fr-fr/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
-    await hubContext.Groups.AddToGroupAsync(connectionId, user.Id);
-    currentConnectionsCache.Set(user.Id, true);
+   // await hubContext.Groups.AddToGroupAsync(connectionId, user.Id);
+    currentConnectionsCache.Set(user.Id, connectionId);
   }
 
   public async Task RemoveUser(Ref<User> user, string connectionId)
   {
     currentConnectionsCache.Remove(user.Id);
-    await hubContext.Groups.RemoveFromGroupAsync(connectionId, user.Id);
+  //  await hubContext.Groups.RemoveFromGroupAsync(connectionId, user.Id);
   }
 }

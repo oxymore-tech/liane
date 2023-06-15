@@ -17,6 +17,7 @@ export interface ChatHubService {
   subscribeToNotifications(callback: OnNotificationCallback): SubscriptionLike;
   postEvent(lianeEvent: LianeEvent): Promise<void>;
   postAnswer(notificationId: string, answer: Answer): Promise<void>;
+  updateActiveState(active: boolean): void;
 
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
 
@@ -45,10 +46,14 @@ export abstract class AbstractHubService implements ChatHubService {
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage | null = null;
+  protected appStateActive: boolean = true;
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
-    console.debug("received : msg", convId, message, this.currentConversationId);
+    console.debug("[HUB] received : msg", this.appStateActive, convId, message, this.currentConversationId);
+    if (!this.appStateActive) {
+      return false;
+    }
     if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
       await this.onReceiveMessageCallback(message);
       return true;
@@ -60,7 +65,7 @@ export abstract class AbstractHubService implements ChatHubService {
 
   protected receiveUnreadOverview = async (unread: UnreadOverview) => {
     // Called when hub is started
-    console.log("unread", unread);
+    console.debug("[HUB] unread", unread);
     this.unreadConversations.next(unread.conversations);
     this.unreadNotificationCount.next(unread.notificationsCount);
   };
@@ -68,10 +73,14 @@ export abstract class AbstractHubService implements ChatHubService {
   protected receiveNotification = async (notification: Notification) => {
     // Called on new notification
     if (__DEV__) {
-      console.debug("received : notification");
+      console.debug("[HUB] received :", this.appStateActive, notification);
     }
-    this.notificationSubject.next(notification);
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
+    if (this.appStateActive) {
+      this.notificationSubject.next(notification);
+      this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
+      return true;
+    }
+    return false;
   };
 
   protected receiveLatestMessages = async (messages: PaginatedResponse<ChatMessage>) => {
@@ -88,6 +97,10 @@ export abstract class AbstractHubService implements ChatHubService {
   abstract start(): Promise<FullUser>;
   abstract stop(): Promise<void>;
 
+  updateActiveState(active: boolean) {
+    this.appStateActive = active;
+  }
+
   connectToChat = async (
     conversationRef: Ref<ConversationGroup>,
     onReceiveLatestMessages: OnLatestMessagesCallback,
@@ -99,7 +112,7 @@ export abstract class AbstractHubService implements ChatHubService {
     this.onReceiveLatestMessagesCallback = onReceiveLatestMessages;
     this.onReceiveMessageCallback = onReceiveMessage;
     const conv: ConversationGroup = await this.joinGroupChat(conversationRef);
-    console.log("joined " + conv.id);
+    console.debug("[HUB] joined " + conv.id);
     this.currentConversationId = conv.id;
     // Remove from unread conversations
     if (this.unreadConversations.getValue().includes(conversationRef)) {
@@ -114,21 +127,20 @@ export abstract class AbstractHubService implements ChatHubService {
       this.onReceiveLatestMessagesCallback = null;
       this.onReceiveMessageCallback = null;
       await this.leaveGroupChat();
-      console.log("left " + this.currentConversationId);
+      console.debug("[HUB] left " + this.currentConversationId);
       this.currentConversationId = undefined;
     } else if (__DEV__) {
-      console.log("Tried to leave an undefined conversation.");
+      console.debug("[HUB] Tried to leave an undefined conversation.");
     }
   };
 
   send = async (message: ChatMessage): Promise<void> => {
-    console.log("send");
     if (this.currentConversationId) {
       try {
         await this.sendToGroup(message);
       } catch (e) {
         if (__DEV__) {
-          console.log(`Could not send message : ${JSON.stringify(message)}`, e);
+          console.warn(`[HUB] Could not send message : ${JSON.stringify(message)}`, e);
         }
       }
     } else {

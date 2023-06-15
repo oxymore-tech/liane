@@ -21,8 +21,8 @@ export const AppTextInput = forwardRef(({ leading, trailing, style, ...props }: 
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    alignItems: "center"
-    //flex: 1
+    alignItems: "center",
+    flex: 1
   },
   input: {
     flex: 1,
