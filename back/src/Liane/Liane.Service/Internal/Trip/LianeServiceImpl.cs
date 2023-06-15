@@ -31,7 +31,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
   private const int LianeMatchPageDeltaInHours = 24;
-  private const int SnapDistanceInMeters = 1500;
+  private const int SnapDistanceInMeters = 10000;
 
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
