@@ -1,4 +1,4 @@
-import { Platform, Pressable, StyleSheet, ToastAndroid, View } from "react-native";
+import { Platform, StyleSheet, ToastAndroid, View } from "react-native";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
@@ -13,8 +13,8 @@ import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON } from "geojson";
 import { isWithinBox, fromPositions, BoundingBox } from "@/api/geo";
-import { AnimatedFloatingBackButton, RallyingPointHeader, RPFormHeader } from "@/screens/home/HomeHeader";
-import { FilterListView, FilterSelector, LianeDestinations } from "@/screens/home/BottomSheetView";
+import { AnimatedFloatingBackButton, RPFormHeader } from "@/screens/home/HomeHeader";
+import { FilterListView, LianeDestinations } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
@@ -25,19 +25,13 @@ import Animated, { FadeInDown, FadeOutDown, SlideInDown } from "react-native-rea
 import { Observable } from "rxjs";
 import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppStyles } from "@/theme/styles";
-import { AppTextInput } from "@/components/base/AppTextInput";
-import { AppIcon } from "@/components/base/AppIcon";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
-import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
 import { useBottomBarStyle } from "@/components/Navigation";
 import { useAppNavigation } from "@/api/navigation";
-import { Column } from "@/components/base/AppLayout";
-import { AppText } from "@/components/base/AppText";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -74,12 +68,14 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
 
   const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
+  const [displayBar, setDisplayBar] = useState(true);
+
   console.debug(bottomSheetDisplay);
   const bbStyle = useBottomBarStyle();
   React.useLayoutEffect(() => {
     navigation.setOptions(
       //@ts-ignore
-      { tabBarStyle: [...bbStyle, { display: isMapState ? undefined : "none" }] }
+      { tabBarStyle: [...bbStyle, { display: isMapState && displayBar ? undefined : "none" }] }
     );
   });
 
@@ -154,6 +150,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
         )}
         {isMapState && (
           <RPFormHeader
+            setBarVisible={setDisplayBar}
             animateEntry={!state.history?.matches("point") && !state.history?.matches("match")}
             title={"Visualiser les lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
@@ -177,6 +174,7 @@ interface BottomSheetObservableMessage {
   expanded: boolean;
   top: number;
 }
+/*
 const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observable<BottomSheetObservableMessage> }) => {
   const insets = useSafeAreaInsets();
 
@@ -198,7 +196,7 @@ const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observa
       </View>
     </Column>
   );
-};
+};*/
 const HomeMap = ({
   displaySource,
   onMovingStateChanged,

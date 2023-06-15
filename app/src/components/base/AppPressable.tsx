@@ -2,6 +2,7 @@ import { ColorValue, Pressable, PressableProps, StyleProp, StyleSheet, View, Vie
 import React, { PropsWithChildren, ReactNode, useMemo } from "react";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { AppColors, WithAlpha } from "@/theme/colors";
+import { AppIcon, AppIconProps } from "@/components/base/AppIcon";
 
 export interface AppPressableOverlayProps extends PressableProps, PropsWithChildren {
   backgroundStyle?: StyleProp<ViewStyle>;
@@ -9,12 +10,19 @@ export interface AppPressableOverlayProps extends PressableProps, PropsWithChild
   children: ReactNode | undefined;
   clickable?: boolean;
   style?: StyleProp<ViewStyle>;
+  align?: "center" | "flex-start" | "flex-end" | undefined;
 }
 
 export function AppPressable(props: PressableProps) {
   // @ts-ignore
-  return <Pressable style={[props.style, { minHeight: 36, minWidth: 36, alignItems: "center", justifyContent: "center" }]} {...props} />;
+  return <Pressable {...props} style={[styles.pressableDefault, props.style, styles.pressableTarget]} />;
 }
+
+export const AppPressableIcon = (props: Omit<AppPressableOverlayProps, "children"> & AppIconProps) => (
+  <AppPressableOverlay align="center" backgroundStyle={{ borderRadius: 8 }} {...props}>
+    <AppIcon name={props.name} color={props.color} opacity={props.opacity} size={props.size} />
+  </AppPressableOverlay>
+);
 
 /**
  * Pressable with an overlay when pressed
@@ -25,6 +33,7 @@ export function AppPressableOverlay({
   children,
   style,
   clickable = true,
+  align,
   disabled,
   onPress,
   ...props
@@ -67,7 +76,7 @@ export function AppPressableOverlay({
     <Pressable
       {...props}
       onPress={clickable && !disabled ? onPress : undefined}
-      style={backgroundStyle}
+      style={[backgroundStyle, styles.pressableTarget]}
       onTouchEnd={() => {
         opacitySv.value = 0;
       }}
@@ -77,7 +86,7 @@ export function AppPressableOverlay({
       onTouchStart={() => {
         opacitySv.value = 1;
       }}>
-      <View>
+      <View style={[styles.pressableTarget, { alignItems: align, justifyContent: align }]}>
         {contentView}
         {clickable && !disabled && <Animated.View style={[overlayColor, foreground, styles.pressedFixed, opacityStyle]} />}
       </View>
@@ -89,11 +98,16 @@ const styles = StyleSheet.create({
   pressedDefault: {
     backgroundColor: WithAlpha(AppColors.black, 0.3)
   },
+
   pressedFixed: {
     position: "absolute",
     right: 0,
     left: 0,
     top: 0,
     bottom: 0
+  },
+  pressableTarget: {
+    minHeight: 36,
+    minWidth: 36
   }
 });

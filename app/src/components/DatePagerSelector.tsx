@@ -1,6 +1,6 @@
 import { isToday, withOffsetHours } from "@/util/datetime";
 import { Row } from "@/components/base/AppLayout";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
@@ -31,9 +31,8 @@ export const DatePagerSelector = ({
   }, []);
   return (
     <Row style={{ alignItems: "center", justifyContent: "center" }} spacing={8}>
-      <AppPressableOverlay
+      <AppPressableIcon
         backgroundStyle={{ borderRadius: 8 }}
-        style={{ padding: 2 }}
         clickable={!dateIsToday}
         onPress={
           dateIsToday
@@ -45,9 +44,11 @@ export const DatePagerSelector = ({
                   onSelectDate(new Date((now > previousDay ? now : previousDay).toDateString()));
                 }
               }
-        }>
-        <AppIcon name={"chevron-left"} color={color} opacity={dateIsToday ? 0.4 : 1} />
-      </AppPressableOverlay>
+        }
+        name={"chevron-left"}
+        color={color}
+        opacity={dateIsToday ? 0.4 : 1}
+      />
 
       <AppPressableOverlay
         onPress={() => {
@@ -63,16 +64,16 @@ export const DatePagerSelector = ({
         </Row>
       </AppPressableOverlay>
 
-      <AppPressableOverlay
-        style={{ padding: 2 }}
+      <AppPressableIcon
         backgroundStyle={{ borderRadius: 8 }}
         onPress={() => {
           if (onSelectDate) {
             onSelectDate(new Date(withOffsetHours(24, date).toDateString()));
           }
-        }}>
-        <AppIcon name={"chevron-right"} color={color} />
-      </AppPressableOverlay>
+        }}
+        name={"chevron-right"}
+        color={color}
+      />
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"

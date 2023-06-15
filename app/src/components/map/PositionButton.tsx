@@ -4,6 +4,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import { AppContext } from "@/components/ContextProvider";
 import { LatLng } from "@/api";
+import { AppPressable } from "@/components/base/AppPressable";
 
 export interface PositionButtonProps {
   onPosition: (position: LatLng) => void | Promise<void>;
@@ -12,8 +13,8 @@ export interface PositionButtonProps {
 export const PositionButton = ({ onPosition }: PositionButtonProps) => {
   const { services } = useContext(AppContext);
   return (
-    <Pressable
-      style={{ height: "100%", width: 36, justifyContent: "center", alignItems: "center" }}
+    <AppPressable
+      style={{ justifyContent: "center", alignItems: "center" }}
       onPress={async () => {
         try {
           const currentLocation = await services.location.currentLocation();
@@ -27,6 +28,6 @@ export const PositionButton = ({ onPosition }: PositionButtonProps) => {
         }
       }}>
       <AppIcon name={"position"} color={AppColors.blue} />
-    </Pressable>
+    </AppPressable>
   );
 };

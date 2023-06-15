@@ -17,6 +17,7 @@ import PointAnnotation = MapLibreGL.PointAnnotation;
 import MarkerView = MapLibreGL.MarkerView;
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
+import { AppStyles } from "@/theme/styles";
 
 MapLibreGL.setAccessToken(null);
 
@@ -560,7 +561,7 @@ const AppMapView = forwardRef(
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
         </MapLibreGL.MapView>
         {showGeolocation && showActions && (
-          <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={styles.mapOverlay}>
+          <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={[styles.mapOverlay, AppStyles.shadow]}>
             <PositionButton
               onPosition={async currentLocation => {
                 if (!contains(FR_BBOX, currentLocation)) {
@@ -609,7 +610,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.white,
     margin: 16,
 
-    paddingVertical: 12,
+    paddingVertical: 6,
     position: "absolute",
     left: 0,
 

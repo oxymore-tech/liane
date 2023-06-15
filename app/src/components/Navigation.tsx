@@ -16,11 +16,7 @@ import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
 import { Row } from "@/components/base/AppLayout";
 import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
-import { SearchScreen } from "@/screens/search/SearchScreen";
 import HomeScreen from "@/screens/home/HomeScreen";
-import { LianeWizardScreen } from "@/screens/lianeWizard/LianeWizardScreen";
-import { SearchResultsScreen } from "@/screens/search/SearchResultsScreen";
-import { LianeMatchDetailScreen } from "@/screens/search/LianeMatchDetailScreen";
 import { WithBadge } from "@/components/base/WithBadge";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { useObservable } from "@/util/hooks/subscription";
@@ -58,7 +54,7 @@ function AppTabBar(props: BottomTabBarProps) {
 }
 */
 function Home() {
-  const { services, appState } = useContext(AppContext);
+  const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
   const iconSize = 24;
   return (
@@ -121,17 +117,13 @@ function Navigation() {
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
-        <Stack.Screen name="LianeWizard" component={LianeWizardScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
-        <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="LianeMatchDetail" component={LianeMatchDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );

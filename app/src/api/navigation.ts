@@ -6,10 +6,8 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, User } from "./index";
-import { InternalLianeSearchFilter } from "@/util/ref";
+import { JoinLianeRequestDetailed, Liane, UnionUtils, User } from "./index";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
-import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { Event, NewMessage, Notification, Reminder } from "@/api/notification";
 import { JoinRequest, MemberAccepted } from "@/api/event";
@@ -18,11 +16,11 @@ export type NavigationParamList = {
   Home: undefined;
   Publish: { initialValue?: Partial<InternalLianeRequest> };
   SignUp: undefined;
-  SearchResults: { filter: InternalLianeSearchFilter };
-  Search: { filter: InternalLianeSearchFilter };
+  //SearchResults: { filter: InternalLianeSearchFilter };
+  //Search: { filter: InternalLianeSearchFilter };
   RequestJoin: { request: JoinLianeRequestDetailed };
-  LianeWizard: { formData?: LianeWizardFormData };
-  LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
+  //LianeWizard: { formData?: LianeWizardFormData };
+  //LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };

@@ -3,7 +3,7 @@ import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React, { forwardRef, useContext, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { RallyingPoint } from "@/api";
@@ -12,14 +12,11 @@ import { CachedTripsView, RallyingPointItem } from "@/screens/ItinerarySearchFor
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
-import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { Trip } from "@/api/service/location";
 import { FilterSelector } from "@/screens/home/BottomSheetView";
 import { AppText } from "@/components/base/AppText";
-import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import { useAppBackController } from "@/components/AppBackContextProvider";
-import { RallyingPointInput } from "@/components/RallyingPointInput";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 
 export const RallyingPointField = forwardRef(
   (
@@ -171,7 +168,8 @@ export const RPFormHeader = ({
   animateEntry = true,
   updateTrip,
   canGoBack = false,
-  onRequestFocus
+  onRequestFocus,
+  setBarVisible
 }: {
   updateTrip: (trip: Partial<Trip>) => void;
   title?: string;
@@ -179,13 +177,21 @@ export const RPFormHeader = ({
   trip: Partial<Trip>;
   canGoBack?: boolean;
   onRequestFocus?: () => void;
+  setBarVisible?: (visible: boolean) => void;
 }) => {
   const insets = useSafeAreaInsets();
 
   const { to, from } = trip;
   const { goBack } = useAppBackController();
   const [showHistory, setShowHistory] = useState(false);
-  //
+  const itineraryMarginTop = insets.top + 88;
+
+  useEffect(() => {
+    if (setBarVisible) {
+      setBarVisible(!showHistory);
+    }
+  }, [showHistory]);
+
   return (
     <Animated.View style={showHistory ? { flex: 1 } : undefined} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
       {!showHistory && (
@@ -195,7 +201,7 @@ export const RPFormHeader = ({
               backgroundColor: AppColorPalettes.gray[100],
               borderBottomLeftRadius: 16,
               borderBottomRightRadius: 16,
-              paddingTop: 108
+              paddingTop: itineraryMarginTop
             },
             AppStyles.shadow
           ]}>
@@ -211,20 +217,20 @@ export const RPFormHeader = ({
                 />
               </View>
               {!from && (
-                <Pressable
+                <AppPressableIcon
                   onPress={() => {
                     setShowHistory(true);
-                  }}>
-                  <AppIcon name={"history"} />
-                </Pressable>
+                  }}
+                  name={"history"}
+                />
               )}
               {!!from && !to && (
-                <Pressable
+                <AppPressableIcon
                   onPress={() => {
                     updateTrip({ from: undefined });
-                  }}>
-                  <AppIcon name={"close-outline"} />
-                </Pressable>
+                  }}
+                  name={"close-outline"}
+                />
               )}
             </Row>
             {from && (
@@ -242,12 +248,12 @@ export const RPFormHeader = ({
                   />
                 </View>
                 {!!to && (
-                  <Pressable
+                  <AppPressableIcon
                     onPress={() => {
                       updateTrip({ to: undefined });
-                    }}>
-                    <AppIcon name={"close-outline"} />
-                  </Pressable>
+                    }}
+                    name={"close-outline"}
+                  />
                 )}
               </Row>
             )}
@@ -255,19 +261,19 @@ export const RPFormHeader = ({
         </View>
       )}
       {showHistory && (
-        <Column style={{ backgroundColor: AppColors.white, paddingTop: 108, flex: 1, paddingBottom: 92 }}>
+        <Column style={{ backgroundColor: AppColors.white, paddingTop: itineraryMarginTop, flex: 1 }}>
           <CachedTripsView
             onSelect={t => {
               updateTrip(t);
             }}
           />
           <View style={{ position: "absolute", top: 116, right: 16 }}>
-            <Pressable
+            <AppPressableIcon
               onPress={() => {
                 setShowHistory(false);
-              }}>
-              <AppIcon name={"close-outline"} />
-            </Pressable>
+              }}
+              name={"close-outline"}
+            />
           </View>
         </Column>
       )}
@@ -275,20 +281,18 @@ export const RPFormHeader = ({
         <Column>
           <Row style={{ alignItems: "center", marginBottom: (title ? 4 : 0) + 8 }} spacing={16}>
             {canGoBack && (
-              <Pressable
+              <AppPressableIcon
                 onPress={() => {
                   goBack();
-                }}>
-                <AppIcon name={"arrow-ios-back-outline"} size={24} color={AppColors.white} />
-              </Pressable>
+                }}
+                name={"arrow-ios-back-outline"}
+                size={24}
+                color={AppColors.white}
+              />
             )}
             {title && <AppText style={styles.title}>{title}</AppText>}
             <View style={{ flex: 1 }} />
-            {onRequestFocus && (
-              <Pressable onPress={onRequestFocus}>
-                <AppIcon color={AppColors.white} name={"search-outline"} />
-              </Pressable>
-            )}
+            {onRequestFocus && <AppPressableIcon onPress={onRequestFocus} color={AppColors.white} name={"search-outline"} />}
           </Row>
 
           <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>

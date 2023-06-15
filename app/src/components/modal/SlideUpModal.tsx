@@ -5,6 +5,7 @@ import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import React, { PropsWithChildren } from "react";
+import { AppPressable } from "@/components/base/AppPressable";
 
 export interface SlideUpModalProps extends PropsWithChildren {
   backgroundColor?: ColorValue;
@@ -19,9 +20,9 @@ export const SlideUpModal = ({ backgroundColor = AppColors.darkBlue, visible, se
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
         <View style={{ backgroundColor, padding: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
           <Row style={{ marginBottom: 8 }}>
-            <Pressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>
+            <AppPressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>
               <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
-            </Pressable>
+            </AppPressable>
           </Row>
           {children}
 
