@@ -169,7 +169,7 @@ export const HomeMapMachine = (services: {
               },
               UPDATE: [
                 {
-                  actions: ["resetTrip", "updateTrip"],
+                  actions: ["resetTrip", "updateTrip", "resetMatches"],
                   target: "#homeMap.match",
                   cond: (context, event: UpdateEvent) => {
                     return filterHasFullTrip(event.data);
@@ -220,12 +220,7 @@ export const HomeMapMachine = (services: {
             },
             UPDATE: [
               {
-                actions: [
-                  "updateTrip",
-                  (context, event) =>
-                    services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
-                  "resetMatches"
-                ],
+                actions: ["updateTrip", "cacheRecentTrip", "resetMatches"],
                 target: "#homeMap.match",
 
                 cond: (context, event: UpdateEvent) => {
@@ -247,7 +242,7 @@ export const HomeMapMachine = (services: {
             BACK: { target: "#homeMap.map", actions: ["resetTrip"] },
             UPDATE: [
               {
-                actions: ["resetTrip", "updateTrip"],
+                actions: ["resetTrip", "updateTrip", "cacheRecentTrip", "resetMatches"],
                 target: "#homeMap.match",
                 cond: (context, event: UpdateEvent) => {
                   return filterHasFullTrip(event.data);
@@ -263,7 +258,7 @@ export const HomeMapMachine = (services: {
             ],
             SELECT: {
               target: "#homeMap.match",
-              actions: ["selectRallyingPoint2"]
+              actions: ["selectRallyingPoint2", "cacheRecentTrip"]
             } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),
@@ -271,7 +266,7 @@ export const HomeMapMachine = (services: {
           {
             on: {
               FILTER: {
-                actions: ["updateFilter", raise({ type: "RELOAD", data: "refresh" })]
+                actions: ["updateFilter", "resetMatches", raise({ type: "RELOAD", data: "refresh" })]
               },
 
               DETAIL: {
@@ -288,13 +283,10 @@ export const HomeMapMachine = (services: {
 
           {
             src: (context, _) => {
-              console.debug("reloading");
               return services.services.match(context);
             },
             autoLoadCond: (context, _) => {
-              const y = !context.matches || context.reloadCause === "refresh";
-              console.debug("will reload", y, context.reloadCause);
-              return y;
+              return !context.matches || !!context.reloadCause;
             },
             actions: [
               assign((context, event) => {
@@ -334,6 +326,9 @@ export const HomeMapMachine = (services: {
     },
     {
       actions: {
+        cacheRecentTrip: (context, event: UpdateEvent) =>
+          services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
+
         resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),
         resetMatches: assign<HomeMapContext, MatchEvent>({ matches: undefined }),

@@ -100,7 +100,7 @@ export const RallyingPointField2 = forwardRef(
       icon,
       placeholder
     }: {
-      onChange: (v: string | undefined) => void;
+      onChange?: (v: string | undefined) => void;
       value: string;
       editable?: boolean;
       onFocus?: () => void;
@@ -124,7 +124,9 @@ export const RallyingPointField2 = forwardRef(
                   if (editable) {
                     inputRef.current?.clear();
                   }
-                  onChange(undefined);
+                  if (onChange) {
+                    onChange(undefined);
+                  }
                   if (editable) {
                     inputRef.current?.focus();
                   }
@@ -141,7 +143,9 @@ export const RallyingPointField2 = forwardRef(
           placeholder={placeholder}
           value={value}
           onChangeText={v => {
-            onChange(v);
+            if (onChange) {
+              onChange(v);
+            }
           }}
           onFocus={onFocus}
         />
@@ -202,10 +206,8 @@ export const RPFormHeader = ({
                   icon={<AppIcon name={"pin"} color={AppColors.orange} />}
                   value={from?.label || ""}
                   placeholder={"Sélectionnez un point de départ"}
-                  showTrailing={!!from && !to}
-                  onChange={() => {
-                    updateTrip({ from: undefined });
-                  }}
+                  showTrailing={false}
+                  editable={false}
                 />
               </View>
               {!from && (
@@ -216,20 +218,38 @@ export const RPFormHeader = ({
                   <AppIcon name={"history"} />
                 </Pressable>
               )}
+              {!!from && !to && (
+                <Pressable
+                  onPress={() => {
+                    updateTrip({ from: undefined });
+                  }}>
+                  <AppIcon name={"close-outline"} />
+                </Pressable>
+              )}
             </Row>
             {from && (
               <View style={{ alignSelf: "flex-start", height: 8, marginLeft: 15, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
             )}
             {from && (
-              <RallyingPointField2
-                icon={<AppIcon name={"flag"} color={AppColors.pink} />}
-                value={to?.label || ""}
-                placeholder={"Sélectionnez un point d'arrivée"}
-                showTrailing={!!to}
-                onChange={() => {
-                  updateTrip({ to: undefined });
-                }}
-              />
+              <Row style={{ alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  <RallyingPointField2
+                    icon={<AppIcon name={"flag"} color={AppColors.pink} />}
+                    value={to?.label || ""}
+                    placeholder={"Sélectionnez un point d'arrivée"}
+                    showTrailing={false}
+                    editable={false}
+                  />
+                </View>
+                {!!to && (
+                  <Pressable
+                    onPress={() => {
+                      updateTrip({ to: undefined });
+                    }}>
+                    <AppIcon name={"close-outline"} />
+                  </Pressable>
+                )}
+              </Row>
             )}
           </Column>
         </View>
