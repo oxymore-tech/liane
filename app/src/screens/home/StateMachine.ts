@@ -339,6 +339,10 @@ export const HomeMapMachine = (services: {
         }),
         selectRallyingPoint2: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
+            if (context.filter.from!.id === event.data.id) {
+              // Ignore if to & from are set to same value
+              return context.filter;
+            }
             return { ...context.filter, to: event.data };
           }
         }),
