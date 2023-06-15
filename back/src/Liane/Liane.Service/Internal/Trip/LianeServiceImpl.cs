@@ -408,14 +408,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var displayed = await Display(pos, pos2, dateTime, true, cancellationToken);
 
     var lianeFeatures = displayed.Segments.ToFeatures();
-
-    // Select all rallying points that can be a pickup 
-    var rallyingPointsFeatures = displayed.Lianes
-      .Select(l => l.WayPoints.Take(l.WayPoints.Count - 1))
-      .SelectMany(w => w)
-      .DistinctBy(w => w.RallyingPoint.Id)
-      .Select(w => new Feature(new Point(new Position(w.RallyingPoint.Location.Lat, w.RallyingPoint.Location.Lng)),
-        w.RallyingPoint.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(w.RallyingPoint, null))
+    
+      // Select all rallying points that can be a pickup 
+     var displayedPoints = displayed.Lianes
+        .Select(l => l.WayPoints.Take(l.WayPoints.Count - 1))
+        .SelectMany(w => w)
+        .DistinctBy(w => w.RallyingPoint.Id).Select(w => w.RallyingPoint);
+    
+    var rallyingPointsFeatures = displayedPoints.Select(rp => new Feature(new Point(new Position(rp.Location.Lat, rp.Location.Lng)),
+        rp.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(rp, null))
       ));
 
     return new FeatureCollection(lianeFeatures.Concat(rallyingPointsFeatures).ToList());

@@ -58,22 +58,22 @@ public sealed class LianeController : ControllerBase
   {
     await lianeService.UpdateDepartureTime(id, departureTime);
   }
-  
+
   [HttpDelete("{id}/members/{memberId}")]
   public async Task Delete([FromRoute] string id, [FromRoute] string memberId)
   {
-    // For now only allow user himself 
+    // For now only allow user himself
     if (currentContext.CurrentUser().Id != memberId) throw new ForbiddenException();
     await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
   }
-  
+
   [HttpGet("{id}/members/{memberId}/contact")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)
   {
     return lianeService.GetContact(id, currentContext.CurrentUser().Id, memberId);
   }
-  
+
   [HttpPost("{id}/feedback")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<IActionResult> SendFeedback([FromRoute] string id, [FromBody] Feedback feedback)
@@ -81,7 +81,7 @@ public sealed class LianeController : ControllerBase
     await lianeService.UpdateFeedback(id, feedback);
     return NoContent();
   }
-  
+
   [HttpGet("display")] // Rename to filter ? + return FeatureCollection instead of Segments ?
   public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after, CancellationToken cancellationToken)
   {

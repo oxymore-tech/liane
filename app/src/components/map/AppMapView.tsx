@@ -47,7 +47,7 @@ export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
-  onSelectLocation?: (point: LatLng) => void;
+  onSelectFeatures?: (features: { location: LatLng; properties: any }[]) => void;
   showGeolocation?: boolean;
   bounds?: DisplayBoundingBox | undefined;
   onMapLoaded?: () => void;
@@ -188,9 +188,18 @@ export interface RallyingPointsDisplayLayerProps {
   onSelect?: (r?: RallyingPoint) => void;
   cluster?: boolean;
   interactive?: boolean;
+  minZoomLevel?: number | undefined;
+  color?: ColorValue;
 }
 
-export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster = true, interactive = true }: RallyingPointsDisplayLayerProps) => {
+export const RallyingPointsDisplayLayer = ({
+  rallyingPoints,
+  onSelect,
+  cluster = true,
+  interactive = true,
+  color = AppColors.orange,
+  minZoomLevel
+}: RallyingPointsDisplayLayerProps) => {
   const feature = useMemo(() => {
     if (isFeatureCollection(rallyingPoints)) {
       return {
@@ -213,6 +222,9 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
     };
   }, [rallyingPoints]);
   const controller = useContext<AppMapViewController>(MapControllerContext);
+
+  // @ts-ignore
+  const mainColor: string = color;
   return (
     <MapLibreGL.ShapeSource
       id="rp_l"
@@ -246,17 +258,18 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
           : undefined
       }>
       <MapLibreGL.CircleLayer
+        minZoomLevel={minZoomLevel}
         id="rp_circles_clustered"
         filter={["has", "point_count"]}
         style={{
-          circleColor: AppColorPalettes.orange[400],
-          circleRadius: 16,
+          circleColor: mainColor,
           circleRadius: ["step", ["get", "point_count"], 14, 3, 16, 10, 18],
           circleStrokeColor: AppColors.white,
           circleStrokeWidth: 1
         }}
       />
       <MapLibreGL.SymbolLayer
+        minZoomLevel={minZoomLevel}
         id="rp_symbols_clustered"
         filter={["has", "point_count"]}
         style={{
@@ -270,11 +283,12 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
         }}
       />
       <MapLibreGL.CircleLayer
+        minZoomLevel={minZoomLevel}
         id="rp_circles"
         // belowLayerID="place"
         filter={["!", ["has", "point_count"]]}
         style={{
-          circleColor: ["step", ["zoom"], AppColorPalettes.orange[400], 12, AppColors.orange],
+          circleColor: ["step", ["zoom"], mainColor, 12, mainColor],
           circleRadius: ["step", ["zoom"], 5, 12, 10],
           circleStrokeColor: AppColors.white,
           circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
@@ -284,11 +298,11 @@ export const RallyingPointsDisplayLayer = ({ rallyingPoints, onSelect, cluster =
       <MapLibreGL.SymbolLayer
         id="rp_labels"
         filter={["!", ["has", "point_count"]]}
-        minZoomLevel={12}
+        minZoomLevel={minZoomLevel ? Math.max(12, minZoomLevel) : 12}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: AppColors.orange,
+          textColor: mainColor,
           textHaloColor: "#fff",
           textHaloWidth: 1.2,
           textField: "{label}",
@@ -390,7 +404,16 @@ export const WayPointDisplay = ({
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, onStartMovingRegion, children, showGeolocation = false, bounds, onMapLoaded }: AppMapViewProps,
+    {
+      onRegionChanged,
+      onStartMovingRegion,
+      children,
+      showGeolocation = false,
+      bounds,
+      onMapLoaded,
+      onStopMovingRegion,
+      onSelectFeatures
+    }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const { services } = useContext(AppContext);
@@ -401,7 +424,7 @@ const AppMapView = forwardRef(
 
     const controller: AppMapViewController = {
       setCenter: (p: LatLng, zoom?: number) => {
-        const duration = 250;
+        const duration = 350;
         cameraRef.current?.setCamera({
           centerCoordinate: [p.lng, p.lat],
           zoomLevel: zoom,
@@ -421,20 +444,56 @@ const AppMapView = forwardRef(
     const scale = Platform.OS === "android" ? wd.scale : 1;
 
     useImperativeHandle(ref, () => controller);
+    const regionMoveCallbackRef = useRef<number | undefined>();
+    const moving = useRef<boolean>(false);
     return (
       <View style={styles.map}>
         <MapLibreGL.MapView
           ref={mapRef}
-          onRegionWillChange={() => {
-            if (animated) {
-              setShowActions(false);
-              if (onStartMovingRegion) {
-                onStartMovingRegion();
+          onTouchMove={() => {
+            if (!moving.current) {
+              moving.current = true;
+              if (animated) {
+                setShowActions(false);
+                if (onStartMovingRegion) {
+                  onStartMovingRegion();
+                }
               }
+            }
+          }}
+          onTouchEnd={() => {
+            regionMoveCallbackRef.current = setTimeout(async () => {
+              moving.current = false;
+              if (onStopMovingRegion) {
+                onStopMovingRegion();
+              }
+            }, 300);
+          }}
+          onTouchCancel={() => {
+            regionMoveCallbackRef.current = setTimeout(async () => {
+              moving.current = false;
+              if (onStopMovingRegion) {
+                onStopMovingRegion();
+              }
+            }, 300);
+          }}
+          onRegionWillChange={() => {
+            if (regionMoveCallbackRef.current) {
+              clearTimeout(regionMoveCallbackRef.current);
+              regionMoveCallbackRef.current = undefined;
+            } else if (animated) {
+              setShowActions(false);
+              /*if (onStartMovingRegion) {
+                onStartMovingRegion();
+              }*/
             }
           }}
           onRegionDidChange={feature => {
             if (animated) {
+              moving.current = false;
+              if (onStopMovingRegion) {
+                onStopMovingRegion();
+              }
               setShowActions(true);
               if (onRegionChanged) {
                 onRegionChanged(feature.properties);
@@ -464,22 +523,27 @@ const AppMapView = forwardRef(
           logoEnabled={false}
           onPress={async f => {
             if ("coordinates" in f.geometry) {
-              console.log(JSON.stringify(f.geometry.coordinates)); //
+              console.log(JSON.stringify(f.geometry.coordinates));
+              //@ts-ignore
               const pointInView = await mapRef.current?.getPointInView(f.geometry.coordinates)!;
-              console.log(wd.width, wd.height, wd.scale, JSON.stringify(pointInView)); //
+              console.log(wd.width, wd.height, wd.scale, JSON.stringify(pointInView));
               const q = await mapRef.current?.queryRenderedFeaturesInRect(
                 [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
                 ["==", ["geometry-type"], "Point"],
                 ["poi", "place", "town", "city", "airport", "parking", "station"]
               );
-              if (Platform.OS === "android" && q && q.features.length > 0) {
-                ToastAndroid.showWithGravity(
-                  JSON.stringify(q.features.map(feat => feat.properties!["name:latin"])),
-                  ToastAndroid.SHORT,
-                  ToastAndroid.CENTER
-                );
+
+              if (q) {
+                const features = q.features.map(feat => ({
+                  //@ts-ignore
+                  location: { lat: feat.geometry.coordinates[1], lng: feat.geometry.coordinates[0] },
+                  properties: feat.properties
+                }));
+                if (onSelectFeatures) {
+                  onSelectFeatures(features);
+                }
+                console.log(JSON.stringify(features));
               }
-              console.log(JSON.stringify(q?.features.map(feat => ({ coordinates: feat.geometry.coordinates, properties: feat.properties }))));
             }
           }}
           attributionEnabled={false}>

@@ -6,7 +6,7 @@ import { AppText } from "@/components/base/AppText";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { toRelativeTimeString } from "@/api/i18n";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation, getNotificationNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
@@ -34,7 +34,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
       const datetime = capitalize(toRelativeTimeString(new Date(item.createdAt!)));
       const navigate = getNotificationNavigation(item);
       return (
-        <AppPressable
+        <AppPressableOverlay
           key={item.id}
           onPress={async () => {
             if (navigate) {
@@ -60,7 +60,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
               <AppText style={{ color: AppColorPalettes.gray[500] }}>{datetime}</AppText>
             </Column>
           </Row>
-        </AppPressable>
+        </AppPressableOverlay>
       );
     };
     return (

@@ -1,6 +1,6 @@
 import { isToday, withOffsetHours } from "@/util/datetime";
 import { Row } from "@/components/base/AppLayout";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
@@ -8,17 +8,19 @@ import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 import React, { useMemo, useRef, useState } from "react";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { WheelPicker } from "@/components/WheelPicker";
-import { Platform } from "react-native";
+import { ColorValue, Platform } from "react-native";
 import { capitalize } from "@/util/strings";
 
 export const DatePagerSelector = ({
   date = new Date(),
   onSelectDate,
-  formatter
+  formatter,
+  color = AppColorPalettes.gray[800]
 }: {
   date: Date | undefined;
   onSelectDate: (d: Date) => void;
   formatter?: (d: Date) => string;
+  color?: ColorValue;
 }) => {
   const dateIsToday = !date || isToday(date);
 
@@ -29,7 +31,7 @@ export const DatePagerSelector = ({
   }, []);
   return (
     <Row style={{ alignItems: "center", justifyContent: "center" }} spacing={8}>
-      <AppPressable
+      <AppPressableOverlay
         backgroundStyle={{ borderRadius: 8 }}
         style={{ padding: 2 }}
         clickable={!dateIsToday}
@@ -44,24 +46,24 @@ export const DatePagerSelector = ({
                 }
               }
         }>
-        <AppIcon name={"chevron-left"} color={AppColorPalettes.gray[800]} opacity={dateIsToday ? 0.4 : 1} />
-      </AppPressable>
+        <AppIcon name={"chevron-left"} color={color} opacity={dateIsToday ? 0.4 : 1} />
+      </AppPressableOverlay>
 
-      <AppPressable
+      <AppPressableOverlay
         onPress={() => {
           setDatePickerVisible(true);
         }}
         style={{ alignItems: "center", justifyContent: "center", paddingVertical: 8, paddingHorizontal: 4 }}
         backgroundStyle={{ borderRadius: 8 }}>
         <Row spacing={6}>
-          <AppIcon name={"calendar-outline"} size={18} />
-          <AppText style={{ fontWeight: "bold" }}>
+          <AppIcon name={"calendar-outline"} size={18} color={color} />
+          <AppText style={{ fontWeight: "bold", color }}>
             {formatter ? formatter(date || new Date()) : capitalize(toRelativeDateString(date, formatShortMonthDay))}
           </AppText>
         </Row>
-      </AppPressable>
+      </AppPressableOverlay>
 
-      <AppPressable
+      <AppPressableOverlay
         style={{ padding: 2 }}
         backgroundStyle={{ borderRadius: 8 }}
         onPress={() => {
@@ -69,8 +71,8 @@ export const DatePagerSelector = ({
             onSelectDate(new Date(withOffsetHours(24, date).toDateString()));
           }
         }}>
-        <AppIcon name={"chevron-right"} />
-      </AppPressable>
+        <AppIcon name={"chevron-right"} color={color} />
+      </AppPressableOverlay>
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"

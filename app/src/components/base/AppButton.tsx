@@ -4,7 +4,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 
 // @ts-ignore
 export interface AppButtonProps extends PressableProps {
@@ -31,7 +31,7 @@ export function AppButton({
   const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 1 : 2);
 
   return (
-    <AppPressable {...props} backgroundStyle={{ backgroundColor, borderRadius }} style={styles.contentContainer} disabled={disabled}>
+    <AppPressableOverlay {...props} backgroundStyle={{ backgroundColor, borderRadius }} style={styles.contentContainer} disabled={disabled}>
       {icon && (
         <View style={styles.iconContainer}>
           <AppIcon name={icon} color={textColor} />
@@ -39,7 +39,7 @@ export function AppButton({
       )}
 
       {title && <AppText style={[{ color: textColor }, styles.text]}>{title}</AppText>}
-    </AppPressable>
+    </AppPressableOverlay>
   );
 }
 

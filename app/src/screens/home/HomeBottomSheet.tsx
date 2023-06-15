@@ -25,14 +25,6 @@ export const HomeBottomSheetContainer = (
   const isMapState = state.matches("map");
   const isMatchState = state.matches("match");
   const isPointState = state.matches("point");
-  const { navigation } = useAppNavigation<"Home">();
-
-  const bbStyle = useBottomBarStyle();
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: [...bbStyle, { display: isMapState ? undefined : "none" }] //{transform: [{translateY: state.matches("map") ? 0 : 80}]}]
-    });
-  });
 
   const insets = useSafeAreaInsets();
   const { height } = useAppWindowsDimensions();
@@ -102,7 +94,9 @@ export const TopRow = ({ loading = false, title }: { loading?: boolean; title: s
         paddingBottom: 8,
         justifyContent: "space-between"
       }}>
-      <AppText style={{ fontWeight: "bold", alignSelf: "center", color: AppColorPalettes.gray[600] }}>{title}</AppText>
+      <AppText numberOfLines={2} style={{ fontWeight: "bold", alignSelf: "center", color: AppColorPalettes.gray[600] }}>
+        {title}
+      </AppText>
       {loading && <ActivityIndicator size={12} color={"red"} />}
     </Row>
   );

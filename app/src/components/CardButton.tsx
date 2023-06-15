@@ -15,7 +15,7 @@ import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/them
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
@@ -43,12 +43,12 @@ const CancelButton = ({ color, label, onCancel }: CancelButtonProps) => {
   const positionStyleOverride = label ? {} : { right: -12 };
 
   return (
-    <AppPressable
+    <AppPressableOverlay
       style={styles.cancelContainer}
       backgroundStyle={[styles.cancelPressable, { backgroundColor: cancelColor }, positionStyleOverride]}
       onPress={onCancel}>
       <AppIcon name="close-outline" color={cancelIconColor} />
-    </AppPressable>
+    </AppPressableOverlay>
   );
 };
 
@@ -291,7 +291,7 @@ export const CardButton = forwardRef<CardButtonElement, LianeCardProps>(
           </CardModal>
         )}
         <View onTouchEnd={onTapped}>
-          <AppPressable backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
+          <AppPressableOverlay backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
             {label && <AppText style={[{ color: finalTextColor }, styles.label]}>{label}</AppText>}
 
             {valueIsString && (
@@ -300,7 +300,7 @@ export const CardButton = forwardRef<CardButtonElement, LianeCardProps>(
               </AppText>
             )}
             {!valueIsString && value}
-          </AppPressable>
+          </AppPressableOverlay>
         </View>
         {onCancel && <CancelButton color={color} label={label} onCancel={onCancel} />}
       </View>

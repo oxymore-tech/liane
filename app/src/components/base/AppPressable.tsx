@@ -3,7 +3,7 @@ import React, { PropsWithChildren, ReactNode, useMemo } from "react";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { AppColors, WithAlpha } from "@/theme/colors";
 
-export interface AppPressableProps extends PressableProps, PropsWithChildren {
+export interface AppPressableOverlayProps extends PressableProps, PropsWithChildren {
   backgroundStyle?: StyleProp<ViewStyle>;
   foregroundColor?: ColorValue;
   children: ReactNode | undefined;
@@ -11,10 +11,15 @@ export interface AppPressableProps extends PressableProps, PropsWithChildren {
   style?: StyleProp<ViewStyle>;
 }
 
+export function AppPressable(props: PressableProps) {
+  // @ts-ignore
+  return <Pressable style={[props.style, { minHeight: 36, minWidth: 36, alignItems: "center", justifyContent: "center" }]} {...props} />;
+}
+
 /**
  * Pressable with an overlay when pressed
  */
-export function AppPressable({
+export function AppPressableOverlay({
   backgroundStyle,
   foregroundColor,
   children,
@@ -23,7 +28,7 @@ export function AppPressable({
   disabled,
   onPress,
   ...props
-}: AppPressableProps) {
+}: AppPressableOverlayProps) {
   const opacitySv = useSharedValue(0);
   const opacityStyle = useAnimatedStyle(() => {
     return {
@@ -34,6 +39,7 @@ export function AppPressable({
     if (backgroundStyle) {
       // Get border radius from background shape
       const styles = StyleSheet.flatten(backgroundStyle);
+
       return Object.fromEntries(
         [
           "borderRadius",
@@ -45,7 +51,10 @@ export function AppPressable({
           "borderTopLeftRadius",
           "borderTopRightRadius",
           "borderTopStartRadius"
-        ].map(k => [k, styles[k]])
+        ].map(k => {
+          //@ts-ignore
+          return [k, styles[k]];
+        })
       );
     }
     return {};

@@ -65,7 +65,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       expanded.next(v);
     };
 
-    const updateCurrentStop = (index: boolean) => {
+    const updateCurrentStop = (index: number) => {
       currentStop.current = index;
     };
 

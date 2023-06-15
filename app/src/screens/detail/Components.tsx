@@ -7,7 +7,7 @@ import { ColorValue, Pressable, StyleSheet, View } from "react-native";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Item } from "@/components/ActionItem";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LianeMember, User } from "@/api";
 
 export const InfoItem = (props: { icon: IconName | CustomIconName; value: string }) => {
@@ -73,12 +73,12 @@ export const PassengerListView = (props: { members: LianeMember[] }) => {
         <AppText style={{ fontWeight: "bold", fontSize: 16 }}>Passagers ({props.members.length})</AppText>
       </View>
       {props.members.map(m => (
-        <AppPressable style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
+        <AppPressableOverlay style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
           <Row spacing={24} style={{ alignItems: "center" }}>
             <UserPicture id={m.user.id} url={m.user.pictureUrl} />
             <AppText>{m.user.pseudo}</AppText>
           </Row>
-        </AppPressable>
+        </AppPressableOverlay>
       ))}
     </Column>
   );

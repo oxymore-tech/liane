@@ -9,6 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
+using GeoJSON.Text.Feature;
+using GeoJSON.Text.Geometry;
 using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -171,6 +173,15 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     }
 
     return results.ToImmutableList();
+  }
+
+  public async Task<FeatureCollection> ListGeojson(LatLng? from, LatLng? to, int? distance = null, string? search = null, int? limit = null)
+  {
+    var displayedPoints = await List(from, to, distance, search, limit);
+    var rallyingPointsFeatures = displayedPoints.Select(rp => new Feature(new Point(new Position(rp.Location.Lat, rp.Location.Lng)),
+      rp.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(rp, null))
+    ));
+    return new FeatureCollection(rallyingPointsFeatures.ToList());
   }
 
   private static string ToSearchPattern(string search)

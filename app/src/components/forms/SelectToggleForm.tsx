@@ -1,6 +1,6 @@
 import React from "react";
 import { Column, Row } from "@/components/base/AppLayout";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
 import { defaultTextColor } from "@/theme/colors";
 import { ColorValue, StyleSheet } from "react-native";
@@ -33,7 +33,7 @@ export const SwitchIconToggle = ({
   const unselectedPadding = padding - 2;
   return (
     <Row>
-      <AppPressable
+      <AppPressableOverlay
         onPress={onChange}
         clickable={!value}
         style={{
@@ -52,8 +52,8 @@ export const SwitchIconToggle = ({
         <Column style={styles.column} spacing={4}>
           {trueIcon}
         </Column>
-      </AppPressable>
-      <AppPressable
+      </AppPressableOverlay>
+      <AppPressableOverlay
         onPress={onChange}
         clickable={value}
         style={{ paddingVertical: !value ? padding : unselectedPadding, paddingHorizontal: (!value ? padding : unselectedPadding) + 2 }}
@@ -69,7 +69,7 @@ export const SwitchIconToggle = ({
         <Column style={styles.column} spacing={4}>
           {falseIcon}
         </Column>
-      </AppPressable>
+      </AppPressableOverlay>
     </Row>
   );
 };
@@ -88,7 +88,7 @@ export const SwitchToggle = ({
   const unselectedPadding = padding - 2;
   return (
     <Row>
-      <AppPressable
+      <AppPressableOverlay
         onPress={!value ? onChange : undefined}
         clickable={!value}
         style={{
@@ -109,8 +109,8 @@ export const SwitchToggle = ({
             {trueLabel}
           </AppText>
         </Column>
-      </AppPressable>
-      <AppPressable
+      </AppPressableOverlay>
+      <AppPressableOverlay
         onPress={value ? onChange : undefined}
         clickable={value}
         style={{ padding: !value ? padding : unselectedPadding }}
@@ -129,7 +129,7 @@ export const SwitchToggle = ({
             {falseLabel}
           </AppText>
         </Column>
-      </AppPressable>
+      </AppPressableOverlay>
     </Row>
   );
 };
@@ -153,7 +153,7 @@ export const SwitchToggleForm = WithFormController(
 
     return (
       <Row>
-        <AppPressable
+        <AppPressableOverlay
           onPress={() => changeSelection(true)}
           clickable={!value}
           style={{
@@ -173,8 +173,8 @@ export const SwitchToggleForm = WithFormController(
               {trueLabel}
             </AppText>
           </Column>
-        </AppPressable>
-        <AppPressable
+        </AppPressableOverlay>
+        <AppPressableOverlay
           onPress={() => changeSelection(false)}
           clickable={value}
           style={{ padding: !value ? padding : unselectedPadding }}
@@ -192,7 +192,7 @@ export const SwitchToggleForm = WithFormController(
               {falseLabel}
             </AppText>
           </Column>
-        </AppPressable>
+        </AppPressableOverlay>
       </Row>
     );
   }

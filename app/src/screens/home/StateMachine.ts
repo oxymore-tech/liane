@@ -1,6 +1,7 @@
 import {
   assign,
-  AssignAction,
+  BaseActionObject,
+  BaseActions,
   createMachine,
   Interpreter,
   raise,
@@ -48,20 +49,24 @@ type InternalLianeMatchFilter = {
     direction: TargetTimeDirection;
   };
   availableSeats: number;
-  displayBounds: BoundingBox | undefined;
 };
 
-type ReloadCause = "display" | "retry" | undefined;
+type ReloadCause = "display" | "refresh";
+type MapDisplayParams = {
+  displayBounds: BoundingBox | undefined;
+  displayAllPoints?: boolean | undefined;
+};
 export type HomeMapContext = {
   filter: Partial<InternalLianeMatchFilter>;
   matches: LianeMatch[] | undefined;
   selectedMatch: LianeMatch | undefined;
   // lianeDisplay: LianeDisplay | undefined;
   error?: any | undefined;
-  reloadCause?: ReloadCause;
+  reloadCause?: ReloadCause | undefined;
+  mapDisplay: MapDisplayParams;
 };
 
-type UpdateDisplayEvent = { type: "DISPLAY"; data: BoundingBox };
+type UpdateDisplayEvent = { type: "DISPLAY"; data: MapDisplayParams };
 type UpdateFilterEvent = { type: "FILTER"; data: Partial<InternalLianeMatchFilter> };
 type UpdateEvent = { type: "UPDATE"; data: Partial<Trip> };
 
@@ -89,10 +94,7 @@ const createState = <T>(
   //  onBack?: TransitionConfigOrTarget<HomeMapContext, Event>,
   load?: {
     src: (context: HomeMapContext, event: Event) => Promise<T>;
-    actions: ((
-      context: HomeMapContext,
-      event: { type: "done.invoke"; data: T }
-    ) => HomeMapContext | AssignAction<HomeMapContext, { type: "done.invoke"; data: T }>)[];
+    actions: BaseActions<HomeMapContext, { type: "done.invoke"; data: T }, Event, BaseActionObject>[];
     autoLoadCond?: (context: HomeMapContext, event: Event) => boolean;
   }
 ) => {
@@ -119,12 +121,13 @@ const createState = <T>(
   }*/
   if (load) {
     //state.on!.RELOAD.actions = forwardTo("map.loader" + ff);
+    // @ts-ignore
     state.states!.load.invoke = {
       src: load.src,
 
       onDone: {
         target: "idle",
-        actions: [() => console.log("loading done"), ...load.actions]
+        actions: [() => console.log("loading done"), "resetReloadCause", ...load.actions]
       },
       onError: {
         target: "failed",
@@ -154,7 +157,7 @@ export const HomeMapMachine = (services: {
         matches: undefined,
         //    lianeDisplay: undefined,
         selectedMatch: undefined,
-        displayBounds: undefined
+        mapDisplay: { displayBounds: undefined }
       },
       initial: "map",
       states: {
@@ -164,9 +167,18 @@ export const HomeMapMachine = (services: {
               DISPLAY: {
                 actions: ["updateBounds", raise({ type: "RELOAD", data: "display" })]
               },
-              UPDATE: {
-                actions: ["updateTrip"]
-              },
+              UPDATE: [
+                {
+                  actions: ["resetTrip", "updateTrip", "resetMatches"],
+                  target: "#homeMap.match",
+                  cond: (context, event: UpdateEvent) => {
+                    return filterHasFullTrip(event.data);
+                  }
+                },
+                {
+                  actions: ["updateTrip"]
+                }
+              ],
               FILTER: {
                 actions: ["updateFilter", raise("RELOAD")]
               },
@@ -193,25 +205,6 @@ export const HomeMapMachine = (services: {
               }
             ]
           }
-          /*  {
-            src: (context, _) => services.display(context),
-            assign: (context, event) => {
-              console.debug(event.data?.lianes);
-              return {
-                ...context,
-                matches: (event.data?.lianes ?? []).map(liane => ({
-                  liane,
-                  match: {
-                    type: "Exact",
-                    pickup: liane.wayPoints[0].rallyingPoint.id!,
-                    deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
-                  },
-                  freeSeatsCount: liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
-                })),
-                lianeDisplay: event.data || context.lianeDisplay // Keep previous display if undefined
-              };
-            }
-          }*/
         ),
         form: createState({
           always: {
@@ -227,12 +220,7 @@ export const HomeMapMachine = (services: {
             },
             UPDATE: [
               {
-                actions: [
-                  "updateTrip",
-                  (context, event) =>
-                    services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
-                  "resetMatches"
-                ],
+                actions: ["updateTrip", "cacheRecentTrip", "resetMatches"],
                 target: "#homeMap.match",
 
                 cond: (context, event: UpdateEvent) => {
@@ -254,28 +242,31 @@ export const HomeMapMachine = (services: {
             BACK: { target: "#homeMap.map", actions: ["resetTrip"] },
             UPDATE: [
               {
-                actions: ["resetTrip", "updateTrip"],
+                actions: ["resetTrip", "updateTrip", "cacheRecentTrip", "resetMatches"],
                 target: "#homeMap.match",
                 cond: (context, event: UpdateEvent) => {
                   return filterHasFullTrip(event.data);
                 }
               },
               {
-                actions: ["resetTrip", "updateTrip", (context, event) => services.services.cacheRecentPoint((event.data.from || event.data.to)!)],
-                target: "#homeMap.form"
+                actions: ["resetTrip", "updateTrip"], //, (context, event) => services.services.cacheRecentPoint((event.data.from || event.data.to)!)],
+                target: "#homeMap.map",
+                cond: (context, event: UpdateEvent) => {
+                  return !event.data.to && !event.data.from;
+                }
               }
             ],
             SELECT: {
-              target: "#homeMap.point",
-              actions: ["selectRallyingPoint"]
-            }
+              target: "#homeMap.match",
+              actions: ["selectRallyingPoint2", "cacheRecentTrip"]
+            } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),
         match: createState(
           {
             on: {
               FILTER: {
-                actions: ["updateFilter", raise("RELOAD")]
+                actions: ["updateFilter", "resetMatches", raise({ type: "RELOAD", data: "refresh" })]
               },
 
               DETAIL: {
@@ -285,14 +276,18 @@ export const HomeMapMachine = (services: {
               BACK: { target: "#homeMap.map", actions: ["resetTrip", "resetMatches"] },
               UPDATE: {
                 actions: ["updateTrip"],
-                target: "#homeMap.form"
+                target: "#homeMap.point" //  target: "#homeMap.form"
               }
             }
           },
 
           {
-            src: (context, _) => services.services.match(context),
-            autoLoadCond: (context, _) => !context.matches,
+            src: (context, _) => {
+              return services.services.match(context);
+            },
+            autoLoadCond: (context, _) => {
+              return !context.matches || !!context.reloadCause;
+            },
             actions: [
               assign((context, event) => {
                 return {
@@ -331,6 +326,9 @@ export const HomeMapMachine = (services: {
     },
     {
       actions: {
+        cacheRecentTrip: (context, event: UpdateEvent) =>
+          services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
+
         resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),
         resetMatches: assign<HomeMapContext, MatchEvent>({ matches: undefined }),
@@ -339,9 +337,17 @@ export const HomeMapMachine = (services: {
             return { ...context.filter, from: event.data, to: undefined };
           }
         }),
+        selectRallyingPoint2: assign<HomeMapContext, SelectEvent>({
+          filter: (context, event) => {
+            return { ...context.filter, to: event.data };
+          }
+        }),
         selectMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: (context, event) => event.data }),
         setReloadCause: assign<HomeMapContext, ReloadEvent>({
           reloadCause: (context, event) => event.data
+        }),
+        resetReloadCause: assign<HomeMapContext, ReloadEvent>({
+          reloadCause: () => undefined
         }),
         updateFilter: assign<HomeMapContext, UpdateFilterEvent>({
           filter: (context, event) => {
@@ -355,7 +361,7 @@ export const HomeMapMachine = (services: {
           }
         }),
         updateBounds: assign<HomeMapContext, UpdateDisplayEvent>({
-          filter: (context, event) => ({ ...context.filter, displayBounds: event.data })
+          mapDisplay: (context, event) => event.data
         }),
         updateTrip: assign<HomeMapContext, UpdateEvent>({
           filter: (context, event) => {
@@ -364,7 +370,6 @@ export const HomeMapMachine = (services: {
               // Ignore if to & from are set to same value
               return context.filter;
             }
-            // console.log(newTrip);
             return newTrip;
           }
         })

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, ToastAndroid, View } from "react-native";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
@@ -12,9 +12,9 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON } from "geojson";
-import { isWithinBox, fromPositions } from "@/api/geo";
-import { AnimatedFloatingBackButton, RallyingPointHeader } from "@/screens/home/HomeHeader";
-import { FilterListView, FilterSelector, LianeDestinations, LianeNearestLinks } from "@/screens/home/BottomSheetView";
+import { isWithinBox, fromPositions, BoundingBox } from "@/api/geo";
+import { AnimatedFloatingBackButton, RallyingPointHeader, RPFormHeader } from "@/screens/home/HomeHeader";
+import { FilterListView, FilterSelector, LianeDestinations } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
@@ -34,6 +34,10 @@ import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
+import { useBottomBarStyle } from "@/components/Navigation";
+import { useAppNavigation } from "@/api/navigation";
+import { Column } from "@/components/base/AppLayout";
+import { AppText } from "@/components/base/AppText";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -61,11 +65,23 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const loadingDisplay = isLoadingDisplay || (loading && state.context.reloadCause === "display");
   const loadingList = loading && !state.context.reloadCause;
   const offline = status === "offline";
+  const { navigation } = useAppNavigation<"Home">();
 
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
+  const isMapState = state.matches("map");
+  const isPointState = state.matches("point");
 
-  const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay /*|| !lianeDisplay*/ ? "closed" : undefined;
+  const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
+
+  console.debug(bottomSheetDisplay);
+  const bbStyle = useBottomBarStyle();
+  React.useLayoutEffect(() => {
+    navigation.setOptions(
+      //@ts-ignore
+      { tabBarStyle: [...bbStyle, { display: isMapState ? undefined : "none" }] }
+    );
+  });
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -88,27 +104,25 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
           </Animated.View>
         )}
 
-        {!offline && (
+        {!offline && !isMapState && (
           <HomeBottomSheetContainer
             onScrolled={(v, expanded) => {
               //setMapBottom(v);
               bottomSheetScroll.next({ expanded, top: v });
             }}
             display={bottomSheetDisplay}
-            canScroll={!state.matches("map") || (loadingDisplay && !movingDisplay)}>
-            {(state.matches("map") || state.matches("point")) && (
-              <TopRow loading={loadingList && !movingDisplay} title={state.matches("point") ? "Prochains départs" : "À proximité"} />
-            )}
-            {(state.matches("map") || state.matches("point")) && <FilterSelector shortFormat={true} />}
+            canScroll={loadingDisplay && !movingDisplay}>
+            {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
+            {/*state.matches("point") && <FilterSelector shortFormat={true} />*/}
             {isMatchState && <FilterListView loading={loadingList} />}
-            {state.matches("map") && <LianeNearestLinks />}
-            {state.matches("point") && <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />}
+
+            {isPointState && <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
             {/*loadingList && isDetailState && <ActivityIndicator />*/}
           </HomeBottomSheetContainer>
         )}
 
-        {state.matches("map") && <HomeHeader bottomSheetObservable={bottomSheetScroll} onPress={() => machine.send("FORM")} />}
+        {/*state.matches("map") && <HomeHeader bottomSheetObservable={bottomSheetScroll} onPress={() => machine.send("FORM")} />*/}
         {state.matches("form") && (
           <ItinerarySearchForm
             // updateField={(field, value) => machine.send("UPDATE", { data: { [field]: value } })}
@@ -120,7 +134,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             updateTrip={t => machine.send("UPDATE", { data: t })}
           />
         )}
-        {isMatchState && (
+        {/*isMatchState && (
           <ItineraryFormHeader
             updateTrip={t => machine.send("UPDATE", { data: t })}
             editable={false}
@@ -130,7 +144,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             }}
             trip={state.context.filter}
           />
-        )}
+        )*/}
         {isDetailState && (
           <AnimatedFloatingBackButton
             onPress={() => {
@@ -138,13 +152,20 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             }}
           />
         )}
-
-        {state.matches("point") && (
-          <RallyingPointHeader
-            rallyingPoint={state.context.filter.from!}
-            onBackPressed={() => {
-              machine.send("BACK");
-            }}
+        {isMapState && (
+          <RPFormHeader
+            animateEntry={!state.history?.matches("point") && !state.history?.matches("match")}
+            title={"Visualiser les lianes"}
+            updateTrip={t => machine.send("UPDATE", { data: t })}
+            trip={state.context.filter}
+          />
+        )}
+        {(isMatchState || isPointState) && (
+          <RPFormHeader
+            animateEntry={false}
+            title={"Visualiser les lianes"}
+            updateTrip={t => machine.send("UPDATE", { data: t })}
+            trip={state.context.filter}
           />
         )}
       </View>
@@ -160,9 +181,9 @@ const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observa
   const insets = useSafeAreaInsets();
 
   const { expanded } = useObservable(props.bottomSheetObservable, { expanded: false, top: 0 });
-  // console.log("bsheet expanded =", expanded);
+
   return (
-    <View style={[styles.floatingSearchBar, { marginTop: insets.top }]}>
+    <Column style={[styles.floatingSearchBar, { marginTop: insets.top }]} spacing={8}>
       <Pressable style={[AppStyles.inputBar, !expanded ? AppStyles.shadow : styles.border]} onPress={props.onPress}>
         <AppTextInput
           style={AppStyles.input}
@@ -172,7 +193,10 @@ const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observa
           onPressIn={props.onPress}
         />
       </Pressable>
-    </View>
+      <View style={{ backgroundColor: AppColors.white, borderRadius: 8 }}>
+        <FilterSelector />
+      </View>
+    </Column>
   );
 };
 const HomeMap = ({
@@ -196,8 +220,10 @@ const HomeMap = ({
   const { height } = useAppWindowsDimensions();
   const { top: insetsTop } = useSafeAreaInsets();
   const lianeDisplay = useObservable(displaySource, EmptyFeatureCollection);
+  const rpMinZoomLevel = 10.5;
+  const { services } = useContext(AppContext);
 
-  console.debug("display :", lianeDisplay.features.length);
+  console.debug("[MAP] displaying", lianeDisplay.features.length, "features");
 
   const pickupsDisplay = useMemo(() => {
     if (isMatchStateIdle) {
@@ -245,17 +271,51 @@ const HomeMap = ({
   }, [state, insetsTop, bSheetTop, height]);
 
   const regionCallbackRef = useRef<number | undefined>();
+  const rpCallbackRef = useRef<number | undefined>();
+  const [rpDisplay, setRpDisplay] = useState<FeatureCollection | undefined>();
+
+  const fetchRallyingPoints = async (currentZoom: number, bounds: BoundingBox) => {
+    if (rpCallbackRef.current) {
+      clearTimeout(rpCallbackRef.current);
+    }
+    onFetchingDisplay(true);
+    rpCallbackRef.current = setTimeout(async () => {
+      const initialRef = rpCallbackRef.current;
+
+      if (currentZoom < rpMinZoomLevel) {
+        onFetchingDisplay(false);
+        return;
+      }
+      try {
+        if (rpCallbackRef.current === initialRef) {
+          // If current timeout is still active, fetch display
+          const res = await services.rallyingPoint.view(bounds.from, bounds.to);
+          setRpDisplay(res);
+        }
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        if (rpCallbackRef.current === initialRef) {
+          // If current timeout is still active, show display
+          onFetchingDisplay(false);
+        }
+      }
+    }, 500);
+  };
   const onRegionChange = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => {
     console.debug("zoom", payload.zoomLevel);
 
-    if (!state.matches("map")) {
+    if (!state.matches("map") && !state.matches("point")) {
       return;
     }
     if (regionCallbackRef.current) {
       clearTimeout(regionCallbackRef.current);
     }
     const bounds = fromPositions(payload.visibleBounds);
-    if (state.context.filter.displayBounds && isWithinBox(bounds, state.context.filter.displayBounds)) {
+
+    fetchRallyingPoints(payload.zoomLevel, bounds).catch(e => console.warn(e));
+
+    if (state.context.mapDisplay.displayBounds && isWithinBox(bounds, state.context.mapDisplay.displayBounds)) {
       // Avoid refetching
       return;
     }
@@ -271,7 +331,7 @@ const HomeMap = ({
         if (regionCallbackRef.current === initialRef) {
           // If current timeout is still active, fetch display
 
-          machine.send("DISPLAY", { data: bounds });
+          machine.send("DISPLAY", { data: { displayBounds: bounds, displayAllPoints: payload.zoomLevel >= rpMinZoomLevel } });
           if (payload.zoomLevel >= 8 && bounds) {
             /*  const ctx = { ...state.context };
             ctx.filter.displayBounds = bounds;
@@ -313,18 +373,28 @@ const HomeMap = ({
       onRegionChanged={onRegionChange}
       onStopMovingRegion={() => {
         onMovingStateChanged(false);
+        console.log("stop moving");
         //  setMovingDisplay(false);
         //console.log("map touch end");
       }}
       onStartMovingRegion={() => {
         // setMovingDisplay(true);
         onMovingStateChanged(true);
+        console.log("start moving");
         // console.log("map moving");
       }}
       ref={appMapRef}
-      onSelectLocation={loc => {
-        console.debug("sel loc", loc);
-        appMapRef.current?.setCenter(loc, 12.1);
+      onSelectFeatures={features => {
+        if (features.length > 0) {
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              JSON.stringify(features.map(feat => feat.properties["name:latin"])),
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER
+            );
+          }
+          appMapRef.current?.setCenter(features[0].location, 12.1);
+        }
       }}>
       {(state.matches("map") ||
         state.matches("point") ||
@@ -346,7 +416,9 @@ const HomeMap = ({
       {isMatchStateIdle && <RallyingPointsDisplayLayer rallyingPoints={pickupsDisplay} cluster={false} interactive={false} />}
       {["map", "point"].some(state.matches) && (
         <RallyingPointsDisplayLayer
-          rallyingPoints={lianeDisplay}
+          color={AppColors.blue}
+          minZoomLevel={rpMinZoomLevel}
+          rallyingPoints={rpDisplay ? rpDisplay : lianeDisplay}
           onSelect={rp => {
             if (rp) {
               machine.send("SELECT", { data: rp });
@@ -393,17 +465,17 @@ const HomeScreen = () => {
         cacheRecentTrip: trip => services.location.cacheRecentTrip(trip).catch(e => console.error(e)),
         cacheRecentPoint: rp => services.location.cacheRecentLocation(rp).catch(e => console.error(e)),
         display: async ctx => {
-          if (!ctx.filter.displayBounds) {
+          if (!ctx.mapDisplay.displayBounds) {
             return undefined;
           }
-          const a = ctx.filter.displayBounds.to.lng - ctx.filter.displayBounds.from.lng;
-          const b = ctx.filter.displayBounds.to.lat - ctx.filter.displayBounds.from.lat;
+          const a = ctx.mapDisplay.displayBounds.to.lng - ctx.mapDisplay.displayBounds.from.lng;
+          const b = ctx.mapDisplay.displayBounds.to.lat - ctx.mapDisplay.displayBounds.from.lat;
           if (a * a + b * b > 4) {
             // Area is too big
             return undefined;
           }
 
-          return services.liane.display(ctx.filter.displayBounds.from, ctx.filter.displayBounds.to, ctx.filter?.targetTime?.dateTime);
+          return services.liane.display(ctx.mapDisplay.displayBounds.from, ctx.mapDisplay.displayBounds.to, ctx.filter?.targetTime?.dateTime);
         }
       },
       observables: {

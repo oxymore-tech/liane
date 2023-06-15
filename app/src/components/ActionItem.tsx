@@ -1,4 +1,4 @@
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon, CustomIconName, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
@@ -34,13 +34,13 @@ export const Item = ({
   onPress: () => void;
 }) => {
   return (
-    <AppPressable foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress}>
+    <AppPressableOverlay foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress}>
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
         {leadingComponent}
         {descriptionComponent}
         <AppIcon name={"chevron-right-outline"} />
       </Row>
-    </AppPressable>
+    </AppPressableOverlay>
   );
 };
 
