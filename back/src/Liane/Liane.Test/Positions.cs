@@ -34,4 +34,8 @@ public sealed class Positions
     public static readonly LatLng RodezMacDrive = new (44.36054915873126, 2.569950520992279);
     public static readonly LatLng Alan = new (43.2299613953, 0.939082980156);
     public static readonly LatLng Toulouse = new (43.6040488, 1.4430474);
+    public static readonly LatLng PointisInard = new (43.0858001709, 0.81293797493);
+    public static readonly LatLng Tournefeuille = new (43.5831985474, 1.34571003914);
+    public static readonly LatLng AireDesPyrénées = new (43.18791, 0.98503);
+    public static readonly LatLng MartresTolosane = new (43.1984357, 1.01088619999996);
 }

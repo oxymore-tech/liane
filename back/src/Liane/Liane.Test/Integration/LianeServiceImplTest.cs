@@ -358,7 +358,33 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("Quezac_Parking_fakeId", compatible.Pickup.Id);
     Assert.AreEqual("Mende_fakeId", compatible.Deposit.Id);
   }
+  
+  [Test]
+  public async Task BertrandShouldMatchSamuelsLiane()
+  {
+    var samuel = Fakers.FakeDbUsers[0];
+    var bertrand = Fakers.FakeDbUsers[1];
 
+    currentContext.SetCurrentUser(samuel);
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
+    
+    currentContext.SetCurrentUser(bertrand);
+    var actual = await testedService.Match(new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival)),
+      new Pagination());
+
+    // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
+
+    Assert.AreEqual(1, actual.Data.Count);
+
+    Assert.AreEqual(liane.Id, actual.Data[0].Liane.Id);
+    Assert.IsInstanceOf<Match.Compatible>(actual.Data[0].Match);
+    var compatible = (Match.Compatible)actual.Data[0].Match;
+
+    Assert.IsTrue(compatible.Delta.TotalInSeconds < 15 * 60);
+    Assert.AreEqual("mairie:31324", compatible.Pickup.Id);
+    Assert.AreEqual("mairie:31557", compatible.Deposit.Id);
+  }
+  
   [Test]
   public async Task ShouldGetNextAppointments()
   {

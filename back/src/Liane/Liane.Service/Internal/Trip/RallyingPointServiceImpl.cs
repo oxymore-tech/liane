@@ -223,7 +223,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     var table = await osrmService.Table(new List<LatLng> { position }.Concat(list.Select(rp => rp.Location)));
     // Get closest point via road network 
     var closest = list.Select((l, i) => (Point: l, Distance: table.Distances[0][i + 1])).MinBy(r => r.Distance);
-    return closest.Distance <= radius ? closest.Point : null;
+    return closest.Point;
   }
 
 
