@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, ToastAndroid, View } from "react-native";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
@@ -237,10 +237,10 @@ const HomeMap = ({
   const { height } = useAppWindowsDimensions();
   const { top: insetsTop } = useSafeAreaInsets();
   const lianeDisplay = useObservable(displaySource, EmptyFeatureCollection);
-  const rpMinZoomLevel = 11;
+  const rpMinZoomLevel = 10.5;
   const { services } = useContext(AppContext);
 
-  console.debug("display :", lianeDisplay.features.length);
+  console.debug("[MAP] displaying", lianeDisplay.features.length, "features");
 
   const pickupsDisplay = useMemo(() => {
     if (isMatchStateIdle) {
@@ -401,9 +401,17 @@ const HomeMap = ({
         // console.log("map moving");
       }}
       ref={appMapRef}
-      onSelectLocation={loc => {
-        console.debug("sel loc", loc);
-        appMapRef.current?.setCenter(loc, 12.1);
+      onSelectFeatures={features => {
+        if (features.length > 0) {
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              JSON.stringify(features.map(feat => feat.properties["name:latin"])),
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER
+            );
+          }
+          appMapRef.current?.setCenter(features[0].location, 12.1);
+        }
       }}>
       {(state.matches("map") ||
         state.matches("point") ||

@@ -47,7 +47,7 @@ export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
-  onSelectLocation?: (point: LatLng) => void;
+  onSelectFeatures?: (features: { location: LatLng; properties: any }[]) => void;
   showGeolocation?: boolean;
   bounds?: DisplayBoundingBox | undefined;
   onMapLoaded?: () => void;
@@ -404,7 +404,16 @@ export const WayPointDisplay = ({
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, onStartMovingRegion, children, showGeolocation = false, bounds, onMapLoaded, onStopMovingRegion }: AppMapViewProps,
+    {
+      onRegionChanged,
+      onStartMovingRegion,
+      children,
+      showGeolocation = false,
+      bounds,
+      onMapLoaded,
+      onStopMovingRegion,
+      onSelectFeatures
+    }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const { services } = useContext(AppContext);
@@ -415,7 +424,7 @@ const AppMapView = forwardRef(
 
     const controller: AppMapViewController = {
       setCenter: (p: LatLng, zoom?: number) => {
-        const duration = 250;
+        const duration = 350;
         cameraRef.current?.setCamera({
           centerCoordinate: [p.lng, p.lat],
           zoomLevel: zoom,
@@ -514,22 +523,27 @@ const AppMapView = forwardRef(
           logoEnabled={false}
           onPress={async f => {
             if ("coordinates" in f.geometry) {
-              console.log(JSON.stringify(f.geometry.coordinates)); //
+              console.log(JSON.stringify(f.geometry.coordinates));
+              //@ts-ignore
               const pointInView = await mapRef.current?.getPointInView(f.geometry.coordinates)!;
-              console.log(wd.width, wd.height, wd.scale, JSON.stringify(pointInView)); //
+              console.log(wd.width, wd.height, wd.scale, JSON.stringify(pointInView));
               const q = await mapRef.current?.queryRenderedFeaturesInRect(
                 [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
                 ["==", ["geometry-type"], "Point"],
                 ["poi", "place", "town", "city", "airport", "parking", "station"]
               );
-              if (Platform.OS === "android" && q && q.features.length > 0) {
-                ToastAndroid.showWithGravity(
-                  JSON.stringify(q.features.map(feat => feat.properties!["name:latin"])),
-                  ToastAndroid.SHORT,
-                  ToastAndroid.CENTER
-                );
+
+              if (q) {
+                const features = q.features.map(feat => ({
+                  //@ts-ignore
+                  location: { lat: feat.geometry.coordinates[1], lng: feat.geometry.coordinates[0] },
+                  properties: feat.properties
+                }));
+                if (onSelectFeatures) {
+                  onSelectFeatures(features);
+                }
+                console.log(JSON.stringify(features));
               }
-              console.log(JSON.stringify(q?.features.map(feat => ({ coordinates: feat.geometry.coordinates, properties: feat.properties }))));
             }
           }}
           attributionEnabled={false}>

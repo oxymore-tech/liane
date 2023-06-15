@@ -1,6 +1,7 @@
 import {
   assign,
-  AssignAction,
+  BaseActionObject,
+  BaseActions,
   createMachine,
   Interpreter,
   raise,
@@ -93,10 +94,7 @@ const createState = <T>(
   //  onBack?: TransitionConfigOrTarget<HomeMapContext, Event>,
   load?: {
     src: (context: HomeMapContext, event: Event) => Promise<T>;
-    actions: ((
-      context: HomeMapContext,
-      event: { type: "done.invoke"; data: T }
-    ) => HomeMapContext | AssignAction<HomeMapContext, { type: "done.invoke"; data: T }>)[];
+    actions: BaseActions<HomeMapContext, { type: "done.invoke"; data: T }, Event, BaseActionObject>[];
     autoLoadCond?: (context: HomeMapContext, event: Event) => boolean;
   }
 ) => {
@@ -123,6 +121,7 @@ const createState = <T>(
   }*/
   if (load) {
     //state.on!.RELOAD.actions = forwardTo("map.loader" + ff);
+    // @ts-ignore
     state.states!.load.invoke = {
       src: load.src,
 
@@ -193,7 +192,6 @@ export const HomeMapMachine = (services: {
             autoLoadCond: () => true,
             actions: [
               (context, event) => {
-                console.log(services.observables.displaySubject);
                 services.observables.displaySubject.next(event.data || EmptyFeatureCollection);
               }
             ]
@@ -358,7 +356,6 @@ export const HomeMapMachine = (services: {
               // Ignore if to & from are set to same value
               return context.filter;
             }
-            // console.log(newTrip);
             return newTrip;
           }
         })
