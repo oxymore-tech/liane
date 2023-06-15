@@ -22,9 +22,12 @@ const MyTripsScreen = () => {
   ]);
   useEffect(() => {
     const s = services.chatHub.subscribeToNotifications(async n => {
-      if (UnionUtils.isInstanceOf<Event>(n, "Event")) {
+      // TODO make sure "type" is serialized via Hub
+      if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
         await queryClient.invalidateQueries(LianeQueryKey);
+        await queryClient.invalidateQueries(JoinRequestsQueryKey);
       }
+      console.log("trips notif received", UnionUtils.isInstanceOf<Event>(n, "Event"));
     });
     return () => s.unsubscribe();
   }, []);

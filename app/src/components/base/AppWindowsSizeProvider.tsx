@@ -11,7 +11,7 @@ export const useAppWindowsDimensions = () => {
 
 export const AppWindowsSizeProvider = (props: PropsWithChildren) => {
   const d = useWindowDimensions();
-  console.log(initialWindowMetrics?.insets, StatusBar.currentHeight, Dimensions.get("screen").height, Dimensions.get("window").height, d.height);
+  //console.debug(initialWindowMetrics?.insets, StatusBar.currentHeight, Dimensions.get("screen").height, Dimensions.get("window").height, d.height);
   const [dimensions, setDimensions] = useState(d);
   return (
     <View

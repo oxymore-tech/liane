@@ -19,7 +19,7 @@ export const PositionButton = ({ onPosition }: PositionButtonProps) => {
         try {
           const currentLocation = await services.location.currentLocation();
           if (__DEV__) {
-            console.log(currentLocation);
+            console.debug(currentLocation);
           }
           onPosition(currentLocation);
         } catch (e) {

@@ -171,6 +171,7 @@ export const HomeScreenHeader = ({ label, isRootHeader = false }: HomeScreenHead
       {isRootHeader && (
         <Pressable
           onPress={() => {
+            // @ts-ignore
             navigation.navigate("Profile", { user });
           }}>
           <UserPicture size={36} url={user?.pictureUrl} id={user?.id} />
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
     fontSize: AppDimensions.textSize.small,
     fontWeight: "400",
     position: "relative",
-    bottom: 8
+    bottom: 12
     // marginBottom: 8
   }
 });

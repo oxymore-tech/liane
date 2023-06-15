@@ -77,7 +77,7 @@ export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "
 export const getLianeStatus = (liane: Liane): LianeStatus => {
   // @ts-ignore
   const delta = (new Date(liane.departureTime) - new Date()) / 1000;
-  console.log(liane.state, liane.members.length);
+  //console.debug(liane.state, liane.members.length);
 
   if (liane.state === "NotStarted") {
     if (delta > 0 && delta < 3600) {

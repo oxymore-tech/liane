@@ -349,6 +349,7 @@ export const PublishScreen = () => {
   const machine = useInterpret(m);
   machine.onDone(() => {
     navigation.popToTop();
+    //@ts-ignore
     navigation.navigate("Mes trajets");
   });
 

@@ -38,7 +38,6 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 };
 
 export function getNotificationNavigation(notification: Notification) {
-  console.debug(JSON.stringify(notification));
   if (UnionUtils.isInstanceOf<Event>(notification, "Event")) {
     if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
       return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>

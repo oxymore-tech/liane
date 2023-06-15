@@ -28,7 +28,7 @@ export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
 
-  console.log("state dbg", state.context.matches);
+  //console.log("state dbg", state.context.matches);
   return (
     <Column style={{ flex: 1 }} spacing={8}>
       {/*["map", "point", "match"].some(state.matches) && <FilterSelector />*/}
@@ -66,7 +66,7 @@ export const LianeNearestLinks = () => {
   const { navigation } = useAppNavigation();
 
   const mapCenter = state.context.mapDisplay.displayBounds ? getCenter(state.context.mapDisplay.displayBounds) : undefined;
-  console.log(["getClosestRP", mapCenter, state.context.filter.availableSeats, state.context.filter.targetTime?.dateTime.toISOString()]);
+  //console.debug(["getClosestRP", mapCenter, state.context.filter.availableSeats, state.context.filter.targetTime?.dateTime.toISOString()]);
   const closestRallyingPointQuery = useQuery(["getClosestRP", mapCenter], () => services.rallyingPoint.snap(mapCenter!), {
     enabled: !!mapCenter
   });
@@ -117,7 +117,7 @@ export const LianeNearestLinks = () => {
       </Column>
     );
   };
-  console.log("n", nearestLinksQuery.data?.length);
+  //console.debug("n", nearestLinksQuery.data?.length);
   if (nearestLinksQuery.data.length === 0) {
     return (
       <Column>
@@ -174,7 +174,7 @@ export const LianeDestinations = (props: { pickup: RallyingPoint; date: Date | u
     error
   } = useQuery(["getNearestLinks", props.pickup.id, props.date?.toISOString()], async () => {
     const res = await services.liane.nearestLinks(props.pickup.location, 100, props.date);
-    console.log("res", res, props.pickup.location);
+    //console.debug("res", res, props.pickup.location);
     const index = res.findIndex(p => p.pickup.id === props.pickup.id);
     if (index < 0) {
       return [];
@@ -401,15 +401,15 @@ export interface FilterSelectorProps {
   shortFormat?: boolean;
 }
 
-const selectAvailableSeats = state => state.context.filter.availableSeats;
+//const selectAvailableSeats = state => state.context.filter.availableSeats;
 const selectTargetTime = state => state.context.filter.targetTime;
 export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelectorProps) => {
   const machine = useContext(HomeMapContext);
 
-  const availableSeats = useSelector(machine, selectAvailableSeats);
+  // const availableSeats = useSelector(machine, selectAvailableSeats);
   const targetTime = useSelector(machine, selectTargetTime);
 
-  const driver = availableSeats > 0;
+  //  const driver = availableSeats > 0;
   const date = targetTime?.dateTime || new Date();
 
   const defaultFormatter = shortFormat
@@ -436,7 +436,7 @@ export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelecto
         color={AppColors.white}
         date={date}
         onSelectDate={d => {
-          machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: d } } });
+          machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: new Date(d.toDateString()) } } });
         }}
         formatter={formatter || defaultFormatter}
       />

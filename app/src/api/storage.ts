@@ -10,7 +10,7 @@ export async function storeAsync<T>(key: string, value: T | undefined) {
       await AsyncStorage.removeItem(key);
     }
   } catch (e) {
-    console.warn("Unable to store ", key);
+    console.warn("[STORAGE] Unable to store ", key);
   }
 }
 
@@ -21,7 +21,7 @@ export async function retrieveAsync<T>(key: string, defaultValue?: T): Promise<T
       return stored ? JSON.parse(stored) : defaultValue;
     }
   } catch (e) {
-    console.warn("Unable to get ", key);
+    console.warn("[STORAGE] Unable to get ", key);
   }
   return defaultValue;
 }
@@ -34,7 +34,7 @@ export async function storeCurrentUser(user?: FullUser) {
       await storeEncryptedString("user");
     }
   } catch (e) {
-    console.warn("Unable to store user", e);
+    console.warn("[STORAGE] Unable to store user", e);
   }
 }
 
@@ -45,7 +45,7 @@ export async function getCurrentUser(): Promise<FullUser | undefined> {
       return stored ? JSON.parse(stored) : undefined;
     }
   } catch (e) {
-    console.warn("Unable to get user", e);
+    console.warn("[STORAGE] Unable to get user", e);
   }
   return undefined;
 }
@@ -58,7 +58,7 @@ export async function storeUserSession(authUser?: AuthUser) {
       await storeEncryptedString("user_session");
     }
   } catch (e) {
-    console.warn("Unable to store user_session", e);
+    console.warn("[STORAGE] Unable to store user_session", e);
   }
 }
 
@@ -69,14 +69,14 @@ export async function getUserSession(): Promise<AuthUser | undefined> {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.warn("Unable to get user_session", e);
+    console.warn("[STORAGE] Unable to get user_session", e);
   }
   return undefined;
 }
 
 async function storeEncryptedString(key: string, value?: string | undefined) {
   if (__DEV__) {
-    console.debug("Store encrypted string", key, value);
+    console.debug("[STORAGE] Store encrypted string", key, value);
   }
   try {
     if (value) {
@@ -85,7 +85,7 @@ async function storeEncryptedString(key: string, value?: string | undefined) {
       await EncryptedStorage.removeItem(key);
     }
   } catch (e) {
-    console.warn("Unable to store encrypted string", key, e);
+    console.warn("[STORAGE] Unable to store encrypted string", key, e);
   }
 }
 

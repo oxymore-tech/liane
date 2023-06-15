@@ -128,9 +128,9 @@ export const ChatScreen = () => {
     services.chatHub
       .connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
       .then(conv => {
-        if (__DEV__) {
-          console.log("Joined conversation", conv);
-        }
+        /* if (__DEV__) {
+          console.debug("Joined conversation", conv);
+        } */
         setConversation(conv);
       })
       .catch(e => setError(e));
@@ -138,7 +138,7 @@ export const ChatScreen = () => {
     return () => {
       services.chatHub.disconnectFromChat(route.params.conversationId).catch(e => {
         if (__DEV__) {
-          console.log(e);
+          console.warn(e);
         }
       });
     };
@@ -158,7 +158,7 @@ export const ChatScreen = () => {
     </Pressable>
   );
 
-  console.debug(JSON.stringify(messages), conversation?.members);
+  //console.debug(JSON.stringify(messages), conversation?.members);
   return (
     <View style={{ backgroundColor: AppColors.white, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (

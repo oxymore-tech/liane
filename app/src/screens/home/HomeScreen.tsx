@@ -41,7 +41,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const [state] = useActor(machine);
   const { status } = useContext(AppContext);
 
-  console.log("moving", movingDisplay);
+  console.log("[MAP] moving", movingDisplay);
 
   const backHandler = () => {
     if (state.can("BACK")) {
@@ -70,7 +70,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
 
   const [displayBar, setDisplayBar] = useState(true);
 
-  console.debug(bottomSheetDisplay);
+  //console.debug(bottomSheetDisplay);
   const bbStyle = useBottomBarStyle();
   React.useLayoutEffect(() => {
     navigation.setOptions(
@@ -246,7 +246,7 @@ const HomeMap = ({
       bbox.paddingLeft = 72;
       bbox.paddingRight = 72;
       bbox.paddingBottom = Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24);
-      console.debug(bbox, bSheetTop, height);
+      //console.debug(bbox, bSheetTop, height);
 
       return bbox;
     } else if (state.matches("match")) {
@@ -262,7 +262,7 @@ const HomeMap = ({
       bbox.paddingLeft = 72;
       bbox.paddingRight = 72;
       bbox.paddingBottom = Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24);
-      console.debug(bbox, bSheetTop, height);
+      //console.debug(bbox, bSheetTop, height);
       return bbox;
     }
     return undefined;
@@ -301,7 +301,7 @@ const HomeMap = ({
     }, 500);
   };
   const onRegionChange = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => {
-    console.debug("zoom", payload.zoomLevel);
+    console.debug("[MAP] zoom", payload.zoomLevel);
 
     if (!state.matches("map") && !state.matches("point")) {
       return;

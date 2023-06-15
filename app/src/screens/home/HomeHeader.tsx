@@ -184,7 +184,7 @@ export const RPFormHeader = ({
   const { to, from } = trip;
   const { goBack } = useAppBackController();
   const [showHistory, setShowHistory] = useState(false);
-  const itineraryMarginTop = insets.top + 88;
+  const itineraryMarginTop = insets.top + 92;
 
   useEffect(() => {
     if (setBarVisible) {
@@ -267,7 +267,7 @@ export const RPFormHeader = ({
               updateTrip(t);
             }}
           />
-          <View style={{ position: "absolute", top: 116, right: 16 }}>
+          <View style={{ position: "absolute", top: itineraryMarginTop, right: 16 }}>
             <AppPressableIcon
               onPress={() => {
                 setShowHistory(false);

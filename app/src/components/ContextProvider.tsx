@@ -1,5 +1,5 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, LatLng, LocationPermissionLevel, UnionUtils, User } from "@/api";
+import { AuthUser, LatLng, LocationPermissionLevel, User } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
@@ -9,9 +9,6 @@ import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, P
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RootNavigation } from "@/api/navigation";
-import { MemberAccepted, MemberHasLeft, MemberRejected } from "@/api/event";
-import { QueryClient } from "react-query";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -60,11 +57,11 @@ async function initContext(service: AppServices): Promise<{
       service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
     } catch (e) {
       if (__DEV__) {
-        console.log("Could not start hub :", e);
+        console.warn("[INIT] Could not start hub :", e);
       }
       if (e instanceof UnauthorizedError) {
       } else if (e instanceof NetworkUnavailable) {
-        console.log("Error : no network");
+        console.warn("[INIT] Error : no network");
         //user = cached value for an offline mode
         user = await service.auth.currentUser();
         online = false;
@@ -79,7 +76,7 @@ async function initContext(service: AppServices): Promise<{
       }
     } catch (e) {
       if (__DEV__) {
-        console.log("Could not init notifications :", e);
+        console.warn("[INIT] Could not init notifications :", e);
       }
     }
   }
@@ -140,14 +137,15 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       }));
       if (p.online && p.user) {
         SERVICES.chatHub.subscribeToNotifications(async n => {
-          console.debug("dbg", SERVICES.notification.receiveNotification.call);
-          await SERVICES.notification.receiveNotification(n, this.state.appState !== "active");
+          //console.debug("dbg ------>", this.state.appState);
+          await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
         });
       }
     });
   }
 
   private handleAppStateChange = (appState: AppStateStatus) => {
+    SERVICES.chatHub.updateActiveState(appState === "active");
     this.setState(prev => ({
       ...prev,
       appState: appState
@@ -159,7 +157,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     this.unsubscribeToUserInteraction = RootNavigation.addListener("state", _ => {
       // Try to reload on user interaction
       if (this.state.status === "offline") {
-        console.debug("Try to reload...");
+        console.debug("[INIT] Try to reload...");
         this.initContext();
       }
     });
@@ -183,14 +181,14 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: undefined
       }));
     } else if (error instanceof NetworkUnavailable) {
-      console.log("Error : no network");
+      console.warn("[INIT] Error : no network");
 
       this.setState(prev => ({
         ...prev,
         status: "offline"
       }));
     } else {
-      console.error("Error :", error);
+      console.error("[INIT] Error :", error);
     }
   }
 
@@ -213,7 +211,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: user
       }));
     } catch (e) {
-      console.error("Problem while setting auth user : ", e);
+      console.error("[INIT] Problem while setting auth user : ", e);
     }
   };
 

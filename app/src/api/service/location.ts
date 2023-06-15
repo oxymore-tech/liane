@@ -42,7 +42,7 @@ export class LocationServiceClient implements LocationService {
     const openSetting = () => {
       Linking.openSettings().catch(() => {
         if (__DEV__) {
-          console.warn("Unable to open settings");
+          console.warn("[LOCATION] Unable to open settings");
         }
       });
     };
@@ -90,11 +90,11 @@ export class LocationServiceClient implements LocationService {
 
     if (status === PermissionsAndroid.RESULTS.DENIED) {
       if (__DEV__) {
-        console.log("Location permission denied by user");
+        console.log("[LOCATION] Location permission denied by user");
       }
     } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
       if (__DEV__) {
-        console.log("Location permission revoked by user");
+        console.log("[LOCATION] Location permission revoked by user");
       }
     }
 

@@ -30,7 +30,8 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const { services, user } = useContext(AppContext);
 
     const renderItem = ({ item }: { item: Notification }) => {
-      const seen = !!item.recipients.find(r => r.user === user?.id)?.seenAt;
+      const userIndex = item.recipients.findIndex(r => r.user === user?.id);
+      const seen = userIndex >= 0 && !!item.recipients[userIndex].seenAt;
       const datetime = capitalize(toRelativeTimeString(new Date(item.createdAt!)));
       const navigate = getNotificationNavigation(item);
       return (
@@ -42,7 +43,11 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
             }
             if (!seen) {
               await services.notification.markAsRead(item);
-              refresh();
+              if (item.answers && item.answers.length > 0) {
+                refresh();
+              } else {
+                item.recipients[userIndex] = { ...item.recipients[userIndex], seenAt: new Date().toISOString() };
+              }
             }
           }}>
           <Row style={{ paddingHorizontal: 24 }}>

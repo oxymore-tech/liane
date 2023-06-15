@@ -265,7 +265,7 @@ const WithBottomSheetContext =
       })
       .onUpdate(event => {
         const nowExpanded = onScroll(-event.translationY);
-        console.log("exp", nowExpanded);
+        //console.log("exp", nowExpanded);
         if (nowExpanded && !expandedScrollDelta.value.expanded) {
           expandedScrollDelta.value.expanded = true;
           expandedScrollDelta.value.y = event.translationY;
@@ -292,7 +292,7 @@ const WithBottomSheetContext =
           scrollEnabled={sheetExpanded}
           onScroll={event => {
             // reached top
-            console.log("scroll", event.nativeEvent);
+            //console.debug("scroll", event.nativeEvent);
             if (event.nativeEvent.contentOffset.y === 0) {
               setBSheetExpanded(false);
             }

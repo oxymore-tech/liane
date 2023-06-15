@@ -236,7 +236,7 @@ export const RallyingPointsDisplayLayer = ({
       onPress={
         interactive
           ? async f => {
-              console.debug("clc", f, f.features[0]!.properties);
+              //console.debug("clc", f, f.features[0]!.properties);
               const rp = f.features[0]!.properties!.point_count ? undefined : f.features[0]!.properties!;
 
               const center = rp ? rp.location : { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
@@ -331,7 +331,7 @@ export const RallyingPointsDisplay = ({
       id={rallyingPoint.id!}
       coordinate={[rallyingPoint.location.lng, rallyingPoint.location.lat]}
       onSelected={async () => {
-        console.debug("sel", rallyingPoint.id, selected);
+        //console.debug("sel", rallyingPoint.id, selected);
         if (onSelect) {
           onSelect();
         }
@@ -513,7 +513,7 @@ const AppMapView = forwardRef(
               animationDuration: 0
             });
             setAnimated(true);
-            console.log("map loading done");
+            console.debug("[MAP] loading done");
             if (onMapLoaded) {
               onMapLoaded();
             }
@@ -524,10 +524,10 @@ const AppMapView = forwardRef(
           logoEnabled={false}
           onPress={async f => {
             if ("coordinates" in f.geometry) {
-              console.log(JSON.stringify(f.geometry.coordinates));
+              //console.debug(JSON.stringify(f.geometry.coordinates));
               //@ts-ignore
               const pointInView = await mapRef.current?.getPointInView(f.geometry.coordinates)!;
-              console.log(wd.width, wd.height, wd.scale, JSON.stringify(pointInView));
+              //console.debug(wd.width, wd.height, wd.scale, JSON.stringify(pointInView));
               const q = await mapRef.current?.queryRenderedFeaturesInRect(
                 [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
                 ["==", ["geometry-type"], "Point"],
@@ -543,7 +543,7 @@ const AppMapView = forwardRef(
                 if (onSelectFeatures) {
                   onSelectFeatures(features);
                 }
-                console.log(JSON.stringify(features));
+                console.debug("[MAP]", JSON.stringify(features));
               }
             }
           }}

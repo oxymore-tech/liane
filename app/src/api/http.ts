@@ -121,7 +121,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   const formatedBody = formatBody(body, bodyAsJson);
   const formatedHeaders = await headers(body, bodyAsJson);
   if (__DEV__) {
-    console.debug(`Fetch API ${method} "${url}"`, formatedBody ?? "");
+    console.debug(`[HTTP] Fetch API ${method} "${url}"`, formatedBody ?? "");
   }
   const response = await fetch(url, {
     headers: formatedHeaders,
@@ -150,7 +150,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
         throw new ForbiddenError();
       default:
         const message = await response.text();
-        console.log(`Unexpected error on ${method} ${uri}`, response.status, message);
+        console.warn(`[HTTP] Unexpected error on ${method} ${uri}`, response.status, message);
         throw new Error(message);
     }
   }
@@ -167,7 +167,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
     } else {
       return refreshTokenMutex.runExclusive(async () => {
         if (__DEV__) {
-          console.debug("Try refresh token...");
+          console.debug("[HTTP] Try refresh token...");
         }
         // Call refresh token endpoint
         try {
@@ -180,7 +180,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
           return await retryAction();
         } catch (e) {
           if (__DEV__) {
-            console.error("Error: could not refresh token: ", e);
+            console.error("[HTTP] Error: could not refresh token: ", e);
           }
           // Logout if unauthorized
           if (e instanceof UnauthorizedError) {

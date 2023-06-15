@@ -41,7 +41,7 @@ export const DatePagerSelector = ({
                 if (onSelectDate) {
                   const previousDay = withOffsetHours(-24, date);
                   const now = new Date();
-                  onSelectDate(new Date((now > previousDay ? now : previousDay).toDateString()));
+                  onSelectDate(new Date(now > previousDay ? now : previousDay));
                 }
               }
         }
@@ -68,7 +68,7 @@ export const DatePagerSelector = ({
         backgroundStyle={{ borderRadius: 8 }}
         onPress={() => {
           if (onSelectDate) {
-            onSelectDate(new Date(withOffsetHours(24, date).toDateString()));
+            onSelectDate(new Date(withOffsetHours(24, date)));
           }
         }}
         name={"chevron-right"}
@@ -85,7 +85,7 @@ export const DatePagerSelector = ({
         cancelTextIOS={"Annuler"}
         onConfirm={d => {
           setDatePickerVisible(false);
-          onSelectDate(new Date(d.toDateString()));
+          onSelectDate(d);
         }}
         onCancel={() => {
           setDatePickerVisible(false);

@@ -58,8 +58,8 @@ export const LianeMatchDetailView = () => {
 
   // const passengers = liane.liane.members.filter(m => m.user !== liane.liane.driver.user);
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
-  const tripDuration = formatDuration(getTotalDuration(currentTrip));
-  const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
+  const tripDuration = formatDuration(getTotalDuration(currentTrip.slice(1)));
+  const tripDistance = Math.ceil(getTotalDistance(currentTrip.slice(1)) / 1000) + " km";
 
   const [modalVisible, setModalVisible] = useState(false);
   const [message, setMessage] = useState("");
@@ -83,10 +83,10 @@ export const LianeMatchDetailView = () => {
     await services.liane.join(r);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
     setModalVisible(false);
+    //@ts-ignore
     navigation.navigate("Home", { screen: "Mes trajets" });
   };
 
-  console.log(JSON.stringify(liane));
   return (
     <AppBottomSheetScrollView>
       <Column style={styles.section}>

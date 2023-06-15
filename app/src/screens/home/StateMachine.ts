@@ -127,7 +127,7 @@ const createState = <T>(
 
       onDone: {
         target: "idle",
-        actions: [() => console.log("loading done"), "resetReloadCause", ...load.actions]
+        actions: ["resetReloadCause", ...load.actions]
       },
       onError: {
         target: "failed",

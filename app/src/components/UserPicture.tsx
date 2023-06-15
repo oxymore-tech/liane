@@ -14,7 +14,6 @@ export const UserPicture = ({ size = 48, id }: UserPictureProps) => {
   const color = useMemo(() => {
     if (id) {
       const hue = (getUniqueColor(id) + 360) % 360;
-      console.log(hue);
       return `hsl(${hue}, 30%, 78%)`;
     }
     return AppColorPalettes.gray[200];
