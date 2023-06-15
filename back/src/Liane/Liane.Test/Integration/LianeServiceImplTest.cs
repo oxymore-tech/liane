@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -362,6 +364,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task BertrandShouldMatchSamuelsLiane()
   {
+    // set thread context timezone to UTC
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+    
     var samuel = Fakers.FakeDbUsers[0];
     var bertrand = Fakers.FakeDbUsers[1];
 
@@ -369,7 +374,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
     
     currentContext.SetCurrentUser(bertrand);
-    var actual = await testedService.Match(new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival)),
+    var actual = await testedService.Match(new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T08:00:00+01:00"), Direction.Departure)),
       new Pagination());
 
     // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
