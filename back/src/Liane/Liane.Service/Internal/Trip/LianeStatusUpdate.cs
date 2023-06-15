@@ -101,9 +101,11 @@ public sealed class LianeStatusUpdate : CronJobService
 
     foreach (var liane in lianes)
     {
-      if (!liane.Pings.IsEmpty && liane.State == LianeState.NotStarted && liane.DepartureTime < DateTime.UtcNow)
+      if (liane.State == LianeState.NotStarted && liane.DepartureTime < to)
       {
-        lianeUpdates.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id), Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)));
+        var update = Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)
+          .Set(l => l.Geometry, null);
+        lianeUpdates.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id), update));
       }
 
       foreach (var wayPoint in liane.WayPoints.Where(w => w.Eta > from && w.Eta <= to))

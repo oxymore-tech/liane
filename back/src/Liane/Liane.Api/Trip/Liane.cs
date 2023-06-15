@@ -28,6 +28,7 @@ public sealed record LianeMember(
   Ref<RallyingPoint> To,
   bool? TakesReturnTrip = null,
   int SeatCount = -1, // Defaults to a passenger seat
+  TimeSpan? Delay = null,
   Feedback? Feedback = null
 ) : IResourceMember;
 

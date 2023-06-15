@@ -79,7 +79,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
       null,
       sender,
       message.CreatedAt!.Value,
-      ImmutableList.Create(new Recipient(receiver, null)),
+      ImmutableList.Create(new Recipient(receiver)),
       ImmutableHashSet<Answer>.Empty,
       sender.Pseudo,
       message.Text,
@@ -115,6 +115,10 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
         _ => ImmutableDictionary<string, string>.Empty
       }
     };
+    if (FirebaseMessaging.DefaultInstance is null)
+    {
+      return Task.FromResult("noop");
+    }
 
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }

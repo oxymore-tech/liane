@@ -40,7 +40,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   {
     await Mongo.GetCollection<ConversationGroup>()
       .UpdateOneAsync(g => g.Id == id.Id,
-        Builders<ConversationGroup>.Update.PullFilter(g => g.Members, m => m.User.Id == user.Id)
+        Builders<ConversationGroup>.Update.PullFilter(g => g.Members, m => m.User == user.Id)
       );
     var deleteOneAsync = await Mongo.GetCollection<ConversationGroup>()
       .DeleteOneAsync(g => g.Id == id.Id && g.Members.Count <= 1);
