@@ -274,10 +274,19 @@ export const HomeMapMachine = (services: {
                 actions: ["selectMatch"]
               },
               BACK: { target: "#homeMap.map", actions: ["resetTrip", "resetMatches"] },
-              UPDATE: {
-                actions: ["updateTrip"],
-                target: "#homeMap.point" //  target: "#homeMap.form"
-              }
+              UPDATE: [
+                {
+                  actions: ["resetTrip", "updateTrip", "cacheRecentTrip", "resetMatches"],
+                  target: "#homeMap.match",
+                  cond: (context, event: UpdateEvent) => {
+                    return filterHasFullTrip(event.data);
+                  }
+                },
+                {
+                  actions: ["updateTrip"],
+                  target: "#homeMap.point" //  target: "#homeMap.form"
+                }
+              ]
             }
           },
 

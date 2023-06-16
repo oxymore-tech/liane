@@ -40,7 +40,7 @@ export const ItineraryFormHeader = ({
 
   return (
     <Animated.View
-      style={[styles.footerContainer, AppStyles.shadow, { paddingTop: insets.top + 4 }]}
+      style={[styles.headerContainer, AppStyles.shadow, { paddingTop: insets.top + 4 }]}
       entering={enters ? SlideInUp : undefined}
       exiting={SlideOutUp}>
       <Column spacing={8}>
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     backgroundColor: AppColors.darkBlue
   },
-  footerContainer: {
+  headerContainer: {
     position: "absolute",
     top: 0,
     left: 0,

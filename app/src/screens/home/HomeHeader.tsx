@@ -3,13 +3,10 @@ import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React, { forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
-import { RallyingPoint } from "@/api";
-import LocationPin from "@/assets/location_pin.svg";
-import { CachedTripsView, RallyingPointItem } from "@/screens/ItinerarySearchForm";
-import { HomeMapContext } from "@/screens/home/StateMachine";
+import { CachedTripsView } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
 import { Trip } from "@/api/service/location";
@@ -168,7 +165,7 @@ export const RPFormHeader = ({
   animateEntry = true,
   updateTrip,
   canGoBack = false,
-  onRequestFocus,
+
   setBarVisible
 }: {
   updateTrip: (trip: Partial<Trip>) => void;
@@ -176,7 +173,6 @@ export const RPFormHeader = ({
   animateEntry?: boolean;
   trip: Partial<Trip>;
   canGoBack?: boolean;
-  onRequestFocus?: () => void;
   setBarVisible?: (visible: boolean) => void;
 }) => {
   const insets = useSafeAreaInsets();
@@ -207,7 +203,15 @@ export const RPFormHeader = ({
           ]}>
           <Column style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
             <Row style={{ alignItems: "center" }}>
-              <View style={{ flex: 1 }}>
+              {!!from && !to && (
+                <AppPressableIcon
+                  onPress={() => {
+                    updateTrip({ from: undefined });
+                  }}
+                  name={"close-outline"}
+                />
+              )}
+              <View style={{ flex: 1, marginLeft: to ? 36 : 0 }}>
                 <RallyingPointField2
                   icon={<AppIcon name={"pin"} color={AppColors.orange} />}
                   value={from?.label || ""}
@@ -224,29 +228,14 @@ export const RPFormHeader = ({
                   name={"history"}
                 />
               )}
-              {!!from && !to && (
-                <AppPressableIcon
-                  onPress={() => {
-                    updateTrip({ from: undefined });
-                  }}
-                  name={"close-outline"}
-                />
-              )}
             </Row>
             {from && (
-              <View style={{ alignSelf: "flex-start", height: 8, marginLeft: 15, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
+              <View
+                style={{ alignSelf: "flex-start", height: 8, marginLeft: 15 + 36, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }}
+              />
             )}
             {from && (
               <Row style={{ alignItems: "center" }}>
-                <View style={{ flex: 1 }}>
-                  <RallyingPointField2
-                    icon={<AppIcon name={"flag"} color={AppColors.pink} />}
-                    value={to?.label || ""}
-                    placeholder={"Sélectionnez un point d'arrivée"}
-                    showTrailing={false}
-                    editable={false}
-                  />
-                </View>
                 {!!to && (
                   <AppPressableIcon
                     onPress={() => {
@@ -255,6 +244,15 @@ export const RPFormHeader = ({
                     name={"close-outline"}
                   />
                 )}
+                <View style={{ flex: 1, marginLeft: to ? 0 : 36 }}>
+                  <RallyingPointField2
+                    icon={<AppIcon name={"flag"} color={AppColors.pink} />}
+                    value={to?.label || ""}
+                    placeholder={"Sélectionnez un point d'arrivée"}
+                    showTrailing={false}
+                    editable={false}
+                  />
+                </View>
               </Row>
             )}
           </Column>
@@ -267,7 +265,7 @@ export const RPFormHeader = ({
               updateTrip(t);
             }}
           />
-          <View style={{ position: "absolute", top: itineraryMarginTop, right: 16 }}>
+          <View style={{ position: "absolute", top: itineraryMarginTop + 4, right: 16 }}>
             <AppPressableIcon
               onPress={() => {
                 setShowHistory(false);
@@ -277,7 +275,12 @@ export const RPFormHeader = ({
           </View>
         </Column>
       )}
-      <View style={[styles.footerContainer, AppStyles.shadow, { paddingTop: insets.top + 4, paddingBottom: 8 }]}>
+      {!!to && !!from && (
+        <View style={{ position: "absolute", top: itineraryMarginTop + 20, right: 20 }}>
+          <AppPressableIcon name={"flip-2-outline"} onPress={() => updateTrip({ to: from, from: to })} />
+        </View>
+      )}
+      <View style={[styles.headerContainer, AppStyles.shadow, { paddingTop: insets.top + 4, paddingBottom: 8 }]}>
         <Column>
           <Row style={{ alignItems: "center", marginBottom: (title ? 4 : 0) + 8 }} spacing={16}>
             {canGoBack && (
@@ -292,10 +295,9 @@ export const RPFormHeader = ({
             )}
             {title && <AppText style={styles.title}>{title}</AppText>}
             <View style={{ flex: 1 }} />
-            {onRequestFocus && <AppPressableIcon onPress={onRequestFocus} color={AppColors.white} name={"search-outline"} />}
           </Row>
 
-          <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>
+          <Row style={{ alignItems: "center", paddingHorizontal: 8, marginRight: 8 }}>
             <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Départ: </AppText>
             <View style={{ flex: 1 }} />
             <FilterSelector shortFormat={true} />
@@ -306,7 +308,7 @@ export const RPFormHeader = ({
   );
 };
 
-export const RallyingPointHeader = ({ onBackPressed, rallyingPoint }: { rallyingPoint: RallyingPoint; onBackPressed?: () => void }) => {
+/*export const RallyingPointHeader = ({ onBackPressed, rallyingPoint }: { rallyingPoint: RallyingPoint; onBackPressed?: () => void }) => {
   const insets = useSafeAreaInsets();
   const machine = useContext(HomeMapContext);
   return (
@@ -338,7 +340,7 @@ export const RallyingPointHeader = ({ onBackPressed, rallyingPoint }: { rallying
       </Row>
     </Column>
   );
-};
+};*/
 
 export const AnimatedFloatingBackButton = (props: { onPress: () => void; color?: ColorValue; iconColor?: ColorValue }) => {
   return (
@@ -364,7 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 52
   },
 
-  footerContainer: {
+  headerContainer: {
     position: "absolute",
     top: 0,
     left: 0,
