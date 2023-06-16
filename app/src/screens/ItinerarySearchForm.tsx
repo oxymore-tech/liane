@@ -1,6 +1,6 @@
 import { Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ColorValue, FlatList, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getKeyForTrip, Trip } from "@/api/service/location";
@@ -66,7 +66,11 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
   );
 };
 
-export const CachedLocationsView = (props: { onSelect: (r: RallyingPoint) => void; exceptValues?: Ref<RallyingPoint>[] | undefined }) => {
+export const CachedLocationsView = (props: {
+  onSelect: (r: RallyingPoint) => void;
+  exceptValues?: Ref<RallyingPoint>[] | undefined;
+  openMap?: () => void;
+}) => {
   const { services } = useContext(AppContext);
   const [recentLocations, setRecentLocations] = useState<RallyingPoint[]>([]);
 
@@ -100,17 +104,27 @@ export const CachedLocationsView = (props: { onSelect: (r: RallyingPoint) => voi
           <AppText>Utiliser ma position</AppText>
         </Row>
       </AppPressableOverlay>
-      <AppText style={{ padding: 16, fontWeight: "bold" }}>Recherches récentes</AppText>
-      <FlatList
-        keyboardShouldPersistTaps="always"
-        data={locationList}
-        keyExtractor={r => r.id!}
-        renderItem={({ item }) => (
-          <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
-            <RallyingPointItem item={item} />
-          </AppPressableOverlay>
-        )}
-      />
+      {props.openMap && (
+        <AppPressableOverlay onPress={props.openMap}>
+          <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
+            <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
+            <AppText>Choisir sur la carte</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
+      <KeyboardAvoidingView style={{ backgroundColor: AppColorPalettes.gray[100] }} behavior={Platform.OS === "ios" ? "position" : undefined}>
+        <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>
+        <FlatList
+          keyboardShouldPersistTaps="always"
+          data={locationList}
+          keyExtractor={r => r.id!}
+          renderItem={({ item }) => (
+            <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+              <RallyingPointItem item={item} />
+            </AppPressableOverlay>
+          )}
+        />
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -195,11 +209,10 @@ export const RallyingPointSuggestions = (props: {
 export interface ItinerarySearchFormProps {
   trip: Partial<Trip>;
   onSelectTrip: (trip: Trip) => void;
-  //  updateField: (field: "to" | "from", value: RallyingPoint | undefined) => void;
   updateTrip: (trip: Partial<Trip>) => void;
   title?: string;
   animateEntry?: boolean;
-
+  openMap?: () => void;
   editable?: boolean;
 }
 export const ItinerarySearchForm = ({
@@ -207,6 +220,7 @@ export const ItinerarySearchForm = ({
   trip: currentTrip,
   updateTrip,
   title,
+  openMap,
   animateEntry = true,
   editable = true
 }: ItinerarySearchFormProps) => {
@@ -253,13 +267,11 @@ export const ItinerarySearchForm = ({
       )}
       {!offline && editable && currentPoint !== undefined && (currentSearch === undefined || currentSearch.trim().length === 0) && (
         <CachedLocationsView
-          exceptValues={[currentTrip.to?.id, currentTrip.from?.id].filter(i => i !== undefined)}
+          exceptValues={[currentTrip.to?.id, currentTrip.from?.id].filter(i => i !== undefined) as string[]}
           onSelect={async rp => {
             updateTrip({ [currentPoint]: rp });
-            // updateField(currentPoint, rp);
-            // machine.send("UPDATE", { data: { [currentPoint]: rp } });
-            //setCurrentTrip({ ...currentTrip, [currentPoint]: rp });
           }}
+          openMap={openMap}
         />
       )}
 
@@ -267,12 +279,9 @@ export const ItinerarySearchForm = ({
         <RallyingPointSuggestions
           fieldName={currentPoint}
           currentSearch={currentSearch}
-          exceptValues={otherValue ? [otherValue.id] : undefined}
+          exceptValues={otherValue ? [otherValue.id!] : undefined}
           onSelect={rp => {
             updateTrip({ [currentPoint]: rp });
-            //updateField(currentPoint, rp);
-            //   machine.send("UPDATE", { data: { [currentPoint]: rp } });
-            //setCurrentTrip({ ...currentTrip, [currentPoint]: rp });
             setCurrentPoint(undefined);
             setCurrentSearch(undefined);
           }}

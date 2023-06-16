@@ -33,13 +33,17 @@ type UpdateEvent = { type: "UPDATE"; data: Partial<InternalLianeRequest> };
 type EditEvent = { type: "EDIT"; data: PublishStepsKeys };
 type PublishEvent = { type: "PUBLISH" };
 
-type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent;
+type OpenMapEvent = { type: "MAP"; data: "from" | "to" };
+type BackEvent = { type: "BACK" };
+
+type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent | OpenMapEvent | BackEvent;
 
 export type PublishStateMachine = StateMachine<PublishContext, Schema, Event>;
 
 export type PublishStateMachineInterpreter = Interpreter<PublishContext, Schema, Event>;
 
 const createState = <T>(nextTarget: string, nextCondition?: (context: T) => boolean, previousState?: string) => {
+  // @ts-ignore
   const index = previousState ? PublishStateSequence.indexOf(previousState) : -1;
 
   const editableStates =
@@ -59,7 +63,9 @@ const createState = <T>(nextTarget: string, nextCondition?: (context: T) => bool
             {
               actions: ["set"],
               target: "#publish." + nextTarget,
-              cond: nextCondition ? (context, event) => nextCondition({ request: { ...context.request, ...event.data } }) : () => false
+              cond: nextCondition
+                ? (context: PublishContext, event: UpdateEvent) => nextCondition({ request: { ...context.request, ...event.data } })
+                : () => false
             },
             {
               actions: ["set"]
@@ -100,6 +106,31 @@ export const CreatePublishLianeMachine = (
   submit: (formData: PublishContext) => Promise<void>,
   initialValue?: Partial<InternalLianeRequest> | undefined
 ): PublishStateMachine => {
+  const states = createStateSequence<PublishContext, PublishStepsKeys>(
+    {
+      trip: { validation: context => !!context.request.from && !!context.request.to && context.request.from.id !== context.request.to.id },
+      date: { validation: context => !!context.request.departureTime },
+      vehicle: { validation: context => !!context.request.availableSeats }
+    },
+    "overview",
+    createState
+  );
+  //@ts-ignore
+  states.trip.on = {
+    MAP: [
+      {
+        target: "#publish.map.from",
+        cond: (context: PublishContext, event: OpenMapEvent) => event.data === "from"
+      },
+      {
+        target: "#publish.map.to",
+        cond: (context: PublishContext, event: OpenMapEvent) => event.data === "to"
+      }
+    ],
+
+    //@ts-ignore
+    ...states.trip.on
+  };
   return createMachine(
     {
       id: "publish",
@@ -110,15 +141,22 @@ export const CreatePublishLianeMachine = (
         route: {
           always: { target: "#publish.trip" + (initialValue ? ".enter" : ".fill") }
         },
-        ...createStateSequence<PublishContext, PublishStepsKeys>(
-          {
-            trip: { validation: context => !!context.request.from && !!context.request.to },
-            date: { validation: context => !!context.request.departureTime },
-            vehicle: { validation: context => !!context.request.availableSeats }
+        ...states,
+        map: {
+          on: {
+            UPDATE: {
+              actions: ["set"],
+              target: "#publish.trip.enter"
+            },
+            BACK: {
+              target: "#publish.trip.enter"
+            }
           },
-          "overview",
-          createState
-        ),
+          states: {
+            from: {},
+            to: {}
+          }
+        },
         overview: {
           initial: "enter",
           states: { enter: {} },
@@ -134,6 +172,7 @@ export const CreatePublishLianeMachine = (
             }
           }
         },
+        // @ts-ignore
         submitting: { ...CreateSubmittingState("publish"), type: "final" }
       }
     },
@@ -144,7 +183,6 @@ export const CreatePublishLianeMachine = (
       actions: {
         set: assign<PublishContext, NextEvent>({
           request: (context, event) => {
-            console.log("update", event.data);
             return {
               ...context.request,
               ...event.data

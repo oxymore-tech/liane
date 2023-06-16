@@ -1,5 +1,5 @@
 import Modal from "react-native-modal/dist/modal";
-import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
+import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";

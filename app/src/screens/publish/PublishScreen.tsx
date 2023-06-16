@@ -35,12 +35,13 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useQueryClient } from "react-query";
 import { useAppNavigation } from "@/api/navigation";
 import { SeatsForm } from "@/components/forms/SeatsForm";
+import { SelectOnMapView } from "@/screens/publish/SelectOnMapView";
+import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 
 export const PublishScreenView = () => {
   const insets = useSafeAreaInsets();
   const machine = useContext(PublishLianeContext);
   const [state] = useActor(machine);
-  //  <Animated.View style={[styles.footerContainer, AppStyles.shadow, { paddingTop: insets.top + 8 }]} entering={SlideInUp} exiting={SlideOutUp}>
 
   const isTripStep = state.matches("trip");
   const isDateStep = state.matches("date");
@@ -50,10 +51,6 @@ export const PublishScreenView = () => {
   console.log(state.value, state.context.request);
 
   const step = useSharedValue(0);
-  /* const loading = useSharedValue(isSubmittingStep);
-  useEffect(() => {
-    loading.value = isSubmittingStep;
-  }, [isSubmittingStep, loading]);*/
 
   const { width } = useWindowDimensions();
 
@@ -66,6 +63,25 @@ export const PublishScreenView = () => {
   const nextStep = (target: number) => {
     step.value = Math.min(3, Math.max(target, step.value));
   };
+
+  if (state.matches("map")) {
+    console.debug(state.toStrings()[1]);
+    const isFrom = state.toStrings()[1].endsWith(".from");
+    return (
+      <AppBackContextProvider
+        backHandler={() => {
+          machine.send("BACK");
+          return true;
+        }}>
+        <SelectOnMapView
+          onSelect={p => {
+            machine.send("UPDATE", { data: { [isFrom ? "from" : "to"]: p } });
+          }}
+          title={"Choisissez un point " + (isFrom ? "de départ" : "d'arrivée")}
+        />
+      </AppBackContextProvider>
+    );
+  }
 
   return (
     <Column style={{ flex: 1 }}>
@@ -145,6 +161,9 @@ export const PublishScreenView = () => {
           }
         }}
         title={isTripStep ? "Où allez-vous?" : undefined}
+        openMap={() => {
+          machine.send("MAP", { data: state.context.request.from ? "to" : "from" });
+        }}
       />
       <Animated.View
         style={[

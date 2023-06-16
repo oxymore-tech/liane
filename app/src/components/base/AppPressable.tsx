@@ -1,4 +1,15 @@
-import { ColorValue, Pressable, PressableProps, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import {
+  ColorValue,
+  Pressable,
+  PressableProps,
+  RotateTransform,
+  StyleProp,
+  StyleSheet,
+  TranslateXTransform,
+  TranslateYTransform,
+  View,
+  ViewStyle
+} from "react-native";
 import React, { PropsWithChildren, ReactNode, useMemo } from "react";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { AppColors, WithAlpha } from "@/theme/colors";
@@ -18,9 +29,14 @@ export function AppPressable(props: PressableProps) {
   return <Pressable {...props} style={[styles.pressableDefault, props.style, styles.pressableTarget]} />;
 }
 
-export const AppPressableIcon = (props: Omit<AppPressableOverlayProps, "children"> & AppIconProps) => (
+export const AppPressableIcon = (
+  props: Omit<AppPressableOverlayProps, "children"> &
+    AppIconProps & { iconTransform?: (RotateTransform | TranslateXTransform | TranslateYTransform)[] | undefined }
+) => (
   <AppPressableOverlay align="center" backgroundStyle={{ borderRadius: 8 }} {...props}>
-    <AppIcon name={props.name} color={props.color} opacity={props.opacity} size={props.size} />
+    <View style={{ transform: props.iconTransform }}>
+      <AppIcon name={props.name} color={props.color} opacity={props.opacity} size={props.size} />
+    </View>
   </AppPressableOverlay>
 );
 

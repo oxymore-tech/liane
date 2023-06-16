@@ -15,8 +15,9 @@ import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { SimpleModal } from "@/components/modal/SimpleModal";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
+import { UserPicture } from "@/components/UserPicture";
 const MessageBubble = ({
   message,
   sender,
@@ -31,34 +32,39 @@ const MessageBubble = ({
   const firstBySender = previousSender !== sender.id;
   const date = capitalize(toRelativeTimeString(new Date(message.createdAt!)));
   return (
-    <Column
+    <Row
+      spacing={8}
       style={{
         marginBottom: 6,
-        marginTop: firstBySender ? 6 : 0
-      }}
-      spacing={2}>
-      {!isSender && firstBySender && (
-        <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 12, fontWeight: "500", color: AppColorPalettes.blue[700] }}>
-          {sender.pseudo}
-        </AppText>
-      )}
-      <Column
-        style={{
-          backgroundColor: isSender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
-          alignSelf: isSender ? "flex-end" : "flex-start",
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-          borderRadius: 8,
-          marginRight: isSender ? 0 : 56,
-          marginLeft: isSender ? 56 : 0
-        }}
-        spacing={4}>
-        <AppText numberOfLines={-1} style={{ fontSize: 14 }}>
-          {message.text}
-        </AppText>
-        <AppText style={{ fontSize: 10, alignSelf: isSender ? "flex-end" : "flex-start" }}>{date}</AppText>
+        alignSelf: isSender ? "flex-end" : "flex-start",
+        marginTop: firstBySender ? 6 : 0,
+        maxWidth: "80%"
+      }}>
+      {!isSender && firstBySender && <UserPicture url={sender.pictureUrl} id={sender.id} size={32} />}
+      <Column spacing={2}>
+        {!isSender && firstBySender && (
+          <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "500", color: AppColorPalettes.blue[700] }}>
+            {sender.pseudo}
+          </AppText>
+        )}
+        <Column
+          style={{
+            backgroundColor: isSender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
+            alignSelf: isSender ? "flex-end" : "flex-start",
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            marginRight: isSender ? 0 : 56,
+            marginLeft: isSender ? 56 : 0
+          }}
+          spacing={4}>
+          <AppText numberOfLines={-1} style={{ fontSize: 15 }}>
+            {message.text}
+          </AppText>
+          <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start" }}>{date}</AppText>
+        </Column>
       </Column>
-    </Column>
+    </Row>
   );
 };
 
@@ -145,7 +151,7 @@ export const ChatScreen = () => {
   }, [route.params.conversationId, services.chatHub]);
 
   const sendButton = (
-    <Pressable
+    <AppPressableIcon
       style={{ alignSelf: "flex-end" }}
       onPress={async () => {
         if (inputValue && inputValue.length > 0) {
@@ -153,9 +159,11 @@ export const ChatScreen = () => {
           await services.chatHub.send({ text: inputValue });
           setIsSending(false);
         }
-      }}>
-      <AppIcon name={"navigation-2-outline"} color={AppColors.blue} />
-    </Pressable>
+      }}
+      iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
+      name={"navigation-outline"}
+      color={AppColors.blue}
+    />
   );
 
   //console.debug(JSON.stringify(messages), conversation?.members);
@@ -234,7 +242,7 @@ export const ChatScreen = () => {
               onPress={() => {
                 setShowMoreModal(true);
               }}
-              icon="plus-outline"
+              icon="attach-outline"
               color={AppColors.white}
               kind="circular"
               foregroundColor={AppColors.blue}
