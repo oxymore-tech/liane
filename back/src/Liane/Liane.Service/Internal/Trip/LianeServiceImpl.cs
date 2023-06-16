@@ -78,7 +78,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public async Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
   {
     var matches = await Match(filter, pagination, cancellationToken);
-    var segments = await GetLianeSegments(matches.Data.Select(m => m.Liane));
+    // Only display the matching part of the liane
+    var segments = await GetLianeSegments(matches.Data.Select(m => m.Liane with {WayPoints = m.GetMatchingTrip()}));
     return new LianeMatchDisplay(new FeatureCollection(segments.ToFeatures().ToList()), matches.Data);
   }
 
@@ -427,6 +428,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var filter = Builders<LianeDb>.Filter.Gte(l => l.DepartureTime, dateTime)
                  & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, dateTime.AddHours(24))
                  & Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, true)
+                 & Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.NotStarted)
                  & Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, Geometry.GetBoundingBox(pos, pos2));
 
     var timer = new Stopwatch();

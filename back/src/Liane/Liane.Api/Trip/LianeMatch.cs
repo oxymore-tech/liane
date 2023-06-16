@@ -10,6 +10,8 @@ public abstract record Match
   private Match()
   {
   }
+  public abstract Ref<RallyingPoint> Pickup{ get; init; }
+  public abstract Ref<RallyingPoint> Deposit { get; init; }
 
   public sealed record Exact(Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit) : Match;
 
