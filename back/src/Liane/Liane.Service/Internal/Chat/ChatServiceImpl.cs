@@ -68,21 +68,16 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
   {
     // Get conversations ids where user's last read is before the latest message
-    return await Mongo.GetCollection<ConversationGroup>().Find(new BsonDocument("$expr", new BsonDocument("$and", new BsonArray
-    {
-      new BsonDocument("$in",
-        new BsonArray
-        {
-          new ObjectId(user.Id),
-          "$members.user"
-        }),
-      new BsonDocument("$lt",
-        new BsonArray
-        {
-          new BsonDocument("$min", "$members.lastReadAt"),
-          "$lastMessageAt"
-        })
-    }))).SelectAsync<ConversationGroup, Ref<ConversationGroup>>(g => Task.FromResult((Ref<ConversationGroup>)g.Id!));
+
+    var userConversations = Mongo.GetCollection<ConversationGroup>()
+      .Find(Builders<ConversationGroup>.Filter.ElemMatch(c => c.Members, m => m.User == user.Id)).ToEnumerable();
+    return userConversations
+      .Where(c =>
+      {
+        var lastReadAt = c.Members.First(m => m.User.Id == user.Id).LastReadAt;
+        return lastReadAt is null || lastReadAt.Value < c.LastMessageAt;
+      })
+      .Select(c => (Ref<ConversationGroup>)c.Id!).ToImmutableList();
   }
 
   public Task PostEvent(LianeEvent lianeEvent)
