@@ -27,6 +27,17 @@ services:
     
   martin:
     image: ghcr.io/maplibre/martin:v0.7.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.routers.${PROJECT}-martin.rule=Host(`${DOMAIN}`) && (PathPrefix(`/tiles`))"
+      - "traefik.http.routers.${PROJECT}-martin.entrypoints=web"
+      - "traefik.http.routers.${PROJECT}-martin.middlewares=redirect@file"
+      - "traefik.http.routers.${PROJECT}-martin-secure.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`))"
+      - "traefik.http.routers.${PROJECT}-martin-secure.entrypoints=web-secure"
+      - "traefik.http.routers.${PROJECT}-martin-secure.middlewares=compress@file"
+      - "traefik.http.routers.${PROJECT}-martin-secure.tls.certResolver=gjinico"
+      - "traefik.http.services.${PROJECT}-martin.loadbalancer.server.port=3000"
     ports:
       - "${MARTIN_HOST_PORT}:3000"
     environment:
@@ -56,6 +67,8 @@ services:
     environment:
       LIANE_Mongo__Username: ${MONGO_USERNAME}
       LIANE_Mongo__Password: ${MONGO_PASSWORD}
+      LIANE_Database__Username: ${MONGO_USERNAME}
+      LIANE_Database__Password: ${MONGO_PASSWORD}
       LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
       LIANE_Twilio__Token: ${TWILIO_TOKEN}
       LIANE_Twilio__From: ${TWILIO_FROM}
