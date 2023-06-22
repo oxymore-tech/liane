@@ -130,6 +130,7 @@ export type LianeMember = Readonly<{
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seatCount: number;
+  delay?: TimeInSeconds;
 }>;
 
 // A date time in ISO 8601 format

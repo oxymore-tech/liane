@@ -1,9 +1,5 @@
 import { LatLng, Liane, RallyingPoint, Ref, User } from "@/api/index";
-
-export type Hours = number;
-export type Minutes = number;
-export type Seconds = number;
-export type TimeSpan = `${Hours}:${Minutes}:${Seconds}`;
+import { TimeInSeconds } from "@/util/datetime";
 
 export type LianeEvent = JoinRequest | MemberAccepted | MemberRejected | MemberHasLeft | MemberPing;
 
@@ -47,6 +43,6 @@ export type MemberPing = Readonly<{
   type: "MemberPing";
   member: Ref<User>;
   liane: Ref<Liane>;
-  delay: TimeSpan;
+  delay: TimeInSeconds;
   coordinate?: LatLng;
 }>;
