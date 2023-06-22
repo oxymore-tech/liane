@@ -33,7 +33,7 @@ services:
       - "traefik.http.routers.${PROJECT}-martin.rule=Host(`${DOMAIN}`) && (PathPrefix(`/tiles`))"
       - "traefik.http.routers.${PROJECT}-martin.entrypoints=web"
       - "traefik.http.routers.${PROJECT}-martin.middlewares=redirect@file"
-      - "traefik.http.routers.${PROJECT}-martin-secure.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`))"
+      - "traefik.http.routers.${PROJECT}-martin-secure.rule=Host(`${DOMAIN}`) && (PathPrefix(`/tiles`))"
       - "traefik.http.routers.${PROJECT}-martin-secure.entrypoints=web-secure"
       - "traefik.http.routers.${PROJECT}-martin-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-martin-secure.tls.certResolver=gjinico"
