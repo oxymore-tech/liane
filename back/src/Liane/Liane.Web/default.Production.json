@@ -9,6 +9,9 @@
   "Mongo": {
     "Host": "mongo"
   },
+  "Database": {
+    "Host": "postgis"
+  },
   "Nominatim": {
     "Url": "http://nominatim:8080"
   },

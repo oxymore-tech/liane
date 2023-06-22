@@ -8,6 +8,11 @@
     "Username": "mongoadmin",
     "Password": "secret"
   },
+  "Database": {
+    "Host": "localhost",
+    "Username": "postgis",
+    "Password": "secret"
+  },
   "Nominatim": {
     "Url": "http://liane.app:7070"
   },

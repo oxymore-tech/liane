@@ -12,6 +12,29 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     restart: unless-stopped
 
+  postgis:
+    image: "postgis/postgis:15-3.3"
+    volumes:
+      - "/data/${PROJECT}/postgis:/var/lib/postgresql/data"
+      - "./postgis/init.sql:/docker-entrypoint-initdb.d/init.sql:ro"
+    ports:
+      - "${POSTGIS_HOST_PORT}:5432"
+    environment:
+      POSTGRES_DB: liane
+      POSTGRES_USER: ${MONGO_USERNAME}
+      POSTGRES_PASSWORD: ${MONGO_PASSWORD}
+    restart: unless-stopped
+    
+  martin:
+    image: ghcr.io/maplibre/martin:v0.7.0
+    ports:
+      - "${MARTIN_HOST_PORT}:3000"
+    environment:
+      - DATABASE_URL=postgres://${MONGO_USERNAME}:${MONGO_PASSWORD}@postgis/liane
+    depends_on:
+      - postgis
+    restart: unless-stopped
+
   back:
     build: ../back
     labels:
@@ -27,7 +50,7 @@ services:
       - "traefik.http.services.${PROJECT}-back.loadbalancer.server.port=5000"
     depends_on:
       - mongo
-      - redis
+      - postgis
     volumes:
       - "./service-account.json:/app/service-account.json:ro"
     environment:

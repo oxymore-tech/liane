@@ -62,8 +62,33 @@ function mongo_purge {
     mongo_start
 }
 
+function martin_start {
+    martin_stop
+    docker run -d --name martin -p 3000:3000 --link postgis:postgis -e "DATABASE_URL=postgresql://postgis:secret@postgis/liane" ghcr.io/maplibre/martin
+}
+
+function martin_stop {
+    docker rm -f martin 2> /dev/null
+}
+
+function postgis_start {
+    postgis_stop
+    docker run -d --name postgis -p 5432:5432 -e POSTGRES_DB=liane -e POSTGRES_USER=postgis -e POSTGRES_PASSWORD=secret -v "${SCRIPTPATH}/../deploy/postgis/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" postgis/postgis:15-3.3
+}
+
+function postgis_stop {
+    docker rm -f postgis 2> /dev/null
+}
+
+function postgis_purge {
+    postgis_stop
+    sudo rm -Rf "${SCRIPTPATH}/data/postgis"
+    postgis_start
+}
+
 function stop {
   mongo_stop
+  postgis_stop
 }
 
 function start {
@@ -72,6 +97,9 @@ function start {
 
 function init {
   mongo_purge
+  postgis_purge
+  sleep 2
+  martin_start
 }
 
 case "$1" in
