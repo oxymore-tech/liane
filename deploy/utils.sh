@@ -20,6 +20,7 @@ function liane_compose {
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
   MONGO_HOST_PORT=$(get_mongo_host_port)
+  POSTGIS_HOST_PORT=$(get_postgis_host_port)
   
   export PROJECT
   export DOMAIN
@@ -74,6 +75,17 @@ function get_project() {
   else
     echo "Project should begin with 'liane' or 'liane-XXX' : ${project}"
     exit 1
+  fi
+}
+
+function get_postgis_host_port() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "5432"
+  else
+    echo "5431"
   fi
 }
 
