@@ -25,6 +25,7 @@ function liane_compose {
   export PROJECT
   export DOMAIN
   export MONGO_HOST_PORT
+  export POSTGIS_HOST_PORT
   
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
 }
