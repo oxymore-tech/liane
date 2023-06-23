@@ -56,7 +56,7 @@ public sealed class RefJsonTest
   public void ShouldSerializeResolvedRef()
   {
     var actual = JsonSerializer.Serialize((Ref<RallyingPoint>)new RallyingPoint("33", "Mende", new LatLng(30.0, 12.0), LocationType.CarpoolArea, "", "15000", "", null, true), options);
-    Assert.AreEqual("{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":1,\"address\":\"\",\"zipCode\":\"15000\",\"city\":\"\",\"placeCount\":null,\"isActive\":true}",
+    Assert.AreEqual("{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":\"CarpoolArea\",\"address\":\"\",\"zipCode\":\"15000\",\"city\":\"\",\"placeCount\":null,\"isActive\":true}",
       actual);
   }
 
