@@ -27,4 +27,6 @@ WORKDIR /app
 
 COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/net7.0/publish .
 
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD curl --silent --fail http://localhost:5000/health || exit 1
+
 ENTRYPOINT [ "/app/Liane.Web" ]

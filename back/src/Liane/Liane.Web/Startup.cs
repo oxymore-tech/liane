@@ -92,6 +92,8 @@ public static class Startup
 
     services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
+
+    services.AddHealthChecks();
   }
 
   public static async Task StartCurrentModule(string[] args)
@@ -286,6 +288,7 @@ public static class Startup
     {
       endpoints.MapHub<ChatHub>("/api/hub");
       endpoints.MapControllers();
+      endpoints.MapHealthChecks("/health");
     });
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();

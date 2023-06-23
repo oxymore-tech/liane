@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.8"
 services:
 
   mongo:
@@ -45,7 +45,8 @@ services:
       DB_USER: ${MONGO_USERNAME}
       DB_PASSWORD: ${MONGO_PASSWORD}
     depends_on:
-      - postgis
+      back:
+        condition: service_healthy
     networks:
       - gateway
       - default
