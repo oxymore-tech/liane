@@ -4,11 +4,16 @@ using System.Collections.Immutable;
 using System.Linq;
 using Liane.Api.Routing;
 using MongoDB.Driver.GeoJsonObjectModel;
+using Wkx;
 
 namespace Liane.Service.Internal.Util;
 
-public static class Geometry
+using LngLatTuple = Tuple<double, double>;
+
+public static class GeometryExtensions
 {
+  public static Geometry ToGeometry(this IEnumerable<LngLatTuple> coordinates) => new LineString(coordinates.Select(t => new Point(t.Item1, t.Item2)));
+
   public static GeoJsonLineString<GeoJson2DGeographicCoordinates> ToGeoJson(this ImmutableList<LatLng> coordinates)
   {
     var geoJson2DGeographicCoordinatesList = coordinates.Select(c => new GeoJson2DGeographicCoordinates(c.Lng, c.Lat));

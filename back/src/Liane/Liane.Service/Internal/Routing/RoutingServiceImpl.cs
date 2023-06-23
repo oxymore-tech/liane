@@ -34,7 +34,7 @@ public sealed class RoutingServiceImpl : IRoutingService
 
   public async Task<Route> GetRoute(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default)
   {
-    var routeResponse = await osrmService.Route(coordinates, overview: "full");
+    var routeResponse = await osrmService.Route(coordinates, overview: "full", cancellationToken: cancellationToken);
 
     var geojson = routeResponse.Routes[0].Geometry;
     var duration = routeResponse.Routes[0].Duration;

@@ -16,7 +16,6 @@ services:
     image: "postgis/postgis:15-3.3"
     volumes:
       - "/data/${PROJECT}/postgis:/var/lib/postgresql/data"
-      - "./postgis/init.sql:/docker-entrypoint-initdb.d/init.sql:ro"
     ports:
       - "${POSTGIS_HOST_PORT}:5432"
     environment:
@@ -27,6 +26,10 @@ services:
     
   martin:
     image: ghcr.io/maplibre/martin
+    command:
+      - "--config /config.yaml"
+    volumes:
+      - "./martin/config.yaml:/config.yaml:ro"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
@@ -40,7 +43,8 @@ services:
       - "traefik.http.services.${PROJECT}-martin.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.martin-stripprefix.stripprefix.prefixes=/tiles"
     environment:
-      - DATABASE_URL=postgres://${MONGO_USERNAME}:${MONGO_PASSWORD}@postgis/liane
+      DB_USER: ${MONGO_USERNAME}
+      DB_PASSWORD: ${MONGO_PASSWORD}
     depends_on:
       - postgis
     networks:

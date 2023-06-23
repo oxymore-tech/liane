@@ -1,0 +1,38 @@
+version: "3.7"
+services:
+
+  mongo:
+    image: "mongo:4.4"
+    volumes:
+      - "${DATA_DIR}/mongo:/data/db"
+    ports:
+      - "${MONGO_HOST_PORT}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    restart: unless-stopped
+
+  postgis:
+    image: "postgis/postgis:15-3.3"
+    volumes:
+      - "${DATA_DIR}/postgis:/var/lib/postgresql/data"
+    ports:
+      - "${POSTGIS_HOST_PORT}:5432"
+    environment:
+      POSTGRES_DB: liane
+      POSTGRES_USER: ${MONGO_USERNAME}
+      POSTGRES_PASSWORD: ${MONGO_PASSWORD}
+    restart: unless-stopped
+  
+  martin:
+    image: ghcr.io/maplibre/martin
+    command:
+      - "--config /config.yaml"
+    volumes:
+      - "./martin/config.yaml:/config.yaml:ro"
+    environment:
+      DB_USER: ${MONGO_USERNAME}
+      DB_PASSWORD: ${MONGO_PASSWORD}
+    depends_on:
+      - postgis
+    restart: unless-stopped
