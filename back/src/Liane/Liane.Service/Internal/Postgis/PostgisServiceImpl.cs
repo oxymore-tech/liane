@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -83,6 +84,15 @@ public sealed class PostgisServiceImpl : IPostgisService
     tx.Commit();
   }
 
+  public async Task Clear(ImmutableList<string> lianes)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE liane_id = ANY(@lianes)", new { lianes }, tx);
+    await DeleteOrphanSegments(connection, tx);
+    tx.Commit();
+  }
+
   private async Task GetStatsAndExecuteBatch(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch, IDbConnection connection, IDbTransaction tx)
   {
     var existingLianes = (await connection.QueryAsync<string>("SELECT DISTINCT liane_id FROM liane_waypoint"))
@@ -97,7 +107,12 @@ public sealed class PostgisServiceImpl : IPostgisService
   {
     var segmentsAdded = await connection.ExecuteAsync("INSERT INTO segment (from_id, to_id, geometry) VALUES (@from_id, @to_id, @geometry) ON CONFLICT DO NOTHING", segments, tx);
     var wayPointsAdded = await connection.ExecuteAsync("INSERT INTO liane_waypoint (from_id, to_id, liane_id, eta) VALUES (@from_id, @to_id, @liane_id, @eta)", lianeWaypoints, tx);
-    var segmentsDeleted = await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)", tx);
+    var segmentsDeleted = await DeleteOrphanSegments(connection, tx);
     logger.LogInformation("Added {segmentsAdded} segments and {lianesAdded} liane waypoints. {segmentsDeleted} orphan segments", segmentsAdded, wayPointsAdded, segmentsDeleted);
+  }
+
+  private static async Task<int> DeleteOrphanSegments(IDbConnection connection, IDbTransaction tx)
+  {
+    return await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)", tx);
   }
 }

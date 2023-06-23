@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Service.Internal.Postgis.Db;
 
@@ -14,4 +15,5 @@ public interface IPostgisService
   Task UpdateSchema();
   Task UpdateGeometry(Api.Trip.Liane liane);
   Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch);
+  Task Clear(ImmutableList<string> lianes);
 }

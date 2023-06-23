@@ -4,7 +4,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Util;
@@ -17,11 +16,11 @@ public sealed class PostgisUpdateService
 {
   private readonly IMongoDatabase mongo;
   private readonly IPostgisService postgis;
-  private readonly ILogger<MigrationService> logger;
+  private readonly ILogger<PostgisUpdateService> logger;
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
 
-  public PostgisUpdateService(IMongoDatabase mongo, ILogger<MigrationService> logger, IPostgisService postgis, IRoutingService routingService,
+  public PostgisUpdateService(IMongoDatabase mongo, ILogger<PostgisUpdateService> logger, IPostgisService postgis, IRoutingService routingService,
     IRallyingPointService rallyingPointService)
   {
     this.mongo = mongo;

@@ -10,6 +10,7 @@ using Liane.Api.User;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Postgis;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -21,17 +22,19 @@ public sealed class LianeStatusUpdate : CronJobService
   private readonly INotificationService notificationService;
   private readonly IRallyingPointService rallyingPointService;
   private readonly IUserService userService;
+  private readonly IPostgisService postgisService;
 
   private const int ReminderDelayInMinutes = 5;
 
   public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, INotificationService notificationService, IRallyingPointService rallyingPointService,
-    IUserService userService) : base(logger, "* * * * *",
+    IUserService userService, IPostgisService postgisService) : base(logger, "* * * * *",
     false)
   {
     this.mongo = mongo;
     this.notificationService = notificationService;
     this.rallyingPointService = rallyingPointService;
     this.userService = userService;
+    this.postgisService = postgisService;
   }
 
   protected override Task DoWork(CancellationToken cancellationToken) => Update(DateTime.UtcNow, TimeSpan.FromMinutes(ReminderDelayInMinutes));
@@ -46,13 +49,21 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private async Task UpdateCanceledLianes(DateTime from, DateTime to)
   {
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted)
-                  & Builders<LianeDb>.Filter.Where(l => l.Members.Count == 1 || !l.Driver.CanDrive)
-                  & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= to);
+    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive) && l.Geometry != null)
+                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= to);
+    var canceled = (await mongo.GetCollection<LianeDb>()
+        .Find(filter)
+        .Project(l => l.Id)
+        .ToListAsync())
+      .ToImmutableHashSet();
+
     await mongo.GetCollection<LianeDb>()
-      .UpdateManyAsync(filter, Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled));
+      .UpdateManyAsync(l => canceled.Contains(l.Id),
+        Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled)
+          .Set(l => l.Geometry, null));
+
+    await postgisService.Clear(canceled.ToImmutableList());
   }
-  
 
   private async Task UpdateFinishedLianes(DateTime from)
   {
@@ -79,8 +90,11 @@ public sealed class LianeStatusUpdate : CronJobService
       .BulkWriteAsync(finishedLianes
         .Select(liane => new UpdateOneModel<LianeDb>(
           Builders<LianeDb>.Filter.Where(l => l.Id == liane.Id),
-          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Finished))
+          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Finished)
+            .Set(l => l.Geometry, null))
         ));
+
+    await postgisService.Clear(finishedLianes.Select(l => l.Id).ToImmutableList());
   }
 
   private async Task UpdateActiveLianes(DateTime from, DateTime to)
@@ -117,7 +131,8 @@ public sealed class LianeStatusUpdate : CronJobService
         }
 
         var rallyingPoint = await wayPoint.RallyingPoint.Resolve(rallyingPointService.Get);
-        reminders.Add(CreateReminder(from, $"Départ dans {ReminderDelayInMinutes} minutes", $"Vous avez rendez-vous dans {ReminderDelayInMinutes} minutes à \"{rallyingPoint.Label}\".", members, new Reminder(liane.Id, wayPoint.RallyingPoint, wayPoint.Eta)));
+        reminders.Add(CreateReminder(from, $"Départ dans {ReminderDelayInMinutes} minutes", $"Vous avez rendez-vous dans {ReminderDelayInMinutes} minutes à \"{rallyingPoint.Label}\".", members,
+          new Reminder(liane.Id, wayPoint.RallyingPoint, wayPoint.Eta)));
       }
     }
 
