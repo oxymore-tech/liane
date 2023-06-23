@@ -67,6 +67,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   public async Task Generate()
   {
     logger.LogInformation("Generate rallying points...");
+    await postgisService.ClearRallyingPoints();
     await Mongo.GetCollection<RallyingPoint>()
       .DeleteManyAsync(_ => true);
 

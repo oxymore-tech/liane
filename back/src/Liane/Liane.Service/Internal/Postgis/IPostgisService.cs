@@ -17,5 +17,6 @@ public interface IPostgisService
   Task UpdateGeometry(Api.Trip.Liane liane);
   Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch);
   Task Clear(ImmutableList<string> lianes);
+  Task ClearRallyingPoints();
   Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints);
 }

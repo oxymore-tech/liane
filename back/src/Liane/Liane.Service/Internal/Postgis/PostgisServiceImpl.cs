@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
@@ -56,11 +57,28 @@ public sealed class PostgisServiceImpl : IPostgisService
     tx.Commit();
   }
 
+  public async Task ClearRallyingPoints()
+  {
+    using var connection = db.NewConnection();
+    await connection.ExecuteAsync("TRUNCATE rallying_point");
+  }
+
   public async Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints)
   {
     using var connection = db.NewConnection();
-    var parameters = rallyingPoints.Select(r => new { id = r.Id, location = r.Location }).ToList();
-    await connection.ExecuteAsync("INSERT INTO rallying_point (id, location) VALUES (@id, @location)", parameters);
+    var parameters = rallyingPoints.Select(r => new { 
+      id = r.Id, 
+      location = new Point(new Position(r.Location.Lat, r.Location.Lng)), 
+      label = r.Label,
+      type = r.Type,
+      address = r.Address,
+      zip_code = r.ZipCode,
+      city = r.City,
+      place_count = r.PlaceCount,
+      is_active = r.IsActive, }).ToList();
+    await connection.ExecuteAsync(
+      "INSERT INTO rallying_point (id, location, label, type, address, zip_code, city, place_count, is_active) VALUES (@id, @location, @label, @type, @address, @zip_code, @city, @place_count, @is_active) ON CONFLICT DO NOTHING",
+      parameters);
   }
 
   private async Task<BatchGeometryUpdate> ComputeLianeBatch(BatchGeometryUpdateInput input, Api.Trip.Liane liane)
