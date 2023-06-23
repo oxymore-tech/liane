@@ -58,7 +58,8 @@ public sealed class PostgisUpdateService
 
     using var connection = postgis.NewConnection();
     using var tx = connection.BeginTransaction();
-    var existing = (await connection.QueryAsync<string>("SELECT liane_id FROM liane_waypoint")).ToImmutableHashSet();
+    var existing = (await connection.QueryAsync<string>("SELECT DISTINCT liane_id FROM liane_waypoint"))
+      .ToImmutableHashSet();
 
     var lianeWaypoints = new List<LianeWayPointDb>();
     var segments = new List<SegmentDb>();
@@ -87,10 +88,10 @@ public sealed class PostgisUpdateService
       }
     }
 
-    logger.LogInformation("Fetch segments in postgis");
+    logger.LogInformation("Fetch {count} segments in postgis", segments.Count);
     var segmentsAdded = await connection.ExecuteAsync("INSERT INTO segment (from_id, to_id, geometry) VALUES (@from_id, @to_id, @geometry) ON CONFLICT DO NOTHING", segments);
 
-    logger.LogInformation("Fetch liane waypoints in postgis");
+    logger.LogInformation("Fetch {count} liane waypoints in postgis", lianeWaypoints.Count);
     var lianesAdded = await connection.ExecuteAsync("INSERT INTO liane_waypoint (from_id, to_id, liane_id, eta) VALUES (@from_id, @to_id, @liane_id, @eta)", lianeWaypoints);
 
     logger.LogInformation("Clear all orphan segments");
