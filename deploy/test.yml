@@ -37,4 +37,5 @@ services:
       - "/tmp/${TEST_PROJECT}:/app/results"
     depends_on:
       - mongo
+      - postgis
       - osrm
