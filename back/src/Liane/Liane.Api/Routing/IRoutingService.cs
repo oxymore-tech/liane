@@ -10,6 +10,7 @@ public interface IRoutingService
 {
   Task<Route> GetRoute(RoutingQuery routingQuery, CancellationToken cancellationToken = default);
   Task<Route> GetRoute(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default);
+  Task<Route> GetRoute(LatLng from, LatLng to, CancellationToken cancellationToken = default);
 
   Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query);
   Task<ImmutableList<Route>> GetAlternatives(RoutingQuery routingQuery);

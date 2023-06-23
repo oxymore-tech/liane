@@ -7,6 +7,18 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongoadmin
       MONGO_INITDB_ROOT_PASSWORD: secret
 
+  postgis:
+    image: "postgis/postgis:15-3.3"
+    volumes:
+      - "${LIANE_HOME}/data/postgis:/var/lib/postgresql/data"
+    ports:
+      - "${POSTGIS_HOST_PORT}:5432"
+    environment:
+      POSTGRES_DB: liane
+      POSTGRES_USER: ${MONGO_USERNAME}
+      POSTGRES_PASSWORD: ${MONGO_PASSWORD}
+    restart: unless-stopped
+  
   osrm:
     image: "osrm/osrm-backend"
     command: osrm-routed --algorithm mld /data/france-latest.osrm
@@ -20,6 +32,7 @@ services:
     environment:
       OSRM_URL: "http://osrm:5000"
       MONGO_HOST: "mongo"
+      POSTGIS_HOST: "postgis"
     volumes:
       - "/tmp/${TEST_PROJECT}:/app/results"
     depends_on:

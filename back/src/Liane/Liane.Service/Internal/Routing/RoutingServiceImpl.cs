@@ -27,10 +27,9 @@ public sealed class RoutingServiceImpl : IRoutingService
     this.logger = logger;
   }
 
-  public async Task<Route> GetRoute(RoutingQuery query, CancellationToken cancellationToken = default)
-  {
-    return await GetRoute(query.Coordinates, cancellationToken);
-  }
+  public Task<Route> GetRoute(RoutingQuery query, CancellationToken cancellationToken = default) => GetRoute(query.Coordinates, cancellationToken);
+
+  public Task<Route> GetRoute(LatLng from, LatLng to, CancellationToken cancellationToken = default) => GetRoute(GetFromTo(from, to), cancellationToken);
 
   public async Task<Route> GetRoute(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default)
   {
@@ -201,12 +200,14 @@ public sealed class RoutingServiceImpl : IRoutingService
         .Select(kv => kv.Key).ToHashSet();
     }
 
-    if (trip.Count != pointsDictionary.Count)
-    {
-      // No solution found
-      return null;
-    }
+    return trip.Count != pointsDictionary.Count
+      ? null // No solution found
+      : trip.ToImmutableList();
+  }
 
-    return trip.ToImmutableList();
+  private static IEnumerable<LatLng> GetFromTo(LatLng fromLocation, LatLng toLocation)
+  {
+    yield return fromLocation;
+    yield return toLocation;
   }
 }

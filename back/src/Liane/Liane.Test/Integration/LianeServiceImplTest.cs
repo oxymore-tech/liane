@@ -188,16 +188,16 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var compatible = results.First(m => m.Liane.Id == expected.Id).Match;
     Assert.IsInstanceOf<Match.Compatible>(compatible);
     Assert.AreEqual(294, ((Match.Compatible)compatible).Delta.TotalInSeconds);
-    Assert.AreEqual("SaintEnimie_Parking_fakeId", ((Match.Compatible)compatible).Pickup.Id);
-    Assert.AreEqual("Champerboux_Eglise_fakeId", ((Match.Compatible)compatible).Deposit.Id);
+    Assert.AreEqual("SaintEnimie_Parking", ((Match.Compatible)compatible).Pickup.Id);
+    Assert.AreEqual("Cboux_Eglise", ((Match.Compatible)compatible).Deposit.Id);
 
     expected = createdLianes[2];
     Assert.Contains(expected.Id, resultsMatchIds);
     compatible = results.First(m => m.Liane.Id == expected.Id).Match;
     Assert.IsInstanceOf<Match.Compatible>(compatible);
     Assert.AreEqual(550, ((Match.Compatible)compatible).Delta.TotalInSeconds);
-    Assert.AreEqual("SaintEnimie_Parking_fakeId", ((Match.Compatible)compatible).Pickup.Id);
-    Assert.AreEqual("Champerboux_Eglise_fakeId", ((Match.Compatible)compatible).Deposit.Id);
+    Assert.AreEqual("SaintEnimie_Parking", ((Match.Compatible)compatible).Pickup.Id);
+    Assert.AreEqual("Cboux_Eglise", ((Match.Compatible)compatible).Deposit.Id);
   }
 
   private async Task<Api.Trip.Liane> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
@@ -355,8 +355,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var compatible = (Match.Compatible)actual.Data[0].Match;
 
     Assert.IsTrue(compatible.Delta.TotalInSeconds < 15 * 60);
-    Assert.AreEqual("Quezac_Parking_fakeId", compatible.Pickup.Id);
-    Assert.AreEqual("Mende_fakeId", compatible.Deposit.Id);
+    Assert.AreEqual("Quezac_Parking", compatible.Pickup.Id);
+    Assert.AreEqual("Mende", compatible.Deposit.Id);
   }
   
   [Test]

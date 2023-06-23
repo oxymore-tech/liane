@@ -12,6 +12,8 @@ using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -57,7 +59,7 @@ public abstract class BaseIntegrationTest
   }
 
   [SetUp]
-  public void EnsureSchema()
+  public async Task EnsureSchema()
   {
     var settings = GetMongoSettings();
 
@@ -98,6 +100,11 @@ public abstract class BaseIntegrationTest
     services.AddService<LianeStatusUpdate>();
     services.AddEventListeners();
 
+    services.AddService(GetDatabaseSettings());
+    services.AddService<PostgisDatabase>();
+    services.AddService<PostgisUpdateService>();
+    services.AddService<PostgisServiceImpl>();
+
     SetupServices(services);
 
     ServiceProvider = services.BuildServiceProvider();
@@ -109,9 +116,12 @@ public abstract class BaseIntegrationTest
     // Init services in child class 
     Setup(mongo);
     // Insert mock users & rallying points
-    mongo.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
-    mongo.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
+    await mongo.GetCollection<DbUser>().InsertManyAsync(Fakers.FakeDbUsers);
+    await mongo.GetCollection<RallyingPoint>().InsertManyAsync(LabeledPositions.RallyingPoints);
     MongoFactory.InitSchema(mongo);
+
+    var postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
+    await postgisService.UpdateSchema();
   }
 
   protected virtual void SetupServices(IServiceCollection services)
@@ -142,7 +152,7 @@ public abstract class BaseIntegrationTest
     {
       var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
       var simplifiedRoute =
-        new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetRoute(testedPoints.Select(p => p.Location).ToImmutableList())).Coordinates.ToLatLng().ToMongoGeoJson());
+        new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetRoute(testedPoints.Select(p => p.Location).ToImmutableList())).Coordinates.ToLatLng().ToGeoJson());
       geoJson.Add(simplifiedRoute);
     }
 
@@ -153,9 +163,14 @@ public abstract class BaseIntegrationTest
 
   private static MongoSettings GetMongoSettings()
   {
-    var mongoHost = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
-    var settings = new MongoSettings(mongoHost, "mongoadmin", "secret");
-    return settings;
+    var host = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
+    return new MongoSettings(host, "mongoadmin", "secret");
+  }
+
+  private static DatabaseSettings GetDatabaseSettings()
+  {
+    var host = Environment.GetEnvironmentVariable("POSTGIS_HOST") ?? "localhost";
+    return new DatabaseSettings(host, "mongoadmin", "secret");
   }
 
   private static OsrmClient GetOsrmClient()

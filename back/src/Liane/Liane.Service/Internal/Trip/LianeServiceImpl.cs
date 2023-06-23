@@ -23,7 +23,6 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
-using Twilio.Rest.Verify.V2.Service.RateLimit;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -40,7 +39,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IUserService userService;
   private readonly IChatService chatService;
   private readonly ICurrentContext currentContext;
-  private readonly PostgisServiceImpl postgisService;
+  private readonly IPostgisService postgisService;
   private readonly ILogger<LianeServiceImpl> logger;
 
   public LianeServiceImpl(
@@ -49,7 +48,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger, IUserService userService) : base(mongo, currentContext)
+    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService) : base(mongo, currentContext)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -63,7 +62,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public new async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
   {
     var liane = await base.Create(entity, owner);
-    
+    await postgisService.UpdateGeometry(liane);
     return liane;
   }
 
@@ -90,7 +89,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var matches = await Match(filter, pagination, cancellationToken);
     // Only display the matching part of the liane
-    var segments = await GetLianeSegments(matches.Data.Select(m => m.Liane with {WayPoints = m.GetMatchingTrip()}));
+    var segments = await GetLianeSegments(matches.Data.Select(m => m.Liane with { WayPoints = m.GetMatchingTrip() }));
     return new LianeMatchDisplay(new FeatureCollection(segments.ToFeatures().ToList()), matches.Data);
   }
 
@@ -187,7 +186,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
       );
 
-    return await MapEntity(updated);
+    var updatedLiane = await MapEntity(updated);
+    await postgisService.UpdateGeometry(updatedLiane);
+    return updatedLiane;
   }
 
   public async Task<Api.Trip.Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<Api.User.User> member)
@@ -234,7 +235,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     await Mongo.GetCollection<LianeDb>()
       .UpdateOneAsync(l => l.Id == liane.Id, update);
 
-    return await MapEntity(toUpdate with { Members = newMembers });
+    var updatedLiane = await MapEntity(toUpdate with { Members = newMembers });
+    await postgisService.UpdateGeometry(updatedLiane);
+    return updatedLiane;
   }
 
   private async Task<ImmutableList<WayPoint>> GetWayPoints(DateTime departureTime, Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
@@ -420,16 +423,16 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var displayed = await Display(pos, pos2, dateTime, true, cancellationToken);
 
     var lianeFeatures = displayed.Segments.ToFeatures();
-    
-      // Select all rallying points that can be a pickup 
-     var displayedPoints = displayed.Lianes
-        .Select(l => l.WayPoints.Take(l.WayPoints.Count - 1))
-        .SelectMany(w => w)
-        .DistinctBy(w => w.RallyingPoint.Id).Select(w => w.RallyingPoint);
-    
+
+    // Select all rallying points that can be a pickup 
+    var displayedPoints = displayed.Lianes
+      .Select(l => l.WayPoints.Take(l.WayPoints.Count - 1))
+      .SelectMany(w => w)
+      .DistinctBy(w => w.RallyingPoint.Id).Select(w => w.RallyingPoint);
+
     var rallyingPointsFeatures = displayedPoints.Select(rp => new Feature(new Point(new Position(rp.Location.Lat, rp.Location.Lng)),
-        rp.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(rp, null))
-      ));
+      rp.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(rp, null))
+    ));
 
     return new FeatureCollection(lianeFeatures.Concat(rallyingPointsFeatures).ToList());
   }
@@ -538,10 +541,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var coordinates = wayPoints.Select(w => w.RallyingPoint.Location);
     var route = await routingService.GetRoute(coordinates);
-    var geometry = route.Coordinates.ToLatLng().ToMongoGeoJson();
     var simplifiedRoute = Simplifier.Simplify(route);
-    var simplifiedGrometry = simplifiedRoute.ToMongoGeoJson();
-    return simplifiedGrometry;
+    return simplifiedRoute.ToGeoJson();
   }
 
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, Filter filter, ImmutableList<LatLng> targetRoute)
@@ -672,7 +673,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
   {
-    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToMongoGeoJson());
+    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToGeoJson());
 
     DateTime lowerBound, upperBound;
     FilterDefinition<LianeDb> timeFilter;
