@@ -17,13 +17,11 @@ using LngLatTuple = Tuple<double, double>;
 public sealed class RoutingServiceImpl : IRoutingService
 {
   private readonly IOsrmService osrmService;
-  private readonly IRallyingPointService rallyingPointService;
   private readonly ILogger<RoutingServiceImpl> logger;
 
-  public RoutingServiceImpl(IOsrmService osrmService, IRallyingPointService rallyingPointService, ILogger<RoutingServiceImpl> logger)
+  public RoutingServiceImpl(IOsrmService osrmService, ILogger<RoutingServiceImpl> logger)
   {
     this.osrmService = osrmService;
-    this.rallyingPointService = rallyingPointService;
     this.logger = logger;
   }
 
@@ -119,8 +117,8 @@ public sealed class RoutingServiceImpl : IRoutingService
 
   public async Task<ImmutableList<WayPoint>?> GetTrip(DateTime departureTime, RouteSegment extremities, IEnumerable<RouteSegment> segments)
   {
-    var start = await rallyingPointService.Get(extremities.From);
-    var end = await rallyingPointService.Get(extremities.To);
+    var start = extremities.From;
+    var end = extremities.To;
     // A dictionary holding each point's constraints
     // The HashSet contains all points that must be visited before this point can be added to the trip.
     // If the hashset of a given point P contains P, it indicates this point is no longer visitable.
@@ -129,14 +127,12 @@ public sealed class RoutingServiceImpl : IRoutingService
 
     foreach (var member in segments)
     {
-      var resolvedFrom = await member.From.Resolve(rallyingPointService.Get);
-      var resolvedTo = await member.To.Resolve(rallyingPointService.Get);
-      pointsDictionary.TryAdd(resolvedFrom, new HashSet<RallyingPoint>());
-      pointsDictionary.TryAdd(resolvedTo, new HashSet<RallyingPoint>());
+      pointsDictionary.TryAdd(member.From, new HashSet<RallyingPoint>());
+      pointsDictionary.TryAdd(member.To, new HashSet<RallyingPoint>());
       // Add precedence constraints
-      if (resolvedFrom != start)
+      if (member.From != start)
       {
-        pointsDictionary[resolvedTo].Add(resolvedFrom);
+        pointsDictionary[member.To].Add(member.From);
       }
     }
 

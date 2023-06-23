@@ -242,7 +242,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private async Task<ImmutableList<WayPoint>> GetWayPoints(DateTime departureTime, Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
   {
-    var (driverSegment, segments) = ExtractRouteSegments(driver, lianeMembers);
+    var (driverSegment, segments) = await ExtractRouteSegments(driver, lianeMembers);
     var result = await routingService.GetTrip(departureTime, driverSegment, segments);
     if (result == null)
     {
@@ -252,22 +252,24 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return result;
   }
 
-  private static (RouteSegment, ImmutableList<RouteSegment>) ExtractRouteSegments(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
+  private async Task<(RouteSegment, ImmutableList<RouteSegment>)> ExtractRouteSegments(Ref<Api.User.User> driver, IEnumerable<LianeMember> lianeMembers)
   {
-    Ref<RallyingPoint>? from = null;
-    Ref<RallyingPoint>? to = null;
+    RallyingPoint? from = null;
+    RallyingPoint? to = null;
     var segments = new HashSet<RouteSegment>();
 
     foreach (var member in lianeMembers)
     {
       if (member.User.Id == driver.Id)
       {
-        from = member.From;
-        to = member.To;
+        from = await member.From.Resolve(rallyingPointService.Get);
+        to = await member.To.Resolve(rallyingPointService.Get);
       }
       else
       {
-        segments.Add((member.From, member.To));
+        var memberFrom = await member.From.Resolve(rallyingPointService.Get);
+        var memberTo = await member.To.Resolve(rallyingPointService.Get);
+        segments.Add((memberFrom, memberTo));
       }
     }
 
@@ -331,7 +333,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Liane> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
   {
     var resolved = await Get(liane);
-    var (driverSegment, segments) = ExtractRouteSegments(resolved.Driver.User, resolved.Members);
+    var (driverSegment, segments) = await ExtractRouteSegments(resolved.Driver.User, resolved.Members);
     var wayPoints = (await routingService.GetTrip(resolved.DepartureTime, driverSegment, segments))!;
     var initialTripDuration = wayPoints.TotalDuration();
     if (wayPoints.IncludesSegment((from, to)))
@@ -549,7 +551,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var matchForDriver = filter.AvailableSeats > 0;
     var defaultDriver = lianeDb.Driver.User;
-    var (driverSegment, segments) = ExtractRouteSegments(defaultDriver, lianeDb.Members);
+    var (driverSegment, segments) = await ExtractRouteSegments(defaultDriver, lianeDb.Members);
     var wayPoints = await routingService.GetTrip(lianeDb.DepartureTime, driverSegment, segments);
 
     if (wayPoints is null)
