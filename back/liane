@@ -19,7 +19,7 @@ function liane_compose {
   export MONGO_USERNAME
   export MONGO_PASSWORD
   
-  docker compose -f "${LIANE_HOME}/deploy/liane-dev.yml" -p "liane" "${@}"
+  docker compose -f "${LIANE_HOME}/deploy/dev.yml" -p "liane" "${@}"
 }
 
 function token {

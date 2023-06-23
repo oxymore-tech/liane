@@ -9,11 +9,11 @@ function source_env() {
 }
 
 function test_compose {
-  PROJECT=$(get_project)
+  TEST_PROJECT=$(get_test_project)
   
-  export PROJECT
+  export TEST_PROJECT
   
-  docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
+  docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${TEST_PROJECT}" "${@}"
 }
 
 function liane_compose {
@@ -30,9 +30,7 @@ function liane_compose {
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
 }
 
-function run_it_tests {
-  PROJECT=$(get_project)
-  
+function run_it_tests {  
   test_compose build
   test_compose run test
   test_compose down
@@ -63,12 +61,16 @@ function get_domain() {
   fi
 }
 
+function get_test_project() {  
+  echo "it-$(get_project)"
+}
+
 function get_project() {
   if [[ -z "${LIANE_HOME}" ]]; then
     echo "LIANE_HOME environment variable is not defined"
     exit 1
   fi
-
+  
   local project
   project="$(basename "${LIANE_HOME}")"
   if [[ "${project}" =~ ^liane(-(dev))?$ ]]; then
