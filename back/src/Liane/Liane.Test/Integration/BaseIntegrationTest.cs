@@ -142,7 +142,7 @@ public abstract class BaseIntegrationTest
     {
       var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
       var simplifiedRoute =
-        new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetRoute(testedPoints.Select(p => p.Location).ToImmutableList())).Coordinates.ToLatLng().ToGeoJson());
+        new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetRoute(testedPoints.Select(p => p.Location).ToImmutableList())).Coordinates.ToLatLng().ToMongoGeoJson());
       geoJson.Add(simplifiedRoute);
     }
 

@@ -62,7 +62,13 @@ public sealed class PostgisUpdateService
 
     var lianeWaypoints = new List<LianeWayPointDb>();
     var segments = new List<SegmentDb>();
-    foreach (var lianeDb in lianes.Where(l => !existing.Contains(l.Id)))
+    var lianeDbs = lianes.Where(l => !existing.Contains(l.Id))
+      .ToImmutableList();
+
+    logger.LogInformation("Start adding {lianes} lianes into postgis", lianeDbs.Count);
+
+    var index = 0;
+    foreach (var lianeDb in lianeDbs)
     {
       var rallyingPoints = await lianeDb.WayPoints.SelectAsync(w => rallyingPointService.Get(w.RallyingPoint));
       for (var i = 0; i < rallyingPoints.Count - 1; i++)
@@ -70,15 +76,19 @@ public sealed class PostgisUpdateService
         var from = rallyingPoints[i];
         var to = rallyingPoints[i + 1];
         var route = await routingService.GetRoute(GetFromTo(from.Location, to.Location));
-        segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToGeometry()));
+        segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToLineString()));
         lianeWaypoints.Add(new LianeWayPointDb(from.Id!, to.Id!, lianeDb.Id, lianeDb.WayPoints[i].Eta));
+        logger.LogInformation("Adding liane {index}/{to}", index++, lianeDbs.Count);
       }
     }
 
+    logger.LogInformation("Fetch segments in postgis");
     var segmentsAdded = await connection.ExecuteAsync("INSERT INTO segment (from_id, to_id, geometry) VALUES (@from_id, @to_id, @geometry)", segments);
+
+    logger.LogInformation("Fetch liane waypoints in postgis");
     var lianesAdded = await connection.ExecuteAsync("INSERT INTO liane_waypoint (from_id, to_id, liane_id, eta) VALUES (@from_id, @to_id, @liane_id, @eta)", lianeWaypoints);
 
-    // clear all orphan segments
+    logger.LogInformation("Clear all orphan segments");
     var segmentsDeleted = await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)");
 
     tx.Commit();

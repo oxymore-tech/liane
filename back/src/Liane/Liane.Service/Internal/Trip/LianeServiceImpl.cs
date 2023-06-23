@@ -538,9 +538,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     var coordinates = wayPoints.Select(w => w.RallyingPoint.Location);
     var route = await routingService.GetRoute(coordinates);
-    var geometry = route.Coordinates.ToLatLng().ToGeoJson();
+    var geometry = route.Coordinates.ToLatLng().ToMongoGeoJson();
     var simplifiedRoute = Simplifier.Simplify(route);
-    var simplifiedGrometry = simplifiedRoute.ToGeoJson();
+    var simplifiedGrometry = simplifiedRoute.ToMongoGeoJson();
     return simplifiedGrometry;
   }
 
@@ -672,7 +672,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
   {
-    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToGeoJson());
+    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToMongoGeoJson());
 
     DateTime lowerBound, upperBound;
     FilterDefinition<LianeDb> timeFilter;

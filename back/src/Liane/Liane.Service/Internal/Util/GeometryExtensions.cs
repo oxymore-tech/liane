@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using MongoDB.Driver.GeoJsonObjectModel;
-using Wkx;
 
 namespace Liane.Service.Internal.Util;
 
@@ -12,9 +12,12 @@ using LngLatTuple = Tuple<double, double>;
 
 public static class GeometryExtensions
 {
-  public static Geometry ToGeometry(this IEnumerable<LngLatTuple> coordinates) => new LineString(coordinates.Select(t => new Point(t.Item1, t.Item2)));
+  public static LineString ToLineString(this IEnumerable<LngLatTuple> coordinates)
+  {
+    return new LineString(coordinates.Select(c => new Position(c.Item2, c.Item1)));
+  }
 
-  public static GeoJsonLineString<GeoJson2DGeographicCoordinates> ToGeoJson(this ImmutableList<LatLng> coordinates)
+  public static GeoJsonLineString<GeoJson2DGeographicCoordinates> ToMongoGeoJson(this ImmutableList<LatLng> coordinates)
   {
     var geoJson2DGeographicCoordinatesList = coordinates.Select(c => new GeoJson2DGeographicCoordinates(c.Lng, c.Lat));
     return new GeoJsonLineString<GeoJson2DGeographicCoordinates>(new GeoJsonLineStringCoordinates<GeoJson2DGeographicCoordinates>(geoJson2DGeographicCoordinatesList));

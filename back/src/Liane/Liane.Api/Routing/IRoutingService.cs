@@ -14,7 +14,6 @@ public interface IRoutingService
   Task<RouteWithSteps> GetRouteStepsGeometry(RoutingQuery query);
   Task<ImmutableList<Route>> GetAlternatives(RoutingQuery routingQuery);
   Task<DeltaRoute> CrossAWayPoint(RoutingWithPointQuery routingWithPointQuery);
-  Task<DeltaRoute> MakeADetour(RoutingWithPointQuery routingWithPointQuery);
 
   /// <summary>
   /// Solves the Travelling Salesman Problem while respecting precedence constraints provided by each pair of rallying points
