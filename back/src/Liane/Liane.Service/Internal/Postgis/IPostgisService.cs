@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Trip;
 using Liane.Service.Internal.Postgis.Db;
 
 namespace Liane.Service.Internal.Postgis;
@@ -16,4 +17,5 @@ public interface IPostgisService
   Task UpdateGeometry(Api.Trip.Liane liane);
   Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch);
   Task Clear(ImmutableList<string> lianes);
+  Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints);
 }

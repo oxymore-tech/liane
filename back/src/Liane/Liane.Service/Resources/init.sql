@@ -15,6 +15,19 @@ CREATE TABLE IF NOT EXISTS liane_waypoint
   PRIMARY KEY (from_id, to_id, liane_id)
 );
 
+CREATE TABLE IF NOT EXISTS rallying_point
+(
+  id varchar(24),
+  label varchar(255),
+  location geometry(Point, 4326),
+  type varchar(24),
+  address varchar(255),
+  zip_code varchar(24),
+  city varchar(255),
+  place_count integer,
+  is_active boolean,
+  PRIMARY KEY (id)
+);
 
 -- Add indexes
 CREATE INDEX IF NOT EXISTS segment_geometry_index

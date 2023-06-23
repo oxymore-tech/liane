@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
@@ -53,6 +54,13 @@ public sealed class PostgisServiceImpl : IPostgisService
     await GetStatsAndExecuteBatch(i => ComputeLianeBatch(i, liane), connection, tx);
 
     tx.Commit();
+  }
+
+  public async Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints)
+  {
+    using var connection = db.NewConnection();
+    var parameters = rallyingPoints.Select(r => new { id = r.Id, location = r.Location }).ToList();
+    await connection.ExecuteAsync("INSERT INTO rallying_point (id, location) VALUES (@id, @location)", parameters);
   }
 
   private async Task<BatchGeometryUpdate> ComputeLianeBatch(BatchGeometryUpdateInput input, Api.Trip.Liane liane)

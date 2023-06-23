@@ -19,6 +19,7 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip.Import;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -47,13 +48,15 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   private readonly MemoryCache pointCache = new(new MemoryCacheOptions());
   private readonly IAddressService addressService;
   private readonly IOsrmService osrmService;
+  private readonly IPostgisService postgisService;
 
-  public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger, IAddressService addressService, IOsrmService osrmService)
+  public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger, IAddressService addressService, IOsrmService osrmService, IPostgisService postgisService)
     : base(mongo)
   {
     this.logger = logger;
     this.addressService = addressService;
     this.osrmService = osrmService;
+    this.postgisService = postgisService;
   }
 
   public override Task<RallyingPoint> Get(Ref<RallyingPoint> reference)
@@ -85,11 +88,13 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       {
         var r = list[i];
         if (Math.Abs(point.Location.Lng - r.Location.Lng) > 0.01) break; // Points are too far anyways 
-        if (r.Location.Distance(point.Location) <= 500)
+        if (!(r.Location.Distance(point.Location) <= 500))
         {
-          close.Add(r);
-          list.RemoveAt(i);
+          continue;
         }
+
+        close.Add(r);
+        list.RemoveAt(i);
       }
 
       grouped.Add(close.ToImmutableList());
@@ -125,6 +130,7 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     var rallyingPoints = (await rallyingPointsMerger).SelectMany(r => r).ToImmutableList();
     await Mongo.GetCollection<RallyingPoint>()
       .InsertManyAsync(rallyingPoints);
+    await postgisService.InsertRallyingPoints(rallyingPoints);
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
   }
 
