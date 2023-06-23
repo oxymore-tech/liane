@@ -13,6 +13,7 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="CsvHelper" Version="30.0.1" />
+        <PackageReference Include="Dapper" Version="2.0.143" />
         <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
         <PackageReference Include="GeoJSON.Text" Version="1.0.1" />
         <PackageReference Include="MongoDB.Bson" Version="2.19.2" />

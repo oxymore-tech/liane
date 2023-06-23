@@ -10,7 +10,7 @@
   },
   "Database": {
     "Host": "localhost",
-    "Username": "postgis",
+    "Username": "mongoadmin",
     "Password": "secret"
   },
   "Nominatim": {

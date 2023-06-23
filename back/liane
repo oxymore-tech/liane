@@ -1,13 +1,31 @@
 #!/usr/bin/env bash
+set -e
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
+
+LIANE_HOME="${SCRIPTPATH}/.."
+
+source "${SCRIPTPATH}/.env.local"
+
+MONGO_HOST_PORT=27017
+POSTGIS_HOST_PORT=5432
+MONGO_USERNAME=${LIANE_MONGO__USERNAME:-mongoadmin}
+MONGO_PASSWORD=${LIANE_MONGO__PASSWORD:-secret}
+
+function liane_compose {
+  export LIANE_HOME
+  export MONGO_HOST_PORT
+  export POSTGIS_HOST_PORT
+  export MONGO_USERNAME
+  export MONGO_PASSWORD
+  
+  docker compose -f "${LIANE_HOME}/deploy/liane-dev.yml" -p "liane" "${@}"
+}
 
 function token {
   local environment=${1:-local}
   
   local baseUrl
-  
-  source "${SCRIPTPATH}/.env.local"
   
   local phone=${LIANE_AUTH__TESTACCOUNT:-0000111111}
   local code=${LIANE_AUTH__TESTCODE:-333333}
@@ -39,67 +57,23 @@ function dump_on_local {
     suffix=""
   fi;
   
-  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | docker exec -i mongo mongorestore --archive --gzip -u mongoadmin -p secret
-}
-
-function mongo_start {
-    mongo_stop
-    docker run -d --name mongo \
-        -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
-        -e MONGO_INITDB_ROOT_PASSWORD=secret \
-        -p 27017:27017 \
-        -v "${SCRIPTPATH}/data/mongo:/data/db" \
-        --restart unless-stopped mongo:4.4.4
-}
-
-function mongo_stop {
-    docker rm -f mongo 2> /dev/null
-}
-
-function mongo_purge {
-    mongo_stop
-    sudo rm -Rf "${SCRIPTPATH}/data/mongo"
-    mongo_start
-}
-
-function martin_start {
-    martin_stop
-    docker run -d --name martin -p 3000:3000 --link postgis:postgis -e "DATABASE_URL=postgresql://postgis:secret@postgis/liane" ghcr.io/maplibre/martin
-}
-
-function martin_stop {
-    docker rm -f martin 2> /dev/null
-}
-
-function postgis_start {
-    postgis_stop
-    docker run -d --name postgis -p 5432:5432 -e POSTGRES_DB=liane -e POSTGRES_USER=postgis -e POSTGRES_PASSWORD=secret -v "${SCRIPTPATH}/../deploy/postgis/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" postgis/postgis:15-3.3
-}
-
-function postgis_stop {
-    docker rm -f postgis 2> /dev/null
-}
-
-function postgis_purge {
-    postgis_stop
-    sudo rm -Rf "${SCRIPTPATH}/data/postgis"
-    postgis_start
-}
-
-function stop {
-  mongo_stop
-  postgis_stop
-}
-
-function start {
-  dotnet run --project "${SCRIPTPATH}/src/Liane/Liane.Web/Liane.Web.csproj"
+  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | liane_compose exec -T mongo mongorestore --archive --gzip -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD}
 }
 
 function init {
-  mongo_purge
-  postgis_purge
-  sleep 2
-  martin_start
+  sudo rm -Rf "${LIANE_HOME}/data"
+  sudo mkdir -p "${LIANE_HOME}/data"
+  sudo chmod -R 777 "${LIANE_HOME}/data"
+
+  start
+}
+
+function stop {
+  liane_compose down
+}
+
+function start {
+  liane_compose up -d --build --remove-orphans
 }
 
 case "$1" in
@@ -113,6 +87,9 @@ case "$1" in
   start
   ;;
  init)
+  init
+  ;;
+ purge)
   init
   ;;
  dump_on_local)

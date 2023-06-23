@@ -14,18 +14,18 @@ case "$1" in
    source_env
    dump
   ;;
- stop)
-   source_env
-   stop
-  ;;
  start)
    source_env
    start
+  ;;
+ stop)
+   source_env
+   stop
   ;;
  test)
    run_it_tests
   ;;
  *)
-  echo "Usage: liane (init_osrm|start|stop|test)"
+  echo "Usage: liane (init_osrm|dump|start|stop|test)"
   ;;
 esac

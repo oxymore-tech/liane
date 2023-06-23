@@ -1,0 +1,11 @@
+postgres:
+  connection_string: postgres://${DB_USER}:${DB_PASSWORD}@postgis/liane
+  auto_publish: false
+  
+  functions:
+    liane_display:
+      schema: public
+      function: liane_display
+    rallying_point_display:
+      schema: public
+      function: rallying_point_display

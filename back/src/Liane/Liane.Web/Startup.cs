@@ -11,6 +11,8 @@ using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -56,6 +58,11 @@ public static class Startup
     services.AddService<AddressServiceNominatimImpl>();
     services.AddSettings<OsrmSettings>(context);
     services.AddSettings<NominatimSettings>(context);
+
+    services.AddSettings<DatabaseSettings>(context);
+    services.AddService<PostgisDatabase>();
+    services.AddService<PostgisUpdateService>();
+    services.AddService<PostgisServiceImpl>();
 
     services.AddSettings<MongoSettings>(context);
     services.AddService<MigrationService>();
@@ -285,6 +292,12 @@ public static class Startup
     var migrationService = app.ApplicationServices.GetRequiredService<MigrationService>();
 
     migrationService.Execute()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
+
+    var postgisMigrationService = app.ApplicationServices.GetRequiredService<PostgisUpdateService>();
+    postgisMigrationService.Execute()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();

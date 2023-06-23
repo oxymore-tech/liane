@@ -87,7 +87,7 @@ public abstract class BaseIntegrationTest
 
     services.AddService<MockCurrentContext>();
     services.AddService(JsonSerializerSettings.TestJsonOptions());
-    services.AddService<NotificationServiceImpl>();  
+    services.AddService<NotificationServiceImpl>();
     services.AddService(new FirebaseSettings(null));
     services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
@@ -141,7 +141,8 @@ public abstract class BaseIntegrationTest
     if (testedPoints.Length > 0)
     {
       var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
-      var simplifiedRoute = new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetSimplifiedRoute(testedPoints.Select(p => p.Location).ToImmutableList())).ToGeoJson());
+      var simplifiedRoute =
+        new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetRoute(testedPoints.Select(p => p.Location).ToImmutableList())).Coordinates.ToLatLng().ToMongoGeoJson());
       geoJson.Add(simplifiedRoute);
     }
 

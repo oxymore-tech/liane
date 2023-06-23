@@ -17,11 +17,13 @@ using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
+using Twilio.Rest.Verify.V2.Service.RateLimit;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -38,6 +40,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private readonly IUserService userService;
   private readonly IChatService chatService;
   private readonly ICurrentContext currentContext;
+  private readonly PostgisServiceImpl postgisService;
   private readonly ILogger<LianeServiceImpl> logger;
 
   public LianeServiceImpl(
@@ -54,6 +57,14 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     this.chatService = chatService;
     this.logger = logger;
     this.userService = userService;
+    this.postgisService = postgisService;
+  }
+
+  public new async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
+  {
+    var liane = await base.Create(entity, owner);
+    
+    return liane;
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
@@ -429,7 +440,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
                  & Builders<LianeDb>.Filter.Lte(l => l.DepartureTime, dateTime.AddHours(24))
                  & Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, true)
                  & Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.NotStarted)
-                 & Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, Geometry.GetBoundingBox(pos, pos2));
+                 & Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, GeometryExtensions.GetBoundingBox(pos, pos2));
 
     var timer = new Stopwatch();
     timer.Start();
@@ -526,9 +537,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   private async Task<GeoJsonLineString<GeoJson2DGeographicCoordinates>> GetGeometry(IEnumerable<WayPoint> wayPoints)
   {
     var coordinates = wayPoints.Select(w => w.RallyingPoint.Location);
-    var simplifiedRoute = await routingService.GetSimplifiedRoute(coordinates);
-    var geometry = simplifiedRoute.ToGeoJson();
-    return geometry;
+    var route = await routingService.GetRoute(coordinates);
+    var geometry = route.Coordinates.ToLatLng().ToMongoGeoJson();
+    var simplifiedRoute = Simplifier.Simplify(route);
+    var simplifiedGrometry = simplifiedRoute.ToMongoGeoJson();
+    return simplifiedGrometry;
   }
 
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, Filter filter, ImmutableList<LatLng> targetRoute)
@@ -659,7 +672,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   private FilterDefinition<LianeDb> BuilderLianeFilter(ImmutableList<LatLng> route, DepartureOrArrivalTime time, int availableSeats)
   {
-    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToGeoJson());
+    var intersects = Builders<LianeDb>.Filter.GeoIntersects(l => l.Geometry, route.ToMongoGeoJson());
 
     DateTime lowerBound, upperBound;
     FilterDefinition<LianeDb> timeFilter;
