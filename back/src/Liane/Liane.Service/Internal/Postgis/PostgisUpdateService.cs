@@ -62,6 +62,7 @@ public sealed class PostgisUpdateService
 
     var lianeWaypoints = new List<LianeWayPointDb>();
     var segments = new List<SegmentDb>();
+    var added = new HashSet<string>();
     var lianeDbs = lianes.Where(l => !existing.Contains(l.Id))
       .ToImmutableList();
 
@@ -75,15 +76,19 @@ public sealed class PostgisUpdateService
       {
         var from = rallyingPoints[i];
         var to = rallyingPoints[i + 1];
-        var route = await routingService.GetRoute(GetFromTo(from.Location, to.Location));
-        segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToLineString()));
+        if (added.Add($"{from.Id!}-{to.Id!}"))
+        {
+          var route = await routingService.GetRoute(GetFromTo(from.Location, to.Location));
+          segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToLineString()));
+        }
+
         lianeWaypoints.Add(new LianeWayPointDb(from.Id!, to.Id!, lianeDb.Id, lianeDb.WayPoints[i].Eta));
         logger.LogInformation("Adding liane {index}/{to}", index++, lianeDbs.Count);
       }
     }
 
     logger.LogInformation("Fetch segments in postgis");
-    var segmentsAdded = await connection.ExecuteAsync("INSERT INTO segment (from_id, to_id, geometry) VALUES (@from_id, @to_id, @geometry)", segments);
+    var segmentsAdded = await connection.ExecuteAsync("INSERT INTO segment (from_id, to_id, geometry) VALUES (@from_id, @to_id, @geometry) ON CONFLICT DO NOTHING", segments);
 
     logger.LogInformation("Fetch liane waypoints in postgis");
     var lianesAdded = await connection.ExecuteAsync("INSERT INTO liane_waypoint (from_id, to_id, liane_id, eta) VALUES (@from_id, @to_id, @liane_id, @eta)", lianeWaypoints);
