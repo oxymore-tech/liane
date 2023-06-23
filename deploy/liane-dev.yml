@@ -4,7 +4,7 @@ services:
   mongo:
     image: "mongo:4.4"
     volumes:
-      - "${DATA_DIR}/mongo:/data/db"
+      - "${LIANE_HOME}/data/mongo:/data/db"
     ports:
       - "${MONGO_HOST_PORT}:27017"
     environment:
@@ -15,7 +15,7 @@ services:
   postgis:
     image: "postgis/postgis:15-3.3"
     volumes:
-      - "${DATA_DIR}/postgis:/var/lib/postgresql/data"
+      - "${LIANE_HOME}/data/postgis:/var/lib/postgresql/data"
     ports:
       - "${POSTGIS_HOST_PORT}:5432"
     environment:
@@ -26,8 +26,7 @@ services:
   
   martin:
     image: ghcr.io/maplibre/martin
-    command:
-      - "--config /config.yaml"
+    command: [ "--config", "/config.yaml" ]
     volumes:
       - "./martin/config.yaml:/config.yaml:ro"
     environment:

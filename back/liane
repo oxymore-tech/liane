@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
+
+LIANE_HOME="${SCRIPTPATH}/.."
+
+source "${SCRIPTPATH}/.env.local"
+
+MONGO_HOST_PORT=27017
+POSTGIS_HOST_PORT=4532
+MONGO_USERNAME=${LIANE_MONGO__USERNAME:-mongoadmin}
+MONGO_PASSWORD=${LIANE_MONGO__PASSWORD:-secret}
+
+function liane_compose {
+  export LIANE_HOME
+  export MONGO_HOST_PORT
+  export POSTGIS_HOST_PORT
+  export MONGO_USERNAME
+  export MONGO_PASSWORD
+  
+  docker compose -f "${LIANE_HOME}/deploy/liane-dev.yml" -p "liane" "${@}"
+}
+
+function token {
+  local environment=${1:-local}
+  
+  local baseUrl
+  
+  local phone=${LIANE_AUTH__TESTACCOUNT:-0000111111}
+  local code=${LIANE_AUTH__TESTCODE:-333333}
+  
+  if [[ "${environment}" = "local" ]]; then
+    baseUrl="http://localhost:5000"
+    phone=0000111111
+    code=333333
+  elif [[ "${environment}" = "dev" ]]; then
+    baseUrl="https://dev.liane.app"
+  elif [[ "${environment}" = "prod" ]]; then
+    baseUrl="https://liane.app"
+  fi;
+  
+  local effectivePhone=${2:-${phone}}
+  local effectiveCode=${3:-${code}}
+  
+  local token
+  token=$(http "${baseUrl}/api/auth/login" "phone=${effectivePhone}" "code=${effectiveCode}" | jq -r .token.accessToken)
+  echo "Authorization:Bearer${token}"
+}
+
+function dump_on_local {
+  local environment=${1:-dev}
+    
+  local suffix="-dev"
+  
+  if [[ "${environment}" = "prod" ]]; then
+    suffix=""
+  fi;
+  
+  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | liane_compose exec -T mongo mongorestore --archive --gzip -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD}
+}
+
+function init {
+  sudo rm -Rf "${LIANE_HOME}/data"
+  sudo mkdir -p "${LIANE_HOME}/data"
+  sudo chmod -R 777 "${LIANE_HOME}/data"
+
+  start
+}
+
+function stop {
+  liane_compose down
+}
+
+function start {
+  liane_compose up -d --build --remove-orphans
+}
+
+case "$1" in
+ stop)
+  stop
+  ;;
+ token)
+  token ${@:2}
+  ;;
+ start)
+  start
+  ;;
+ init)
+  init
+  ;;
+ purge)
+  init
+  ;;
+ dump_on_local)
+  dump_on_local ${@:2}
+  ;;
+ *)
+  # else
+  echo "Usage: liane (token|init|start|stop|dump_on_local)"
+  ;;
+esac
