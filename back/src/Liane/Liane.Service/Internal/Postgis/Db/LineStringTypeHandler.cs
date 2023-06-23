@@ -4,7 +4,7 @@ using GeoJSON.Text.Geometry;
 
 namespace Liane.Service.Internal.Postgis.Db;
 
-public sealed class GeoJsonTypeHandler : SqlMapper.TypeHandler<LineString>
+public sealed class LineStringTypeHandler : SqlMapper.TypeHandler<LineString>
 {
   public override void SetValue(IDbDataParameter parameter, LineString value)
   {

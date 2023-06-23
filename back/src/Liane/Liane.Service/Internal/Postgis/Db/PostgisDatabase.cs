@@ -11,7 +11,8 @@ public sealed class PostgisDatabase
   public PostgisDatabase(DatabaseSettings settings)
   {
     this.settings = settings;
-    SqlMapper.AddTypeHandler(new GeoJsonTypeHandler());
+    SqlMapper.AddTypeHandler(new LineStringTypeHandler());
+    SqlMapper.AddTypeHandler(new PointTypeHandler());
   }
 
   public IDbConnection NewConnection()
