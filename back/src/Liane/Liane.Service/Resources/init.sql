@@ -177,7 +177,7 @@ BEGIN
                  label,
                  'pickup'                as point_type
           FROM (select distinct on (id) *
-                from rallying_points,
+                from rallying_point,
                      (select st_startpoint(geometry) as start
                       from segment
                              inner join liane_waypoint
@@ -201,7 +201,7 @@ BEGIN
                    else 'suggestion' end as point_type
           FROM (select id, label, location, min(ds) ds
                 from (select *, st_distancesphere(location, st_startpoint(geom)) as ds
-                      from rallying_points,
+                      from rallying_point,
                            (select geometry as geom, st_simplify(geometry, 0.001) as simplified
                             from segment
                                    inner join liane_waypoint
@@ -238,7 +238,7 @@ BEGIN
                       select *,
                              st_distancesphere(location, st_startpoint(geom)) as ds,
                              st_distancesphere(location, simplified)          as d
-                      from rallying_points
+                      from rallying_point
                              full join filtered_lianes on true
                       where location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)) as x
                 group by id, label, location) as clusters) as tile
