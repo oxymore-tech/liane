@@ -41,7 +41,7 @@ services:
       - "traefik.http.routers.${PROJECT}-martin-secure.tls.certResolver=gjinico"
       - "traefik.http.services.${PROJECT}-martin.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.martin-stripprefix.stripprefix.prefixes=/tiles"
-      - "traefik.http.middlewares.forward-headers.headers.hostsProxyHeaders=X-Forwarded-For"
+      - "traefik.http.middlewares.forward-headers.headers.hostsProxyHeaders=X-Forwarded-For,X-Forwarded-Url"
     environment:
       DB_USER: ${MONGO_USERNAME}
       DB_PASSWORD: ${MONGO_PASSWORD}
