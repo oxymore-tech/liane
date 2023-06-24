@@ -32,16 +32,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
-      - "traefik.http.routers.${PROJECT}-martin.rule=Host(`${DOMAIN}`) && PathPrefix(`/tiles`)"
+      - "traefik.http.routers.${PROJECT}-martin.rule=Host(`${DOMAIN}`) && PathPrefix(`/liane_display`) && PathPrefix(`/rallying_point_display`)"
       - "traefik.http.routers.${PROJECT}-martin.entrypoints=web"
       - "traefik.http.routers.${PROJECT}-martin.middlewares=redirect@file"
-      - "traefik.http.routers.${PROJECT}-martin-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/tiles`)"
+      - "traefik.http.routers.${PROJECT}-martin-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/liane_display`) && PathPrefix(`/rallying_point_display`)"
       - "traefik.http.routers.${PROJECT}-martin-secure.entrypoints=web-secure"
-      - "traefik.http.routers.${PROJECT}-martin-secure.middlewares=martin-stripprefix,forward-headers,compress@file"
+      - "traefik.http.routers.${PROJECT}-martin-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-martin-secure.tls.certResolver=gjinico"
       - "traefik.http.services.${PROJECT}-martin.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.martin-stripprefix.stripprefix.prefixes=/tiles"
-      - "traefik.http.middlewares.forward-headers.headers.hostsProxyHeaders=X-Rewrite-URL"
     environment:
       DB_USER: ${MONGO_USERNAME}
       DB_PASSWORD: ${MONGO_PASSWORD}
