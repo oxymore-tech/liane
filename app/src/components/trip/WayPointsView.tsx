@@ -197,7 +197,7 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
   const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
 
   const lianeSymbolView = (index: number) =>
-    index + 1 === di ? <NewLianeSymbol color={AppColors.orange} /> : <LianeSymbol color={AppColorPalettes.gray[500]} />;
+    index + 1 === di ? <NewLianeSymbol key={index} color={AppColors.orange} /> : <LianeSymbol key={index} color={AppColorPalettes.gray[500]} />;
 
   const intermediateWayPoint = (index: number) => {
     const wayPoint = steps[index];

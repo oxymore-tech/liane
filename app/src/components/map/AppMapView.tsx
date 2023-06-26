@@ -1,9 +1,9 @@
-import React, { ForwardedRef, forwardRef, PropsWithChildren, useContext, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { ColorValue, Platform, StyleSheet, ToastAndroid, useWindowDimensions, View } from "react-native";
-import MapLibreGL, { Logger } from "@maplibre/maplibre-react-native";
+import React, { ForwardedRef, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { ColorValue, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import MapLibreGL, { Expression, Logger } from "@maplibre/maplibre-react-native";
 import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, UnionUtils } from "@/api";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { FeatureCollection, GeoJSON } from "geojson";
+import { FeatureCollection, GeoJSON, Position } from "geojson";
 import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/ContextProvider";
@@ -13,11 +13,11 @@ import { contains } from "@/api/geo";
 import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
 import { useQuery } from "react-query";
 import { getTripMatch } from "@/components/trip/trip";
-import PointAnnotation = MapLibreGL.PointAnnotation;
+import { AppStyles } from "@/theme/styles";
+import { TilesUrl } from "@/api/http";
 import MarkerView = MapLibreGL.MarkerView;
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
-import { AppStyles } from "@/theme/styles";
 
 MapLibreGL.setAccessToken(null);
 
@@ -39,6 +39,8 @@ export interface AppMapViewController {
   fitBounds: (bbox: DisplayBoundingBox) => void;
 
   getZoom: () => Promise<number> | undefined;
+
+  queryFeatures: (coordinate: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
 }
 // @ts-ignore
 const MapControllerContext = React.createContext<AppMapViewController>();
@@ -152,6 +154,31 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   );
 };
 
+export const LianeDisplayLayer2 = ({ date, useWidth }: { date?: Date | undefined; useWidth?: number | undefined }) => {
+  const dateArg = date ? "?day=" + date.toISOString().substring(0, "YYYY-MM-DD".length) + "&offset=" + date.getTimezoneOffset() : "";
+  const [sourceId, setSourceId] = useState("");
+  useEffect(() => {
+    setSourceId("segments" + dateArg);
+  }, [dateArg]);
+
+  return (
+    <MapLibreGL.VectorSource id={"segments"} url={TilesUrl + "/liane_display" + dateArg} key={sourceId} maxZoomLevel={14}>
+      <MapLibreGL.LineLayer
+        belowLayerID="place"
+        id="lianeLayer"
+        sourceLayerID="liane_display"
+        style={{
+          //@ts-ignore
+          lineSortKey: ["get", "count"],
+          lineCap: "round",
+          lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
+          lineWidth: useWidth ? useWidth : ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+        }}
+      />
+    </MapLibreGL.VectorSource>
+  );
+};
+
 export const LianeDisplayLayer = ({
   loading = false,
   lianeDisplay,
@@ -174,7 +201,7 @@ export const LianeDisplayLayer = ({
     <MapLibreGL.ShapeSource id="segments" shape={features}>
       <MapLibreGL.LineLayer
         belowLayerID="place"
-        id="segmentLayer"
+        id="lianeLayer"
         style={{
           lineColor: loading ? AppColorPalettes.gray[400] : AppColors.darkBlue,
           lineWidth: useWidth ? useWidth : ["step", ["length", ["get", "lianes"]], 1, 2, 2, 3, 3, 4, 4, 5, 5]
@@ -317,36 +344,107 @@ export const RallyingPointsDisplayLayer = ({
     </MapLibreGL.ShapeSource>
   );
 };
-export const RallyingPointsDisplay = ({
-  rallyingPoint,
-  selected = false,
-  onSelect
+
+export const RallyingPointsDisplayLayer2 = ({
+  onSelect,
+  date,
+  interactive = true,
+  color = AppColors.orange
 }: {
-  rallyingPoint: RallyingPoint;
-  selected?: boolean;
-  onSelect?: () => void;
+  onSelect?: (r?: RallyingPoint) => void;
+  interactive?: boolean;
+  color?: ColorValue;
+  date?: Date | undefined;
 }) => {
+  const controller = useContext<AppMapViewController>(MapControllerContext);
+  const dateArg = date ? "?day=" + date.toISOString().substring(0, "YYYY-MM-DD".length) + "&offset=" + date.getTimezoneOffset() : "";
+  const [sourceId, setSourceId] = useState("");
+  useEffect(() => {
+    setSourceId("rallying_points" + dateArg);
+  }, [dateArg]);
+  // @ts-ignore
+  const mainColor: string = color;
+
   return (
-    <PointAnnotation
-      id={rallyingPoint.id!}
-      coordinate={[rallyingPoint.location.lng, rallyingPoint.location.lat]}
-      onSelected={async () => {
-        //console.debug("sel", rallyingPoint.id, selected);
-        if (onSelect) {
-          onSelect();
-        }
-      }}>
-      <View
+    <MapLibreGL.VectorSource
+      id={"rallying_points"}
+      key={sourceId}
+      // TODO not working maxZoomLevel={12}
+      minZoomLevel={8}
+      url={TilesUrl + "/rallying_point_display" + dateArg}
+      onPress={
+        interactive
+          ? async f => {
+              console.debug("clc", f, f.features[0]);
+              //   const rp = f.features[0]!.properties!.point_count ? undefined : f.features[0]!.properties!;
+
+              const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
+              const zoom = await controller.getZoom()!;
+
+              let newZoom;
+              if (zoom < 10.5) {
+                newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+              } else if (zoom < 12) {
+                newZoom = 12.1;
+              } else {
+                newZoom = undefined;
+              }
+              await controller.setCenter(center, newZoom);
+              const q = await controller.queryFeatures([f.coordinates.longitude, f.coordinates.latitude], undefined, ["lianeLayer"]);
+
+              // console.debug(JSON.stringify(q?.features.map(qf => qf.properties.lianes)));
+              if (onSelect) {
+                //@ts-ignore
+                onSelect({ ...f.features[0]!.properties!, location: center });
+              }
+            }
+          : undefined
+      }>
+      <MapLibreGL.CircleLayer
+        id="rp_circles"
+        minZoomLevel={8}
+        sourceLayerID={"rallying_point_display"}
         style={{
-          height: 20,
-          width: 20,
-          backgroundColor: selected ? AppColorPalettes.orange[400] : AppColors.orange,
-          borderRadius: 48,
-          borderColor: AppColors.white,
-          borderWidth: 2
+          circleColor: [
+            "case",
+            ["==", ["get", "point_type"], "pickup"],
+            AppColors.orange,
+            ["==", ["get", "point_type"], "suggestion"],
+            AppColors.blue,
+            mainColor
+          ],
+          circleRadius: ["step", ["zoom"], 5, 12, 10],
+          circleStrokeColor: AppColors.white,
+          circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
         }}
       />
-    </PointAnnotation>
+
+      <MapLibreGL.SymbolLayer
+        id="rp_labels"
+        sourceLayerID={"rallying_point_display"}
+        minZoomLevel={12}
+        style={{
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 12,
+          textColor: [
+            "case",
+            ["==", ["get", "point_type"], "pickup"],
+            AppColors.orange,
+            ["==", ["get", "point_type"], "suggestion"],
+            AppColors.blue,
+            mainColor
+          ],
+          textHaloColor: "#fff",
+          textHaloWidth: 1.2,
+          textField: "{label}",
+          textAllowOverlap: false,
+          textAnchor: "bottom",
+          textOffset: [0, -1.2],
+          textMaxWidth: 5.4,
+          visibility: "visible"
+        }}
+      />
+    </MapLibreGL.VectorSource>
   );
 };
 
@@ -423,6 +521,9 @@ const AppMapView = forwardRef(
     const [animated, setAnimated] = useState(false);
     const [showActions, setShowActions] = useState(showGeolocation);
 
+    const wd = useWindowDimensions();
+    const scale = Platform.OS === "android" ? wd.scale : 1;
+
     const controller: AppMapViewController = {
       setCenter: (p: LatLng, zoom?: number) => {
         const duration = 350;
@@ -436,13 +537,19 @@ const AppMapView = forwardRef(
           return new Promise<void>(resolve => setTimeout(resolve, duration));
         }
       },
+      queryFeatures: async (coordinates: Position, filter?: Expression, layersId?: string[]) => {
+        const pointInView = await mapRef.current?.getPointInView(coordinates)!;
+        return mapRef.current?.queryRenderedFeaturesInRect(
+          [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
+          filter,
+          layersId
+        );
+      },
       getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
       getZoom: () => mapRef.current?.getZoom(),
       fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
         cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration)
     };
-    const wd = useWindowDimensions();
-    const scale = Platform.OS === "android" ? wd.scale : 1;
 
     useImperativeHandle(ref, () => controller);
     const regionMoveCallbackRef = useRef<number | undefined>();

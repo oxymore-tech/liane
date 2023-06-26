@@ -8,6 +8,7 @@ import { AuthResponse } from "@/api/index";
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
 
 export const BaseUrl = `${API_URL || `https://${domain}`}/api`;
+export const TilesUrl = `${API_URL || `https://${domain}`}`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;

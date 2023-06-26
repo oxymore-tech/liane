@@ -3,9 +3,11 @@ import React, { useContext, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
   LianeDisplayLayer,
+  LianeDisplayLayer2,
   LianeMatchRouteLayer,
   PotentialLianeLayer,
   RallyingPointsDisplayLayer,
+  RallyingPointsDisplayLayer2,
   WayPointDisplay
 } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -41,7 +43,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const [state] = useActor(machine);
   const { status } = useContext(AppContext);
 
-  console.log("[MAP] moving", movingDisplay);
+  //console.log("[MAP] moving", movingDisplay);
 
   const backHandler = () => {
     if (state.can("BACK")) {
@@ -198,16 +200,10 @@ const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observa
   );
 };*/
 const HomeMap = ({
-  displaySource,
   onMovingStateChanged,
-  loading,
-  onFetchingDisplay,
   bottomSheetObservable
 }: {
-  displaySource: Observable<FeatureCollection>;
-  loading?: boolean;
   onMovingStateChanged: (moving: boolean) => void;
-  onFetchingDisplay: (fetching: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
 }) => {
   const machine = useContext(HomeMapContext);
@@ -217,11 +213,6 @@ const HomeMap = ({
   const { top: bSheetTop } = useObservable(bottomSheetObservable, { expanded: false, top: 52 });
   const { height } = useAppWindowsDimensions();
   const { top: insetsTop } = useSafeAreaInsets();
-  const lianeDisplay = useObservable(displaySource, EmptyFeatureCollection);
-  const rpMinZoomLevel = 10.5;
-  const { services } = useContext(AppContext);
-
-  console.debug("[MAP] displaying", lianeDisplay.features.length, "features");
 
   const pickupsDisplay = useMemo(() => {
     if (isMatchStateIdle) {
@@ -268,86 +259,6 @@ const HomeMap = ({
     return undefined;
   }, [state, insetsTop, bSheetTop, height]);
 
-  const regionCallbackRef = useRef<number | undefined>();
-  const rpCallbackRef = useRef<number | undefined>();
-  const [rpDisplay, setRpDisplay] = useState<FeatureCollection | undefined>();
-
-  const fetchRallyingPoints = async (currentZoom: number, bounds: BoundingBox) => {
-    if (rpCallbackRef.current) {
-      clearTimeout(rpCallbackRef.current);
-    }
-    onFetchingDisplay(true);
-    rpCallbackRef.current = setTimeout(async () => {
-      const initialRef = rpCallbackRef.current;
-
-      if (currentZoom < rpMinZoomLevel) {
-        onFetchingDisplay(false);
-        return;
-      }
-      try {
-        if (rpCallbackRef.current === initialRef) {
-          // If current timeout is still active, fetch display
-          const res = await services.rallyingPoint.view(bounds.from, bounds.to);
-          setRpDisplay(res);
-        }
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        if (rpCallbackRef.current === initialRef) {
-          // If current timeout is still active, show display
-          onFetchingDisplay(false);
-        }
-      }
-    }, 500);
-  };
-  const onRegionChange = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => {
-    console.debug("[MAP] zoom", payload.zoomLevel);
-
-    if (!state.matches("map") && !state.matches("point")) {
-      return;
-    }
-    if (regionCallbackRef.current) {
-      clearTimeout(regionCallbackRef.current);
-    }
-    const bounds = fromPositions(payload.visibleBounds);
-
-    fetchRallyingPoints(payload.zoomLevel, bounds).catch(e => console.warn(e));
-
-    if (state.context.mapDisplay.displayBounds && isWithinBox(bounds, state.context.mapDisplay.displayBounds)) {
-      // Avoid refetching
-      return;
-    }
-    onFetchingDisplay(true);
-    regionCallbackRef.current = setTimeout(async () => {
-      const initialRef = regionCallbackRef.current;
-
-      if (payload.zoomLevel < 8) {
-        onFetchingDisplay(false);
-        return;
-      }
-      try {
-        if (regionCallbackRef.current === initialRef) {
-          // If current timeout is still active, fetch display
-
-          machine.send("DISPLAY", { data: { displayBounds: bounds, displayAllPoints: payload.zoomLevel >= rpMinZoomLevel } });
-          if (payload.zoomLevel >= 8 && bounds) {
-            /*  const ctx = { ...state.context };
-            ctx.filter.displayBounds = bounds;
-            const res = await fetchDisplay(ctx);
-            setLianeDisplay(res || lianeDisplay);*/
-          }
-        }
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        if (regionCallbackRef.current === initialRef) {
-          // If current timeout is still active, show display
-          onFetchingDisplay(false);
-        }
-      }
-    }, 1000);
-  };
-
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
 
@@ -368,17 +279,17 @@ const HomeMap = ({
     <AppMapView
       bounds={mapBounds}
       showGeolocation={state.matches("map")} //&& !movingDisplay}
-      onRegionChanged={onRegionChange}
+      onRegionChanged={payload => console.debug("[MAP] zoom", payload.zoomLevel)}
       onStopMovingRegion={() => {
         onMovingStateChanged(false);
-        console.log("stop moving");
+
         //  setMovingDisplay(false);
         //console.log("map touch end");
       }}
       onStartMovingRegion={() => {
         // setMovingDisplay(true);
         onMovingStateChanged(true);
-        console.log("start moving");
+
         // console.log("map moving");
       }}
       ref={appMapRef}
@@ -397,26 +308,25 @@ const HomeMap = ({
       {(state.matches("map") ||
         state.matches("point") ||
         (isMatchState && !(state.matches({ match: "idle" }) && state.context.matches!.length === 0))) && (
-        <LianeDisplayLayer lianeDisplay={lianeDisplay} loading={loading} useWidth={isMatchState && !loading ? 3 : undefined} />
+        <LianeDisplayLayer2 useWidth={isMatchState ? 3 : undefined} date={state.context.filter.targetTime?.dateTime} />
       )}
       {isMatchState && state.matches({ match: "idle" }) && state.context.matches!.length === 0 && (
         <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
       )}
-      {isDetailState && (
+      {/* TODO isDetailState && (
         <LianeMatchRouteLayer
           from={state.context.filter.from!}
           to={state.context.filter.to!}
           match={state.context.selectedMatch!}
           loadingFeatures={lianeDisplay}
         />
-      )}
+      )*/}
 
       {isMatchStateIdle && <RallyingPointsDisplayLayer rallyingPoints={pickupsDisplay} cluster={false} interactive={false} />}
       {["map", "point"].some(state.matches) && (
-        <RallyingPointsDisplayLayer
+        <RallyingPointsDisplayLayer2
+          date={state.context.filter.targetTime?.dateTime}
           color={AppColors.blue}
-          minZoomLevel={rpMinZoomLevel}
-          rallyingPoints={rpDisplay ? rpDisplay : lianeDisplay}
           onSelect={rp => {
             if (rp) {
               machine.send("SELECT", { data: rp });
