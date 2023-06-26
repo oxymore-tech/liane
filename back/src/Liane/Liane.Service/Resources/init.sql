@@ -267,12 +267,16 @@ BEGIN
                            when min(ds) < 200 then 'pickup'
                            when bool_or(d < 500 and d_end > 200) then 'suggestion'
                            else 'active' end,
-                         jsonb_object(array_agg('l_' || rallying_points.liane_id), array_agg(case
-                                                                                               when rallying_points.ds < 200
-                                                                                                 then 'pickup'
-                                                                                               when rallying_points.d < 500 and rallying_points.d_end > 200
-                                                                                                 then 'suggestion'
-                                                                                               else 'active' end)),
+
+                         jsonb_object(
+                             array_agg('l_' || rallying_points.liane_id) filter ( where rallying_points.d < 500),
+                             array_agg(case
+                                         when rallying_points.ds < 200
+                                           then 'pickup'
+                                         when rallying_points.d < 500 and rallying_points.d_end > 200
+                                           then 'suggestion'
+                                         else 'active' end) filter ( where rallying_points.d < 500)
+                           ),
                          rallying_points.type::text,
                          rallying_points.address::text,
                          rallying_points.zip_code::text,
@@ -381,15 +385,18 @@ with filtered_lianes as (select *
                            from lianes),
      partial_candidates as (select *,
                                    (ST_Dump(ST_LineMerge(ST_CollectionExtract(ST_Intersection(geom, geometry), 2)))).geom as intersections
-                            from lianes where ST_Intersects(geom, geometry)),
+                            from lianes
+                            where ST_Intersects(geom, geometry)),
      filtered_detour_candidates as (select liane_id,
                                            st_startpoint(geom) as pickup,
-                                           st_endpoint(geom) as deposit,
+                                           st_endpoint(geom)   as deposit,
                                            l_start,
                                            l_end,
-                                           'detour' as mode
+                                           'detour'            as mode
                                     from detour_candidates
-                                    where d_start < 5000 and d_end < 5000 and l_end > l_start),
+                                    where d_start < 5000
+                                      and d_end < 5000
+                                      and l_end > l_start),
      filtered_partial_candidates as (select liane_id, pickup, deposit, l_start, l_end, 'partial' as mode
                                      from (select *,
                                                   st_startpoint(intersections)                               as pickup,
