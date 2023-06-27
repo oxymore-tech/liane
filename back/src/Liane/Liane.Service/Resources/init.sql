@@ -240,14 +240,14 @@ DECLARE
   timezone_offset integer;
   min_length      integer; -- min displayed distance in km
   simplify_factor double precision;
-  from_location   varchar(24);
+  from_location   text;
 BEGIN
   SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
   SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD'), timezone('utc', now())::date) +
           make_interval(mins => timezone_offset))
   INTO after;
 
-  SELECT location from rallying_point where (query_params ->> 'pickup')::varchar(24) = rallying_point.id INTO from_location;
+  SELECT location from rallying_point where (query_params ->> 'pickup')::text = rallying_point.id INTO from_location;
 
   SELECT (case
             when z < 5 then 80
