@@ -169,7 +169,7 @@ export const LianeDisplayLayer2 = ({
     setSourceId("segments" + dateArg + pickupPoint);
   }, [dateArg, pickupPoint]);
 
-  const url = TilesUrl + "/liane_display" + dateArg; //TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "")
+  const url = TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "");
   return (
     <MapLibreGL.VectorSource id={"segments"} url={url} key={sourceId} maxZoomLevel={14}>
       <MapLibreGL.LineLayer
