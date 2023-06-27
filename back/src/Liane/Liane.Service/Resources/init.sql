@@ -296,7 +296,7 @@ BEGIN
                          from filtered_segments
                                 inner join longest_lianes on longest_lianes.liane_id = filtered_segments.liane_id
                          where length > min_length), -- filter and clip segments
-       clipped_points as (select *
+       clipped_points as (select id, label, location, type, address, zip_code, city, place_count
                           from rallying_point
                           where z > 7
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
