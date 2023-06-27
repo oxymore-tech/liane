@@ -413,8 +413,8 @@ BEGIN
 
     WHERE geom IS NOT NULL;
 
-    RETURN mvt;
   end if;
+  RETURN mvt;
 END
 $$ LANGUAGE plpgsql IMMUTABLE
                     STRICT
