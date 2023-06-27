@@ -147,7 +147,7 @@ BEGIN
                          where length > min_length
                          order by length desc
                          limit segments_limit), -- filter and clip segments
-       clipped_points as (select *
+       clipped_points as (select id, label, location, type, address, zip_code, city, place_count
                           from rallying_point
                           where z > 7
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
