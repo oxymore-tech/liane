@@ -154,15 +154,24 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   );
 };
 
-export const LianeDisplayLayer2 = ({ date, useWidth }: { date?: Date | undefined; useWidth?: number | undefined }) => {
+export const LianeDisplayLayer2 = ({
+  date,
+  useWidth,
+  pickupPoint
+}: {
+  date?: Date | undefined;
+  useWidth?: number | undefined;
+  pickupPoint?: string | undefined;
+}) => {
   const dateArg = date ? "?day=" + date.toISOString().substring(0, "YYYY-MM-DD".length) + "&offset=" + date.getTimezoneOffset() : "";
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
-    setSourceId("segments" + dateArg);
-  }, [dateArg]);
+    setSourceId("segments" + dateArg + pickupPoint);
+  }, [dateArg, pickupPoint]);
 
+  const url = TilesUrl + "/liane_display" + dateArg; //TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "")
   return (
-    <MapLibreGL.VectorSource id={"segments"} url={TilesUrl + "/liane_display" + dateArg} key={sourceId} maxZoomLevel={14}>
+    <MapLibreGL.VectorSource id={"segments"} url={url} key={sourceId} maxZoomLevel={14}>
       <MapLibreGL.LineLayer
         belowLayerID="place"
         id="lianeLayer"
@@ -173,6 +182,50 @@ export const LianeDisplayLayer2 = ({ date, useWidth }: { date?: Date | undefined
           lineCap: "round",
           lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
           lineWidth: useWidth ? useWidth : ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+        }}
+      />
+      <MapLibreGL.CircleLayer
+        id="rp_circles_active"
+        minZoomLevel={8}
+        sourceLayerID={"rallying_point_display"}
+        style={{
+          circleColor: [
+            "case",
+            ["==", ["get", "point_type"], "pickup"],
+            AppColors.orange,
+            //["==", ["get", "point_type"], "suggestion"],
+            AppColors.blue
+            // mainColor
+          ],
+          circleRadius: ["step", ["zoom"], 5, 12, 10],
+          circleStrokeColor: AppColors.white,
+          circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
+        }}
+      />
+
+      <MapLibreGL.SymbolLayer
+        id="rp_labels_active"
+        sourceLayerID={"rallying_point_display"}
+        minZoomLevel={12}
+        style={{
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 12,
+          textColor: [
+            "case",
+            ["==", ["get", "point_type"], "pickup"],
+            AppColors.orange,
+            //["==", ["get", "point_type"], "suggestion"],
+            AppColors.blue
+            //    mainColor
+          ],
+          textHaloColor: "#fff",
+          textHaloWidth: 1.2,
+          textField: "{label}",
+          textAllowOverlap: false,
+          textAnchor: "bottom",
+          textOffset: [0, -1.2],
+          textMaxWidth: 5.4,
+          visibility: "visible"
         }}
       />
     </MapLibreGL.VectorSource>
@@ -351,7 +404,7 @@ export const RallyingPointsDisplayLayer2 = ({
   interactive = true,
   color = AppColors.orange
 }: {
-  onSelect?: (r?: RallyingPoint) => void;
+  onSelect?: (r?: RallyingPoint, lianes: { [liane_id: string]: "suggestion" | "pickup" }) => void;
   interactive?: boolean;
   color?: ColorValue;
   date?: Date | undefined;
@@ -392,27 +445,26 @@ export const RallyingPointsDisplayLayer2 = ({
               await controller.setCenter(center, newZoom);
               const q = await controller.queryFeatures([f.coordinates.longitude, f.coordinates.latitude], undefined, ["lianeLayer"]);
 
-              // console.debug(JSON.stringify(q?.features.map(qf => qf.properties.lianes)));
+              const linkedLianes = Object.fromEntries(
+                Object.entries(f.features[0]!.properties!)
+                  .filter(([k]) => k.startsWith("l_") && k.length === 26)
+                  .map(([k, v]) => [k.substring(2), v])
+              );
+
               if (onSelect) {
                 //@ts-ignore
-                onSelect({ ...f.features[0]!.properties!, location: center });
+                onSelect({ ...f.features[0]!.properties!, location: center }, linkedLianes);
               }
             }
           : undefined
       }>
       <MapLibreGL.CircleLayer
         id="rp_circles"
-        minZoomLevel={8}
+        minZoomLevel={12}
+        belowLayerID={"rp_circles_active"}
         sourceLayerID={"rallying_point_display"}
         style={{
-          circleColor: [
-            "case",
-            ["==", ["get", "point_type"], "pickup"],
-            AppColors.orange,
-            ["==", ["get", "point_type"], "suggestion"],
-            AppColors.blue,
-            mainColor
-          ],
+          circleColor: "#46516e",
           circleRadius: ["step", ["zoom"], 5, 12, 10],
           circleStrokeColor: AppColors.white,
           circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
@@ -421,19 +473,13 @@ export const RallyingPointsDisplayLayer2 = ({
 
       <MapLibreGL.SymbolLayer
         id="rp_labels"
+        belowLayerID={"rp_labels_active"}
         sourceLayerID={"rallying_point_display"}
         minZoomLevel={12}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: [
-            "case",
-            ["==", ["get", "point_type"], "pickup"],
-            AppColors.orange,
-            ["==", ["get", "point_type"], "suggestion"],
-            AppColors.blue,
-            mainColor
-          ],
+          textColor: "#46516e",
           textHaloColor: "#fff",
           textHaloWidth: 1.2,
           textField: "{label}",

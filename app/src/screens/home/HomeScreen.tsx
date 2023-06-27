@@ -2,9 +2,7 @@ import { Platform, StyleSheet, ToastAndroid, View } from "react-native";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
-  LianeDisplayLayer,
   LianeDisplayLayer2,
-  LianeMatchRouteLayer,
   PotentialLianeLayer,
   RallyingPointsDisplayLayer,
   RallyingPointsDisplayLayer2,
@@ -13,8 +11,7 @@ import AppMapView, {
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
-import { FeatureCollection, GeoJSON } from "geojson";
-import { isWithinBox, fromPositions, BoundingBox } from "@/api/geo";
+import { FeatureCollection } from "geojson";
 import { AnimatedFloatingBackButton, RPFormHeader } from "@/screens/home/HomeHeader";
 import { FilterListView, LianeDestinations } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -305,10 +302,12 @@ const HomeMap = ({
           appMapRef.current?.setCenter(features[0].location, 12.1);
         }
       }}>
-      {(state.matches("map") ||
-        state.matches("point") ||
-        (isMatchState && !(state.matches({ match: "idle" }) && state.context.matches!.length === 0))) && (
-        <LianeDisplayLayer2 useWidth={isMatchState ? 3 : undefined} date={state.context.filter.targetTime?.dateTime} />
+      {(state.matches("map") || state.matches("point")) && (
+        <LianeDisplayLayer2
+          useWidth={isMatchState ? 3 : undefined}
+          date={state.context.filter.targetTime?.dateTime}
+          pickupPoint={state.context.filter.from?.id}
+        />
       )}
       {isMatchState && state.matches({ match: "idle" }) && state.context.matches!.length === 0 && (
         <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
