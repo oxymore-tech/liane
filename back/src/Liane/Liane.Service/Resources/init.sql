@@ -293,7 +293,7 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length) as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 NTH_VALUE(s.to_id order by s.eta desc, 1) as destination
+                                 (array_agg(s.to_id order by s.eta desc))[1] as destination
                           from (select liane_id,
                                        to_id,
                                        st_length(st_boundingdiagonal(geometry)::geography)      as length,
