@@ -8,7 +8,9 @@ import {
   UTCDateTime,
   LianeMatchDisplay,
   NearestLinks,
-  Feedback
+  Feedback,
+  RallyingPoint,
+  Ref
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
 import { FeatureCollection } from "geojson";
@@ -20,7 +22,8 @@ export interface LianeService {
   // match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   // links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<NearestLinks>;
-  nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
+  //nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
+  pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks>;
   display(from: LatLng, to: LatLng, afterDate?: Date): Promise<FeatureCollection>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   leave(id: string, userId: string): Promise<void>;
@@ -65,7 +68,7 @@ export class LianeServiceClient implements LianeService {
     }
     return get<FeatureCollection>("/liane/display/geojson", { params });
   }
-
+  /*
   nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks> {
     const params = { lat: center.lat, lng: center.lng, radius: radius };
     if (afterDate) {
@@ -73,6 +76,11 @@ export class LianeServiceClient implements LianeService {
       params.after = new Date(afterDate.toDateString()).valueOf();
     }
     return get("/liane/links", { params });
+  }*/
+
+  pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
+    const body = { pickup, lianes };
+    return postAs("/liane/links", { body });
   }
 
   join(joinRequest: JoinRequest) {

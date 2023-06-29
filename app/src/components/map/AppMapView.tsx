@@ -36,13 +36,13 @@ export interface AppMapViewController {
 
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
 
-  fitBounds: (bbox: DisplayBoundingBox) => void;
+  fitBounds: (bbox: DisplayBoundingBox, duration?: number) => void;
 
   getZoom: () => Promise<number> | undefined;
 
   getCenter: () => Promise<Position> | undefined;
 
-  queryFeatures: (coordinate: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
+  queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
 }
 // @ts-ignore
 const MapControllerContext = React.createContext<AppMapViewController>();
@@ -183,20 +183,34 @@ export const LianeDisplayLayer2 = ({
   const url = TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "");
   return (
     <MapLibreGL.VectorSource id={"segments"} url={url} key={sourceId} maxZoomLevel={14}>
-      <MapLibreGL.LineLayer
-        belowLayerID="place"
-        id="lianeLayer"
-        sourceLayerID="liane_display"
-        style={{
-          //@ts-ignore
-          lineSortKey: ["get", "count"],
-          lineCap: "round",
-          lineColor: pickupPoint
-            ? AppColors.darkBlue
-            : ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
-          lineWidth: pickupPoint ? 3 : ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
-        }}
-      />
+      {pickupPoint && (
+        <MapLibreGL.LineLayer
+          belowLayerID="place"
+          id="lianeLayerFiltered"
+          sourceLayerID="liane_display"
+          style={{
+            //@ts-ignore
+            lineSortKey: ["get", "count"],
+            lineCap: "round",
+            lineColor: AppColors.darkBlue,
+            lineWidth: 3
+          }}
+        />
+      )}
+      {!pickupPoint && (
+        <MapLibreGL.LineLayer
+          belowLayerID="place"
+          id="lianeLayer"
+          sourceLayerID="liane_display"
+          style={{
+            //@ts-ignore
+            lineSortKey: ["get", "count"],
+            lineCap: "round",
+            lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
+            lineWidth: ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+          }}
+        />
+      )}
       <MapLibreGL.CircleLayer
         id="rp_circles_active"
         minZoomLevel={8}
@@ -598,13 +612,23 @@ const AppMapView = forwardRef(
           return new Promise<void>(resolve => setTimeout(resolve, duration));
         }
       },
-      queryFeatures: async (coordinates: Position, filter?: Expression, layersId?: string[]) => {
-        const pointInView = await mapRef.current?.getPointInView(coordinates)!;
-        return mapRef.current?.queryRenderedFeaturesInRect(
-          [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
-          filter,
-          layersId
-        );
+      queryFeatures: async (coordinates?: Position, filter?: Expression, layersId?: string[]) => {
+        if (coordinates) {
+          // query at point
+          const pointInView = await mapRef.current?.getPointInView(coordinates)!;
+          return mapRef.current?.queryRenderedFeaturesAtPoint(
+            pointInView, //[(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
+            filter,
+            layersId
+          );
+        } else {
+          // query visible viewport
+          const b = await mapRef.current?.getVisibleBounds()!;
+          const ne = await mapRef.current?.getPointInView(b[0])!;
+          const sw = await mapRef.current?.getPointInView(b[1])!;
+          console.log(ne, sw);
+          return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
+        }
       },
       getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
       getZoom: () => mapRef.current?.getZoom(),
@@ -696,8 +720,14 @@ const AppMapView = forwardRef(
               //@ts-ignore
               const pointInView = await mapRef.current?.getPointInView(f.geometry.coordinates)!;
               //console.debug(wd.width, wd.height, wd.scale, JSON.stringify(pointInView));
-              const q = await mapRef.current?.queryRenderedFeaturesInRect(
+              /*const q = await mapRef.current?.queryRenderedFeaturesInRect(
                 [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
+                ["==", ["geometry-type"], "Point"],
+                ["poi", "place", "town", "city", "airport", "parking", "station"]
+              );*/
+
+              const q = await mapRef.current?.queryRenderedFeaturesAtPoint(
+                pointInView,
                 ["==", ["geometry-type"], "Point"],
                 ["poi", "place", "town", "city", "airport", "parking", "station"]
               );

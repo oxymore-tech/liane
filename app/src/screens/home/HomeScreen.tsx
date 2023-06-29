@@ -1,5 +1,5 @@
 import { Platform, StyleSheet, ToastAndroid, View } from "react-native";
-import React, { useContext, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
   LianeDisplayLayer,
@@ -12,7 +12,7 @@ import AppMapView, {
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
-import { FeatureCollection, Position } from "geojson";
+import { Feature, FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
 import { AnimatedFloatingBackButton, RPFormHeader } from "@/screens/home/HomeHeader";
 import { FilterListView, LianeDestinations } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -20,9 +20,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { useActor, useInterpret } from "@xstate/react";
 import { filterHasFullTrip, getSearchFilter, HomeMapContext, HomeMapMachine } from "@/screens/home/StateMachine";
-import { EmptyFeatureCollection, getBoundingBox } from "@/util/geometry";
+import { DisplayBoundingBox, EmptyFeatureCollection, getBoundingBox } from "@/util/geometry";
 import Animated, { FadeInDown, FadeOutDown, SlideInDown } from "react-native-reanimated";
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
@@ -32,6 +32,8 @@ import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
 import { useBottomBarStyle } from "@/components/Navigation";
 import { useAppNavigation } from "@/api/navigation";
+import envelope from "@turf/envelope";
+import { feature, featureCollection } from "@turf/helpers";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -79,11 +81,14 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
     );
   });
 
+  const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[]>([]);
+
   return (
     <AppBackContextProvider backHandler={backHandler}>
       <View style={styles.page}>
         <View style={styles.container}>
           <HomeMap
+            featureSubject={mapFeatureSubject}
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
@@ -112,7 +117,13 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             {/*state.matches("point") && <FilterSelector shortFormat={true} />*/}
             {isMatchState && <FilterListView loading={loadingList} />}
 
-            {isPointState && <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />}
+            {isPointState && (
+              <LianeDestinations
+                pickup={state.context.filter.from!}
+                date={state.context.filter.targetTime?.dateTime}
+                mapFeatureObservable={mapFeatureSubject}
+              />
+            )}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
             {/*loadingList && isDetailState && <ActivityIndicator />*/}
           </HomeBottomSheetContainer>
@@ -199,10 +210,12 @@ const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observa
 };*/
 const HomeMap = ({
   onMovingStateChanged,
-  bottomSheetObservable
+  bottomSheetObservable,
+  featureSubject
 }: {
   onMovingStateChanged: (moving: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
+  featureSubject?: Subject<GeoJSON.Feature[]>;
 }) => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -211,6 +224,8 @@ const HomeMap = ({
   const { top: bSheetTop } = useObservable(bottomSheetObservable, { expanded: false, top: 52 });
   const { height } = useAppWindowsDimensions();
   const { top: insetsTop } = useSafeAreaInsets();
+
+  const [geometryBbox, setGeometryBbox] = useState<DisplayBoundingBox | undefined>();
 
   const pickupsDisplay = useMemo(() => {
     if (isMatchStateIdle) {
@@ -238,6 +253,13 @@ const HomeMap = ({
       //console.debug(bbox, bSheetTop, height);
 
       return bbox;
+    } else if (state.matches("point") && geometryBbox) {
+      geometryBbox.paddingTop = insetsTop + 210; //180;
+      geometryBbox.paddingLeft = 72;
+      geometryBbox.paddingRight = 72;
+      geometryBbox.paddingBottom = Math.min(bSheetTop + 40, (height - geometryBbox.paddingTop) / 2 + 24);
+
+      return geometryBbox;
     } else if (state.matches("match")) {
       // Set bounds
       const { from, to } = state.context.filter!;
@@ -247,7 +269,7 @@ const HomeMap = ({
         [to!.location.lng, to!.location.lat]
       ]);
 
-      bbox.paddingTop = insetsTop + 180;
+      bbox.paddingTop = insetsTop + 210; //180;
       bbox.paddingLeft = 72;
       bbox.paddingRight = 72;
       bbox.paddingBottom = Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24);
@@ -255,7 +277,7 @@ const HomeMap = ({
       return bbox;
     }
     return undefined;
-  }, [state, insetsTop, bSheetTop, height]);
+  }, [state, insetsTop, bSheetTop, height, geometryBbox]);
 
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
@@ -273,12 +295,41 @@ const HomeMap = ({
   //const [movingDisplay, setMovingDisplay] = useState<boolean>();
   const appMapRef = useRef<AppMapViewController>(null);
 
+  // zoom to bbox when pickup is selected
+  useEffect(() => {
+    appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"])?.then(features => {
+      if (!features) {
+        return;
+      }
+      const viewportFeatures = features?.features.map(f => f.properties);
+      const bboxesCoordinates: Polygon[] = viewportFeatures.filter(f => !!f!.bbox).map(f => JSON.parse(f!.bbox));
+
+      if (bboxesCoordinates.length > 0) {
+        const mergedBbox = envelope(featureCollection(bboxesCoordinates.map(p => feature(p))));
+        const bbox = getBoundingBox(mergedBbox.geometry.coordinates.flat(), 24);
+        console.debug("[MAP] moving to ", bbox, mergedBbox.bbox);
+        if (Number.isFinite(bbox.ne[0]) && Number.isFinite(bbox.ne[1]) && Number.isFinite(bbox.sw[0]) && Number.isFinite(bbox.sw[1])) {
+          setGeometryBbox(bbox);
+          /*appMapRef.current?.fitBounds(
+            { ...bbox, paddingTop: insetsTop + 210, paddingBottom: Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24) },
+            1000
+          );*/
+        } else {
+          console.warn("[MAP]: cannot fit infinite bounds");
+        }
+      }
+    });
+  }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime]);
+
   const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
     console.debug("[MAP] zoom", payload.zoomLevel);
-    const center = await appMapRef.current?.getCenter();
-    if (state.matches("point") && center) {
-      const features = await appMapRef.current?.queryFeatures(center, undefined, ["lianeLayer"]);
-      console.log(features?.features.map(f => f.properties));
+
+    if (state.matches("point")) {
+      const features = await appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"]);
+      if (features) {
+        console.debug("[MAP] found", features.features.length, "features");
+        featureSubject?.next(features.features);
+      }
     }
   };
 

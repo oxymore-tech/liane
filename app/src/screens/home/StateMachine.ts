@@ -165,7 +165,8 @@ export const HomeMapMachine = (services: {
           {
             on: {
               DISPLAY: {
-                actions: ["updateBounds", raise({ type: "RELOAD", data: "display" })]
+                actions: ["updateBounds"]
+                //actions: ["updateBounds", raise({ type: "RELOAD", data: "display" })]
               },
               UPDATE: [
                 {
@@ -236,6 +237,9 @@ export const HomeMapMachine = (services: {
         }),
         point: createState({
           on: {
+            DISPLAY: {
+              actions: ["updateBounds"]
+            },
             FILTER: {
               actions: ["updateFilter"] // raise("RELOAD")] // TODO
             },

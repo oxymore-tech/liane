@@ -1,5 +1,5 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, Liane, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
@@ -23,6 +23,9 @@ import { useQuery } from "react-query";
 import { getCenter } from "@/api/geo";
 
 import { capitalize } from "@/util/strings";
+import { Observable } from "rxjs";
+import { Feature } from "geojson";
+import { useObservable } from "@/util/hooks/subscription";
 
 export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
   const machine = useContext(HomeMapContext);
@@ -163,17 +166,22 @@ export const LianeNearestLinks = () => {
     </Column>
   );*/
 };
-export const LianeDestinations = (props: { pickup: RallyingPoint; date: Date | undefined }) => {
+export const LianeDestinations = (props: { pickup: RallyingPoint; date: Date | undefined; mapFeatureObservable: Observable<Feature[]> }) => {
   const { services } = useContext(AppContext);
   const machine = useContext(HomeMapContext);
   const { navigation } = useAppNavigation();
+
+  const features = useObservable(props.mapFeatureObservable, []);
+  console.log(features.map(f => f.properties));
+  const viewportLianes = [...new Set<string>(features.map(f => f.properties!.id))];
 
   const {
     data: results,
     isLoading,
     error
-  } = useQuery(["getNearestLinks", props.pickup.id, props.date?.toISOString()], async () => {
-    const res = await services.liane.nearestLinks(props.pickup.location, 100, props.date);
+  } = useQuery(["getNearestLinks", props.pickup.id, props.date?.toISOString(), viewportLianes.sort().join(",")], async () => {
+    const res = await services.liane.pickupLinks(props.pickup.id!, viewportLianes);
+    // await services.liane.nearestLinks(props.pickup.location, 100, props.date);
     //console.debug("res", res, props.pickup.location);
     const index = res.findIndex(p => p.pickup.id === props.pickup.id);
     if (index < 0) {

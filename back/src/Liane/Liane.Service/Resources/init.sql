@@ -314,7 +314,8 @@ BEGIN
                         from (select liane_id, destination, st_linesubstring(geometry, st_linelocatepoint(geometry, from_location), 1) as geom
                               from longest_lianes
                               where st_dwithin(geometry::geography, from_location::geography, 500)
-                                and length > min_length) as sub),
+                                and length > min_length) as sub
+                          where st_length(geom) > 500),
        clipped_points as (select id,
                                  label,
                                  location,
@@ -332,6 +333,7 @@ BEGIN
                                     inner join clipped_points on
                                st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
                                           case when z <= 10 then 200 else 500 end)
+                             where st_distancesphere(from_location, location) > 500
 
                              group by id, label, location, type, address, zip_code, city, place_count),
 
@@ -496,3 +498,4 @@ $$ LANGUAGE SQL
   IMMUTABLE
   RETURNS NULL ON NULL INPUT
   PARALLEL SAFE;
+
