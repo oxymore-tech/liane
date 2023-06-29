@@ -8,6 +8,10 @@
       "Liane.Web.Internal.Debug": "Debug"
     }
   },
+  "Database": {
+    "Db": "liane",
+    "Port": 5432
+  },
   "Auth": {
     "Validity": "0.08:00:00",
     "Issuer": "Liane",

@@ -61,6 +61,8 @@ function dump_on_local {
 }
 
 function init {
+  stop
+
   sudo rm -Rf "${LIANE_HOME}/data"
   sudo mkdir -p "${LIANE_HOME}/data"
   sudo chmod -R 777 "${LIANE_HOME}/data"

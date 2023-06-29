@@ -35,6 +35,7 @@ using NUnit.Framework;
 
 namespace Liane.Test.Integration;
 
+[NonParallelizable]
 public abstract class BaseIntegrationTest
 {
   private static readonly HashSet<string> DbNames = new();
@@ -100,7 +101,8 @@ public abstract class BaseIntegrationTest
     services.AddService<LianeStatusUpdate>();
     services.AddEventListeners();
 
-    services.AddService(GetDatabaseSettings());
+    var databaseSettings = GetDatabaseSettings();
+    services.AddService(databaseSettings);
     services.AddService<PostgisDatabase>();
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
@@ -121,7 +123,7 @@ public abstract class BaseIntegrationTest
     MongoFactory.InitSchema(mongo);
 
     var postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
-    await postgisService.UpdateSchema();
+    await postgisService.UpdateSchema(true);
   }
 
   protected virtual void SetupServices(IServiceCollection services)
@@ -170,7 +172,8 @@ public abstract class BaseIntegrationTest
   private static DatabaseSettings GetDatabaseSettings()
   {
     var host = Environment.GetEnvironmentVariable("POSTGIS_HOST") ?? "localhost";
-    return new DatabaseSettings(host, "mongoadmin", "secret");
+    var port = Environment.GetEnvironmentVariable("POSTGIS_HOST") is null ? 5433 : 5432;
+    return new DatabaseSettings(host, port, "liane_test", "mongoadmin", "secret");
   }
 
   private static OsrmClient GetOsrmClient()

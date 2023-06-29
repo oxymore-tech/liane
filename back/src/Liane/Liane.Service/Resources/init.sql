@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS liane_waypoint
   liane_id VARCHAR(24),
   eta      TIMESTAMP,
   PRIMARY KEY (from_id, to_id, liane_id),
-  constraint liane_waypoints_segments_from_id_to_id_fk
-    foreign key (from_id, to_id) references segment
+  CONSTRAINT liane_waypoints_segments_from_id_to_id_fk
+    FOREIGN KEY (from_id, to_id) REFERENCES segment
 );
 
 CREATE TABLE IF NOT EXISTS rallying_point
@@ -202,7 +202,7 @@ BEGIN
                                       eta_flag_agg(eta, timezone_offset)    as eta,
                                       g
                                from cut_segments
-                               group by g),
+                               group by g, eta),
        final_segments as (SELECT st_simplify(st_linemerge(st_collect(g)), simplify_factor
                                    ) as geom,
                                  lianes,
@@ -293,7 +293,7 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length) as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 array_agg(s.to_id order by s.eta desc)[1] as destination
+                                 NTH_VALUE(s.to_id order by s.eta desc, 1) as destination
                           from (select liane_id,
                                        to_id,
                                        st_length(st_boundingdiagonal(geometry)::geography)      as length,
@@ -411,7 +411,6 @@ $$ LANGUAGE plpgsql IMMUTABLE
                     PARALLEL SAFE;
 
 -- search liane (detour or partial route match)
-DROP FUNCTION IF EXISTS match_liane;
 CREATE OR REPLACE
   FUNCTION match_liane(geom geometry, after timestamp, before timestamp)
   RETURNS table

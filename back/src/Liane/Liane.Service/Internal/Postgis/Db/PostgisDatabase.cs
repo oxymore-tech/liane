@@ -27,12 +27,12 @@ public sealed class PostgisDatabase
   {
     var builder = new NpgsqlConnectionStringBuilder
     {
-      Database = "liane",
+      Database = settings.Db,
       Host = settings.Host,
+      Port = settings.Port,
       Username = settings.Username,
       Password = settings.Password,
-      IncludeErrorDetail = true,
-      SearchPath = "public"
+      IncludeErrorDetail = true
     };
 
     return builder.ConnectionString;

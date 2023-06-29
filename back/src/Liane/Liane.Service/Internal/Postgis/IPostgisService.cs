@@ -13,7 +13,7 @@ public sealed record BatchGeometryUpdate(List<SegmentDb> Segments, List<LianeWay
 
 public interface IPostgisService
 {
-  Task UpdateSchema();
+  Task UpdateSchema(bool clearAll = false);
   Task UpdateGeometry(Api.Trip.Liane liane);
   Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch);
   Task Clear(ImmutableList<string> lianes);

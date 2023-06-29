@@ -24,6 +24,18 @@ services:
       POSTGRES_PASSWORD: ${MONGO_PASSWORD}
     restart: unless-stopped
   
+  postgis-test:
+    image: "postgis/postgis:15-3.3"
+    volumes:
+      - "${LIANE_HOME}/data/postgis-test:/var/lib/postgresql/data"
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: liane_test
+      POSTGRES_USER: ${MONGO_USERNAME}
+      POSTGRES_PASSWORD: ${MONGO_PASSWORD}
+    restart: unless-stopped
+
   martin:
     image: ghcr.io/maplibre/martin
     command: [ "--config", "/config.yaml" ]

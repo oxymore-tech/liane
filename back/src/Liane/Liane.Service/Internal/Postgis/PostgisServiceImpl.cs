@@ -29,7 +29,7 @@ public sealed class PostgisServiceImpl : IPostgisService
     this.routingService = routingService;
   }
 
-  public async Task UpdateSchema()
+  public async Task UpdateSchema(bool clearAll = false)
   {
     var assembly = typeof(PostgisUpdateService).Assembly;
 
@@ -41,8 +41,19 @@ public sealed class PostgisServiceImpl : IPostgisService
 
     using var reader = new StreamReader(stream);
     var sql = await reader.ReadToEndAsync();
+
     using var connection = db.NewConnection();
-    await connection.ExecuteAsync(sql);
+    using var tx = connection.BeginTransaction();
+
+    await connection.ExecuteAsync(sql, transaction: tx);
+    if (clearAll)
+    {
+      await connection.ExecuteAsync("DELETE FROM liane_waypoint", transaction: tx);
+      await connection.ExecuteAsync("DELETE FROM segment", transaction: tx);
+      await connection.ExecuteAsync("DELETE FROM rallying_point", transaction: tx);
+    }
+
+    tx.Commit();
   }
 
   public async Task UpdateGeometry(Api.Trip.Liane liane)
@@ -60,22 +71,24 @@ public sealed class PostgisServiceImpl : IPostgisService
   public async Task ClearRallyingPoints()
   {
     using var connection = db.NewConnection();
-    await connection.ExecuteAsync("TRUNCATE rallying_point");
+    await connection.ExecuteAsync("DELETE FROM rallying_point");
   }
 
   public async Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints)
   {
     using var connection = db.NewConnection();
-    var parameters = rallyingPoints.Select(r => new { 
-      id = r.Id, 
-      location = new Point(new Position(r.Location.Lat, r.Location.Lng)), 
+    var parameters = rallyingPoints.Select(r => new
+    {
+      id = r.Id,
+      location = new Point(new Position(r.Location.Lat, r.Location.Lng)),
       label = r.Label,
       type = r.Type,
       address = r.Address,
       zip_code = r.ZipCode,
       city = r.City,
       place_count = r.PlaceCount,
-      is_active = r.IsActive, }).ToList();
+      is_active = r.IsActive,
+    }).ToList();
     await connection.ExecuteAsync(
       "INSERT INTO rallying_point (id, location, label, type, address, zip_code, city, place_count, is_active) VALUES (@id, @location, @label, @type, @address, @zip_code, @city, @place_count, @is_active) ON CONFLICT DO NOTHING",
       parameters);
