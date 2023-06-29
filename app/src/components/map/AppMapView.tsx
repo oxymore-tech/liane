@@ -40,6 +40,8 @@ export interface AppMapViewController {
 
   getZoom: () => Promise<number> | undefined;
 
+  getCenter: () => Promise<Position> | undefined;
+
   queryFeatures: (coordinate: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
 }
 // @ts-ignore
@@ -583,6 +585,7 @@ const AppMapView = forwardRef(
     const scale = Platform.OS === "android" ? wd.scale : 1;
 
     const controller: AppMapViewController = {
+      getCenter: () => mapRef.current?.getCenter(),
       setCenter: (p: LatLng, zoom?: number) => {
         const duration = 350;
         cameraRef.current?.setCamera({

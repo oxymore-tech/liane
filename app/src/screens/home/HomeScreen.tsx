@@ -12,7 +12,7 @@ import AppMapView, {
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
-import { FeatureCollection } from "geojson";
+import { FeatureCollection, Position } from "geojson";
 import { AnimatedFloatingBackButton, RPFormHeader } from "@/screens/home/HomeHeader";
 import { FilterListView, LianeDestinations } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -273,11 +273,20 @@ const HomeMap = ({
   //const [movingDisplay, setMovingDisplay] = useState<boolean>();
   const appMapRef = useRef<AppMapViewController>(null);
 
+  const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
+    console.debug("[MAP] zoom", payload.zoomLevel);
+    const center = await appMapRef.current?.getCenter();
+    if (state.matches("point") && center) {
+      const features = await appMapRef.current?.queryFeatures(center, undefined, ["lianeLayer"]);
+      console.log(features?.features.map(f => f.properties));
+    }
+  };
+
   return (
     <AppMapView
       bounds={mapBounds}
       showGeolocation={state.matches("map")} //&& !movingDisplay}
-      onRegionChanged={payload => console.debug("[MAP] zoom", payload.zoomLevel)}
+      onRegionChanged={onRegionChanged}
       onStopMovingRegion={() => {
         onMovingStateChanged(false);
 

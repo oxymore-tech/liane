@@ -261,7 +261,7 @@ BEGIN
           make_interval(mins => timezone_offset))
   INTO after;
 
-  SELECT location from rallying_point where (query_params ->> 'from') = rallying_point.id INTO from_location;
+  SELECT location from rallying_point where (query_params ->> 'pickup') = rallying_point.id INTO from_location;
 
   SELECT (case
             when z < 5 then 80
@@ -290,8 +290,12 @@ BEGIN
                          inner join filtered_lianes
                                     on segment.from_id = filtered_lianes.from_id and
                                        segment.to_id = filtered_lianes.to_id),
-       longest_lianes as (select liane_id, sum(length) as length, st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry
+       longest_lianes as (select liane_id,
+                                 sum(length) as length,
+                                 st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
+                                 array_agg(s.to_id order by s.eta desc)[1] as destination
                           from (select liane_id,
+                                       to_id,
                                        st_length(st_boundingdiagonal(geometry)::geography)      as length,
                                        geometry,
                                        eta,
@@ -300,13 +304,14 @@ BEGIN
                           group by liane_id
                           having bool_or(intersects)),
        lianes_parts as (select liane_id,
+                               destination,
                                ST_Envelope(geom) as bbox,
                                ST_Intersection(
                                  geom,
                                  ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)
                                  )               as geom
                                -- ST_Intersection(geometry,     ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)) as geom
-                        from (select liane_id, st_linesubstring(geometry, st_linelocatepoint(geometry, from_location), 1) as geom
+                        from (select liane_id, destination, st_linesubstring(geometry, st_linelocatepoint(geometry, from_location), 1) as geom
                               from longest_lianes
                               where st_dwithin(geometry::geography, from_location::geography, 500)
                                 and length > min_length) as sub),
@@ -337,7 +342,7 @@ BEGIN
                                      ST_TileEnvelope(z, x, y),
                                      4096, 64, true) AS geom,
                                    liane_id          as id,
-                                   bbox
+                                   st_asgeojson(bbox)
                             FROM lianes_parts) as x
                       where geom is not null),
        points_tile as (select ST_AsMVT(x.*, 'rallying_point_display', 4096, 'location') as tile
