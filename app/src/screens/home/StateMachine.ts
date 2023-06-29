@@ -60,7 +60,7 @@ export type HomeMapContext = {
   filter: Partial<InternalLianeMatchFilter>;
   matches: LianeMatch[] | undefined;
   selectedMatch: LianeMatch | undefined;
-  // lianeDisplay: LianeDisplay | undefined;
+  lianeDisplay: any | undefined;
   error?: any | undefined;
   reloadCause?: ReloadCause | undefined;
   mapDisplay: MapDisplayParams;
@@ -155,7 +155,7 @@ export const HomeMapMachine = (services: {
       context: <HomeMapContext>{
         filter: { from: undefined, to: undefined, targetTime: { dateTime: new Date(), direction: "Departure" }, availableSeats: -1 },
         matches: undefined,
-        //    lianeDisplay: undefined,
+        lianeDisplay: undefined,
         selectedMatch: undefined,
         mapDisplay: { displayBounds: undefined }
       },
@@ -301,8 +301,8 @@ export const HomeMapMachine = (services: {
               assign((context, event) => {
                 return {
                   ...context,
-                  matches: event.data.lianeMatches
-                  //lianeDisplay: { segments: event.data.segments, lianes: event.data.lianeMatches.map(lm => lm.liane) }
+                  matches: event.data.lianeMatches,
+                  lianeDisplay: { segments: event.data.segments, lianes: event.data.lianeMatches.map(lm => lm.liane) }
                 };
               }),
               (context, event) => {

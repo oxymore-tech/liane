@@ -2,6 +2,7 @@ import { Platform, StyleSheet, ToastAndroid, View } from "react-native";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
+  LianeDisplayLayer,
   LianeDisplayLayer2,
   PotentialLianeLayer,
   RallyingPointsDisplayLayer,
@@ -303,12 +304,9 @@ const HomeMap = ({
         }
       }}>
       {(state.matches("map") || state.matches("point")) && (
-        <LianeDisplayLayer2
-          useWidth={isMatchState ? 3 : undefined}
-          date={state.context.filter.targetTime?.dateTime}
-          pickupPoint={state.context.filter.from?.id}
-        />
+        <LianeDisplayLayer2 date={state.context.filter.targetTime?.dateTime} pickupPoint={state.context.filter.from?.id} />
       )}
+      {isMatchState && <LianeDisplayLayer useWidth={3} lianeDisplay={state.context.lianeDisplay} />}
       {isMatchState && state.matches({ match: "idle" }) && state.context.matches!.length === 0 && (
         <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
       )}

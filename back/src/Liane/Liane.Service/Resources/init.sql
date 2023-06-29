@@ -147,7 +147,14 @@ BEGIN
                          where length > min_length
                          order by length desc
                          limit segments_limit), -- filter and clip segments
-       clipped_points as (select id, label, location, type, address, zip_code, city, place_count
+       clipped_points as (select id,
+                                 label,
+                                 location,
+                                 type,
+                                 address,
+                                 zip_code,
+                                 city,
+                                 place_count
                           from rallying_point
                           where z > 7
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
@@ -165,10 +172,17 @@ BEGIN
                                               case when z <= 10 then 200 else 500 end)
                              where z >= 10
                              group by id, label, location, type, address, zip_code, city, place_count),
-       all_points as (select id, label, location, type, address, zip_code, city, place_count,
+       all_points as (select id,
+                             label,
+                             location,
+                             type,
+                             address,
+                             zip_code,
+                             city,
+                             place_count,
                              case
                                when 'pickup' = any (array_agg(mode)) then 'pickup'
-                               else 'suggestion' end   as point_type,
+                               else 'suggestion' end      as point_type,
                              string_agg(pickups, ',')     as pickups,
                              string_agg(suggestions, ',') as suggestions
                       from (select *, 'pickup' as mode, liane_ids as pickups, null as suggestions
@@ -199,9 +213,9 @@ BEGIN
                       from (SELECT ST_AsMVTGeom(
                                      st_transform(geom, 3857),
                                      ST_TileEnvelope(z, x, y),
-                                     4096, 64, true)                                             AS geom,
+                                     4096, 64, true)            AS geom,
                                    array_to_string(lianes, ',') as lianes,
-                                   array_length(lianes, 1)                                             as count,
+                                   array_length(lianes, 1)      as count,
                                    --jsonb_object(array(select 'l_' || (unnest(lianes))),  array_fill(''::text, array [array_length(lianes, 1)])) as liane_map,
                                    eta
                             FROM final_segments) as x
@@ -247,7 +261,7 @@ BEGIN
           make_interval(mins => timezone_offset))
   INTO after;
 
-  SELECT location from rallying_point where (query_params ->> 'pickup')::text = rallying_point.id INTO from_location;
+  SELECT location from rallying_points where (query_params ->> 'from') = rallying_points.id INTO from_location;
 
   SELECT (case
             when z < 5 then 80
@@ -267,93 +281,64 @@ BEGIN
   with filtered_lianes as (select *
                            from liane_waypoint
                            where eta between after and after + make_interval(hours => 24)),
-       filtered_segments as (select segment.from_id,
-                                    segment.to_id,
-                                    filtered_lianes.liane_id,
-                                    filtered_lianes.eta,
-                                    segment.geometry
-                             from segment
-                                    inner join filtered_lianes
-                                               on segment.from_id = filtered_lianes.from_id and
-                                                  segment.to_id = filtered_lianes.to_id
-                             where segment.geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
-       longest_lianes as (select liane_id, length, st_linesubstring(geometry, start, 1) as geometry
-                          from (select *, st_linelocatepoint(geometry, from_location) as start
-                                from (select liane_id,
-                                             sum(length)                                                                         as length,
-                                             st_linemerge(st_collect(s.geometry order by s.eta)) as geometry
-                                      from (select liane_id,
-                                                   st_length(st_boundingdiagonal(geometry)::geography) as length, geometry, eta
-                                            from filtered_segments) as s
-                                      group by liane_id) as merged
-                                where st_distancesphere(from_location, geometry) < 500) as interpolated),
-       clipped_links as (select from_id,
-                                to_id,
-                                filtered_segments.liane_id,
-                                eta,
-                                ST_Intersection(longest_lianes.geometry,
-                                                ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)) as geom
-                         from filtered_segments
-                                inner join longest_lianes on longest_lianes.liane_id = filtered_segments.liane_id
-                         where length > min_length), -- filter and clip segments
-       clipped_points as (select id, label, location, type, address, zip_code, city, place_count
+       joined as (select segment.from_id,
+                         segment.to_id,
+                         filtered_lianes.liane_id,
+                         filtered_lianes.eta,
+                         segment.geometry
+                  from segment
+                         inner join filtered_lianes
+                                    on segment.from_id = filtered_lianes.from_id and
+                                       segment.to_id = filtered_lianes.to_id),
+       longest_lianes as (select liane_id, sum(length) as length, st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry
+                          from (select liane_id,
+                                       st_length(st_boundingdiagonal(geometry)::geography)      as length,
+                                       geometry,
+                                       eta,
+                                       geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326) as intersects
+                                from joined) as s
+                          group by liane_id
+                          having bool_or(intersects)),
+       lianes_parts as (select liane_id,
+                               ST_Envelope(geom) as bbox,
+                               ST_Intersection(
+                                 geom,
+                                 ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)
+                                 )               as geom
+                               -- ST_Intersection(geometry,     ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)) as geom
+                        from (select liane_id, st_linesubstring(geometry, st_linelocatepoint(geometry, from_location), 1) as geom
+                              from longest_lianes
+                              where st_dwithin(geometry::geography, from_location::geography, 500)
+                                and length > min_length) as sub),
+       clipped_points as (select id,
+                                 label,
+                                 location,
+                                 type,
+                                 address,
+                                 zip_code,
+                                 city,
+                                 place_count
                           from rallying_point
                           where z > 7
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
-       pickup_points as (select clipped_points.*,
-                                string_agg(clipped_links.liane_id, ',') as liane_ids
-                         from clipped_links
-                                inner join clipped_points on clipped_links.from_id = clipped_points.id
-                         where  st_dwithin(clipped_points.location::geography, clipped_links.geom::geography, 200)
-                         group by id, label, location, type, address, zip_code, city, place_count),
-       suggestion_points as (select clipped_points.*, string_agg(clipped_links.liane_id, ',') as liane_ids
-                             from clipped_links
-                                    inner join clipped_points on
-                                   clipped_links.from_id != clipped_points.id and
-                                   st_dwithin(clipped_points.location::geography, clipped_links.geom::geography,
-                                              case when z <= 10 then 200 else 500 end)
-                             where z >= 10
-                             group by id, label, location, type, address, zip_code, city, place_count),
-       all_points as (select id, label, location, type, address, zip_code, city, place_count,
-                             case
-                               when 'pickup' = any (array_agg(mode)) then 'pickup'
-                               else 'suggestion' end   as point_type,
-                             string_agg(pickups, ',')     as pickups,
-                             string_agg(suggestions, ',') as suggestions
-                      from (select *, 'pickup' as mode, liane_ids as pickups, null as suggestions
-                            from pickup_points
-                            union
-                            select *, 'suggestion' as mode, null as pickups, liane_ids as suggestions
-                            from suggestion_points) as ls
-                      group by id, label, location, type, address, zip_code, city, place_count),
-       cut_segments as (select liane_id,
-                               from_id,
-                               to_id,
-                               eta,
-                               (st_dumpsegments(st_snaptogrid(geom, 0.000001))).geom as g
-                        from clipped_links),
 
-       aggregated_segments as (select array_agg(liane_id order by liane_id) as lianes,
-                                      eta_flag_agg(eta, timezone_offset)    as eta,
-                                      g
-                               from cut_segments
-                               group by g),
-       final_segments as (SELECT st_simplify(st_linemerge(st_collect(g)), simplify_factor
-                                   ) as geom,
-                                 lianes,
-                                 eta
-                          from aggregated_segments
-                          group by lianes, eta),
+       suggestion_points as (select clipped_points.*, string_agg(lianes_parts.liane_id, ',') as liane_ids
+                             from lianes_parts
+                                    inner join clipped_points on
+                               st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                          case when z <= 10 then 200 else 500 end)
+
+                             group by id, label, location, type, address, zip_code, city, place_count),
+
+
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
                                      st_transform(geom, 3857),
                                      ST_TileEnvelope(z, x, y),
-                                     4096, 64, true)                                             AS geom,
-                                   array_to_string(lianes, ',') as lianes,
-                                   array_length(lianes, 1)                                             as count,
-                                   --jsonb_object(array(select 'l_' || (unnest(lianes))),  array_fill(''::text, array [array_length(lianes, 1)])) as liane_map,
-                                   eta
-                            FROM final_segments) as x
+                                     4096, 64, true) AS geom,
+                                   liane_id          as id,
+                                   bbox
+                            FROM lianes_parts) as x
                       where geom is not null),
        points_tile as (select ST_AsMVT(x.*, 'rallying_point_display', 4096, 'location') as tile
                        from (SELECT ST_AsMVTGeom(
@@ -362,10 +347,9 @@ BEGIN
                                       4096, 64, true) AS location,
                                     id,
                                     label,
-                                    point_type,
-                                    pickups,
-                                    suggestions
-                             from all_points) as x
+                                    liane_ids         as lianes,
+                                    'suggestion'      as point_type
+                             from suggestion_points) as x
                        where location is not null)
   SELECT INTO mvt points_tile.tile || liane_tile.tile
   from points_tile,
@@ -408,8 +392,9 @@ BEGIN
                  zip_code,
                  city,
                  place_count
-          FROM rallying_point where rallying_point.location @
-                                    ST_Transform(ST_TileEnvelope(z, x, y), 4326))  as tile
+          FROM rallying_point
+          where rallying_point.location @
+                ST_Transform(ST_TileEnvelope(z, x, y), 4326)) as tile
 
     WHERE geom IS NOT NULL;
 
@@ -422,11 +407,11 @@ $$ LANGUAGE plpgsql IMMUTABLE
 
 -- search liane (detour or partial route match)
 DROP FUNCTION IF EXISTS match_liane;
-CREATE
+CREATE OR REPLACE
   FUNCTION match_liane(geom geometry, after timestamp, before timestamp)
   RETURNS table
           (
-            liane_id varchar(24),
+            liane_id text,
             pickup   geometry,
             deposit  geometry,
             l_start  double precision,
@@ -438,15 +423,29 @@ $$
 with filtered_lianes as (select *
                          from liane_waypoint
                          where eta between after and before),
-     -- eliminate segments that are too far from the requested route
-     filtered_segments as (select * from segment where st_distancesphere(st_envelope(geom), st_envelope(geometry)) < st_length(st_boundingdiagonal(geometry)::geography)),
+     filtered_segments as (select st_snaptogrid(segment.geometry, 0.000001) as geometry, from_id, to_id
+                           from segment
+                           where st_distancesphere(st_envelope(geom), st_envelope(geometry)) <
+                                 st_length(st_boundingdiagonal(geometry)::geography)),
      lianes as (select filtered_lianes.liane_id,
-                       ST_LineMerge(st_collect(filtered_segments.geometry)) as geometry
+                       ST_LineMerge(st_collect(filtered_segments.geometry order by eta)) as geometry,
+                       st_removerepeatedpoints(
+                         st_union(
+                           st_collect(st_startpoint(filtered_segments.geometry)),
+                           st_collect(st_endpoint(filtered_segments.geometry)))
+                         )                                                               as waypoints
                 from filtered_segments
                        inner join filtered_lianes
                                   on filtered_segments.from_id = filtered_lianes.from_id and
                                      filtered_segments.to_id = filtered_lianes.to_id
                 group by liane_id),
+     exact_candidates as (select *,
+                                 ST_LineLocatePoint(geometry, st_startpoint(geom)) as l_start,
+                                 ST_LineLocatePoint(geometry, st_endpoint(geom))   as l_end
+                          from lianes
+                          where st_contains(st_buffer(waypoints::geography, 200)::geometry, st_startpoint(geom))
+                            and st_contains(st_buffer(waypoints::geography, 200)::geometry, st_endpoint(
+                            geom))),
      detour_candidates as (select *,
                                   st_distancesphere(st_startpoint(geom), geometry)  as d_start,
                                   st_distancesphere(st_endpoint(geom), geometry)    as d_end,
@@ -457,6 +456,14 @@ with filtered_lianes as (select *
                                    (ST_Dump(ST_LineMerge(ST_CollectionExtract(ST_Intersection(geom, geometry), 2)))).geom as intersections
                             from lianes
                             where ST_Intersects(geom, geometry)),
+     filtered_exact_candidates as (select liane_id,
+                                          st_startpoint(geom) as pickup,
+                                          st_endpoint(geom)   as deposit,
+                                          0                   as l_start,
+                                          0                   as l_end,
+                                          'exact'             as mode
+                                   from exact_candidates
+                                   where exact_candidates.l_end > exact_candidates.l_start),
      filtered_detour_candidates as (select liane_id,
                                            st_startpoint(geom) as pickup,
                                            st_endpoint(geom)   as deposit,
@@ -466,7 +473,7 @@ with filtered_lianes as (select *
                                     from detour_candidates
                                     where d_start < 5000
                                       and d_end < 5000
-                                      and l_end > l_start),
+                                      and l_end - l_start > 0.2),
      filtered_partial_candidates as (select liane_id, pickup, deposit, l_start, l_end, 'partial' as mode
                                      from (select *,
                                                   st_startpoint(intersections)                               as pickup,
@@ -475,7 +482,9 @@ with filtered_lianes as (select *
                                                   st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end
                                            from partial_candidates) as x
                                      where l_end - l_start > 0.4),
-     candidates as (select * from filtered_detour_candidates union all select * from filtered_partial_candidates)
+     candidates as
+       (select * from filtered_exact_candidates union all select * from filtered_detour_candidates union all select * from filtered_partial_candidates)
+
 select liane_id, pickup, deposit, l_start, l_end, mode
 from candidates
 

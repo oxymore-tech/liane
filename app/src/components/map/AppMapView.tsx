@@ -155,18 +155,27 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
 };
 
 export const LianeDisplayLayer2 = ({
-  date,
-  useWidth,
+  date = new Date(),
+
   pickupPoint
 }: {
-  date?: Date | undefined;
-  useWidth?: number | undefined;
+  date?: Date;
+
   pickupPoint?: string | undefined;
 }) => {
-  const dateArg = date ? "?day=" + date.toISOString().substring(0, "YYYY-MM-DD".length) + "&offset=" + date.getTimezoneOffset() : "";
+  const dateArg =
+    "?offset=" +
+    date.getTimezoneOffset() +
+    "&day=" +
+    date.getFullYear() +
+    "-" +
+    (1 + date.getMonth()).toString().padStart(2, "0") +
+    "-" +
+    date.getDate().toString().padStart(2, "0");
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
     setSourceId("segments" + dateArg + pickupPoint);
+    console.debug("[MAP]: tile source", dateArg, pickupPoint);
   }, [dateArg, pickupPoint]);
 
   const url = TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "");
@@ -180,8 +189,10 @@ export const LianeDisplayLayer2 = ({
           //@ts-ignore
           lineSortKey: ["get", "count"],
           lineCap: "round",
-          lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
-          lineWidth: useWidth ? useWidth : ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+          lineColor: pickupPoint
+            ? AppColors.darkBlue
+            : ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
+          lineWidth: pickupPoint ? 3 : ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
         }}
       />
       <MapLibreGL.CircleLayer
@@ -246,6 +257,7 @@ export const LianeDisplayLayer = ({
     return toFeatureCollection(segments, lianeDisplay?.lianes ?? []);
   }, [lianeDisplay]);
 */
+  console.log(lianeDisplay);
   const features = lianeDisplay || {
     type: "FeatureCollection",
     features: []
