@@ -342,7 +342,7 @@ BEGIN
                                      ST_TileEnvelope(z, x, y),
                                      4096, 64, true) AS geom,
                                    liane_id          as id,
-                                   st_asgeojson(bbox)
+                                   st_asgeojson(bbox) as bbox
                             FROM lianes_parts) as x
                       where geom is not null),
        points_tile as (select ST_AsMVT(x.*, 'rallying_point_display', 4096, 'location') as tile
