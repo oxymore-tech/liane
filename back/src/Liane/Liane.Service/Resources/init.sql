@@ -202,7 +202,7 @@ BEGIN
                                       eta_flag_agg(eta, timezone_offset)    as eta,
                                       g
                                from cut_segments
-                               group by g, eta),
+                               group by g),
        final_segments as (SELECT st_simplify(st_linemerge(st_collect(g)), simplify_factor
                                    ) as geom,
                                  lianes,
