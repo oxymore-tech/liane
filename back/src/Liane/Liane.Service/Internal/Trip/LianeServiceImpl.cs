@@ -605,7 +605,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var liane = await MapEntity(lianeDb);
     var initialTripDuration = liane.WayPoints.TotalDuration();
-    if (!(filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.DateTime))
+    if (filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.DateTime)
     {
       // For filters on arrival types, filter here using trip duration
       return null;
