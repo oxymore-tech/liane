@@ -52,7 +52,7 @@ public sealed class LabeledPositions
     new("Balsiege", "Balsiege_Parking_Eglise", Positions.BalsiegeParkingEglise, LocationType.CarpoolArea, "", "48000", "", null, true);
 
   public static readonly RallyingPoint SeveracDAveyronRondPoint =
-    new("Severac_dAveyron_Rond_Point", "Severac_dAveyron_Rond_Point", Positions.SeveracDAveyronRondPoint, LocationType.CarpoolArea, "", "48000", "", null, true);
+    new("SARP", "Severac_dAveyron_Rond_Point", Positions.SeveracDAveyronRondPoint, LocationType.CarpoolArea, "", "48000", "", null, true);
 
   public static readonly RallyingPoint LanuejolsParkingEglise =
     new("LanuejolsfakeId", "Lanuejols_Parking_Eglise", Positions.LanuejolsParkingEglise, LocationType.CarpoolArea, "", "48000", "", null, true);
