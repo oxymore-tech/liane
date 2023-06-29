@@ -10,7 +10,7 @@ services:
   postgis:
     image: "postgis/postgis:15-3.3"
     environment:
-      POSTGRES_DB: liane
+      POSTGRES_DB: liane_test
       POSTGRES_USER: mongoadmin
       POSTGRES_PASSWORD: secret
   
