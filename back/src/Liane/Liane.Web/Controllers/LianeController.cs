@@ -124,6 +124,13 @@ public sealed class LianeController : ControllerBase
     return await lianeService.GetNearestLinks(from, dateTime, radius ?? 30_000);
   }
 
+  [HttpPost("links")]
+  public async Task<ImmutableList<ClosestPickups>> GetNear([FromBody] LinkFilterPayload payload)
+  {
+
+    return await lianeService.GetPickupLinks(payload);
+  }
+
   [HttpGet("")]
   public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
   {

@@ -99,7 +99,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
     if (lianeFilter is { ForCurrentUser: true, States.Length: > 0 })
     {
-      // Return with user's version of liane state 
+      // Return with user's version of liane state
       var result = paginatedLianes.Select(l => l with { State = GetUserState(l, currentContext.CurrentUser().Id) });
       paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
     }
@@ -407,6 +407,32 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .ToImmutableList();
   }
 
+  public async Task<ImmutableList<ClosestPickups>> GetPickupLinks(LinkFilterPayload payload)
+  {
+    var from = await rallyingPointService.Get(payload.Pickup);
+    var links = await Mongo.GetCollection<LianeDb>()
+      .Find(Builders<LianeDb>.Filter.In(l => l.Id, payload.Lianes.Select(l => l.Id)))
+      .SelectAsync(async lianeDb =>
+      {
+        var (driverSegment, segments) = await ExtractRouteSegments(lianeDb.Driver.User, lianeDb.Members);
+        var destination = await rallyingPointService.Get(lianeDb.WayPoints.Last().RallyingPoint);
+        var newWayPoints = await routingService.GetTrip(lianeDb.DepartureTime, driverSegment, segments.Append((from, destination)));
+        return (lianeDb, newWayPoints);
+      }, parallel: true);
+    var destinations = links
+      .Where(l => l.newWayPoints is not null)
+      .Select(l => (l.newWayPoints!.Last().RallyingPoint, pickupTime: l.lianeDb.DepartureTime + TimeSpan.FromSeconds(l.newWayPoints!.TakeUntilInclusive(w => w.RallyingPoint.Id == from.Id).TotalDuration())))
+      .GroupBy(l => l.RallyingPoint);
+
+    return new List<ClosestPickups>{
+      new (from, destinations.Select(g => new RallyingPointLink(
+        g.Key,
+        g.Select(item => item.pickupTime).Order().ToImmutableList())
+      ).ToImmutableList())
+
+    }.ToImmutableList();
+  }
+
   public async Task<string> GetContact(Ref<Api.Trip.Liane> id, Ref<Api.User.User> requester, Ref<Api.User.User> member)
   {
     var liane = await Get(id);
@@ -426,7 +452,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var lianeFeatures = displayed.Segments.ToFeatures();
 
-    // Select all rallying points that can be a pickup 
+    // Select all rallying points that can be a pickup
     var displayedPoints = displayed.Lianes
       .Select(l => l.WayPoints.Take(l.WayPoints.Count - 1))
       .SelectMany(w => w)
