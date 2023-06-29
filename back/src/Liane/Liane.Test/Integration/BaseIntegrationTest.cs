@@ -113,6 +113,7 @@ public abstract class BaseIntegrationTest
 
     CurrentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
+    var postgis = ServiceProvider.GetRequiredService<PostgisServiceImpl>();
 
     mongo.Drop();
     // Init services in child class 
@@ -120,6 +121,7 @@ public abstract class BaseIntegrationTest
     // Insert mock users & rallying points
     await mongo.GetCollection<DbUser>().InsertManyAsync(Fakers.FakeDbUsers);
     await mongo.GetCollection<RallyingPoint>().InsertManyAsync(LabeledPositions.RallyingPoints);
+    await postgis.InsertRallyingPoints(LabeledPositions.RallyingPoints);
     MongoFactory.InitSchema(mongo);
 
     var postgisService = ServiceProvider.GetRequiredService<IPostgisService>();

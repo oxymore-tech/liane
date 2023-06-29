@@ -9,10 +9,12 @@ using Dapper;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Liane.Service.Internal.Postgis;
 
@@ -74,7 +76,7 @@ public sealed class PostgisServiceImpl : IPostgisService
     await connection.ExecuteAsync("DELETE FROM rallying_point");
   }
 
-  public async Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints)
+  public async Task InsertRallyingPoints(IEnumerable<RallyingPoint> rallyingPoints)
   {
     using var connection = db.NewConnection();
     var parameters = rallyingPoints.Select(r => new
@@ -92,6 +94,23 @@ public sealed class PostgisServiceImpl : IPostgisService
     await connection.ExecuteAsync(
       "INSERT INTO rallying_point (id, location, label, type, address, zip_code, city, place_count, is_active) VALUES (@id, @location, @label, @type, @address, @zip_code, @city, @place_count, @is_active) ON CONFLICT DO NOTHING",
       parameters);
+  }
+
+  public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to)
+  {
+    using var connection = db.NewConnection();
+    var results = await connection.QueryAsync("SELECT liane_id, st_AsGeoJSON(pickup) as pickup, st_AsGeoJSON(deposit) as deposit, l_start, l_end, mode FROM match_liane(@route::geometry(LineString, 4326), @from, @to)", new {from, to, route = targetRoute.Coordinates.ToLineString()});
+    var candidates = results.Select(r =>
+    {
+      var dict = (r as IDictionary<string, object>)!;
+
+      Enum.TryParse(typeof(MatchResultMode),((string)dict["mode"]).Capitalize(), false, out var mode);
+      var pickup = JsonSerializer.Deserialize<Point>((string)dict["pickup"])!;
+      var deposit = JsonSerializer.Deserialize<Point>((string)dict["deposit"])!;
+      return new LianeMatchCandidate((string)dict["liane_id"], LatLngExtensions.FromGeoJson(pickup), LatLngExtensions.FromGeoJson(deposit), (double)dict["l_start"], (double)dict["l_end"],
+       (MatchResultMode) mode! );
+    });
+    return candidates.ToImmutableList();
   }
 
   private async Task<BatchGeometryUpdate> ComputeLianeBatch(BatchGeometryUpdateInput input, Api.Trip.Liane liane)

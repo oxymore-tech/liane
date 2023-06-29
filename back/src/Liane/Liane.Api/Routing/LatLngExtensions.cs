@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using GeoJSON.Text.Geometry;
 using LngLatTuple = System.Tuple<double, double>;
 
 namespace Liane.Api.Routing;
@@ -59,6 +60,10 @@ public static class LatLngExtensions
     return null;
   }
 
+  public static LatLng FromGeoJson(Point geojson)
+  {
+    return new LatLng(geojson.Coordinates.Latitude, geojson.Coordinates.Longitude);
+  }
   public static ImmutableList<LatLng> ToLatLng(this IEnumerable<LngLatTuple> coordinates) => coordinates.Select(t => (LatLng)t).ToImmutableList();
 
   public static ImmutableList<LngLatTuple> ToLngLatTuple(this IEnumerable<LatLng> coordinates) => coordinates.Select(t => (LngLatTuple)t).ToImmutableList();

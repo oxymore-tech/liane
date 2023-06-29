@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Postgis.Db;
 
@@ -18,5 +19,6 @@ public interface IPostgisService
   Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch);
   Task Clear(ImmutableList<string> lianes);
   Task ClearRallyingPoints();
-  Task InsertRallyingPoints(ImmutableList<RallyingPoint> rallyingPoints);
+  Task InsertRallyingPoints(IEnumerable<RallyingPoint> rallyingPoints);
+  Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to);
 }
