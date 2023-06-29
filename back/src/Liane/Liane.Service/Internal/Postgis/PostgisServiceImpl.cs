@@ -31,33 +31,6 @@ public sealed class PostgisServiceImpl : IPostgisService
     this.routingService = routingService;
   }
 
-  public async Task UpdateSchema(bool clearAll = false)
-  {
-    var assembly = typeof(PostgisUpdateService).Assembly;
-
-    await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.init.sql");
-    if (stream is null)
-    {
-      throw new ResourceNotFoundException("Unable to find init.sql");
-    }
-
-    using var reader = new StreamReader(stream);
-    var sql = await reader.ReadToEndAsync();
-
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-
-    await connection.ExecuteAsync(sql, transaction: tx);
-    if (clearAll)
-    {
-      await connection.ExecuteAsync("DELETE FROM liane_waypoint", transaction: tx);
-      await connection.ExecuteAsync("DELETE FROM segment", transaction: tx);
-      await connection.ExecuteAsync("DELETE FROM rallying_point", transaction: tx);
-    }
-
-    tx.Commit();
-  }
-
   public async Task UpdateGeometry(Api.Trip.Liane liane)
   {
     using var connection = db.NewConnection();

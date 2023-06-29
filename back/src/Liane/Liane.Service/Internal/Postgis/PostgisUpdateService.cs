@@ -15,25 +15,27 @@ namespace Liane.Service.Internal.Postgis;
 public sealed class PostgisUpdateService
 {
   private readonly IMongoDatabase mongo;
-  private readonly IPostgisService postgis;
+  private readonly IPostgisService postgisService;
   private readonly ILogger<PostgisUpdateService> logger;
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
+  private readonly PostgisDatabase postgis;
 
-  public PostgisUpdateService(IMongoDatabase mongo, ILogger<PostgisUpdateService> logger, IPostgisService postgis, IRoutingService routingService,
+  public PostgisUpdateService(IMongoDatabase mongo, PostgisDatabase postgis, ILogger<PostgisUpdateService> logger, IPostgisService postgisService, IRoutingService routingService,
     IRallyingPointService rallyingPointService)
   {
     this.mongo = mongo;
-    this.postgis = postgis;
+    this.postgisService = postgisService;
     this.routingService = routingService;
     this.rallyingPointService = rallyingPointService;
     this.logger = logger;
+    this.postgis = postgis;
   }
 
   private async Task Migrate()
   {
-    await postgis.UpdateSchema();
-    await postgis.UpdateGeometry(ComputeGeometry);
+    await PostgisFactory.UpdateSchema(postgis);
+    await postgisService.UpdateGeometry(ComputeGeometry);
   }
 
   public async Task Execute()

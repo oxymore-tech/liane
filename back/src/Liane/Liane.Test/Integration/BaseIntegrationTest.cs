@@ -100,10 +100,10 @@ public abstract class BaseIntegrationTest
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
     services.AddEventListeners();
-
+    
     var databaseSettings = GetDatabaseSettings();
+    services.AddSingleton(sp => PostgisFactory.CreateForTest(databaseSettings));
     services.AddService(databaseSettings);
-    services.AddService<PostgisDatabase>();
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
 
@@ -111,9 +111,14 @@ public abstract class BaseIntegrationTest
 
     ServiceProvider = services.BuildServiceProvider();
 
+    // Init mongo
     CurrentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
+    MongoFactory.InitSchema(mongo);
+    // Init postgis
+    var postgisDatabase = ServiceProvider.GetRequiredService<PostgisDatabase>();
     var postgis = ServiceProvider.GetRequiredService<PostgisServiceImpl>();
+    await PostgisFactory.UpdateSchema(postgisDatabase, true);
 
     mongo.Drop();
     // Init services in child class 
@@ -122,10 +127,7 @@ public abstract class BaseIntegrationTest
     await mongo.GetCollection<DbUser>().InsertManyAsync(Fakers.FakeDbUsers);
     await mongo.GetCollection<RallyingPoint>().InsertManyAsync(LabeledPositions.RallyingPoints);
     await postgis.InsertRallyingPoints(LabeledPositions.RallyingPoints);
-    MongoFactory.InitSchema(mongo);
 
-    var postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
-    await postgisService.UpdateSchema(true);
   }
 
   protected virtual void SetupServices(IServiceCollection services)
