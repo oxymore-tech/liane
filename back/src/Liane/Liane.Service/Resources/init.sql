@@ -466,7 +466,7 @@ with filtered_lianes as (select *
                                           st_startpoint(geom) as pickup,
                                           st_endpoint(geom)   as deposit,
                                           0                   as l_start,
-                                          0                   as l_end,
+                                          1                   as l_end,
                                           'exact'             as mode
                                    from exact_candidates
                                    where exact_candidates.l_end > exact_candidates.l_start),
@@ -481,10 +481,10 @@ with filtered_lianes as (select *
                                       and d_end < 5000
                                       and l_end - l_start > 0.2),
      filtered_partial_candidates as (select liane_id,
-                                            l_start,
-                                            l_end,
                                             st_lineinterpolatepoint(geometry, l_start) as pickup,
                                             st_lineinterpolatepoint(geometry, l_end) as deposit,
+                                            l_start,
+                                            l_end,
                                             'partial' as mode
                                      from (select liane_id, geometry, min(least(l_start, l_end)) as l_start, max(greatest(l_start, l_end)) as l_end
                                            from (select *,
