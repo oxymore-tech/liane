@@ -261,7 +261,7 @@ BEGIN
           make_interval(mins => timezone_offset))
   INTO after;
 
-  SELECT location from rallying_points where (query_params ->> 'from') = rallying_points.id INTO from_location;
+  SELECT location from rallying_point where (query_params ->> 'from') = rallying_point.id INTO from_location;
 
   SELECT (case
             when z < 5 then 80
