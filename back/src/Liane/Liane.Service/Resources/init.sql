@@ -291,9 +291,9 @@ BEGIN
                                     on segment.from_id = filtered_lianes.from_id and
                                        segment.to_id = filtered_lianes.to_id),
        longest_lianes as (select liane_id,
-                                 sum(length) as length,
+                                 sum(length)                                                               as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 (array_agg(s.to_id order by s.eta desc))[1] as destination
+                                 (array_agg(s.to_id order by s.eta desc))[1]                               as destination
                           from (select liane_id,
                                        to_id,
                                        st_length(st_boundingdiagonal(geometry)::geography)      as length,
@@ -459,7 +459,7 @@ with filtered_lianes as (select *
                                   ST_LineLocatePoint(geometry, st_endpoint(geom))   as l_end
                            from lianes),
      partial_candidates as (select *,
-                                   (ST_Dump(ST_LineMerge(ST_CollectionExtract(ST_Intersection(geom, geometry), 2)))).geom as intersections
+                                   (ST_Dump(ST_Intersection(geom, geometry))).geom as intersections
                             from lianes
                             where ST_Intersects(geom, geometry)),
      filtered_exact_candidates as (select liane_id,
@@ -480,14 +480,19 @@ with filtered_lianes as (select *
                                     where d_start < 5000
                                       and d_end < 5000
                                       and l_end - l_start > 0.2),
-     filtered_partial_candidates as (select liane_id, pickup, deposit, l_start, l_end, 'partial' as mode
-                                     from (select *,
-                                                  st_startpoint(intersections)                               as pickup,
-                                                  st_endpoint(intersections)                                 as deposit,
-                                                  st_linelocatepoint(geometry, st_startpoint(intersections)) as l_start,
-                                                  st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end
-                                           from partial_candidates) as x
-                                     where l_end - l_start > 0.4),
+     filtered_partial_candidates as (select liane_id,
+                                            l_start,
+                                            l_end,
+                                            st_lineinterpolatepoint(geometry, l_start) as pickup,
+                                            st_lineinterpolatepoint(geometry, l_end) as deposit,
+                                            'partial' as mode
+                                     from (select liane_id, geometry, min(least(l_start, l_end)) as l_start, max(greatest(l_start, l_end)) as l_end
+                                           from (select *,
+                                                        st_linelocatepoint(geometry, st_startpoint(intersections)) as l_start,
+                                                        st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end -- will be null if intersection is a point
+                                                 from partial_candidates) as x
+                                           group by liane_id, geometry) as intersections
+                                     where l_end - l_start > 0.15),
      candidates as
        (select * from filtered_exact_candidates union all select * from filtered_detour_candidates union all select * from filtered_partial_candidates)
 
