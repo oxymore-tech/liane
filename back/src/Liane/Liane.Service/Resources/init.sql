@@ -569,14 +569,23 @@ with filtered_lianes as (select *
                                             l_start,
                                             l_end,
                                             'partial'                                  as mode
-                                     from (select liane_id, geometry, min(least(l_start, l_end)) as l_start, max(greatest(l_start, l_end)) as l_end
+                                     from (select liane_id, 
+                                                  geometry,
+                                                  min(least(l_start, l_end)) as l_start,
+                                                  max(greatest(l_start, l_end)) as l_end,
+                                                  min(least(tl_start, tl_end)) as tl_start,
+                                                  max(greatest(tl_start, tl_end)) as tl_end
                                            from (select *,
                                                         st_linelocatepoint(geometry, st_startpoint(intersections)) as l_start,
-                                                        st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end -- will be null if intersection is a point
-                                                 from partial_candidates) as x
+                                                        st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end, -- will be null if intersection is a point
+                                                        st_linelocatepoint(geom, st_endpoint(intersections)) as tl_end,
+                                                        st_linelocatepoint(geom, st_startpoint(intersections)) as tl_start
+
+                                                   from partial_candidates) as x
                                            group by liane_id, geometry) as intersections
-                                     where st_length(st_linesubstring(geometry, l_start, l_end)::geography) > 1000 --l_end - l_start > 0.15
-                                    ),
+                                     -- keep matches that cover at least 35% of the target route
+                                      where tl_end - tl_start > 0.35
+                                     ),
      candidates as
        (select * from filtered_exact_candidates union all select * from filtered_detour_candidates union all select * from filtered_partial_candidates)
 
