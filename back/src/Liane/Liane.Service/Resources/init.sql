@@ -575,7 +575,8 @@ with filtered_lianes as (select *
                                                         st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end -- will be null if intersection is a point
                                                  from partial_candidates) as x
                                            group by liane_id, geometry) as intersections
-                                     where l_end - l_start > 0.15),
+                                     where st_length(st_linesubstring(geometry, l_start, l_end)::geography) > 1000 --l_end - l_start > 0.15
+                                    ),
      candidates as
        (select * from filtered_exact_candidates union all select * from filtered_detour_candidates union all select * from filtered_partial_candidates)
 
