@@ -35,5 +35,5 @@ export const useSubject = <T>() => {
 export const useBehaviorSubject = <T>(initialValue: T) => {
   return useMemo(() => {
     return new BehaviorSubject<T>(initialValue);
-  }, [initialValue]);
+  }, []);
 };

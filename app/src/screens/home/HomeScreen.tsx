@@ -83,8 +83,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   });
 
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
-  const g = useObservable(mapFeatureSubject, []);
-  console.log(g);
 
   return (
     <AppBackContextProvider backHandler={backHandler}>

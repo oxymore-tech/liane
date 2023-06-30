@@ -192,7 +192,7 @@ export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date
           ? async f => {
               console.debug(JSON.stringify(f));
               // @ts-ignore
-              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry.type === "Point");
+              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
 
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1) {
