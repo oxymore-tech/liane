@@ -3,7 +3,7 @@ import { ColorValue, Platform, StyleSheet, useWindowDimensions, View } from "rea
 import MapLibreGL, { Expression, Logger } from "@maplibre/maplibre-react-native";
 import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, UnionUtils } from "@/api";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { FeatureCollection, GeoJSON, Position } from "geojson";
+import { Feature, FeatureCollection, GeoJSON, Point, Position } from "geojson";
 import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/ContextProvider";
@@ -21,6 +21,8 @@ import LineLayer = MapLibreGL.LineLayer;
 import Images = MapLibreGL.Images;
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
+const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
+const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 
 MapLibreGL.setAccessToken(null);
 
@@ -132,7 +134,7 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   }, [data, isSameDeposit, isSamePickup]);
 
   if (!mapFeatures || isLoading) {
-    return <LianeDisplayLayer lianeDisplay={props.loadingFeatures} loading={true} useWidth={3} />;
+    return <LianeShapeDisplayLayer lianeDisplay={props.loadingFeatures} loading={true} useWidth={3} />;
   }
 
   return (
@@ -159,32 +161,26 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   );
 };
 
-export const LianeDisplayLayer2 = ({
-  date = new Date(),
-  onSelect,
-  pickupPoint
-}: {
-  date?: Date;
-  onSelect?: (rp: RallyingPoint) => void;
-  pickupPoint?: string | undefined;
-}) => {
-  const dateArg =
-    "?offset=" +
-    date.getTimezoneOffset() +
-    "&day=" +
-    date.getFullYear() +
-    "-" +
-    (1 + date.getMonth()).toString().padStart(2, "0") +
-    "-" +
-    date.getDate().toString().padStart(2, "0");
+const getDateParams = (date: Date) =>
+  "offset=" +
+  date.getTimezoneOffset() +
+  "&day=" +
+  date.getFullYear() +
+  "-" +
+  (1 + date.getMonth()).toString().padStart(2, "0") +
+  "-" +
+  date.getDate().toString().padStart(2, "0");
+
+export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date; onSelect?: (rp: RallyingPoint) => void }) => {
+  const dateArg = getDateParams(date);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
-    setSourceId("segments" + dateArg + pickupPoint);
-    console.debug("[MAP]: tile source", dateArg, pickupPoint);
-  }, [dateArg, pickupPoint]);
+    setSourceId("segments" + dateArg);
+    console.debug("[MAP]: tile source", dateArg);
+  }, [dateArg]);
 
   const controller = useContext<AppMapViewController>(MapControllerContext);
-  const url = TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "");
+  const url = TilesUrl + "/liane_display?" + dateArg;
   return (
     <MapLibreGL.VectorSource
       id={"segments"}
@@ -195,64 +191,48 @@ export const LianeDisplayLayer2 = ({
         onSelect
           ? async f => {
               console.debug(JSON.stringify(f));
-              const points = f.features.filter(feat => feat.geometry.type === "Point");
-              if (points.length > 0) {
+              // @ts-ignore
+              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry.type === "Point");
+
+              const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
+              if (points.length === 1) {
                 const p = points[0];
                 console.debug("clc", p);
-                const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
-                /*
-               const zoom = await controller.getZoom()!;
-
-               /t newZoom;
-                 if (zoom < 10.5) {
-                   newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
-                 } else if (zoom < 12) {
-                   newZoom = 12.1;
-                 } else {
-                   newZoom = undefined;
-                 }
-                 await controller.setCenter(center, newZoom);
-               */
 
                 //@ts-ignore
-                onSelect({ ...p!.properties!, location: center });
+                onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
+              } else if (points.length > 0) {
+                const zoom = await controller.getZoom()!;
+
+                let newZoom;
+                if (zoom < 10.5) {
+                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+                } else if (zoom < 12) {
+                  newZoom = 12.1;
+                } else {
+                  newZoom = undefined;
+                }
+                await controller.setCenter(center, newZoom);
               }
             }
           : undefined
       }>
-      {pickupPoint && (
-        <MapLibreGL.LineLayer
-          belowLayerID="place"
-          id="lianeLayerFiltered"
-          sourceLayerID="liane_display"
-          style={{
-            //@ts-ignore
-            lineSortKey: ["get", "count"],
-            lineCap: "round",
-            lineColor: AppColors.darkBlue,
-            lineWidth: 3
-          }}
-        />
-      )}
-      {!pickupPoint && (
-        <MapLibreGL.LineLayer
-          belowLayerID="place"
-          id="lianeLayer"
-          sourceLayerID="liane_display"
-          style={{
-            //@ts-ignore
-            lineSortKey: ["get", "count"],
-            lineCap: "round",
-            lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
-            lineWidth: ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
-          }}
-        />
-      )}
+      <MapLibreGL.LineLayer
+        belowLayerID="place"
+        id="lianeLayer"
+        sourceLayerID="liane_display"
+        style={{
+          //@ts-ignore
+          lineSortKey: ["get", "count"],
+          lineCap: "round",
+          lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
+          lineWidth: ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+        }}
+      />
 
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        filter={pickupPoint ? ["!=", ["get", "id"], pickupPoint] : undefined}
         minZoomLevel={8}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "pickup"], 0, 1],
@@ -262,28 +242,124 @@ export const LianeDisplayLayer2 = ({
             "case",
             ["==", ["get", "point_type"], "pickup"],
             AppColors.orange,
-            //["==", ["get", "point_type"], "suggestion"],
+            ["==", ["get", "point_type"], "suggestion"],
+            "#9f4a2f",
             "#000"
-            //    mainColor
           ],
           textHaloColor: "#fff",
           textHaloWidth: 1.2,
           textField: ["step", ["zoom"], "", 12, ["get", "label"]],
           textAllowOverlap: false,
           textAnchor: "bottom",
-          textOffset: [0, -3],
+          textOffset: [0, -3.4],
           textMaxWidth: 5.4,
+          textOptional: true,
           visibility: "visible",
-          iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", "rp"],
+          iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", ["==", ["get", "point_type"], "suggestion"], "suggestion", "rp"],
           iconAnchor: "bottom",
-          iconSize: ["step", ["zoom"], 0.75, 12, 1]
+          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
         }}
       />
     </MapLibreGL.VectorSource>
   );
 };
 
-export const LianeDisplayLayer = ({
+export const PickupDestinationsDisplayLayer = ({
+  date = new Date(),
+  onSelect,
+  pickupPoint
+}: {
+  date?: Date;
+  onSelect?: (rp: RallyingPoint) => void;
+  pickupPoint: string;
+}) => {
+  const dateArg = getDateParams(date);
+  const [sourceId, setSourceId] = useState("");
+  useEffect(() => {
+    setSourceId("segmentsFiltered" + dateArg + pickupPoint);
+    console.debug("[MAP]: tile source", dateArg, pickupPoint);
+  }, [dateArg, pickupPoint]);
+
+  const controller = useContext<AppMapViewController>(MapControllerContext);
+  const url = TilesUrl + "/liane_display_filter?" + dateArg + "&pickup=" + pickupPoint;
+  return (
+    <MapLibreGL.VectorSource
+      id={"segmentsFiltered"}
+      url={url}
+      key={sourceId}
+      maxZoomLevel={14}
+      onPress={
+        onSelect
+          ? async f => {
+              console.debug(JSON.stringify(f));
+              // @ts-ignore
+              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry.type === "Point");
+
+              const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
+              if (points.length === 1) {
+                const p = points[0];
+                console.debug("clc", p);
+
+                //@ts-ignore
+                onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
+              } else if (points.length > 0) {
+                const zoom = await controller.getZoom()!;
+
+                let newZoom;
+                if (zoom < 10.5) {
+                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+                } else if (zoom < 12) {
+                  newZoom = 12.1;
+                } else {
+                  newZoom = undefined;
+                }
+                await controller.setCenter(center, newZoom);
+              }
+            }
+          : undefined
+      }>
+      <MapLibreGL.LineLayer
+        belowLayerID="place"
+        id="lianeLayerFiltered"
+        sourceLayerID="liane_display"
+        style={{
+          //@ts-ignore
+          lineSortKey: ["get", "count"],
+          lineCap: "round",
+          lineColor: AppColors.darkBlue,
+          lineWidth: 3
+        }}
+      />
+
+      <MapLibreGL.SymbolLayer
+        id="rp_symbols"
+        sourceLayerID={"rallying_point_display"}
+        filter={["!=", ["get", "id"], pickupPoint]}
+        minZoomLevel={8}
+        style={{
+          symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 12,
+          textColor: ["case", ["==", ["get", "point_type"], "suggestion"], AppColors.pink, "#000"],
+          textHaloColor: "#fff",
+          textHaloWidth: 1.2,
+          textField: ["step", ["zoom"], "", 12, ["get", "label"]],
+          textAllowOverlap: false,
+          textAnchor: "bottom",
+          textOffset: [0, -3.4],
+          textMaxWidth: 5.4,
+          visibility: "visible",
+          textOptional: true,
+          iconImage: ["case", ["==", ["get", "point_type"], "suggestion"], "deposit", "rp"],
+          iconAnchor: "bottom",
+          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+        }}
+      />
+    </MapLibreGL.VectorSource>
+  );
+};
+
+export const LianeShapeDisplayLayer = ({
   loading = false,
   lianeDisplay,
   useWidth
@@ -292,11 +368,6 @@ export const LianeDisplayLayer = ({
   lianeDisplay: FeatureCollection | undefined;
   useWidth?: number | undefined;
 }) => {
-  /* const features = useMemo(() => {
-    let segments = lianeDisplay?.segments ?? [];
-    return toFeatureCollection(segments, lianeDisplay?.lianes ?? []);
-  }, [lianeDisplay]);
-*/
   const features = lianeDisplay || {
     type: "FeatureCollection",
     features: []
@@ -446,101 +517,6 @@ export const RallyingPointsDisplayLayer = ({
         }}
       />
     </MapLibreGL.ShapeSource>
-  );
-};
-
-export const RallyingPointsDisplayLayer2 = ({
-  onSelect,
-  date,
-  interactive = true,
-  color = AppColors.orange
-}: {
-  onSelect?: (r?: RallyingPoint, lianes: { [liane_id: string]: "suggestion" | "pickup" }) => void;
-  interactive?: boolean;
-  color?: ColorValue;
-  date?: Date | undefined;
-}) => {
-  const controller = useContext<AppMapViewController>(MapControllerContext);
-  const dateArg = date ? "?day=" + date.toISOString().substring(0, "YYYY-MM-DD".length) + "&offset=" + date.getTimezoneOffset() : "";
-  const [sourceId, setSourceId] = useState("");
-  useEffect(() => {
-    setSourceId("rallying_points" + dateArg);
-  }, [dateArg]);
-  // @ts-ignore
-  const mainColor: string = color;
-
-  return (
-    <MapLibreGL.VectorSource
-      id={"rallying_points"}
-      key={sourceId}
-      // TODO not working maxZoomLevel={12}
-      minZoomLevel={8}
-      url={TilesUrl + "/rallying_point_display" + dateArg}
-      onPress={
-        interactive
-          ? async f => {
-              console.debug("clc", f, f.features[0]);
-              //   const rp = f.features[0]!.properties!.point_count ? undefined : f.features[0]!.properties!;
-
-              const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
-              const zoom = await controller.getZoom()!;
-
-              let newZoom;
-              if (zoom < 10.5) {
-                newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
-              } else if (zoom < 12) {
-                newZoom = 12.1;
-              } else {
-                newZoom = undefined;
-              }
-              await controller.setCenter(center, newZoom);
-
-              const linkedLianes = Object.fromEntries(
-                Object.entries(f.features[0]!.properties!)
-                  .filter(([k]) => k.startsWith("l_") && k.length === 26)
-                  .map(([k, v]) => [k.substring(2), v])
-              );
-
-              if (onSelect) {
-                //@ts-ignore
-                onSelect({ ...f.features[0]!.properties!, location: center }, linkedLianes);
-              }
-            }
-          : undefined
-      }>
-      <MapLibreGL.CircleLayer
-        id="rp_circles"
-        minZoomLevel={12}
-        belowLayerID={"rp_circles_active"}
-        sourceLayerID={"rallying_point_display"}
-        style={{
-          circleColor: "#46516e",
-          circleRadius: ["step", ["zoom"], 5, 12, 10],
-          circleStrokeColor: AppColors.white,
-          circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
-        }}
-      />
-
-      <MapLibreGL.SymbolLayer
-        id="rp_labels"
-        belowLayerID={"rp_labels_active"}
-        sourceLayerID={"rallying_point_display"}
-        minZoomLevel={12}
-        style={{
-          textFont: ["Open Sans Regular", "Noto Sans Regular"],
-          textSize: 12,
-          textColor: "#46516e",
-          textHaloColor: "#fff",
-          textHaloWidth: 1.2,
-          textField: "{label}",
-          textAllowOverlap: false,
-          textAnchor: "bottom",
-          textOffset: [0, -1.2],
-          textMaxWidth: 5.4,
-          visibility: "visible"
-        }}
-      />
-    </MapLibreGL.VectorSource>
   );
 };
 
@@ -778,7 +754,7 @@ const AppMapView = forwardRef(
             zoomLevel={10}
             ref={cameraRef}
           />
-          <Images images={{ pickup: rp_pickup_icon, rp: rp_icon }} />
+          <Images images={{ pickup: rp_pickup_icon, rp: rp_icon, suggestion: rp_suggestion_icon, deposit: rp_deposit_icon }} />
 
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
         </MapLibreGL.MapView>

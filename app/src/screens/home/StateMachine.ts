@@ -139,7 +139,7 @@ const createState = <T>(
 export const HomeMapMachine = (services: {
   services: {
     match: (ctx: HomeMapContext) => Promise<LianeMatchDisplay>;
-    display: (ctx: HomeMapContext) => Promise<FeatureCollection | undefined>;
+    //display: (ctx: HomeMapContext) => Promise<FeatureCollection | undefined>;
     cacheRecentTrip: (trip: Trip) => void;
     cacheRecentPoint: (rp: RallyingPoint) => void;
   };
@@ -194,8 +194,8 @@ export const HomeMapMachine = (services: {
                 actions: ["selectMatch"]
               }
             }
-          },
-          {
+          }
+          /*{
             src: (context, _) => services.services.display(context),
             autoLoadCond: () => true,
             actions: [
@@ -203,7 +203,7 @@ export const HomeMapMachine = (services: {
                 services.observables.displaySubject.next(event.data || EmptyFeatureCollection);
               }
             ]
-          }
+          }*/
         ),
         form: createState({
           always: {
@@ -260,7 +260,7 @@ export const HomeMapMachine = (services: {
             ],
             SELECT: {
               target: "#homeMap.match",
-              actions: ["resetMatches", "selectRallyingPoint2", "cacheRecentTrip"]
+              actions: ["selectRallyingPoint2", "cacheRecentTrip"]
             } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),
@@ -268,24 +268,24 @@ export const HomeMapMachine = (services: {
           {
             on: {
               FILTER: {
-                actions: ["updateFilter", "resetMatches", raise({ type: "RELOAD", data: "refresh" })]
+                actions: ["updateFilter", "resetMatches", "resetMatchesDisplay", raise({ type: "RELOAD", data: "refresh" })]
               },
 
               DETAIL: {
                 target: "#homeMap.detail",
                 actions: ["selectMatch"]
               },
-              BACK: { target: "#homeMap.map", actions: ["resetTrip", "resetMatches"] },
+              BACK: { target: "#homeMap.map", actions: ["resetTrip", "resetMatches", "resetMatchesDisplay"] },
               UPDATE: [
                 {
-                  actions: ["resetTrip", "updateTrip", "cacheRecentTrip", "resetMatches"],
+                  actions: ["resetTrip", "updateTrip", "cacheRecentTrip", "resetMatches", "resetMatchesDisplay"],
                   target: "#homeMap.match",
                   cond: (context, event: UpdateEvent) => {
                     return filterHasFullTrip(event.data);
                   }
                 },
                 {
-                  actions: ["updateTrip"],
+                  actions: ["updateTrip", "resetMatches", "resetMatchesDisplay"],
                   target: "#homeMap.point" //  target: "#homeMap.form"
                 }
               ]
@@ -300,6 +300,7 @@ export const HomeMapMachine = (services: {
               return !context.matches || !!context.reloadCause;
             },
             actions: [
+              () => services.observables.displaySubject.next(EmptyFeatureCollection),
               assign((context, event) => {
                 return {
                   ...context,
@@ -342,6 +343,7 @@ export const HomeMapMachine = (services: {
         resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),
         resetMatches: assign<HomeMapContext, MatchEvent>({ matches: undefined }),
+        resetMatchesDisplay: () => services.observables.displaySubject.next(EmptyFeatureCollection),
         selectRallyingPoint: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
             return { ...context.filter, from: event.data, to: undefined };

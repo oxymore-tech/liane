@@ -1,6 +1,5 @@
 import {
   JoinLianeRequestDetailed,
-  LatLng,
   Liane,
   LianeRequest,
   LianeSearchFilter,
@@ -13,18 +12,13 @@ import {
   Ref
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
-import { FeatureCollection } from "geojson";
 import { JoinRequest } from "@/api/event";
 
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
-  // match(filter: LianeSearchFilter): Promise<PaginatedResponse<LianeMatch>>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
-  // links(pickup: Ref<RallyingPoint>, afterDate?: Date): Promise<NearestLinks>;
-  //nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks>;
   pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks>;
-  display(from: LatLng, to: LatLng, afterDate?: Date): Promise<FeatureCollection>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   leave(id: string, userId: string): Promise<void>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
@@ -59,24 +53,6 @@ export class LianeServiceClient implements LianeService {
   post(liane: LianeRequest) {
     return postAs<Liane>("/liane/", { body: liane });
   }
-
-  display(from: LatLng, to: LatLng, afterDate?: Date) {
-    const params = { lat: from.lat, lng: from.lng, lat2: to.lat, lng2: to.lng };
-    if (afterDate) {
-      // @ts-ignore
-      params.after = new Date(afterDate.toDateString()).valueOf();
-    }
-    return get<FeatureCollection>("/liane/display/geojson", { params });
-  }
-  /*
-  nearestLinks(center: LatLng, radius: number, afterDate?: Date): Promise<NearestLinks> {
-    const params = { lat: center.lat, lng: center.lng, radius: radius };
-    if (afterDate) {
-      // @ts-ignore
-      params.after = new Date(afterDate.toDateString()).valueOf();
-    }
-    return get("/liane/links", { params });
-  }*/
 
   pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
     const body = { pickup, lianes };

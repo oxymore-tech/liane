@@ -2,11 +2,13 @@ import { Platform, StyleSheet, ToastAndroid, View } from "react-native";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
+  LianeShapeDisplayLayer,
   LianeDisplayLayer,
-  LianeDisplayLayer2,
+  LianeMatchRouteLayer,
   PotentialLianeLayer,
   RallyingPointsDisplayLayer,
-  WayPointDisplay
+  WayPointDisplay,
+  PickupDestinationsDisplayLayer
 } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint } from "@/api";
@@ -80,7 +82,9 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
     );
   });
 
-  const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[]>([]);
+  const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
+  const g = useObservable(mapFeatureSubject, []);
+  console.log(g);
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -113,7 +117,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             display={bottomSheetDisplay}
             canScroll={loadingDisplay && !movingDisplay}>
             {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
-            {/*state.matches("point") && <FilterSelector shortFormat={true} />*/}
+
             {isMatchState && <FilterListView loading={loadingList} />}
 
             {isPointState && (
@@ -124,7 +128,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
               />
             )}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
-            {/*loadingList && isDetailState && <ActivityIndicator />*/}
           </HomeBottomSheetContainer>
         )}
 
@@ -140,17 +143,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             updateTrip={t => machine.send("UPDATE", { data: t })}
           />
         )}
-        {/*isMatchState && (
-          <ItineraryFormHeader
-            updateTrip={t => machine.send("UPDATE", { data: t })}
-            editable={false}
-            animateEntry={state.history?.matches("detail")}
-            onChangeField={field => {
-              machine.send("UPDATE", { data: { [field]: undefined } });
-            }}
-            trip={state.context.filter}
-          />
-        )*/}
+
         {isDetailState && (
           <AnimatedFloatingBackButton
             onPress={() => {
@@ -216,7 +209,7 @@ const HomeMap = ({
   onMovingStateChanged: (moving: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
   displaySource: Observable<FeatureCollection>;
-  featureSubject?: Subject<GeoJSON.Feature[]>;
+  featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
 }) => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -240,9 +233,7 @@ const HomeMap = ({
   const mapBounds = useMemo(() => {
     if (state.matches("detail")) {
       const coordinates = []; // TODO (lianeDisplay?.segments ?? [])
-      //.filter(s => s.lianes.includes(state.context.selectedMatch!.liane.id!))
-      // .map(s => s.coordinates)
-      // .flat();
+
       if (filterHasFullTrip(state.context.filter)) {
         const { from, to } = state.context.filter!;
         coordinates.push([from!.location.lng, from!.location.lat]);
@@ -300,39 +291,48 @@ const HomeMap = ({
   const appMapRef = useRef<AppMapViewController>(null);
 
   // zoom to bbox when pickup is selected
+  const [shouldFitBounds, setShouldFitBounds] = useState(false);
+  const [movingDisplay, setMovingDisplay] = useState(false);
   useEffect(() => {
     if (!isPointState) {
       return;
     }
-
-    appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"])?.then(features => {
-      if (!features) {
-        return;
-      }
-      const viewportFeatures = features?.features.map(f => f.properties);
-      const bboxesCoordinates: Polygon[] = viewportFeatures.filter(f => !!f!.bbox).map(f => JSON.parse(f!.bbox));
-
-      if (bboxesCoordinates.length > 0) {
-        const mergedBbox = envelope(featureCollection(bboxesCoordinates.map(p => feature(p))));
-        const bbox = getBoundingBox(mergedBbox.geometry.coordinates.flat(), 24);
-        console.debug("[MAP] moving to ", bbox, mergedBbox.bbox);
-        if (Number.isFinite(bbox.ne[0]) && Number.isFinite(bbox.ne[1]) && Number.isFinite(bbox.sw[0]) && Number.isFinite(bbox.sw[1])) {
-          setGeometryBbox(bbox);
-        } else {
-          console.warn("[MAP]: cannot fit infinite bounds");
-        }
-      }
-    });
+    setShouldFitBounds(true);
+    featureSubject?.next(undefined);
+    //TODO
+    appMapRef.current?.getZoom()?.then(zoom => appMapRef.current?.setCenter(state.context.filter.from!.location, zoom));
   }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime, isPointState]);
 
   const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
     console.debug("[MAP] zoom", payload.zoomLevel);
 
     if (state.matches("point")) {
-      const features = await appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"]);
-      if (features) {
-        console.debug("[MAP] found", features.features.length, "features");
-        featureSubject?.next(features.features);
+      if (shouldFitBounds) {
+        setShouldFitBounds(false);
+        appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"])?.then(features => {
+          if (!features) {
+            return;
+          }
+          const viewportFeatures = features?.features.map(f => f.properties);
+          const bboxesCoordinates: Polygon[] = viewportFeatures.filter(f => !!f!.bbox).map(f => JSON.parse(f!.bbox));
+
+          if (bboxesCoordinates.length > 0) {
+            const mergedBbox = envelope(featureCollection(bboxesCoordinates.map(p => feature(p))));
+            const bbox = getBoundingBox(mergedBbox.geometry.coordinates.flat(), 24);
+            console.debug("[MAP] moving to ", bbox, mergedBbox.bbox);
+            if (Number.isFinite(bbox.ne[0]) && Number.isFinite(bbox.ne[1]) && Number.isFinite(bbox.sw[0]) && Number.isFinite(bbox.sw[1])) {
+              setGeometryBbox(bbox);
+            } else {
+              console.warn("[MAP]: cannot fit infinite bounds");
+            }
+          }
+        });
+      } else {
+        const features = await appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"]);
+        if (features) {
+          console.debug("[MAP] found", features.features.length, "features");
+          featureSubject?.next(features.features);
+        }
       }
     }
   };
@@ -344,15 +344,11 @@ const HomeMap = ({
       onRegionChanged={onRegionChanged}
       onStopMovingRegion={() => {
         onMovingStateChanged(false);
-
-        //  setMovingDisplay(false);
-        //console.log("map touch end");
+        setMovingDisplay(false);
       }}
       onStartMovingRegion={() => {
-        // setMovingDisplay(true);
         onMovingStateChanged(true);
-
-        // console.log("map moving");
+        setMovingDisplay(true);
       }}
       ref={appMapRef}
       onSelectFeatures={features => {
@@ -367,10 +363,9 @@ const HomeMap = ({
           appMapRef.current?.setCenter(features[0].location, 12.1);
         }
       }}>
-      {(state.matches("map") || state.matches("point")) && (
-        <LianeDisplayLayer2
+      {state.matches("map") && (
+        <LianeDisplayLayer
           date={state.context.filter.targetTime?.dateTime}
-          pickupPoint={state.context.filter.from?.id}
           onSelect={rp => {
             if (rp) {
               machine.send("SELECT", { data: rp });
@@ -380,33 +375,26 @@ const HomeMap = ({
           }}
         />
       )}
-      {isMatchState && <LianeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} />}
+      {state.matches("point") && (
+        <PickupDestinationsDisplayLayer
+          date={state.context.filter.targetTime?.dateTime}
+          pickupPoint={state.context.filter.from!.id!}
+          onSelect={rp => {
+            if (rp) {
+              machine.send("SELECT", { data: rp });
+            } else {
+              machine.send("BACK");
+            }
+          }}
+        />
+      )}
+      {isMatchState && <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} />}
       {isMatchState && state.matches({ match: "idle" }) && state.context.matches!.length === 0 && (
         <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
       )}
-      {/* TODO isDetailState && (
-        <LianeMatchRouteLayer
-          from={state.context.filter.from!}
-          to={state.context.filter.to!}
-          match={state.context.selectedMatch!}
-          loadingFeatures={lianeDisplay}
-        />
-      )*/}
+      {isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />}
 
       {isMatchStateIdle && <RallyingPointsDisplayLayer rallyingPoints={pickupsDisplay} cluster={false} interactive={false} />}
-      {/*["map", "point"].some(state.matches) && (
-        <RallyingPointsDisplayLayer2
-          date={state.context.filter.targetTime?.dateTime}
-          color={AppColors.blue}
-          onSelect={rp => {
-            if (rp) {
-              machine.send("SELECT", { data: rp });
-            } else {
-              machine.send("BACK");
-            }
-          }}
-        />
-      )*/}
 
       {isDetailState && state.context.filter.from?.id !== detailStateData!.pickup.id && (
         <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"pickup"} />
@@ -442,8 +430,8 @@ const HomeScreen = () => {
       services: {
         match: ctx => services.liane.match2(getSearchFilter(ctx.filter)),
         cacheRecentTrip: trip => services.location.cacheRecentTrip(trip).catch(e => console.error(e)),
-        cacheRecentPoint: rp => services.location.cacheRecentLocation(rp).catch(e => console.error(e)),
-        display: async ctx => {
+        cacheRecentPoint: rp => services.location.cacheRecentLocation(rp).catch(e => console.error(e))
+        /*display: async ctx => {
           if (!ctx.mapDisplay.displayBounds) {
             return undefined;
           }
@@ -455,7 +443,7 @@ const HomeScreen = () => {
           }
 
           return services.liane.display(ctx.mapDisplay.displayBounds.from, ctx.mapDisplay.displayBounds.to, ctx.filter?.targetTime?.dateTime);
-        }
+        }*/
       },
       observables: {
         displaySubject

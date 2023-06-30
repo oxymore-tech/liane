@@ -166,20 +166,28 @@ export const LianeNearestLinks = () => {
     </Column>
   );*/
 };
-export const LianeDestinations = (props: { pickup: RallyingPoint; date: Date | undefined; mapFeatureObservable: Observable<Feature[]> }) => {
+export const LianeDestinations = (props: {
+  pickup: RallyingPoint;
+  date: Date | undefined;
+  mapFeatureObservable: Observable<Feature[] | undefined>;
+}) => {
   const { services } = useContext(AppContext);
   const machine = useContext(HomeMapContext);
   const { navigation } = useAppNavigation();
 
-  const features = useObservable(props.mapFeatureObservable, []);
-  console.log(features.map(f => f.properties));
-  const viewportLianes = [...new Set<string>(features.map(f => f.properties!.id))];
+  const features = useObservable(props.mapFeatureObservable, undefined);
+  console.log("[LINKS]", features?.length || 0, "found");
 
+  const viewportLianes = features ? [...new Set<string>(features.map(f => f.properties!.id))] : undefined;
   const {
     data: results,
     isLoading,
     error
-  } = useQuery(["getNearestLinks", props.pickup.id, props.date?.toISOString(), viewportLianes.sort().join(",")], async () => {
+  } = useQuery(["getNearestLinks", props.pickup.id, props.date?.toISOString(), viewportLianes?.sort().join(",")], async () => {
+    if (!viewportLianes) {
+      return undefined;
+    }
+
     const res = await services.liane.pickupLinks(props.pickup.id!, viewportLianes);
     // await services.liane.nearestLinks(props.pickup.location, 100, props.date);
     //console.debug("res", res, props.pickup.location);
