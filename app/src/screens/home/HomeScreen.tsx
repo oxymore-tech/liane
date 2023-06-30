@@ -281,6 +281,7 @@ const HomeMap = ({
 
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
+  const isPointState = state.matches("point");
 
   const detailStateData = useMemo(() => {
     if (!isDetailState) {
@@ -297,29 +298,34 @@ const HomeMap = ({
 
   // zoom to bbox when pickup is selected
   useEffect(() => {
-    appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"])?.then(features => {
-      if (!features) {
-        return;
-      }
-      const viewportFeatures = features?.features.map(f => f.properties);
-      const bboxesCoordinates: Polygon[] = viewportFeatures.filter(f => !!f!.bbox).map(f => JSON.parse(f!.bbox));
-
-      if (bboxesCoordinates.length > 0) {
-        const mergedBbox = envelope(featureCollection(bboxesCoordinates.map(p => feature(p))));
-        const bbox = getBoundingBox(mergedBbox.geometry.coordinates.flat(), 24);
-        console.debug("[MAP] moving to ", bbox, mergedBbox.bbox);
-        if (Number.isFinite(bbox.ne[0]) && Number.isFinite(bbox.ne[1]) && Number.isFinite(bbox.sw[0]) && Number.isFinite(bbox.sw[1])) {
-          setGeometryBbox(bbox);
-          /*appMapRef.current?.fitBounds(
-            { ...bbox, paddingTop: insetsTop + 210, paddingBottom: Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24) },
-            1000
-          );*/
-        } else {
-          console.warn("[MAP]: cannot fit infinite bounds");
+    if (!isPointState) {
+      return;
+    }
+    setTimeout(() => {
+      appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"])?.then(features => {
+        if (!features) {
+          return;
         }
-      }
-    });
-  }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime]);
+        const viewportFeatures = features?.features.map(f => f.properties);
+        const bboxesCoordinates: Polygon[] = viewportFeatures.filter(f => !!f!.bbox).map(f => JSON.parse(f!.bbox));
+
+        if (bboxesCoordinates.length > 0) {
+          const mergedBbox = envelope(featureCollection(bboxesCoordinates.map(p => feature(p))));
+          const bbox = getBoundingBox(mergedBbox.geometry.coordinates.flat(), 24);
+          console.debug("[MAP] moving to ", bbox, mergedBbox.bbox);
+          if (Number.isFinite(bbox.ne[0]) && Number.isFinite(bbox.ne[1]) && Number.isFinite(bbox.sw[0]) && Number.isFinite(bbox.sw[1])) {
+            setGeometryBbox(bbox);
+            /*appMapRef.current?.fitBounds(
+              { ...bbox, paddingTop: insetsTop + 210, paddingBottom: Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24) },
+              1000
+            );*/
+          } else {
+            console.warn("[MAP]: cannot fit infinite bounds");
+          }
+        }
+      });
+    }, 250);
+  }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime, isPointState]);
 
   const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
     console.debug("[MAP] zoom", payload.zoomLevel);

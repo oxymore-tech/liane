@@ -18,6 +18,9 @@ import { TilesUrl } from "@/api/http";
 import MarkerView = MapLibreGL.MarkerView;
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
+import Images = MapLibreGL.Images;
+const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
+const rp_icon = require("../../../assets/icons/rp_gray.png");
 
 MapLibreGL.setAccessToken(null);
 
@@ -158,11 +161,11 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
 
 export const LianeDisplayLayer2 = ({
   date = new Date(),
-
+  onSelect,
   pickupPoint
 }: {
   date?: Date;
-
+  onSelect?: (rp: RallyingPoint) => void;
   pickupPoint?: string | undefined;
 }) => {
   const dateArg =
@@ -180,9 +183,40 @@ export const LianeDisplayLayer2 = ({
     console.debug("[MAP]: tile source", dateArg, pickupPoint);
   }, [dateArg, pickupPoint]);
 
+  const controller = useContext<AppMapViewController>(MapControllerContext);
   const url = TilesUrl + (pickupPoint ? "/liane_display_filter" : "/liane_display") + dateArg + (pickupPoint ? "&pickup=" + pickupPoint : "");
   return (
-    <MapLibreGL.VectorSource id={"segments"} url={url} key={sourceId} maxZoomLevel={14}>
+    <MapLibreGL.VectorSource
+      id={"segments"}
+      url={url}
+      key={sourceId}
+      maxZoomLevel={14}
+      onPress={
+        onSelect
+          ? async f => {
+              const points = f.features.filter(feat => feat.geometry.type === "Point");
+              if (points.length > 0) {
+                const p = points[0];
+                console.debug("clc", p);
+                const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
+                const zoom = await controller.getZoom()!;
+
+                let newZoom;
+                if (zoom < 10.5) {
+                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+                } else if (zoom < 12) {
+                  newZoom = 12.1;
+                } else {
+                  newZoom = undefined;
+                }
+                await controller.setCenter(center, newZoom);
+
+                //@ts-ignore
+                onSelect({ ...p!.properties!, location: center });
+              }
+            }
+          : undefined
+      }>
       {pickupPoint && (
         <MapLibreGL.LineLayer
           belowLayerID="place"
@@ -211,30 +245,13 @@ export const LianeDisplayLayer2 = ({
           }}
         />
       )}
-      <MapLibreGL.CircleLayer
-        id="rp_circles_active"
-        minZoomLevel={8}
-        sourceLayerID={"rallying_point_display"}
-        style={{
-          circleColor: [
-            "case",
-            ["==", ["get", "point_type"], "pickup"],
-            AppColors.orange,
-            //["==", ["get", "point_type"], "suggestion"],
-            AppColors.blue
-            // mainColor
-          ],
-          circleRadius: ["step", ["zoom"], 5, 12, 10],
-          circleStrokeColor: AppColors.white,
-          circleStrokeWidth: ["step", ["zoom"], 1, 12, 2]
-        }}
-      />
 
       <MapLibreGL.SymbolLayer
-        id="rp_labels_active"
+        id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        minZoomLevel={12}
+        minZoomLevel={8}
         style={{
+          symbolSortKey: ["case", ["==", ["get", "point_type"], "pickup"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
           textColor: [
@@ -242,17 +259,20 @@ export const LianeDisplayLayer2 = ({
             ["==", ["get", "point_type"], "pickup"],
             AppColors.orange,
             //["==", ["get", "point_type"], "suggestion"],
-            AppColors.blue
+            "#000"
             //    mainColor
           ],
           textHaloColor: "#fff",
           textHaloWidth: 1.2,
-          textField: "{label}",
+          textField: ["step", ["zoom"], "", 12, ["get", "label"]],
           textAllowOverlap: false,
           textAnchor: "bottom",
-          textOffset: [0, -1.2],
+          textOffset: [0, -3],
           textMaxWidth: 5.4,
-          visibility: "visible"
+          visibility: "visible",
+          iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", "rp"],
+          iconAnchor: "bottom",
+          iconSize: ["step", ["zoom"], 0.75, 12, 1]
         }}
       />
     </MapLibreGL.VectorSource>
@@ -471,7 +491,6 @@ export const RallyingPointsDisplayLayer2 = ({
                 newZoom = undefined;
               }
               await controller.setCenter(center, newZoom);
-              const q = await controller.queryFeatures([f.coordinates.longitude, f.coordinates.latitude], undefined, ["lianeLayer"]);
 
               const linkedLianes = Object.fromEntries(
                 Object.entries(f.features[0]!.properties!)
@@ -711,6 +730,7 @@ const AppMapView = forwardRef(
             }
           }}
           rotateEnabled={false}
+          pitchEnabled={false}
           style={styles.map}
           {...MapStyleProps}
           logoEnabled={false}
@@ -755,6 +775,7 @@ const AppMapView = forwardRef(
             zoomLevel={10}
             ref={cameraRef}
           />
+          <Images images={{ pickup: rp_pickup_icon, rp: rp_icon }} />
 
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
         </MapLibreGL.MapView>
