@@ -71,45 +71,48 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var from = await rallyingPointService.Get(filter.From);
     var to = await rallyingPointService.Get(filter.To);
 
-  //  var targetRoute = Simplifier.Simplify(await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location), cancellationToken));
+    logger.LogDebug("Match lianes from '{From}' to '{To}' - '{TargetTime}'", from.Label, to.Label, filter.TargetTime);
     var targetRoute = await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location), cancellationToken);
     DateTime lowerBound, upperBound;
     if (filter.TargetTime.Direction == Direction.Departure)
     {
       lowerBound = filter.TargetTime.DateTime;
       upperBound = filter.TargetTime.DateTime.AddHours(LianeMatchPageDeltaInHours);
-    
     }
     else
     {
       lowerBound = filter.TargetTime.DateTime.AddHours(-LianeMatchPageDeltaInHours);
       upperBound = filter.TargetTime.DateTime;
     }
+
+    var timer = new Stopwatch();
+    timer.Start();
     var results = await postgisService.GetMatchingLianes(targetRoute, lowerBound, upperBound);
+    timer.Stop();
+    logger.LogDebug("Posgis match {count} lianes in {Elapsed} ms", results.Count, timer.ElapsedMilliseconds);
+
     var resultDict = results.GroupBy(r => r.Liane).ToDictionary(g => g.Key, g => g.ToImmutableList());
-    
+
     var isDriverSearch = Builders<LianeDb>.Filter.Eq(l => l.Driver.CanDrive, filter.AvailableSeats <= 0);
 
     var hasAvailableSeats = Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -filter.AvailableSeats);
 
     var userIsMember = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == currentContext.CurrentUser().Id);
 
-    var timer = new Stopwatch();
-    timer.Start();
-    var lianedb = Mongo.GetCollection<LianeDb>()
-        .Find(isDriverSearch & hasAvailableSeats & !userIsMember &  Builders<LianeDb>.Filter.In(l => l.Id, resultDict.Keys.Select(k => (string) k)))
-        .ToEnumerable().ToImmutableList();
-    timer.Stop();
-    logger.LogDebug("Find compatible liane by filter : {Elapsed}", timer.Elapsed);
     timer.Restart();
-    var lianes = await lianedb.SelectAsync(l => MatchLiane(l, filter, resultDict[l.Id], targetRoute.Coordinates.ToLatLng()), parallel: true);
+    var lianes = await Mongo.GetCollection<LianeDb>()
+      .Find(isDriverSearch & hasAvailableSeats & !userIsMember & Builders<LianeDb>.Filter.In(l => l.Id, resultDict.Keys.Select(k => (string)k)))
+      .ToListAsync(cancellationToken);
     timer.Stop();
-    logger.LogDebug("Computed compatible matches : {Elapsed}", timer.Elapsed);
-    
-    /*, cancellationToken: cancellationToken);*/
+    logger.LogDebug("Find {count} compatible liane by filter in {Elapsed} ms", lianes.Count, timer.ElapsedMilliseconds);
+
+    timer.Restart();
+    var matches = await lianes.SelectAsync(l => MatchLiane(l, filter, resultDict[l.Id], targetRoute.Coordinates.ToLatLng()), parallel: true);
+    timer.Stop();
+    logger.LogDebug("Computed {Count} compatible matches in {Elapsed} ms", matches.Count, timer.ElapsedMilliseconds);
 
     Cursor? nextCursor = null; //TODO
-    return new PaginatedResponse<LianeMatch>(lianes.Count, nextCursor, lianes
+    return new PaginatedResponse<LianeMatch>(matches.Count, nextCursor, matches
       .Where(l => l is not null)
       .Cast<LianeMatch>()
       .Order(new BestMatchComparer(from, to, filter.TargetTime))
@@ -452,15 +455,16 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       }, parallel: true);
     var destinations = links
       .Where(l => l.newWayPoints is not null)
-      .Select(l => (l.newWayPoints!.Last().RallyingPoint, pickupTime: l.lianeDb.DepartureTime + TimeSpan.FromSeconds(l.newWayPoints!.TakeUntilInclusive(w => w.RallyingPoint.Id == from.Id).TotalDuration())))
+      .Select(l => (l.newWayPoints!.Last().RallyingPoint,
+        pickupTime: l.lianeDb.DepartureTime + TimeSpan.FromSeconds(l.newWayPoints!.TakeUntilInclusive(w => w.RallyingPoint.Id == from.Id).TotalDuration())))
       .GroupBy(l => l.RallyingPoint);
 
-    return new List<ClosestPickups>{
-      new (from, destinations.Select(g => new RallyingPointLink(
+    return new List<ClosestPickups>
+    {
+      new(from, destinations.Select(g => new RallyingPointLink(
         g.Key,
         g.Select(item => item.pickupTime).Order().ToImmutableList())
       ).ToImmutableList())
-
     }.ToImmutableList();
   }
 
@@ -616,9 +620,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       // For filters on arrival types, filter here using trip duration
       return null;
     }
-    
+
     RallyingPoint? pickupPoint, depositPoint;
-    
+
     if (candidates.Find(c => c.Mode == MatchResultMode.Exact) is not null)
     {
       pickupPoint = await rallyingPointService.Get(filter.From);

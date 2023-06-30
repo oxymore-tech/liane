@@ -12,7 +12,17 @@ public enum Direction
 public record DepartureOrArrivalTime(
   DateTime DateTime,
   Direction Direction
-);
+)
+{
+  public override string ToString()
+  {
+    return Direction switch
+    {
+      Direction.Departure => $"Starting at {DateTime}",
+      _ => $"Arriving at {DateTime}"
+    };
+  }
+}
 
 public sealed record Filter(
   Ref<RallyingPoint> From,
