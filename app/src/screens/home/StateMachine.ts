@@ -260,7 +260,7 @@ export const HomeMapMachine = (services: {
             ],
             SELECT: {
               target: "#homeMap.match",
-              actions: ["selectRallyingPoint2", "cacheRecentTrip"]
+              actions: ["resetMatches", "selectRallyingPoint2", "cacheRecentTrip"]
             } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),

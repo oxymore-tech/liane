@@ -91,8 +91,8 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
-            onFetchingDisplay={setLoadingDisplay}
-            loading={loadingDisplay || loadingList}
+            // onFetchingDisplay={setLoadingDisplay}
+            // loading={loadingDisplay || loadingList}
           />
         </View>
         {state.matches("form") && (

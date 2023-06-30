@@ -81,7 +81,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     bbox.paddingLeft = 72;
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
-    console.log(bbox, bSheetTop);
+    //console.log(bbox, bSheetTop);
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
   return (

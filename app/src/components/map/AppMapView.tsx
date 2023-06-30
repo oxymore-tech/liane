@@ -200,17 +200,19 @@ export const LianeDisplayLayer2 = ({
                 const p = points[0];
                 console.debug("clc", p);
                 const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
-                const zoom = await controller.getZoom()!;
+                /*
+               const zoom = await controller.getZoom()!;
 
-                let newZoom;
-                if (zoom < 10.5) {
-                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
-                } else if (zoom < 12) {
-                  newZoom = 12.1;
-                } else {
-                  newZoom = undefined;
-                }
-                await controller.setCenter(center, newZoom);
+               /t newZoom;
+                 if (zoom < 10.5) {
+                   newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+                 } else if (zoom < 12) {
+                   newZoom = 12.1;
+                 } else {
+                   newZoom = undefined;
+                 }
+                 await controller.setCenter(center, newZoom);
+               */
 
                 //@ts-ignore
                 onSelect({ ...p!.properties!, location: center });
@@ -295,7 +297,6 @@ export const LianeDisplayLayer = ({
     return toFeatureCollection(segments, lianeDisplay?.lianes ?? []);
   }, [lianeDisplay]);
 */
-  console.log(lianeDisplay);
   const features = lianeDisplay || {
     type: "FeatureCollection",
     features: []
@@ -647,7 +648,7 @@ const AppMapView = forwardRef(
           const b = await mapRef.current?.getVisibleBounds()!;
           const ne = await mapRef.current?.getPointInView(b[0])!;
           const sw = await mapRef.current?.getPointInView(b[1])!;
-          console.log(ne, sw);
+          //console.log(ne, sw);
           return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
         }
       },
