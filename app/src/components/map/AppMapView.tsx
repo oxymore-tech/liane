@@ -187,6 +187,7 @@ export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date
       url={url}
       key={sourceId}
       maxZoomLevel={14}
+      hitbox={{ width: 64, height: 64 }}
       onPress={
         onSelect
           ? async f => {
@@ -288,12 +289,13 @@ export const PickupDestinationsDisplayLayer = ({
       url={url}
       key={sourceId}
       maxZoomLevel={14}
+      hitbox={{ width: 64, height: 64 }}
       onPress={
         onSelect
           ? async f => {
               console.debug(JSON.stringify(f));
               // @ts-ignore
-              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry.type === "Point");
+              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
 
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1) {
@@ -334,7 +336,7 @@ export const PickupDestinationsDisplayLayer = ({
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        filter={["!=", ["get", "id"], pickupPoint]}
+        filter={["all", ["!=", ["get", "id"], pickupPoint]]}
         minZoomLevel={8}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],

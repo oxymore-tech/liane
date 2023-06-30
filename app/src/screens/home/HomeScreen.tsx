@@ -290,7 +290,6 @@ const HomeMap = ({
 
   // zoom to bbox when pickup is selected
   const [shouldFitBounds, setShouldFitBounds] = useState(false);
-  const [movingDisplay, setMovingDisplay] = useState(false);
   useEffect(() => {
     if (!isPointState) {
       return;
@@ -323,6 +322,9 @@ const HomeMap = ({
             } else {
               console.warn("[MAP]: cannot fit infinite bounds");
             }
+          } else {
+            console.debug("[MAP] found", 0, "features");
+            featureSubject?.next([]);
           }
         });
       } else {
@@ -342,11 +344,9 @@ const HomeMap = ({
       onRegionChanged={onRegionChanged}
       onStopMovingRegion={() => {
         onMovingStateChanged(false);
-        setMovingDisplay(false);
       }}
       onStartMovingRegion={() => {
         onMovingStateChanged(true);
-        setMovingDisplay(true);
       }}
       ref={appMapRef}
       onSelectFeatures={features => {
@@ -387,7 +387,7 @@ const HomeMap = ({
         />
       )}
       {isMatchState && <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} />}
-      {isMatchState && state.matches({ match: "idle" }) && state.context.matches!.length === 0 && (
+      {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
         <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
       )}
       {isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />}
@@ -429,19 +429,6 @@ const HomeScreen = () => {
         match: ctx => services.liane.match2(getSearchFilter(ctx.filter)),
         cacheRecentTrip: trip => services.location.cacheRecentTrip(trip).catch(e => console.error(e)),
         cacheRecentPoint: rp => services.location.cacheRecentLocation(rp).catch(e => console.error(e))
-        /*display: async ctx => {
-          if (!ctx.mapDisplay.displayBounds) {
-            return undefined;
-          }
-          const a = ctx.mapDisplay.displayBounds.to.lng - ctx.mapDisplay.displayBounds.from.lng;
-          const b = ctx.mapDisplay.displayBounds.to.lat - ctx.mapDisplay.displayBounds.from.lat;
-          if (a * a + b * b > 4) {
-            // Area is too big
-            return undefined;
-          }
-
-          return services.liane.display(ctx.mapDisplay.displayBounds.from, ctx.mapDisplay.displayBounds.to, ctx.filter?.targetTime?.dateTime);
-        }*/
       },
       observables: {
         displaySubject

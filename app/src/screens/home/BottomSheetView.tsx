@@ -1,8 +1,8 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { Exact, getPoint, Liane, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
+import { Exact, getPoint, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip } from "@/components/trip/trip";
@@ -20,7 +20,6 @@ import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { useQuery } from "react-query";
-import { getCenter } from "@/api/geo";
 
 import { capitalize } from "@/util/strings";
 import { Observable } from "rxjs";
@@ -58,114 +57,6 @@ const ErrorView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center", color: "red" }]}>{props.message}</AppText>
 );
 
-/*
-{"mairie:65382": {"hours": ["2023-04-15T07:30:37.276Z"], "pickup": {"address": "Le Village", "city": "Sacoué", "id": "mairie:65382", "isActive": true, "label": "Mairie de Sacoué", "location": [Object], "placeCount": null, "type": "TownHall", "zipCode": "65370"}}}
- */
-
-export const LianeNearestLinks = () => {
-  const { services } = useContext(AppContext);
-  const machine = useContext(HomeMapContext);
-  const [state] = useActor(machine);
-  const { navigation } = useAppNavigation();
-
-  const mapCenter = state.context.mapDisplay.displayBounds ? getCenter(state.context.mapDisplay.displayBounds) : undefined;
-  //console.debug(["getClosestRP", mapCenter, state.context.filter.availableSeats, state.context.filter.targetTime?.dateTime.toISOString()]);
-  const closestRallyingPointQuery = useQuery(["getClosestRP", mapCenter], () => services.rallyingPoint.snap(mapCenter!), {
-    enabled: !!mapCenter
-  });
-
-  const nearestLinksQuery = useQuery(
-    [
-      "getNearestLinks",
-      closestRallyingPointQuery.data?.id,
-      // TODO ? :  state.context.filter.availableSeats,
-      state.context.filter.targetTime?.dateTime.toISOString()
-    ],
-    () => services.liane.nearestLinks(closestRallyingPointQuery.data!.location, 10000, state.context.filter.targetTime?.dateTime),
-    {
-      enabled: !!closestRallyingPointQuery.data
-    }
-  );
-  const sectionData = useMemo(
-    () => (nearestLinksQuery?.data || []).slice(0, Math.min(10, nearestLinksQuery.data?.length || 0)),
-    [nearestLinksQuery?.data]
-  );
-
-  if (!nearestLinksQuery.data) {
-    return <ActivityIndicator />;
-  }
-
-  const renderItem = ({ item: section }) => {
-    if (!section.pickup) {
-      console.warn("undefined pickup:", section);
-    }
-    return (
-      <Column key={section.pickup.id!} style={{ marginBottom: 16 }}>
-        <Row style={{ justifyContent: "flex-start", paddingHorizontal: 16, flex: 1 }}>
-          <View style={{ backgroundColor: AppColorPalettes.orange[500], borderRadius: 16, paddingHorizontal: 8, paddingVertical: 4 }}>
-            <AppText style={{ color: AppColors.white, fontWeight: "bold", flexShrink: 1 }}>{section.pickup.label}</AppText>
-          </View>
-        </Row>
-        {section.destinations.map(item => {
-          return (
-            <LianeDestinationView
-              key={item.deposit.id!}
-              onPress={() => {
-                machine.send([{ type: "UPDATE", data: { from: section.pickup, to: item.deposit } }, { type: "FORM" }]);
-              }}
-              item={item}
-            />
-          );
-        })}
-      </Column>
-    );
-  };
-  //console.debug("n", nearestLinksQuery.data?.length);
-  if (nearestLinksQuery.data.length === 0) {
-    return (
-      <Column>
-        <EmptyResultView message={"Aucun trajet dans cette zone."} />
-        {
-          <Center style={{ paddingVertical: 8 }}>
-            <AppRoundedButton
-              backgroundColor={AppColors.orange}
-              text={"Proposer un trajet"}
-              onPress={() => {
-                navigation.navigate("Publish", {});
-              }}
-            />
-          </Center>
-        }
-      </Column>
-    );
-  }
-  return (
-    /* <AppBottomSheetSectionList
-      stickySectionHeadersEnabled={false}
-      sections={sectionData}
-      renderSectionHeader={renderSectionHeader}
-      renderItem={renderItem}
-      renderSectionFooter={() => <View style={{ height: 16 }} />}
-    />*/
-    <AppBottomSheetFlatList data={sectionData} renderItem={renderItem} />
-  );
-
-  /*
-  return (
-    <Column spacing={8} style={{ flex: 1 }}>
-      {nearestLinksQuery.data.length === 0 && <EmptyResultView />}
-      <SectionList
-        keyExtractor={(i, index) => [i.deposit.id!, index].join(" ")}
-        renderSectionHeader={renderSectionHeader}
-        renderSectionFooter={() => {
-          return <View style={{ height: 16 }} />;
-        }}
-        renderItem={renderItem}
-        sections={sectionData}
-      />
-    </Column>
-  );*/
-};
 export const LianeDestinations = (props: {
   pickup: RallyingPoint;
   date: Date | undefined;
@@ -176,7 +67,6 @@ export const LianeDestinations = (props: {
   const { navigation } = useAppNavigation();
 
   const features = useObservable(props.mapFeatureObservable, undefined);
-  console.log("[LINKS]", features?.length || 0, "found");
 
   const viewportLianes = features ? [...new Set<string>(features.map(f => f.properties!.id))] : undefined;
   const {
@@ -189,8 +79,7 @@ export const LianeDestinations = (props: {
     }
 
     const res = await services.liane.pickupLinks(props.pickup.id!, viewportLianes);
-    // await services.liane.nearestLinks(props.pickup.location, 100, props.date);
-    //console.debug("res", res, props.pickup.location);
+
     const index = res.findIndex(p => p.pickup.id === props.pickup.id);
     if (index < 0) {
       return [];
@@ -352,62 +241,6 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
         renderItem={renderItem}
       />
     </Column>
-  );
-};
-
-/*
-export const LianeListView = (props: { lianeList: Liane[] | undefined }) => {
-  const displayedLianes = props.lianeList ?? [];
-  const { send } = useContext(HomeMapContext);
-  return (
-    <Column spacing={8}>
-      {displayedLianes.length > 0 && (
-        <AppText style={{ paddingHorizontal: 24, fontWeight: "bold" }}>
-          {displayedLianes.length} résultat{displayedLianes.length > 1 ? "s" : ""}
-        </AppText>
-      )}
-      {displayedLianes.length === 0 && <EmptyResultView />}
-      <FlatList
-        data={displayedLianes}
-        keyExtractor={i => i.id!}
-        renderItem={({ item }) =>
-          renderLianeOverview(item, args => {
-            send("DETAIL", { data: args });
-            //navigation.navigate("LianeMatchDetail", y);
-          })
-        }
-      />
-    </Column>
-  );
-};
-*/
-const renderLianeOverview = (liane: Liane, onSelect: (lianeMatch: LianeMatch) => void) => {
-  const freeSeatsCount = liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0);
-
-  return (
-    <AppPressableOverlay
-      foregroundColor={WithAlpha(AppColors.black, 0.1)}
-      style={{ paddingHorizontal: 24, paddingVertical: 8 }}
-      onPress={() => {
-        onSelect({
-          liane,
-          match: {
-            type: "Exact",
-            pickup: liane.wayPoints[0].rallyingPoint.id!,
-            deposit: liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id!
-          },
-          freeSeatsCount
-        }); // TODO freeseat = -1 ?
-      }}>
-      <TripSegmentView
-        departureTime={liane.departureTime}
-        arrivalTime={liane.wayPoints[liane.wayPoints.length - 1].eta}
-        duration={getTotalDuration(liane.wayPoints)}
-        from={liane.wayPoints[0].rallyingPoint}
-        to={liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint}
-        freeSeatsCount={freeSeatsCount}
-      />
-    </AppPressableOverlay>
   );
 };
 
