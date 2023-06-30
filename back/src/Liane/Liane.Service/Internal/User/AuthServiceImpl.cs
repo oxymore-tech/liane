@@ -53,8 +53,6 @@ public sealed class AuthServiceImpl : IAuthService
       throw new ArgumentException("Invalid phone number");
     }
 
-    logger.LogDebug("start send sms ");
-
     if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
     {
       var phoneNumber = phone.ToPhoneNumber();
