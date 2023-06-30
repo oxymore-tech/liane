@@ -49,7 +49,7 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private async Task UpdateCanceledLianes(DateTime from, DateTime to)
   {
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive) && l.Geometry != null)
+    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive))
                  & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= to);
     var canceled = (await mongo.GetCollection<LianeDb>()
         .Find(filter)
@@ -59,8 +59,7 @@ public sealed class LianeStatusUpdate : CronJobService
 
     await mongo.GetCollection<LianeDb>()
       .UpdateManyAsync(l => canceled.Contains(l.Id),
-        Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled)
-          .Set(l => l.Geometry, null));
+        Builders<LianeDb>.Update.Set(l => l.State, LianeState.Canceled));
 
     await postgisService.Clear(canceled.ToImmutableList());
   }
@@ -90,8 +89,7 @@ public sealed class LianeStatusUpdate : CronJobService
       .BulkWriteAsync(finishedLianes
         .Select(liane => new UpdateOneModel<LianeDb>(
           Builders<LianeDb>.Filter.Where(l => l.Id == liane.Id),
-          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Finished)
-            .Set(l => l.Geometry, null))
+          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Finished))
         ));
 
     await postgisService.Clear(finishedLianes.Select(l => l.Id).ToImmutableList());
@@ -117,9 +115,10 @@ public sealed class LianeStatusUpdate : CronJobService
     {
       if (liane.State == LianeState.NotStarted && liane.DepartureTime < to)
       {
-        var update = Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)
-          .Set(l => l.Geometry, null);
-        lianeUpdates.Add(new UpdateOneModel<LianeDb>(Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id), update));
+        lianeUpdates.Add(new UpdateOneModel<LianeDb>(
+          Builders<LianeDb>.Filter.Eq(l => l.Id, liane.Id),
+          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)
+        ));
       }
 
       foreach (var wayPoint in liane.WayPoints.Where(w => w.Eta > from && w.Eta <= to))

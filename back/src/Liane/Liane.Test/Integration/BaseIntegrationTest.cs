@@ -13,7 +13,6 @@ using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
-using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -102,7 +101,8 @@ public abstract class BaseIntegrationTest
     services.AddEventListeners();
     
     var databaseSettings = GetDatabaseSettings();
-    services.AddSingleton(sp => PostgisFactory.CreateForTest(databaseSettings));
+    var postgisDatabase = await PostgisFactory.CreateForTest(databaseSettings);
+    services.AddService(postgisDatabase);
     services.AddService(databaseSettings);
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
@@ -116,7 +116,6 @@ public abstract class BaseIntegrationTest
     mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
     MongoFactory.InitSchema(mongo);
     // Init postgis
-    var postgisDatabase = ServiceProvider.GetRequiredService<PostgisDatabase>();
     var postgis = ServiceProvider.GetRequiredService<PostgisServiceImpl>();
     await PostgisFactory.UpdateSchema(postgisDatabase, true);
 
@@ -127,7 +126,6 @@ public abstract class BaseIntegrationTest
     await mongo.GetCollection<DbUser>().InsertManyAsync(Fakers.FakeDbUsers);
     await mongo.GetCollection<RallyingPoint>().InsertManyAsync(LabeledPositions.RallyingPoints);
     await postgis.InsertRallyingPoints(LabeledPositions.RallyingPoints);
-
   }
 
   protected virtual void SetupServices(IServiceCollection services)
@@ -139,19 +137,21 @@ public abstract class BaseIntegrationTest
   protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(params RallyingPoint[] testedPoints)
   {
     var geoJson = new List<GeoJsonFeature<GeoJson2DGeographicCoordinates>>();
-
-    var geometries = await mongo.GetCollection<LianeDb>()
-      .Find(FilterDefinition<LianeDb>.Empty)
-      .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
-      .ToListAsync();
+    //
+    // var postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
+    // var geometries = await mongo.GetCollection<LianeDb>()
+    //   .Find(FilterDefinition<LianeDb>.Empty)
+    //   .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
+    //   .ToListAsync();
+    //
+    // postgisService.
 
     var points = await mongo.GetCollection<RallyingPoint>()
       .Find(FilterDefinition<RallyingPoint>.Empty)
       .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
       .ToListAsync();
 
-
-    geoJson.AddRange(geometries);
+    // geoJson.AddRange(geometries);
     geoJson.AddRange(points);
 
     if (testedPoints.Length > 0)

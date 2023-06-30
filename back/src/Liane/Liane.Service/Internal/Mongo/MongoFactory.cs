@@ -6,7 +6,6 @@ using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Mongo.Serialization;
-using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -95,8 +94,6 @@ public static class MongoFactory
 
   public static void InitSchema(IMongoDatabase db)
   {
-    CreateIndex(db, "geometry_index", Builders<LianeDb>.IndexKeys.Geo2DSphere(l => l.Geometry));
-
     CreateIndex(db, "created_at_index", Builders<DbChatMessage>.IndexKeys.Descending(l => l.CreatedAt));
 
     db.GetCollection<DbUser>()

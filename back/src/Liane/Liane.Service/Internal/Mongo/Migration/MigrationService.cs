@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Liane.Api.Trip;
 using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -9,7 +8,7 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 7;
+  private const int Version = 8;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
@@ -22,8 +21,10 @@ public sealed class MigrationService
 
   private async Task Migrate()
   {
+    await db.GetCollection<LianeDb>().Indexes
+      .DropOneAsync("geometry_index");
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(l => l.Geometry != null && (l.State == LianeState.Finished || l.State == LianeState.Canceled), Builders<LianeDb>.Update.Set(g => g.Geometry, null));
+      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("Geometry"));
   }
 
   public async Task Execute()

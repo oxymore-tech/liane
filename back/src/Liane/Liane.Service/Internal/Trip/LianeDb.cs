@@ -7,7 +7,6 @@ using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -31,7 +30,6 @@ public sealed record LianeDb(
   LianeState State,
   ImmutableList<WayPointDb> WayPoints,
   ImmutableList<UserPing> Pings,
-  GeoJsonLineString<GeoJson2DGeographicCoordinates>? Geometry,
   Ref<ConversationGroup>? Conversation
 ) : IEntity, ISharedResource<LianeMember>
 {

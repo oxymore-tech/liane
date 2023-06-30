@@ -51,7 +51,7 @@ public sealed class PostgisUpdateService
     var segments = new List<SegmentDb>();
 
     var lianeDbs = await mongo.GetCollection<LianeDb>()
-      .Find(l => l.Geometry != null && !input.Lianes.Contains(l.Id))
+      .Find(l => l.State == LianeState.NotStarted && !input.Lianes.Contains(l.Id))
       .ToListAsync();
 
     logger.LogInformation("Start adding {lianes} lianes into postgis", lianeDbs.Count);

@@ -7,9 +7,8 @@ using Npgsql;
 
 namespace Liane.Service.Internal.Postgis;
 
-public class PostgisFactory
+public sealed class PostgisFactory
 {
-
   public static async Task UpdateSchema(PostgisDatabase db, bool clearAll = false)
   {
     var assembly = typeof(PostgisUpdateService).Assembly;
@@ -36,9 +35,8 @@ public class PostgisFactory
 
     tx.Commit();
   }
-  
-  
-  public static PostgisDatabase CreateForTest(DatabaseSettings settings)
+
+  public static async Task<PostgisDatabase> CreateForTest(DatabaseSettings settings)
   {
     var connectionString = new NpgsqlConnectionStringBuilder
     {
@@ -52,19 +50,19 @@ public class PostgisFactory
     var connection = new NpgsqlConnection(connectionString);
     connection.Open();
 
-    var exists = (bool)(connection.QueryFirst("SELECT exists(SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower(@db));", new { db = settings.Db }).exists);
+    var exists = (bool)((await connection.QueryFirstAsync("SELECT exists(SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower(@db));", new { db = settings.Db })).exists);
     if (!exists)
     {
       var createCommand = new NpgsqlCommand($"CREATE DATABASE {settings.Db} WITH OWNER {settings.Username};", connection);
-      createCommand.ExecuteNonQuery();
+      await createCommand.ExecuteNonQueryAsync();
     }
 
-    connection.Close();
+    await connection.CloseAsync();
 
     var db = new PostgisDatabase(settings);
 
     var databaseConnection = db.NewConnection();
-    databaseConnection.Execute("CREATE EXTENSION IF NOT EXISTS postgis;");
+    await databaseConnection.ExecuteAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
     databaseConnection.Close();
 
     return db;

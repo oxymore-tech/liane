@@ -9,7 +9,6 @@ using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Mock;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
@@ -83,23 +82,12 @@ public sealed class LianeController : ControllerBase
     return NoContent();
   }
 
-  [HttpGet("display")] // Rename to filter ? + return FeatureCollection instead of Segments ?
-  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after, CancellationToken cancellationToken)
-  {
-    var from = new LatLng(lat, lng);
-    var to = new LatLng(lat2, lng2);
-    var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return await lianeService.Display(from, to, dateTime, cancellationToken: cancellationToken);
-  }
-
   [HttpGet("display/geojson")]
-  public async Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after, CancellationToken cancellationToken)
+  public Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after,
+    CancellationToken cancellationToken)
   {
-    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-    var from = new LatLng(lat, lng);
-    var to = new LatLng(lat2, lng2);
-    var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-    return await lianeService.DisplayGeoJson(from, to, dateTime, cancellationToken);
+    //TODO remove
+    return Task.FromResult(new FeatureCollection());
   }
 
   [HttpPost("match")]
@@ -116,19 +104,9 @@ public sealed class LianeController : ControllerBase
     return lianeService.MatchWithDisplay(filter, pagination, cancellationToken);
   }
 
-  [HttpGet("links")]
-  public async Task<ImmutableList<ClosestPickups>> GetNear([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] int? radius, [FromQuery] long? after = null)
-  {
-    var dateTime = after is null ? DateTime.Now : DateTimeOffset.FromUnixTimeMilliseconds(after.Value).UtcDateTime;
-
-    var from = new LatLng(lat!.Value, lng!.Value);
-    return await lianeService.GetNearestLinks(from, dateTime, radius ?? 30_000);
-  }
-
   [HttpPost("links")]
   public async Task<ImmutableList<ClosestPickups>> GetNear([FromBody] LinkFilterPayload payload)
   {
-
     return await lianeService.GetPickupLinks(payload);
   }
 
