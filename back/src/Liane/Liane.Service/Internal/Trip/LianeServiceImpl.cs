@@ -97,7 +97,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var lianedb = Mongo.GetCollection<LianeDb>()
         .Find(isDriverSearch & hasAvailableSeats & !userIsMember &  Builders<LianeDb>.Filter.In(l => l.Id, resultDict.Keys.Select(k => (string) k)))
         .ToEnumerable().ToImmutableList();
-    var lianes = await lianedb.SelectAsync(l => MatchLiane(l, filter, resultDict[l.Id], targetRoute.Coordinates.ToLatLng()));
+    var lianes = await lianedb.SelectAsync(l => MatchLiane(l, filter, resultDict[l.Id], targetRoute.Coordinates.ToLatLng()), parallel: true);
     
     
     /*, cancellationToken: cancellationToken);*/
