@@ -165,13 +165,44 @@ BEGIN
                          group by id, label, location, type, address, zip_code, city, place_count),
        suggestion_points as (select clipped_points.*, string_agg(clipped_links.liane_id, ',') as liane_ids
                              from clipped_links
-                                    inner join clipped_points on
+                                    inner join (select * from clipped_points except select id, label, location, type, address, zip_code, city, place_count from pickup_points) as clipped_points on
                                    clipped_links.from_id != clipped_points.id and
                                    clipped_links.to_id != clipped_points.id and
                                    st_dwithin(clipped_points.location::geography, clipped_links.geom::geography,
                                               case when z <= 10 then 200 else 500 end)
                              where z >= 10
                              group by id, label, location, type, address, zip_code, city, place_count),
+       other_points as (select id,
+                               label,
+                               location,
+                               type,
+                               address,
+                               zip_code,
+                               city,
+                               place_count
+                        from clipped_points
+                        where z >= 12
+                        except
+                        select id,
+                               label,
+                               location,
+                               type,
+                               address,
+                               zip_code,
+                               city,
+                               place_count
+                        from pickup_points
+                        except
+                        select id,
+                               label,
+                               location,
+                               type,
+                               address,
+                               zip_code,
+                               city,
+                               place_count
+                        from suggestion_points),
+
        all_points as (select id,
                              label,
                              location,
@@ -180,17 +211,36 @@ BEGIN
                              zip_code,
                              city,
                              place_count,
-                             case
-                               when 'pickup' = any (array_agg(mode)) then 'pickup'
-                               else 'suggestion' end      as point_type,
-                             string_agg(pickups, ',')     as pickups,
-                             string_agg(suggestions, ',') as suggestions
-                      from (select *, 'pickup' as mode, liane_ids as pickups, null as suggestions
-                            from pickup_points
-                            union
-                            select *, 'suggestion' as mode, null as pickups, liane_ids as suggestions
-                            from suggestion_points) as ls
-                      group by id, label, location, type, address, zip_code, city, place_count),
+                             'pickup'  as point_type,
+                             liane_ids as pickups,
+                             null      as suggestions
+                      from pickup_points
+                      union
+                      select id,
+                             label,
+                             location,
+                             type,
+                             address,
+                             zip_code,
+                             city,
+                             place_count,
+                             'suggestion' as point_type,
+                             null         as pickups,
+                             liane_ids    as suggestions
+                      from suggestion_points
+                      union
+                      select id,
+                             label,
+                             location,
+                             type,
+                             address,
+                             zip_code,
+                             city,
+                             place_count,
+                             'active' as point_type,
+                             null     as pickups,
+                             null     as suggestions
+                      from other_points),
        cut_segments as (select liane_id,
                                from_id,
                                to_id,
@@ -227,6 +277,11 @@ BEGIN
                                       4096, 64, true) AS location,
                                     id,
                                     label,
+                                    type,
+                                    address,
+                                    zip_code,
+                                    city,
+                                    place_count,
                                     point_type,
                                     pickups,
                                     suggestions
@@ -315,7 +370,7 @@ BEGIN
                               from longest_lianes
                               where st_dwithin(geometry::geography, from_location::geography, 500)
                                 and length > min_length) as sub
-                          where st_length(geom) > 500),
+                        where st_length(geom::geography) > 500),
        clipped_points as (select id,
                                  label,
                                  location,
@@ -336,14 +391,37 @@ BEGIN
                              where st_distancesphere(from_location, location) > 500
 
                              group by id, label, location, type, address, zip_code, city, place_count),
-
-
+       other_points as (select id,
+                               label,
+                               location,
+                               type,
+                               address,
+                               zip_code,
+                               city,
+                               place_count
+                        from clipped_points
+                        where z >= 12
+                        except
+                        select id,
+                               label,
+                               location,
+                               type,
+                               address,
+                               zip_code,
+                               city,
+                               place_count
+                        from suggestion_points),
+       all_points as (select *, 'suggestion' as point_type
+                      from suggestion_points
+                      union
+                      select *, null as liane_ids, 'active' as point_type
+                      from other_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
                                      st_transform(geom, 3857),
                                      ST_TileEnvelope(z, x, y),
-                                     4096, 64, true) AS geom,
-                                   liane_id          as id,
+                                     4096, 64, true)  AS geom,
+                                   liane_id           as id,
                                    st_asgeojson(bbox) as bbox
                             FROM lianes_parts) as x
                       where geom is not null),
@@ -354,9 +432,14 @@ BEGIN
                                       4096, 64, true) AS location,
                                     id,
                                     label,
+                                    type,
+                                    address,
+                                    zip_code,
+                                    city,
+                                    place_count,
                                     liane_ids         as lianes,
-                                    'suggestion'      as point_type
-                             from suggestion_points) as x
+                                    point_type
+                             from all_points) as x
                        where location is not null)
   SELECT INTO mvt points_tile.tile || liane_tile.tile
   from points_tile,
@@ -482,10 +565,10 @@ with filtered_lianes as (select *
                                       and l_end - l_start > 0.2),
      filtered_partial_candidates as (select liane_id,
                                             st_lineinterpolatepoint(geometry, l_start) as pickup,
-                                            st_lineinterpolatepoint(geometry, l_end) as deposit,
+                                            st_lineinterpolatepoint(geometry, l_end)   as deposit,
                                             l_start,
                                             l_end,
-                                            'partial' as mode
+                                            'partial'                                  as mode
                                      from (select liane_id, geometry, min(least(l_start, l_end)) as l_start, max(greatest(l_start, l_end)) as l_end
                                            from (select *,
                                                         st_linelocatepoint(geometry, st_startpoint(intersections)) as l_start,
