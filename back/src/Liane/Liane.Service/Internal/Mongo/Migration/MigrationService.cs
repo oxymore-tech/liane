@@ -21,8 +21,6 @@ public sealed class MigrationService
 
   private async Task Migrate()
   {
-    await db.GetCollection<LianeDb>().Indexes
-      .DropOneAsync("geometry_index");
     await db.GetCollection<LianeDb>()
       .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("geometry"));
   }
