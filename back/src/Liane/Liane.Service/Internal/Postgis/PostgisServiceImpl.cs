@@ -72,7 +72,7 @@ public sealed class PostgisServiceImpl : IPostgisService
   public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to)
   {
     using var connection = db.NewConnection();
-    var results = await connection.QueryAsync("SELECT liane_id, st_AsGeoJSON(pickup) as pickup, st_AsGeoJSON(deposit) as deposit, l_start, l_end, mode FROM match_liane(@route::geometry(LineString, 4326), @from, @to)", new {from, to, route = targetRoute.Coordinates.ToLineString()});
+    var results = await connection.QueryAsync("SELECT liane_id, st_AsGeoJSON(pickup) as pickup, st_AsGeoJSON(deposit) as deposit, l_start, l_end, mode FROM match_liane(@route::geometry(LineString, 4326), @from::timestamp, @to::timestamp)", new {from, to, route = targetRoute.Coordinates.ToLineString()});
     var candidates = results.Select(r =>
     {
       var dict = (r as IDictionary<string, object>)!;
