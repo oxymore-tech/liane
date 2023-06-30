@@ -296,8 +296,12 @@ const HomeMap = ({
     }
     setShouldFitBounds(true);
     featureSubject?.next(undefined);
-    //TODO
-    appMapRef.current?.getZoom()?.then(zoom => appMapRef.current?.setCenter(state.context.filter.from!.location, zoom));
+    // Trigger rerender to make sure features are loaded on the map when queried
+    appMapRef.current?.getZoom()?.then(zoom => {
+      appMapRef.current?.getCenter()?.then(center => {
+        appMapRef.current?.setCenter({ lat: center[1], lng: center[0] }, zoom + 0.01, 0); //state.context.filter.from!.location
+      });
+    });
   }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime, isPointState]);
 
   const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {

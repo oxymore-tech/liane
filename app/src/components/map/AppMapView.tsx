@@ -37,7 +37,7 @@ Logger.setLogCallback(log => {
 });
 
 export interface AppMapViewController {
-  setCenter: (position: LatLng, zoom?: number) => Promise<void> | undefined;
+  setCenter: (position: LatLng, zoom?: number, duration?: number) => Promise<void> | undefined;
 
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
 
@@ -600,8 +600,7 @@ const AppMapView = forwardRef(
 
     const controller: AppMapViewController = {
       getCenter: () => mapRef.current?.getCenter(),
-      setCenter: (p: LatLng, zoom?: number) => {
-        const duration = 350;
+      setCenter: (p: LatLng, zoom?: number, duration = 350) => {
         cameraRef.current?.setCamera({
           centerCoordinate: [p.lng, p.lat],
           zoomLevel: zoom,
