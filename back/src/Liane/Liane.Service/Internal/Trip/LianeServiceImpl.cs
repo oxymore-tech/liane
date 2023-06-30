@@ -94,11 +94,17 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     var userIsMember = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == currentContext.CurrentUser().Id);
 
+    var timer = new Stopwatch();
+    timer.Start();
     var lianedb = Mongo.GetCollection<LianeDb>()
         .Find(isDriverSearch & hasAvailableSeats & !userIsMember &  Builders<LianeDb>.Filter.In(l => l.Id, resultDict.Keys.Select(k => (string) k)))
         .ToEnumerable().ToImmutableList();
+    timer.Stop();
+    logger.LogDebug("Find compatible liane by filter : {Elapsed}", timer.Elapsed);
+    timer.Restart();
     var lianes = await lianedb.SelectAsync(l => MatchLiane(l, filter, resultDict[l.Id], targetRoute.Coordinates.ToLatLng()), parallel: true);
-    
+    timer.Stop();
+    logger.LogDebug("Computed compatible matches : {Elapsed}", timer.Elapsed);
     
     /*, cancellationToken: cancellationToken);*/
 
