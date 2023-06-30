@@ -41,29 +41,25 @@ public sealed class PostgisFactory
     var connectionString = new NpgsqlConnectionStringBuilder
     {
       Host = settings.Host,
-      Port = settings.Port,
       Username = settings.Username,
       Password = settings.Password,
       IncludeErrorDetail = true,
       Database = "postgres"
     }.ConnectionString;
-    var connection = new NpgsqlConnection(connectionString);
+    await using var connection = new NpgsqlConnection(connectionString);
     connection.Open();
 
-    var exists = (bool)((await connection.QueryFirstAsync("SELECT exists(SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower(@db));", new { db = settings.Db })).exists);
+    var exists = (bool)(await connection.QueryFirstAsync("SELECT exists(SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower(@db));", new { db = settings.Db })).exists;
     if (!exists)
     {
       var createCommand = new NpgsqlCommand($"CREATE DATABASE {settings.Db} WITH OWNER {settings.Username};", connection);
       await createCommand.ExecuteNonQueryAsync();
     }
 
-    await connection.CloseAsync();
-
     var db = new PostgisDatabase(settings);
 
-    var databaseConnection = db.NewConnection();
+    using var databaseConnection = db.NewConnection();
     await databaseConnection.ExecuteAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
-    databaseConnection.Close();
 
     return db;
   }

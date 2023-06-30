@@ -29,7 +29,6 @@ public sealed class PostgisDatabase
     {
       Database = settings.Db,
       Host = settings.Host,
-      Port = settings.Port,
       Username = settings.Username,
       Password = settings.Password,
       IncludeErrorDetail = true

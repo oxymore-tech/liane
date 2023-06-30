@@ -176,8 +176,7 @@ public abstract class BaseIntegrationTest
   private static DatabaseSettings GetDatabaseSettings()
   {
     var host = Environment.GetEnvironmentVariable("POSTGIS_HOST") ?? "localhost";
-    var port = Environment.GetEnvironmentVariable("POSTGIS_HOST") is null ? 5433 : 5432;
-    return new DatabaseSettings(host, port, "liane_test", "mongoadmin", "secret");
+    return new DatabaseSettings(host, "liane_test", "mongoadmin", "secret");
   }
 
   private static OsrmClient GetOsrmClient()
