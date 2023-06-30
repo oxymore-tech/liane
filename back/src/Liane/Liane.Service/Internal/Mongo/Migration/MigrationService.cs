@@ -8,7 +8,7 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 8;
+  private const int Version = 9;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
@@ -24,7 +24,7 @@ public sealed class MigrationService
     await db.GetCollection<LianeDb>().Indexes
       .DropOneAsync("geometry_index");
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("Geometry"));
+      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("geometry"));
   }
 
   public async Task Execute()
