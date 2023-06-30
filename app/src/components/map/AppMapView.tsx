@@ -194,6 +194,7 @@ export const LianeDisplayLayer2 = ({
       onPress={
         onSelect
           ? async f => {
+              console.debug(JSON.stringify(f));
               const points = f.features.filter(feat => feat.geometry.type === "Point");
               if (points.length > 0) {
                 const p = points[0];
@@ -249,6 +250,7 @@ export const LianeDisplayLayer2 = ({
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
+        filter={pickupPoint ? ["!=", ["get", "id"], pickupPoint] : undefined}
         minZoomLevel={8}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "pickup"], 0, 1],
