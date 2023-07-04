@@ -19,6 +19,8 @@ import MarkerView = MapLibreGL.MarkerView;
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
 import Images = MapLibreGL.Images;
+import UserLocation = MapLibreGL.UserLocation;
+import distance from "@turf/distance";
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
@@ -638,6 +640,15 @@ const AppMapView = forwardRef(
     useImperativeHandle(ref, () => controller);
     const regionMoveCallbackRef = useRef<number | undefined>();
     const moving = useRef<boolean>(false);
+    const [locationEnabled, setLocationEnabled] = useState(true);
+    const [showUserLocation, setShowUserLocation] = useState(false);
+    const [flyingToLocation, setFlyingToLocation] = useState(false);
+
+    useEffect(() => {
+      services.location.tryCurrentLocation().then(loc => {
+        setLocationEnabled(!!loc);
+      });
+    }, []);
     return (
       <View style={styles.map}>
         <MapLibreGL.MapView
@@ -646,7 +657,7 @@ const AppMapView = forwardRef(
             if (!moving.current) {
               moving.current = true;
               if (animated) {
-                setShowActions(false);
+                setShowActions(flyingToLocation || false);
                 if (onStartMovingRegion) {
                   onStartMovingRegion();
                 }
@@ -674,10 +685,7 @@ const AppMapView = forwardRef(
               clearTimeout(regionMoveCallbackRef.current);
               regionMoveCallbackRef.current = undefined;
             } else if (animated) {
-              setShowActions(false);
-              /*if (onStartMovingRegion) {
-                onStartMovingRegion();
-              }*/
+              setShowActions(flyingToLocation || false);
             }
           }}
           onRegionDidChange={feature => {
@@ -758,15 +766,34 @@ const AppMapView = forwardRef(
           <Images images={{ pickup: rp_pickup_icon, rp: rp_icon, suggestion: rp_suggestion_icon, deposit: rp_deposit_icon }} />
 
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
+          {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
         {showGeolocation && showActions && (
           <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={[styles.mapOverlay, AppStyles.shadow]}>
             <PositionButton
+              locationEnabled={locationEnabled}
               onPosition={async currentLocation => {
+                setLocationEnabled(true);
+                setShowUserLocation(true);
                 if (!contains(FR_BBOX, currentLocation)) {
                   currentLocation = DEFAULT_TLS;
                 }
-                cameraRef.current?.flyTo([currentLocation.lng, currentLocation.lat]);
+                const currentCenter = await mapRef.current?.getCenter()!;
+                const currentZoom = await mapRef.current?.getZoom()!;
+                const targetCoord = [currentLocation.lng, currentLocation.lat];
+                setFlyingToLocation(true);
+                if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
+                  cameraRef.current?.setCamera({
+                    centerCoordinate: targetCoord,
+                    zoomLevel: 12,
+                    animationMode: "flyTo",
+                    animationDuration: 1000
+                  });
+                  await new Promise(resolve => setTimeout(resolve, 1250));
+                } else {
+                  cameraRef.current?.flyTo(targetCoord);
+                }
+                setFlyingToLocation(false);
               }}
             />
           </Animated.View>

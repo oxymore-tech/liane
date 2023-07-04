@@ -8,10 +8,11 @@ import CarCheckMark from "@/assets/icons/car_check_mark.svg";
 import CarStrikeThrough from "@/assets/icons/car_strike_through.svg";
 import MessageCircleFull from "@/assets/icons/message-circle-full.svg";
 import Car from "@/assets/icons/car.svg";
-import Position from "@/assets/icons/position.svg";
 import TwistingArrow from "@/assets/icons/twisting_arrow.svg";
 import DirectionsWalk from "@/assets/icons/directions_walk.svg";
 import History from "@/assets/icons/history.svg";
+import PositionOn from "@/assets/icons/position-on.svg";
+import PositionOff from "@/assets/icons/position-off.svg";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
 
@@ -39,8 +40,10 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <Car {...props} />;
     case "history":
       return <History {...props} />;
-    case "position":
-      return <Position {...props} />;
+    case "position-on":
+      return <PositionOn {...props} />;
+    case "position-off":
+      return <PositionOff {...props} />;
     case "directions-walk":
       return <DirectionsWalk {...props} />;
     default:
@@ -57,7 +60,8 @@ const AppIconsNames = [
   "message-circle-full",
   "car",
   "history",
-  "position",
+  "position-on",
+  "position-off",
   "twisting-arrow",
   "directions-walk"
 ] as const;

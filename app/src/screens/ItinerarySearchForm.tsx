@@ -100,7 +100,7 @@ export const CachedLocationsView = (props: {
           updateValue(closestPoint);
         }}>
         <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
-          <AppIcon name={"position"} color={AppColors.blue} />
+          <AppIcon name={"position-on"} color={AppColors.blue} />
           <AppText>Utiliser ma position</AppText>
         </Row>
       </AppPressableOverlay>

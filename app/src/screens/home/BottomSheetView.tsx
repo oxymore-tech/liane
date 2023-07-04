@@ -166,9 +166,10 @@ const LianeDestinationView = (props: { onPress: () => void; item: RallyingPointL
             borderStyle: Platform.OS === "ios" ? undefined : "dotted"
           }}>
           <AppText style={TripViewStyles.mainWayPointTime}>Départ à </AppText>
-          {props.item.hours.map(h => (
-            <TimeView key={h} style={TripViewStyles.mainWayPointTime} value={h} />
-          ))}
+          {props.item.hours.flatMap((h, index, array) => {
+            const time = <TimeView key={h} style={TripViewStyles.mainWayPointTime} value={h} />;
+            return array.length - 1 !== index ? [time, <AppText style={TripViewStyles.mainWayPointTime}>, </AppText>] : time;
+          })}
         </Row>
       </Column>
     </AppPressableOverlay>
