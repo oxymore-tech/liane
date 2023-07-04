@@ -66,9 +66,9 @@ function Home() {
         tabBarHideOnKeyboard: true
       }}>
       {makeTab(
-        "Recherche",
+        "Carte",
         ({ focused }) => (
-          <TabIcon iconName={"search-outline"} focused={focused} size={iconSize} />
+          <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
         ),
         HomeScreen,
         {

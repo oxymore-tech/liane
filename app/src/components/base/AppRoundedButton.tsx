@@ -53,6 +53,55 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
   );
 };
 
+export interface AppRoundedButtonOutlineProps {
+  color: ColorValue;
+  text: string;
+  onPress?: () => void;
+  opacity?: number;
+  enabled?: boolean;
+}
+export const AppRoundedButtonOutline = ({ color, text, onPress, opacity = 1, enabled = true }: AppRoundedButtonOutlineProps) => {
+  const content = useMemo(
+    () => (
+      <View style={styles.buttonPadding}>
+        <AppText
+          style={{
+            fontWeight: "600",
+            fontSize: 14,
+            color,
+            textAlign: "center",
+            paddingVertical: 4
+          }}>
+          {text}
+        </AppText>
+      </View>
+    ),
+    [color, text]
+  );
+  return enabled ? (
+    <AppPressableOverlay
+      onPress={onPress}
+      backgroundStyle={{
+        borderColor: color,
+        borderWidth: 2,
+        opacity,
+        borderRadius: 24
+      }}>
+      {content}
+    </AppPressableOverlay>
+  ) : (
+    <View
+      style={{
+        opacity,
+        borderRadius: 24,
+        borderWidth: 2,
+        borderColor: AppColorPalettes.gray[200]
+      }}>
+      {content}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   buttonPadding: {
     paddingVertical: 8,

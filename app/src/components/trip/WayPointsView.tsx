@@ -202,7 +202,9 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
   const intermediateWayPoint = (index: number) => {
     const wayPoint = steps[index];
     return (
-      <AppText style={[{ paddingVertical: 7 }, styles.intermediateWayPointLabel, index + 1 === di ? styles.intermediateFromWayPointLabelColor : {}]}>
+      <AppText
+        key={index}
+        style={[{ paddingVertical: 7 }, styles.intermediateWayPointLabel, index + 1 === di ? styles.intermediateFromWayPointLabelColor : {}]}>
         <TimeView
           style={[styles.intermediateWayPointLabel, index + 1 === di ? styles.intermediateFromWayPointLabelColor : {}]}
           value={wayPoint.eta}
@@ -216,15 +218,15 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
     <Row spacing={12}>
       <Column style={styles.column}>
         <TimeView style={styles.mainWayPointTime} value={from.eta} />
-        <>
-          {steps.length === 0 && <View style={styles.line} />}
-          {steps.length <= 3 && steps.map((_, i) => lianeSymbolView(i))}
-          {steps.length > 3 && [
-            lianeSymbolView(0),
-            <AppText style={[styles.alignCenter, styles.intermediateWayPointLabel]}>...</AppText>,
-            lianeSymbolView(steps.length - 1)
-          ]}
-        </>
+
+        {steps.length === 0 && <View style={styles.line} />}
+        {steps.length <= 3 && steps.map((_, i) => lianeSymbolView(i))}
+        {steps.length > 3 && [
+          lianeSymbolView(0),
+          <AppText style={[styles.alignCenter, styles.intermediateWayPointLabel]}>...</AppText>,
+          lianeSymbolView(steps.length - 1)
+        ]}
+
         <TimeView style={styles.mainWayPointTime} value={to.eta} />
       </Column>
 

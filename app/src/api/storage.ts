@@ -125,3 +125,13 @@ export async function processAuthResponse(authResponse: AuthResponse): Promise<A
   await storeUserSession(authResponse.user);
   return authResponse.user;
 }
+
+export async function shouldShowTutorial(name: string) {
+  return !(await retrieveAsync<string[]>("tutorials", []))?.includes(name);
+}
+
+export async function hideTutorial(name: string) {
+  const stored = (await retrieveAsync<string[]>("tutorials", [])) || [];
+  stored.push(name);
+  await storeAsync("tutorials", stored);
+}

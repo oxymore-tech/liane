@@ -35,6 +35,7 @@ import { useBottomBarStyle } from "@/components/Navigation";
 import { useAppNavigation } from "@/api/navigation";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
+import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -83,6 +84,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   });
 
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
+  const [hintPhrase, setHintPhrase] = useState<string | null>(null);
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -93,6 +95,14 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
+            onZoomChanged={z => {
+              console.debug("[MAP] zoom", z);
+              if (z < 7) {
+                setHintPhrase("Zoomez pour afficher les points de ralliement");
+              } else {
+                setHintPhrase(null);
+              }
+            }}
             // onFetchingDisplay={setLoadingDisplay}
             // loading={loadingDisplay || loadingList}
           />
@@ -152,8 +162,9 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
         {isMapState && (
           <RPFormHeader
             setBarVisible={setDisplayBar}
+            hintPhrase={hintPhrase}
             animateEntry={!state.history?.matches("point") && !state.history?.matches("match")}
-            title={"Visualiser les lianes"}
+            title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
           />
@@ -161,7 +172,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
         {(isMatchState || isPointState) && (
           <RPFormHeader
             animateEntry={false}
-            title={"Visualiser les lianes"}
+            title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
           />
@@ -200,6 +211,7 @@ const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observa
 };*/
 const HomeMap = ({
   onMovingStateChanged,
+  onZoomChanged,
   bottomSheetObservable,
   displaySource: matchDisplaySource,
   featureSubject
@@ -208,6 +220,7 @@ const HomeMap = ({
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
   displaySource: Observable<FeatureCollection>;
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
+  onZoomChanged?: (z: number) => void;
 }) => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -305,8 +318,9 @@ const HomeMap = ({
   }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime, isPointState]);
 
   const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
-    console.debug("[MAP] zoom", payload.zoomLevel);
-
+    if (onZoomChanged) {
+      onZoomChanged(payload.zoomLevel);
+    }
     if (state.matches("point")) {
       if (shouldFitBounds) {
         setShouldFitBounds(false);
@@ -444,6 +458,7 @@ const HomeScreen = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <WelcomeWizardModal />
       <HomeMapContext.Provider value={machine}>
         <HomeScreenView displaySource={displaySubject} />
       </HomeMapContext.Provider>

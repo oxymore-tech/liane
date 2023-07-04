@@ -21,10 +21,13 @@ import LineLayer = MapLibreGL.LineLayer;
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
 import distance from "@turf/distance";
+import { Column, Row } from "@/components/base/AppLayout";
+import { AppText } from "@/components/base/AppText";
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
+import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
 
 MapLibreGL.setAccessToken(null);
 
@@ -640,15 +643,10 @@ const AppMapView = forwardRef(
     useImperativeHandle(ref, () => controller);
     const regionMoveCallbackRef = useRef<number | undefined>();
     const moving = useRef<boolean>(false);
-    const [locationEnabled, setLocationEnabled] = useState(true);
+
     const [showUserLocation, setShowUserLocation] = useState(false);
     const [flyingToLocation, setFlyingToLocation] = useState(false);
 
-    useEffect(() => {
-      services.location.tryCurrentLocation().then(loc => {
-        setLocationEnabled(!!loc);
-      });
-    }, []);
     return (
       <View style={styles.map}>
         <MapLibreGL.MapView
@@ -770,34 +768,46 @@ const AppMapView = forwardRef(
         </MapLibreGL.MapView>
         {showGeolocation && showActions && (
           <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={[styles.mapOverlay, AppStyles.shadow]}>
-            <PositionButton
-              locationEnabled={locationEnabled}
-              onPosition={async currentLocation => {
-                setLocationEnabled(true);
-                setShowUserLocation(true);
-                if (!contains(FR_BBOX, currentLocation)) {
-                  currentLocation = DEFAULT_TLS;
-                }
-                const currentCenter = await mapRef.current?.getCenter()!;
-                const currentZoom = await mapRef.current?.getZoom()!;
-                const targetCoord = [currentLocation.lng, currentLocation.lat];
-                setFlyingToLocation(true);
-                if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
-                  cameraRef.current?.setCamera({
-                    centerCoordinate: targetCoord,
-                    zoomLevel: 12,
-                    animationMode: "flyTo",
-                    animationDuration: 1000
-                  });
-                  await new Promise(resolve => setTimeout(resolve, 1250));
-                } else {
-                  cameraRef.current?.flyTo(targetCoord);
-                }
-                setFlyingToLocation(false);
-              }}
-            />
+            <Column spacing={8}>
+              <PositionButton
+                onPosition={async currentLocation => {
+                  setShowUserLocation(true);
+                  if (!contains(FR_BBOX, currentLocation)) {
+                    currentLocation = DEFAULT_TLS;
+                  }
+                  const currentCenter = await mapRef.current?.getCenter()!;
+                  const currentZoom = await mapRef.current?.getZoom()!;
+                  const targetCoord = [currentLocation.lng, currentLocation.lat];
+                  setFlyingToLocation(true);
+                  if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
+                    cameraRef.current?.setCamera({
+                      centerCoordinate: targetCoord,
+                      zoomLevel: 12,
+                      animationMode: "flyTo",
+                      animationDuration: 1000
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 1250));
+                  } else {
+                    cameraRef.current?.flyTo(targetCoord);
+                  }
+                  setFlyingToLocation(false);
+                }}
+              />
+              {/*  <AppPressable style={{ justifyContent: "center", alignItems: "center" }}>
+                <AppIcon name={"info-outline"} color={AppColorPalettes.gray[700]} />
+              </AppPressable>*/}
+            </Column>
           </Animated.View>
         )}
+        <View style={{ position: "absolute", bottom: 0, left: 0, paddingHorizontal: 2, backgroundColor: "rgba(255,255,255,0.6)" }}>
+          <MapTilerLogo width={64} height={18} />
+        </View>
+        <View style={{ position: "absolute", bottom: 0, right: 0, paddingHorizontal: 2, backgroundColor: "rgba(255,255,255,0.6)" }}>
+          <Row spacing={4}>
+            <AppText style={{ fontSize: 10 }}>©MapTiler</AppText>
+            <AppText style={{ fontSize: 10 }}>©OpenStreetMap</AppText>
+          </Row>
+        </View>
       </View>
     );
   }

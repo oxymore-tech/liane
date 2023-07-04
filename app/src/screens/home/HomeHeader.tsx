@@ -165,7 +165,7 @@ export const RPFormHeader = ({
   animateEntry = true,
   updateTrip,
   canGoBack = false,
-
+  hintPhrase = null,
   setBarVisible
 }: {
   updateTrip: (trip: Partial<Trip>) => void;
@@ -174,6 +174,7 @@ export const RPFormHeader = ({
   trip: Partial<Trip>;
   canGoBack?: boolean;
   setBarVisible?: (visible: boolean) => void;
+  hintPhrase?: string | null;
 }) => {
   const insets = useSafeAreaInsets();
 
@@ -190,7 +191,26 @@ export const RPFormHeader = ({
 
   return (
     <Animated.View style={showHistory ? { flex: 1 } : undefined} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
-      {!showHistory && (
+      {!!hintPhrase && (
+        <Animated.View
+          entering={animateEntry ? SlideInUp : undefined}
+          exiting={SlideOutUp}
+          style={[
+            {
+              backgroundColor: AppColorPalettes.gray[100],
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: itineraryMarginTop
+            },
+            AppStyles.shadow
+          ]}>
+          <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center" }} spacing={8}>
+            <AppIcon name={"info-outline"} />
+            <AppText>{hintPhrase}</AppText>
+          </Row>
+        </Animated.View>
+      )}
+      {!showHistory && !hintPhrase && (
         <View
           style={[
             {
