@@ -28,6 +28,7 @@ const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
+import DeviceInfo from "react-native-device-info";
 
 MapLibreGL.setAccessToken(null);
 
@@ -108,6 +109,7 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
     return trip.wayPoints; //.slice(trip.departureIndex, trip.arrivalIndex + 1);
   }, [fromPoint, match, toPoint]);
 
+  console.log(to, from, wayPoints);
   const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.liane.id!], () => {
     const wp = [...(isSamePickup ? [] : [from!.location]), ...wayPoints.map(w => w.rallyingPoint.location), ...(isSameDeposit ? [] : [to!.location])];
 
@@ -239,7 +241,7 @@ export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        minZoomLevel={8}
+        minZoomLevel={7}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "pickup"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
@@ -342,7 +344,7 @@ export const PickupDestinationsDisplayLayer = ({
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
         filter={["all", ["!=", ["get", "id"], pickupPoint]]}
-        minZoomLevel={8}
+        minZoomLevel={7}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
@@ -369,21 +371,25 @@ export const PickupDestinationsDisplayLayer = ({
 export const LianeShapeDisplayLayer = ({
   loading = false,
   lianeDisplay,
-  useWidth
+  useWidth,
+  lianeId = null
 }: {
   loading?: boolean;
   lianeDisplay: FeatureCollection | undefined;
   useWidth?: number | undefined;
+  lianeId?: string | undefined | null;
 }) => {
   const features = lianeDisplay || {
     type: "FeatureCollection",
     features: []
   };
+  console.log(JSON.stringify(features));
   return (
     <MapLibreGL.ShapeSource id="segments" shape={features}>
       <MapLibreGL.LineLayer
         belowLayerID="place"
         id="lianeLayer"
+        filter={lianeId ? ["in", lianeId, ["get", "lianes"]] : undefined}
         style={{
           lineColor: loading ? AppColorPalettes.gray[400] : AppColors.darkBlue,
           lineWidth: useWidth ? useWidth : ["step", ["length", ["get", "lianes"]], 1, 2, 2, 3, 3, 4, 4, 5, 5]
@@ -646,6 +652,9 @@ const AppMapView = forwardRef(
 
     const [showUserLocation, setShowUserLocation] = useState(false);
     const [flyingToLocation, setFlyingToLocation] = useState(false);
+    useEffect(() => {
+      DeviceInfo.isLocationEnabled().then(setShowUserLocation);
+    }, []);
 
     return (
       <View style={styles.map}>
@@ -721,7 +730,7 @@ const AppMapView = forwardRef(
           {...MapStyleProps}
           logoEnabled={false}
           onPress={async f => {
-            if ("coordinates" in f.geometry) {
+            if (__DEV__ && "coordinates" in f.geometry) {
               //console.debug(JSON.stringify(f.geometry.coordinates));
               //@ts-ignore
               const pointInView = await mapRef.current?.getPointInView(f.geometry.coordinates)!;
@@ -770,11 +779,12 @@ const AppMapView = forwardRef(
           <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={[styles.mapOverlay, AppStyles.shadow]}>
             <Column spacing={8}>
               <PositionButton
+                //locationEnabled={showUserLocation}
                 onPosition={async currentLocation => {
-                  setShowUserLocation(true);
                   if (!contains(FR_BBOX, currentLocation)) {
-                    currentLocation = DEFAULT_TLS;
+                    return;
                   }
+                  setShowUserLocation(true);
                   const currentCenter = await mapRef.current?.getCenter()!;
                   const currentZoom = await mapRef.current?.getZoom()!;
                   const targetCoord = [currentLocation.lng, currentLocation.lat];
@@ -792,17 +802,32 @@ const AppMapView = forwardRef(
                   }
                   setFlyingToLocation(false);
                 }}
+                onPositionError={() => setShowUserLocation(false)}
               />
-              {/*  <AppPressable style={{ justifyContent: "center", alignItems: "center" }}>
-                <AppIcon name={"info-outline"} color={AppColorPalettes.gray[700]} />
-              </AppPressable>*/}
             </Column>
           </Animated.View>
         )}
-        <View style={{ position: "absolute", bottom: 0, left: 0, paddingHorizontal: 2, backgroundColor: "rgba(255,255,255,0.6)" }}>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            paddingHorizontal: 2,
+            backgroundColor: "rgba(255,255,255,0.6)",
+            borderTopRightRadius: 2
+          }}>
           <MapTilerLogo width={64} height={18} />
         </View>
-        <View style={{ position: "absolute", bottom: 0, right: 0, paddingHorizontal: 2, backgroundColor: "rgba(255,255,255,0.6)" }}>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            paddingLeft: 2,
+            paddingRight: 8,
+            backgroundColor: "rgba(255,255,255,0.6)",
+            borderTopLeftRadius: 2
+          }}>
           <Row spacing={4}>
             <AppText style={{ fontSize: 10 }}>©MapTiler</AppText>
             <AppText style={{ fontSize: 10 }}>©OpenStreetMap</AppText>

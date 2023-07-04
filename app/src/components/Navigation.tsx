@@ -66,7 +66,7 @@ function Home() {
         tabBarHideOnKeyboard: true
       }}>
       {makeTab(
-        "Carte",
+        "Carte des lianes",
         ({ focused }) => (
           <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
         ),

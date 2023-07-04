@@ -17,7 +17,7 @@ export const WelcomeWizardModal = () => {
     shouldShowTutorial("welcome").then(setShow);
   }, [user?.id]);
   return (
-    <Modal isVisible={show} style={{ margin: 0 }}>
+    <Modal useNativeDriverForBackdrop={true} isVisible={show} style={{ margin: 0 }}>
       {page === 0 && <WelcomePage1 prev={() => setShow(false)} next={() => setPage(page + 1)} />}
       {page === 1 && <WelcomePageRp prev={() => setPage(page - 1)} next={() => setPage(page + 1)} />}
       {page === 2 && <WelcomePageMap prev={() => setPage(page - 1)} next={() => setPage(page + 1)} />}
@@ -28,30 +28,30 @@ export const WelcomeWizardModal = () => {
 
 const MapExample = require("../../../assets/images/tutorial/map_example.png");
 const RpExample = require("../../../assets/images/tutorial/rallying_point_example.png");
-const AddTripExample = require("../../../assets/images/tutorial/add_trip_example.png");
+const LinkExample = require("../../../assets/images/tutorial/links_example.png");
 
 const WelcomePage4 = (props: { next: () => void; prev: () => void }) => (
-  <View style={{ margin: 32, borderRadius: 8, backgroundColor: AppColors.white, padding: 16, marginVertical: 80, flex: 1 }}>
+  <View style={{ margin: 16, borderRadius: 8, backgroundColor: AppColors.white, padding: 16, marginVertical: 80, flex: 1 }}>
     <Column spacing={8} style={{ alignItems: "center", flex: 1 }}>
       <Column style={{ padding: 8, flex: 1 }}>
         <AppText style={{ fontSize: 18, fontWeight: "bold" }} numberOfLines={2}>
-          Ajoutez vos trajets en un clic
+          Une recherche interactive
         </AppText>
-        <Image source={AddTripExample} style={{ maxWidth: "100%", resizeMode: "contain", flex: 1 }} />
+        <Image source={LinkExample} style={{ maxWidth: "100%", resizeMode: "contain", flex: 1 }} />
         <AppText numberOfLines={5} style={{ color: defaultTextColor(AppColors.white), alignSelf: "center", textAlign: "center" }}>
-          Vous ne trouvez pas de liane compatible ? Proposez votre trajet pour relier votre territoire au réseau Liane !
+          Sélectionnez un point de ralliement pour voir l'ensemble des territoires desservis. Vous n'avez plus qu'à choisir votre destination !
         </AppText>
       </Column>
       <Dots count={4} selectedIndex={3} color={AppColors.darkBlue} />
       <Row spacing={8} style={{ alignSelf: "flex-end", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
         <AppRoundedButtonOutline color={AppColors.orange} text={"Précédent"} onPress={props.prev} />
-        <AppRoundedButton backgroundColor={AppColors.orange} text={"J'ai compris!"} onPress={props.next} />
+        <AppRoundedButton backgroundColor={AppColors.orange} text={"J'ai compris !"} onPress={props.next} />
       </Row>
     </Column>
   </View>
 );
 const WelcomePageRp = (props: { next: () => void; prev: () => void }) => (
-  <View style={{ margin: 32, borderRadius: 8, backgroundColor: AppColors.white, padding: 16, marginVertical: 80, flex: 1 }}>
+  <View style={{ margin: 16, borderRadius: 8, backgroundColor: AppColors.white, padding: 16, marginVertical: 80, flex: 1 }}>
     <Column spacing={8} style={{ alignItems: "center", flex: 1 }}>
       <Column style={{ padding: 8, flex: 1 }}>
         <AppText style={{ fontSize: 18, fontWeight: "bold" }} numberOfLines={2}>
@@ -59,7 +59,7 @@ const WelcomePageRp = (props: { next: () => void; prev: () => void }) => (
         </AppText>
         <Image source={RpExample} style={{ maxWidth: "100%", resizeMode: "contain", flex: 1 }} />
         <AppText numberOfLines={5} style={{ color: defaultTextColor(AppColors.white), alignSelf: "center", textAlign: "center" }}>
-          Liane, c'est plus de 10000 lieux de covoiturages vérifiés sur tout le territoire français.{"\n"}
+          Liane, c'est plus de 10000 lieux de covoiturages vérifiés répartis sur tout le territoire français.{"\n"}
         </AppText>
       </Column>
       <Dots count={4} selectedIndex={1} color={AppColors.darkBlue} />
@@ -82,7 +82,7 @@ const PointLegend = (props: { iconSource: ImageSourcePropType; legend: string })
   );
 };
 const WelcomePageMap = (props: { next: () => void; prev: () => void }) => (
-  <View style={{ margin: 32, borderRadius: 8, backgroundColor: AppColors.white, padding: 16, marginVertical: 80, flex: 1 }}>
+  <View style={{ margin: 16, borderRadius: 8, backgroundColor: AppColors.white, padding: 16, marginVertical: 80, flex: 1 }}>
     <Column spacing={8} style={{ alignItems: "center", flex: 1 }}>
       <Column style={{ padding: 8, flex: 1 }}>
         <AppText style={{ fontSize: 18, fontWeight: "bold" }} numberOfLines={2}>

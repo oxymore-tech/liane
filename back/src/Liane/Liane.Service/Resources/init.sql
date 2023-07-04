@@ -108,7 +108,7 @@ BEGIN
   INTO simplify_factor;
   select (case when z < 7 then 25 else 1000 end) into segments_limit;
 
-  -- stages :
+  -- stages for lianes :
   -- (1) : filter lianes by eta
   -- (2) : filter lines intersecting with the tile boundaries
   -- (3) : estimate longest lianes to reduce the amount of features to compute / display at low zoom levels
@@ -181,7 +181,7 @@ BEGIN
                                city,
                                place_count
                         from clipped_points
-                        where z >= 12
+                        where z >= 11
                         except
                         select id,
                                label,
@@ -380,15 +380,15 @@ BEGIN
                                  city,
                                  place_count
                           from rallying_point
-                          where z > 7
+                          where z > 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
 
        suggestion_points as (select clipped_points.*, string_agg(lianes_parts.liane_id, ',') as liane_ids
                              from lianes_parts
                                     inner join clipped_points on
-                               st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
-                                          case when z <= 10 then 200 else 500 end)
-                             where st_distancesphere(from_location, location) > 500
+                               case when z > 7 then st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                          case when z <= 10 then 200 else 500 end) else clipped_points.id = lianes_parts.destination end
+                             where st_distancesphere(from_location, location) > 1000 -- don't display points that are too close from pickup location
 
                              group by id, label, location, type, address, zip_code, city, place_count),
        other_points as (select id,
@@ -400,7 +400,7 @@ BEGIN
                                city,
                                place_count
                         from clipped_points
-                        where z >= 12
+                        where z >= 11
                         except
                         select id,
                                label,
@@ -569,7 +569,7 @@ with filtered_lianes as (select *
                                             l_start,
                                             l_end,
                                             'partial'                                  as mode
-                                     from (select liane_id, 
+                                     from (select liane_id,
                                                   geometry,
                                                   min(least(l_start, l_end)) as l_start,
                                                   max(greatest(l_start, l_end)) as l_end,

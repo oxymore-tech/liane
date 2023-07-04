@@ -5,7 +5,7 @@ import { retrieveAsync, storeAsync } from "@/api/storage";
 import { DEFAULT_TLS } from "@/api/location";
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
-  tryCurrentLocation(): Promise<LatLng | null>;
+  // tryCurrentLocation(): Promise<LatLng | null>;
   getLastKnownLocation(): LatLng;
   cacheRecentLocation(rallyingPoint: RallyingPoint): Promise<RallyingPoint[]>;
   getRecentLocations(): Promise<RallyingPoint[]>;
@@ -129,21 +129,6 @@ export class LocationServiceClient implements LocationService {
     return (await retrieveAsync<Trip[]>(tripsKey)) ?? [];
   }
 
-  tryCurrentLocation(): Promise<LatLng | null> {
-    return new Promise<LatLng | null>(async resolve => {
-      Geolocation.getCurrentPosition(
-        position => {
-          this.lastKnownLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-          storeAsync<LatLng>(lastKnownLocationKey, this.lastKnownLocation);
-          resolve(this.lastKnownLocation);
-        },
-        _ => {
-          resolve(null);
-        },
-        { enableHighAccuracy: true, timeout: 300, maximumAge: 100 }
-      );
-    });
-  }
   currentLocation(): Promise<LatLng> {
     return new Promise<LatLng>(async (resolve, reject) => {
       const enabled = await this.hasLocationPermission();

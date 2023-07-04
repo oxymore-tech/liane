@@ -404,11 +404,13 @@ const HomeMap = ({
           }}
         />
       )}
-      {isMatchState && <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} />}
+      {(isMatchState || isDetailState) && (
+        <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.liane.id : null} />
+      )}
       {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
         <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
       )}
-      {isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />}
+      {/*isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />*/}
 
       {isMatchStateIdle && <RallyingPointsDisplayLayer rallyingPoints={pickupsDisplay} cluster={false} interactive={false} />}
 
