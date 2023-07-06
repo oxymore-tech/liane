@@ -108,12 +108,13 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     timer.Stop();
     logger.LogDebug("Computed {Count} compatible matches in {Elapsed} ms", matches.Count, timer.ElapsedMilliseconds);
 
-    Cursor? nextCursor = null; //TODO
-    return new PaginatedResponse<LianeMatch>(matches.Count, nextCursor, matches
+    var paginated = matches
       .Where(l => l is not null)
       .Cast<LianeMatch>()
       .Order(new BestMatchComparer(from, to, filter.TargetTime))
-      .ToImmutableList());
+      .ToImmutableList();
+    Cursor? nextCursor = null; //TODO
+    return new PaginatedResponse<LianeMatch>(matches.Count, nextCursor, paginated.Take(10).ToImmutableList(), paginated.Count);
   }
 
   public async Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
