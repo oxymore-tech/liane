@@ -12,3 +12,8 @@ postgres:
     rallying_point_display:
       schema: public
       function: rallying_point_display
+
+    ## For testing
+    liane_display_filter_test:
+      schema: public
+      function: liane_display_filter_test
