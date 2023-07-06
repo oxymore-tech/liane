@@ -30,6 +30,7 @@ const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
+const rp_deposit_cluster_icon = require("../../../assets/icons/rp_pink_blank.png");
 
 MapLibreGL.setAccessToken(null);
 
@@ -189,9 +190,11 @@ export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date
 
   const controller = useContext<AppMapViewController>(MapControllerContext);
   const url = TilesUrl + "/liane_display?" + dateArg;
+
+  const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (
     <MapLibreGL.VectorSource
-      id={"segments"}
+      id={"segments" + ":" + updateIdentifier}
       url={url}
       key={sourceId}
       maxZoomLevel={14}
@@ -290,10 +293,12 @@ export const PickupDestinationsDisplayLayer = ({
   }, [dateArg, pickupPoint]);
 
   const controller = useContext<AppMapViewController>(MapControllerContext);
-  const url = TilesUrl + "/liane_display_filter?" + dateArg + "&pickup=" + pickupPoint;
+  const url = TilesUrl + "/liane_display_filter_test?" + dateArg + "&pickup=" + pickupPoint;
+
+  const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (
     <MapLibreGL.VectorSource
-      id={"segmentsFiltered"}
+      id={"segmentsFiltered" + ":" + updateIdentifier}
       url={url}
       key={sourceId}
       maxZoomLevel={14}
@@ -344,8 +349,7 @@ export const PickupDestinationsDisplayLayer = ({
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        filter={["all", ["!=", ["get", "id"], pickupPoint]]}
-        minZoomLevel={7}
+        filter={["all", ["!=", ["get", "id"], pickupPoint], ["!", ["has", "point_count"]]]}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
@@ -361,6 +365,29 @@ export const PickupDestinationsDisplayLayer = ({
           visibility: "visible",
           textOptional: true,
           iconImage: ["case", ["==", ["get", "point_type"], "suggestion"], "deposit", "rp"],
+          iconAnchor: "bottom",
+          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+        }}
+      />
+
+      <MapLibreGL.SymbolLayer
+        id="rp_symbols_clustered"
+        sourceLayerID={"rallying_point_display"}
+        filter={["has", "point_count"]}
+        style={{
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 14,
+          textColor: "#fff",
+          textHaloColor: "#fff",
+          textHaloBlur: 0,
+          textHaloWidth: 0.4,
+          textField: ["get", "point_count"],
+          textAnchor: "bottom",
+          textOffset: [0, -0.75],
+          textMaxWidth: 5.4,
+          visibility: "visible",
+          textOptional: false,
+          iconImage: "deposit_cluster",
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
         }}
@@ -853,7 +880,15 @@ const AppMapView = forwardRef(
             zoomLevel={10}
             ref={cameraRef}
           />
-          <Images images={{ pickup: rp_pickup_icon, rp: rp_icon, suggestion: rp_suggestion_icon, deposit: rp_deposit_icon }} />
+          <Images
+            images={{
+              pickup: rp_pickup_icon,
+              rp: rp_icon,
+              suggestion: rp_suggestion_icon,
+              deposit: rp_deposit_icon,
+              deposit_cluster: rp_deposit_cluster_icon
+            }}
+          />
 
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
           {showUserLocation && <UserLocation androidRenderMode="normal" />}

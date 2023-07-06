@@ -115,7 +115,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
           </Animated.View>
         )}
 
-        {!offline && !isMapState && (
+        {!offline && !isMapState && !isPointState && (
           <HomeBottomSheetContainer
             onScrolled={(v, expanded) => {
               //setMapBottom(v);
@@ -356,6 +356,12 @@ const HomeMap = ({
         if (features) {
           console.debug("[MAP] found", features.features.length, "features");
           featureSubject?.next(features.features);
+        }
+
+        const featuresr = await appMapRef.current?.queryFeatures(undefined, undefined, ["rp_symbols_clustered", "rp_symbols"]);
+        if (featuresr) {
+          console.debug(JSON.stringify(featuresr));
+          featureSubject?.next(featuresr.features);
         }
       }
     }
