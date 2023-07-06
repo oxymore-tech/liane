@@ -180,7 +180,13 @@ const getDateParams = (date: Date) =>
   "-" +
   date.getDate().toString().padStart(2, "0");
 
-export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date; onSelect?: (rp: RallyingPoint) => void }) => {
+export const LianeDisplayLayer = ({
+  date = new Date(),
+  onSelect
+}: {
+  date?: Date;
+  onSelect?: (rp: RallyingPoint & { point_type: string }) => void;
+}) => {
   const dateArg = getDateParams(date);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
@@ -202,14 +208,14 @@ export const LianeDisplayLayer = ({ date = new Date(), onSelect }: { date?: Date
       onPress={
         onSelect
           ? async f => {
-              console.debug(JSON.stringify(f));
+              // console.debug(JSON.stringify(f));
               // @ts-ignore
               const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
 
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1) {
                 const p = points[0];
-                console.debug("clc", p);
+                console.debug("[MAP] selected point", p);
 
                 //@ts-ignore
                 onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
@@ -313,7 +319,7 @@ export const PickupDestinationsDisplayLayer = ({
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1 && !!points[0].properties!.id) {
                 const p = points[0];
-                console.debug("clc", p);
+                console.debug("[MAP] selected point", p);
 
                 //@ts-ignore
                 onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });

@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, ToastAndroid, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
@@ -14,7 +14,7 @@ import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
 import { AnimatedFloatingBackButton, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
-import { FilterListView, LianeDestinations } from "@/screens/home/BottomSheetView";
+import { FilterListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
@@ -85,8 +85,8 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
   const [hintPhrase, setHintPhrase] = useState<string | null>(null);
 
-  const features = useObservable(mapFeatureSubject, []);
-  const filteredFeatures = features?.length;
+  const features = useObservable(mapFeatureSubject, undefined);
+  const hasFeatures = !!features;
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -130,13 +130,13 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
 
             {isMatchState && <FilterListView loading={loadingList} />}
 
-            {isPointState && (
+            {/*isPointState && (
               <LianeDestinations
                 pickup={state.context.filter.from!}
                 date={state.context.filter.targetTime?.dateTime}
                 mapFeatureObservable={mapFeatureSubject}
               />
-            )}
+            )*/}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
           </HomeBottomSheetContainer>
         )}
@@ -173,7 +173,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
         )}
         {isPointState && (
           <RPFormHeader
-            hintPhrase={isPointState && !filteredFeatures ? "Aucun passage n'est prévu." : null}
+            hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
             animateEntry={false}
             title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
@@ -327,7 +327,7 @@ const HomeMap = ({
       return;
     }
     setShouldFitBounds(true);
-    featureSubject?.next(undefined);
+    //featureSubject?.next(undefined);
     // Trigger rerender to make sure features are loaded on the map when queried
     appMapRef.current?.getZoom()?.then(zoom => {
       appMapRef.current?.getCenter()?.then(center => {
@@ -361,16 +361,16 @@ const HomeMap = ({
             }
           } else {
             console.debug("[MAP] found", 0, "features");
-            featureSubject?.next([]);
+            //featureSubject?.next([]);
           }
         });
-      } else {
+      } /*else {
         const features = await appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"]);
         if (features) {
           console.debug("[MAP] found", features.features.length, "features");
           featureSubject?.next(features.features);
         }
-      }
+      }*/
     }
   };
 
@@ -387,7 +387,7 @@ const HomeMap = ({
           onMovingStateChanged(true);
         }}
         ref={appMapRef}
-        onSelectFeatures={features => {
+        /* onSelectFeatures={features => {
           if (features.length > 0) {
             if (Platform.OS === "android") {
               ToastAndroid.showWithGravity(
@@ -398,13 +398,15 @@ const HomeMap = ({
             }
             appMapRef.current?.setCenter(features[0].location, 12.1);
           }
-        }}>
+        }}*/
+      >
         {state.matches("map") && (
           <LianeDisplayLayer
             date={state.context.filter.targetTime?.dateTime}
             onSelect={rp => {
               if (rp) {
                 machine.send("SELECT", { data: rp });
+                featureSubject?.next(rp.point_type === "active" ? undefined : []);
               } else {
                 machine.send("BACK");
               }

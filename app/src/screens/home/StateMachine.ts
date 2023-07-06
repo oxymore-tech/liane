@@ -276,7 +276,7 @@ export const HomeMapMachine = (services: {
                 actions: ["selectMatch"]
               },
               BACK: {
-                target: "#homeMap.map",
+                target: "#homeMap.point", //map
                 actions: [
                   assign({ filter: context => ({ ...context.filter, to: undefined }) }) /*"resetTrip"*/,
 

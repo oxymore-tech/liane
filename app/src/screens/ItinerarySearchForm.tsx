@@ -153,7 +153,7 @@ export const RallyingPointItem = ({
   showIcon?: boolean;
 }) => {
   return (
-    <Row style={{ alignItems: "center" }} spacing={16}>
+    <Row style={{ alignItems: "center", flex: 1 }} spacing={16}>
       {showIcon && <AppIcon name={"rallying-point"} size={28} color={color} />}
       <Column style={{ justifyContent: "space-evenly" }}>
         <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize, minHeight: labelSize + 4 }]}>{item.label}</AppText>

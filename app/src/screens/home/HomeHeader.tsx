@@ -224,10 +224,12 @@ export const RPFormHeader = ({
             AppStyles.shadow
           ]}>
           <Column>
-            <Row style={{ paddingVertical: 8, paddingHorizontal: 8, minHeight: 54 }} spacing={16}>
+            <Row style={{ paddingVertical: 8, paddingHorizontal: 8 }} spacing={16}>
               <AppIcon name={"pin"} color={AppColors.orange} size={32} />
-              <RallyingPointItem item={from} labelSize={18} showIcon={false} />
-              <View style={{ flex: 1 }} />
+              <View style={{ flexShrink: 1, flexGrow: 1 }}>
+                <RallyingPointItem item={from} labelSize={18} showIcon={false} />
+              </View>
+
               <AppPressableIcon
                 onPress={() => {
                   updateTrip({ from: undefined });
@@ -435,12 +437,12 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
   return (
     <>
       <Pressable
-        style={[styles.smallActionButton, { backgroundColor: AppColors.white, position: "absolute", bottom: 90, right: 24 }, AppStyles.shadow]}
+        style={[styles.smallActionButton, { backgroundColor: AppColors.blue, position: "absolute", bottom: 90, left: 16 }, AppStyles.shadow]}
         onPress={() => {
           //machine.send("UPDATE", { data: { to: rallyingPoint } });
           setModalOpen(true);
         }}>
-        <AppIcon name={"search-outline"} color={AppColors.darkBlue} />
+        <AppIcon name={"search-outline"} color={AppColors.white} />
       </Pressable>
       <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal}>
         <View style={{ backgroundColor: AppColors.white, padding: 16, height: "100%", paddingTop: 16 + top }}>
@@ -528,7 +530,7 @@ const styles = StyleSheet.create({
   },
   title: { color: AppColors.white, ...AppStyles.title, paddingVertical: 4 },
   smallActionButton: {
-    padding: 12,
+    padding: 16,
     borderRadius: 52
   },
   modal: {
@@ -556,7 +558,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    minHeight: 36
+    minHeight: 40
   },
   inputContainer2: {
     //backgroundColor: AppColors.white,
