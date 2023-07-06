@@ -13,6 +13,9 @@ import { useDebounceValue } from "@/util/hooks/debounce";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
+import { Feature, FeatureCollection } from "geojson";
+import { EmptyFeatureCollection } from "@/util/geometry";
+import { capitalize } from "@/util/strings";
 
 export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
   const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
@@ -66,10 +69,16 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
   );
 };
 
-export const CachedLocationsView = (props: {
+export const CachedLocationsView = ({
+  onSelect,
+  exceptValues,
+  showOpenMap,
+  showUsePosition = true
+}: {
   onSelect: (r: RallyingPoint) => void;
   exceptValues?: Ref<RallyingPoint>[] | undefined;
-  openMap?: () => void;
+  showOpenMap?: () => void;
+  showUsePosition?: boolean;
 }) => {
   const { services } = useContext(AppContext);
   const [recentLocations, setRecentLocations] = useState<RallyingPoint[]>([]);
@@ -81,38 +90,42 @@ export const CachedLocationsView = (props: {
   }, [services.location]);
 
   const updateValue = (v: RallyingPoint) => {
-    props.onSelect(v);
+    onSelect(v);
     services.location.cacheRecentLocation(v).then(updated => setRecentLocations(updated));
   };
 
   const locationList = useMemo(() => {
-    if (props.exceptValues) {
-      return recentLocations.filter(l => !props.exceptValues!.includes(l.id!));
+    if (exceptValues) {
+      return recentLocations.filter(l => !exceptValues!.includes(l.id!));
+    } else {
+      return recentLocations;
     }
-  }, [props.exceptValues, recentLocations]);
+  }, [exceptValues, recentLocations]);
 
   return (
     <View style={styles.page}>
-      <AppPressableOverlay
-        onPress={async () => {
-          const currentLocation = await services.location.currentLocation();
-          const closestPoint = await services.rallyingPoint.snap(currentLocation);
-          updateValue(closestPoint);
-        }}>
-        <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
-          <AppIcon name={"position-on"} color={AppColors.blue} />
-          <AppText>Utiliser ma position</AppText>
-        </Row>
-      </AppPressableOverlay>
-      {props.openMap && (
-        <AppPressableOverlay onPress={props.openMap}>
+      {showUsePosition && (
+        <AppPressableOverlay
+          onPress={async () => {
+            const currentLocation = await services.location.currentLocation();
+            const closestPoint = await services.rallyingPoint.snap(currentLocation);
+            updateValue(closestPoint);
+          }}>
+          <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
+            <AppIcon name={"position-on"} color={AppColors.blue} />
+            <AppText>Utiliser ma position</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
+      {showOpenMap && (
+        <AppPressableOverlay onPress={showOpenMap}>
           <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
             <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
             <AppText>Choisir sur la carte</AppText>
           </Row>
         </AppPressableOverlay>
       )}
-      <KeyboardAvoidingView style={{ backgroundColor: AppColorPalettes.gray[100] }} behavior={Platform.OS === "ios" ? "position" : undefined}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
         <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>
         <FlatList
           keyboardShouldPersistTaps="always"
@@ -132,28 +145,69 @@ export const CachedLocationsView = (props: {
 export const RallyingPointItem = ({
   item,
   color = AppColorPalettes.gray[800],
-  labelSize = 14
+  labelSize = 14,
+  showIcon = true
 }: {
   item: RallyingPoint;
   color?: ColorValue;
   labelSize?: number;
+  showIcon?: boolean;
 }) => {
   return (
-    <Column>
-      <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>{item.label}</AppText>
-      <AppText style={{ color }} numberOfLines={1}>
-        {item.address}
-      </AppText>
-      <AppText style={{ color }} numberOfLines={1}>
-        {item.zipCode + ", " + item.city}
-      </AppText>
-    </Column>
+    <Row style={{ alignItems: "center" }} spacing={16}>
+      {showIcon && <AppIcon name={"rallying-point"} size={28} color={color} />}
+      <Column>
+        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>{item.label}</AppText>
+
+        <AppText style={{ color }} numberOfLines={1}>
+          {(item.zipCode ? item.zipCode + ", " : "") + item.city}
+        </AppText>
+      </Column>
+    </Row>
+  );
+};
+
+export const PlaceItem = ({
+  item,
+  color = AppColorPalettes.gray[800],
+  labelSize = 14
+}: {
+  item: Feature;
+  color?: ColorValue;
+  labelSize?: number;
+}) => {
+  let placeTypeName = item.place_type_name[0];
+  if (!placeTypeName) {
+    if (item.place_type[0] === "poi") {
+      if (item.properties?.categories.includes("bus stop")) {
+        placeTypeName = "Arrêt de bus";
+      }
+      if (item.properties?.categories.includes("railway station")) {
+        placeTypeName = "Gare";
+      }
+    }
+  }
+  let placeName = item.place_name;
+  if (placeName.endsWith(", France")) {
+    placeName = placeName.substring(0, placeName.length - ", France".length) + ", " + item.context[item.context.length - 3].text;
+  }
+  return (
+    <Row style={{ alignItems: "center" }} spacing={16}>
+      <AppIcon name={"pin-outline"} size={28} />
+      <Column style={{ flex: 1 }}>
+        <AppText style={{ color, fontSize: 11 }} numberOfLines={1}>
+          {capitalize(placeTypeName) || "Lieu"}
+        </AppText>
+        <AppText numberOfLines={2} style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>
+          {placeName}
+        </AppText>
+      </Column>
+    </Row>
   );
 };
 export const RallyingPointSuggestions = (props: {
   currentSearch: string | undefined;
   onSelect: (r: RallyingPoint) => void;
-  fieldName: "to" | "from";
   exceptValues?: Ref<RallyingPoint>[] | undefined;
 }) => {
   const [results, setResults] = useState<RallyingPoint[]>([]);
@@ -200,6 +254,64 @@ export const RallyingPointSuggestions = (props: {
       renderItem={({ item }) => (
         <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
           <RallyingPointItem item={item} />
+        </AppPressableOverlay>
+      )}
+    />
+  );
+};
+
+export const PlaceSuggestions = (props: {
+  currentSearch: string | undefined;
+  onSelect: (r: Feature) => void;
+  //exceptValues?: Ref<RallyingPoint>[] | undefined;
+}) => {
+  const [results, setResults] = useState<FeatureCollection>(EmptyFeatureCollection);
+  const { services } = useContext(AppContext);
+
+  const debouncedSearch = useDebounceValue(props.currentSearch, 500);
+  const [loading, setLoading] = useState(false);
+
+  const updateValue = async (v: Feature) => {
+    props.onSelect(v);
+    // TODO await services.location.cacheRecentLocation(v);
+  };
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      setLoading(true);
+      services.location.search(debouncedSearch, services.location.getLastKnownLocation()).then(r => {
+        setLoading(false);
+        setResults(r);
+      });
+    }
+  }, [debouncedSearch, services.location]);
+
+  /*const locationList = useMemo(() => {
+    if (props.exceptValues) {
+      return results.filter(l => !props.exceptValues!.includes(l.id!));
+    }
+    return results;
+  }, [props.exceptValues, results]);*/
+
+  if (loading) {
+    return <ActivityIndicator />;
+  }
+
+  if (results.features.length === 0) {
+    return <AppText style={[{ padding: 16, color: AppColorPalettes.gray[600] }]}>Aucun résultat</AppText>;
+  }
+
+  return (
+    <FlatList
+      keyboardShouldPersistTaps="always"
+      data={results.features}
+      keyExtractor={(i, index) => i.properties!.ref! + index}
+      renderItem={({ item, index }) => (
+        <AppPressableOverlay
+          key={item.properties!.ref! + index}
+          style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+          onPress={() => updateValue(item)}>
+          <PlaceItem item={item} />
         </AppPressableOverlay>
       )}
     />
@@ -271,13 +383,12 @@ export const ItinerarySearchForm = ({
           onSelect={async rp => {
             updateTrip({ [currentPoint]: rp });
           }}
-          openMap={openMap}
+          showOpenMap={openMap}
         />
       )}
 
       {!offline && editable && currentPoint !== undefined && (currentSearch?.trim()?.length ?? 0) > 0 && (
         <RallyingPointSuggestions
-          fieldName={currentPoint}
           currentSearch={currentSearch}
           exceptValues={otherValue ? [otherValue.id!] : undefined}
           onSelect={rp => {

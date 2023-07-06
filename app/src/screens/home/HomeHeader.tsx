@@ -1,19 +1,21 @@
-import { ColorValue, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
-import { CachedTripsView } from "@/screens/ItinerarySearchForm";
+import { CachedLocationsView, CachedTripsView, PlaceSuggestions } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
 import { Trip } from "@/api/service/location";
 import { FilterSelector } from "@/screens/home/BottomSheetView";
 import { AppText } from "@/components/base/AppText";
 import { useAppBackController } from "@/components/AppBackContextProvider";
-import { AppPressableIcon } from "@/components/base/AppPressable";
+import { AppPressable, AppPressableIcon } from "@/components/base/AppPressable";
+import Modal from "react-native-modal/dist/modal";
+import { Feature } from "geojson";
 
 export const RallyingPointField = forwardRef(
   (
@@ -235,7 +237,7 @@ export const RPFormHeader = ({
                 <RallyingPointField2
                   icon={<AppIcon name={"pin"} color={AppColors.orange} />}
                   value={from?.label || ""}
-                  placeholder={"Sélectionnez un point de départ"}
+                  placeholder={"Sélectionnez un point de ralliement"}
                   showTrailing={false}
                   editable={false}
                 />
@@ -297,7 +299,7 @@ export const RPFormHeader = ({
       )}
       {!!to && !!from && (
         <View style={{ position: "absolute", top: itineraryMarginTop + 20, right: 20 }}>
-          <AppPressableIcon name={"flip-2-outline"} onPress={() => updateTrip({ to: from, from: to })} />
+          <AppPressableIcon name={"flip-outline"} onPress={() => updateTrip({ to: from, from: to })} />
         </View>
       )}
       <View style={[styles.headerContainer, AppStyles.shadow, { paddingTop: insets.top + 4, paddingBottom: 8 }]}>
@@ -362,6 +364,90 @@ export const RPFormHeader = ({
   );
 };*/
 
+export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; title?: string }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const { top } = useSafeAreaInsets();
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setInputText("");
+  }, []);
+  return (
+    <>
+      <Pressable
+        style={[styles.smallActionButton, { backgroundColor: AppColors.white, position: "absolute", bottom: 90, right: 24 }, AppStyles.shadow]}
+        onPress={() => {
+          //machine.send("UPDATE", { data: { to: rallyingPoint } });
+          setModalOpen(true);
+        }}>
+        <AppIcon name={"search-outline"} color={AppColors.darkBlue} />
+      </Pressable>
+      <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal}>
+        <View style={{ backgroundColor: AppColors.white, padding: 16, height: "100%", paddingTop: 16 + top }}>
+          <Row style={{ marginBottom: 8 }}>
+            <AppPressable style={{ paddingBottom: 16 }} onPress={closeModal}>
+              <AppIcon name={"close-outline"} />
+            </AppPressable>
+            <AppText style={{ fontSize: 18, fontWeight: "500" }}>{props.title || "Rechercher"}</AppText>
+          </Row>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
+            <View style={styles.inputContainer}>
+              <AppTextInput
+                trailing={
+                  inputText.length > 0 ? (
+                    <Pressable
+                      onPress={() => {
+                        setInputText("");
+                      }}>
+                      <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+                    </Pressable>
+                  ) : undefined
+                }
+                value={inputText}
+                onChangeText={setInputText}
+                style={[AppStyles.input, { fontSize: 16 }]}
+                placeholder={"Adresse, point de ralliement..."}
+                leading={<AppIcon name={"search-outline"} />}
+              />
+            </View>
+            <View style={{ flex: 1, marginTop: 16 }}>
+              {inputText.length === 0 && (
+                <CachedLocationsView
+                  //exceptValues={[]}
+                  showUsePosition={false}
+                  onSelect={async rp => {
+                    // updateTrip({ [currentPoint]: rp });
+                    const close = props.onSelect({
+                      type: "Feature",
+                      geometry: { type: "Point", coordinates: [rp.location.lng, rp.location.lat] },
+                      properties: { ...rp },
+                      place_type: ["rallying_point"]
+                    });
+                    if (close) {
+                      closeModal();
+                    }
+                  }}
+                />
+              )}
+              {inputText.length > 0 && (
+                <PlaceSuggestions
+                  currentSearch={inputText}
+                  onSelect={f => {
+                    const close = props.onSelect(f);
+                    if (close) {
+                      closeModal();
+                    }
+                  }}
+                />
+              )}
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+    </>
+  );
+};
+
 export const AnimatedFloatingBackButton = (props: { onPress: () => void; color?: ColorValue; iconColor?: ColorValue }) => {
   return (
     <Animated.View entering={SlideInLeft} exiting={SlideOutLeft}>
@@ -382,8 +468,12 @@ const styles = StyleSheet.create({
   },
   title: { color: AppColors.white, ...AppStyles.title, paddingVertical: 4 },
   smallActionButton: {
-    padding: 8,
+    padding: 12,
     borderRadius: 52
+  },
+  modal: {
+    justifyContent: "flex-end",
+    margin: 0
   },
 
   headerContainer: {

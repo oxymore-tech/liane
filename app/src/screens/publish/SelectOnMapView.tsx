@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { RallyingPoint } from "@/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,9 +10,6 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
 import AppMapView, { RallyingPointsDisplayLayer, WayPointDisplay } from "@/components/map/AppMapView";
-import { FeatureCollection, GeoJSON } from "geojson";
-import { BoundingBox, fromPositions } from "@/api/geo";
-import { AppContext } from "@/components/ContextProvider";
 import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
@@ -20,52 +17,16 @@ import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 export interface SelectOnMapViewProps {
   onSelect: (rp: RallyingPoint) => void;
   title: string;
-  type?: "pickup" | "deposit" | "from" | "to";
+  type?: "from" | "to";
 }
 export const SelectOnMapView = ({ onSelect, title, type = "from" }: SelectOnMapViewProps) => {
-  const rpMinZoomLevel = 10.5;
-  const { services } = useContext(AppContext);
-  const rpCallbackRef = useRef<number | undefined>();
-  const [rpDisplay, setRpDisplay] = useState<FeatureCollection | undefined>();
   const [selectedRP, setSelectedRP] = useState<RallyingPoint | undefined>();
-  const fetchRallyingPoints = async (currentZoom: number, bounds: BoundingBox) => {
-    if (rpCallbackRef.current) {
-      clearTimeout(rpCallbackRef.current);
-    }
-    //onFetchingDisplay(true);
-    rpCallbackRef.current = setTimeout(async () => {
-      const initialRef = rpCallbackRef.current;
 
-      if (currentZoom < rpMinZoomLevel) {
-        //onFetchingDisplay(false);
-        return;
-      }
-      try {
-        if (rpCallbackRef.current === initialRef) {
-          // If current timeout is still active, fetch display
-          const res = await services.rallyingPoint.view(bounds.from, bounds.to);
-          setRpDisplay(res);
-        }
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        if (rpCallbackRef.current === initialRef) {
-          // If current timeout is still active, show display
-          //onFetchingDisplay(false);
-        }
-      }
-    }, 500);
-  };
   return (
     <View style={styles.container}>
-      <AppMapView
-        onRegionChanged={(payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => {
-          const bounds = fromPositions(payload.visibleBounds);
-
-          fetchRallyingPoints(payload.zoomLevel, bounds).catch(e => console.warn(e));
-        }}>
-        <RallyingPointsDisplayLayer color={AppColors.blue} minZoomLevel={rpMinZoomLevel} rallyingPoints={rpDisplay || []} onSelect={setSelectedRP} />
-        {selectedRP && <WayPointDisplay rallyingPoint={selectedRP} type={"from"} />}
+      <AppMapView>
+        <RallyingPointsDisplayLayer type={type} selected={selectedRP?.id} onSelect={setSelectedRP} />
+        {selectedRP && <WayPointDisplay rallyingPoint={selectedRP} type={"from"} size={24} offsetY={-24} />}
       </AppMapView>
       <Header title={title} canGoBack={true} />
       {selectedRP && (
@@ -73,7 +34,7 @@ export const SelectOnMapView = ({ onSelect, title, type = "from" }: SelectOnMapV
           <Row style={{ alignItems: "center", paddingHorizontal: 8 }} spacing={16}>
             <LocationPin fill={AppColors.white} height={32} />
             <View style={{ flexShrink: 1 }}>
-              <RallyingPointItem item={selectedRP} color={AppColors.white} labelSize={18} />
+              <RallyingPointItem item={selectedRP} color={AppColors.white} labelSize={18} showIcon={false} />
             </View>
             <View style={{ flex: 1 }} />
           </Row>

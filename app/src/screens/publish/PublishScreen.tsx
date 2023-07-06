@@ -74,6 +74,7 @@ export const PublishScreenView = () => {
           return true;
         }}>
         <SelectOnMapView
+          type={isFrom ? "from" : "to"}
           onSelect={p => {
             machine.send("UPDATE", { data: { [isFrom ? "from" : "to"]: p } });
           }}

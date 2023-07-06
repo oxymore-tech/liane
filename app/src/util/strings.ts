@@ -1,4 +1,7 @@
-export const capitalize = (v: string) => {
+export const capitalize = (v: string | null | undefined) => {
+  if (!v) {
+    return v;
+  }
   return v.at(0)!.toUpperCase() + v.slice(1);
 };
 

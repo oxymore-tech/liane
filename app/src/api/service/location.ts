@@ -3,6 +3,9 @@ import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation from "react-native-geolocation-service";
 import { retrieveAsync, storeAsync } from "@/api/storage";
 import { DEFAULT_TLS } from "@/api/location";
+import { MAPTILER_KEY } from "@env";
+import { BaseUrl, get } from "@/api/http";
+import { FeatureCollection } from "geojson";
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
   // tryCurrentLocation(): Promise<LatLng | null>;
@@ -12,6 +15,8 @@ export interface LocationService {
 
   cacheRecentTrip(trip: Trip): Promise<Trip[]>;
   getRecentTrips(): Promise<Trip[]>;
+
+  search(query: string, closeTo?: LatLng): Promise<FeatureCollection>;
 }
 
 export type Trip = {
@@ -152,5 +157,40 @@ export class LocationServiceClient implements LocationService {
 
   getLastKnownLocation(): LatLng {
     return this.lastKnownLocation;
+  }
+
+  async search(query: string, closeTo?: LatLng): Promise<FeatureCollection> {
+    let url = `https://api.maptiler.com/geocoding/${query}.json`;
+
+    const types = [
+      "joint_municipality",
+      "joint_submunicipality",
+      "municipality",
+      "municipal_district",
+      "locality",
+      "neighbourhood",
+      "place",
+      "postal_code",
+      "address",
+      "poi"
+    ];
+
+    url += `?key=${MAPTILER_KEY}`;
+    url += `&country=${["fr"]}`;
+    url += `&language=${["fr"]}`;
+    url += `&types=${types}`;
+    if (closeTo) {
+      url += `&proximity=${[closeTo.lng, closeTo.lat]}`;
+    }
+
+    console.log(url);
+    const response = await fetch(url, {
+      method: "GET"
+    });
+    if (response.status === 200) {
+      return response.json();
+    } else {
+      throw new Error("API returned error " + response.status);
+    }
   }
 }

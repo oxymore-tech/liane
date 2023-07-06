@@ -1,7 +1,7 @@
 import React, { ForwardedRef, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { ColorValue, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger } from "@maplibre/maplibre-react-native";
-import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, UnionUtils } from "@/api";
+import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, Ref, UnionUtils } from "@/api";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Feature, FeatureCollection, GeoJSON, Point, Position } from "geojson";
 import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
@@ -15,20 +15,21 @@ import { useQuery } from "react-query";
 import { getTripMatch } from "@/components/trip/trip";
 import { AppStyles } from "@/theme/styles";
 import { TilesUrl } from "@/api/http";
+import distance from "@turf/distance";
+import { Column, Row } from "@/components/base/AppLayout";
+import { AppText } from "@/components/base/AppText";
+import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
+import DeviceInfo from "react-native-device-info";
 import MarkerView = MapLibreGL.MarkerView;
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
-import distance from "@turf/distance";
-import { Column, Row } from "@/components/base/AppLayout";
-import { AppText } from "@/components/base/AppText";
+
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
-import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
-import DeviceInfo from "react-native-device-info";
 
 MapLibreGL.setAccessToken(null);
 
@@ -383,7 +384,6 @@ export const LianeShapeDisplayLayer = ({
     type: "FeatureCollection",
     features: []
   };
-  console.log(JSON.stringify(features));
   return (
     <MapLibreGL.ShapeSource id="segments" shape={features}>
       <MapLibreGL.LineLayer
@@ -399,6 +399,81 @@ export const LianeShapeDisplayLayer = ({
   );
 };
 
+export const RallyingPointsDisplayLayer = ({
+  type,
+  selected,
+  onSelect
+}: {
+  onSelect?: (rp: RallyingPoint) => void;
+  selected?: Ref<RallyingPoint> | undefined;
+  type?: "from" | "to" | undefined;
+}) => {
+  const controller = useContext<AppMapViewController>(MapControllerContext);
+  const url = TilesUrl + "/rallying_point_display";
+  const color = type ? (type === "from" ? AppColors.orange : AppColors.pink) : AppColors.black;
+  const image = type ? (type === "from" ? "pickup" : "deposit") : "rp";
+  return (
+    <MapLibreGL.VectorSource
+      id={"all_rallying_points"}
+      url={url}
+      maxZoomLevel={14}
+      hitbox={{ width: 64, height: 64 }}
+      onPress={
+        onSelect
+          ? async f => {
+              console.debug(JSON.stringify(f));
+              // @ts-ignore
+              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
+
+              const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
+              if (points.length === 1) {
+                const p = points[0];
+                console.debug("clc", p);
+
+                //@ts-ignore
+                onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
+              } else if (points.length > 0) {
+                const zoom = await controller.getZoom()!;
+
+                let newZoom;
+                if (zoom < 10.5) {
+                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+                } else if (zoom < 12) {
+                  newZoom = 12.1;
+                } else {
+                  newZoom = undefined;
+                }
+                await controller.setCenter(center, newZoom);
+              }
+            }
+          : undefined
+      }>
+      <MapLibreGL.SymbolLayer
+        id="rp_symbols"
+        sourceLayerID={"rallying_point_display"}
+        minZoomLevel={7}
+        style={{
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 12,
+          textColor: color,
+          textHaloColor: "#fff",
+          textHaloWidth: 1.2,
+          textField: ["step", ["zoom"], "", 12, ["get", "label"]],
+          textAllowOverlap: false,
+          textAnchor: "bottom",
+          textOffset: [0, -3.4],
+          textMaxWidth: 5.4,
+          visibility: "visible",
+          textOptional: true,
+          iconImage: image,
+          iconAnchor: "bottom",
+          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+        }}
+      />
+    </MapLibreGL.VectorSource>
+  );
+};
+
 export interface RallyingPointsDisplayLayerProps {
   rallyingPoints: RallyingPoint[] | FeatureCollection;
   onSelect?: (r?: RallyingPoint) => void;
@@ -406,13 +481,15 @@ export interface RallyingPointsDisplayLayerProps {
   interactive?: boolean;
   minZoomLevel?: number | undefined;
   color?: ColorValue;
+  id?: string;
 }
 
-export const RallyingPointsDisplayLayer = ({
+export const RallyingPointsFeaturesDisplayLayer = ({
   rallyingPoints,
   onSelect,
   cluster = true,
   interactive = true,
+  id,
   color = AppColors.orange,
   minZoomLevel
 }: RallyingPointsDisplayLayerProps) => {
@@ -443,7 +520,7 @@ export const RallyingPointsDisplayLayer = ({
   const mainColor: string = color;
   return (
     <MapLibreGL.ShapeSource
-      id="rp_l"
+      id={"points_" + (id || "")}
       shape={feature}
       cluster={cluster}
       clusterMaxZoomLevel={10}
@@ -475,7 +552,7 @@ export const RallyingPointsDisplayLayer = ({
       }>
       <MapLibreGL.CircleLayer
         minZoomLevel={minZoomLevel}
-        id="rp_circles_clustered"
+        id={"rp_circles_clustered" + (id || "")}
         filter={["has", "point_count"]}
         style={{
           circleColor: mainColor,
@@ -486,7 +563,7 @@ export const RallyingPointsDisplayLayer = ({
       />
       <MapLibreGL.SymbolLayer
         minZoomLevel={minZoomLevel}
-        id="rp_symbols_clustered"
+        id={"rp_symbols_clustered" + (id || "")}
         filter={["has", "point_count"]}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
@@ -500,7 +577,7 @@ export const RallyingPointsDisplayLayer = ({
       />
       <MapLibreGL.CircleLayer
         minZoomLevel={minZoomLevel}
-        id="rp_circles"
+        id={"rp_circles" + (id || "")}
         // belowLayerID="place"
         filter={["!", ["has", "point_count"]]}
         style={{
@@ -512,7 +589,7 @@ export const RallyingPointsDisplayLayer = ({
       />
 
       <MapLibreGL.SymbolLayer
-        id="rp_labels"
+        id={"rp_labels" + (id || "")}
         filter={["!", ["has", "point_count"]]}
         minZoomLevel={minZoomLevel ? Math.max(12, minZoomLevel) : 12}
         style={{
@@ -536,28 +613,32 @@ export const RallyingPointsDisplayLayer = ({
 export const WayPointDisplay = ({
   rallyingPoint,
   type,
-  active = true
+  active = true,
+  size = 14,
+  offsetY
 }: // showIcon = true
 {
   rallyingPoint: RallyingPoint;
   type: "to" | "from" | "step" | "pickup" | "deposit";
   active?: boolean;
+  size?: number;
+  offsetY?: number;
 }) => {
   let color: ColorValue = AppColors.darkBlue;
   let icon;
 
   switch (type) {
     case "to":
-      icon = <AppIcon name={"flag"} color={active ? AppColors.pink : AppColors.black} size={14} />;
+      icon = <AppIcon name={"flag"} color={active ? AppColors.pink : AppColors.black} size={size} />;
       break;
     case "from":
-      icon = <AppIcon name={"pin"} color={active ? AppColors.orange : AppColors.black} size={14} />;
+      icon = <AppIcon name={"pin"} color={active ? AppColors.orange : AppColors.black} size={size} />;
       break;
     case "pickup":
-      icon = <AppIcon name={"car"} color={active ? AppColors.orange : AppColors.black} size={14} />;
+      icon = <AppIcon name={"car"} color={active ? AppColors.orange : AppColors.black} size={size} />;
       break;
     case "deposit":
-      icon = <AppIcon name={"directions-walk"} color={active ? AppColors.pink : AppColors.black} size={14} />;
+      icon = <AppIcon name={"directions-walk"} color={active ? AppColors.pink : AppColors.black} size={size} />;
       break;
     default:
       icon = undefined;
@@ -573,12 +654,14 @@ export const WayPointDisplay = ({
           padding: 4,
           alignItems: "center",
           justifyContent: "center",
-          width: type !== "step" && showIcon ? 24 : 8,
-          height: type !== "step" && showIcon ? 24 : 8,
+          width: type !== "step" && showIcon ? size + 10 : 8,
+          height: type !== "step" && showIcon ? size + 10 : 8,
           backgroundColor: color,
           borderRadius: 48,
           borderColor: AppColors.white,
-          borderWidth: 1
+          borderWidth: 1,
+          position: "relative",
+          top: offsetY
         }}>
         {showIcon && icon}
       </View>

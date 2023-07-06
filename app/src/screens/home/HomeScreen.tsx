@@ -4,9 +4,8 @@ import AppMapView, {
   AppMapViewController,
   LianeShapeDisplayLayer,
   LianeDisplayLayer,
-  LianeMatchRouteLayer,
   PotentialLianeLayer,
-  RallyingPointsDisplayLayer,
+  RallyingPointsFeaturesDisplayLayer,
   WayPointDisplay,
   PickupDestinationsDisplayLayer
 } from "@/components/map/AppMapView";
@@ -14,7 +13,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
-import { AnimatedFloatingBackButton, RPFormHeader } from "@/screens/home/HomeHeader";
+import { AnimatedFloatingBackButton, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
 import { FilterListView, LianeDestinations } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -39,7 +38,7 @@ import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
-  const [isLoadingDisplay, setLoadingDisplay] = useState<boolean>(false);
+  // const [isLoadingDisplay, setLoadingDisplay] = useState<boolean>(false);
 
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -60,7 +59,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const bottomSheetScroll = useBehaviorSubject<BottomSheetObservableMessage>({ top: 0, expanded: false });
 
   const loading = Object.values(state.value).find(s => s === "init" || s === "load") !== undefined;
-  const loadingDisplay = isLoadingDisplay || (loading && state.context.reloadCause === "display");
+  const loadingDisplay = loading && state.context.reloadCause === "display"; //isLoadingDisplay ||
   const loadingList = loading && !state.context.reloadCause;
   const offline = status === "offline";
   const { navigation } = useAppNavigation<"Home">();
@@ -239,6 +238,13 @@ const HomeMap = ({
     return [];
   }, [isMatchStateIdle, state.context.matches]);
 
+  const depositsDisplay = useMemo(() => {
+    if (isMatchStateIdle) {
+      return state.context.matches!.map(m => getPoint(m, "deposit"));
+    }
+    return [];
+  }, [isMatchStateIdle, state.context.matches]);
+
   const matchDisplay = useObservable(matchDisplaySource, undefined);
 
   const mapBounds = useMemo(() => {
@@ -312,7 +318,7 @@ const HomeMap = ({
     // Trigger rerender to make sure features are loaded on the map when queried
     appMapRef.current?.getZoom()?.then(zoom => {
       appMapRef.current?.getCenter()?.then(center => {
-        appMapRef.current?.setCenter({ lat: center[1], lng: center[0] }, zoom + 0.01, 0); //state.context.filter.from!.location
+        appMapRef.current?.setCenter({ lat: center[1], lng: center[0] }, zoom + 0.01, 50); //state.context.filter.from!.location
       });
     });
   }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime, isPointState]);
@@ -356,89 +362,137 @@ const HomeMap = ({
   };
 
   return (
-    <AppMapView
-      bounds={mapBounds}
-      showGeolocation={state.matches("map")} //&& !movingDisplay}
-      onRegionChanged={onRegionChanged}
-      onStopMovingRegion={() => {
-        onMovingStateChanged(false);
-      }}
-      onStartMovingRegion={() => {
-        onMovingStateChanged(true);
-      }}
-      ref={appMapRef}
-      onSelectFeatures={features => {
-        if (features.length > 0) {
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              JSON.stringify(features.map(feat => feat.properties["name:latin"])),
-              ToastAndroid.SHORT,
-              ToastAndroid.CENTER
-            );
+    <>
+      <AppMapView
+        bounds={mapBounds}
+        showGeolocation={state.matches("map")} //&& !movingDisplay}
+        onRegionChanged={onRegionChanged}
+        onStopMovingRegion={() => {
+          onMovingStateChanged(false);
+        }}
+        onStartMovingRegion={() => {
+          onMovingStateChanged(true);
+        }}
+        ref={appMapRef}
+        onSelectFeatures={features => {
+          if (features.length > 0) {
+            if (Platform.OS === "android") {
+              ToastAndroid.showWithGravity(
+                JSON.stringify(features.map(feat => feat.properties["name:latin"])),
+                ToastAndroid.SHORT,
+                ToastAndroid.CENTER
+              );
+            }
+            appMapRef.current?.setCenter(features[0].location, 12.1);
           }
-          appMapRef.current?.setCenter(features[0].location, 12.1);
-        }
-      }}>
-      {state.matches("map") && (
-        <LianeDisplayLayer
-          date={state.context.filter.targetTime?.dateTime}
-          onSelect={rp => {
-            if (rp) {
-              machine.send("SELECT", { data: rp });
-            } else {
-              machine.send("BACK");
+        }}>
+        {state.matches("map") && (
+          <LianeDisplayLayer
+            date={state.context.filter.targetTime?.dateTime}
+            onSelect={rp => {
+              if (rp) {
+                machine.send("SELECT", { data: rp });
+              } else {
+                machine.send("BACK");
+              }
+            }}
+          />
+        )}
+        {state.matches("point") && (
+          <PickupDestinationsDisplayLayer
+            date={state.context.filter.targetTime?.dateTime}
+            pickupPoint={state.context.filter.from!.id!}
+            onSelect={rp => {
+              if (rp) {
+                machine.send("SELECT", { data: rp });
+              } else {
+                machine.send("BACK");
+              }
+            }}
+          />
+        )}
+        {(isMatchState || isDetailState) && (
+          <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.liane.id : null} />
+        )}
+        {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
+          <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
+        )}
+        {/*isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />*/}
+
+        {isMatchStateIdle && (
+          <RallyingPointsFeaturesDisplayLayer
+            rallyingPoints={pickupsDisplay}
+            cluster={false}
+            interactive={false}
+            id="pickups"
+            color={AppColors.orange}
+          />
+        )}
+        {isMatchStateIdle && (
+          <RallyingPointsFeaturesDisplayLayer
+            rallyingPoints={depositsDisplay}
+            cluster={false}
+            interactive={false}
+            id="deposits"
+            color={AppColors.pink}
+          />
+        )}
+
+        {isDetailState && state.context.filter.from?.id !== detailStateData!.pickup.id && (
+          <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />
+        )}
+        {isDetailState && state.context.filter.to?.id !== detailStateData!.deposit.id && (
+          <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />
+        )}
+        {["point", "match"].some(state.matches) && (
+          <WayPointDisplay
+            rallyingPoint={state.context.filter.from || detailStateData!.pickup}
+            type={"from"}
+
+            // active={!isDetailState || !state.context.filter.from || state.context.filter.from.id === detailStateData!.pickup.id}
+          />
+        )}
+        {["match"].some(state.matches) && (
+          <WayPointDisplay
+            rallyingPoint={state.context.filter.to || detailStateData!.deposit}
+            type={"to"}
+
+            //  active={!isDetailState || !state.context.filter.to || state.context.filter.to.id === detailStateData!.deposit.id}
+          />
+        )}
+      </AppMapView>
+      {["point", "map"].some(state.matches) && (
+        <SearchFeature
+          onSelect={placeFeature => {
+            console.log("place selected", JSON.stringify(placeFeature));
+            if (placeFeature.bbox) {
+              appMapRef.current?.fitBounds(
+                getBoundingBox(
+                  [
+                    [placeFeature.bbox[0], placeFeature.bbox[1]],
+                    [placeFeature.bbox[2], placeFeature.bbox[3]]
+                  ],
+                  8
+                ),
+                1000
+              );
+            } else if (placeFeature.geometry.type === "Point") {
+              appMapRef.current?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000);
+              if (placeFeature.place_type[0] === "rallying_point") {
+                // Select it
+                setTimeout(() => {
+                  machine.send("SELECT", { data: placeFeature.properties });
+                }, 1000);
+              }
             }
+            return true;
           }}
         />
       )}
-      {state.matches("point") && (
-        <PickupDestinationsDisplayLayer
-          date={state.context.filter.targetTime?.dateTime}
-          pickupPoint={state.context.filter.from!.id!}
-          onSelect={rp => {
-            if (rp) {
-              machine.send("SELECT", { data: rp });
-            } else {
-              machine.send("BACK");
-            }
-          }}
-        />
-      )}
-      {(isMatchState || isDetailState) && (
-        <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.liane.id : null} />
-      )}
-      {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
-        <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
-      )}
-      {/*isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />*/}
-
-      {isMatchStateIdle && <RallyingPointsDisplayLayer rallyingPoints={pickupsDisplay} cluster={false} interactive={false} />}
-
-      {isDetailState && state.context.filter.from?.id !== detailStateData!.pickup.id && (
-        <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"pickup"} />
-      )}
-      {isDetailState && state.context.filter.to?.id !== detailStateData!.deposit.id && (
-        <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"deposit"} />
-      )}
-      {["detail", "match", "point"].some(state.matches) && (
-        <WayPointDisplay
-          rallyingPoint={state.context.filter.from || detailStateData!.pickup}
-          type={"from"}
-          // showIcon={state.context.selectedMatch === undefined}
-          active={!isDetailState || !state.context.filter.from || state.context.filter.from.id === detailStateData!.pickup.id}
-        />
-      )}
-      {["detail", "match"].some(state.matches) && (
-        <WayPointDisplay
-          rallyingPoint={state.context.filter.to || detailStateData!.deposit}
-          type={"to"}
-          //  showIcon={state.context.selectedMatch === undefined}
-          active={!isDetailState || !state.context.filter.to || state.context.filter.to.id === detailStateData!.deposit.id}
-        />
-      )}
-    </AppMapView>
+    </>
   );
 };
+
 const HomeScreen = () => {
   const { services } = useContext(AppContext);
   const displaySubject = useBehaviorSubject<FeatureCollection>(EmptyFeatureCollection);

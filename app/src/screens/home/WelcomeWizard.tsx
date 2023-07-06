@@ -39,7 +39,7 @@ const WelcomePage4 = (props: { next: () => void; prev: () => void }) => (
         </AppText>
         <Image source={LinkExample} style={{ maxWidth: "100%", resizeMode: "contain", flex: 1 }} />
         <AppText numberOfLines={5} style={{ color: defaultTextColor(AppColors.white), alignSelf: "center", textAlign: "center" }}>
-          Sélectionnez un point de ralliement pour voir l'ensemble des territoires desservis. Vous n'avez plus qu'à choisir votre destination !
+          Sélectionnez un point de ralliement pour voir l'ensemble des territoires desservis. Vous n'avez plus qu'à choisir votre destination !{"\n"}
         </AppText>
       </Column>
       <Dots count={4} selectedIndex={3} color={AppColors.darkBlue} />
@@ -59,7 +59,7 @@ const WelcomePageRp = (props: { next: () => void; prev: () => void }) => (
         </AppText>
         <Image source={RpExample} style={{ maxWidth: "100%", resizeMode: "contain", flex: 1 }} />
         <AppText numberOfLines={5} style={{ color: defaultTextColor(AppColors.white), alignSelf: "center", textAlign: "center" }}>
-          Liane, c'est plus de 10000 lieux de covoiturages vérifiés répartis sur tout le territoire français.{"\n"}
+          Liane, c'est plus de 10000 lieux de covoiturages vérifiés, répartis sur tout le territoire français.{"\n"}
         </AppText>
       </Column>
       <Dots count={4} selectedIndex={1} color={AppColors.darkBlue} />
