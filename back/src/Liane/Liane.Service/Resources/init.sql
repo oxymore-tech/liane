@@ -407,7 +407,7 @@ BEGIN
        -- (3) : remove duplicated points occurrences then make clusters
        -- (4) : remove clustered points from suggestions
        subdivided as (select liane_id, destination, geom, (points_cluster_distance*i/len) as l_start,  (points_cluster_distance*(i+1)/len) as l_end, len, i
-                      from (select *, st_length(geom::geography) as len from lianes_parts where points_cluster_distance is not null and z > 7) as measured
+                      from (select *, st_length(geom::geography) as len from lianes_parts where points_cluster_distance is not null and z > 7 and st_geometrytype(geom) = 'ST_LineString') as measured
                              cross join lateral (select i from generate_series(0, floor(len / points_cluster_distance)::integer - 1) as t(i)) as iterator),
        subdivided_suggestions as (select subdivided.liane_id, destination, i,
                                          st_lineinterpolatepoint(geom, (l_start+l_end)/2) as middle,
@@ -446,7 +446,7 @@ BEGIN
                       union
                       select null as id,
                              null as label,
-                             null as location,
+                             location,
                              null as type,
                              null as address,
                              null as zip_code,
