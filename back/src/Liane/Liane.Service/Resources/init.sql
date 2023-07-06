@@ -406,15 +406,15 @@ BEGIN
        -- (2) : join subdivided lines and its suggestion points
        -- (3) : remove duplicated points occurrences then make clusters
        -- (4) : remove clustered points from suggestions
-       subdivided as (select liane_id, destination, geom, (points_cluster_distance*i/len) as l_start,  (points_cluster_distance*(i+1)/len) as l_end, len, i
-                      from (select *, st_length(geom::geography) as len from lianes_parts where points_cluster_distance is not null and z > 7 and st_geometrytype(geom) = 'ST_LineString') as measured
+       subdivided as (select liane_id, destination, geometry as geom, (points_cluster_distance*i/len) as l_start,  (points_cluster_distance*(i+1)/len) as l_end, len, i
+                      from (select *, st_length(geometry::geography) as len from longest_lianes where points_cluster_distance is not null and z > 7) as measured
                              cross join lateral (select i from generate_series(0, floor(len / points_cluster_distance)::integer - 1) as t(i)) as iterator),
-       subdivided_suggestions as (select subdivided.liane_id, destination, i,
-                                         st_lineinterpolatepoint(geom, (l_start+l_end)/2) as middle,
-                                         row_number() over (partition by suggestion_points.id) as point_occurence,
-                                         suggestion_points.*
-                                  from subdivided inner join suggestion_points on subdivided.liane_id = any(suggestion_points.liane_ids)
-       ),
+       subdivided_suggestions as (select *, row_number() over (partition by id) as point_occurence from
+         (select subdivided.liane_id, destination, i,
+         st_lineinterpolatepoint(geom, (l_start+l_end)/2) as middle,
+         suggestion_points.*
+         from subdivided inner join suggestion_points on subdivided.liane_id = any(suggestion_points.liane_ids)
+         ) as x  where st_distancesphere(middle, location) < points_cluster_distance/2),
        clustered_points as (select middle as location, array_agg(id) as ids, count(id) as point_count from subdivided_suggestions where point_occurence = 1 and id != destination group by middle having count(id) > 1),
        solo_points as (select suggestion_points.* from suggestion_points left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id where c.id is null),
 
@@ -475,7 +475,8 @@ BEGIN
                                     city,
                                     place_count,
                                     liane_ids         as lianes,
-                                    point_type
+                                    point_type,
+                                    point_count
                              from all_points) as x
                        where location is not null)
   SELECT INTO mvt points_tile.tile || liane_tile.tile
