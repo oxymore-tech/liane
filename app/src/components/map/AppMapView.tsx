@@ -311,7 +311,7 @@ export const PickupDestinationsDisplayLayer = ({
               const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
 
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
-              if (points.length === 1) {
+              if (points.length === 1 && !!points[0].properties!.id) {
                 const p = points[0];
                 console.debug("clc", p);
 

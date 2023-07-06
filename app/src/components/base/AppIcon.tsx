@@ -15,10 +15,10 @@ import PositionOn from "@/assets/icons/position-on.svg";
 import PositionOff from "@/assets/icons/position-off.svg";
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 
-export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
+export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number] | CustomIconName;
 
 export type AppIconProps = {
-  name: IconName | CustomIconName;
+  name: IconName;
   color?: ColorValue;
   size?: number;
   opacity?: number;
@@ -54,7 +54,7 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
   }
 }
 
-export type CustomIconName = (typeof AppIconsNames)[number];
+type CustomIconName = (typeof AppIconsNames)[number];
 
 const AppIconsNames = [
   "car-check-mark",

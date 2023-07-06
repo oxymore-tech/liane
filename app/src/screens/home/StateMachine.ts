@@ -275,7 +275,15 @@ export const HomeMapMachine = (services: {
                 target: "#homeMap.detail",
                 actions: ["selectMatch"]
               },
-              BACK: { target: "#homeMap.map", actions: ["resetTrip", "resetMatches", "resetMatchesDisplay"] },
+              BACK: {
+                target: "#homeMap.map",
+                actions: [
+                  assign({ filter: context => ({ ...context.filter, to: undefined }) }) /*"resetTrip"*/,
+
+                  "resetMatches",
+                  "resetMatchesDisplay"
+                ]
+              },
               UPDATE: [
                 {
                   actions: ["resetTrip", "updateTrip", "cacheRecentTrip", "resetMatches", "resetMatchesDisplay"],

@@ -6,7 +6,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
-import { CachedLocationsView, CachedTripsView, PlaceSuggestions } from "@/screens/ItinerarySearchForm";
+import { CachedLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
 import { Trip } from "@/api/service/location";
@@ -193,7 +193,7 @@ export const RPFormHeader = ({
 
   return (
     <Animated.View style={showHistory ? { flex: 1 } : undefined} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
-      {!!hintPhrase && (
+      {!from && !showHistory && (
         <Animated.View
           entering={animateEntry ? SlideInUp : undefined}
           exiting={SlideOutUp}
@@ -206,13 +206,75 @@ export const RPFormHeader = ({
             },
             AppStyles.shadow
           ]}>
-          <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center" }} spacing={8}>
-            <AppIcon name={"info-outline"} />
-            <AppText>{hintPhrase}</AppText>
+          <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
+            <AppIcon name={hintPhrase ? "info-outline" : "pin"} color={hintPhrase ? undefined : AppColors.orange} />
+            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point de ralliement"}</AppText>
           </Row>
         </Animated.View>
       )}
-      {!showHistory && !hintPhrase && (
+      {!!from && !to && (
+        <View
+          style={[
+            {
+              backgroundColor: AppColorPalettes.gray[100],
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: itineraryMarginTop
+            },
+            AppStyles.shadow
+          ]}>
+          <Column>
+            <Row style={{ paddingVertical: 8, paddingHorizontal: 8, minHeight: 54 }} spacing={16}>
+              <AppIcon name={"pin"} color={AppColors.orange} size={32} />
+              <RallyingPointItem item={from} labelSize={18} showIcon={false} />
+              <View style={{ flex: 1 }} />
+              <AppPressableIcon
+                onPress={() => {
+                  updateTrip({ from: undefined });
+                }}
+                name={"close-outline"}
+              />
+            </Row>
+            <View style={[{ width: "72%" }, styles.line]} />
+            <View style={{ paddingVertical: 4, paddingLeft: 16 }}>
+              {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
+              {!hintPhrase && (
+                <Row style={{ alignItems: "center" }} spacing={16}>
+                  <AppIcon name={"flag"} color={AppColors.pink} />
+                  <AppText style={{ fontStyle: "italic" }}>{"Sélectionnez un point d'arrivée"}</AppText>
+                </Row>
+              )}
+            </View>
+          </Column>
+        </View>
+      )}
+      {!!from && !!to && (
+        <View
+          style={[
+            {
+              backgroundColor: AppColorPalettes.gray[100],
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: itineraryMarginTop
+            },
+            AppStyles.shadow
+          ]}>
+          <Column style={{ paddingVertical: 4, paddingHorizontal: 24 }}>
+            <Row style={{ paddingVertical: 8, alignItems: "center" }} spacing={16}>
+              <AppIcon name={"pin"} color={AppColors.orange} />
+              <AppText style={[{ fontSize: 16 }]}>{from.label}</AppText>
+            </Row>
+            <Row style={{ paddingVertical: 8, alignItems: "center" }} spacing={16}>
+              <AppIcon name={"flag"} color={AppColors.pink} />
+              <AppText style={[{ fontSize: 16 }]}>{to.label}</AppText>
+            </Row>
+          </Column>
+          <View style={{ position: "absolute", top: itineraryMarginTop + 24, right: 16 }}>
+            <AppPressableIcon name={"flip-outline"} onPress={() => updateTrip({ to: from, from: to })} />
+          </View>
+        </View>
+      )}
+      {/*!showHistory && (
         <View
           style={[
             {
@@ -279,7 +341,7 @@ export const RPFormHeader = ({
             )}
           </Column>
         </View>
-      )}
+      )*/}
       {showHistory && (
         <Column style={{ backgroundColor: AppColors.white, paddingTop: itineraryMarginTop, flex: 1 }}>
           <CachedTripsView
@@ -297,14 +359,12 @@ export const RPFormHeader = ({
           </View>
         </Column>
       )}
-      {!!to && !!from && (
-        <View style={{ position: "absolute", top: itineraryMarginTop + 20, right: 20 }}>
-          <AppPressableIcon name={"flip-outline"} onPress={() => updateTrip({ to: from, from: to })} />
-        </View>
-      )}
+
       <View style={[styles.headerContainer, AppStyles.shadow, { paddingTop: insets.top + 4, paddingBottom: 8 }]}>
         <Column>
           <Row style={{ alignItems: "center", marginBottom: (title ? 4 : 0) + 8 }} spacing={16}>
+            {!canGoBack && <View style={{ flex: 1 }} />}
+
             {canGoBack && (
               <AppPressableIcon
                 onPress={() => {
@@ -504,5 +564,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 4,
     minHeight: 32
+  },
+  line: {
+    borderBottomColor: AppColorPalettes.gray[200],
+    borderBottomWidth: 1,
+    alignSelf: "center"
   }
 });

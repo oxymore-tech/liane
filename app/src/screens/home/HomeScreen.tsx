@@ -78,12 +78,15 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   React.useLayoutEffect(() => {
     navigation.setOptions(
       //@ts-ignore
-      { tabBarStyle: [...bbStyle, { display: isMapState && displayBar ? undefined : "none" }] }
+      { tabBarStyle: [...bbStyle, { display: (isMapState || isPointState) && displayBar ? undefined : "none" }] }
     );
   });
 
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
   const [hintPhrase, setHintPhrase] = useState<string | null>(null);
+
+  const features = useObservable(mapFeatureSubject, []);
+  const filteredFeatures = features?.length;
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -96,7 +99,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             onMovingStateChanged={setMovingDisplay}
             onZoomChanged={z => {
               console.debug("[MAP] zoom", z);
-              if (z < 7) {
+              if (z < 8) {
                 setHintPhrase("Zoomez pour afficher les points de ralliement");
               } else {
                 setHintPhrase(null);
@@ -168,10 +171,20 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             trip={state.context.filter}
           />
         )}
-        {(isMatchState || isPointState) && (
+        {isPointState && (
           <RPFormHeader
+            hintPhrase={isPointState && !filteredFeatures ? "Aucun passage n'est prévu." : null}
             animateEntry={false}
             title={"Carte des lianes"}
+            updateTrip={t => machine.send("UPDATE", { data: t })}
+            trip={state.context.filter}
+          />
+        )}
+        {isMatchState && (
+          <RPFormHeader
+            animateEntry={false}
+            canGoBack={true}
+            title={"Recherche"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
           />
@@ -357,12 +370,6 @@ const HomeMap = ({
           console.debug("[MAP] found", features.features.length, "features");
           featureSubject?.next(features.features);
         }
-
-        const featuresr = await appMapRef.current?.queryFeatures(undefined, undefined, ["rp_symbols_clustered", "rp_symbols"]);
-        if (featuresr) {
-          console.debug(JSON.stringify(featuresr));
-          featureSubject?.next(featuresr.features);
-        }
       }
     }
   };
@@ -371,7 +378,7 @@ const HomeMap = ({
     <>
       <AppMapView
         bounds={mapBounds}
-        showGeolocation={state.matches("map")} //&& !movingDisplay}
+        showGeolocation={state.matches("map") || state.matches("point")} //&& !movingDisplay}
         onRegionChanged={onRegionChanged}
         onStopMovingRegion={() => {
           onMovingStateChanged(false);
