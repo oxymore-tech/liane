@@ -38,7 +38,11 @@ public sealed class PostgisServiceImpl : IPostgisService
 
     await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE liane_id = @id", new { id = liane.Id }, tx);
 
-    await GetStatsAndExecuteBatch(i => ComputeLianeBatch(i, liane), connection, tx);
+    if (liane.Members.Select(m => m.SeatCount).Aggregate(0, (v, acc) => v + acc) > 0)
+    {
+      // Only add liane to research if it has available seats
+      await GetStatsAndExecuteBatch(i => ComputeLianeBatch(i, liane), connection, tx);
+    }
 
     tx.Commit();
   }
