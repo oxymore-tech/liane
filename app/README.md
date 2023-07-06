@@ -90,3 +90,6 @@ yarn add                                                \
   react-native-svg                                      \
   react-query
 ```
+# Generate new ios certficate for distribution
+
+See [doc/ios_certificate.md](doc/ios_certificate.md)
