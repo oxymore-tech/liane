@@ -135,3 +135,24 @@ export async function hideTutorial(name: string) {
   stored.push(name);
   await storeAsync("tutorials", stored);
 }
+
+export type AppSettings = Readonly<{
+  "map.lianeTrafficAsWidth": boolean;
+  "map.lianeTrafficAsColor": boolean;
+}>;
+export function getSettings() {
+  return retrieveAsync<AppSettings>("settings", { "map.lianeTrafficAsWidth": true, "map.lianeTrafficAsColor": true });
+}
+
+export async function getSetting(name: keyof AppSettings) {
+  const setting = (await getSettings())?.[name];
+  if (setting === undefined) {
+    throw new Error("Setting not found: " + name);
+  }
+  return setting;
+}
+export async function saveSetting(name: keyof AppSettings, value: any) {
+  const stored = await getSettings();
+
+  await storeAsync("settings", { ...stored, [name]: value });
+}

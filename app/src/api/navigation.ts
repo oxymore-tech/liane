@@ -27,6 +27,7 @@ export type NavigationParamList = {
   Profile: { user: User };
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
   ArchivedTrips: undefined;
+  Settings: undefined;
   OpenValidateTrip: { liane: Liane };
 };
 

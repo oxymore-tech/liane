@@ -28,7 +28,7 @@ import UserLocation = MapLibreGL.UserLocation;
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
-const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
+//const rp_suggestion_icon = require("../../../assets/icons/rp_beige.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 const rp_deposit_cluster_icon = require("../../../assets/icons/rp_pink_blank.png");
 
@@ -182,10 +182,14 @@ const getDateParams = (date: Date) =>
 
 export const LianeDisplayLayer = ({
   date = new Date(),
-  onSelect
+  onSelect,
+  trafficAsColor = true,
+  trafficAsWidth = true
 }: {
   date?: Date;
   onSelect?: (rp: RallyingPoint & { point_type: string }) => void;
+  trafficAsWidth?: boolean;
+  trafficAsColor?: boolean;
 }) => {
   const dateArg = getDateParams(date);
   const [sourceId, setSourceId] = useState("");
@@ -198,6 +202,7 @@ export const LianeDisplayLayer = ({
   const url = TilesUrl + "/liane_display?" + dateArg;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
+
   return (
     <MapLibreGL.VectorSource
       id={"segments" + ":" + updateIdentifier}
@@ -243,8 +248,10 @@ export const LianeDisplayLayer = ({
           //@ts-ignore
           lineSortKey: ["get", "count"],
           lineCap: "round",
-          lineColor: ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"],
-          lineWidth: ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+          lineColor: trafficAsColor
+            ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"]
+            : AppColors.darkBlue,
+          lineWidth: trafficAsWidth ? ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5] : 3
         }}
       />
 
@@ -261,7 +268,8 @@ export const LianeDisplayLayer = ({
             ["==", ["get", "point_type"], "pickup"],
             AppColors.orange,
             ["==", ["get", "point_type"], "suggestion"],
-            "#9f4a2f",
+            AppColors.orange,
+            // "#9f4a2f",
             "#000"
           ],
           textHaloColor: "#fff",
@@ -273,7 +281,7 @@ export const LianeDisplayLayer = ({
           textMaxWidth: 5.4,
           textOptional: true,
           visibility: "visible",
-          iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", ["==", ["get", "point_type"], "suggestion"], "suggestion", "rp"],
+          iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", ["==", ["get", "point_type"], "suggestion"], "pickup", "rp"],
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
         }}
@@ -890,7 +898,7 @@ const AppMapView = forwardRef(
             images={{
               pickup: rp_pickup_icon,
               rp: rp_icon,
-              suggestion: rp_suggestion_icon,
+              //    suggestion: rp_suggestion_icon,
               deposit: rp_deposit_icon,
               deposit_cluster: rp_deposit_cluster_icon
             }}

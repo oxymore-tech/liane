@@ -32,7 +32,7 @@ export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
 
   //console.log("state dbg", state.context.matches);
   return (
-    <Column style={{ flex: 1 }} spacing={8}>
+    <>
       {/*["map", "point", "match"].some(state.matches) && <FilterSelector />*/}
       {(loading || (state.matches("match") && !state.context.matches)) && <ActivityIndicator />}
       {!loading && state.matches("match") && state.context.matches && (
@@ -45,7 +45,7 @@ export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
       {/*!filterVisible && state.matches("point") && (
         <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />
       )*/}
-    </Column>
+    </>
   );
 };
 
@@ -214,7 +214,7 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
   return (
     <Column spacing={8}>
       {displayedLianes.length > 0 && (
-        <AppText style={{ paddingHorizontal: 24, fontWeight: "bold" }}>
+        <AppText style={{ paddingHorizontal: 24, fontWeight: "bold", minHeight: 20 }}>
           {displayedLianes.length} résultat{displayedLianes.length > 1 ? "s" : ""}
         </AppText>
       )}

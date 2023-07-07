@@ -209,7 +209,7 @@ export const RPFormHeader = ({
             AppStyles.shadow
           ]}>
           <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
-            <AppIcon name={hintPhrase ? "info-outline" : "pin"} color={hintPhrase ? undefined : AppColors.orange} />
+            <AppIcon name={"info-outline"} />
             <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point de ralliement"}</AppText>
           </Row>
         </Animated.View>

@@ -84,6 +84,13 @@ const Actions = () => {
         iconName={"history"}
         text={"Historique des trajets"}
       />
+      <ActionItem
+        onPress={() => {
+          navigation.navigate("Settings");
+        }}
+        iconName={"settings-outline"}
+        text={"Paramètres"}
+      />
       <LineSeparator />
       <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
       <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />

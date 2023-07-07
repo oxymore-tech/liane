@@ -30,6 +30,7 @@ import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { UserPicture } from "@/components/UserPicture";
 import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { SettingsScreen } from "@/screens/user/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -117,6 +118,7 @@ function Navigation() {
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />

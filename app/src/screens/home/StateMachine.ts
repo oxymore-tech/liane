@@ -187,7 +187,7 @@ export const HomeMapMachine = (services: {
               },
               SELECT: {
                 target: "#homeMap.point",
-                actions: ["selectRallyingPoint"]
+                actions: ["selectRallyingPoint", "cacheRecentPoint"]
               },
               DETAIL: {
                 target: "#homeMap.detail",
@@ -260,7 +260,7 @@ export const HomeMapMachine = (services: {
             ],
             SELECT: {
               target: "#homeMap.match",
-              actions: ["selectRallyingPoint2", "cacheRecentTrip"]
+              actions: ["cacheRecentPoint", "selectRallyingPoint2", "cacheRecentTrip"]
             } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),
@@ -347,6 +347,7 @@ export const HomeMapMachine = (services: {
       actions: {
         cacheRecentTrip: (context, event: UpdateEvent) =>
           services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
+        cacheRecentPoint: (context, event: SelectEvent) => services.services.cacheRecentPoint(event.data),
 
         resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),

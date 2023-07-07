@@ -1,4 +1,4 @@
-import { StatusBar, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
@@ -35,6 +35,8 @@ import { useAppNavigation } from "@/api/navigation";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
+import { getSetting } from "@/api/storage";
+import { useIsFocused } from "@react-navigation/native";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -182,7 +184,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
           <RPFormHeader
             animateEntry={false}
             canGoBack={true}
-            title={"Recherche"}
+            title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
           />
@@ -372,6 +374,15 @@ const HomeMap = ({
     }
   };
 
+  // Debug settings
+  const isFocused = useIsFocused();
+  const [trafficAsWidth, setTrafficAsWidth] = useState(true);
+  const [trafficAsColor, setTrafficAsColor] = useState(true);
+  useEffect(() => {
+    getSetting("map.lianeTrafficAsWidth").then(setTrafficAsWidth);
+    getSetting("map.lianeTrafficAsColor").then(setTrafficAsColor);
+  }, [isFocused]);
+
   return (
     <>
       <AppMapView
@@ -400,6 +411,8 @@ const HomeMap = ({
       >
         {state.matches("map") && (
           <LianeDisplayLayer
+            trafficAsWidth={trafficAsWidth}
+            trafficAsColor={trafficAsColor}
             date={state.context.filter.targetTime?.dateTime}
             onSelect={rp => {
               if (rp) {

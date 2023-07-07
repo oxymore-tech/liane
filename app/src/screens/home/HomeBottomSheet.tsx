@@ -56,7 +56,7 @@ export const HomeBottomSheetContainer = (
     initialIndex = 1;
   } else if (isMatchState || isPointState) {
     stops = [AppBottomSheetHandleHeight + h / 2 + 52, 0.35, 1];
-    paddingTop = 176;
+    paddingTop = 196;
     initialIndex = 1;
   } else {
     stops = [0.35, 1];
