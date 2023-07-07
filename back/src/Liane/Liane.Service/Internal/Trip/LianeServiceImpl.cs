@@ -28,6 +28,7 @@ using LngLatTuple = Tuple<double, double>;
 public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, LianeDb, Api.Trip.Liane>, ILianeService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
+  private const int MaxDepositDeltaInMeters = 1000;
   private const int LianeMatchPageDeltaInHours = 24;
   private const int SnapDistanceInMeters = 10000;
 
@@ -534,9 +535,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       trip.RemoveRange(0, trip.FindIndex(w => w.RallyingPoint.Id == depositPoint.Id));
 
       var t = trip.TotalDistance();
-      var maxBoundPickup = filter.MaxDeltaInMeters ?? t * 0.65;
-      if (dPickup.Distance > maxBoundPickup
-          || dDeposit.Distance > SnapDistanceInMeters)
+      var maxBoundPickup = filter.MaxDeltaInMeters ?? t * 0.50;
+      if (dPickup.Distance > maxBoundPickup || dDeposit.Distance > MaxDepositDeltaInMeters)
       {
         // Too far for current user
         continue;
