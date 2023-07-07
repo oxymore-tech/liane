@@ -14,7 +14,7 @@ import { getPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
 import { AnimatedFloatingBackButton, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
-import { FilterListView } from "@/screens/home/BottomSheetView";
+import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
@@ -128,7 +128,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
             canScroll={loadingDisplay && !movingDisplay}>
             {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
 
-            {isMatchState && <FilterListView loading={loadingList} />}
+            {isMatchState && <LianeMatchListView loading={loadingList} />}
 
             {/*isPointState && (
               <LianeDestinations
@@ -504,12 +504,12 @@ const HomeMap = ({
               );
             } else if (placeFeature.geometry.type === "Point") {
               appMapRef.current?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000);
-              if (placeFeature.place_type[0] === "rallying_point") {
+              /*  if (placeFeature.place_type[0] === "rallying_point") {
                 // Select it
                 setTimeout(() => {
                   machine.send("SELECT", { data: placeFeature.properties });
                 }, 1000);
-              }
+              }*/
             }
             return true;
           }}

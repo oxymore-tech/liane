@@ -3,10 +3,10 @@ import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
-import { CachedLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
+import { CachedPlaceLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
 import { Trip } from "@/api/service/location";
@@ -17,6 +17,8 @@ import { AppPressableIcon } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { Feature } from "geojson";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { RallyingPoint } from "@/api";
+import { AppContext } from "@/components/ContextProvider";
 
 export const RallyingPointField = forwardRef(
   (
@@ -210,7 +212,7 @@ export const RPFormHeader = ({
           ]}>
           <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
             <AppIcon name={"info-outline"} />
-            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point de ralliement"}</AppText>
+            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point de départ"}</AppText>
           </Row>
         </Animated.View>
       )}
@@ -434,10 +436,12 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
   const [modalOpen, setModalOpen] = useState(false);
   const [inputText, setInputText] = useState("");
   const { top } = useSafeAreaInsets();
+  const { services } = useContext(AppContext);
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setInputText("");
   }, []);
+
   return (
     <>
       <Pressable
@@ -477,17 +481,10 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
             </View>
             <View style={{ flex: 1, marginTop: 16 }}>
               {inputText.length === 0 && (
-                <CachedLocationsView
-                  //exceptValues={[]}
+                <CachedPlaceLocationsView
                   showUsePosition={false}
-                  onSelect={async rp => {
-                    // updateTrip({ [currentPoint]: rp });
-                    const close = props.onSelect({
-                      type: "Feature",
-                      geometry: { type: "Point", coordinates: [rp.location.lng, rp.location.lat] },
-                      properties: { ...rp },
-                      place_type: ["rallying_point"]
-                    });
+                  onSelect={async f => {
+                    const close = props.onSelect(f);
                     if (close) {
                       closeModal();
                     }
@@ -502,6 +499,8 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
                     if (close) {
                       closeModal();
                     }
+                    // Cache location
+                    services.location.cacheRecentPlaceLocation(f).catch(e => console.warn(e));
                   }}
                 />
               )}

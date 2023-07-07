@@ -4,14 +4,16 @@ import Geolocation from "react-native-geolocation-service";
 import { retrieveAsync, storeAsync } from "@/api/storage";
 import { DEFAULT_TLS } from "@/api/location";
 import { MAPTILER_KEY } from "@env";
-import { BaseUrl, get } from "@/api/http";
-import { FeatureCollection } from "geojson";
+import { Feature, FeatureCollection } from "geojson";
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
-  // tryCurrentLocation(): Promise<LatLng | null>;
+
   getLastKnownLocation(): LatLng;
   cacheRecentLocation(rallyingPoint: RallyingPoint): Promise<RallyingPoint[]>;
   getRecentLocations(): Promise<RallyingPoint[]>;
+
+  cacheRecentPlaceLocation(rallyingPoint: Feature): Promise<Feature[]>;
+  getRecentPlaceLocations(): Promise<Feature[]>;
 
   cacheRecentTrip(trip: Trip): Promise<Trip[]>;
   getRecentTrips(): Promise<Trip[]>;
@@ -30,6 +32,7 @@ export const getKeyForTrip = (trip: Trip) => {
 
 const cacheSize = 5;
 const rallyingPointsKey = "rallyingPoints";
+const recentPlacesKey = "recent_places";
 const tripsKey = "trips";
 const lastKnownLocationKey = "last_known_loc";
 
@@ -118,6 +121,20 @@ export class LocationServiceClient implements LocationService {
 
   async getRecentLocations(): Promise<RallyingPoint[]> {
     return (await retrieveAsync<RallyingPoint[]>(rallyingPointsKey)) ?? [];
+  }
+
+  async cacheRecentPlaceLocation(p: Feature): Promise<Feature[]> {
+    let cachedValues = (await retrieveAsync<Feature[]>(recentPlacesKey)) ?? [];
+    cachedValues = cachedValues.filter(v => v.properties!.ref || v.properties!.id !== p.properties!.ref || p.properties!.id);
+    cachedValues.unshift(p);
+    cachedValues = cachedValues.slice(0, cacheSize);
+    await storeAsync<Feature[]>(recentPlacesKey, cachedValues);
+
+    return cachedValues;
+  }
+
+  async getRecentPlaceLocations(): Promise<Feature[]> {
+    return (await retrieveAsync<Feature[]>(recentPlacesKey)) ?? [];
   }
 
   async cacheRecentTrip(trip: Trip): Promise<Trip[]> {

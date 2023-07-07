@@ -96,8 +96,7 @@ const WelcomePageMap = (props: { next: () => void; prev: () => void }) => (
         </AppText>
         <Row style={{ justifyContent: "center", paddingTop: 8 }}>
           <PointLegend iconSource={require("../../../assets/icons/rp_gray.png")} legend={"Pas de\npassage"} />
-          <PointLegend iconSource={require("../../../assets/icons/rp_beige.png")} legend={"Arrêt\npossible"} />
-          <PointLegend iconSource={require("../../../assets/icons/rp_orange.png")} legend={"Arrêt\nprévu"} />
+          <PointLegend iconSource={require("../../../assets/icons/rp_orange.png")} legend={"Départ\npossible"} />
         </Row>
       </Column>
       <Dots count={4} selectedIndex={2} color={AppColors.darkBlue} />

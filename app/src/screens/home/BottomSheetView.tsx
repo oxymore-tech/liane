@@ -1,8 +1,8 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { Exact, getPoint, LianeMatch, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
+import { Exact, getPoint, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip } from "@/components/trip/trip";
@@ -25,31 +25,8 @@ import { capitalize } from "@/util/strings";
 import { Observable } from "rxjs";
 import { Feature } from "geojson";
 import { useObservable } from "@/util/hooks/subscription";
+import { AppTabs } from "@/components/base/AppTabs";
 
-export const FilterListView = ({ loading = false }: { loading?: boolean }) => {
-  const machine = useContext(HomeMapContext);
-  const [state] = useActor(machine);
-
-  //console.log("state dbg", state.context.matches);
-  return (
-    <>
-      {/*["map", "point", "match"].some(state.matches) && <FilterSelector />*/}
-      {(loading || (state.matches("match") && !state.context.matches)) && <ActivityIndicator />}
-      {!loading && state.matches("match") && state.context.matches && (
-        <LianeMatchListView
-          onSelect={l => machine.send("DETAIL", { data: l })}
-          lianeList={state.context.matches}
-          filter={filterHasFullTrip(state.context.filter) ? { to: state.context.filter.to!, from: state.context.filter.from! } : undefined}
-        />
-      )}
-      {/*!filterVisible && state.matches("point") && (
-        <LianeDestinations pickup={state.context.filter.from!} date={state.context.filter.targetTime?.dateTime} />
-      )*/}
-    </>
-  );
-};
-
-//TODO
 const EmptyResultView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center" }]}>{props.message}</AppText>
 );
@@ -176,29 +153,43 @@ const LianeDestinationView = (props: { onPress: () => void; item: RallyingPointL
   );
 };
 
-export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined; filter: any; onSelect: (l: LianeMatch) => void }) => {
-  const displayedLianes = props.lianeList ?? [];
+export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) => {
+  const machine = useContext(HomeMapContext);
+  const [state] = useActor(machine);
+  const displayedLianes = state.context.matches ?? [];
   const { navigation } = useAppNavigation();
+  const [showCompatible, setShowCompatible] = useState(false);
   const data = useMemo(
     () =>
-      (props.lianeList ?? []).map(item => {
-        const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
-        const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
-        const fromPoint = getPoint(item, "pickup");
-        const toPoint = getPoint(item, "deposit");
-        const trip = getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id);
-        const tripDuration = getTotalDuration(trip.wayPoints);
-        return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration };
-      }),
-    [props.lianeList]
+      (state.context.matches ?? [])
+        .map(item => {
+          const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
+          const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
+          const fromPoint = getPoint(item, "pickup");
+          const toPoint = getPoint(item, "deposit");
+          const trip = getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id);
+          const tripDuration = getTotalDuration(trip.wayPoints);
+          return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration };
+        })
+        .filter(i => {
+          const isResearched = i.fromPoint.id === state.context.filter.from!.id && i.toPoint.id === state.context.filter.to!.id;
+          return showCompatible ? !isResearched : isResearched;
+        }),
+    [state.context.matches, showCompatible]
   );
+  if (loading || (state.matches("match") && !state.context.matches)) {
+    return <ActivityIndicator />;
+  }
+  if (loading || !state.matches("match") || !state.context.matches) {
+    return null;
+  }
   const renderItem = ({ item }) => {
     return (
       <AppPressableOverlay
         foregroundColor={WithAlpha(AppColors.black, 0.1)}
         style={{ paddingHorizontal: 24, paddingVertical: 8 }}
         onPress={() => {
-          props.onSelect(item.lianeMatch);
+          machine.send("DETAIL", { data: item.lianeMatch });
         }}>
         <TripSegmentView
           from={item.fromPoint}
@@ -211,21 +202,26 @@ export const LianeMatchListView = (props: { lianeList: LianeMatch[] | undefined;
       </AppPressableOverlay>
     );
   };
+  const exactResultsCount = showCompatible ? displayedLianes.length - data.length : data.length;
   return (
     <Column spacing={8}>
-      {displayedLianes.length > 0 && (
-        <AppText style={{ paddingHorizontal: 24, fontWeight: "bold", minHeight: 20 }}>
-          {displayedLianes.length} résultat{displayedLianes.length > 1 ? "s" : ""}
-        </AppText>
-      )}
-      {displayedLianes.length === 0 && <EmptyResultView message={"Aucun trajet ne correspond à votre recherche."} />}
-      {displayedLianes.length === 0 && (
+      <AppTabs
+        items={["Résultats (" + exactResultsCount + ")", "Trajets alternatifs (" + (displayedLianes.length - exactResultsCount) + ")"]}
+        onSelect={i => setShowCompatible(i === 1)}
+        selectedIndex={showCompatible ? 1 : 0}
+        isSelectable={index => index !== 1 || displayedLianes.length - exactResultsCount !== 0}
+        unselectedTextColor={AppColorPalettes.gray[500]}
+      />
+      {data.length === 0 && <EmptyResultView message={"Aucun trajet ne correspond à votre recherche."} />}
+      {data.length === 0 && (
         <Center style={{ paddingVertical: 8 }}>
           <AppRoundedButton
             backgroundColor={AppColors.orange}
             text={"Ajouter une annonce"}
             onPress={() => {
-              navigation.navigate("Publish", { initialValue: props.filter });
+              navigation.navigate("Publish", {
+                initialValue: filterHasFullTrip(state.context.filter) ? { to: state.context.filter.to!, from: state.context.filter.from! } : undefined
+              });
             }}
           />
         </Center>

@@ -68,6 +68,69 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
   );
 };
 
+export const CachedPlaceLocationsView = ({
+  onSelect,
+  showOpenMap,
+  showUsePosition = true
+}: {
+  onSelect: (r: Feature) => void;
+  showOpenMap?: () => void;
+  showUsePosition?: boolean;
+}) => {
+  const { services } = useContext(AppContext);
+  const [locationList, setRecentLocations] = useState<Feature[]>([]);
+
+  useEffect(() => {
+    services.location.getRecentPlaceLocations().then(r => {
+      setRecentLocations(r);
+    });
+  }, [services.location]);
+
+  const updateValue = (v: Feature) => {
+    onSelect(v);
+    services.location.cacheRecentPlaceLocation(v).then(updated => setRecentLocations(updated));
+  };
+
+  return (
+    <View style={styles.page}>
+      {showUsePosition && (
+        <AppPressableOverlay
+          onPress={async () => {
+            //const currentLocation = await services.location.currentLocation();
+            // TODO revese geocoding
+            //  updateValue(closestPoint);
+          }}>
+          <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
+            <AppIcon name={"position-on"} color={AppColors.blue} />
+            <AppText>Utiliser ma position</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
+      {showOpenMap && (
+        <AppPressableOverlay onPress={showOpenMap}>
+          <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
+            <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
+            <AppText>Choisir sur la carte</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
+        {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
+        <FlatList
+          keyboardShouldPersistTaps="always"
+          data={locationList}
+          keyExtractor={r => r.properties!.ref || r.properties!.id!}
+          renderItem={({ item }) => (
+            <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+              <PlaceItem item={item} />
+            </AppPressableOverlay>
+          )}
+        />
+      </KeyboardAvoidingView>
+    </View>
+  );
+};
+
 export const CachedLocationsView = ({
   onSelect,
   exceptValues,
