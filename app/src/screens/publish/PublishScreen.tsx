@@ -37,6 +37,7 @@ import { useAppNavigation } from "@/api/navigation";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { SelectOnMapView } from "@/screens/publish/SelectOnMapView";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const PublishScreenView = () => {
   const insets = useSafeAreaInsets();
@@ -376,6 +377,7 @@ export const PublishScreen = () => {
   return (
     <PublishLianeContext.Provider value={machine}>
       <PublishScreenView />
+      <AppStatusBar style="light-content" />
     </PublishLianeContext.Provider>
   );
 };

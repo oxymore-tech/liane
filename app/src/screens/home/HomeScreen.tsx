@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import AppMapView, {
   AppMapViewController,
@@ -43,8 +43,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCo
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
   const { status } = useContext(AppContext);
-
-  //console.log("[MAP] moving", movingDisplay);
 
   const backHandler = () => {
     if (state.can("BACK")) {

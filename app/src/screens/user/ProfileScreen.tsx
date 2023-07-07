@@ -16,6 +16,7 @@ import { WithFetchResource } from "@/components/base/WithFetchResource";
 import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { DebugIdView } from "@/components/base/DebugIdView";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export interface ProfileProps {
   user: User;
@@ -23,7 +24,12 @@ export interface ProfileProps {
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
-  return <ProfileView params={route.params} />;
+  return (
+    <>
+      <AppStatusBar style="light-content" />
+      <ProfileView params={route.params} />
+    </>
+  );
 };
 
 const ProfileView = WithFetchResource<User>(

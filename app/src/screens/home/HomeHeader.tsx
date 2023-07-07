@@ -13,9 +13,10 @@ import { Trip } from "@/api/service/location";
 import { FilterSelector } from "@/screens/home/BottomSheetView";
 import { AppText } from "@/components/base/AppText";
 import { useAppBackController } from "@/components/AppBackContextProvider";
-import { AppPressable, AppPressableIcon } from "@/components/base/AppPressable";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { Feature } from "geojson";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const RallyingPointField = forwardRef(
   (
@@ -193,6 +194,7 @@ export const RPFormHeader = ({
 
   return (
     <Animated.View style={showHistory ? { flex: 1 } : undefined} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
+      <AppStatusBar style="light-content" />
       {!from && !showHistory && (
         <Animated.View
           entering={animateEntry ? SlideInUp : undefined}
@@ -225,7 +227,9 @@ export const RPFormHeader = ({
           ]}>
           <Column>
             <Row style={{ paddingVertical: 8, paddingHorizontal: 8 }} spacing={16}>
-              <AppIcon name={"pin"} color={AppColors.orange} size={32} />
+              <View style={{ paddingVertical: 8 }}>
+                <AppIcon name={"pin"} color={AppColors.orange} size={32} />
+              </View>
               <View style={{ flexShrink: 1, flexGrow: 1 }}>
                 <RallyingPointItem item={from} labelSize={18} showIcon={false} />
               </View>
@@ -238,7 +242,7 @@ export const RPFormHeader = ({
               />
             </Row>
             <View style={[{ width: "72%" }, styles.line]} />
-            <View style={{ paddingVertical: 4, paddingLeft: 16 }}>
+            <View style={{ paddingVertical: 4, paddingLeft: 16, paddingBottom: 8 }}>
               {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
               {!hintPhrase && (
                 <Row style={{ alignItems: "center" }} spacing={16}>
@@ -446,10 +450,9 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
       </Pressable>
       <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal}>
         <View style={{ backgroundColor: AppColors.white, padding: 16, height: "100%", paddingTop: 16 + top }}>
-          <Row style={{ marginBottom: 8 }}>
-            <AppPressable style={{ paddingBottom: 16 }} onPress={closeModal}>
-              <AppIcon name={"close-outline"} />
-            </AppPressable>
+          <Row style={{ marginBottom: 16, alignItems: "center" }} spacing={8}>
+            <AppPressableIcon onPress={closeModal} name={"close-outline"} />
+
             <AppText style={{ fontSize: 18, fontWeight: "500" }}>{props.title || "Rechercher"}</AppText>
           </Row>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>

@@ -1,6 +1,6 @@
 import { Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, SectionList, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getKeyForTrip, Trip } from "@/api/service/location";
@@ -125,7 +125,7 @@ export const CachedLocationsView = ({
         </AppPressableOverlay>
       )}
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
-        <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>
+        {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
         <FlatList
           keyboardShouldPersistTaps="always"
           data={locationList}
@@ -295,7 +295,7 @@ export const PlaceSuggestions = (props: {
         .then(queriesData => {
           setLoading(false);
           setResults([
-            ...queriesData[0].map(rp => ({
+            ...queriesData[0].slice(0, Math.min(4, queriesData[0].length)).map(rp => ({
               type: "Feature",
               geometry: { type: "Point", coordinates: [rp.location.lng, rp.location.lat] },
               properties: { ...rp },

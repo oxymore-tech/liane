@@ -29,6 +29,7 @@ import { Notification } from "@/api/notification";
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { UserPicture } from "@/components/UserPicture";
 import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -158,6 +159,7 @@ export const HomeScreenHeader = ({ label, isRootHeader = false }: HomeScreenHead
         minHeight: 60,
         marginTop: insets.top
       }}>
+      <AppStatusBar style="dark-content" />
       {!isRootHeader && (
         <Pressable
           style={{ paddingHorizontal: 16, paddingVertical: 12 }}
