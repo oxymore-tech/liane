@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Immutable;
+using System.Linq;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 
@@ -10,7 +12,8 @@ public abstract record Match
   private Match()
   {
   }
-  public abstract Ref<RallyingPoint> Pickup{ get; init; }
+
+  public abstract Ref<RallyingPoint> Pickup { get; init; }
   public abstract Ref<RallyingPoint> Deposit { get; init; }
 
   public sealed record Exact(Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit) : Match;
@@ -24,4 +27,21 @@ public sealed record LianeMatch(
   Liane Liane,
   int FreeSeatsCount,
   Match Match
-);
+)
+{
+  public WayPoint PickupWayPoint => Match switch
+  {
+    Match.Exact e => Liane.WayPoints.First(w => w.RallyingPoint.Id == e.Pickup.Id),
+    Match.Compatible c => c.WayPoints.First(w => w.RallyingPoint.Id == c.Pickup.Id),
+    _ => throw new ArgumentOutOfRangeException(nameof(Match))
+  };
+
+  public WayPoint DepositWayPoint => Match switch
+  {
+    Match.Exact e => Liane.WayPoints.First(w => w.RallyingPoint.Id == e.Deposit.Id),
+    Match.Compatible c => c.WayPoints.First(w => w.RallyingPoint.Id == c.Deposit.Id),
+    _ => throw new ArgumentOutOfRangeException(nameof(Match))
+  };
+
+  public DateTime DepartureTime => PickupWayPoint.Eta;
+}

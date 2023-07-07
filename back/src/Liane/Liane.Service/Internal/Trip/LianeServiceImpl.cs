@@ -111,10 +111,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var paginated = matches
       .Where(l => l is not null)
       .Cast<LianeMatch>()
-      .Order(new BestMatchComparer(from, to, filter.TargetTime))
+      .Order(new DistanceFromComparer())
+      .Take(20)
+      .OrderBy(l => l.DepartureTime)
       .ToImmutableList();
     Cursor? nextCursor = null; //TODO
-    return new PaginatedResponse<LianeMatch>(matches.Count, nextCursor, paginated.Take(10).ToImmutableList(), paginated.Count);
+    return new PaginatedResponse<LianeMatch>(matches.Count, nextCursor, paginated, paginated.Count);
   }
 
   public async Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
@@ -468,7 +470,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     return Builders<LianeDb>.Update
       .Set(l => l.WayPoints, wayPoints.ToDb());
   }
-  
+
   private async Task<LianeMatch?> MatchLiane(LianeDb lianeDb, Filter filter, ImmutableList<LianeMatchCandidate> candidates, ImmutableList<LatLng> targetRoute)
   {
     var matchForDriver = filter.AvailableSeats > 0;
@@ -526,7 +528,6 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
       var dPickup = await routingService.GetRoute(ImmutableList.Create(targetRoute.First(), pickupPoint.Location));
       var dDeposit = await routingService.GetRoute(ImmutableList.Create(targetRoute.Last(), depositPoint.Location));
-
 
       var trip = newWayPoints.SkipWhile(w => w.RallyingPoint.Id != pickupPoint.Id)
         .Skip(1).ToList();
