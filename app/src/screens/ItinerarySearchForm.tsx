@@ -221,7 +221,7 @@ export const RallyingPointItem = ({
       <Column style={{ justifyContent: "space-evenly" }}>
         <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize, minHeight: labelSize + 4 }]}>{item.label}</AppText>
 
-        <AppText style={{ color }} numberOfLines={1}>
+        <AppText style={{ color, minHeight: 18 }} numberOfLines={1}>
           {(item.zipCode ? item.zipCode + ", " : "") + item.city}
         </AppText>
       </Column>

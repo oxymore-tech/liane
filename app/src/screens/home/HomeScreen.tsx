@@ -13,7 +13,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
-import { AnimatedFloatingBackButton, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
+import { AnimatedFloatingBackButton, MapHeader, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -162,6 +162,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
           />
         )}
         {isMapState && (
+          /*(
           <RPFormHeader
             setBarVisible={setDisplayBar}
             hintPhrase={hintPhrase}
@@ -170,9 +171,15 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
           />
+        )*/ <MapHeader
+            hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
+            title={"Carte des lianes"}
+            updateTrip={t => machine.send("UPDATE", { data: t })}
+            trip={state.context.filter}
+          />
         )}
         {isPointState && (
-          <RPFormHeader
+          <MapHeader
             hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
             animateEntry={false}
             title={"Carte des lianes"}
@@ -181,9 +188,8 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
           />
         )}
         {isMatchState && (
-          <RPFormHeader
+          <MapHeader
             animateEntry={false}
-            canGoBack={true}
             title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}

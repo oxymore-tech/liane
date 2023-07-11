@@ -1,7 +1,7 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
-import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
+import { ActivityIndicator, ColorValue, Platform, View } from "react-native";
+import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
@@ -259,13 +259,13 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
 
 export interface FilterSelectorProps {
   formatter?: (d: Date) => string;
-
+  color?: ColorValue;
   shortFormat?: boolean;
 }
 
 //const selectAvailableSeats = state => state.context.filter.availableSeats;
 const selectTargetTime = state => state.context.filter.targetTime;
-export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelectorProps) => {
+export const FilterSelector = ({ formatter, shortFormat = false, color = defaultTextColor(AppColors.white) }: FilterSelectorProps) => {
   const machine = useContext(HomeMapContext);
 
   // const availableSeats = useSelector(machine, selectAvailableSeats);
@@ -295,7 +295,7 @@ export const FilterSelector = ({ formatter, shortFormat = false }: FilterSelecto
         />
       </View>*/}
       <DatePagerSelector
-        color={AppColors.white}
+        color={color}
         date={date}
         onSelectDate={d => {
           machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: new Date(d.toDateString()) } } });

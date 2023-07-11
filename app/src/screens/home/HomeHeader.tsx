@@ -19,6 +19,7 @@ import { Feature } from "geojson";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { RallyingPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
+import { HomeScreenHeader } from "@/components/Navigation";
 
 export const RallyingPointField = forwardRef(
   (
@@ -164,6 +165,181 @@ export const RallyingPointField2 = forwardRef(
   }
 );
 
+export const MapHeader = ({
+  trip,
+  title,
+
+  updateTrip,
+  animateEntry = false,
+  hintPhrase = null,
+  setBarVisible
+}: {
+  updateTrip: (trip: Partial<Trip>) => void;
+  title: string;
+
+  trip: Partial<Trip>;
+  animateEntry?: boolean;
+  setBarVisible?: (visible: boolean) => void;
+  hintPhrase?: string | null;
+}) => {
+  const insets = useSafeAreaInsets();
+  const { to, from } = trip;
+
+  const itineraryMarginTop = 24;
+
+  return (
+    <View style={{ backgroundColor: AppColorPalettes.gray[100] }}>
+      <HomeScreenHeader label={title} isRootHeader={true} />
+
+      {!from && (
+        <Animated.View
+          entering={animateEntry ? SlideInUp : undefined}
+          exiting={SlideOutUp}
+          style={[
+            {
+              backgroundColor: AppColors.white,
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: itineraryMarginTop,
+              paddingBottom: 4
+            },
+            AppStyles.shadow
+          ]}>
+          <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
+            <AppIcon name={"info-outline"} />
+            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point de départ"}</AppText>
+          </Row>
+        </Animated.View>
+      )}
+      {!!from && (
+        <View
+          style={[
+            {
+              backgroundColor: AppColors.white,
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: itineraryMarginTop
+            },
+            AppStyles.shadow
+          ]}>
+          <View
+            style={{
+              alignSelf: "center",
+              flex: 1,
+              borderLeftWidth: 1,
+              borderLeftColor: AppColorPalettes.gray[200],
+              position: "absolute",
+              top: itineraryMarginTop + 32,
+              bottom: 32,
+              left: 21
+            }}
+          />
+
+          <Column>
+            <Row style={{ paddingVertical: 8, paddingHorizontal: 8 }} spacing={16}>
+              <View
+                style={{
+                  backgroundColor: AppColorPalettes.gray[100],
+                  borderRadius: 32,
+                  width: 28,
+                  height: 28,
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                <AppIcon name={"pin"} color={AppColors.orange} size={24} />
+              </View>
+              <View style={{ flexShrink: 1, flexGrow: 1 }}>
+                <RallyingPointItem item={from} labelSize={16} showIcon={false} />
+              </View>
+
+              {!to && (
+                <AppPressableIcon
+                  onPress={() => {
+                    updateTrip({ from: undefined });
+                  }}
+                  name={"close-outline"}
+                />
+              )}
+            </Row>
+            <View style={[{ width: "72%" }, styles.line]} />
+            {!to && (
+              <View style={{ paddingVertical: 4, paddingLeft: 8, paddingBottom: 8 }}>
+                {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
+                {!hintPhrase && (
+                  <Row style={{ alignItems: "center" }} spacing={16}>
+                    <View
+                      style={{
+                        backgroundColor: AppColorPalettes.gray[100],
+                        borderRadius: 32,
+                        width: 28,
+                        height: 28,
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}>
+                      <AppIcon name={"flag"} color={AppColors.pink} size={24} />
+                    </View>
+                    <AppText style={{ fontStyle: "italic" }}>{"Sélectionnez un point d'arrivée"}</AppText>
+                  </Row>
+                )}
+              </View>
+            )}
+            {!!to && (
+              <Row style={{ paddingVertical: 8, paddingHorizontal: 8 }} spacing={16}>
+                <View
+                  style={{
+                    backgroundColor: AppColorPalettes.gray[100],
+                    borderRadius: 32,
+                    width: 28,
+                    height: 28,
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}>
+                  <AppIcon name={"flag"} color={AppColors.pink} size={24} />
+                </View>
+                <View style={{ flexShrink: 1, flexGrow: 1 }}>
+                  <RallyingPointItem item={to} labelSize={16} showIcon={false} />
+                </View>
+
+                <AppPressableIcon
+                  onPress={() => {
+                    updateTrip({ to: undefined });
+                  }}
+                  name={"close-outline"}
+                />
+              </Row>
+            )}
+          </Column>
+        </View>
+      )}
+
+      <View
+        style={[
+          AppStyles.shadow,
+          {
+            marginTop: insets.top + 56,
+            paddingVertical: 4,
+            position: "absolute",
+            top: 0,
+            left: 40,
+            right: 40,
+            flexShrink: 1,
+
+            backgroundColor: AppColors.yellow,
+            alignSelf: "center",
+            borderRadius: 24,
+            paddingHorizontal: 16
+          }
+        ]}>
+        <Row style={{ alignItems: "center", paddingHorizontal: 8, marginRight: 8 }}>
+          <View style={{ flex: 1 }} />
+          <FilterSelector shortFormat={true} />
+          <View style={{ flex: 1 }} />
+        </Row>
+      </View>
+    </View>
+  );
+};
+
 export const RPFormHeader = ({
   trip,
   title,
@@ -197,6 +373,7 @@ export const RPFormHeader = ({
   return (
     <Animated.View style={showHistory ? { flex: 1 } : undefined} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
       <AppStatusBar style="light-content" />
+
       {!from && !showHistory && (
         <Animated.View
           entering={animateEntry ? SlideInUp : undefined}
