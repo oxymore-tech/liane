@@ -573,17 +573,19 @@ BEGIN
                                  city,
                                  place_count
                           from rallying_point
-                          where z > 5
+                          where z >= 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
                           and st_distancesphere(from_location, location) > 1000 -- don't display points that are too close from pickup location
 
        ),
 
-       suggestion_points as (select clipped_points.*, string_agg(lianes_parts.liane_id, ',') as liane_ids
+       suggestion_points as (select clipped_points.*,
+                                    string_agg(lianes_parts.liane_id, ',') as liane_ids,
+                                    case when clipped_points.id = lianes_parts.destination then 'deposit' else 'suggestion' end as point_type
                              from lianes_parts
                                     inner join clipped_points on
-                               case when z > 7 then st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
-                                          case when z <= 10 then 200 else 500 end) else clipped_points.id = lianes_parts.destination end
+                               case when z >= 6 then st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                          500) else clipped_points.id = lianes_parts.destination end
 
                              group by id, label, location, type, address, zip_code, city, place_count),
        other_points as (select id,
@@ -593,9 +595,10 @@ BEGIN
                                address,
                                zip_code,
                                city,
-                               place_count
+                               place_count,
+                               'active' as point_type
                         from clipped_points
-                        where z >= 11
+                        where z >= 10
                         except
                         select id,
                                label,
@@ -604,12 +607,13 @@ BEGIN
                                address,
                                zip_code,
                                city,
-                               place_count
+                               place_count,
+                               point_type
                         from suggestion_points),
-       all_points as (select *, 'suggestion' as point_type
+       all_points as (select *
                       from suggestion_points
                       union
-                      select *, null as liane_ids, 'active' as point_type
+                      select *, null as liane_ids
                       from other_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
