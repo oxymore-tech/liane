@@ -125,7 +125,7 @@ export class LocationServiceClient implements LocationService {
 
   async cacheRecentPlaceLocation(p: Feature): Promise<Feature[]> {
     let cachedValues = (await retrieveAsync<Feature[]>(recentPlacesKey)) ?? [];
-    cachedValues = cachedValues.filter(v => v.properties!.ref || v.properties!.id !== p.properties!.ref || p.properties!.id);
+    cachedValues = cachedValues.filter(v => (v.properties!.ref || v.properties!.id) !== (p.properties!.ref || p.properties!.id));
     cachedValues.unshift(p);
     cachedValues = cachedValues.slice(0, cacheSize);
     await storeAsync<Feature[]>(recentPlacesKey, cachedValues);
