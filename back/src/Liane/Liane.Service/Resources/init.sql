@@ -581,7 +581,7 @@ BEGIN
 
        suggestion_points as (select clipped_points.*,
                                     string_agg(lianes_parts.liane_id, ',') as liane_ids,
-                                    case when clipped_points.id = lianes_parts.destination then 'deposit' else 'suggestion' end as point_type
+                                    case when bool_or(clipped_points.id = lianes_parts.destination) then 'deposit' else 'suggestion' end as point_type
                              from lianes_parts
                                     inner join clipped_points on
                                case when z >= 6 then st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
