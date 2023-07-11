@@ -202,7 +202,7 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
       <Column spacing={8}>
         {editable && (
           <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
-            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8, color: AppColors.white }}>Avez-vous un véhicule ?</AppText>
+            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8, color: AppColors.white }}>Combien de places avez-vous ?</AppText>
           </Animated.View>
         )}
         {!editable && (
@@ -217,12 +217,13 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
                   textAlignVertical: "center",
                   color: AppColors.white
                 }}>
-                Je suis {seats > 0 ? "conducteur" : "passager"}
+                {/*Je suis {seats > 0 ? "conducteur" : "passager"}*/}
+                {seats} places disponibles
               </AppText>
             </Row>
           </Animated.View>
         )}
-        {editable && (
+        {/*editable && (
           <Animated.View entering={FadeIn.delay(1100)} style={{ alignSelf: "center" }}>
             <AppSwitchToggle
               defaultSelectedValue={seats > 0}
@@ -231,7 +232,7 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
               onSelectValue={() => setSeats(-seats)}
             />
           </Animated.View>
-        )}
+        )*/}
         {editable && (
           <Animated.View entering={FadeInDown.delay(1100)}>
             <Column style={{ alignSelf: "stretch" }}>

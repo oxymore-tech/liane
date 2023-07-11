@@ -23,7 +23,7 @@ export const SeatsForm = ({ seats, setSeats, maxSeats = 8 }: SeatsFormProps) => 
         alignItems: "center",
         padding: 16
       }}>
-      <AppText style={{ fontSize: 16 }}>{seats > 0 ? "Combien de places avez-vous ?" : "Combien de personnes voyagent ?"}</AppText>
+      {/*<AppText style={{ fontSize: 16 }}>{seats > 0 ? "Combien de places avez-vous ?" : "Combien de personnes voyagent ?"}</AppText>*/}
       <Row style={{ alignItems: "center" }} spacing={16}>
         <AppButton
           kind="circular"
