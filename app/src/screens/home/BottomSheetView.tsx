@@ -1,5 +1,5 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
@@ -159,24 +159,37 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   const displayedLianes = state.context.matches ?? [];
   const { navigation } = useAppNavigation();
   const [showCompatible, setShowCompatible] = useState(false);
-  const data = useMemo(
-    () =>
-      (state.context.matches ?? [])
-        .map(item => {
-          const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
-          const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
-          const fromPoint = getPoint(item, "pickup");
-          const toPoint = getPoint(item, "deposit");
-          const trip = getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id);
-          const tripDuration = getTotalDuration(trip.wayPoints);
-          return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration };
-        })
-        .filter(i => {
-          const isResearched = i.fromPoint.id === state.context.filter.from!.id && i.toPoint.id === state.context.filter.to!.id;
-          return showCompatible ? !isResearched : isResearched;
-        }),
-    [state.context.matches, showCompatible]
-  );
+  const formattedData = useMemo(() => {
+    const matches = (state.context.matches ?? []).map(item => {
+      const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
+      const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
+      const fromPoint = getPoint(item, "pickup");
+      const toPoint = getPoint(item, "deposit");
+      const trip = getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id);
+      const tripDuration = getTotalDuration(trip.wayPoints);
+      return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration };
+    });
+    const exact = matches.filter(i => {
+      return i.fromPoint.id === state.context.filter.from!.id && i.toPoint.id === state.context.filter.to!.id;
+    });
+    const compatible = matches.filter(i => {
+      const isResearched = i.fromPoint.id === state.context.filter.from!.id && i.toPoint.id === state.context.filter.to!.id;
+      return !isResearched;
+    });
+    return [exact, compatible];
+    //@ts-ignore
+  }, [state.context.filter.from?.id, state.context.filter.to?.id, JSON.stringify(state.context.matches)]);
+
+  const data = useMemo(() => {
+    const d = showCompatible ? formattedData[1] : formattedData[0];
+
+    return d;
+  }, [showCompatible, JSON.stringify(formattedData)]);
+  useEffect(() => {
+    const d = showCompatible ? formattedData[1] : formattedData[0];
+    machine.send("DISPLAY", { data: d.map(item => item.lianeMatch.liane.id) });
+  }, [showCompatible, JSON.stringify(formattedData)]);
+
   if (loading || (state.matches("match") && !state.context.matches)) {
     return <ActivityIndicator />;
   }
@@ -207,10 +220,13 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
     <Column spacing={8}>
       <AppTabs
         items={["Résultats (" + exactResultsCount + ")", "Trajets alternatifs (" + (displayedLianes.length - exactResultsCount) + ")"]}
-        onSelect={i => setShowCompatible(i === 1)}
+        onSelect={i => {
+          const showCompat = i === 1;
+          setShowCompatible(showCompat);
+        }}
         selectedIndex={showCompatible ? 1 : 0}
         isSelectable={index => index !== 1 || displayedLianes.length - exactResultsCount !== 0}
-        unselectedTextColor={AppColorPalettes.gray[500]}
+        unselectedTextColor={displayedLianes.length - exactResultsCount === 0 ? AppColorPalettes.gray[500] : undefined}
       />
       {data.length === 0 && <EmptyResultView message={"Aucun trajet ne correspond à votre recherche."} />}
       {data.length === 0 && (

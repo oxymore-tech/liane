@@ -10,7 +10,7 @@ import AppMapView, {
   PickupDestinationsDisplayLayer
 } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { getPoint } from "@/api";
+import { getPoint, Liane, Ref } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
 import { AnimatedFloatingBackButton, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
@@ -38,7 +38,7 @@ import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { getSetting } from "@/api/storage";
 import { useIsFocused } from "@react-navigation/native";
 
-const HomeScreenView = ({ displaySource }: { displaySource: Observable<FeatureCollection> }) => {
+const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
   // const [isLoadingDisplay, setLoadingDisplay] = useState<boolean>(false);
 
@@ -230,7 +230,7 @@ const HomeMap = ({
 }: {
   onMovingStateChanged: (moving: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
-  displaySource: Observable<FeatureCollection>;
+  displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]>;
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
   onZoomChanged?: (z: number) => void;
 }) => {
@@ -244,21 +244,47 @@ const HomeMap = ({
 
   const [geometryBbox, setGeometryBbox] = useState<DisplayBoundingBox | undefined>();
 
+  const matchDisplayData = useObservable(matchDisplaySource, undefined);
+
   const pickupsDisplay = useMemo(() => {
     if (isMatchStateIdle) {
-      return state.context.matches!.map(m => getPoint(m, "pickup"));
+      const filterSet = matchDisplayData?.[1];
+      let matches = state.context.matches!;
+      if (filterSet) {
+        matches = matches.filter(m => filterSet.has(m.liane.id!));
+      }
+      return matches!.map(m => getPoint(m, "pickup"));
     }
     return [];
-  }, [isMatchStateIdle, state.context.matches]);
+  }, [isMatchStateIdle, matchDisplayData, state.context.matches]);
 
   const depositsDisplay = useMemo(() => {
     if (isMatchStateIdle) {
-      return state.context.matches!.map(m => getPoint(m, "deposit"));
+      const filterSet = matchDisplayData?.[1];
+      let matches = state.context.matches!;
+      if (filterSet) {
+        matches = matches.filter(m => filterSet.has(m.liane.id!));
+      }
+      return matches.map(m => getPoint(m, "deposit"));
     }
     return [];
-  }, [isMatchStateIdle, state.context.matches]);
+  }, [isMatchStateIdle, matchDisplayData, state.context.matches]);
 
-  const matchDisplay = useObservable(matchDisplaySource, undefined);
+  const matchDisplay = useMemo(() => {
+    const baseData = matchDisplayData?.[0];
+    if (!baseData) {
+      return undefined;
+    }
+    const filterSet = matchDisplayData?.[1];
+    if (!filterSet) {
+      return baseData;
+    }
+    const newCollection: FeatureCollection = {
+      type: "FeatureCollection",
+      features: baseData.features.filter(f => f.properties!.lianes.find((l: string) => filterSet.has(l)))
+    };
+    return newCollection;
+  }, [matchDisplayData]);
 
   const mapBounds = useMemo(() => {
     if (state.matches("detail")) {
@@ -464,12 +490,8 @@ const HomeMap = ({
           />
         )}
 
-        {isDetailState && state.context.filter.from?.id !== detailStateData!.pickup.id && (
-          <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />
-        )}
-        {isDetailState && state.context.filter.to?.id !== detailStateData!.deposit.id && (
-          <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />
-        )}
+        {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />}
+        {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />}
         {["point", "match"].some(state.matches) && (
           <WayPointDisplay
             rallyingPoint={state.context.filter.from || detailStateData!.pickup}
@@ -521,7 +543,8 @@ const HomeMap = ({
 
 const HomeScreen = () => {
   const { services } = useContext(AppContext);
-  const displaySubject = useBehaviorSubject<FeatureCollection>(EmptyFeatureCollection);
+
+  const displaySubject = useBehaviorSubject<[FeatureCollection, Set<Ref<Liane>> | undefined]>([EmptyFeatureCollection, undefined]);
 
   const [m] = useState(() =>
     HomeMapMachine({

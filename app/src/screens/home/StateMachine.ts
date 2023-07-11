@@ -10,7 +10,7 @@ import {
   TransitionConfigOrTarget,
   TransitionsConfig
 } from "xstate";
-import { LianeMatch, LianeMatchDisplay, LianeSearchFilter, RallyingPoint, TargetTimeDirection } from "@/api";
+import { Liane, LianeMatch, LianeMatchDisplay, LianeSearchFilter, RallyingPoint, Ref, TargetTimeDirection } from "@/api";
 
 import React from "react";
 import { Trip } from "@/api/service/location";
@@ -73,6 +73,8 @@ type SelectEvent = { type: "SELECT"; data: RallyingPoint }; //TODO go to
 type MatchEvent = { type: "DETAIL"; data: LianeMatch }; //TODO go to
 type ReloadEvent = { type: "RELOAD"; data: ReloadCause };
 
+type FilterDisplayEvent = { type: "DISPLAY"; data: Ref<Liane>[] };
+
 type Event =
   | UpdateFilterEvent
   | UpdateEvent
@@ -81,7 +83,8 @@ type Event =
   | { type: "BACK" }
   | ReloadEvent
   | SelectEvent
-  | MatchEvent;
+  | MatchEvent
+  | FilterDisplayEvent;
 
 export type HomeStateMachine = StateMachine<HomeMapContext, Schema, Event>;
 
@@ -144,7 +147,7 @@ export const HomeMapMachine = (services: {
     cacheRecentPoint: (rp: RallyingPoint) => void;
   };
   observables: {
-    displaySubject: BehaviorSubject<FeatureCollection>;
+    displaySubject: BehaviorSubject<[FeatureCollection, Set<Ref<Liane>> | undefined]>;
   };
 }): HomeStateMachine =>
   createMachine(
@@ -154,6 +157,7 @@ export const HomeMapMachine = (services: {
       context: <HomeMapContext>{
         filter: { from: undefined, to: undefined, targetTime: { dateTime: new Date(), direction: "Departure" }, availableSeats: -1 },
         matches: undefined,
+        matchesDisplay: EmptyFeatureCollection,
         selectedMatch: undefined,
         mapDisplay: { displayBounds: undefined }
       },
@@ -296,7 +300,16 @@ export const HomeMapMachine = (services: {
                   actions: ["updateTrip", "resetMatches", "resetMatchesDisplay"],
                   target: "#homeMap.point" //  target: "#homeMap.form"
                 }
-              ]
+              ],
+              DISPLAY: {
+                actions: [
+                  (context, event: FilterDisplayEvent) => {
+                    const matchesDisplay = services.observables.displaySubject.getValue();
+
+                    services.observables.displaySubject.next([matchesDisplay[0], new Set(event.data)]);
+                  }
+                ]
+              }
             }
           },
 
@@ -308,15 +321,16 @@ export const HomeMapMachine = (services: {
               return !context.matches || !!context.reloadCause;
             },
             actions: [
-              () => services.observables.displaySubject.next(EmptyFeatureCollection),
+              //   () => services.observables.displaySubject.next([EmptyFeatureCollection, new Set()]),
               assign((context, event) => {
                 return {
                   ...context,
-                  matches: event.data.lianeMatches
+                  matches: event.data.lianeMatches,
+                  matchesDisplay: event.data.features
                 };
               }),
               (context, event) => {
-                services.observables.displaySubject.next(event.data.features);
+                services.observables.displaySubject.next([event.data.features, undefined]);
               }
             ]
           }
@@ -352,7 +366,7 @@ export const HomeMapMachine = (services: {
         resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),
         resetMatches: assign<HomeMapContext, MatchEvent>({ matches: undefined }),
-        resetMatchesDisplay: () => services.observables.displaySubject.next(EmptyFeatureCollection),
+        resetMatchesDisplay: () => services.observables.displaySubject.next([EmptyFeatureCollection, new Set()]),
         selectRallyingPoint: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
             return { ...context.filter, from: event.data, to: undefined };
