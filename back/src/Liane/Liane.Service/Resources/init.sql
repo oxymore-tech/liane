@@ -391,7 +391,7 @@ BEGIN
                           from rallying_point
                           where z > 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-                            and st_distancesphere(from_location, location) > 1500),
+                            and st_distancesphere(from_location, location) > 500),
 
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids
                              from lianes_parts
@@ -575,7 +575,7 @@ BEGIN
                           from rallying_point
                           where z >= 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-                          and st_distancesphere(from_location, location) > 1000 -- don't display points that are too close from pickup location
+                          and st_distancesphere(from_location, location) > 500 -- don't display points that are too close from pickup location
 
        ),
 
