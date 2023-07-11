@@ -618,11 +618,12 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
     setModalOpen(false);
     setInputText("");
   }, []);
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <>
       <Pressable
-        style={[styles.smallActionButton, { backgroundColor: AppColors.blue, position: "absolute", bottom: 90, left: 16 }, AppStyles.shadow]}
+        style={[styles.smallActionButton, { backgroundColor: AppColors.blue, position: "absolute", bottom: 90 + bottom, left: 16 }, AppStyles.shadow]}
         onPress={() => {
           //machine.send("UPDATE", { data: { to: rallyingPoint } });
           setModalOpen(true);
