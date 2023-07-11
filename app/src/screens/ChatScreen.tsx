@@ -41,6 +41,7 @@ const MessageBubble = ({
         maxWidth: "80%"
       }}>
       {!isSender && firstBySender && <UserPicture url={sender.pictureUrl} id={sender.id} size={32} />}
+      {!isSender && !firstBySender && <View style={{ width: 32 }} />}
       <Column spacing={2}>
         {!isSender && firstBySender && (
           <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "500", color: AppColorPalettes.blue[700] }}>
