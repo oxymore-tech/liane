@@ -240,7 +240,7 @@ export const LianeDisplayLayer = ({
           : undefined
       }>
       <MapLibreGL.LineLayer
-        belowLayerID="place"
+        aboveLayerID="Highway"
         id="lianeLayer"
         sourceLayerID="liane_display"
         style={{
@@ -347,7 +347,7 @@ export const PickupDestinationsDisplayLayer = ({
           : undefined
       }>
       <MapLibreGL.LineLayer
-        belowLayerID="place"
+        aboveLayerID="Highway"
         id="lianeLayerFiltered"
         sourceLayerID="liane_display"
         style={{
@@ -427,7 +427,7 @@ export const LianeShapeDisplayLayer = ({
   return (
     <MapLibreGL.ShapeSource id="segments" shape={features}>
       <MapLibreGL.LineLayer
-        belowLayerID="place"
+        aboveLayerID="Highway"
         id="lianeLayer"
         filter={lianeId ? ["in", lianeId, ["get", "lianes"]] : undefined}
         style={{
@@ -618,7 +618,6 @@ export const RallyingPointsFeaturesDisplayLayer = ({
       <MapLibreGL.CircleLayer
         minZoomLevel={minZoomLevel}
         id={"rp_circles" + (id || "")}
-        // belowLayerID="place"
         filter={["!", ["has", "point_count"]]}
         style={{
           circleColor: ["step", ["zoom"], mainColor, 12, mainColor],
