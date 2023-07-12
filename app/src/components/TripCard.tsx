@@ -1,5 +1,5 @@
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React from "react";
 import { Row } from "@/components/base/AppLayout";
 
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 16
   },
-  headerContainer: {
+  footerContainer: {
     backgroundColor: AppColors.darkBlue,
     paddingVertical: 12
   },
@@ -48,10 +48,10 @@ const styles = StyleSheet.create({
     borderColor: AppColorPalettes.gray[200]
   },
   exactMatchBg: {
-    backgroundColor: ContextualColors.greenValid.bg
+    backgroundColor: ContextualColors.greenValid.light
   },
   compatibleMatchBg: {
-    backgroundColor: ContextualColors.orangeWarn.bg
+    backgroundColor: ContextualColors.orangeWarn.light
   },
   header: {
     paddingHorizontal: 16,

@@ -1,11 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.Hub;
-using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
-using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -23,8 +23,10 @@ public sealed class ChatHub : Hub<IHubClient>
   private readonly IUserService userService;
   private readonly IHubService hubService;
   private readonly INotificationService notificationService;
+  private readonly EventDispatcher eventDispatcher;
 
-  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService)
+  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService,
+    EventDispatcher eventDispatcher)
   {
     this.logger = logger;
     this.chatService = chatService;
@@ -32,11 +34,21 @@ public sealed class ChatHub : Hub<IHubClient>
     this.userService = userService;
     this.hubService = hubService;
     this.notificationService = notificationService;
+    this.eventDispatcher = eventDispatcher;
+  }
+
+  public async Task PostEvent(LianeEvent lianeEvent)
+  {
+    await eventDispatcher.Dispatch(lianeEvent);
+  }
+
+  public async Task PostAnswer(string notificationId, Answer answer)
+  {
+    await notificationService.Answer(notificationId, answer);
   }
 
   public async Task SendToGroup(ChatMessage message, string groupId)
   {
-
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
     logger.LogInformation(sent.Text + " " + currentContext.CurrentUser().Id);
     // Send created message directly to the caller, the rest of the group will be handled by chat service
@@ -50,7 +62,7 @@ public sealed class ChatHub : Hub<IHubClient>
     var nowCursor = Cursor.Now();
     var updatedConversation = await chatService.ReadAndGetConversation(groupId, userId, nowCursor.Timestamp);
     //await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-    logger.LogInformation("User " + userId + " joined conversation " + groupId);
+    logger.LogInformation("User '{userId}' joined conversation '{groupId}'", userId, groupId);
     var caller = Clients.Caller;
     // Send latest messages async
     var _ = Task.Run(async () =>
@@ -72,9 +84,7 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     await base.OnConnectedAsync();
     var userId = currentContext.CurrentUser().Id;
-    logger.LogInformation("User " + userId
-                                  + " connected to hub with connection ID : "
-                                  + Context.ConnectionId);
+    logger.LogInformation("User {userId} connected to hub with connection ID : {ConnectionId}", userId, Context.ConnectionId);
     await hubService.AddConnectedUser(userId, Context.ConnectionId);
     // Get user data
     var user = await userService.GetFullUser(userId);

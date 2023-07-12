@@ -16,7 +16,7 @@ public record Waypoint(
     LngLatTuple Location,
     float Distance,
     string Hint,
-    ImmutableList<int>? Nodes
+    ImmutableList<long>? Nodes
 );
 
 /// <summary>
@@ -29,7 +29,7 @@ public sealed record TripWaypoint(
     LngLatTuple Location,
     float Distance,
     string Hint,
-    ImmutableList<int>? Nodes,
+    ImmutableList<long>? Nodes,
     int TripsIndex,
     int WaypointIndex
     

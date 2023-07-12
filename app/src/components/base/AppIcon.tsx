@@ -1,45 +1,30 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Icon } from "react-native-eva-icons";
 import { AppDimensions } from "@/theme/dimensions";
 import { ColorValue } from "react-native";
 import { AppColorPalettes } from "@/theme/colors";
-import { IconAnimationRegistry } from "react-native-eva-icons/animation";
 import CarQuestionMark from "@/assets/icons/car_question_mark.svg";
 import CarCheckMark from "@/assets/icons/car_check_mark.svg";
 import CarStrikeThrough from "@/assets/icons/car_strike_through.svg";
 import MessageCircleFull from "@/assets/icons/message-circle-full.svg";
 import Car from "@/assets/icons/car.svg";
-import Position from "@/assets/icons/position.svg";
 import TwistingArrow from "@/assets/icons/twisting_arrow.svg";
+import DirectionsWalk from "@/assets/icons/directions_walk.svg";
+import History from "@/assets/icons/history.svg";
+import PositionOn from "@/assets/icons/position-on.svg";
+import PositionOff from "@/assets/icons/position-off.svg";
+import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 
-export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number];
+export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number] | CustomIconName;
 
 export type AppIconProps = {
   name: IconName;
   color?: ColorValue;
   size?: number;
-  animation?: keyof IconAnimationRegistry;
+  opacity?: number;
 };
 
-export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, animation }: AppIconProps) {
-  const iconRef = React.useRef<Icon>();
-  useEffect(() => {
-    if (animation) {
-      iconRef.current?.startAnimation();
-    }
-  });
-  // @ts-ignore
-  return <Icon name={name} width={size} height={size} fill={color} animation={animation} ref={iconRef} />;
-}
-
-export type AppCustomIconProps = {
-  name: CustomIconName;
-  color?: ColorValue;
-  size?: number;
-};
-
-export type CustomIconName = (typeof AppIconsNames)[number];
-export const AppCustomIcon = ({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize }: AppCustomIconProps) => {
+export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, opacity = 1 }: AppIconProps) {
   const props = { color, width: size, height: size };
   switch (name) {
     case "car-check-mark":
@@ -54,12 +39,22 @@ export const AppCustomIcon = ({ name, color = AppColorPalettes.gray[800], size =
       return <TwistingArrow {...props} />;
     case "car":
       return <Car {...props} />;
-    case "position":
-      return <Position {...props} />;
+    case "history":
+      return <History {...props} />;
+    case "position-on":
+      return <PositionOn {...props} />;
+    case "position-off":
+      return <PositionOff {...props} />;
+    case "directions-walk":
+      return <DirectionsWalk {...props} />;
+    case "rallying-point":
+      return <RallyingPoint {...props} />;
     default:
-      throw Error(name + " is not a valid icon name");
+      return <Icon opacity={opacity} name={name} width={size} height={size} fill={color} />;
   }
-};
+}
+
+type CustomIconName = (typeof AppIconsNames)[number];
 
 const AppIconsNames = [
   "car-check-mark",
@@ -67,8 +62,12 @@ const AppIconsNames = [
   "car-strike-through",
   "message-circle-full",
   "car",
-  "position",
-  "twisting-arrow"
+  "history",
+  "position-on",
+  "position-off",
+  "twisting-arrow",
+  "directions-walk",
+  "rallying-point"
 ] as const;
 
 const EvaIconsNames = [

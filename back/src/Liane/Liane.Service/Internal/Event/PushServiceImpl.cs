@@ -1,0 +1,46 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
+using Liane.Api.Chat;
+using Liane.Api.Event;
+using Liane.Api.Util.Ref;
+
+namespace Liane.Service.Internal.Event;
+
+public sealed class PushServiceImpl : IPushService
+{
+  private readonly ImmutableList<IPushMiddleware> pushMiddlewares;
+
+  public PushServiceImpl(IEnumerable<IPushMiddleware> pushMiddlewares)
+  {
+    this.pushMiddlewares = pushMiddlewares.OrderBy(p => p.Priority)
+      .ToImmutableList();
+  }
+
+  public async Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  {
+    foreach (var pushService in pushMiddlewares)
+    {
+      if (await pushService.SendChatMessage(receiver, conversation, message))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public async Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification)
+  {
+    foreach (var pushService in pushMiddlewares)
+    {
+      if (await pushService.SendNotification(receiver, notification))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}

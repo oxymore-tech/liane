@@ -14,6 +14,7 @@ export const WithFullscreenModal = (WrappedComponent: React.ComponentType, title
         </Pressable>
         <AppText style={[styles.title, { color: AppColors.white }]}>{title} </AppText>
       </Row>
+
       <WrappedComponent {...props} />
     </View>
   );

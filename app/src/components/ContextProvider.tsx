@@ -5,9 +5,10 @@ import { AppServices, CreateAppServices } from "@/api/service";
 import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
 import { initializeNotification, initializePushNotification } from "@/api/service/notification";
-import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, Platform, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
+import { RootNavigation } from "@/api/navigation";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -17,6 +18,7 @@ interface AppContextProps {
   setAuthUser: (authUser?: AuthUser) => void;
   services: AppServices;
   status: "online" | "offline";
+  appState: AppStateStatus;
 }
 
 const SERVICES = CreateAppServices();
@@ -26,7 +28,8 @@ export const AppContext = createContext<AppContextProps>({
   setLocationPermission: () => {},
   setAuthUser: () => {},
   services: SERVICES,
-  status: "offline"
+  status: "offline",
+  appState: "active"
 });
 
 async function initContext(service: AppServices): Promise<{
@@ -36,7 +39,8 @@ async function initContext(service: AppServices): Promise<{
   online: boolean;
 }> {
   // await SplashScreen.preventAutoHideAsync();
-  const authUser = await service.auth.authUser();
+  let authUser = await service.auth.authUser();
+
   let user;
   let online = true;
   //let notificationSubscription = undefined;
@@ -46,19 +50,18 @@ async function initContext(service: AppServices): Promise<{
 
   await initializeNotification();
 
-  if (authUser) {
+  if (authUser?.isSignedUp) {
     try {
       user = await service.chatHub.start();
       // Branch hub to notifications
       service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
-      service.chatHub.subscribeToNotifications(service.notification.receiveNotification);
     } catch (e) {
       if (__DEV__) {
-        console.log("Could not start hub :", e);
+        console.warn("[INIT] Could not start hub :", e);
       }
       if (e instanceof UnauthorizedError) {
       } else if (e instanceof NetworkUnavailable) {
-        console.log("Error : no network");
+        console.warn("[INIT] Error : no network");
         //user = cached value for an offline mode
         user = await service.auth.currentUser();
         online = false;
@@ -73,7 +76,7 @@ async function initContext(service: AppServices): Promise<{
       }
     } catch (e) {
       if (__DEV__) {
-        console.log("Could not init notifications :", e);
+        console.warn("[INIT] Could not init notifications :", e);
       }
     }
   }
@@ -99,9 +102,12 @@ interface ContextProviderState {
   position?: LatLng;
   user?: User;
   status: "online" | "offline";
+  appState: AppStateStatus;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
+  private unsubscribeToUserInteraction: (() => void) | undefined = undefined;
+  private unsubscribeToStateChange: NativeEventSubscription | undefined = undefined;
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
@@ -109,7 +115,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       appLoaded: false,
       position: undefined,
       user: undefined,
-      status: "offline"
+      status: "offline",
+      appState: "active"
     };
   }
 
@@ -119,7 +126,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   }
 
   private initContext() {
-    initContext(SERVICES).then(async p =>
+    initContext(SERVICES).then(async p => {
       this.setState(prev => ({
         ...prev,
         user: p.user,
@@ -127,15 +134,43 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         position: p.position,
         appLoaded: true,
         status: p.online ? "online" : "offline"
-      }))
-    );
+      }));
+      if (p.online && p.user) {
+        SERVICES.chatHub.subscribeToNotifications(async n => {
+          //console.debug("dbg ------>", this.state.appState);
+          await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
+        });
+      }
+    });
   }
+
+  private handleAppStateChange = (appState: AppStateStatus) => {
+    SERVICES.chatHub.updateActiveState(appState === "active");
+    this.setState(prev => ({
+      ...prev,
+      appState: appState
+    }));
+  };
 
   componentDidMount() {
     this.initContext();
+    this.unsubscribeToUserInteraction = RootNavigation.addListener("state", _ => {
+      // Try to reload on user interaction
+      if (this.state.status === "offline") {
+        console.debug("[INIT] Try to reload...");
+        this.initContext();
+      }
+    });
+    this.unsubscribeToStateChange = AppState.addEventListener("change", this.handleAppStateChange);
   }
 
   componentWillUnmount() {
+    if (this.unsubscribeToUserInteraction) {
+      this.unsubscribeToUserInteraction();
+    }
+    if (this.unsubscribeToStateChange) {
+      this.unsubscribeToStateChange.remove();
+    }
     destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
   }
 
@@ -146,7 +181,14 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: undefined
       }));
     } else if (error instanceof NetworkUnavailable) {
-      console.log("Error : no network");
+      console.warn("[INIT] Error : no network");
+
+      this.setState(prev => ({
+        ...prev,
+        status: "offline"
+      }));
+    } else {
+      console.error("[INIT] Error :", error);
     }
   }
 
@@ -169,13 +211,13 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: user
       }));
     } catch (e) {
-      console.error("Problem while setting auth user : ", e);
+      console.error("[INIT] Problem while setting auth user : ", e);
     }
   };
 
   render() {
     const { children } = this.props;
-    const { appLoaded, locationPermission, position, user, status } = this.state;
+    const { appLoaded, locationPermission, position, user, status, appState } = this.state;
     const { setLocationPermission, setAuthUser } = this;
 
     if (!appLoaded) {
@@ -201,6 +243,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
           position,
           user,
           status,
+          appState,
           services: SERVICES
         }}>
         {children}

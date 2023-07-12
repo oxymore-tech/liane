@@ -1,8 +1,6 @@
 using System;
 using Liane.Api.Chat;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Mongo.Serialization;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Service.Internal.Chat;
 

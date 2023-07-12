@@ -32,6 +32,7 @@ export const AppColorPalettes = {
   },
   yellow: {
     500: AppColors.yellow,
+    800: "#d28127",
     700: "#F39F41",
     200: "#FFD19E",
     100: "#FFE4C7"
@@ -48,6 +49,7 @@ export const defaultTextColor = (color: ColorValue) => {
   switch (color) {
     case AppColors.blue:
     case AppColors.orange:
+    case AppColors.darkBlue:
       return AppColors.white;
     default:
       return AppColorPalettes.gray[700];
@@ -56,13 +58,14 @@ export const defaultTextColor = (color: ColorValue) => {
 
 export const ContextualColors = {
   orangeWarn: {
-    bg: "#FFBC8B"
+    light: "#FFBC8B"
   },
   greenValid: {
-    bg: "#B9E7C3"
+    light: "#B9E7C3"
   },
   redAlert: {
-    bg: "#ffd7d0",
+    light: "#ffd7d0",
+    bg: "#d62a47",
     text: "#750000"
   }
 } as const;

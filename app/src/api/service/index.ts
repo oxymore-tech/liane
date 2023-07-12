@@ -1,10 +1,12 @@
 import { AuthService, AuthServiceClient } from "@/api/service/auth";
 import { LianeService, LianeServiceClient } from "@/api/service/liane";
 import { RallyingPointClient, RallyingPointService } from "@/api/service/rallyingPoints";
-import { ChatHubService, HubServiceClient } from "@/api/service/chat";
+import { HubServiceClient } from "@/api/service/chat";
 import { LocationService, LocationServiceClient } from "@/api/service/location";
-import { NotificationService, NotificationServiceClient } from "@/api/service/notification";
+import { NotificationServiceClient } from "@/api/service/notification";
 import { RoutingService, RoutingServiceClient } from "@/api/service/routing";
+import { ChatHubService } from "@/api/service/interfaces/hub";
+import { NotificationService } from "@/api/service/interfaces/notification";
 
 export type AppServices = {
   readonly auth: AuthService;

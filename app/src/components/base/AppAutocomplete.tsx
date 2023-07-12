@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Identity } from "@/api";
-import { useDebounce } from "@/util/hooks/debounce";
+import { useDebounceValue } from "@/util/hooks/debounce";
 
 export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;
@@ -20,10 +20,18 @@ export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppT
 export type BasicItem = Readonly<{ id?: string; label: string }>;
 
 const borderRadius = 24;
-export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, onChange, renderItem, trailing, ...props }: AppAutocompleteProps<T>) {
+export const AppAutocomplete = <T extends BasicItem>({
+  value,
+  items,
+  onSearch,
+  onChange,
+  renderItem,
+  trailing,
+  ...props
+}: AppAutocompleteProps<T>) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>();
-  const debouncedSearch = useDebounce(search);
+  const debouncedSearch = useDebounceValue(search);
   const [focused, setFocused] = useState(false);
 
   const inputRef = useRef<TextInput>(null);
@@ -76,31 +84,33 @@ export function AppAutocomplete<T extends BasicItem>({ value, items, onSearch, o
     );
 
   return (
-    <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : borderRadius, borderBottomLeftRadius: open ? 0 : borderRadius }]}>
-      <AppTextInput
-        ref={inputRef}
-        style={styles.input}
-        leading={leading}
-        trailing={trailingIcon}
-        blurOnSubmit={false}
-        value={search ?? value?.label ?? undefined}
-        onChangeText={setSearch}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onTouchCancel={onBlur}
-        {...props}
-      />
+    <View style={[styles.container, { maxHeight: open ? undefined : 2 * borderRadius }]}>
+      <View style={[styles.inputContainer, { borderBottomRightRadius: open ? 0 : borderRadius, borderBottomLeftRadius: open ? 0 : borderRadius }]}>
+        <AppTextInput
+          ref={inputRef}
+          style={styles.input}
+          leading={leading}
+          trailing={trailingIcon}
+          blurOnSubmit={false}
+          value={search ?? value?.label ?? undefined}
+          onChangeText={setSearch}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onTouchCancel={onBlur}
+          {...props}
+        />
+      </View>
 
       {open && (
-        <View style={{ zIndex: 100, position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
+        <View style={{ position: "absolute", left: 0, right: 0, top: 2 * borderRadius }}>
           <View style={[styles.itemsContainer, { maxHeight: items.length > 3 ? `${Math.floor((100 * 3) / items.length)}%` : "100%" }]}>
-            <ItemList items={items} loading={false} onSelect={onSelect} renderItem={renderItem} />
+            <ItemList items={items} loading={debouncedSearch !== undefined} onSelect={onSelect} renderItem={renderItem} />
           </View>
         </View>
       )}
     </View>
   );
-}
+};
 
 type ItemListProps<T extends Identity> = Readonly<{
   items: T[];
@@ -140,8 +150,13 @@ const AutocompleteItem = ({ itemView, onPress }: AutocompleteItemProps) => (
 );
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexShrink: 1
+  },
   input: {
     fontSize: 18,
+    paddingVertical: 4,
     color: AppColorPalettes.gray[800]
   },
   item: {
@@ -150,6 +165,9 @@ const styles = StyleSheet.create({
   },
   itemsContainer: {
     width: "100%",
+    flexGrow: 1,
+    zIndex: 10,
+    flexShrink: 1,
     backgroundColor: AppColorPalettes.gray[100],
     borderRadius,
     borderTopLeftRadius: 0,
@@ -159,12 +177,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     height: 2 * borderRadius,
-    paddingVertical: 8,
     backgroundColor: AppColors.white,
     alignContent: "center",
     alignItems: "center",
     borderRadius,
     paddingLeft: 12,
+    paddingVertical: 4,
     paddingRight: 12
   }
 });

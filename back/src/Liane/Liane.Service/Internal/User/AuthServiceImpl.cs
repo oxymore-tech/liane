@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
@@ -25,6 +26,7 @@ public sealed class AuthServiceImpl : IAuthService
 
   private const string UserRole = "user";
   private const int KeySize = 64;
+  private static readonly Regex ValidPhoneNumber = new(@"^\+33|06|07");
 
   private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
   private readonly ILogger<AuthServiceImpl> logger;
@@ -46,7 +48,10 @@ public sealed class AuthServiceImpl : IAuthService
 
   public async Task SendSms(string phone)
   {
-    logger.LogDebug("start send sms ");
+    if (!ValidPhoneNumber.IsMatch(phone))
+    {
+      throw new ArgumentException("Invalid phone number");
+    }
 
     if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
     {
@@ -59,7 +64,7 @@ public sealed class AuthServiceImpl : IAuthService
 
       smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
 
-      if (twilioSettings is { Account: { }, Token: { } })
+      if (twilioSettings is { Account: not null, Token: not null })
       {
         TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
         var generator = new Random();
@@ -80,25 +85,7 @@ public sealed class AuthServiceImpl : IAuthService
 
   public async Task<AuthResponse> Login(AuthRequest request)
   {
-    if (request.Phone.Equals(authSettings.TestAccount) && request.Code.Equals(authSettings.TestCode))
-    {
-      var user = new AuthUser($"test:{authSettings.TestAccount}", authSettings.TestAccount, true);
-      return GenerateAuthResponse(user, null);
-    }
-
-    var phoneNumber = request.Phone.ToPhoneNumber();
-
-    if (!smsCodeCache.TryGetValue(phoneNumber.ToString(), out string? expectedCode))
-    {
-      throw new UnauthorizedAccessException("Invalid code");
-    }
-
-    if (expectedCode != request.Code)
-    {
-      throw new UnauthorizedAccessException("Invalid code");
-    }
-
-    var number = phoneNumber.ToString();
+    var (number, isAdmin) = Authenticate(request);
 
     var collection = mongo.GetCollection<DbUser>();
 
@@ -112,15 +99,38 @@ public sealed class AuthServiceImpl : IAuthService
     var createdAt = DateTime.UtcNow;
     var update = Builders<DbUser>.Update
       .SetOnInsert(p => p.Phone, number)
-      .SetOnInsert(p => p.IsAdmin, false)
+      .SetOnInsert(p => p.IsAdmin, isAdmin)
       .SetOnInsert(p => p.CreatedAt, createdAt)
       .Set(p => p.RefreshToken, encryptedToken)
       .Set(p => p.Salt, salt)
       .Set(p => p.PushToken, request.PushToken);
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
-    var authUser = new AuthUser(userId, number, dbUser?.IsAdmin ?? false);
+    var authUser = new AuthUser(userId, dbUser?.IsAdmin ?? isAdmin, dbUser?.UserInfo is not null);
     return GenerateAuthResponse(authUser, refreshToken);
+  }
+
+  private (string, bool) Authenticate(AuthRequest request)
+  {
+    var phoneNumber = request.Phone.ToPhoneNumber().ToString();
+    var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber().ToString();
+
+    if (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode))
+    {
+      return (phoneNumber, true);
+    }
+
+    if (!smsCodeCache.TryGetValue(phoneNumber, out string? expectedCode))
+    {
+      throw new UnauthorizedAccessException("Invalid code");
+    }
+
+    if (expectedCode != request.Code)
+    {
+      throw new UnauthorizedAccessException("Invalid code");
+    }
+
+    return (phoneNumber, false);
   }
 
   public async Task<AuthResponse> RefreshToken(RefreshTokenRequest request)
@@ -146,7 +156,7 @@ public sealed class AuthServiceImpl : IAuthService
         .Set(p => p.RefreshToken, encryptedToken)
         .Set(p => p.Salt, salt));
 
-    var authUser = new AuthUser(request.UserId, dbUser.Phone, dbUser.IsAdmin);
+    var authUser = new AuthUser(request.UserId, dbUser.IsAdmin, dbUser.UserInfo is not null);
     return GenerateAuthResponse(authUser, newRefreshToken);
   }
 
@@ -213,7 +223,6 @@ public sealed class AuthServiceImpl : IAuthService
     var claims = new List<Claim>
     {
       new(ClaimTypes.Name, user.Id),
-      new(ClaimTypes.MobilePhone, user.Phone),
       new(ClaimTypes.Role, user.IsAdmin ? AdminRole : UserRole)
     };
 

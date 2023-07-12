@@ -6,25 +6,29 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { isJoinLianeRequest, JoinLianeRequest, JoinLianeRequestDetailed, Liane, LianeMatch, NotificationPayload } from "./index";
-import { InternalLianeSearchFilter } from "@/util/ref";
+import { JoinLianeRequestDetailed, Liane, UnionUtils, User } from "./index";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
-import { LianeWizardFormData } from "@/screens/lianeWizard/LianeWizardFormData";
+import { InternalLianeRequest } from "@/screens/publish/StateMachine";
+import { Event, NewMessage, Notification, Reminder } from "@/api/notification";
+import { JoinRequest, MemberAccepted } from "@/api/event";
 
 export type NavigationParamList = {
   Home: undefined;
-  Publish: undefined;
-  SignUp: {};
-  SearchResults: { filter: InternalLianeSearchFilter };
-  Search: { filter: InternalLianeSearchFilter };
+  Publish: { initialValue?: Partial<InternalLianeRequest> };
+  SignUp: undefined;
+  //SearchResults: { filter: InternalLianeSearchFilter };
+  //Search: { filter: InternalLianeSearchFilter };
   RequestJoin: { request: JoinLianeRequestDetailed };
-  LianeWizard: { formData?: LianeWizardFormData };
-  LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
-
+  //LianeWizard: { formData?: LianeWizardFormData };
+  //LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
-  Chat: { conversationId: string };
+  Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
-  OpenJoinLianeRequest: { request: JoinLianeRequest };
+  Profile: { user: User };
+  OpenJoinLianeRequest: { request: Event<JoinRequest> };
+  ArchivedTrips: undefined;
+  Settings: undefined;
+  OpenValidateTrip: { liane: Liane };
 };
 
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
@@ -34,18 +38,23 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
   return { navigation, route };
 };
 
-export const getNotificationNavigation = (
-  payload: NotificationPayload<any>
-): ((navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => void) => {
-  if (isJoinLianeRequest(payload)) {
-    if (payload.event.accepted) {
-      return navigation => navigation.navigate("LianeDetail", { liane: payload.event.targetLiane });
-    } else if (payload.event.accepted !== false) {
-      return navigation => navigation.navigate("OpenJoinLianeRequest", { request: payload.event });
+export function getNotificationNavigation(notification: Notification) {
+  if (UnionUtils.isInstanceOf<Event>(notification, "Event")) {
+    if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
+      return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+        navigation.navigate("OpenJoinLianeRequest", { request: notification });
+    } else if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
+      return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+        navigation.navigate("LianeDetail", { liane: notification.payload.liane });
     }
+  } else if (UnionUtils.isInstanceOf<Reminder>(notification, "Reminder")) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("LianeDetail", { liane: notification.payload.liane });
+  } else if (UnionUtils.isInstanceOf<NewMessage>(notification, "NewMessage")) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("Chat", { conversationId: notification.conversation });
   }
-
-  return () => {};
-};
+  return undefined;
+}
 
 export const RootNavigation = createNavigationContainerRef<NavigationParamList>();

@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Liane.Api.Notification;
+using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Mongo.Serialization;
-using Liane.Service.Internal.Notification;
-using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -15,12 +14,19 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
+using MongoDB.Driver.Linq;
 
 namespace Liane.Service.Internal.Mongo;
 
 public static class MongoFactory
 {
   private static bool _init;
+
+  public static IMongoDatabase CreateForTest(IServiceProvider sp, MongoSettings settings, string databaseName)
+  {
+    var logger = sp.GetRequiredService<ILogger<IMongoDatabase>>();
+    return GetDatabase(settings, logger, databaseName);
+  }
 
   public static IMongoDatabase Create(IServiceProvider sp)
   {
@@ -29,7 +35,7 @@ public static class MongoFactory
     return GetDatabase(settings, logger);
   }
 
-  public static IMongoDatabase GetDatabase(MongoSettings settings, ILogger<IMongoDatabase> logger, string databaseName = "liane")
+  private static IMongoDatabase GetDatabase(MongoSettings settings, ILogger<IMongoDatabase> logger, string databaseName = "liane")
   {
     var mongo = GetMongoClient(settings, logger);
     var db = mongo.GetDatabase(databaseName);
@@ -45,11 +51,11 @@ public static class MongoFactory
       var alwaysPack = new ConventionPack
       {
         new EnumRepresentationConvention(BsonType.String),
+        new CamelCaseElementNameConvention()
       };
       var stringIdAsObjectIdPack = new ConventionPack
       {
-        new IdSerializationConvention(),
-        new RefSerializationConvention(new[] { typeof(RallyingPoint) }.ToImmutableList())
+        new IdSerializationConvention()
       };
 
       ConventionRegistry.Register("EnumStringConvention", alwaysPack, _ => true);
@@ -58,12 +64,13 @@ public static class MongoFactory
         var use = !t.IsAssignableFrom(typeof(RallyingPoint));
         return use;
       });
-      //BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
-      //BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
+      BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
+      BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
+      BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableList<>), typeof(ImmutableListSerializer<>));
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(NotificationDb), new NotificationDiscriminatorConvention());
-      BsonSerializer.RegisterDiscriminatorConvention(typeof(LianeEvent), new PolymorphicTypeDiscriminatorConvention());
+      BsonSerializer.RegisterGenericSerializerDefinition(typeof(ImmutableHashSet<>), typeof(ImmutableHashSetSerializer<>));
+      UnionDiscriminatorConvention.Register();
       _init = true;
     }
 
@@ -77,17 +84,16 @@ public static class MongoFactory
         {
           var json = e.Command.ToJson();
           var command = json.Length < 50_000 ? json : "Big query not displayed";
-          logger.LogDebug($"{e.CommandName} - {command}");
+          logger.LogDebug("{e.CommandName} - {command}", e.CommandName, command);
         });
-      }
+      },
+      LinqProvider = LinqProvider.V2
     });
     return mongo;
   }
 
   public static void InitSchema(IMongoDatabase db)
   {
-    CreateIndex(db, "geometry_index", Builders<LianeDb>.IndexKeys.Geo2DSphere(l => l.Geometry));
-
     CreateIndex(db, "created_at_index", Builders<DbChatMessage>.IndexKeys.Descending(l => l.CreatedAt));
 
     db.GetCollection<DbUser>()
@@ -114,6 +120,22 @@ public static class MongoFactory
           { nameof(RallyingPoint.Address), 1 },
         })
       }));
+
+    db.GetCollection<Notification.Reminder>()
+      .Indexes
+      .CreateOne(new CreateIndexModel<Notification.Reminder>(
+        Builders<Notification.Reminder>.IndexKeys.Combine(
+          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.RallyingPoint),
+          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.Liane),
+          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.At)
+        ),
+        new CreateIndexOptions<Notification.Reminder>
+        {
+          Unique = true,
+          Name = "reminder_index",
+          PartialFilterExpression = Builders<Notification.Reminder>.Filter.IsInstanceOf<Notification.Reminder, Notification.Reminder>()
+        }
+      ));
   }
 
   private static void CreateIndex<T>(IMongoDatabase db, string name, IndexKeysDefinition<T> indexKey, CreateIndexOptions? options = null)

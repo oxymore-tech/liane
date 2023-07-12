@@ -7,19 +7,16 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
-using Liane.Web.Internal.AccessLevel;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Task = System.Threading.Tasks.Task;
 
 namespace Liane.Service.Internal.Mongo;
-
 
 public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolverService<TDb, TOut> where TDb : class, IIdentity where TOut : class, IIdentity
 {
   protected readonly IMongoDatabase Mongo;
 
-  protected async Task<TCollection?> ResolveRef<TCollection>(string id) where TCollection: class, IIdentity
+  private async Task<TCollection?> ResolveRef<TCollection>(string id) where TCollection : class, IIdentity
   {
     var obj = await Mongo.GetCollection<TCollection>()
       .Find(p => p.Id == id)
@@ -27,26 +24,27 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
 
     return obj;
   }
-  
-  public BaseMongoCrudService(IMongoDatabase mongo)
+
+  protected BaseMongoCrudService(IMongoDatabase mongo)
   {
     Mongo = mongo;
   }
 
   public virtual async Task<TOut> Get(Ref<TOut> reference)
   {
+    if (reference is Ref<TOut>.Resolved resolved1) return resolved1.Value;
     var resolved = await ResolveRef<TDb>(reference);
-    return await MapEntity(resolved!); //TODO can get send back null ?
+    if (resolved is null) throw new ResourceNotFoundException(typeof(TOut).Name + " not found : " + reference.Id);
+    return await MapEntity(resolved);
   }
-  
+
   public virtual async Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references)
   {
-
-    var query = Mongo.GetCollection<TDb>().Find(Builders<TDb>.Filter.In(f => f.Id, references.Select(r => (string) r).ToImmutableList()));
-    var resolved =  await query.SelectAsync(MapEntity);
-    return resolved.ToDictionary(v => v.Id!); 
+    var query = Mongo.GetCollection<TDb>().Find(Builders<TDb>.Filter.In(f => f.Id, references.Select(r => (string)r).ToImmutableList()));
+    var resolved = await query.SelectAsync(MapEntity);
+    return resolved.ToDictionary(v => v.Id!);
   }
-  
+
   public virtual async Task<bool> Delete(Ref<TOut> reference)
   {
     var res = await Mongo.GetCollection<TDb>()
@@ -55,7 +53,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   }
 
   protected abstract Task<TOut> MapEntity(TDb dbRecord);
-  
+
   public async Task<TOut?> GetIfMatches(string id, Predicate<TDb> filter)
   {
     var value = await ResolveRef<TDb>(id);
@@ -63,6 +61,7 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
     {
       throw ResourceNotFoundException.For((Ref<TDb>)id);
     }
+
     return filter(value) ? await MapEntity(value) : null;
   }
 
@@ -70,34 +69,28 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   {
     return MongoAccessLevelContextFactory.NewMongoAccessLevelContext<TDb>(accessLevel, userId).HasAccessLevelFilterDefinition;
   }
-  
-  
 }
 
-
-
-public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudService<TIn, TOut> where TIn : class where TDb : class, IIdentity where TOut : class, IIdentity
+public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudService<TIn, TOut> where TIn : class, IIdentity where TDb : class, IIdentity where TOut : class, IIdentity
 {
   protected MongoCrudService(IMongoDatabase mongo) : base(mongo)
   {
   }
-  
+
   public async Task<TOut> Create(TIn obj)
   {
-    var id = ObjectId.GenerateNewId()
+    var id = obj.Id ?? ObjectId.GenerateNewId()
       .ToString();
     var created = ToDb(obj, id);
-    await Mongo.GetCollection<TDb>().InsertOneAsync(
-      created);
+    await Mongo.GetCollection<TDb>()
+      .InsertOneAsync(created);
     return await MapEntity(created);
   }
 
   protected abstract TDb ToDb(TIn inputDto, string originalId);
-
-
 }
 
-public abstract class MongoCrudService<T> : MongoCrudService<T,T,T>  where T : class, IIdentity
+public abstract class MongoCrudService<T> : MongoCrudService<T, T, T> where T : class, IIdentity
 {
   protected MongoCrudService(IMongoDatabase mongo) : base(mongo)
   {
@@ -107,40 +100,37 @@ public abstract class MongoCrudService<T> : MongoCrudService<T,T,T>  where T : c
   {
     return Task.FromResult(dbRecord);
   }
-  
-
 }
 
-
-
-public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudEntityService<TIn, TOut> where TIn : class where TDb : class, IIdentity where TOut : class, IEntity
+public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudEntityService<TIn, TOut>
+  where TIn : class, IIdentity where TDb : class, IIdentity where TOut : class, IEntity
 {
-  protected MongoCrudEntityService(IMongoDatabase mongo) : base(mongo)
+  protected readonly ICurrentContext CurrentContext;
+
+  protected MongoCrudEntityService(IMongoDatabase mongo, ICurrentContext currentContext) : base(mongo)
   {
+    CurrentContext = currentContext;
   }
-  
-  public async Task<TOut> Create(TIn obj, string ownerId)
+
+  public async Task<TOut> Create(TIn lianeRequest, Ref<Api.User.User>? ownerId)
   {
-    var id = ObjectId.GenerateNewId()
-      .ToString();
+    var id = lianeRequest.Id ?? ObjectId.GenerateNewId().ToString();
     var createdAt = DateTime.UtcNow;
-    var created = ToDb(obj, id, createdAt, ownerId);
-    await Mongo.GetCollection<TDb>().InsertOneAsync(
-      created);
+    var created = await ToDb(lianeRequest, id, createdAt, ownerId ?? CurrentContext.CurrentUser().Id);
+    await Mongo.GetCollection<TDb>()
+      .InsertOneAsync(created);
     return await MapEntity(created);
   }
 
-  protected abstract TDb ToDb(TIn inputDto, string originalId, DateTime createdAt, string createdBy);
-
-
+  protected abstract Task<TDb> ToDb(TIn inputDto, string originalId, DateTime createdAt, string createdBy);
 }
 
-
-public abstract class MongoCrudEntityService<T> : MongoCrudEntityService<T,T,T>  where T : class, IEntity
+public abstract class MongoCrudEntityService<T> : MongoCrudEntityService<T, T, T> where T : class, IEntity
 {
-  protected MongoCrudEntityService(IMongoDatabase mongo) : base(mongo)
+  protected MongoCrudEntityService(IMongoDatabase mongo, ICurrentContext currentContext) : base(mongo, currentContext)
   {
   }
+
   protected override Task<T> MapEntity(T dbRecord)
   {
     return Task.FromResult(dbRecord);

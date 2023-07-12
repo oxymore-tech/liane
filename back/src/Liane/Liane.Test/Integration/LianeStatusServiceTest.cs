@@ -1,0 +1,102 @@
+using System;
+using System.Threading.Tasks;
+using Liane.Api.Event;
+using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.User;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
+using NUnit.Framework;
+
+namespace Liane.Test.Integration;
+
+[TestFixture(Category = "Integration")]
+public sealed class LianeStatusServiceTest : BaseIntegrationTest
+{
+  private LianeServiceImpl lianeService = null!;
+  private MockCurrentContext currentContext = null!;
+  private EventDispatcher eventDispatcher = null!;
+  private LianeStatusUpdate lianeStatusUpdate = null!;
+
+  protected override void Setup(IMongoDatabase db)
+  {
+    lianeService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+    lianeStatusUpdate = ServiceProvider.GetRequiredService<LianeStatusUpdate>();
+    eventDispatcher = ServiceProvider.GetRequiredService<EventDispatcher>();
+    currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
+  }
+
+  [Test]
+  public async Task ShouldUpdateToFinished()
+  {
+    var userA = Fakers.FakeDbUsers[0];
+    var userB = Fakers.FakeDbUsers[1];
+
+    var now = DateTime.UtcNow;
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-1));
+    await lianeService.AddMember(liane1, new LianeMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
+
+    await lianeStatusUpdate.Update(now, TimeSpan.FromMinutes(5));
+
+    liane1 = await lianeService.Get(liane1.Id);
+    liane2 = await lianeService.Get(liane2.Id);
+
+    Assert.AreEqual(LianeState.Finished, liane1.State);
+    Assert.AreEqual(LianeState.NotStarted, liane2.State);
+  }
+
+  [Test]
+  public async Task ShouldGetStartedStatus()
+  {
+    var userA = Fakers.FakeDbUsers[0];
+    var userB = Fakers.FakeDbUsers[1];
+
+    var departureTime = DateTime.UtcNow.AddMinutes(5);
+
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
+    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende, false));
+
+    currentContext.SetCurrentUser(userA);
+    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id, userA.Id, TimeSpan.Zero, null));
+
+    var actual = await lianeService.Get(liane1.Id);
+
+    // Assert.AreEqual(LianeState.Started, actual.State);
+    // CollectionAssert.AreEquivalent(ImmutableHashSet.Create((Ref<User>)userA.Id), actual.Carpoolers);
+    // Assert.IsNotNull(actual.NextEta);
+    // Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
+    // AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
+  }
+
+  [Test]
+  public async Task ShouldGetStartedStatusWithDelay()
+  {
+    var userA = Fakers.FakeDbUsers[0];
+    var userB = Fakers.FakeDbUsers[1];
+
+    var departureTime = DateTime.UtcNow.AddMinutes(5);
+
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
+    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende, false));
+
+    currentContext.SetCurrentUser(userA);
+    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id, userA.Id, TimeSpan.FromMinutes(5), null));
+
+    var actual = await lianeService.Get(liane1.Id);
+
+    // Assert.AreEqual(LianeState.Started, actual.State);
+    // CollectionAssert.AreEquivalent(ImmutableHashSet.Create((Ref<User>)userA.Id), actual.Carpoolers);
+    // Assert.IsNotNull(actual.NextEta);
+    // Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
+    // AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
+  }
+
+  private async Task<Api.Trip.Liane> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to, DateTime departureTime)
+  {
+    currentContext.SetCurrentUser(userA);
+    return await lianeService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
+  }
+}

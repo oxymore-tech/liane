@@ -4,6 +4,7 @@ using System.Linq;
 using Bogus;
 using Liane.Api.Chat;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;
 
@@ -13,7 +14,8 @@ public class Fakers
 {
   private static Faker<DbUser> DbUserFaker => new Faker<DbUser>()
     .CustomInstantiator(f => new DbUser(
-        ObjectId.GenerateNewId().ToString(), false, f.Phone.PhoneNumber("0#########"), f.Name.FirstName(), null, null, null, DateTime.Today, null
+        ObjectId.GenerateNewId().ToString(), false, f.Phone.PhoneNumber("0#########"),  null, null, null, DateTime.Today, null, 
+        new UserInfo(f.Name.FirstName(null)+"-Bot","$",null, Gender.Unspecified)
       )
     );
 
@@ -23,8 +25,8 @@ public class Fakers
     .CustomInstantiator(f =>
     {
       var memberUsers = f.PickRandom(FakeDbUsers, f.Random.Int(2, 3));
-      var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now, null));
-      return new ConversationGroup(members.ToImmutableList(), ObjectId.GenerateNewId().ToString(), f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
+      var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now));
+      return new ConversationGroup(members.ToImmutableList(), null, f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
     });
 
   public static readonly Faker<ChatMessage> MessageFaker = new Faker<ChatMessage>()

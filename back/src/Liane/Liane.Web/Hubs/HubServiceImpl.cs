@@ -1,62 +1,86 @@
 using System;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.Hub;
-using Liane.Api.Notification;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Event;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Hubs;
 
-public sealed class HubServiceImpl : IHubService
+public sealed class HubServiceImpl : IHubService, IPushMiddleware
 {
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
+  private readonly IUserService userService;
   private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
 
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService)
   {
     this.hubContext = hubContext;
     this.logger = logger;
+    this.userService = userService;
   }
 
-  public bool IsConnected(Ref<User> user)
+  public Priority Priority => Priority.High;
+
+  public string? GetConnectionId(Ref<User> user)
   {
-    return currentConnectionsCache.Get(user.Id) is not null;
+    currentConnectionsCache.TryGetValue(user.Id, out string? connectionId);
+    return connectionId;
   }
 
-  public async Task<bool> TrySendNotification(Ref<User> receiver, Notification notification)
+  public async Task<bool> SendNotification(Ref<User> recipient, Notification notification)
   {
-    if (IsConnected(receiver))
+    try
     {
-      try
+      var connectionId = GetConnectionId(recipient);
+      if (connectionId is not null) 
       {
-        await hubContext.Clients.Group(receiver.Id).ReceiveNotification(notification);
-        return true;
+        var result =  await hubContext.Clients.Client(connectionId)
+          .ReceiveNotification(notification);
+        return result;
       }
-      catch (Exception e)
-      {
-        // TODO handle retry 
-        logger.LogInformation("Could not send notification to user {receiver} : {error}", receiver, e.Message);
-      }
+    }
+    catch (Exception e)
+    {
+      // TODO handle retry 
+      logger.LogWarning(e, "Could not send notification to user {receiver} : {error}", recipient, e.Message);
     }
 
     return false;
   }
 
-  public async Task<bool> TrySendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task<bool> SendChatMessage(Ref<User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
-   
-    if (IsConnected(receiver))
+    var connectionId = GetConnectionId(receiver);
+    if (connectionId is not null) 
     {
       try
       {
-        await hubContext.Clients.Group(receiver.Id).ReceiveMessage(conversation, message);
+        var result = await hubContext.Clients.Client(connectionId).ReceiveMessage(conversation, message);
+        if (!result)
+        {
+          var sender = await userService.Get(message.CreatedBy!);
+          var notification = new Notification.NewMessage(
+            null,
+            sender,
+            message.CreatedAt!.Value,
+            ImmutableList.Create(new Recipient(receiver, null)),
+            ImmutableHashSet<Answer>.Empty,
+            sender.Pseudo,
+            message.Text,
+            conversation.Id);
+          return await SendNotification(receiver, notification);
+        }
+        
         return true;
+
       }
       catch (Exception e)
       {
@@ -69,18 +93,22 @@ public sealed class HubServiceImpl : IHubService
     return false;
   }
 
+  public bool IsConnected(Ref<User> user)
+  {
+    return GetConnectionId(user) is not null;
+  }
+
   public async Task AddConnectedUser(Ref<User> user, string connectionId)
   {
     // Make mono user group to map userId and connectionId 
     // https://learn.microsoft.com/fr-fr/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
-    await hubContext.Groups.AddToGroupAsync(connectionId, user.Id);
-    currentConnectionsCache.Set(user.Id, true);
+   // await hubContext.Groups.AddToGroupAsync(connectionId, user.Id);
+    currentConnectionsCache.Set(user.Id, connectionId);
   }
-
 
   public async Task RemoveUser(Ref<User> user, string connectionId)
   {
     currentConnectionsCache.Remove(user.Id);
-    await hubContext.Groups.RemoveFromGroupAsync(connectionId, user.Id);
+  //  await hubContext.Groups.RemoveFromGroupAsync(connectionId, user.Id);
   }
 }

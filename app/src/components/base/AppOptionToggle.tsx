@@ -28,7 +28,7 @@ export const CreateAppOptionToggle =
         <View
           style={{
             height: 44,
-            width: 215,
+            minWidth: 216,
             backgroundColor: "white",
             borderRadius: 24,
             borderWidth: 1,
@@ -69,3 +69,4 @@ export const CreateAppOptionToggle =
   };
 
 export const AppSwitchToggle = CreateAppOptionToggle<boolean>(option => (option ? "Oui" : "Non"));
+export const AppToggle = CreateAppOptionToggle<string>(option => option);

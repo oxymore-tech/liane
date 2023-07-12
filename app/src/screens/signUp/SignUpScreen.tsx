@@ -1,5 +1,5 @@
-import React, { useCallback, useContext, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useContext, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
@@ -10,9 +10,13 @@ import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
 import { UnauthorizedError } from "@/api/exception";
-
-
-type SignUpStep = "EnterPhoneNumber" | "EnterCode";
+import { useActor, useInterpret } from "@xstate/react";
+import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateMachine";
+import { DoneEvent } from "xstate";
+import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
+import { Center } from "@/components/base/AppLayout";
+import { APP_ENV } from "@env";
+import MonkeyHi from "@/assets/images/monkey-hi.svg";
 
 const t = scopedTranslate("SignUp");
 
@@ -24,58 +28,103 @@ async function getPushToken() {
   return await messaging().getToken();
 }
 
-const SignUpScreen = () => {
-  const [step, setStep] = useState<SignUpStep>("EnterPhoneNumber");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [code, setCode] = useState("");
+const SignUpPage = () => {
+  const machine = useContext(SignUpLianeContext);
+  const [state] = useActor(machine);
+  const [value, setValue] = useState<string>("");
   const [error, setError] = useState("");
-  const { services, setAuthUser } = useContext(AppContext);
+  const { services } = useContext(AppContext);
 
-  const signUp = useCallback(async () => {
-    try {
-      setError("");
-      await services.auth.sendSms(phoneNumber);
-      setStep("EnterCode");
-    } catch (e) {
-      console.error("Sign up error ", e);
-      setError("Impossible d'effectuer la demande");
-    }
-  }, [phoneNumber, services.auth]);
-
-  const signIn = useCallback(async () => {
-    try {
-      const pushToken = await getPushToken();
-      const authUser = await services.auth.login({ phone: phoneNumber, code, pushToken });
-      setAuthUser(authUser);
-    } catch (e: any) {
-      if (e instanceof UnauthorizedError) {
-        setStep("EnterPhoneNumber");
-        setError("Le code est incorrect");
-      } else {
-        console.warn("Error during login", e);
-        setError(e.toString());
+  const submit = async () => {
+    if (state.matches("phone")) {
+      try {
+        setError("");
+        await services.auth.sendSms(value);
+        machine.send("SET_PHONE", { data: { phone: value } });
+      } catch (e) {
+        console.error("Sign up error ", e);
+        setError("Impossible d'effectuer la demande");
       }
-    }
-  }, [services.auth, phoneNumber, code, setAuthUser]);
+    } else if (state.matches("code")) {
+      try {
+        const pushToken = await getPushToken();
+        const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
 
+        machine.send("LOGIN", { data: { authUser } });
+      } catch (e: any) {
+        if (e instanceof UnauthorizedError) {
+          setError("Le code est incorrect");
+        } else {
+          console.warn("Error during login", e);
+          setError(e.toString());
+        }
+      }
+    } else {
+      console.error("Bad step", state.value);
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <LianeLogo style={styles.image} width="75%" />
       </View>
-
-      <View>
-        <AppText style={styles.helperText}>
-          {step === "EnterPhoneNumber" ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+      {APP_ENV !== "dev" && (
+        <AppText
+          numberOfLines={2}
+          style={{
+            fontSize: 32,
+            alignSelf: "center",
+            textAlign: "center",
+            backgroundColor: AppColorPalettes.blue[100],
+            padding: 16,
+            width: "100%"
+          }}>
+          {"Bientôt\ndisponible..."}
         </AppText>
-        {step === "EnterPhoneNumber" ? (
-          <PhoneNumberInput phoneNumber={phoneNumber} onChange={setPhoneNumber} onValidate={signUp} />
-        ) : (
-          <CodeInput code={code} onChange={setCode} onValidate={signIn} />
-        )}
-        <AppText style={styles.errorText}>{error || " "}</AppText>
-      </View>
+      )}
+      {APP_ENV !== "dev" && (
+        <View style={{ position: "absolute", bottom: -100, left: 16 }}>
+          <MonkeyHi height={400} />
+        </View>
+      )}
+
+      {APP_ENV === "dev" && (
+        <View>
+          <AppText numberOfLines={-1} style={styles.helperText}>
+            {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+          </AppText>
+          {state.matches("phone") ? (
+            <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={submit} />
+          ) : (
+            <CodeInput code={value} onChange={setValue} onValidate={submit} />
+          )}
+          <AppText style={styles.errorText}>{error || " "}</AppText>
+        </View>
+      )}
     </View>
+  );
+};
+
+const SignUpScreen = () => {
+  const { setAuthUser } = useContext(AppContext);
+  const [m] = useState(() => CreateSignUpMachine());
+  const machine = useInterpret(m);
+  const [state] = useActor(machine);
+  machine.onDone((d: DoneEvent) => {
+    console.log(JSON.stringify(d));
+    setAuthUser({ ...state.context.authUser!, isSignedUp: true });
+  });
+
+  return (
+    <SignUpLianeContext.Provider value={machine}>
+      {["code", "phone"].some(state.matches) && <SignUpPage />}
+      {state.matches("form") && <SignUpFormScreen />}
+      {!["code", "phone", "form"].some(state.matches) && (
+        <Center style={styles.container}>
+          <ActivityIndicator />
+        </Center>
+      )}
+    </SignUpLianeContext.Provider>
   );
 };
 

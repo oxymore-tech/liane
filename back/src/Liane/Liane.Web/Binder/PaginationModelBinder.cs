@@ -17,13 +17,19 @@ public sealed class PaginationModelBinder : IModelBinder
   private static Pagination ParseFromQuery(HttpContext httpContext)
   {
     var limit = httpContext.Request.Query["limit"]
+      .Where(s => s is not null)
+      .Cast<string>()
       .Select(int.Parse)
       .Cast<int?>()
       .FirstOrDefault() ?? 15;
     var sortAsc = httpContext.Request.Query["asc"]
+      .Where(s => s is not null)
+      .Cast<string>()
       .Select(bool.Parse)
       .FirstOrDefault();
     var cursor = httpContext.Request.Query["cursor"]
+      .Where(s => s is not null)
+      .Cast<string>()
       .Select(Cursor.Parse)
       .FirstOrDefault();
     return new Pagination(cursor, limit, sortAsc);

@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 
 namespace Liane.Api.Util.Ref;
 
-public abstract record Ref<T> where T : class, IIdentity
+public abstract record Ref<T>
+  where T : class, IIdentity
 {
   private Ref()
   {
@@ -32,10 +33,19 @@ public abstract record Ref<T> where T : class, IIdentity
     _ => null
   };
 
+  public bool Equals(Unresolved? other)
+  {
+    if (ReferenceEquals(null, other)) return false;
+    if (ReferenceEquals(this, other)) return true;
+    return Id == other.Id;
+  }
+
   public override int GetHashCode()
   {
     return Id.GetHashCode();
   }
+
+  public abstract T? Value { get; init; }
 
   public sealed record Unresolved(string RefId) : Ref<T>
   {
@@ -51,7 +61,13 @@ public abstract record Ref<T> where T : class, IIdentity
 
     public override string ToString()
     {
-      return $"{nameof(T)} {{ {nameof(Id)} = {Id} }}";
+      return Id;
+    }
+
+    public override T? Value
+    {
+      get => null;
+      init => throw new NotImplementedException();
     }
   }
 
@@ -69,7 +85,7 @@ public abstract record Ref<T> where T : class, IIdentity
 
     public override string ToString()
     {
-      return Value.ToString()!;
+      return Id;
     }
   }
 }

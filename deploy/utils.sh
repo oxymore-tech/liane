@@ -9,24 +9,28 @@ function source_env() {
 }
 
 function test_compose {
-  PROJECT=$(get_project)
+  TEST_PROJECT=$(get_test_project)
   
-  docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${PROJECT}" "${@}"
+  export TEST_PROJECT
+  
+  docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${TEST_PROJECT}" "${@}"
 }
 
-function liane_compose {  
+function liane_compose {
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
   MONGO_HOST_PORT=$(get_mongo_host_port)
+  POSTGIS_HOST_PORT=$(get_postgis_host_port)
   
   export PROJECT
   export DOMAIN
   export MONGO_HOST_PORT
+  export POSTGIS_HOST_PORT
   
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
 }
 
-function run_it_tests {
+function run_it_tests {  
   test_compose build
   test_compose run test
   test_compose down
@@ -57,12 +61,16 @@ function get_domain() {
   fi
 }
 
+function get_test_project() {  
+  echo "it-$(get_project)"
+}
+
 function get_project() {
   if [[ -z "${LIANE_HOME}" ]]; then
     echo "LIANE_HOME environment variable is not defined"
     exit 1
   fi
-
+  
   local project
   project="$(basename "${LIANE_HOME}")"
   if [[ "${project}" =~ ^liane(-(dev))?$ ]]; then
@@ -70,6 +78,17 @@ function get_project() {
   else
     echo "Project should begin with 'liane' or 'liane-XXX' : ${project}"
     exit 1
+  fi
+}
+
+function get_postgis_host_port() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "5432"
+  else
+    echo "5431"
   fi
 }
 

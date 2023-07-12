@@ -5,8 +5,12 @@
       "System": "Warning",
       "Microsoft": "Error",
       "Microsoft.AspNetCore.Hosting.Diagnostics": "Information",
-      "Liane.Web.Internal.Debug": "Debug"
+      "Liane.Web.Internal.Debug": "Debug",
+      "Liane.Service.Internal": "Debug"
     }
+  },
+  "Database": {
+    "Db": "liane"
   },
   "Auth": {
     "Validity": "0.08:00:00",

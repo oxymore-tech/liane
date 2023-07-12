@@ -1,5 +1,5 @@
 import React, { forwardRef, useContext, useEffect, useImperativeHandle, useState } from "react";
-import { ColorValue, GestureResponderEvent, Modal, Pressable, PressableProps, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ColorValue, GestureResponderEvent, Modal, Pressable, PressableProps, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   Extrapolation,
@@ -15,11 +15,11 @@ import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/them
 import { AppText } from "@/components/base/AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
-// @ts-ignore
 export interface LianeCardProps extends PressableProps {
   label?: string;
   value: string | JSX.Element;
@@ -43,12 +43,12 @@ const CancelButton = ({ color, label, onCancel }: CancelButtonProps) => {
   const positionStyleOverride = label ? {} : { right: -12 };
 
   return (
-    <AppPressable
+    <AppPressableOverlay
       style={styles.cancelContainer}
       backgroundStyle={[styles.cancelPressable, { backgroundColor: cancelColor }, positionStyleOverride]}
       onPress={onCancel}>
       <AppIcon name="close-outline" color={cancelIconColor} />
-    </AppPressable>
+    </AppPressableOverlay>
   );
 };
 
@@ -65,7 +65,7 @@ type CardModalProps = {
   color: ColorValue;
 };
 const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }: CardModalProps) => {
-  const { height, width } = useWindowDimensions();
+  const { height, width } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
 
   const animState = useSharedValue(0);
@@ -249,8 +249,12 @@ const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }: Mod
   </Pressable>
 );
 
-export const CardButton = forwardRef(
-  ({ color, textColor, label, value, onCancel, extendedView, useOkButton = false, onCloseExtendedView }: LianeCardProps, ref) => {
+export type CardButtonElement = {
+  showModal: (fromX: number, fromY: number) => void;
+};
+
+export const CardButton = forwardRef<CardButtonElement, LianeCardProps>(
+  ({ color, textColor, label, value, onCancel, extendedView, useOkButton = false, onCloseExtendedView }, ref) => {
     let finalTextColor = textColor;
     if (!textColor) {
       finalTextColor = defaultTextColor(color);
@@ -287,7 +291,7 @@ export const CardButton = forwardRef(
           </CardModal>
         )}
         <View onTouchEnd={onTapped}>
-          <AppPressable backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
+          <AppPressableOverlay backgroundStyle={[{ backgroundColor: color }, styles.pressableContainer]} style={styles.cardContainer}>
             {label && <AppText style={[{ color: finalTextColor }, styles.label]}>{label}</AppText>}
 
             {valueIsString && (
@@ -296,7 +300,7 @@ export const CardButton = forwardRef(
               </AppText>
             )}
             {!valueIsString && value}
-          </AppPressable>
+          </AppPressableOverlay>
         </View>
         {onCancel && <CancelButton color={color} label={label} onCancel={onCancel} />}
       </View>

@@ -1,4 +1,4 @@
-import { API_URL, APP_ENV } from "@env";
+import { API_URL, APP_ENV, TILES_URL } from "@env";
 import { Mutex } from "async-mutex";
 import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
@@ -8,6 +8,7 @@ import { AuthResponse } from "@/api/index";
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
 
 export const BaseUrl = `${API_URL || `https://${domain}`}/api`;
+export const TilesUrl = `${TILES_URL || `https://${domain}`}`;
 
 export interface ListOptions<T> {
   readonly filter?: FilterQuery<T>;
@@ -86,9 +87,21 @@ export function patch(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("PATCH", uri, options);
 }
 
+// @ts-ignore
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
   const response = await fetchAndCheck(method, uri, options);
-  return response.json();
+  if (response.status === 204) {
+    // Do not try parsing body
+    // @ts-ignore
+    return undefined;
+  } else {
+    try {
+      const res = await response.text();
+      return res ? JSON.parse(res) : undefined;
+    } catch (e) {
+      console.error(e);
+    }
+  }
 }
 
 function formatBody(body?: any, bodyAsJson: boolean = true) {
@@ -109,7 +122,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   const formatedBody = formatBody(body, bodyAsJson);
   const formatedHeaders = await headers(body, bodyAsJson);
   if (__DEV__) {
-    console.debug(`Fetch API ${method} "${url}"`, formatedBody ?? "");
+    console.debug(`[HTTP] Fetch API ${method} "${url}"`, formatedBody ?? "");
   }
   const response = await fetch(url, {
     headers: formatedHeaders,
@@ -138,7 +151,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
         throw new ForbiddenError();
       default:
         const message = await response.text();
-        console.log(`Unexpected error on ${method} ${uri}`, response.status, message);
+        console.warn(`[HTTP] Unexpected error on ${method} ${uri}`, response.status, message);
         throw new Error(message);
     }
   }
@@ -155,7 +168,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
     } else {
       return refreshTokenMutex.runExclusive(async () => {
         if (__DEV__) {
-          console.debug("Try refresh token...");
+          console.debug("[HTTP] Try refresh token...");
         }
         // Call refresh token endpoint
         try {
@@ -168,7 +181,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
           return await retryAction();
         } catch (e) {
           if (__DEV__) {
-            console.error("Error: could not refresh token: ", e);
+            console.error("[HTTP] Error: could not refresh token: ", e);
           }
           // Logout if unauthorized
           if (e instanceof UnauthorizedError) {

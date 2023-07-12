@@ -1,35 +1,53 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
-using Liane.Api.Util.Startup;
+using Liane.Service.Internal.Address;
+using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
-using Liane.Test.Util;
+using Liane.Service.Internal.Util;
+using Liane.Test.Mock;
+using Liane.Web.Internal.Json;
+using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
+using NLog.Config;
+using NLog.Layouts;
+using NLog.Targets;
+using NLog.Targets.Wrappers;
+using NLog.Web;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
 
+[NonParallelizable]
 public abstract class BaseIntegrationTest
 {
   private static readonly HashSet<string> DbNames = new();
 
-  protected IMongoDatabase Db = null!;
+  private IMongoDatabase mongo = null!;
   protected ServiceProvider ServiceProvider = null!;
+  protected MockCurrentContext CurrentContext = null!;
 
   [OneTimeSetUp]
   public async Task SetupMockData()
   {
     var settings = GetMongoSettings();
-    var client = MongoFactory.GetMongoClient(settings, new TestLogger<IMongoDatabase>());
+    var client = MongoFactory.GetMongoClient(settings, Moq.Mock.Of<ILogger<IMongoDatabase>>());
 
     var databases = (await client.ListDatabaseNamesAsync())
       .ToEnumerable()
@@ -41,49 +59,137 @@ public abstract class BaseIntegrationTest
   }
 
   [SetUp]
-  public void EnsureSchema()
+  public async Task EnsureSchema()
   {
     var settings = GetMongoSettings();
-    Db = MongoFactory.GetDatabase(settings, new TestLogger<IMongoDatabase>(), GetUniqueDbName());
 
     var services = new ServiceCollection();
     var osrmClient = GetOsrmClient();
-    services.AddService(new RallyingPointServiceImpl(Db, new TestLogger<RallyingPointServiceImpl>()));
+    var nominatimClient = GetNominatimClient();
+    services.AddService<RallyingPointServiceImpl>();
     services.AddService<IOsrmService>(osrmClient);
+    services.AddService<IAddressService>(nominatimClient);
+
+    var dbName = GetUniqueDbName();
+    services.AddSingleton(sp => MongoFactory.CreateForTest(sp, settings, dbName));
+
     services.AddTransient<IRoutingService, RoutingServiceImpl>();
+    services.AddLogging(builder =>
+    {
+      builder.SetMinimumLevel(LogLevel.Debug);
+      Layout devLayout = new SimpleLayout(
+        "${longdate} | ${uppercase:${level:padding=5}} | ${threadid:padding=3} | ${logger:padding=40:fixedLength=true:alignmentOnTruncation=right} | ${message} ${exception:format=ToString}");
+      var coloredConsoleTarget = new ColoredConsoleTarget { Layout = devLayout };
+      var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
+      var loggingConfiguration = new LoggingConfiguration();
+      loggingConfiguration.AddTarget(consoleTarget);
+      loggingConfiguration.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, consoleTarget);
+      builder.AddNLog(loggingConfiguration);
+    });
+
+    services.AddService<MockCurrentContext>();
+    services.AddService(JsonSerializerSettings.TestJsonOptions());
+    services.AddService<NotificationServiceImpl>();
+    services.AddService(new FirebaseSettings(null));
+    services.AddService<MockPushServiceImpl>();
+    services.AddService(Moq.Mock.Of<IHubService>());
+    services.AddService<LianeServiceImpl>();
+    services.AddService<UserServiceImpl>();
+    services.AddService<PushServiceImpl>();
+    services.AddService<ChatServiceImpl>();
+    services.AddService<LianeStatusUpdate>();
+    services.AddEventListeners();
+    
+    var databaseSettings = GetDatabaseSettings();
+    var postgisDatabase = await PostgisFactory.CreateForTest(databaseSettings);
+    services.AddService(postgisDatabase);
+    services.AddService(databaseSettings);
+    services.AddService<PostgisUpdateService>();
+    services.AddService<PostgisServiceImpl>();
+
+    SetupServices(services);
 
     ServiceProvider = services.BuildServiceProvider();
 
-    Db.Drop();
+    // Init mongo
+    CurrentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
+    mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
+    MongoFactory.InitSchema(mongo);
+    // Init postgis
+    var postgis = ServiceProvider.GetRequiredService<PostgisServiceImpl>();
+    await PostgisFactory.UpdateSchema(postgisDatabase, true);
+
+    mongo.Drop();
     // Init services in child class 
-    Setup(Db);
+    Setup(mongo);
     // Insert mock users & rallying points
-    Db.GetCollection<DbUser>().InsertMany(Fakers.FakeDbUsers);
-    Db.GetCollection<RallyingPoint>().InsertMany(LabeledPositions.RallyingPoints);
-    MongoFactory.InitSchema(Db);
+    await mongo.GetCollection<DbUser>().InsertManyAsync(Fakers.FakeDbUsers);
+    await mongo.GetCollection<RallyingPoint>().InsertManyAsync(LabeledPositions.RallyingPoints);
+    await postgis.InsertRallyingPoints(LabeledPositions.RallyingPoints);
+  }
+
+  protected virtual void SetupServices(IServiceCollection services)
+  {
   }
 
   protected abstract void Setup(IMongoDatabase db);
 
-  /// <summary>
-  /// Clears given Collection. Should be called in ClearTestedCollections
-  /// </summary>
-  protected void DropTestedCollection<T>()
+  protected async Task<GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>> DebugGeoJson(params RallyingPoint[] testedPoints)
   {
-    Db.DropCollection<T>();
+    var geoJson = new List<GeoJsonFeature<GeoJson2DGeographicCoordinates>>();
+    //
+    // var postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
+    // var geometries = await mongo.GetCollection<LianeDb>()
+    //   .Find(FilterDefinition<LianeDb>.Empty)
+    //   .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(l.Geometry))
+    //   .ToListAsync();
+    //
+    // postgisService.
+
+    var points = await mongo.GetCollection<RallyingPoint>()
+      .Find(FilterDefinition<RallyingPoint>.Empty)
+      .Project(l => new GeoJsonFeature<GeoJson2DGeographicCoordinates>(new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(l.Location.Lng, l.Location.Lat))))
+      .ToListAsync();
+
+    // geoJson.AddRange(geometries);
+    geoJson.AddRange(points);
+
+    if (testedPoints.Length > 0)
+    {
+      var routingService = ServiceProvider.GetRequiredService<IRoutingService>();
+      var simplifiedRoute =
+        new GeoJsonFeature<GeoJson2DGeographicCoordinates>((await routingService.GetRoute(testedPoints.Select(p => p.Location).ToImmutableList())).Coordinates.ToLatLng().ToGeoJson());
+      geoJson.Add(simplifiedRoute);
+    }
+
+    var collection = new GeoJsonFeatureCollection<GeoJson2DGeographicCoordinates>(geoJson);
+    Console.WriteLine("GEOJSON : {0}", collection.ToJson());
+    return collection;
   }
 
   private static MongoSettings GetMongoSettings()
   {
-    var mongoHost = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
-    var settings = new MongoSettings(mongoHost, "mongoadmin", "secret");
-    return settings;
+    var host = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
+    return new MongoSettings(host, "mongoadmin", "secret");
+  }
+
+  private static DatabaseSettings GetDatabaseSettings()
+  {
+    var host = Environment.GetEnvironmentVariable("POSTGIS_HOST") ?? "localhost";
+    return new DatabaseSettings(host, "liane_test", "mongoadmin", "secret");
   }
 
   private static OsrmClient GetOsrmClient()
   {
     var osrmUrl = Environment.GetEnvironmentVariable("OSRM_URL") ?? "http://liane.gjini.co:5000";
     var osrmClient = new OsrmClient(new OsrmSettings(new Uri(osrmUrl)));
+    return osrmClient;
+  }
+
+  private static AddressServiceNominatimImpl GetNominatimClient()
+  {
+    var osrmUrl = Environment.GetEnvironmentVariable("NOMINATIM_URL") ?? "http://liane.gjini.co:7070";
+    var osrmClient = new AddressServiceNominatimImpl(new NominatimSettings(new Uri(osrmUrl)));
     return osrmClient;
   }
 

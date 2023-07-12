@@ -8,6 +8,7 @@ public interface IUserService : IResourceResolverService<User>
 {
   Task UpdateLastConnection(string id, DateTime timestamp);
   Task UpdatePushToken(string id, string pushToken);
+  Task UpdateInfo(string id, UserInfo info);
   Task<FullUser> GetByPhone(string phone);
   Task<FullUser> GetFullUser(string userId);
 }

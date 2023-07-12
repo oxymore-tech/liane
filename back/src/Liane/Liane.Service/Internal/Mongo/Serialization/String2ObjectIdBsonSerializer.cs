@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Serializers;
 
 namespace Liane.Service.Internal.Mongo.Serialization;
 
-public class String2ObjectIdBsonSerializer : SerializerBase<string?> 
+public sealed class String2ObjectIdBsonSerializer : SerializerBase<string?>
 {
   public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, string? value)
   {

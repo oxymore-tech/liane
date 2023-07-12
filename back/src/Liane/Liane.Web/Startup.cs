@@ -4,13 +4,15 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Util;
-using Liane.Api.Util.Startup;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Notification;
+using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -21,6 +23,7 @@ using Liane.Web.Internal.Auth;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
+using Liane.Web.Internal.Startup;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -40,7 +43,6 @@ using NLog.Targets.Wrappers;
 using NLog.Web;
 using NLog.Web.LayoutRenderers;
 using NSwag;
-using JsonAttribute = NLog.Layouts.JsonAttribute;
 using LogLevel = NLog.LogLevel;
 
 namespace Liane.Web;
@@ -57,7 +59,13 @@ public static class Startup
     services.AddSettings<OsrmSettings>(context);
     services.AddSettings<NominatimSettings>(context);
 
+    services.AddSettings<DatabaseSettings>(context);
+    services.AddService<PostgisDatabase>();
+    services.AddService<PostgisUpdateService>();
+    services.AddService<PostgisServiceImpl>();
+
     services.AddSettings<MongoSettings>(context);
+    services.AddService<MigrationService>();
 
     services.AddService<CurrentContextImpl>();
     services.AddSettings<TwilioSettings>(context);
@@ -67,25 +75,33 @@ public static class Startup
     services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
-    services.AddService<TripIntentServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
-    services.AddSettings<FirebaseSettings>(context);
+    services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
-    services.AddService<JoinLianeRequestServiceImpl>();
+
+    services.AddSettings<FirebaseSettings>(context);
+    services.AddService<FirebaseMessagingImpl>();
+
+    services.AddEventListeners();
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddHostedService<LianeMockCronService>();
+    services.AddService<MockServiceImpl>();
+
+    services.AddHostedService<LianeMockGenerator>();
+    services.AddHostedService<LianeStatusUpdate>();
+
+    services.AddHealthChecks();
   }
 
-  public static void StartCurrentModule(string[] args)
+  public static async Task StartCurrentModule(string[] args)
   {
     var logger = ConfigureLogger();
     try
     {
-      StartCurrentModuleWeb(args);
+      await StartCurrentModuleWeb(args);
     }
     catch (Exception e)
     {
@@ -148,20 +164,14 @@ public static class Startup
     loggingConfiguration.AddTarget(consoleTarget);
     loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
     var logFactory = NLogBuilder.ConfigureNLog(loggingConfiguration);
-    var logger = logFactory.GetCurrentClassLogger();
-    return logger;
+    return logFactory.GetCurrentClassLogger();
   }
 
   private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
   {
-  
-    ConfigureLianeServices(context, services);
     services.AddService<FileStreamResultExecutor>();
     services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new BindersProvider()); })
-      .AddJsonOptions(options =>
-      {
-        JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions);
-      });
+      .AddJsonOptions(options => { JsonSerializerSettings.ConfigureOptions(options.JsonSerializerOptions); });
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
@@ -201,26 +211,22 @@ public static class Startup
 
     // Add json converters here as well
     services.AddSignalR()
-      .AddJsonProtocol(options =>
-      {
-        JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions);
-      });
+      .AddJsonProtocol(options => { JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions); });
 
     // For Resource access level
     services.AddService<MongoAccessLevelContextFactory>();
-
-    // For Mock data generation
-    services.AddService<MockServiceImpl>();
 
     // For services using json serialization (notifications)
     var jsonSerializerOptions = new JsonSerializerOptions();
     JsonSerializerSettings.ConfigureOptions(jsonSerializerOptions);
     services.AddSingleton(jsonSerializerOptions);
+
+    ConfigureLianeServices(context, services);
   }
 
-  private static void StartCurrentModuleWeb(string[] args)
+  private static Task StartCurrentModuleWeb(string[] args)
   {
-    WebHost.CreateDefaultBuilder(args)
+    return WebHost.CreateDefaultBuilder(args)
       .ConfigureLogging(logging =>
       {
         logging.ClearProviders();
@@ -249,7 +255,7 @@ public static class Startup
       .UseUrls("http://*:5000")
       .UseKestrel()
       .Build()
-      .Run();
+      .RunAsync();
   }
 
   private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
@@ -282,9 +288,21 @@ public static class Startup
     {
       endpoints.MapHub<ChatHub>("/api/hub");
       endpoints.MapControllers();
+      endpoints.MapHealthChecks("/health");
     });
 
     app.ApplicationServices.GetRequiredService<IMongoDatabase>();
-  }
+    var migrationService = app.ApplicationServices.GetRequiredService<MigrationService>();
 
+    migrationService.Execute()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
+
+    var postgisMigrationService = app.ApplicationServices.GetRequiredService<PostgisUpdateService>();
+    postgisMigrationService.Execute()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
+  }
 }

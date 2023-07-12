@@ -12,7 +12,7 @@ export const AppTextInput = forwardRef(({ leading, trailing, style, ...props }: 
   return (
     <Row style={styles.container} spacing={8}>
       {leading}
-      <TextInput ref={ref} style={[styles.input, style]} {...props} />
+      <TextInput placeholderTextColor={AppColorPalettes.gray[500]} ref={ref} style={[styles.input, style]} {...props} />
       {trailing}
     </Row>
   );

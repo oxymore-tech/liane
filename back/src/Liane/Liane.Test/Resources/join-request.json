@@ -1,0 +1,9 @@
+{
+  "type": "JoinRequest",
+  "from": "Aurillac",
+  "message": "Hey !",
+  "seats": 2,
+  "takeReturnTrip": false,
+  "liane": "6408a644437b60cfd3b15874",
+  "to": "Medon"
+}

@@ -45,6 +45,7 @@ jobs:
         env:
           ENV_DD_CLIENT_TOKEN: ${{ secrets.DD_CLIENT_TOKEN }}
           ENV_DD_APP_ID: ${{ secrets.DD_APP_ID }}
+          ENV_MAPTILER_KEY: ${{ secrets.MAPTILER_KEY }}
           ENV_APP_ENV: ${{ env.app_env }}
           ENV_APP_VERSION: ${{steps.exact-version.outputs.tag}}
 

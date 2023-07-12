@@ -33,6 +33,12 @@ public static class StringUtils
         return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(replace);
     }
 
+    public static string NormalizeToSnakeCase(this string value)
+    {
+      var titleCase = ToTitleCase(value).ToLowerInvariant().Replace(" ", "_");
+      return char.ToLowerInvariant(titleCase[0]) + titleCase[1..];
+    }
+    
     public static string NormalizeToCamelCase(this string value)
     {
         var titleCase = ToTitleCase(value).Replace(" ", "");

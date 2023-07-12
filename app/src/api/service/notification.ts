@@ -1,37 +1,41 @@
 import notifee, { EventType } from "@notifee/react-native";
-import { FullUser, Notification, PaginatedResponse } from "@/api";
+import { FullUser, PaginatedResponse } from "@/api";
 import { get, patch } from "@/api/http";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { AuthService } from "@/api/service/auth";
 import { Platform } from "react-native";
 import { AbstractNotificationService } from "@/api/service/interfaces/notification";
+import { Notification } from "@/api/notification";
+import { getNotificationNavigation } from "@/api/navigation";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
-    return await get(`/user/notification`);
+    return await get("/notification");
   }
+  markAsRead = async (notification: Notification) => {
+    // TODO find out how to use super
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
+    await patch(`/notification/${notification.id}`);
+  };
 
-  async changeSeenStatus(notificationId: string): Promise<void> {
-    await patch("user/notification/" + notificationId);
-  }
-
-  async checkInitialNotification(): Promise<void> {
-    const m = await PushNotifications?.getInitialNotification();
-    if (m && m.data?.jsonPayload) {
-      console.debug("opened via", JSON.stringify(m));
-      this._initialNotification = JSON.parse(m.data!.jsonPayload);
+  checkInitialNotification = async (): Promise<void> => {
+    if (initialPushNotification) {
+      this.initialNotification = initialPushNotification;
       return;
     }
     const n = await notifee.getInitialNotification();
     if (n && n.notification.data?.jsonPayload) {
-      this._initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
-      console.debug("opened via", JSON.stringify(n));
+      this.initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
+      console.debug("[NOTIF] opened via", JSON.stringify(n));
     }
-  }
-  override async receiveNotification(notification: Notification): Promise<void> {
-    await super.receiveNotification(notification);
-    await displayNotifeeNotification(notification);
-  }
+  };
+
+  override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
+    if (display) {
+      await displayNotifeeNotification(notification);
+    }
+  };
 }
 
 const DefaultChannelId = "liane_default";
@@ -46,7 +50,7 @@ const DefaultAndroidSettings = {
 };
 
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
-  console.log("received push", JSON.stringify(message));
+  console.log("[NOTIF] received push", JSON.stringify(message));
   if (!message.notification) {
     return;
   }
@@ -62,7 +66,7 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 // Called when notification is pressed and app is open
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
-  console.debug(JSON.stringify(detail));
+  console.debug("[NOTIFEE]", JSON.stringify(detail));
 
   // Check if the user pressed the "Mark as read" action
   if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "mark-as-read") {
@@ -70,14 +74,16 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
     await notifee.cancelNotification(notification.id!);
   }
   if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "default") {
-    // TODO navigate
+    getNotificationNavigation(notification.data as Notification);
   }
 });
+
 async function displayNotifeeNotification(notification: Notification) {
   await notifee.displayNotification({
     android: DefaultAndroidSettings,
     title: notification.title,
-    body: notification.message
+    body: notification.message,
+    data: notification
   });
 }
 
@@ -96,7 +102,7 @@ export async function initializePushNotification(user: FullUser, authService: Au
   try {
     const pushToken = await PushNotifications?.getToken();
     if (pushToken && pushToken !== user.pushToken) {
-      console.debug("New push token:", pushToken);
+      console.debug("[NOTIF]: New push token", pushToken);
       // Update server's token
       await authService.updatePushToken(pushToken);
     }
@@ -114,7 +120,20 @@ export const PushNotifications = (() => {
       return messaging();
     }
   } catch (e) {
-    console.debug("Counld not init push notifications", e);
+    console.error("[NOTIF] Counld not init push notifications", e);
   }
   return undefined;
 })();
+
+let initialPushNotification: Notification | undefined;
+const setInitialPushNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
+  if (m && m.data?.jsonPayload) {
+    console.debug("[NOTIF] opened via", JSON.stringify(m));
+    initialPushNotification = JSON.parse(m.data!.jsonPayload);
+  }
+  return Promise.resolve();
+};
+
+PushNotifications?.onNotificationOpenedApp(setInitialPushNotification);
+//PushNotifications?.setBackgroundMessageHandler(setInitialPushNotification);
+PushNotifications?.getInitialNotification()?.then(setInitialPushNotification);

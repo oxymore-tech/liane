@@ -19,7 +19,6 @@ internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : clas
 
     public override void Write(Utf8JsonWriter writer, Ref<T> value, JsonSerializerOptions options)
     {
-        // TODO always write Id since it's a ref ?
         value.Visit(
             writer.WriteStringValue,
             v => JsonSerializer.Serialize(writer, v, options)

@@ -1,9 +1,12 @@
 using System;
+using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Mongo;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
@@ -22,14 +25,22 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
         Builders<DbUser>.Update.Set(field, value)
       );
   }
+
   public async Task UpdateLastConnection(string id, DateTime timestamp)
   {
-    await UpdateField(id, u => u.LastConnection , timestamp);
+    await UpdateField(id, u => u.LastConnection, timestamp);
   }
-  
+
   public async Task UpdatePushToken(string id, string pushToken)
   {
-    await UpdateField(id, u => u.PushToken , pushToken);
+    await UpdateField(id, u => u.PushToken, pushToken);
+  }
+
+  public async Task UpdateInfo(string id, UserInfo info)
+  {
+    // Check fist and last name 
+    if (info.FirstName.Length < 2 || info.LastName.Length < 2) throw new ConstraintException("Given name is too short."); 
+    await UpdateField(id, u => u.UserInfo, info);
   }
 
   public async Task<FullUser> GetByPhone(string phone)
@@ -52,7 +63,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
   public async Task<FullUser> GetFullUser(string userId)
   {
-    var userDb = await ResolveRef<DbUser>(userId);
+    var userDb = await Mongo.Get<DbUser>(userId);
     if (userDb is null)
     {
       throw new ResourceNotFoundException($"User ${userId}");
@@ -61,13 +72,15 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     return MapUser(userDb);
   }
 
-  private FullUser MapUser(DbUser dbUser)
+  private static FullUser MapUser(DbUser dbUser)
   {
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.Pseudo, dbUser.PushToken, dbUser.CreatedAt);
+    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName ,  info.LastName, info.Gender, info.PictureUrl, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)
   {
-    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.Pseudo, dbUser.CreatedAt));
+    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
+    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt,  FullUser.GetPseudo(info.FirstName, info.LastName),  info.Gender, info.PictureUrl));
   }
 }

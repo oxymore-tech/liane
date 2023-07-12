@@ -1,13 +1,17 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Liane.Api.Util.Pagination;
 
-internal static class ExpressionHelper
+public static class ExpressionHelper
 {
-  internal static MemberExpression GetMemberExpression<T>(Expression paramExpr, Expression<Func<T, object?>> paginationField)
+  public static IEnumerable<MemberInfo> GetMembers<T>(Expression<Func<T, object?>> field)
   {
-    var node = paginationField.Body;
+    var node = field.Body;
     while (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.Quote)
     {
       node = ((UnaryExpression)node).Operand;
@@ -18,7 +22,22 @@ internal static class ExpressionHelper
       throw new ArgumentException($"Must be a MemberExpression {node.NodeType}");
     }
 
-    return Expression.MakeMemberAccess(paramExpr, e.Member);
+    return ImmutableList.Create(e.Member);
+  }
+
+  public static MemberExpression GetMemberExpression<T>(Expression paramExpr, Expression<Func<T, object?>> field)
+  {
+    var members = GetMembers(field);
+
+    var memberExpression = members.Reverse()
+      .Aggregate<MemberInfo, MemberExpression?>(null, (current, memberInfo) => Expression.MakeMemberAccess(current ?? paramExpr, memberInfo));
+
+    if (memberExpression is null)
+    {
+      throw new ArgumentException("Must have at least one member");
+    }
+
+    return memberExpression;
   }
 
   internal static Expression GetValueExpression(object? value, Type targetType)

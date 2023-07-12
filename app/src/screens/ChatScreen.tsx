@@ -1,7 +1,7 @@
-import { ChatMessage, ConversationGroup, PaginatedResponse, User } from "@/api";
-import React, { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@/api";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, View } from "react-native";
+import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -11,45 +11,103 @@ import { AppContext } from "@/components/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
-const MessageBubble = ({ message, currentUser }: { message: ChatMessage; currentUser: User }) => {
-  const sender = message.createdBy === currentUser.id;
+import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
+import { getTripFromLiane } from "@/components/trip/trip";
+import { capitalize } from "@/util/strings";
+import { SimpleModal } from "@/components/modal/SimpleModal";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
+import { DebugIdView } from "@/components/base/DebugIdView";
+import { UserPicture } from "@/components/UserPicture";
+const MessageBubble = ({
+  message,
+  sender,
+  isSender,
+  previousSender
+}: {
+  message: ChatMessage;
+  sender: User;
+  isSender: boolean;
+  previousSender?: Ref<User> | undefined;
+}) => {
+  const firstBySender = previousSender !== sender.id;
+  const date = capitalize(toRelativeTimeString(new Date(message.createdAt!)));
   return (
-    <Column
-      spacing={4}
+    <Row
+      spacing={8}
       style={{
-        backgroundColor: sender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
-        alignSelf: sender ? "flex-end" : "flex-start",
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        marginVertical: 6,
-        marginRight: sender ? 0 : 56,
-        marginLeft: sender ? 56 : 0
+        marginBottom: 6,
+        alignSelf: isSender ? "flex-end" : "flex-start",
+        marginTop: firstBySender ? 6 : 0,
+        maxWidth: "80%"
       }}>
-      <AppText numberOfLines={-1} style={{ fontSize: 14 }}>
-        {message.text}
-      </AppText>
-      <AppText style={{ fontSize: 10, alignSelf: sender ? "flex-end" : "flex-start" }}>{toRelativeTimeString(new Date(message.createdAt!))}</AppText>
-    </Column>
+      {!isSender && firstBySender && <UserPicture url={sender.pictureUrl} id={sender.id} size={32} />}
+      {!isSender && !firstBySender && <View style={{ width: 32 }} />}
+      <Column spacing={2}>
+        {!isSender && firstBySender && (
+          <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "500", color: AppColorPalettes.blue[700] }}>
+            {sender.pseudo}
+          </AppText>
+        )}
+        <Column
+          style={{
+            backgroundColor: isSender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
+            alignSelf: isSender ? "flex-end" : "flex-start",
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            marginRight: isSender ? 0 : 56,
+            marginLeft: isSender ? 56 : 0
+          }}
+          spacing={4}>
+          <AppText numberOfLines={-1} style={{ fontSize: 15 }}>
+            {message.text}
+          </AppText>
+          <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start" }}>{date}</AppText>
+        </Column>
+      </Column>
+    </Row>
+  );
+};
+
+const AttachedLianeOverview = ({ liane, user }: { liane: Liane; user: User }) => {
+  const { wayPoints, departureTime } = getTripFromLiane(liane, user);
+
+  return (
+    <View style={{ paddingLeft: 56, paddingTop: 8, paddingRight: 16 }}>
+      <TripOverviewHeader from={wayPoints[0].rallyingPoint} to={wayPoints[wayPoints.length - 1].rallyingPoint} dateTime={departureTime} />
+    </View>
   );
 };
 
 export const ChatScreen = () => {
   const { navigation, route } = useAppNavigation<"Chat">();
   const groupId = route.params.conversationId;
+  const attachedLiane: Liane | undefined = route.params.liane;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
+  const [error, setError] = useState<Error | undefined>(undefined);
+  const [showMoreModal, setShowMoreModal] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const members = conversation
-    ? conversation.members
-        .filter(m => m.user.id !== user!.id)
-        .map(m => m.user.pseudo)
-        .join(", ")
-    : "";
+  const membersNames = useMemo(
+    () =>
+      conversation
+        ? conversation.members
+            .filter(m => m.user.id !== user!.id)
+            .map(m => m.user.pseudo)
+            .join(", ")
+        : "",
+    [conversation, user]
+  );
+
+  const members: { [k: string]: User } | undefined = useMemo(
+    () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
+    [conversation?.members]
+  );
 
   const appendMessage = (m: ChatMessage) => {
     // console.log([m, ...messages]);
@@ -63,7 +121,7 @@ export const ChatScreen = () => {
   };
 
   const fetchNextPage = async () => {
-    console.log(paginationCursor);
+    //console.log(paginationCursor);
     if (paginationCursor) {
       const paginatedResult = await services.chatHub.list(groupId, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
@@ -74,33 +132,42 @@ export const ChatScreen = () => {
   };
 
   useEffect(() => {
-    services.chatHub.connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage).then(conv => {
-      if (__DEV__) {
-        console.log("Joined conversation", conv);
-      }
-      setConversation(conv);
-    });
+    services.chatHub
+      .connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
+      .then(conv => {
+        /* if (__DEV__) {
+          console.debug("Joined conversation", conv);
+        } */
+        setConversation(conv);
+      })
+      .catch(e => setError(e));
+
     return () => {
       services.chatHub.disconnectFromChat(route.params.conversationId).catch(e => {
         if (__DEV__) {
-          console.log(e);
+          console.warn(e);
         }
       });
     };
-  }, [route, services]);
+  }, [route.params.conversationId, services.chatHub]);
 
   const sendButton = (
-    <Pressable
+    <AppPressableIcon
       style={{ alignSelf: "flex-end" }}
       onPress={async () => {
         if (inputValue && inputValue.length > 0) {
+          setIsSending(true);
           await services.chatHub.send({ text: inputValue });
+          setIsSending(false);
         }
-      }}>
-      <AppIcon name={"navigation-2-outline"} color={AppColors.blue} />
-    </Pressable>
+      }}
+      iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
+      name={"navigation-outline"}
+      color={AppColors.blue}
+    />
   );
 
+  //console.debug(JSON.stringify(messages), conversation?.members);
   return (
     <View style={{ backgroundColor: AppColors.white, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (
@@ -108,19 +175,30 @@ export const ChatScreen = () => {
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
           keyExtractor={m => m.id!}
-          renderItem={({ item }) => <MessageBubble message={item} currentUser={user!} />}
+          renderItem={({ item, index }) => (
+            <MessageBubble
+              message={item}
+              sender={members![item.createdBy!]}
+              isSender={item.createdBy === user?.id}
+              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+            />
+          )}
           inverted={true}
           onEndReachedThreshold={0.2}
           onEndReached={() => fetchNextPage()}
         />
       )}
       {!conversation && (
-        <Center>
+        <Center style={{ flex: 1 }}>
           <ActivityIndicator />
         </Center>
       )}
-      <Row
-        spacing={8}
+      {error && (
+        <Center style={{ flex: 1 }}>
+          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
+        </Center>
+      )}
+      <View
         style={{
           backgroundColor: AppColors.darkBlue,
           position: "absolute",
@@ -128,36 +206,83 @@ export const ChatScreen = () => {
           left: 0,
           right: 0,
           paddingTop: 16 + insets.top,
-          paddingBottom: 16,
+          paddingBottom: 8,
           paddingHorizontal: 8
         }}>
-        <Pressable style={{ padding: 8 }} onPress={() => navigation.goBack()}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
-        </Pressable>
-        {conversation ? (
-          <View
-            style={{
-              justifyContent: "center"
-            }}>
-            <AppText style={{ color: AppColors.white, fontSize: 16 }}>{members}</AppText>
-          </View>
-        ) : null}
-      </Row>
+        <Row spacing={8}>
+          <Pressable style={{ padding: 8 }} onPress={() => navigation.goBack()}>
+            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+          </Pressable>
+          {conversation && (
+            <View
+              style={{
+                justifyContent: "center"
+              }}>
+              <AppText style={{ color: AppColors.white, fontSize: 16, fontWeight: "bold" }}>{membersNames}</AppText>
+            </View>
+          )}
+        </Row>
+        {/* TODO attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />*/}
+        {conversation && <DebugIdView id={conversation.id!} />}
+      </View>
 
-      <Row
-        spacing={16}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{
-          backgroundColor: AppColors.darkBlue,
-          paddingHorizontal: 16,
-          paddingBottom: 12 + insets.bottom,
-          paddingTop: 12,
-          marginTop: 8,
-          alignItems: "flex-end"
+          backgroundColor: AppColors.darkBlue
         }}>
-        <AppButton onPress={() => {}} icon="plus-outline" color={AppColors.white} kind="circular" foregroundColor={AppColors.blue} />
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingBottom: 12 + insets.bottom,
+            paddingTop: 12,
+            marginTop: 8
+          }}>
+          <Row style={{ alignItems: "flex-end" }} spacing={16}>
+            <AppButton
+              onPress={() => {
+                setShowMoreModal(true);
+              }}
+              icon="attach-outline"
+              color={AppColors.white}
+              kind="circular"
+              foregroundColor={AppColors.blue}
+            />
 
-        <AppExpandingTextInput multiline={true} trailing={sendButton} onChangeText={setInputValue} value={inputValue} clearButtonMode="always" />
-      </Row>
+            <AppExpandingTextInput
+              multiline={true}
+              trailing={!isSending ? sendButton : <ActivityIndicator />}
+              onChangeText={setInputValue}
+              value={inputValue}
+              clearButtonMode="always"
+            />
+          </Row>
+        </View>
+      </KeyboardAvoidingView>
+      <SimpleModal visible={showMoreModal} setVisible={setShowMoreModal} backgroundColor={AppColors.white}>
+        <Column>
+          {/* TODO (attachedLiane && user!.id !== attachedLiane.driver.user) && <AppPressable style={{ paddingVertical: 12 }} onPress={() => {
+            Linking.openURL(`tel:${attachedLiane.members.}`)
+          }}>
+            <Row spacing={24} style={{ alignItems: "center" }}>
+              <AppIcon name={"phone-call-outline"} />
+              <AppText>Appeler le conducteur</AppText>
+            </Row>
+          </AppPressable>*/}
+          <AppPressableOverlay style={{ paddingVertical: 12 }}>
+            <Row spacing={24} style={{ alignItems: "center" }}>
+              <AppIcon name={"image-outline"} />
+              <AppText>Partager une image</AppText>
+            </Row>
+          </AppPressableOverlay>
+          <AppPressableOverlay style={{ paddingVertical: 12 }}>
+            <Row spacing={24} style={{ alignItems: "center" }}>
+              <AppIcon name={"pin-outline"} />
+              <AppText>Partager une position</AppText>
+            </Row>
+          </AppPressableOverlay>
+        </Column>
+      </SimpleModal>
     </View>
   ); // TODO loading screen
 };

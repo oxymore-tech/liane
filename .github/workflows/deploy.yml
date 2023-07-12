@@ -17,6 +17,7 @@ jobs:
     environment: production
     concurrency: production
     steps:
+      - uses: actions/checkout@v3
 
       - name: Set variables
         run: |
@@ -38,9 +39,32 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            set -e
             cd ~
             git clone -b "${{ env.branch }}" git@github.com:oxymore-tech/liane.git "${{ env.project }}" || true;
             cd "${{ env.project }}/deploy"
             git pull
             ./liane test
             ./liane start
+
+      - name: Copy test results
+        uses: nicklasfrahm/scp-action@main
+        if: always()
+        with:
+          direction: download
+          insecure_ignore_fingerprint: true
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          source: "/tmp/${{ env.project }}-test/test-results.trx"
+          target: "test-results.trx"
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: DotNET Tests
+          path: "test-results.trx"
+          reporter: dotnet-trx
+          fail-on-error: true

@@ -1,9 +1,16 @@
+using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Exception;
+using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Mock;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
@@ -20,14 +27,14 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
-  private readonly IJoinLianeRequestService joinLianeRequestService;
+  private readonly EventDispatcher eventDispatcher;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, IJoinLianeRequestService joinLianeRequest)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
-    this.joinLianeRequestService = joinLianeRequest;
+    this.eventDispatcher = eventDispatcher;
   }
 
   [HttpGet("{id}")]
@@ -38,74 +45,88 @@ public sealed class LianeController : ControllerBase
     return current ?? await lianeService.Get(id);
   }
 
-  [HttpPost("{id}/request")]
-  [RequiresAccessLevel(ResourceAccessLevel.Any, typeof(Api.Trip.Liane))] // Check resource exits
-  public async Task<JoinLianeRequest> Join([FromRoute] string id, [FromBody] JoinLianeRequest request)
+  [HttpDelete("{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Liane))]
+  public async Task Delete([FromRoute] string id)
   {
-    return await joinLianeRequestService.Create(request with { TargetLiane = id }, currentContext.CurrentUser().Id);
+    await lianeService.Delete(id);
   }
 
-  [HttpGet("{id}/request")]
+  [HttpPatch("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<PaginatedResponse<JoinLianeRequest>> GetLianeRequests([FromRoute] string id, [FromQuery] Pagination pagination)
+  public async Task UpdateDeparture([FromRoute] string id, [FromBody] DateTime departureTime)
   {
-    // Get requests linked to a particular Liane
-    return await joinLianeRequestService.ListLianeRequests(id, pagination);
+    await lianeService.UpdateDepartureTime(id, departureTime);
   }
 
-
-  [HttpGet("request/{id}")]
-  public async Task<JoinLianeRequestDetailed> GetDetailedLianeRequest([FromRoute] string id)
+  [HttpDelete("{id}/members/{memberId}")]
+  public async Task Delete([FromRoute] string id, [FromRoute] string memberId)
   {
-    return await joinLianeRequestService.GetDetailedRequest(id);
+    // For now only allow user himself
+    if (currentContext.CurrentUser().Id != memberId) throw new ForbiddenException();
+    await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
   }
 
-  [HttpPatch("request/{id}")]
-  public async Task SetStatus([FromRoute] string id, [FromQuery] int? accept)
+  [HttpGet("{id}/members/{memberId}/contact")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)
   {
-    var currentUser = currentContext.CurrentUser().Id;
-    if (accept == 1) await joinLianeRequestService.AcceptJoinRequest(currentUser, id);
-    else await joinLianeRequestService.RefuseJoinRequest(currentUser, id);
+    return lianeService.GetContact(id, currentContext.CurrentUser().Id, memberId);
   }
 
-  [HttpGet("request")]
-  public async Task<PaginatedResponse<JoinLianeRequestDetailed>> ListUserRequests([FromQuery] Pagination pagination)
+  [HttpPost("{id}/feedback")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task<IActionResult> SendFeedback([FromRoute] string id, [FromBody] Feedback feedback)
   {
-    return await joinLianeRequestService.ListUserRequests(currentContext.CurrentUser().Id, pagination);
+    await lianeService.UpdateFeedback(id, feedback);
+    return NoContent();
   }
 
-  [HttpGet("display")]
-  public async Task<LianeDisplay> Display([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2)
+  [HttpGet("display/geojson")]
+  public Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after,
+    CancellationToken cancellationToken)
   {
-    var from = new LatLng(lat, lng);
-    var to = new LatLng(lat2, lng2);
-    return await lianeService.Display(from, to);
+    //TODO remove
+    return Task.FromResult(new FeatureCollection());
   }
 
   [HttpPost("match")]
   [DebugRequest]
-  public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
-    return lianeService.Match(filter, pagination);
+    return lianeService.Match(filter, pagination, cancellationToken);
+  }
+
+  [HttpPost("match/geojson")] //TODO use query option
+  [DebugRequest]
+  public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
+  {
+    return lianeService.MatchWithDisplay(filter, pagination, cancellationToken);
+  }
+
+  [HttpPost("links")]
+  public async Task<ImmutableList<ClosestPickups>> GetNear([FromBody] LinkFilterPayload payload)
+  {
+    return await lianeService.GetPickupLinks(payload);
   }
 
   [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
   {
-    return lianeService.ListForCurrentUser(pagination);
+    return lianeService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
   }
 
   [HttpPost("")]
   public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
   {
-    return lianeService.Create(lianeRequest, currentContext.CurrentUser().Id);
+    return lianeService.Create(lianeRequest);
   }
 
   [HttpGet("all")]
   [RequiresAdminAuth]
-  public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination)
+  public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
-    return lianeService.ListAll(pagination);
+    return lianeService.List(new LianeFilter(), pagination, cancellationToken);
   }
 
   [HttpPost("generate")]

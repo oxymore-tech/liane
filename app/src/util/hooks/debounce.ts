@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-export function useDebounce<T>(value: T, delay?: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+import { useEffect, useRef, useState } from "react";
+export function useDebounceValue<T>(value: T, delay?: number): T | undefined {
+  const [debouncedValue, setDebouncedValue] = useState<T | undefined>(undefined);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedValue(value), delay || 300);
@@ -10,4 +10,28 @@ export function useDebounce<T>(value: T, delay?: number): T {
   }, [value, delay]);
 
   return debouncedValue;
+}
+
+export function useDebounce<T>(
+  callback: (args: T) => void,
+  delay?: number
+): {
+  run: (args: T) => void;
+  isPending: boolean;
+} {
+  const callbackRef = useRef<number | undefined>();
+  const [pending, setPending] = useState(false);
+
+  const run = (args: T) => {
+    if (callbackRef.current) {
+      clearTimeout(callbackRef.current);
+    }
+    callbackRef.current = setTimeout(() => {
+      callback(args);
+      setPending(false);
+    }, delay || 300);
+    setPending(true);
+  };
+
+  return { run, isPending: pending };
 }

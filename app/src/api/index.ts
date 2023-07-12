@@ -1,5 +1,12 @@
 import { TimeInSeconds } from "@/util/datetime";
-import { GeoJSON } from "geojson";
+import { FeatureCollection } from "geojson";
+
+export class UnionUtils {
+  static isInstanceOf<T extends { type: string }>(notification: { type: string }, type: T["type"]): notification is T {
+    return notification.type === type;
+  }
+}
+
 export type Identity = Readonly<{
   id?: string;
 }>;
@@ -17,8 +24,8 @@ export type WithResolvedRef<Key extends string, TRef extends Identity, T extends
 
 export type AuthUser = Readonly<{
   id: string;
-  phone: string;
   isAdmin: boolean;
+  isSignedUp: boolean;
 }>;
 
 export type AuthResponse = Readonly<{
@@ -35,10 +42,14 @@ export type AuthRequest = Readonly<{
   pushToken?: string;
 }>;
 
+export type UserInfo = Readonly<{ firstName: string; lastName: string; gender: "Man" | "Woman" | "Unspecified"; pictureUrl?: string }>;
+
 export type User = Readonly<
   {
     phone: string;
     pseudo: string;
+    pictureUrl: string | undefined | null;
+    gender: "Man" | "Woman" | "Unspecified";
   } & Entity
 >;
 
@@ -100,44 +111,53 @@ export type Liane = Entity &
     returnTime?: UTCDateTime;
     wayPoints: WayPoint[];
     members: LianeMember[];
-    driver?: Ref<User>;
-    group: Ref<ConversationGroup>;
+    driver: { user: Ref<User>; canDrive: boolean };
+    conversation: Ref<ConversationGroup>;
+    state: LianeState;
   }>;
+
+export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
 
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
   duration: TimeInSeconds;
-  order: number;
+  distance: number;
+  eta: UTCDateTime;
 }>;
 
 export type LianeMember = Readonly<{
-  user: Ref<User>;
+  user: User;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seatCount: number;
+  delay?: TimeInSeconds;
 }>;
 
 // A date time in ISO 8601 format
 export type UTCDateTime = string;
-
-// A time in ISO 8601 format
-export type UTCTimeOnly = string;
 
 export type PointDisplay = Readonly<{
   rallyingPoint: RallyingPoint;
   lianes: Liane[];
 }>;
 
+export type Feedback = Readonly<{
+  comment: string | null;
+  canceled: boolean;
+}>;
+/*
 export type LianeSegment = Readonly<{
   coordinates: GeoJSON.Position[];
-  lianes: Liane[];
+  lianes: Ref<Liane>[];
 }>;
 
 export type LianeDisplay = Readonly<{
-  points: PointDisplay[];
   segments: LianeSegment[];
+  lianes: Liane[];
 }>;
+*/
 
+export type LianeMatchDisplay = Readonly<{ features: FeatureCollection; lianeMatches: LianeMatch[] }>;
 export type ChatMessage = Readonly<
   {
     text: string;
@@ -191,54 +211,42 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type Exact = { type: "Exact" };
-export type Compatible = { type: "Compatible"; deltaInSeconds: TimeInSeconds };
+export type Exact = { type: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
+export type Compatible = {
+  type: "Compatible";
+  pickup: Ref<RallyingPoint>;
+  deposit: Ref<RallyingPoint>;
+  wayPoints: WayPoint[];
+  // deltaInSeconds: number;
+
+  delta: {
+    totalInSeconds: number;
+    totalInMeters: number;
+    pickupInSeconds: number;
+    pickupInMeters: number;
+    depositInSeconds: number;
+    depositInMeters: number;
+  };
+};
 export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{
   liane: Liane;
-  wayPoints: WayPoint[];
+  //   wayPoints: WayPoint[];
   match: Match;
   freeSeatsCount: number;
 }>;
 
-// Notifications
-export type Notification = Readonly<{
-  title: string;
-  message: string;
-  payload: NotificationPayload<any>;
-}>;
-
-export type NotificationPayload<T> = Readonly<
-  {
-    event: T;
-    createdAt: UTCDateTime;
-    seen: boolean;
-    type: string;
-  } & Identity
->;
+export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): RallyingPoint => {
+  const wp = UnionUtils.isInstanceOf<Exact>(match.match, "Exact") ? match.liane.wayPoints : match.match.wayPoints;
+  return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
+};
 
 export type NewConversationMessage = Readonly<{
   conversationId: string;
   sender: User;
   message: ChatMessage;
 }>;
-
-export type JoinLianeRequest = Readonly<
-  {
-    from: Ref<RallyingPoint>;
-    to: Ref<RallyingPoint>;
-    targetLiane: Ref<Liane>;
-    seats: number;
-    takeReturnTrip: boolean;
-    message: string;
-    accepted?: boolean;
-  } & Entity
->;
-
-export const isJoinLianeRequest = (notification: NotificationPayload<any>): notification is NotificationPayload<JoinLianeRequest> => {
-  return notification.type === "JoinLianeRequest";
-};
 
 export type JoinLianeRequestDetailed = Readonly<
   {
@@ -250,8 +258,11 @@ export type JoinLianeRequestDetailed = Readonly<
     message: string;
     accepted?: boolean;
     match: Match;
-    wayPoints: WayPoint[];
+    //wayPoints: WayPoint[];
     createdBy?: User;
     createdAt?: UTCDateTime;
   } & Identity
 >;
+
+export type RallyingPointLink = { deposit: RallyingPoint; hours: UTCDateTime[] };
+export type NearestLinks = { pickup: RallyingPoint; destinations: RallyingPointLink[] }[];
