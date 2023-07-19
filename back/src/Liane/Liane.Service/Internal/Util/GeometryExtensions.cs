@@ -17,6 +17,11 @@ public static class GeometryExtensions
     return new LineString(coordinates.Select(c => new Position(c.Item2, c.Item1)));
   }
 
+  public static GeoJsonPoint<GeoJson2DGeographicCoordinates> ToGeoJson(this LatLng c)
+  {
+    return new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(c.Lng, c.Lat));
+  }
+
   public static GeoJsonLineString<GeoJson2DGeographicCoordinates> ToGeoJson(this ImmutableList<LatLng> coordinates)
   {
     var geoJson2DGeographicCoordinatesList = coordinates.Select(c => new GeoJson2DGeographicCoordinates(c.Lng, c.Lat));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
@@ -59,19 +60,26 @@ public sealed class PostgisUpdateService
     var index = 0;
     foreach (var lianeDb in lianeDbs)
     {
-      var rallyingPoints = await lianeDb.WayPoints.SelectAsync(w => rallyingPointService.Get(w.RallyingPoint));
-      for (var i = 0; i < rallyingPoints.Count - 1; i++)
+      try
       {
-        var from = rallyingPoints[i];
-        var to = rallyingPoints[i + 1];
-        if (input.Segments.Add((from.Id!, to.Id!)))
+        var rallyingPoints = await lianeDb.WayPoints.SelectAsync(w => rallyingPointService.Get(w.RallyingPoint));
+        for (var i = 0; i < rallyingPoints.Count - 1; i++)
         {
-          var route = await routingService.GetRoute(from.Location, to.Location);
-          segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToLineString()));
-        }
+          var from = rallyingPoints[i];
+          var to = rallyingPoints[i + 1];
+          if (input.Segments.Add((from.Id!, to.Id!)))
+          {
+            var route = await routingService.GetRoute(from.Location, to.Location);
+            segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToLineString()));
+          }
 
-        wayPoints.Add(new LianeWayPointDb(from.Id!, to.Id!, lianeDb.Id, lianeDb.WayPoints[i].Eta));
-        logger.LogInformation("Adding liane {index}/{to}", index++, lianeDbs.Count);
+          wayPoints.Add(new LianeWayPointDb(from.Id!, to.Id!, lianeDb.Id, lianeDb.WayPoints[i].Eta));
+          logger.LogInformation("Adding liane {index}/{to}", index++, lianeDbs.Count);
+        }
+      }
+      catch (Exception e)
+      {
+        logger.LogWarning("Unable to update geometry in postgis for liane {Liane} : {Message}", lianeDb.Id, e.Message);
       }
     }
 
