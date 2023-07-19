@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
-using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
@@ -52,7 +51,6 @@ public sealed class RallyingPointController : ControllerBase
   [DisableAuth]
   public async Task<ImmutableList<RallyingPoint>> List(
     [FromQuery] double? lat, [FromQuery] double? lng,
-    [FromQuery] double? lat2, [FromQuery] double? lng2,
     [FromQuery] int? distance = null,
     [FromQuery] int? limit = 10,
     [FromQuery] string? search = null)
@@ -63,36 +61,7 @@ public sealed class RallyingPointController : ControllerBase
       from = new LatLng((double)lat, (double)lng);
     }
 
-    LatLng? to = null;
-    if (lat2 != null && lng2 != null)
-    {
-      to = new LatLng((double)lat2, (double)lng2);
-    }
-
-    return await rallyingPointService.List(from, to, distance, search, limit);
-  }
-
-  [HttpGet("geojson")]
-  [DisableAuth]
-  public async Task<FeatureCollection> ListGeojson(
-    [FromQuery] double? lat, [FromQuery] double? lng,
-    [FromQuery] double? lat2, [FromQuery] double? lng2,
-    [FromQuery] int? distance = null,
-    [FromQuery] int? limit = 10,
-    [FromQuery] string? search = null)
-  {
-    LatLng? from = null;
-    if (lat != null && lng != null)
-    {
-      from = new LatLng((double)lat, (double)lng);
-    }
-
-    LatLng? to = null;
-    if (lat2 != null && lng2 != null)
-    {
-      to = new LatLng((double)lat2, (double)lng2);
-    }
-    return await rallyingPointService.ListGeojson(from, to, distance, search, limit);
+    return await rallyingPointService.List(from, distance: distance, search: search, limit: limit);
   }
 
   [HttpGet("snap")]

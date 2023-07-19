@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Postgis.Db;
-using Npgsql;
 
 namespace Liane.Service.Internal.Postgis;
 
@@ -34,33 +33,5 @@ public sealed class PostgisFactory
     }
 
     tx.Commit();
-  }
-
-  public static async Task<PostgisDatabase> CreateForTest(DatabaseSettings settings)
-  {
-    var connectionString = new NpgsqlConnectionStringBuilder
-    {
-      Host = settings.Host,
-      Username = settings.Username,
-      Password = settings.Password,
-      IncludeErrorDetail = true,
-      Database = "postgres"
-    }.ConnectionString;
-    await using var connection = new NpgsqlConnection(connectionString);
-    connection.Open();
-
-    var exists = (bool)(await connection.QueryFirstAsync("SELECT exists(SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower(@db));", new { db = settings.Db })).exists;
-    if (!exists)
-    {
-      var createCommand = new NpgsqlCommand($"CREATE DATABASE {settings.Db} WITH OWNER {settings.Username};", connection);
-      await createCommand.ExecuteNonQueryAsync();
-    }
-
-    var db = new PostgisDatabase(settings);
-
-    using var databaseConnection = db.NewConnection();
-    await databaseConnection.ExecuteAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
-
-    return db;
   }
 }

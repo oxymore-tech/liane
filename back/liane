@@ -9,7 +9,7 @@ source "${SCRIPTPATH}/.env.local"
 
 MONGO_HOST_PORT=27017
 POSTGIS_HOST_PORT=5432
-MONGO_USERNAME=${LIANE_MONGO__USERNAME:-mongoadmin}
+MONGO_USERNAME=${LIANE_MONGO__USERNAME:-mongo}
 MONGO_PASSWORD=${LIANE_MONGO__PASSWORD:-secret}
 
 function liane_compose {
@@ -57,7 +57,8 @@ function dump_on_local {
     suffix=""
   fi;
   
-  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | liane_compose exec -T mongo mongorestore --archive --gzip -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD}
+  # ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | liane_compose exec -T mongo mongorestore --drop --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}" --nsInclude='liane.*'
+  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump_pg" | liane_compose exec -T -e "PGPASSWORD=${MONGO_PASSWORD}" postgis psql -U "${MONGO_USERNAME}" -h 127.0.0.1 -d liane
 }
 
 function init {

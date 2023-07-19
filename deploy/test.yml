@@ -4,14 +4,14 @@ services:
   mongo:
     image: "mongo:4.4"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_USERNAME: mongo
       MONGO_INITDB_ROOT_PASSWORD: secret
 
   postgis:
     image: "postgis/postgis:15-3.3"
     environment:
       POSTGRES_DB: liane_test
-      POSTGRES_USER: mongoadmin
+      POSTGRES_USER: mongo
       POSTGRES_PASSWORD: secret
   
   osrm:

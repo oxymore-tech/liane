@@ -13,13 +13,13 @@ services:
     restart: unless-stopped
 
   postgis:
-    image: "postgis/postgis:15-3.3"
+    image: "kartoza/postgis:15-3.3"
     volumes:
       - "${LIANE_HOME}/data/postgis:/var/lib/postgresql/data"
     ports:
       - "${POSTGIS_HOST_PORT}:5432"
     environment:
-      POSTGRES_DB: liane
+      POSTGRES_DB: liane,liane_test
       POSTGRES_USER: ${MONGO_USERNAME}
       POSTGRES_PASSWORD: ${MONGO_PASSWORD}
     restart: unless-stopped

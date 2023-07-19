@@ -5,12 +5,12 @@
   },
   "Mongo": {
     "Host": "localhost",
-    "Username": "mongoadmin",
+    "Username": "mongo",
     "Password": "secret"
   },
   "Database": {
     "Host": "localhost",
-    "Username": "mongoadmin",
+    "Username": "mongo",
     "Password": "secret"
   },
   "Nominatim": {
