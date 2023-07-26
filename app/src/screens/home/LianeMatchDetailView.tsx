@@ -98,7 +98,7 @@ export const LianeMatchDetailView = () => {
       <SectionSeparator />
 
       <Column style={styles.section} spacing={4}>
-        <InfoItem icon={"calendar-outline"} value={formattedDepartureTime} />
+        <InfoItem icon={"calendar-outline"} value={formattedDepartureTime!} />
         <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
         <InfoItem icon={"twisting-arrow"} value={tripDistance} />
       </Column>

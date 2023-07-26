@@ -36,9 +36,9 @@ interface Props {
   onChange?: (index: number) => void;
 }
 
-Number.prototype.mod = function (n) {
+const mod = function (x: number, n: number) {
   "use strict";
-  return ((this % n) + n) % n;
+  return ((x % n) + n) % n;
 };
 
 export const WheelPicker: React.FC<Props> = ({
@@ -62,7 +62,7 @@ export const WheelPicker: React.FC<Props> = ({
 }) => {
   const flatListRef = useRef<FlatList>(null);
   if (isInfinite) {
-    selectedIndex = (selectedIndex + 1).mod(options.length);
+    selectedIndex = mod(selectedIndex + 1, options.length);
   }
 
   const oldVal = useRef(selectedIndex);
@@ -104,7 +104,7 @@ export const WheelPicker: React.FC<Props> = ({
     }
 
     if (isInfinite) {
-      index = (index - 1).mod(options.length);
+      index = mod(index - 1, options.length);
     }
 
     onChanged(index);
@@ -133,12 +133,12 @@ export const WheelPicker: React.FC<Props> = ({
       index++;
     }
 
-    index = (index - 1).mod(options.length);
+    index = mod(index - 1, options.length);
 
     if (index !== oldVal.current && onChange) {
       onChange(index);
     }
-    oldVal.current = (index + 1).mod(options.length);
+    oldVal.current = mod(index + 1, options.length);
   };
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export const WheelPicker: React.FC<Props> = ({
     }
   }, [selectedIndex]);
 
-  const renderItem = useCallback(
+  const renderItem = useCallback<({ item, index }: { item: any; index: any }) => JSX.Element>(
     ({ item: option, index }) => (
       <WheelPickerItem
         key={`option-${index}`}

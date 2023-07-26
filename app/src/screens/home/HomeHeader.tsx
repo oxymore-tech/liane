@@ -17,7 +17,6 @@ import { AppPressableIcon } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { Feature } from "geojson";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
-import { RallyingPoint } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { HomeScreenHeader } from "@/components/Navigation";
 
@@ -171,15 +170,13 @@ export const MapHeader = ({
 
   updateTrip,
   animateEntry = false,
-  hintPhrase = null,
-  setBarVisible
+  hintPhrase = null
 }: {
   updateTrip: (trip: Partial<Trip>) => void;
   title: string;
 
   trip: Partial<Trip>;
   animateEntry?: boolean;
-  setBarVisible?: (visible: boolean) => void;
   hintPhrase?: string | null;
 }) => {
   const insets = useSafeAreaInsets();
@@ -330,10 +327,8 @@ export const MapHeader = ({
             paddingHorizontal: 16
           }
         ]}>
-        <Row style={{ alignItems: "center", paddingHorizontal: 8, marginRight: 8 }}>
-          <View style={{ flex: 1 }} />
+        <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>
           <FilterSelector shortFormat={true} />
-          <View style={{ flex: 1 }} />
         </Row>
       </View>
     </View>

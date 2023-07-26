@@ -17,7 +17,7 @@ export const WelcomeWizardModal = () => {
     shouldShowTutorial("welcome").then(setShow);
   }, [user?.id]);
   return (
-    <Modal useNativeDriverForBackdrop={true} isVisible={show} style={{ margin: 0 }}>
+    <Modal useNativeDriverForBackdrop={true} isVisible={false} style={{ margin: 0 }}>
       {page === 0 && <WelcomePage1 prev={() => setShow(false)} next={() => setPage(page + 1)} />}
       {page === 1 && <WelcomePageRp prev={() => setPage(page - 1)} next={() => setPage(page + 1)} />}
       {page === 2 && <WelcomePageMap prev={() => setPage(page - 1)} next={() => setPage(page + 1)} />}

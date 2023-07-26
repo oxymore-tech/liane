@@ -116,7 +116,9 @@ const SignUpScreen = () => {
   });
 
   return (
-    <SignUpLianeContext.Provider value={machine}>
+    <SignUpLianeContext.Provider
+      /* @ts-ignore */
+      value={machine}>
       {["code", "phone"].some(state.matches) && <SignUpPage />}
       {state.matches("form") && <SignUpFormScreen />}
       {!["code", "phone", "form"].some(state.matches) && (

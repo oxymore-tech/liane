@@ -24,7 +24,7 @@ import Animated, {
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelector";
-import { AppSwitchToggle, AppToggle } from "@/components/base/AppOptionToggle";
+import { AppToggle } from "@/components/base/AppOptionToggle";
 import { useActor, useInterpret } from "@xstate/react";
 import { CreatePublishLianeMachine, PublishLianeContext } from "@/screens/publish/StateMachine";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
@@ -376,6 +376,7 @@ export const PublishScreen = () => {
   });
 
   return (
+    /*  @ts-ignore */
     <PublishLianeContext.Provider value={machine}>
       <PublishScreenView />
       <AppStatusBar style="light-content" />

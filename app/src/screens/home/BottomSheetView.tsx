@@ -65,6 +65,7 @@ export const LianeDestinations = (props: {
   });
 
   if (error) {
+    /* @ts-ignore */
     return <ErrorView message={error.message} />;
   }
   if (isLoading || !results) {
@@ -196,7 +197,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   if (loading || !state.matches("match") || !state.context.matches) {
     return null;
   }
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item }: { item: any }) => {
     return (
       <AppPressableOverlay
         foregroundColor={WithAlpha(AppColors.black, 0.1)}
@@ -264,7 +265,7 @@ export interface FilterSelectorProps {
 }
 
 //const selectAvailableSeats = state => state.context.filter.availableSeats;
-const selectTargetTime = state => state.context.filter.targetTime;
+const selectTargetTime = (state: any) => state.context.filter.targetTime;
 export const FilterSelector = ({ formatter, shortFormat = false, color = defaultTextColor(AppColors.white) }: FilterSelectorProps) => {
   const machine = useContext(HomeMapContext);
 
@@ -275,7 +276,7 @@ export const FilterSelector = ({ formatter, shortFormat = false, color = default
   const date = targetTime?.dateTime || new Date();
 
   const defaultFormatter = shortFormat
-    ? (d: Date) => capitalize(toRelativeDateString(d, formatShortMonthDay))
+    ? (d: Date) => capitalize(toRelativeDateString(d, formatShortMonthDay))!
     : (d: Date) => {
         return targetTime?.direction === "Arrival" ? "Arrivée " : "Départ " + toRelativeDateString(d, formatShortMonthDay);
       };

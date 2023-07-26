@@ -122,7 +122,7 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
       return undefined;
     }
 
-    const features = {
+    const features: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features: data.geometry.coordinates.map((line, i): GeoJSON.Feature => {
         return {
@@ -429,6 +429,7 @@ export const LianeShapeDisplayLayer = ({
       <MapLibreGL.LineLayer
         aboveLayerID="Highway"
         id="lianeLayer"
+        /* @ts-ignore */
         filter={lianeId ? ["in", lianeId, ["get", "lianes"]] : undefined}
         style={{
           lineColor: loading ? AppColorPalettes.gray[400] : AppColors.darkBlue,
@@ -441,7 +442,6 @@ export const LianeShapeDisplayLayer = ({
 
 export const RallyingPointsDisplayLayer = ({
   type,
-  selected,
   onSelect
 }: {
   onSelect?: (rp: RallyingPoint) => void;
@@ -533,7 +533,7 @@ export const RallyingPointsFeaturesDisplayLayer = ({
   color = AppColors.orange,
   minZoomLevel
 }: RallyingPointsDisplayLayerProps) => {
-  const feature = useMemo(() => {
+  const feature: FeatureCollection = useMemo(() => {
     if (isFeatureCollection(rallyingPoints)) {
       return {
         type: "FeatureCollection",
@@ -585,6 +585,7 @@ export const RallyingPointsFeaturesDisplayLayer = ({
               await controller.setCenter(center, newZoom);
 
               if (onSelect) {
+                /* @ts-ignore */
                 onSelect(zoom >= 10.5 ? rp : undefined);
               }
             }
@@ -781,6 +782,7 @@ const AppMapView = forwardRef(
     return (
       <View style={styles.map}>
         <MapLibreGL.MapView
+          // @ts-ignore
           ref={mapRef}
           onTouchMove={() => {
             if (!moving.current) {
@@ -890,6 +892,7 @@ const AppMapView = forwardRef(
             maxZoomLevel={18}
             minZoomLevel={4}
             zoomLevel={10}
+            // @ts-ignore
             ref={cameraRef}
           />
           <Images

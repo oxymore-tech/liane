@@ -23,6 +23,8 @@ const MyTripsScreen = () => {
   useEffect(() => {
     const s = services.chatHub.subscribeToNotifications(async n => {
       // TODO make sure "type" is serialized via Hub
+
+      //  @ts-ignore
       if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
         await queryClient.invalidateQueries(LianeQueryKey);
         await queryClient.invalidateQueries(JoinRequestsQueryKey);

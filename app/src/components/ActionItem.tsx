@@ -1,6 +1,6 @@
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Row } from "@/components/base/AppLayout";
-import { AppIcon, CustomIconName, IconName } from "@/components/base/AppIcon";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { ColorValue, StyleSheet, View } from "react-native";
 import React from "react";
@@ -9,7 +9,7 @@ import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 export interface ActionItemProps {
   onPress: () => void;
   color?: ColorValue;
-  iconName: IconName | CustomIconName;
+  iconName: IconName;
   text: string;
 }
 export const ActionItem = ({ onPress, color = AppColorPalettes.gray[800], iconName, text }: ActionItemProps) => (

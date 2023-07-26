@@ -64,7 +64,8 @@ const createState = <T>(nextTarget: string, nextCondition?: (context: T) => bool
               actions: ["set"],
               target: "#publish." + nextTarget,
               cond: nextCondition
-                ? (context: PublishContext, event: UpdateEvent) => nextCondition({ request: { ...context.request, ...event.data } })
+                ? /* @ts-ignore */
+                  (context: PublishContext, event: UpdateEvent) => nextCondition({ request: { ...context.request, ...event.data } })
                 : () => false
             },
             {

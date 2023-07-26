@@ -13,6 +13,7 @@ const WithIconButton =
   ({ backgroundColor, onPress, ...props }: T & AppIconButtonProps) => {
     return (
       <AppPressableOverlay backgroundStyle={[styles.light, { backgroundColor }]} style={styles.button} onPress={onPress}>
+        {/*  @ts-ignore */}
         <WrappedIcon {...props} />
       </AppPressableOverlay>
     );

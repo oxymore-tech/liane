@@ -12,7 +12,7 @@ import { AppText } from "@/components/base/AppText";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import LianeIcon from "@/assets/icon.svg";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
-import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
+//import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
 import { Row } from "@/components/base/AppLayout";
 import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
@@ -122,7 +122,6 @@ function Navigation() {
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
@@ -217,6 +216,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       component={screen}
       options={({ navigation }) => ({
         headerShown,
+        /*  @ts-ignore */
         header: () => <HomeScreenHeader label={label} navigation={navigation} isRootHeader={true} />,
         tabBarLabel: ({ focused }) => (
           <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>

@@ -1,5 +1,5 @@
 import { LatLng } from "@/api/index";
-import { MAPBOX_KEY, MAPTILER_KEY } from "@env";
+import { MAPTILER_KEY } from "@env";
 import { BoundingBox } from "@/api/geo";
 
 export const DEFAULT_TLS = {

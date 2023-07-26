@@ -371,7 +371,7 @@ export const PlaceSuggestions = (props: {
           console.warn(queriesErrors);
           setError(queriesErrors[0] || queriesErrors[1]);
         });
-      services.location.search(debouncedSearch, services.location.getLastKnownLocation()).then(r => {});
+      services.location.search(debouncedSearch, services.location.getLastKnownLocation()).catch(e => console.warn(e));
     }
   }, [debouncedSearch]);
 

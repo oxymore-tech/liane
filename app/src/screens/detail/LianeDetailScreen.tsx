@@ -57,7 +57,7 @@ export const LianeDetailScreen = () => {
     }
   }, [lianeParam, services.liane]);
 
-  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id) : undefined), [liane]);
+  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
 
   return <LianeDetailPage match={match} />;
 };
@@ -91,7 +91,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           {match && <LianeMatchRouteLayer match={match} />}
           {match &&
             !request &&
-            match.liane.wayPoints.map((w, i) => {
+            match.liane.wayPoints.map(w => {
               let type: "to" | "from" | "step";
               if (w.rallyingPoint.id === fromPoint!.id) {
                 type = "from";
@@ -498,7 +498,7 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
       <SectionSeparator />
 
       <Column style={styles.section} spacing={4}>
-        <InfoItem icon={"calendar-outline"} value={formattedDepartureTime} />
+        <InfoItem icon={"calendar-outline"} value={formattedDepartureTime!} />
         <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
         <InfoItem icon={"twisting-arrow"} value={tripDistance} />
       </Column>
