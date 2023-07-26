@@ -78,7 +78,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   React.useLayoutEffect(() => {
     navigation.setOptions(
       //@ts-ignore
-      { tabBarStyle: [...bbStyle, { display: (isMapState || isPointState) && displayBar ? undefined : "none" }] }
+      { tabBarStyle: [...bbStyle, { display: isMapState || isPointState ? undefined : "none" }] }
     );
   });
 
