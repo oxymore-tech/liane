@@ -13,7 +13,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
-import { AnimatedFloatingBackButton, MapHeader, SearchFeature } from "@/screens/home/HomeHeader";
+import { AnimatedFloatingBackButton, MapHeader, SearchModal } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -516,8 +516,12 @@ const HomeMap = ({
         )}
       </AppMapView>
       {["point", "map"].some(state.matches) && (
-        <SearchFeature
-          onSelect={placeFeature => {
+        <SearchModal
+          onSelectTrip={trip => {
+            machine.send("UPDATE", { data: trip });
+            return true;
+          }}
+          onSelectFeature={placeFeature => {
             console.log("place selected", JSON.stringify(placeFeature));
             if (placeFeature.bbox) {
               appMapRef.current?.fitBounds(

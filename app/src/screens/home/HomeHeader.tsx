@@ -643,7 +643,11 @@ export const RPFormHeader = ({
   );
 };*/
 
-export const SearchFeature = (props: { onSelect: (feature: SearchedLocation) => boolean; title?: string }) => {
+export const SearchModal = (props: {
+  onSelectTrip: (trip: Trip) => boolean;
+  onSelectFeature: (feature: SearchedLocation) => boolean;
+  title?: string;
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [searchTrips, setSearchTrips] = useState(false);
   const [inputText, setInputText] = useState("");
@@ -715,22 +719,33 @@ export const SearchFeature = (props: { onSelect: (feature: SearchedLocation) => 
               ))}
             </Row>
             <View style={{ flex: 1 }}>
-              {inputText.length === 0 && (
+              {!searchTrips && inputText.length === 0 && (
                 <CachedPlaceLocationsView
                   showUsePosition={false}
                   onSelect={async f => {
-                    const close = props.onSelect(f);
+                    const close = props.onSelectFeature(f);
                     if (close) {
                       closeModal();
                     }
                   }}
                 />
               )}
-              {inputText.length > 0 && (
+              {searchTrips && (
+                <CachedTripsView
+                  filter={inputText.length > 0 ? inputText : undefined}
+                  onSelect={t => {
+                    const close = props.onSelectTrip(t);
+                    if (close) {
+                      closeModal();
+                    }
+                  }}
+                />
+              )}
+              {!searchTrips && inputText.length > 0 && (
                 <PlaceSuggestions
                   currentSearch={inputText}
                   onSelect={f => {
-                    const close = props.onSelect(f);
+                    const close = props.onSelectFeature(f);
                     if (close) {
                       closeModal();
                     }

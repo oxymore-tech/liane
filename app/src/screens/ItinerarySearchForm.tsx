@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { capitalize } from "@/util/strings";
+import { filter } from "rxjs";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
@@ -61,14 +62,18 @@ export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<View
   );
 };
 
-export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
+export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?: string }) => {
   const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
   const { services } = useContext(AppContext);
   useEffect(() => {
     services.location.getRecentTrips().then(r => {
-      setRecentTrips(r);
+      let trips = r;
+      if (props.filter) {
+        trips = trips.filter(t => (t.from.city + " " + t.to.city + " " + t.from.label + " " + t.to.label).includes(props.filter!));
+      }
+      setRecentTrips(trips);
     });
-  }, [services.location]);
+  }, [services.location, props.filter]);
 
   return (
     <Animated.View style={styles.page} entering={FadeIn}>
