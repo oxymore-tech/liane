@@ -219,7 +219,7 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
       <Column style={styles.column}>
         <TimeView style={styles.mainWayPointTime} value={from.eta} />
 
-        {steps.length === 0 && <View style={styles.line} />}
+        {steps.length === 0 && <View style={styles.horizontalLine} />}
         {steps.length <= 3 && steps.map((_, i) => lianeSymbolView(i))}
         {steps.length > 3 && [
           lianeSymbolView(0),
@@ -244,13 +244,13 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
 
 const styles = StyleSheet.create({
   toLabel: {
-    color: AppColorPalettes.pink[500]
+    // color: AppColorPalettes.pink[500]
   },
   overallFromLabel: {
-    color: AppColorPalettes.gray[500]
+    // color: AppColorPalettes.gray[500]
   },
   fromLabel: {
-    color: AppColorPalettes.orange[500]
+    // color: AppColorPalettes.orange[500]
   },
   mainWayPointLabel: {
     fontSize: 18,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     top: -2
   },
 
-  line: {
+  horizontalLine: {
     borderLeftColor: AppColorPalettes.gray[400],
     borderLeftWidth: 1,
     minHeight: 18,

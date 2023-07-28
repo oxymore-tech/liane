@@ -4,7 +4,7 @@ import Geolocation from "react-native-geolocation-service";
 import { retrieveAsync, storeAsync } from "@/api/storage";
 import { DEFAULT_TLS } from "@/api/location";
 import { MAPTILER_KEY } from "@env";
-import { Feature, FeatureCollection } from "geojson";
+import { Feature, Geometry, Point } from "geojson";
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
 
@@ -12,13 +12,19 @@ export interface LocationService {
   cacheRecentLocation(rallyingPoint: RallyingPoint): Promise<RallyingPoint[]>;
   getRecentLocations(): Promise<RallyingPoint[]>;
 
-  cacheRecentPlaceLocation(rallyingPoint: Feature): Promise<Feature[]>;
-  getRecentPlaceLocations(): Promise<Feature[]>;
+  cacheRecentPlaceLocation(rallyingPoint: SearchedLocation): Promise<SearchedLocation[]>;
+  getRecentPlaceLocations(): Promise<SearchedLocation[]>;
 
   cacheRecentTrip(trip: Trip): Promise<Trip[]>;
   getRecentTrips(): Promise<Trip[]>;
 
-  search(query: string, closeTo?: LatLng): Promise<FeatureCollection>;
+  search(
+    query: string,
+    closeTo?: LatLng
+  ): Promise<{
+    type: "FeatureCollection";
+    features: Array<SearchedLocationSuggestion>;
+  }>;
 }
 
 export type Trip = {
@@ -123,18 +129,22 @@ export class LocationServiceClient implements LocationService {
     return (await retrieveAsync<RallyingPoint[]>(rallyingPointsKey)) ?? [];
   }
 
-  async cacheRecentPlaceLocation(p: Feature): Promise<Feature[]> {
-    let cachedValues = (await retrieveAsync<Feature[]>(recentPlacesKey)) ?? [];
-    cachedValues = cachedValues.filter(v => (v.properties!.ref || v.properties!.id) !== (p.properties!.ref || p.properties!.id));
+  async cacheRecentPlaceLocation(p: SearchedLocation): Promise<SearchedLocation[]> {
+    let cachedValues = (await retrieveAsync<SearchedLocation[]>(recentPlacesKey)) ?? [];
+    cachedValues = cachedValues.filter(
+      v =>
+        (isRallyingPointSearchedLocation(v) ? v.properties!.id : v.properties!.ref) !==
+        (isRallyingPointSearchedLocation(p) ? p.properties!.id : p.properties!.ref)
+    );
     cachedValues.unshift(p);
     cachedValues = cachedValues.slice(0, cacheSize);
-    await storeAsync<Feature[]>(recentPlacesKey, cachedValues);
+    await storeAsync<SearchedLocation[]>(recentPlacesKey, cachedValues);
 
     return cachedValues;
   }
 
-  async getRecentPlaceLocations(): Promise<Feature[]> {
-    return (await retrieveAsync<Feature[]>(recentPlacesKey)) ?? [];
+  async getRecentPlaceLocations(): Promise<SearchedLocation[]> {
+    return (await retrieveAsync<SearchedLocation[]>(recentPlacesKey)) ?? [];
   }
 
   async cacheRecentTrip(trip: Trip): Promise<Trip[]> {
@@ -176,7 +186,13 @@ export class LocationServiceClient implements LocationService {
     return this.lastKnownLocation;
   }
 
-  async search(query: string, closeTo?: LatLng): Promise<FeatureCollection> {
+  async search(
+    query: string,
+    closeTo?: LatLng
+  ): Promise<{
+    type: "FeatureCollection";
+    features: Array<SearchedLocationSuggestion>;
+  }> {
     let url = `https://api.maptiler.com/geocoding/${query}.json`;
 
     const types = [
@@ -210,4 +226,26 @@ export class LocationServiceClient implements LocationService {
       throw new Error("API returned error " + response.status);
     }
   }
+}
+export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
+export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };
+export type SearchedLocationSuggestion = Readonly<
+  {
+    place_type_name: string[] | undefined;
+    place_name: string;
+    place_type: string[];
+    context: Array<{ text: string }>;
+  } & Feature<Geometry, { ref: string; categories: string[] }>
+>;
+export function isRallyingPointSearchedLocation(item: SearchedLocation): item is RallyingPointSearchedLocation {
+  return item.place_type[0] === "rallying_point";
+}
+
+export function asSearchedLocation(rp: RallyingPoint): SearchedLocation {
+  return {
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [rp.location.lng, rp.location.lat] },
+    properties: { ...rp },
+    place_type: ["rallying_point"]
+  };
 }

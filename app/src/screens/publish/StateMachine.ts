@@ -8,7 +8,7 @@ export const PublishStateSequence = ["trip", "date", "vehicle"] as const;
 
 export type PublishStepsKeys = (typeof PublishStateSequence)[number];
 
-type StateKeys = PublishStepsKeys | "overview" | "submitting";
+type StateKeys = PublishStepsKeys | "return" | "overview" | "submitting";
 
 type Schema = {
   states: {
@@ -21,6 +21,7 @@ export type InternalLianeRequest = {
   from: RallyingPoint;
   departureTime: Date;
   availableSeats: number;
+  returnTime: Date | null | undefined;
 };
 
 export type PublishContext = {
@@ -35,8 +36,9 @@ type PublishEvent = { type: "PUBLISH" };
 
 type OpenMapEvent = { type: "MAP"; data: "from" | "to" };
 type BackEvent = { type: "BACK" };
+type ReturnEvent = { type: "RETURN"; data: null | undefined | Date };
 
-type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent | OpenMapEvent | BackEvent;
+type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent | OpenMapEvent | BackEvent | ReturnEvent;
 
 export type PublishStateMachine = StateMachine<PublishContext, Schema, Event>;
 
@@ -158,6 +160,17 @@ export const CreatePublishLianeMachine = (
             to: {}
           }
         },
+        return: {
+          on: {
+            BACK: {
+              target: "#publish.overview.enter"
+            },
+            UPDATE: {
+              actions: ["set"],
+              target: "#publish.overview.enter"
+            }
+          }
+        },
         overview: {
           initial: "enter",
           states: { enter: {} },
@@ -170,6 +183,10 @@ export const CreatePublishLianeMachine = (
             },
             PUBLISH: {
               target: "#publish.submitting"
+            },
+            RETURN: {
+              target: "#publish.return",
+              actions: ["set"]
             }
           }
         },

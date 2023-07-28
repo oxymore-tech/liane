@@ -51,7 +51,7 @@ public sealed class MockServiceImpl : IMockService
         var start = startDay.Date.AddHours(9);
         var end = startDay.Date.AddHours(18);
         var departure = f.Date.Between(start, end).ToUniversalTime();
-        DateTime? returnTrip = f.Random.Bool(0.2f) ? f.Date.SoonOffset(1, departure).DateTime.ToUniversalTime() : null;
+        DateTime? returnTrip = f.Random.Bool(0.75f) ? f.Date.SoonOffset(1, departure).DateTime.ToUniversalTime() : null;
         var from = f.PickRandom(departureSet);
         var to = f.PickRandom(destinationSet.Where(d => d != from));
 

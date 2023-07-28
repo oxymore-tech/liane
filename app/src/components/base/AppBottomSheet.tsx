@@ -203,7 +203,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
             //exiting={SlideOutDown}
             // entering={SlideInDown}
           >
-            <Animated.View style={[styles.line, handleStyle]} />
+            <Animated.View style={[styles.horizontalLine, handleStyle]} />
             <BottomSheetContext.Provider
               value={{
                 expanded,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12
   },
-  line: {
+  horizontalLine: {
     width: 52,
     height: 4,
     backgroundColor: AppColorPalettes.gray[400],

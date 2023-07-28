@@ -1,31 +1,31 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ColorValue, Platform, View } from "react-native";
-import { AppColorPalettes, AppColors, defaultTextColor, WithAlpha } from "@/theme/colors";
-import { Exact, getPoint, RallyingPoint, RallyingPointLink, UnionUtils } from "@/api";
+import { ActivityIndicator, Platform, View } from "react-native";
+import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
+import { Exact, getPoint, RallyingPoint, RallyingPointLink, UnionUtils, UTCDateTime, WayPoint } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
-import { useActor, useSelector } from "@xstate/react";
+import { useActor } from "@xstate/react";
 import { AppContext } from "@/components/ContextProvider";
 import { TimeView } from "@/components/TimeView";
-import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { useAppNavigation } from "@/api/navigation";
 
 import { AppIcon } from "@/components/base/AppIcon";
-import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { useQuery } from "react-query";
 
-import { capitalize } from "@/util/strings";
 import { Observable } from "rxjs";
 import { Feature } from "geojson";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppTabs } from "@/components/base/AppTabs";
+import { SectionSeparator } from "@/components/Separator";
+import { UserPicture } from "@/components/UserPicture";
+import { formatDuration } from "@/util/datetime";
 
 const EmptyResultView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center" }]}>{props.message}</AppText>
@@ -154,6 +154,74 @@ const LianeDestinationView = (props: { onPress: () => void; item: RallyingPointL
   );
 };
 
+const formatSeatCount = (seatCount: number) => {
+  let count = seatCount;
+  let words: string[];
+  if (seatCount > 0) {
+    // offered seats
+    words = ["place", "disponible"];
+  } else {
+    // passengers
+    count = -seatCount;
+    words = ["passager"];
+  }
+  return `${count} ${words.map(word => word + (count > 1 ? "s" : "")).join(" ")}`;
+};
+export const LianeMatchItemView = ({
+  from,
+  to,
+  freeSeatsCount,
+  returnTime,
+  duration
+}: {
+  duration: string;
+  from: WayPoint;
+  to: WayPoint;
+  returnTime?: UTCDateTime | undefined;
+  freeSeatsCount: number;
+}) => {
+  return (
+    <Column>
+      <TripSegmentView from={from.rallyingPoint} to={to.rallyingPoint} departureTime={from.eta} arrivalTime={to.eta} />
+      <View
+        style={[
+          TripViewStyles.horizontalLine,
+          { alignSelf: "flex-start", width: "100%", borderColor: AppColorPalettes.gray[200], marginTop: 12, marginBottom: 8 }
+        ]}
+      />
+      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <Column>
+          <Row spacing={2} style={{ position: "relative", left: -4, alignItems: "center" }}>
+            <AppIcon name={"clock-outline"} color={AppColorPalettes.gray[500]} size={18} />
+            <AppText>{duration}</AppText>
+          </Row>
+          <Row style={{ position: "relative", left: -4, alignItems: "center" }}>
+            <AppIcon name={returnTime ? "corner-down-right-outline" : "arrow-forward"} color={AppColorPalettes.gray[500]} size={15} />
+
+            {!returnTime && <AppText>Aller simple</AppText>}
+            {!!returnTime && (
+              <Row>
+                <AppText>{"Retour à "}</AppText>
+                <TimeView style={{ fontWeight: "bold" }} value={returnTime} />
+              </Row>
+            )}
+          </Row>
+        </Column>
+        <Column style={{ alignItems: "flex-end" }}>
+          <Row style={{ alignItems: "center" }}>
+            <AppText style={{ fontWeight: "bold", fontSize: 16 }}>5€ / </AppText>
+            <AppIcon name={"person-outline"} size={18} />
+          </Row>
+          <Row style={{ alignItems: "center" }}>
+            <AppText style={{ fontWeight: "bold", fontSize: 16 }}>{freeSeatsCount}</AppText>
+            <AppIcon name={"seat"} />
+          </Row>
+        </Column>
+      </Row>
+    </Column>
+  );
+};
+
 export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -197,23 +265,34 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   if (loading || !state.matches("match") || !state.context.matches) {
     return null;
   }
+
   const renderItem = ({ item }: { item: any }) => {
+    const driver = item.lianeMatch.liane.members.find(l => l.user.id === item.lianeMatch.liane.driver.user)!.user;
+    const duration = formatDuration(getTotalDuration(item.trip.wayPoints.slice(1)));
     return (
-      <AppPressableOverlay
-        foregroundColor={WithAlpha(AppColors.black, 0.1)}
-        style={{ paddingHorizontal: 24, paddingVertical: 8 }}
-        onPress={() => {
-          machine.send("DETAIL", { data: item.lianeMatch });
-        }}>
-        <TripSegmentView
-          from={item.fromPoint}
-          to={item.toPoint}
-          departureTime={item.trip.departureTime}
-          arrivalTime={item.trip.wayPoints[item.trip.wayPoints.length - 1].eta}
-          duration={item.tripDuration}
-          freeSeatsCount={item.lianeMatch.freeSeatsCount}
-        />
-      </AppPressableOverlay>
+      <Column>
+        <AppPressableOverlay
+          foregroundColor={WithAlpha(AppColors.black, 0.1)}
+          style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 }}
+          onPress={() => {
+            machine.send("DETAIL", { data: item.lianeMatch });
+          }}>
+          <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
+            <UserPicture url={undefined} size={24} id={driver.id} />
+            <AppText style={{ fontSize: 14, fontWeight: "500" }}>{driver.pseudo}</AppText>
+          </Row>
+          <View style={{ paddingHorizontal: 8 }}>
+            <LianeMatchItemView
+              duration={duration}
+              from={item.trip.wayPoints[0]}
+              to={item.trip.wayPoints[item.trip.wayPoints.length - 1]}
+              freeSeatsCount={item.lianeMatch.freeSeatsCount}
+              returnTime={item.returnTime}
+            />
+          </View>
+        </AppPressableOverlay>
+        <SectionSeparator style={{ marginVertical: 0 }} />
+      </Column>
     );
   };
   const exactResultsCount = showCompatible ? displayedLianes.length - data.length : data.length;
@@ -255,54 +334,5 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
         renderItem={renderItem}
       />
     </Column>
-  );
-};
-
-export interface FilterSelectorProps {
-  formatter?: (d: Date) => string;
-  color?: ColorValue;
-  shortFormat?: boolean;
-}
-
-//const selectAvailableSeats = state => state.context.filter.availableSeats;
-const selectTargetTime = (state: any) => state.context.filter.targetTime;
-export const FilterSelector = ({ formatter, shortFormat = false, color = defaultTextColor(AppColors.white) }: FilterSelectorProps) => {
-  const machine = useContext(HomeMapContext);
-
-  // const availableSeats = useSelector(machine, selectAvailableSeats);
-  const targetTime = useSelector(machine, selectTargetTime);
-
-  //  const driver = availableSeats > 0;
-  const date = targetTime?.dateTime || new Date();
-
-  const defaultFormatter = shortFormat
-    ? (d: Date) => capitalize(toRelativeDateString(d, formatShortMonthDay))!
-    : (d: Date) => {
-        return targetTime?.direction === "Arrival" ? "Arrivée " : "Départ " + toRelativeDateString(d, formatShortMonthDay);
-      };
-
-  return (
-    <Row style={{ justifyContent: "center", alignItems: "center", alignSelf: "center", flex: 1, paddingHorizontal: 8 }}>
-      {/*<View style={{ paddingHorizontal: 16 }}>
-        <SwitchIconToggle
-          color={AppColors.blue}
-          unselectedColor={AppColorPalettes.gray[200]}
-          value={driver}
-          onChange={() => {
-            machine.send("FILTER", { data: { availableSeats: -availableSeats } });
-          }}
-          trueIcon={<AppIcon name={"car"} color={driver ? AppColors.white : undefined} size={22} />}
-          falseIcon={<AppIcon name={"car-strike-through"} color={!driver ? AppColors.white : undefined} size={22} />}
-        />
-      </View>*/}
-      <DatePagerSelector
-        color={color}
-        date={date}
-        onSelectDate={d => {
-          machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: new Date(d.toDateString()) } } });
-        }}
-        formatter={formatter || defaultFormatter}
-      />
-    </Row>
   );
 };

@@ -90,7 +90,7 @@ const MyTripsScreen = () => {
     <Column spacing={16} style={styles.container}>
       <AppButton
         icon="plus-outline"
-        title="Nouvelle Liane"
+        title="Publier une liane"
         onPress={() => {
           // @ts-ignore
           navigation.navigate("Publish");

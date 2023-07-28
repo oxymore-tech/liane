@@ -2,23 +2,26 @@ import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text
 import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { CachedPlaceLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 import { FloatingBackButton } from "@/screens/detail/Components";
-import { Trip } from "@/api/service/location";
-import { FilterSelector } from "@/screens/home/BottomSheetView";
+import { SearchedLocation, Trip } from "@/api/service/location";
 import { AppText } from "@/components/base/AppText";
 import { useAppBackController } from "@/components/AppBackContextProvider";
-import { AppPressableIcon } from "@/components/base/AppPressable";
+import { AppPressable, AppPressableIcon } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
-import { Feature } from "geojson";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { AppContext } from "@/components/ContextProvider";
 import { HomeScreenHeader } from "@/components/Navigation";
+import { HomeMapContext } from "@/screens/home/StateMachine";
+import { useSelector } from "@xstate/react";
+import { capitalize } from "@/util/strings";
+import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
+import { DatePagerSelector } from "@/components/DatePagerSelector";
 
 export const RallyingPointField = forwardRef(
   (
@@ -179,15 +182,23 @@ export const MapHeader = ({
   animateEntry?: boolean;
   hintPhrase?: string | null;
 }) => {
-  const insets = useSafeAreaInsets();
+  //const insets = useSafeAreaInsets();
   const { to, from } = trip;
 
-  const itineraryMarginTop = 24;
+  const itineraryMarginTop = 0; //24;
 
   return (
     <View style={{ backgroundColor: AppColorPalettes.gray[100] }}>
-      <HomeScreenHeader label={title} isRootHeader={true} />
-
+      <HomeScreenHeader label={title} isRootHeader={true} style={{ paddingBottom: 0, minHeight: 0 }} />
+      <View style={{ paddingTop: 4, zIndex: 5 }}>
+        <View style={{ position: "absolute", height: 20, bottom: 0, left: 0, right: 0, backgroundColor: AppColors.white }} />
+        <Row style={{ justifyContent: "space-between" }}>
+          <View style={{ height: 40, backgroundColor: AppColors.white, borderTopRightRadius: 32, paddingRight: 2, paddingTop: 2 }}>
+            <FilterSelector shortFormat={true} />
+          </View>
+          <View style={{ backgroundColor: AppColorPalettes.gray[100], borderBottomLeftRadius: 40, flex: 1, marginLeft: 2 }} />
+        </Row>
+      </View>
       {!from && (
         <Animated.View
           entering={animateEntry ? SlideInUp : undefined}
@@ -228,16 +239,17 @@ export const MapHeader = ({
               position: "absolute",
               top: itineraryMarginTop + 32,
               bottom: 32,
-              left: 21
+              left: 29
             }}
           />
 
-          <Column>
-            <Row style={{ paddingVertical: 8, paddingHorizontal: 8 }} spacing={16}>
+          <Column style={{ paddingRight: 8, paddingLeft: 16 }}>
+            <Row style={{ paddingTop: 8, paddingBottom: 4 }} spacing={16}>
               <View
                 style={{
                   backgroundColor: AppColorPalettes.gray[100],
                   borderRadius: 32,
+                  marginTop: 4,
                   width: 28,
                   height: 28,
                   justifyContent: "center",
@@ -245,8 +257,8 @@ export const MapHeader = ({
                 }}>
                 <AppIcon name={"pin"} color={AppColors.orange} size={24} />
               </View>
-              <View style={{ flexShrink: 1, flexGrow: 1 }}>
-                <RallyingPointItem item={from} labelSize={16} showIcon={false} />
+              <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
+                <RallyingPointItem item={from} labelSize={15} showIcon={false} />
               </View>
 
               {!to && (
@@ -258,9 +270,9 @@ export const MapHeader = ({
                 />
               )}
             </Row>
-            <View style={[{ width: "72%" }, styles.line]} />
+            <View style={[{ width: "75%" }, styles.horizontalLine]} />
             {!to && (
-              <View style={{ paddingVertical: 4, paddingLeft: 8, paddingBottom: 8 }}>
+              <View style={{ paddingVertical: 4, paddingBottom: 8 }}>
                 {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
                 {!hintPhrase && (
                   <Row style={{ alignItems: "center" }} spacing={16}>
@@ -281,11 +293,12 @@ export const MapHeader = ({
               </View>
             )}
             {!!to && (
-              <Row style={{ paddingVertical: 8, paddingHorizontal: 8 }} spacing={16}>
+              <Row style={{ paddingTop: 4, paddingBottom: 8 }} spacing={16}>
                 <View
                   style={{
                     backgroundColor: AppColorPalettes.gray[100],
                     borderRadius: 32,
+                    marginTop: 4,
                     width: 28,
                     height: 28,
                     justifyContent: "center",
@@ -293,8 +306,8 @@ export const MapHeader = ({
                   }}>
                   <AppIcon name={"flag"} color={AppColors.pink} size={24} />
                 </View>
-                <View style={{ flexShrink: 1, flexGrow: 1 }}>
-                  <RallyingPointItem item={to} labelSize={16} showIcon={false} />
+                <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
+                  <RallyingPointItem item={to} labelSize={15} showIcon={false} />
                 </View>
 
                 <AppPressableIcon
@@ -308,30 +321,56 @@ export const MapHeader = ({
           </Column>
         </View>
       )}
-
-      <View
-        style={[
-          AppStyles.shadow,
-          {
-            marginTop: insets.top + 56,
-            paddingVertical: 4,
-            position: "absolute",
-            top: 0,
-            left: 40,
-            right: 40,
-            flexShrink: 1,
-
-            backgroundColor: AppColors.yellow,
-            alignSelf: "center",
-            borderRadius: 24,
-            paddingHorizontal: 16
-          }
-        ]}>
-        <Row style={{ alignItems: "center", paddingHorizontal: 8 }}>
-          <FilterSelector shortFormat={true} />
-        </Row>
-      </View>
     </View>
+  );
+};
+
+export interface FilterSelectorProps {
+  formatter?: (d: Date) => string;
+  color?: ColorValue;
+  shortFormat?: boolean;
+}
+
+//const selectAvailableSeats = state => state.context.filter.availableSeats;
+const selectTargetTime = (state: any) => state.context.filter.targetTime;
+export const FilterSelector = ({ formatter, shortFormat = false, color = defaultTextColor(AppColors.white) }: FilterSelectorProps) => {
+  const machine = useContext(HomeMapContext);
+
+  // const availableSeats = useSelector(machine, selectAvailableSeats);
+  const targetTime = useSelector(machine, selectTargetTime);
+
+  //  const driver = availableSeats > 0;
+  const date = targetTime?.dateTime || new Date();
+
+  const defaultFormatter = shortFormat
+    ? (d: Date) => capitalize(toRelativeDateString(d, formatShortMonthDay))!
+    : (d: Date) => {
+        return targetTime?.direction === "Arrival" ? "Arrivée " : "Départ " + toRelativeDateString(d, formatShortMonthDay);
+      };
+
+  return (
+    <Row style={{ justifyContent: "center", alignItems: "center", alignSelf: "center", flex: 1, paddingHorizontal: 8 }}>
+      {/*<View style={{ paddingHorizontal: 16 }}>
+        <SwitchIconToggle
+          color={AppColors.blue}
+          unselectedColor={AppColorPalettes.gray[200]}
+          value={driver}
+          onChange={() => {
+            machine.send("FILTER", { data: { availableSeats: -availableSeats } });
+          }}
+          trueIcon={<AppIcon name={"car"} color={driver ? AppColors.white : undefined} size={22} />}
+          falseIcon={<AppIcon name={"car-strike-through"} color={!driver ? AppColors.white : undefined} size={22} />}
+        />
+      </View>*/}
+      <DatePagerSelector
+        color={color}
+        date={date}
+        onSelectDate={d => {
+          machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: new Date(d.toDateString()) } } });
+        }}
+        formatter={formatter || defaultFormatter}
+      />
+    </Row>
   );
 };
 
@@ -415,7 +454,7 @@ export const RPFormHeader = ({
                 name={"close-outline"}
               />
             </Row>
-            <View style={[{ width: "72%" }, styles.line]} />
+            <View style={[{ width: "72%" }, styles.horizontalLine]} />
             <View style={{ paddingVertical: 4, paddingLeft: 16, paddingBottom: 8 }}>
               {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
               {!hintPhrase && (
@@ -604,16 +643,19 @@ export const RPFormHeader = ({
   );
 };*/
 
-export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; title?: string }) => {
+export const SearchFeature = (props: { onSelect: (feature: SearchedLocation) => boolean; title?: string }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchTrips, setSearchTrips] = useState(false);
   const [inputText, setInputText] = useState("");
   const { top } = useSafeAreaInsets();
   const { services } = useContext(AppContext);
+  const inputRef = useRef<TextInput>();
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setInputText("");
   }, []);
   const { bottom } = useSafeAreaInsets();
+  useEffect(() => inputRef.current?.focus());
 
   return (
     <>
@@ -635,6 +677,8 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
             <View style={styles.inputContainer}>
               <AppTextInput
+                // @ts-ignore
+                ref={inputRef}
                 trailing={
                   inputText.length > 0 ? (
                     <Pressable
@@ -652,7 +696,25 @@ export const SearchFeature = (props: { onSelect: (feature: Feature) => boolean; 
                 leading={<AppIcon name={"search-outline"} />}
               />
             </View>
-            <View style={{ flex: 1, marginTop: 16 }}>
+            <View style={{ height: 16 }} />
+            <Row style={{ marginHorizontal: 8 }} spacing={8}>
+              {["Lieux", "Trajets passés"].map((e, i) => (
+                <AppPressable onPress={() => setSearchTrips(i === 1)}>
+                  <View
+                    style={{
+                      backgroundColor: i === (searchTrips ? 1 : 0) ? AppColors.darkBlue : undefined,
+                      borderWidth: 1,
+                      borderColor: i !== (searchTrips ? 1 : 0) ? AppColors.darkBlue : "transparent",
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 16
+                    }}>
+                    <AppText style={{ color: i === (searchTrips ? 1 : 0) ? AppColors.white : AppColors.darkBlue }}>{e}</AppText>
+                  </View>
+                </AppPressable>
+              ))}
+            </Row>
+            <View style={{ flex: 1 }}>
               {inputText.length === 0 && (
                 <CachedPlaceLocationsView
                   showUsePosition={false}
@@ -742,9 +804,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     minHeight: 32
   },
-  line: {
-    borderBottomColor: AppColorPalettes.gray[200],
-    borderBottomWidth: 1,
+  horizontalLine: {
+    backgroundColor: AppColorPalettes.gray[200],
+    height: 1,
     alignSelf: "center"
   }
 });

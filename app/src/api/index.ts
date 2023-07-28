@@ -98,7 +98,7 @@ export type RallyingPoint = Identity &
 export type LianeRequest = Identity &
   Readonly<{
     departureTime: UTCDateTime;
-    returnTime?: UTCDateTime;
+    returnTime?: UTCDateTime | null;
     availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;

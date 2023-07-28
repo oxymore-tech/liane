@@ -71,9 +71,9 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
   const { navigation } = useAppNavigation();
   const [statusText, color] = getLianeStatusStyle(item);
 
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const unread = useObservable(services.chatHub.unreadConversations, undefined);
-
+  const driver = item.members.find(l => l.user.id === item.driver.user)!.user;
   return (
     <Pressable
       onPress={() => {
@@ -84,13 +84,17 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
       }}
       style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <View>
+        <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
+          <UserPicture url={undefined} size={24} id={driver.id} />
+          <AppText style={{ fontSize: 14, fontWeight: "500" }}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
+        </Row>
         <View style={{ flexGrow: 1, marginRight: 40 }}>
           <LianeView liane={item} />
         </View>
         {item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
           <Pressable
             onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })}
-            style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -12, right: -4 }}>
+            style={{ alignItems: "flex-end", position: "absolute", padding: 4, top: -8, right: -4 }}>
             <AppIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
             {unread && unread.includes(item.conversation) && (
               <View
@@ -126,13 +130,15 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         <View style={{ flex: 1 }} />
         {(item.state === "NotStarted" || item.state === "Started") && (
           <Row style={{ position: "relative", left: 12 * (item.members.length - 1) }}>
-            {item.members.map((m, i) => {
-              return (
-                <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
-                  <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
-                </View>
-              );
-            })}
+            {item.members
+              .filter(m => m.user.id !== driver.id)
+              .map((m, i) => {
+                return (
+                  <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
+                    <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
+                  </View>
+                );
+              })}
           </Row>
         )}
         {item.state === "Finished" && (
@@ -222,7 +228,8 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   item: {
-    padding: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     backgroundColor: AppColors.white,
     borderLeftWidth: 1,
     borderRightWidth: 1,

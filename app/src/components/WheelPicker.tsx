@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { StyleSheet } from "react-native";
 import { AppText } from "@/components/base/AppText";
+import { mod } from "@/util/numbers";
 interface Props {
   selectedIndex: number;
   options: string[];
@@ -35,11 +36,6 @@ interface Props {
 
   onChange?: (index: number) => void;
 }
-
-const mod = function (x: number, n: number) {
-  "use strict";
-  return ((x % n) + n) % n;
-};
 
 export const WheelPicker: React.FC<Props> = ({
   selectedIndex,
