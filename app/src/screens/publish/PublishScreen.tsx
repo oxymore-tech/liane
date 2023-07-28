@@ -24,12 +24,12 @@ import Animated, {
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelector";
-import { AppSwitchToggle, AppToggle } from "@/components/base/AppOptionToggle";
+import { AppToggle } from "@/components/base/AppOptionToggle";
 import { useActor, useInterpret } from "@xstate/react";
 import { CreatePublishLianeMachine, PublishLianeContext } from "@/screens/publish/StateMachine";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { formatMonthDay, toRelativeTimeString } from "@/api/i18n";
+import { formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useQueryClient } from "react-query";
@@ -47,6 +47,7 @@ export const PublishScreenView = () => {
   const isTripStep = state.matches("trip");
   const isDateStep = state.matches("date");
   const isVehicleStep = state.matches("vehicle");
+  const isReturnStep = state.matches("return");
   const isOverviewStep = state.matches("overview");
   const isSubmittingStep = state.matches("submitting");
   console.log(state.value, state.context.request);
@@ -95,8 +96,38 @@ export const PublishScreenView = () => {
             styles.footerContainer,
             AppStyles.shadow,
             { paddingTop: 24 + 16, marginTop: insets.top + 160 - 24 * 3 + 80 * 2, backgroundColor: AppColors.white, bottom: 0 }
-          ]}
-        />
+          ]}>
+          {/*<AppPressableOverlay
+            onPress={() => {
+              machine.send("RETURN", { data: { returnTime: null } });
+            }}>
+            <Row style={{ paddingHorizontal: 16, alignItems: "center" }}>
+              <AppIcon name={"plus-circle-outline"} />
+              <AppText style={{ paddingHorizontal: 16 }}>Ajouter un retour</AppText>
+            </Row>
+          </AppPressableOverlay>*/}
+        </Animated.View>
+      )}
+      {(isOverviewStep || isSubmittingStep || isReturnStep) && (
+        <Animated.View
+          exiting={SlideOutUp.duration(20)}
+          entering={SlideInUp.delay(50).duration(300).springify().damping(20)}
+          style={[
+            styles.footerContainer,
+            AppStyles.shadow,
+            { paddingTop: 24 + 16, marginTop: insets.top + 160 - 24 * 3 + 80 * 2, backgroundColor: AppColorPalettes.blue[100] }
+          ]}>
+          <ReturnStepView
+            after={state.context.request.departureTime!}
+            editable={isReturnStep}
+            animationType={state.context.request.returnTime === undefined ? "firstEntrance" : "ease"}
+            onRequestEdit={() => machine.send("RETURN", { data: { returnTime: null } })}
+            onChange={v => {
+              machine.send("UPDATE", { data: { returnTime: v } });
+            }}
+            initialValue={state.context.request.returnTime}
+          />
+        </Animated.View>
       )}
       {!isTripStep && !isDateStep && (
         <Animated.View
@@ -253,7 +284,10 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
               onPress={() => {
                 onChange(seats);
               }}>
-              <AppIcon size={20} name={"checkmark-outline"} color={AppColors.white} />
+              <Row spacing={4} style={{ alignItems: "center" }}>
+                <AppText style={{ color: AppColors.white }}>Valider</AppText>
+                <AppIcon size={20} name={"checkmark-outline"} color={AppColors.white} />
+              </Row>
             </AppPressableOverlay>
           </Row>
         )}
@@ -340,7 +374,75 @@ const DateStepView = ({ editable, onChange, initialValue: initialDate, onRequest
               onPress={() => {
                 onChange(date);
               }}>
-              <AppIcon size={20} name={"checkmark-outline"} />
+              <Row spacing={4} style={{ alignItems: "center" }}>
+                <AppText>Valider</AppText>
+                <AppIcon size={20} name={"checkmark-outline"} />
+              </Row>
+            </AppPressableOverlay>
+          </Row>
+        )}
+      </Column>
+    </Pressable>
+  );
+};
+
+const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onRequestEdit, after }: StepProps<Date | null> & { after: Date }) => {
+  const [date, setDate] = useState(initialDate);
+
+  return (
+    <Pressable disabled={editable} onPress={onRequestEdit}>
+      <Column spacing={8}>
+        {editable && (
+          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
+            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand repartez-vous ?</AppText>
+          </Animated.View>
+        )}
+        {!editable && (
+          <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
+            <Row style={{ paddingLeft: 8, paddingBottom: 8 }} spacing={8}>
+              <AppIcon name={"corner-down-right-outline"} />
+              <AppText
+                style={{
+                  fontSize: 18,
+                  paddingLeft: 8,
+                  alignSelf: "center",
+                  textAlignVertical: "center"
+                }}>
+                {date ? "Retour à " + formatTime(date) : "Pas de retour"}
+              </AppText>
+            </Row>
+          </Animated.View>
+        )}
+
+        {editable && (
+          <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
+            <TimeWheelPicker date={date || after} minuteStep={5} onChange={setDate} />
+          </Animated.View>
+        )}
+
+        {editable && (
+          <Row spacing={8} style={{ justifyContent: "space-between", paddingHorizontal: 8 }}>
+            <AppPressableOverlay
+              backgroundStyle={{ borderRadius: 32 }}
+              style={{ padding: 8 }}
+              onPress={() => {
+                onChange(date || null);
+              }}>
+              <Row spacing={4} style={{ alignItems: "center" }}>
+                <AppText>Annuler</AppText>
+                <AppIcon size={20} name={"close-outline"} />
+              </Row>
+            </AppPressableOverlay>
+            <AppPressableOverlay
+              backgroundStyle={{ borderRadius: 32 }}
+              style={{ padding: 8 }}
+              onPress={() => {
+                onChange(date || null);
+              }}>
+              <Row spacing={4} style={{ alignItems: "center" }}>
+                <AppText>Valider</AppText>
+                <AppIcon size={20} name={"checkmark-outline"} />
+              </Row>
             </AppPressableOverlay>
           </Row>
         )}
@@ -359,7 +461,8 @@ export const PublishScreen = () => {
         to: ctx.request.to!.id!,
         from: ctx.request.from!.id!,
         departureTime: ctx.request.departureTime!.toISOString(),
-        availableSeats: ctx.request.availableSeats!
+        availableSeats: ctx.request.availableSeats!,
+        returnTime: ctx.request.returnTime?.toISOString()
       });
       console.log(ctx, liane);
       if (liane) {
@@ -376,6 +479,7 @@ export const PublishScreen = () => {
   });
 
   return (
+    /*  @ts-ignore */
     <PublishLianeContext.Provider value={machine}>
       <PublishScreenView />
       <AppStatusBar style="light-content" />

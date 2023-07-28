@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -12,7 +12,6 @@ import { AppText } from "@/components/base/AppText";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import LianeIcon from "@/assets/icon.svg";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
-import { LianeInvitationScreen } from "@/screens/LianeInvitationScreen";
 import { Row } from "@/components/base/AppLayout";
 import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
@@ -122,7 +121,6 @@ function Navigation() {
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="LianeInvitation" component={LianeInvitationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
@@ -142,25 +140,29 @@ function Navigation() {
 type HomeScreenHeaderProp = {
   label: string;
   isRootHeader?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 const PageTitle = ({ title }: { title: string }) => <AppText style={{ fontSize: 22, fontWeight: "500", color: AppColors.darkBlue }}>{title}</AppText>;
 
-export const HomeScreenHeader = ({ label, isRootHeader = false }: HomeScreenHeaderProp) => {
+export const HomeScreenHeader = ({ label, isRootHeader = false, style = [] }: HomeScreenHeaderProp) => {
   const insets = useSafeAreaInsets();
   const { navigation } = useAppNavigation();
   const { user } = useContext(AppContext);
   return (
     <Row
-      style={{
-        justifyContent: isRootHeader ? "space-between" : "flex-start",
-        alignItems: "center",
-        paddingHorizontal: isRootHeader ? 24 : 0,
-        paddingTop: isRootHeader ? 12 : 0,
-        paddingBottom: 32,
-        minHeight: 60,
-        marginTop: insets.top
-      }}>
+      style={[
+        {
+          justifyContent: isRootHeader ? "space-between" : "flex-start",
+          alignItems: "center",
+          paddingHorizontal: isRootHeader ? 24 : 0,
+          paddingTop: isRootHeader ? 12 : 0,
+          paddingBottom: 32,
+          minHeight: 60,
+          marginTop: insets.top
+        },
+        style
+      ]}>
       <AppStatusBar style="dark-content" />
       {!isRootHeader && (
         <Pressable
@@ -217,6 +219,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       component={screen}
       options={({ navigation }) => ({
         headerShown,
+        /*  @ts-ignore */
         header: () => <HomeScreenHeader label={label} navigation={navigation} isRootHeader={true} />,
         tabBarLabel: ({ focused }) => (
           <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>

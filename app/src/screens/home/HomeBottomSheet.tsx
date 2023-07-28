@@ -1,8 +1,6 @@
 import React, { PropsWithChildren, useContext, useEffect, useRef } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import { useAppNavigation } from "@/api/navigation";
-import { useBottomBarStyle } from "@/components/Navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -38,7 +36,19 @@ export const HomeBottomSheetContainer = (
       ref.current?.scrollTo(1);
     }
   }, [props.display]);
-
+  useEffect(() => {
+    const transitionListener = (s: any) => {
+      if (s.matches("detail")) {
+        ref.current?.scrollTo(0.7);
+      } else if (s.matches("match")) {
+        ref.current?.scrollTo(0.35);
+      }
+    };
+    machine.onTransition(transitionListener);
+    return () => {
+      machine.off(transitionListener);
+    };
+  }, []);
   //console.log(Platform.OS, h, insets, StatusBar.currentHeight, bottomSpace);
 
   if (props.display === "none") {
@@ -59,7 +69,7 @@ export const HomeBottomSheetContainer = (
     paddingTop = 196;
     initialIndex = 1;
   } else {
-    stops = [0.35, 1];
+    stops = [0.35, 0.7, 1];
     paddingTop = 72;
     initialIndex = 1;
   }
@@ -78,7 +88,7 @@ export const HomeBottomSheetContainer = (
       padding={{ top: paddingTop + insets.top }}
       margins={{ right: isMapState ? 24 : 0, left: isMapState ? 24 : 0, bottom: isMapState ? bottomSpace : 0 }}>
       {props.children}
-      <View style={{ height: h / 2 }} />
+      {/*<View style={{ height: h / 2 }} />*/}
     </AppBottomSheet>
   );
 };

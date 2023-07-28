@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { FormProvider, SubmitErrorHandler, SubmitHandler, useController, useForm } from "react-hook-form";
+import { FieldValue, FieldValues, FormProvider, SubmitErrorHandler, SubmitHandler, useController, useForm } from "react-hook-form";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppToggle } from "@/components/base/AppOptionToggle";
 import { AppContext } from "@/components/ContextProvider";
@@ -17,7 +17,7 @@ export const SignUpFormScreen = () => {
   const machine = useContext(SignUpLianeContext);
 
   const { services } = useContext(AppContext);
-  const onSubmit: SubmitHandler<FormValues> = data => {
+  const onSubmit: SubmitHandler<FieldValues> = data => {
     services.auth
       .updateUserInfo({
         firstName: data.firstname,

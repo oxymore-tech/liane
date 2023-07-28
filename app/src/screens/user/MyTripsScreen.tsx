@@ -23,6 +23,8 @@ const MyTripsScreen = () => {
   useEffect(() => {
     const s = services.chatHub.subscribeToNotifications(async n => {
       // TODO make sure "type" is serialized via Hub
+
+      //  @ts-ignore
       if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
         await queryClient.invalidateQueries(LianeQueryKey);
         await queryClient.invalidateQueries(JoinRequestsQueryKey);
@@ -88,7 +90,7 @@ const MyTripsScreen = () => {
     <Column spacing={16} style={styles.container}>
       <AppButton
         icon="plus-outline"
-        title="Nouvelle Liane"
+        title="Publier une liane"
         onPress={() => {
           // @ts-ignore
           navigation.navigate("Publish");

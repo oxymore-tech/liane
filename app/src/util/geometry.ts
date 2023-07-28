@@ -31,7 +31,7 @@ export const isFeatureCollection = (x: any): x is FeatureCollection => {
   return x.type && x.type === "FeatureCollection";
 };
 
-export function intersect(a, b) {
+export function intersect(a: Iterable<any>, b: Iterable<any>) {
   const setA = new Set(a);
   const setB = new Set(b);
   const intersection = new Set([...setA].filter(x => setB.has(x)));

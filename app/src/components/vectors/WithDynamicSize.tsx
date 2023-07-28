@@ -26,5 +26,6 @@ export const WithDynamicSize =
       height = (maxSize.maxHeight / maxSize.maxWidth) * maxWidth;
     }
 
+    // @ts-ignore
     return <WrappedComponent width={width} height={height} {...props} />;
   };

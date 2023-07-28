@@ -105,31 +105,31 @@ export const getLianeStatusStyle = (liane: Liane): [string | undefined, ColorVal
   switch (lianeStatus) {
     case "StartingSoon":
       status = "Départ imminent";
-      color = AppColorPalettes.yellow[100];
+      //  color = AppColorPalettes.yellow[100];
       break;
     case "Started":
       status = "En cours";
-      color = ContextualColors.greenValid.light;
+      //  color = ContextualColors.greenValid.light;
       break;
     case "Finished":
       status = "Terminé";
-      color = AppColorPalettes.blue[100];
+      // color = AppColorPalettes.blue[100];
       break;
     case "Canceled":
       status = "Annulé";
-      color = ContextualColors.redAlert.light;
+      // color = ContextualColors.redAlert.light;
       break;
     case "AwaitingDriver":
       status = "Sans conducteur";
-      color = ContextualColors.redAlert.light;
+      //  color = ContextualColors.redAlert.light;
       break;
     case "AwaitingPassengers":
       status = "En attente de passagers";
-      color = AppColorPalettes.gray[100];
+      // color = AppColorPalettes.gray[100];
       break;
     case "Archived":
       status = "Archivé";
-      color = AppColorPalettes.gray[100];
+      //  color = AppColorPalettes.gray[100];
       break;
   }
   return [status, color];

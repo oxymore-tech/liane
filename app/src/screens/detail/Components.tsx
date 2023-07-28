@@ -1,4 +1,4 @@
-import { AppIcon, CustomIconName, IconName } from "@/components/base/AppIcon";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
@@ -10,7 +10,7 @@ import { Item } from "@/components/ActionItem";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LianeMember, User } from "@/api";
 
-export const InfoItem = (props: { icon: IconName | CustomIconName; value: string }) => {
+export const InfoItem = (props: { icon: IconName; value: string }) => {
   return (
     <Row spacing={12}>
       <AppIcon name={props.icon} size={22} />

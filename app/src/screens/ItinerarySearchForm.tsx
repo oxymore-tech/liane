@@ -1,9 +1,9 @@
 import { Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
-import { getKeyForTrip, Trip } from "@/api/service/location";
+import { asSearchedLocation, getKeyForTrip, isRallyingPointSearchedLocation, SearchedLocation, Trip } from "@/api/service/location";
 import { RallyingPoint, Ref } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -13,17 +13,67 @@ import { useDebounceValue } from "@/util/hooks/debounce";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
-import { Feature } from "geojson";
 import { capitalize } from "@/util/strings";
+import { filter } from "rxjs";
 
-export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
+export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
+  return (
+    <Row style={style} spacing={8}>
+      <Column style={{ justifyContent: "space-between", alignSelf: "stretch" }}>
+        <View
+          style={{
+            backgroundColor: AppColorPalettes.gray[100],
+            borderWidth: 1,
+            borderColor: AppColorPalettes.gray[200],
+            borderRadius: 16,
+            alignSelf: "center"
+          }}>
+          <AppIcon name={"pin"} size={18} color={AppColors.orange} />
+        </View>
+        <View style={[TripViewStyles.verticalLine, { borderColor: AppColorPalettes.gray[300] }]} />
+        <View
+          style={{
+            backgroundColor: AppColorPalettes.gray[100],
+            borderWidth: 1,
+            borderColor: AppColorPalettes.gray[200],
+            borderRadius: 16,
+            alignSelf: "center",
+            marginBottom: 16
+          }}>
+          <AppIcon name={"flag"} size={18} color={AppColors.pink} />
+        </View>
+      </Column>
+
+      <Column spacing={8}>
+        <Column>
+          <AppText style={[TripViewStyles.mainWayPointLabel, /*TripViewStyles.fromLabel,*/ { alignSelf: "flex-start", maxWidth: undefined }]}>
+            {trip.from.label}
+          </AppText>
+          <AppText>{trip.from.city}</AppText>
+        </Column>
+        <Column>
+          <AppText style={[TripViewStyles.mainWayPointLabel, /*TripViewStyles.toLabel,*/ { alignSelf: "flex-start", maxWidth: undefined }]}>
+            {trip.to.label}
+          </AppText>
+          <AppText>{trip.to.city}</AppText>
+        </Column>
+      </Column>
+    </Row>
+  );
+};
+
+export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?: string }) => {
   const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
   const { services } = useContext(AppContext);
   useEffect(() => {
     services.location.getRecentTrips().then(r => {
-      setRecentTrips(r);
+      let trips = r;
+      if (props.filter) {
+        trips = trips.filter(t => (t.from.city + " " + t.to.city + " " + t.from.label + " " + t.to.label).includes(props.filter!));
+      }
+      setRecentTrips(trips);
     });
-  }, [services.location]);
+  }, [services.location, props.filter]);
 
   return (
     <Animated.View style={styles.page} entering={FadeIn}>
@@ -36,30 +86,11 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void }) => {
         renderItem={({ item }) => {
           return (
             <AppPressableOverlay
+              style={{ borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200], marginHorizontal: 20 }}
               onPress={async () => {
                 props.onSelect(item);
               }}>
-              <Row style={{ marginHorizontal: 20, flexWrap: "wrap", marginVertical: 12 }} spacing={8}>
-                <Column style={{ paddingTop: 6, paddingBottom: 22 }}>
-                  <View style={{ height: 8, width: 8, backgroundColor: AppColorPalettes.gray[200], borderRadius: 8 }} />
-                  <View style={{ alignSelf: "center", flex: 1, borderLeftWidth: 1, borderLeftColor: AppColorPalettes.gray[200] }} />
-                  <View style={{ height: 8, width: 8, backgroundColor: AppColorPalettes.gray[200], borderRadius: 8 }} />
-                </Column>
-                <Column spacing={8}>
-                  <Column>
-                    <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.fromLabel, { alignSelf: "flex-start", maxWidth: undefined }]}>
-                      {item.from.label}
-                    </AppText>
-                    <AppText>{item.from.city}</AppText>
-                  </Column>
-                  <Column>
-                    <AppText style={[TripViewStyles.mainWayPointLabel, TripViewStyles.toLabel, { alignSelf: "flex-start", maxWidth: undefined }]}>
-                      {item.to.label}
-                    </AppText>
-                    <AppText>{item.to.city}</AppText>
-                  </Column>
-                </Column>
-              </Row>
+              <RecentTrip trip={item} style={{ marginHorizontal: 0, marginVertical: 12 }} />
             </AppPressableOverlay>
           );
         }}
@@ -73,12 +104,12 @@ export const CachedPlaceLocationsView = ({
   showOpenMap,
   showUsePosition = true
 }: {
-  onSelect: (r: Feature) => void;
+  onSelect: (r: SearchedLocation) => void;
   showOpenMap?: () => void;
   showUsePosition?: boolean;
 }) => {
   const { services } = useContext(AppContext);
-  const [locationList, setRecentLocations] = useState<Feature[]>([]);
+  const [locationList, setRecentLocations] = useState<Array<SearchedLocation>>([]);
 
   useEffect(() => {
     services.location.getRecentPlaceLocations().then(r => {
@@ -86,7 +117,7 @@ export const CachedPlaceLocationsView = ({
     });
   }, [services.location]);
 
-  const updateValue = (v: Feature) => {
+  const updateValue = (v: SearchedLocation) => {
     onSelect(v);
     services.location.cacheRecentPlaceLocation(v).then(updated => setRecentLocations(updated));
   };
@@ -119,7 +150,7 @@ export const CachedPlaceLocationsView = ({
         <FlatList
           keyboardShouldPersistTaps="always"
           data={locationList}
-          keyExtractor={r => r.properties!.ref || r.properties!.id!}
+          keyExtractor={v => (isRallyingPointSearchedLocation(v) ? v.properties!.id! : v.properties!.ref)}
           renderItem={({ item }) => (
             <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
               <PlaceItem item={item} />
@@ -218,10 +249,10 @@ export const RallyingPointItem = ({
   return (
     <Row style={{ alignItems: "center", flex: 1 }} spacing={16}>
       {showIcon && <AppIcon name={"rallying-point"} size={28} color={color} />}
-      <Column style={{ justifyContent: "space-evenly" }}>
-        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize, minHeight: labelSize + 4 }]}>{item.label}</AppText>
+      <Column style={{ justifyContent: "space-evenly", flex: 1 }}>
+        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>{item.label}</AppText>
 
-        <AppText style={{ color, minHeight: 18 }} numberOfLines={1}>
+        <AppText style={{ color }} numberOfLines={1}>
           {(item.zipCode ? item.zipCode + ", " : "") + item.city}
         </AppText>
       </Column>
@@ -234,22 +265,24 @@ export const PlaceItem = ({
   color = AppColorPalettes.gray[800],
   labelSize = 14
 }: {
-  item: Feature;
+  item: SearchedLocation;
   color?: ColorValue;
   labelSize?: number;
 }) => {
-  let placeTypeName = item.place_type_name?.[0];
-  let placeName = item.place_name;
+  let placeTypeName;
+  let placeName;
   let placeNameLine2: string | undefined;
   let iconName: IconName = "pin-outline";
-  if (!placeTypeName) {
-    if (item.place_type![0] === "rallying_point") {
-      placeTypeName = "Point de ralliement";
-      placeName = item.properties!.label!;
-      iconName = "rallying-point";
-      placeNameLine2 = (item.properties!.zipCode ? item.properties!.zipCode + ", " : "") + item.properties!.city;
-    }
-    if (item.place_type![0] === "poi") {
+
+  if (isRallyingPointSearchedLocation(item)) {
+    placeTypeName = "Point de ralliement";
+    placeName = item.properties!.label!;
+    iconName = "rallying-point";
+    placeNameLine2 = (item.properties!.zipCode ? item.properties!.zipCode + ", " : "") + item.properties!.city;
+  } else {
+    placeTypeName = item.place_type_name?.[0];
+    placeName = item.place_name;
+    if (!placeTypeName && item.place_type![0] === "poi") {
       if (item.properties?.categories.includes("bus stop")) {
         placeTypeName = "Arrêt de bus";
       }
@@ -257,9 +290,10 @@ export const PlaceItem = ({
         placeTypeName = "Gare";
       }
     }
-  }
-  if (placeName.endsWith(", France")) {
-    placeName = placeName.substring(0, placeName.length - ", France".length) + ", " + item.context[item.context.length - 3].text;
+
+    if (placeName.endsWith(", France") && item.context.length >= 3) {
+      placeName = placeName.substring(0, placeName.length - ", France".length) + ", " + item.context[item.context.length - 3].text;
+    }
   }
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
@@ -333,17 +367,17 @@ export const RallyingPointSuggestions = (props: {
 
 export const PlaceSuggestions = (props: {
   currentSearch: string | undefined;
-  onSelect: (r: Feature) => void;
+  onSelect: (r: SearchedLocation) => void;
   //exceptValues?: Ref<RallyingPoint>[] | undefined;
 }) => {
-  const [results, setResults] = useState<Feature[]>([]);
+  const [results, setResults] = useState<SearchedLocation[]>([]);
   const { services } = useContext(AppContext);
 
   const debouncedSearch = useDebounceValue(props.currentSearch, 500);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(undefined);
 
-  const updateValue = async (v: Feature) => {
+  const updateValue = async (v: SearchedLocation) => {
     props.onSelect(v);
     // TODO await services.location.cacheRecentLocation(v);
   };
@@ -357,21 +391,13 @@ export const PlaceSuggestions = (props: {
       ])
         .then(queriesData => {
           setLoading(false);
-          setResults([
-            ...queriesData[0].slice(0, Math.min(4, queriesData[0].length)).map(rp => ({
-              type: "Feature",
-              geometry: { type: "Point", coordinates: [rp.location.lng, rp.location.lat] },
-              properties: { ...rp },
-              place_type: ["rallying_point"]
-            })),
-            ...queriesData[1].features
-          ]);
+          setResults([...queriesData[0].slice(0, Math.min(4, queriesData[0].length)).map(rp => asSearchedLocation(rp)), ...queriesData[1].features]);
         })
         .catch(queriesErrors => {
           console.warn(queriesErrors);
           setError(queriesErrors[0] || queriesErrors[1]);
         });
-      services.location.search(debouncedSearch, services.location.getLastKnownLocation()).then(r => {});
+      services.location.search(debouncedSearch, services.location.getLastKnownLocation()).catch(e => console.warn(e));
     }
   }, [debouncedSearch]);
 
@@ -397,10 +423,10 @@ export const PlaceSuggestions = (props: {
     <FlatList
       keyboardShouldPersistTaps="always"
       data={results}
-      keyExtractor={(i, index) => (i.properties!.ref || i.properties!.id) + index}
+      keyExtractor={(item, index) => (isRallyingPointSearchedLocation(item) ? item.properties!.id! : item.properties!.ref) + index}
       renderItem={({ item, index }) => (
         <AppPressableOverlay
-          key={(item.properties!.ref || item.properties!.id) + index}
+          key={(isRallyingPointSearchedLocation(item) ? item.properties!.id! : item.properties!.ref) + index}
           style={{ paddingHorizontal: 16, paddingVertical: 8 }}
           onPress={() => updateValue(item)}>
           <PlaceItem item={item} />

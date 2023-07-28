@@ -72,9 +72,6 @@ export const CreateSignUpMachine = (initialValue: SignUpContext = {}): SignUpSta
       }
     },
     {
-      services: {
-        submit: (context, _) => submit(context)
-      },
       actions: {
         set: assign<SignUpContext, LoginEvent>({
           authUser: (context, event) => event.data.authUser

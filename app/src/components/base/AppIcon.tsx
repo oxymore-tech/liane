@@ -14,6 +14,7 @@ import History from "@/assets/icons/history.svg";
 import PositionOn from "@/assets/icons/position-on.svg";
 import PositionOff from "@/assets/icons/position-off.svg";
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
+import Seat from "@/assets/icons/seat.svg";
 
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number] | CustomIconName;
 
@@ -49,6 +50,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <DirectionsWalk {...props} />;
     case "rallying-point":
       return <RallyingPoint {...props} />;
+    case "seat":
+      return <Seat {...props} />;
     default:
       return <Icon opacity={opacity} name={name} width={size} height={size} fill={color} />;
   }
@@ -67,7 +70,8 @@ const AppIconsNames = [
   "position-off",
   "twisting-arrow",
   "directions-walk",
-  "rallying-point"
+  "rallying-point",
+  "seat"
 ] as const;
 
 const EvaIconsNames = [

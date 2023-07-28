@@ -13,7 +13,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
 import { AppContext } from "@/components/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
-import { AnimatedFloatingBackButton, MapHeader, RPFormHeader, SearchFeature } from "@/screens/home/HomeHeader";
+import { AnimatedFloatingBackButton, MapHeader, SearchModal } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -71,19 +71,19 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
 
   const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
-  const [displayBar, setDisplayBar] = useState(true);
+  // const [displayBar, setDisplayBar] = useState(true);
 
   //console.debug(bottomSheetDisplay);
   const bbStyle = useBottomBarStyle();
   React.useLayoutEffect(() => {
     navigation.setOptions(
       //@ts-ignore
-      { tabBarStyle: [...bbStyle, { display: (isMapState || isPointState) && displayBar ? undefined : "none" }] }
+      { tabBarStyle: [...bbStyle, { display: isMapState || isPointState ? undefined : "none" }] }
     );
   });
 
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
-  const [hintPhrase, setHintPhrase] = useState<string | null>(null);
+  //const [hintPhrase, setHintPhrase] = useState<string | null>(null);
 
   const features = useObservable(mapFeatureSubject, undefined);
   const hasFeatures = !!features;
@@ -99,11 +99,11 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             onMovingStateChanged={setMovingDisplay}
             onZoomChanged={z => {
               console.debug("[MAP] zoom", z);
-              if (z < 8) {
+              /*if (z < 8) {
                 setHintPhrase("Zoomez pour afficher les points de ralliement");
               } else {
                 setHintPhrase(null);
-              }
+              } */
             }}
             // onFetchingDisplay={setLoadingDisplay}
             // loading={loadingDisplay || loadingList}
@@ -516,8 +516,12 @@ const HomeMap = ({
         )}
       </AppMapView>
       {["point", "map"].some(state.matches) && (
-        <SearchFeature
-          onSelect={placeFeature => {
+        <SearchModal
+          onSelectTrip={trip => {
+            machine.send("UPDATE", { data: trip });
+            return true;
+          }}
+          onSelectFeature={placeFeature => {
             console.log("place selected", JSON.stringify(placeFeature));
             if (placeFeature.bbox) {
               appMapRef.current?.fitBounds(
@@ -570,6 +574,7 @@ const HomeScreen = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <WelcomeWizardModal />
+      {/* @ts-ignore */}
       <HomeMapContext.Provider value={machine}>
         <HomeScreenView displaySource={displaySubject} />
       </HomeMapContext.Provider>

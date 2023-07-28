@@ -1,42 +1,31 @@
-import React, { useContext, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
 import { Exact, getPoint, UnionUtils } from "@/api";
-import { getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
+import { getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatMonthDay } from "@/api/i18n";
+import { formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
-import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
-import { StyleSheet, View } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { View } from "react-native";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { formatDuration } from "@/util/datetime";
-import { CardTextInput } from "@/components/base/CardTextInput";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppContext } from "@/components/ContextProvider";
 import { useQueryClient } from "react-query";
-import { DriverInfo, InfoItem } from "@/screens/detail/Components";
+import { DriverInfo } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";
-import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
-
-const formatSeatCount = (seatCount: number) => {
-  let count = seatCount;
-  let words: string[];
-  if (seatCount > 0) {
-    // offered seats
-    words = ["place", "disponible"];
-  } else {
-    // passengers
-    count = -seatCount;
-    words = ["passager"];
-  }
-  return `${count} ${words.map(word => word + (count > 1 ? "s" : "")).join(" ")}`;
-};
+import { AppStyles } from "@/theme/styles";
+import { AppIcon } from "@/components/base/AppIcon";
+import { LianeMatchItemView } from "@/screens/home/BottomSheetView";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideInLeft, SlideInRight, SlideOutDown, SlideOutLeft } from "react-native-reanimated";
+import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 
 export const LianeMatchDetailView = () => {
   const machine = useContext(HomeMapContext);
@@ -54,16 +43,15 @@ export const LianeMatchDetailView = () => {
   const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
 
   const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
-  const formattedSeatCount = formatSeatCount(liane.freeSeatsCount);
 
-  // const passengers = liane.liane.members.filter(m => m.user !== liane.liane.driver.user);
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
   const tripDuration = formatDuration(getTotalDuration(currentTrip.slice(1)));
-  const tripDistance = Math.ceil(getTotalDistance(currentTrip.slice(1)) / 1000) + " km";
 
-  const [modalVisible, setModalVisible] = useState(false);
   const [message, setMessage] = useState("");
   const [seats, setSeats] = useState(liane.freeSeatsCount > 0 ? -1 : 1);
+  const [step, setStep] = useState(0);
+  const [firstEdit, setFirstEdit] = useState(true);
+  const [takeReturnTrip, setTakeReturnTrip] = useState(false);
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
@@ -75,86 +63,222 @@ export const LianeMatchDetailView = () => {
       message,
       seats: seats,
       liane: liane.liane.id!,
-      takeReturnTrip: false,
+      takeReturnTrip,
       to: toPoint.id!
     };
 
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
-    setModalVisible(false);
+    // setModalVisible(false);
+    machine.send(["BACK", "BACK", "BACK"]);
     //@ts-ignore
     navigation.navigate("Home", { screen: "Mes trajets" });
   };
+  const isReturnStep = step === 2 && !!liane.liane.returnTime;
+  const isSeatsStep = step === 1 && liane.freeSeatsCount > 1;
+  const nextStep = useCallback(() => {
+    setStep(firstEdit ? step + 1 : 3);
+  }, [firstEdit, step]);
+  useEffect(() => {
+    console.log(step, isSeatsStep, isReturnStep);
+    if (step === 1 && !isSeatsStep) {
+      nextStep();
+    } else if (step === 2 && !isReturnStep) {
+      nextStep();
+    } else if (step === 3 && firstEdit) {
+      setFirstEdit(false);
+    }
+  }, [firstEdit, isReturnStep, isSeatsStep, nextStep, requestJoin, step]);
+  const insets = useSafeAreaInsets();
 
   return (
-    <AppBottomSheetScrollView>
-      <Column style={styles.section}>
-        <DetailedLianeMatchView
-          departureTime={liane.liane.departureTime}
-          wayPoints={wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1)}
-        />
-      </Column>
-      <SectionSeparator />
+    <View style={{ flex: 1 }}>
+      <AppBottomSheetScrollView style={{ marginBottom: 52 }}>
+        <Column style={{ paddingVertical: 8, paddingHorizontal: 24 }} spacing={6}>
+          <AppText style={{ fontWeight: "bold", fontSize: 20, marginBottom: 8 }}>{formattedDepartureTime}</AppText>
 
-      <Column style={styles.section} spacing={4}>
-        <InfoItem icon={"calendar-outline"} value={formattedDepartureTime} />
-        <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
-        <InfoItem icon={"twisting-arrow"} value={tripDistance} />
-      </Column>
-
-      <LineSeparator />
-
-      {liane.liane.driver.canDrive && <DriverInfo user={driver} />}
-      <SectionSeparator />
-
-      <Row
-        style={[
-          styles.section,
-          {
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginVertical: 16,
-            borderLeftWidth: 4,
-            borderLeftColor: AppColorPalettes.orange[400],
-            paddingLeft: 8,
-            paddingVertical: 0
-          }
-        ]}>
-        <InfoItem icon={"people-outline"} value={formattedSeatCount} />
-
-        {!userIsMember && (
-          <AppRoundedButton
-            backgroundColor={AppColors.orange}
-            text={"Rejoindre"}
-            onPress={() => {
-              setModalVisible(true);
-            }}
+          <LianeMatchItemView
+            duration={tripDuration}
+            from={wayPoints[tripMatch.departureIndex]}
+            to={wayPoints[tripMatch.arrivalIndex]}
+            freeSeatsCount={liane.freeSeatsCount}
+            returnTime={liane.liane.returnTime} /*TODO*/
           />
-        )}
-      </Row>
-      {userIsMember && <AppText style={{ marginHorizontal: 24 }}>Vous êtes membre de cette liane.</AppText>}
-      <SlideUpModal actionText={"Envoyer la demande"} onAction={requestJoin} visible={modalVisible} setVisible={setModalVisible}>
-        <Column>
-          <SeatsForm seats={seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
-          <View style={{ marginVertical: 24 }}>
-            <CardTextInput value={message} multiline={true} numberOfLines={5} placeholder={"Ajouter un message..."} onChangeText={setMessage} />
-          </View>
         </Column>
-      </SlideUpModal>
-    </AppBottomSheetScrollView>
+
+        <SectionSeparator />
+        {liane.liane.driver.canDrive && step === 0 && (
+          <Animated.View exiting={SlideOutLeft}>
+            <DriverInfo user={driver} />
+          </Animated.View>
+        )}
+
+        {(step >= 1 || !firstEdit) && (
+          <Animated.View entering={SlideInRight} style={{ backgroundColor: isSeatsStep ? AppColorPalettes.blue[100] : undefined }}>
+            {isSeatsStep && (
+              <Column style={{ paddingHorizontal: 12, paddingVertical: 12 }}>
+                <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
+                  <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Combien de places réservez vous ?</AppText>
+                </Animated.View>
+                <Animated.View entering={firstEdit ? undefined : FadeInDown}>
+                  <SeatsForm seats={seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
+                </Animated.View>
+                <Row style={{ justifyContent: "flex-end", marginTop: 8 }}>
+                  <AppPressableOverlay backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={nextStep}>
+                    <Row spacing={4} style={{ alignItems: "center" }}>
+                      <AppText>Valider</AppText>
+                      <AppIcon size={20} name={"checkmark-outline"} />
+                    </Row>
+                  </AppPressableOverlay>
+                </Row>
+              </Column>
+            )}
+            {(step > 1 || !firstEdit) && !isSeatsStep && (
+              <Animated.View exiting={firstEdit ? undefined : FadeOut} entering={FadeIn}>
+                <AppPressable onPress={() => setStep(liane.freeSeatsCount > 1 ? 1 : step)}>
+                  <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
+                    <AppIcon name={"people-outline"} />
+                    <AppText
+                      style={{
+                        fontSize: 16,
+                        paddingLeft: 4,
+                        alignSelf: "center",
+                        textAlignVertical: "center"
+                      }}>
+                      {Math.abs(seats) + " passager" + (Math.abs(seats) > 1 ? "s" : "")}
+                    </AppText>
+                  </Row>
+                </AppPressable>
+              </Animated.View>
+            )}
+          </Animated.View>
+        )}
+        {(step > 1 || !firstEdit) && (
+          <Animated.View entering={FadeIn}>
+            <LineSeparator />
+          </Animated.View>
+        )}
+
+        {(step >= 2 || !firstEdit) && !!liane.liane.returnTime && (
+          <Animated.View entering={SlideInRight} style={{ backgroundColor: isReturnStep ? AppColorPalettes.blue[100] : undefined }}>
+            {isReturnStep && (
+              <Column style={{ paddingHorizontal: 12, paddingVertical: 12 }}>
+                <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
+                  <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }} numberOfLines={2}>
+                    Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.liane.returnTime), formatTime)}?
+                  </AppText>
+                </Animated.View>
+
+                <Row style={{ justifyContent: "flex-end", marginTop: 8 }} spacing={16}>
+                  <AppPressableOverlay
+                    backgroundStyle={{ borderRadius: 32 }}
+                    style={{ padding: 8 }}
+                    onPress={() => {
+                      setTakeReturnTrip(false);
+                      nextStep();
+                    }}>
+                    <Row spacing={4} style={{ alignItems: "center" }}>
+                      <AppText>Non</AppText>
+                      <AppIcon size={20} name={"close-outline"} />
+                    </Row>
+                  </AppPressableOverlay>
+                  <AppPressableOverlay
+                    backgroundStyle={{ borderRadius: 32 }}
+                    style={{ padding: 8 }}
+                    onPress={() => {
+                      setTakeReturnTrip(true);
+                      nextStep();
+                    }}>
+                    <Row spacing={4} style={{ alignItems: "center" }}>
+                      <AppText>Oui</AppText>
+                      <AppIcon size={20} name={"checkmark-outline"} />
+                    </Row>
+                  </AppPressableOverlay>
+                </Row>
+              </Column>
+            )}
+            {(step > 2 || !firstEdit) && !isReturnStep && (
+              <Animated.View exiting={firstEdit ? undefined : FadeOut} entering={FadeIn}>
+                <AppPressable onPress={() => setStep(liane.liane.returnTime ? 2 : step)}>
+                  <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
+                    <AppIcon name={"corner-down-right-outline"} />
+                    <AppText
+                      style={{
+                        fontSize: 16,
+                        paddingLeft: 4,
+                        alignSelf: "center",
+                        textAlignVertical: "center"
+                      }}>
+                      {takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.liane.returnTime), formatTime) : "Aller simple"}
+                    </AppText>
+                  </Row>
+                </AppPressable>
+              </Animated.View>
+            )}
+          </Animated.View>
+        )}
+        {(step > 2 || !firstEdit) && !!liane.liane.returnTime && (
+          <Animated.View entering={FadeIn}>
+            <LineSeparator />
+          </Animated.View>
+        )}
+        {(step > 2 || !firstEdit) && (
+          <Animated.View entering={SlideInRight}>
+            <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
+              <AppText
+                style={{
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  paddingLeft: 4,
+                  alignSelf: "center",
+                  textAlignVertical: "center"
+                }}>
+                Prix total : {5 * Math.abs(seats)} €
+              </AppText>
+            </Row>
+          </Animated.View>
+        )}
+
+        {userIsMember && <AppText style={{ marginHorizontal: 24 }}>Vous êtes membre de cette liane.</AppText>}
+      </AppBottomSheetScrollView>
+
+      <Animated.View
+        entering={SlideInDown}
+        exiting={SlideOutDown}
+        style={{ paddingHorizontal: 24, position: "absolute", bottom: 4 + insets.bottom, left: 0, right: 0 }}>
+        {!userIsMember && !isReturnStep && !isSeatsStep && (
+          <Animated.View entering={FadeIn} exiting={FadeOut}>
+            <AppRoundedButton
+              color={defaultTextColor(AppColors.orange)}
+              //onPress={requestJoin}
+              onPress={
+                step === 0
+                  ? nextStep
+                  : () => {
+                      requestJoin().catch(e => console.warn(e));
+                    }
+              }
+              backgroundColor={AppColors.orange}
+              text={step === 0 ? "Rejoindre cette liane" : "Réserver ce trajet"}
+            />
+          </Animated.View>
+        )}
+        {!userIsMember && (isReturnStep || isSeatsStep) && (
+          <Animated.View entering={FadeIn} exiting={FadeOut}>
+            <AppRoundedButton
+              color={"black"}
+              //onPress={requestJoin}
+              onPress={() => setStep(0)}
+              backgroundColor={AppColorPalettes.gray[300]}
+              text={"Annuler"}
+            />
+          </Animated.View>
+        )}
+        {userIsMember && (
+          <AppRoundedButton color={"black"} backgroundColor={AppColorPalettes.gray[300]} enabled={false} text={"Vous êtes membre de cette liane"} />
+        )}
+      </Animated.View>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  section: { paddingVertical: 16, marginHorizontal: 24 },
-  modal: {
-    justifyContent: "flex-end",
-    margin: 0
-  },
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    backgroundColor: AppColors.white
-  }
-});

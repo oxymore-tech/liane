@@ -106,6 +106,9 @@ export async function initializePushNotification(user: FullUser, authService: Au
       // Update server's token
       await authService.updatePushToken(pushToken);
     }
+    PushNotifications?.onTokenRefresh(async (pushToken) => {
+      await authService.updatePushToken(pushToken);
+    });
     PushNotifications?.onMessage(onMessageReceived);
     return true;
   } catch (e) {
