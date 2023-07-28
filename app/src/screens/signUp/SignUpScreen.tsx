@@ -15,8 +15,6 @@ import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateM
 import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { Center } from "@/components/base/AppLayout";
-import { APP_ENV } from "@env";
-import MonkeyHi from "@/assets/images/monkey-hi.svg";
 
 const t = scopedTranslate("SignUp");
 
@@ -68,39 +66,18 @@ const SignUpPage = () => {
       <View style={styles.imageContainer}>
         <LianeLogo style={styles.image} width="75%" />
       </View>
-      {APP_ENV !== "dev" && (
-        <AppText
-          numberOfLines={2}
-          style={{
-            fontSize: 32,
-            alignSelf: "center",
-            textAlign: "center",
-            backgroundColor: AppColorPalettes.blue[100],
-            padding: 16,
-            width: "100%"
-          }}>
-          {"Bientôt\ndisponible..."}
-        </AppText>
-      )}
-      {APP_ENV !== "dev" && (
-        <View style={{ position: "absolute", bottom: -100, left: 16 }}>
-          <MonkeyHi height={400} />
-        </View>
-      )}
 
-      {APP_ENV === "dev" && (
-        <View>
-          <AppText numberOfLines={-1} style={styles.helperText}>
-            {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
-          </AppText>
-          {state.matches("phone") ? (
-            <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={submit} />
-          ) : (
-            <CodeInput code={value} onChange={setValue} onValidate={submit} />
-          )}
-          <AppText style={styles.errorText}>{error || " "}</AppText>
-        </View>
-      )}
+      <View>
+        <AppText numberOfLines={-1} style={styles.helperText}>
+          {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+        </AppText>
+        {state.matches("phone") ? (
+          <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={submit} />
+        ) : (
+          <CodeInput code={value} onChange={setValue} onValidate={submit} />
+        )}
+        <AppText style={styles.errorText}>{error || " "}</AppText>
+      </View>
     </View>
   );
 };
