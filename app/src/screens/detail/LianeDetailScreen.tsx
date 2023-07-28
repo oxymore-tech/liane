@@ -9,7 +9,7 @@ import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView 
 import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, WayPoint } from "@/api";
 import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatDate, formatMonthDay } from "@/api/i18n";
+import { formatDate, formatMonthDay, formatTime } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
@@ -126,13 +126,6 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           initialStop={1}>
           {match && (
             <AppBottomSheetScrollView>
-              {!request && (
-                <Row>
-                  <LianeStatusRow liane={match} />
-                  <View style={{ flex: 1 }} />
-                  <LianeActionRow liane={match} />
-                </Row>
-              )}
               <LianeDetailView liane={match} isRequest={!!request} />
               <LianeActionsView match={match} request={request?.id} />
             </AppBottomSheetScrollView>
@@ -164,7 +157,7 @@ const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
         <ActionFAB
           onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
           color={AppColors.blue}
-          icon={"message-circle"}
+          icon={"message-circle-full"}
         />
       )}
     </Row>
@@ -478,6 +471,7 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
   const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
 
   const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
+  const formattedReturnTime = liane.liane.returnTime ? formatTime(new Date(liane.liane.returnTime)) : null;
 
   // const passengers = liane.liane.members.filter(m => m.user !== liane.liane.driver.user);
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
@@ -488,6 +482,14 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
 
   return (
     <Column>
+      <AppText style={{ fontWeight: "bold", fontSize: 20, marginBottom: 8, marginHorizontal: 16 }}>{formattedDepartureTime}</AppText>
+
+      <Row>
+        <LianeStatusRow liane={liane} />
+        <View style={{ flex: 1 }} />
+        <LianeActionRow liane={liane} />
+      </Row>
+
       <Column style={styles.section}>
         <DetailedLianeMatchView
           departureTime={liane.liane.departureTime}
@@ -498,7 +500,7 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
       <SectionSeparator />
 
       <Column style={styles.section} spacing={4}>
-        <InfoItem icon={"calendar-outline"} value={formattedDepartureTime!} />
+        {!!liane.liane.returnTime && <InfoItem icon={"corner-down-right-outline"} value={"Retour à " + formattedReturnTime!} />}
         <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
         <InfoItem icon={"twisting-arrow"} value={tripDistance} />
       </Column>
