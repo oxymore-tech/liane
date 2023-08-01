@@ -108,7 +108,7 @@ export type LianeRequest = Identity &
 export type Liane = Entity &
   Readonly<{
     departureTime: UTCDateTime;
-    returnTime?: UTCDateTime;
+    return: Ref<Liane>;
     wayPoints: WayPoint[];
     members: LianeMember[];
     driver: { user: Ref<User>; canDrive: boolean };
@@ -234,6 +234,7 @@ export type LianeMatch = Readonly<{
   liane: Liane;
   //   wayPoints: WayPoint[];
   match: Match;
+  returnTime?: UTCDateTime;
   freeSeatsCount: number;
 }>;
 

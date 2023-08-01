@@ -18,10 +18,6 @@ import { capitalize } from "@/util/strings";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 
-export interface ProfileProps {
-  user: User;
-}
-
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
   return (

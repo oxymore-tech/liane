@@ -111,7 +111,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
       const toPoint = getPoint(item, "deposit");
       const trip = getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id);
       const tripDuration = getTotalDuration(trip.wayPoints);
-      return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration, returnTime: item.liane.returnTime };
+      return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration, returnTime: item.returnTime };
     });
     const exact = matches.filter(i => {
       return i.fromPoint.id === state.context.filter.from!.id && i.toPoint.id === state.context.filter.to!.id;
