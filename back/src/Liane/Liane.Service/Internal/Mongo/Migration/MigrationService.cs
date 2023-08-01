@@ -24,7 +24,7 @@ public sealed class MigrationService
     await db.GetCollection<LianeDb>()
       .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("returnTime"));
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("members.$[c].takesReturnTrip"));
+      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("members.takesReturnTrip"));
   }
 
   public async Task Execute()
