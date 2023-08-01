@@ -8,7 +8,7 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 11;
+  private const int Version = 12;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
