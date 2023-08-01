@@ -8,7 +8,7 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 10;
+  private const int Version = 11;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
@@ -23,6 +23,8 @@ public sealed class MigrationService
   {
     await db.GetCollection<LianeDb>()
       .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("returnTime"));
+    await db.GetCollection<LianeDb>()
+      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("members.$[c].takesReturnTrip"));
   }
 
   public async Task Execute()
