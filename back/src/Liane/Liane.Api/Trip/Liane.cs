@@ -26,7 +26,6 @@ public sealed record LianeMember(
   Ref<User.User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
-  bool? TakesReturnTrip = null,
   int SeatCount = -1, // Defaults to a passenger seat
   int? Delay = null, // TimeInSeconds
   Feedback? Feedback = null
@@ -43,7 +42,7 @@ public sealed record Liane(
   Ref<User.User> CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
-  DateTime? ReturnTime,
+  Ref<Liane>? Return,
   ImmutableList<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,

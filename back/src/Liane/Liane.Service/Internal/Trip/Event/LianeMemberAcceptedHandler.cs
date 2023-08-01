@@ -18,8 +18,12 @@ public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.Membe
 
   public async Task OnEvent(LianeEvent.MemberAccepted e)
   {
-    var member = new LianeMember(e.Member, e.From, e.To, e.TakeReturnTrip, e.Seats);
+    var member = new LianeMember(e.Member, e.From, e.To, e.Seats);
     var liane = await lianeService.AddMember(e.Liane, member);
+    if (e.TakeReturnTrip)
+    {
+      await lianeService.AddMember(liane.Return!, member);
+    }
     var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
     await notificationService.SendEvent("Demande acceptée", "Vous avez rejoint la liane à destination de "+destination+".", e.Member, e);
   }

@@ -19,6 +19,7 @@ using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
@@ -59,9 +60,30 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
   public new async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
   {
-    var liane = await base.Create(entity, owner);
-    await postgisService.UpdateGeometry(liane);
-    return liane;
+
+    var toCreate = new List<LianeDb>();
+    // Handle return here
+    if (entity.ReturnTime is not null)
+    {
+      var createdReturn = await ToDb(
+        new LianeRequest(null, entity.ReturnTime.Value, null, entity.AvailableSeats, entity.To, entity.From),
+        ObjectId.GenerateNewId().ToString(), 
+        DateTime.UtcNow,
+        owner ?? CurrentContext.CurrentUser().Id
+      );
+      toCreate.Add(createdReturn);
+    }
+    var created = await ToDb(entity with {ReturnTime = null}, ObjectId.GenerateNewId().ToString(), DateTime.UtcNow, owner ?? CurrentContext.CurrentUser().Id);
+    toCreate.Add(entity.ReturnTime is null ? created : created with { Return = toCreate[0].Id } );
+    
+    await Mongo.GetCollection<LianeDb>().InsertManyAsync(toCreate);
+    foreach (var lianeDb in toCreate)
+    {
+      var liane = await Get(lianeDb.Id);
+      await postgisService.UpdateGeometry(liane);
+    } 
+    
+    return await Get(created.Id);
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
@@ -395,8 +417,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return new WayPoint(rallyingPoint, w.Duration, w.Distance, w.Eta);
     });
     var users = await liane.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
-    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.ReturnTime, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
+    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
   }
+  
+  
 
   protected override async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
   {
@@ -405,11 +429,11 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       throw new ValidationException("To", ValidationMessage.MalFormed);
     }
 
-    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.ReturnTime is not null, lianeRequest.AvailableSeats) };
+    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats) };
     var driverData = new Driver(createdBy, lianeRequest.AvailableSeats > 0);
     var wayPoints = await GetWayPoints(lianeRequest.DepartureTime, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
-    return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime, lianeRequest.ReturnTime, members.ToImmutableList(), driverData,
+    return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime, null, members.ToImmutableList(), driverData,
       LianeState.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, null);
   }
 
@@ -492,7 +516,15 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       pickupPoint = await rallyingPointService.Get(filter.From);
       depositPoint = await rallyingPointService.Get(filter.To);
       var match = new Match.Exact(pickupPoint.Id!, depositPoint.Id!);
-      return new LianeMatch(await MapEntity(lianeDb), lianeDb.TotalSeatCount, match);
+      DateTime? returnTime = null;
+      if (liane.Return is not null)
+      {
+        var compatibleReturnTrip = await Mongo.GetCollection<LianeDb>()
+          .Find(p => p.Id == liane.Return && p.TotalSeatCount >= -filter.AvailableSeats)
+          .FirstOrDefaultAsync();
+        returnTime = compatibleReturnTrip.WayPoints.Find(w => w.RallyingPoint.Id == depositPoint.Id)?.Eta;
+      }
+      return new LianeMatch(liane, lianeDb.TotalSeatCount, returnTime ,match);
     }
 
     // Try detour first, otherwise fallback to partial match
@@ -550,8 +582,17 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         (int)dDeposit.Duration,
         (int)dDeposit.Distance
       ), pickupPoint.Id!, depositPoint.Id!, newWayPoints);
+      
+      DateTime? returnTime = null;
+      if (liane.Return is not null)
+      {
+        var compatibleReturnTrip = await Mongo.GetCollection<LianeDb>()
+          .Find(p => p.Id == liane.Return && p.TotalSeatCount >= -filter.AvailableSeats)
+          .FirstOrDefaultAsync();
+        returnTime = compatibleReturnTrip.WayPoints.Find(w => w.RallyingPoint.Id == depositPoint.Id)?.Eta;
+      }
 
-      return new LianeMatch(liane, lianeDb.TotalSeatCount, compatibleMatch);
+      return new LianeMatch(liane, lianeDb.TotalSeatCount, returnTime ,compatibleMatch);
     }
 
     return null;
