@@ -446,7 +446,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         // TODO adjust time delta
         var pickupPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.From);
         if (pickupPoint!.Eta > DateTime.Now.AddSeconds(30)) return LianeState.NotStarted;
-        var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.From);
+        var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.To);
         if (depositPoint!.Eta < DateTime.Now) return LianeState.Finished;
         break;
       case LianeState.Finished:
