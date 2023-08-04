@@ -68,9 +68,9 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
   {
     // Get conversations ids where user's last read is before the latest message
-
-    var userConversations = Mongo.GetCollection<ConversationGroup>()
-      .Find(Builders<ConversationGroup>.Filter.ElemMatch(c => c.Members, m => m.User == user.Id)).ToEnumerable();
+    var userConversations = await Mongo.GetCollection<ConversationGroup>()
+      .Find(Builders<ConversationGroup>.Filter.ElemMatch(c => c.Members, m => m.User == user.Id))
+      .ToListAsync();
     return userConversations
       .Where(c =>
       {
@@ -95,7 +95,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     var createdAt = DateTime.UtcNow;
     var sent = message with { Id = ObjectId.GenerateNewId().ToString(), CreatedBy = author.Id, CreatedAt = createdAt };
     await Mongo.GetCollection<DbChatMessage>()
-      .InsertOneAsync(new DbChatMessage(sent.Id, groupId, sent.CreatedBy, createdAt, sent.Text));
+      .InsertOneAsync(new DbChatMessage(sent.Id!, groupId, sent.CreatedBy, createdAt, sent.Text));
     var conversation = await Mongo.GetCollection<ConversationGroup>()
       .FindOneAndUpdateAsync<ConversationGroup>(c => c.Id == groupId,
         Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt),

@@ -30,6 +30,6 @@ case "$1" in
    run_it_tests
   ;;
  *)
-  echo "Usage: liane (init_osrm|dump|start|stop|test)"
+  echo "Usage: liane (init_osrm|dump|dump_pg|start|stop|test)"
   ;;
 esac

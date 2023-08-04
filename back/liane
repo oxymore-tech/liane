@@ -57,7 +57,7 @@ function dump_on_local {
     suffix=""
   fi;
   
-  # ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | liane_compose exec -T mongo mongorestore --drop --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}" --nsInclude='liane.*'
+  ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump" | liane_compose exec -T mongo mongorestore --drop --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}" --nsInclude='liane.*'
   ssh gjini.co "/home/ubuntu/liane${suffix}/deploy/liane dump_pg" | liane_compose exec -T -e "PGPASSWORD=${MONGO_PASSWORD}" postgis psql -U "${MONGO_USERNAME}" -h 127.0.0.1 -d liane
 }
 

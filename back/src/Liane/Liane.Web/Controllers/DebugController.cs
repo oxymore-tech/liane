@@ -1,5 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 
 namespace Liane.Web.Controllers;
 
@@ -16,11 +19,10 @@ public sealed class DebugController : ControllerBase
     this.chatService = chatService;
   }
 
-  // a get route that send a fake message to the user
-  // [HttpGet("send")]
-  // public async Task Send()
-  // {
-  //   var chloe = "63f745390f65806b1adb3018";
-  //   var sent = await chatService.SaveMessageInGroup(new ChatMessage(ObjectId.GenerateNewId().ToString(), chloe, DateTime.Now, "Chep chèpe " + inc++), "64afb7250c5f07a6e647ed57", chloe);
-  // }
+  [HttpGet("send")]
+  public async Task Send()
+  {
+    var chloe = "63f745390f65806b1adb3018";
+    var sent = await chatService.SaveMessageInGroup(new ChatMessage(ObjectId.GenerateNewId().ToString(), chloe, DateTime.Now, "Chep chèpe " + inc++), "64afb7250c5f07a6e647ed57", chloe);
+  }
 }
