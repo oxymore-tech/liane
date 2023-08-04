@@ -9,27 +9,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
-using GeoJSON.Text.Feature;
-using GeoJSON.Text.Geometry;
 using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Trip.Import;
+using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, IRallyingPointService
+public sealed class RallyingPointServiceImpl : IRallyingPointService
 {
   private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]+");
 
@@ -48,28 +43,33 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
   private readonly MemoryCache pointCache = new(new MemoryCacheOptions());
   private readonly IAddressService addressService;
   private readonly IOsrmService osrmService;
-  private readonly IPostgisService postgisService;
+  private readonly PostgisDatabase db;
 
-  public RallyingPointServiceImpl(IMongoDatabase mongo, ILogger<RallyingPointServiceImpl> logger, IAddressService addressService, IOsrmService osrmService, IPostgisService postgisService)
-    : base(mongo)
+  public RallyingPointServiceImpl(ILogger<RallyingPointServiceImpl> logger, IAddressService addressService, IOsrmService osrmService, PostgisDatabase db)
   {
     this.logger = logger;
     this.addressService = addressService;
     this.osrmService = osrmService;
-    this.postgisService = postgisService;
+    this.db = db;
   }
 
-  public override Task<RallyingPoint> Get(Ref<RallyingPoint> reference)
+  public Task<RallyingPoint> Get(Ref<RallyingPoint> reference)
   {
-    return pointCache.GetOrCreateAsync(reference, _ => base.Get(reference))!;
+    return pointCache.GetOrCreateAsync(reference, async _ =>
+    {
+      using var connection = db.NewConnection();
+      return await connection.GetAsync(reference);
+    })!;
+  }
+
+  public Task<Dictionary<string, RallyingPoint>> GetMany(ImmutableList<Ref<RallyingPoint>> references)
+  {
+    throw new NotImplementedException();
   }
 
   public async Task Generate()
   {
     logger.LogInformation("Generate rallying points...");
-    await postgisService.ClearRallyingPoints();
-    await Mongo.GetCollection<RallyingPoint>()
-      .DeleteManyAsync(_ => true);
 
     logger.LogDebug("Loading carpool areas...");
     IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();
@@ -102,93 +102,76 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     }
 
     var pool = new Semaphore(initialCount: 8, maximumCount: 8);
-    var rallyingPointsMerger =
-      grouped.SelectAsync(async g =>
+    var rallyingPointsMerger = await grouped.SelectAsync(async g =>
+    {
+      var selected = new List<RallyingPoint> { g.First() };
+      var count = g.Count;
+      if (count <= 1)
       {
-        var selected = new List<RallyingPoint> { g.First() };
-        var count = g.Count;
-        if (count <= 1)
-        {
-          return selected;
-        }
-
-        // Group by real routing distance
-        var dict = g.Select((rp, index) => new { Id = rp.Id!, Index = index }).ToDictionary(rp => rp.Id, rp => rp.Index);
-        pool.WaitOne();
-        var table = await osrmService.Table(g.Select(rp => rp.Location));
-        pool.Release();
-        foreach (var rp in g.Skip(1))
-        {
-          var i1 = dict[rp.Id!];
-          if (selected.All(rp1 => table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500))
-          {
-            selected.Add(rp);
-          }
-        }
-
         return selected;
-      }, true);
-    var rallyingPoints = (await rallyingPointsMerger).SelectMany(r => r).ToImmutableList();
-    await Mongo.GetCollection<RallyingPoint>()
-      .InsertManyAsync(rallyingPoints);
-    await postgisService.InsertRallyingPoints(rallyingPoints);
+      }
+
+      // Group by real routing distance
+      var dict = g.Select((rp, index) => new { Id = rp.Id!, Index = index }).ToDictionary(rp => rp.Id, rp => rp.Index);
+      pool.WaitOne();
+      var table = await osrmService.Table(g.Select(rp => rp.Location));
+      pool.Release();
+      foreach (var rp in g.Skip(1))
+      {
+        var i1 = dict[rp.Id!];
+        if (selected.All(rp1 => table.Distances[i1][dict[rp1.Id!]] > 500 && table.Distances[dict[rp1.Id!]][i1] > 500))
+        {
+          selected.Add(rp);
+        }
+      }
+
+      return selected;
+    }, true);
+
+    var rallyingPoints = rallyingPointsMerger.SelectMany(r => r)
+      .ToImmutableList();
+
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
+    await connection.DeleteAsync(Filter<RallyingPoint>.Empty, tx);
+    await connection.InsertMultipleAsync(rallyingPoints, tx);
+
+    tx.Commit();
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
   }
 
-  public async Task<ImmutableList<RallyingPoint>> List(LatLng? from, LatLng? to, int? distance = null, string? search = null, int? limit = null)
+  public async Task<ImmutableList<RallyingPoint>> List(LatLng? center, int? distance = null, string? search = null, int? limit = null)
   {
-    var filter = FilterDefinition<RallyingPoint>.Empty;
-    var isLimitedBoxSearch = from is not null && to is not null && limit is not null;
+    var filter = Filter<RallyingPoint>.Empty;
 
     if (search is not null)
     {
-      var regex = new Regex(ToSearchPattern(search), RegexOptions.IgnoreCase);
-      filter &= Builders<RallyingPoint>.Filter.Regex(x => x.Label, new BsonRegularExpression(regex))
-                | Builders<RallyingPoint>.Filter.Regex(x => x.City, new BsonRegularExpression(regex))
-                | Builders<RallyingPoint>.Filter.Regex(x => x.ZipCode, new BsonRegularExpression(regex))
-                | Builders<RallyingPoint>.Filter.Regex(x => x.Address, new BsonRegularExpression(regex));
+      var regex = ToSearchPattern(search);
+      filter &= Filter<RallyingPoint>.Regex(r => r.Label, regex)
+                | Filter<RallyingPoint>.Regex(r => r.City, regex)
+                | Filter<RallyingPoint>.Regex(r => r.ZipCode, regex)
+                | Filter<RallyingPoint>.Regex(r => r.Address, regex);
     }
 
-    if (from.HasValue)
+    if (center.HasValue)
     {
-      if (to.HasValue)
-      {
-        var box = GeoJson.BoundingBox(new GeoJson2DGeographicCoordinates(from.Value.Lng, from.Value.Lat), new GeoJson2DGeographicCoordinates(to.Value.Lng, to.Value.Lat));
-        filter &= Builders<RallyingPoint>.Filter.GeoWithinBox(x => x.Location, box.Min.Longitude, box.Min.Latitude, box.Max.Longitude, box.Max.Latitude);
-      }
-      else
-      {
-        var center = GeoJson.Point(new GeoJson2DGeographicCoordinates(from.Value.Lng, from.Value.Lat));
-        filter &= Builders<RallyingPoint>.Filter.Near(x => x.Location, center, distance ?? 500_000);
-      }
+      filter &= Filter<RallyingPoint>.Near(x => x.Location, center.Value, distance ?? 500_000);
     }
 
-    var results = (await Mongo.GetCollection<RallyingPoint>()
-        .Find(filter)
-        .Limit(isLimitedBoxSearch ? null : limit)
-        .ToCursorAsync())
-      .ToEnumerable();
+    using var connection = db.NewConnection();
 
-    if (isLimitedBoxSearch)
+    var query = Query.Select<RallyingPoint>()
+      .Where(filter)
+      .Take(limit);
+
+    if (center.HasValue)
     {
-      // Limit manually to get those closest to center
-      var center = new LatLng((from!.Value.Lat + to!.Value.Lat) / 2, (from.Value.Lng + to.Value.Lng) / 2);
-      return results
-        .OrderBy(rp => rp.Location.Distance(center))
-        .Take(limit!.Value)
-        .ToImmutableList();
+      query = query.OrderBy(rp => rp.Location.Distance(center.Value));
     }
 
+    var results = await connection.QueryAsync(query);
     return results.ToImmutableList();
-  }
-
-  public async Task<FeatureCollection> ListGeojson(LatLng? from, LatLng? to, int? distance = null, string? search = null, int? limit = null)
-  {
-    var displayedPoints = await List(from, to, distance, search, limit);
-    var rallyingPointsFeatures = displayedPoints.Select(rp => new Feature(new Point(new Position(rp.Location.Lat, rp.Location.Lng)),
-      rp.GetType().GetProperties().ToDictionary(prop => prop.Name.NormalizeToCamelCase(), prop => prop.GetValue(rp, null))
-    ));
-    return new FeatureCollection(rallyingPointsFeatures.ToList());
   }
 
   private static string ToSearchPattern(string search)
@@ -201,69 +184,38 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
     return string.Concat(words.Select(w =>
     {
       var removeAccent = AccentedChars.Aggregate(w, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
-      return $@"\b{removeAccent}.*";
+      return $@"\m{removeAccent}.*";
     }));
   }
 
   public async Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto)
   {
-    var res = await Mongo.GetCollection<RallyingPoint>()
-      .ReplaceOneAsync(
-        rp => rp.Id == reference.Id,
-        ToDb(inputDto, reference.Id)
-      );
-    return res.IsAcknowledged;
+    using var connection = db.NewConnection();
+    var updated = await connection.UpdateAsync(inputDto);
+    return updated > 0;
   }
 
   public async Task<RallyingPoint?> Snap(LatLng position, int radius = 100)
   {
-    var builder = Builders<RallyingPoint>.Filter;
-    var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(position.Lng, position.Lat));
-    var filter = builder.Near(x => x.Location, point, radius);
-
-    return await Mongo.GetCollection<RallyingPoint>()
-      .Find(filter)
-      .FirstOrDefaultAsync();
+    using var connection = db.NewConnection();
+    var query = Query.Select<RallyingPoint>()
+      .Where(Filter<RallyingPoint>.Near(x => x.Location, position, radius));
+    return await connection.FirstOrDefaultAsync(query);
   }
 
   public async Task<RallyingPoint?> SnapViaRoute(LatLng position, int radius = 100)
   {
-    var builder = Builders<RallyingPoint>.Filter;
-    var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(position.Lng, position.Lat));
-    var filter = builder.Near(x => x.Location, point, radius);
+    using var connection = db.NewConnection();
+    var query = Query.Select<RallyingPoint>()
+      .Where(Filter<RallyingPoint>.Near(x => x.Location, position, radius));
+    var list = await connection.QueryAsync(query);
 
-    var results = await Mongo.GetCollection<RallyingPoint>()
-      .Find(filter)
-      .ToCursorAsync();
-    var list = results.ToEnumerable().ToImmutableList();
     if (list.Count < 1) return null;
 
     var table = await osrmService.Table(new List<LatLng> { position }.Concat(list.Select(rp => rp.Location)));
     // Get closest point via road network 
     var closest = list.Select((l, i) => (Point: l, Distance: table.Distances[0][i + 1])).MinBy(r => r.Distance);
     return closest.Distance <= radius ? closest.Point : null;
-  }
-
-
-  public async Task<ImmutableList<RallyingPoint>> Interpolate(ImmutableList<LatLng> locations)
-  {
-    var rallyingPoints = ImmutableList.CreateBuilder<RallyingPoint>();
-
-    foreach (var l in locations)
-    {
-      var result = await Snap(l);
-
-      if (result is null) continue;
-
-      rallyingPoints.Add(result);
-    }
-
-    return rallyingPoints.Distinct().ToImmutableList();
-  }
-
-  protected override RallyingPoint ToDb(RallyingPoint inputDto, string id)
-  {
-    return inputDto with { Id = id };
   }
 
   private async Task<ImmutableList<RallyingPoint>> LoadCarpoolArea()
@@ -377,5 +329,21 @@ public sealed class RallyingPointServiceImpl : MongoCrudService<RallyingPoint>, 
       })
       .DistinctBy(e => e.Id)
       .ToImmutableList();
+  }
+
+  public Task<bool> Delete(Ref<RallyingPoint> reference)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<RallyingPoint> Create(RallyingPoint obj)
+  {
+    throw new NotImplementedException();
+  }
+
+  public async Task Insert(IEnumerable<RallyingPoint> rallyingPoints)
+  {
+    using var connection = db.NewConnection();
+    await connection.InsertMultipleAsync(rallyingPoints);
   }
 }

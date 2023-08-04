@@ -92,6 +92,12 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var to = await rallyingPointService.Get(filter.To);
 
     logger.LogDebug("Match lianes from '{From}' to '{To}' - '{TargetTime}'", from.Label, to.Label, filter.TargetTime);
+
+    if (from.Equals(to))
+    {
+      throw new ValidationException("To", ValidationMessage.MalFormed);
+    }
+
     var targetRoute = await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location), cancellationToken);
     DateTime lowerBound, upperBound;
     if (filter.TargetTime.Direction == Direction.Departure)

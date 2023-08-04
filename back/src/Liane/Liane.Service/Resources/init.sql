@@ -696,7 +696,7 @@ $$ LANGUAGE plpgsql IMMUTABLE
 
 -- search liane (detour or partial route match)
 CREATE OR REPLACE
-  FUNCTION match_liane(geom geometry, after timestamp, before timestamp)
+  FUNCTION match_liane(geom geometry, after timestamp with time zone, before timestamp with time zone)
   RETURNS table
           (
             liane_id text,

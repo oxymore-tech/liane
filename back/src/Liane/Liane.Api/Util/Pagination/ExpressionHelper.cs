@@ -9,9 +9,21 @@ namespace Liane.Api.Util.Pagination;
 
 public static class ExpressionHelper
 {
+  public static T GetExpressionValue<T>(Expression expression)
+  {
+    var e = Expression.Convert(expression, typeof(T));
+    var getterLambda = Expression.Lambda<Func<T>>(e);
+    var getter = getterLambda.Compile();
+    return getter();
+  }
+  
   public static IEnumerable<MemberInfo> GetMembers<T>(Expression<Func<T, object?>> field)
   {
-    var node = field.Body;
+    return ImmutableList.Create(GetMember(field.Body));
+  }
+
+  public static MemberInfo GetMember(Expression node)
+  {
     while (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.Quote)
     {
       node = ((UnaryExpression)node).Operand;
@@ -22,7 +34,7 @@ public static class ExpressionHelper
       throw new ArgumentException($"Must be a MemberExpression {node.NodeType}");
     }
 
-    return ImmutableList.Create(e.Member);
+    return e.Member;
   }
 
   public static MemberExpression GetMemberExpression<T>(Expression paramExpr, Expression<Func<T, object?>> field)
