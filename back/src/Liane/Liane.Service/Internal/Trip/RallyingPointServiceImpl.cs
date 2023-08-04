@@ -170,8 +170,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
       query = query.OrderBy(rp => rp.Location.Distance(center.Value));
     }
 
-    var results = await connection.QueryAsync(query);
-    return results.ToImmutableList();
+    return await connection.QueryAsync(query);
   }
 
   private static string ToSearchPattern(string search)
