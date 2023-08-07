@@ -1280,15 +1280,15 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/mobile-react-native@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.npmjs.org/@datadog/mobile-react-native/-/mobile-react-native-1.2.1.tgz"
-  integrity sha512-DwCQfOY7l8P9uiwmRbecw1UJ5+H4/zZPZOw9uAs1faH75OEacc3NcY0B6wucIyw5leeeBsO5XZaFgaYN0dMnqQ==
+"@datadog/mobile-react-native@^1.8.2":
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-native/-/mobile-react-native-1.8.2.tgz#66dad6619d8a692a2487284a5fdb5cea7930d789"
+  integrity sha512-DO+jQKVUk7FGstDA/VoMwgpZ43dReMxiDMr8SRDwA2mMJXxyo8Nc6ZNiN7gS7r/uIt4oFbPQtOFT5MsW2NDCYg==
 
-"@datadog/mobile-react-navigation@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.npmjs.org/@datadog/mobile-react-navigation/-/mobile-react-navigation-1.2.1.tgz"
-  integrity sha512-AbcBJbpA9RVxsvCR3nFgKzwEjmJ/hGc5kW4A+9BYUGuokYdL7XkZ0FgKngJtgKiPZJ4l2Ap98PX4NZK4mgLkcw==
+"@datadog/mobile-react-navigation@^1.8.2":
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-navigation/-/mobile-react-navigation-1.8.2.tgz#202466c2201c43e4c70a4fa1040e129bc4c0aba1"
+  integrity sha512-yMSe0pW7o4bXz/igAJmcuB/JGwNOlcZAjhJkW8fwrt95+CnVMATxfmtsslQFre/2/EFOnlTy+rIRjMEUboR90A==
 
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
