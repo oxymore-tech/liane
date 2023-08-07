@@ -9,24 +9,25 @@ import { getTotalDuration, getTrip } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-
 import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { useAppNavigation } from "@/api/navigation";
-
 import { AppIcon } from "@/components/base/AppIcon";
-
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { AppTabs } from "@/components/base/AppTabs";
 import { SectionSeparator } from "@/components/Separator";
 import { UserPicture } from "@/components/UserPicture";
 import { formatDuration } from "@/util/datetime";
+import { AppButton } from "@/components/base/AppButton";
 
 const EmptyResultView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center" }]}>{props.message}</AppText>
 );
-const ErrorView = (props: { message: string }) => (
-  <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center", color: "red" }]}>{props.message}</AppText>
+const ErrorView = (props: { message: string; retry: () => void }) => (
+  <Column style={{ alignItems: "center" }} spacing={8}>
+    <AppText>{props.message}</AppText>
+    <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={props.retry} />
+  </Column>
 );
 
 const formatSeatCount = (seatCount: number) => {
@@ -125,15 +126,23 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   }, [state.context.filter.from?.id, state.context.filter.to?.id, JSON.stringify(state.context.matches)]);
 
   const data = useMemo(() => {
-    const d = showCompatible ? formattedData[1] : formattedData[0];
-
-    return d;
+    return showCompatible ? formattedData[1] : formattedData[0];
   }, [showCompatible, JSON.stringify(formattedData)]);
   useEffect(() => {
     const d = showCompatible ? formattedData[1] : formattedData[0];
     machine.send("DISPLAY", { data: d.map(item => item.lianeMatch.liane.id) });
   }, [showCompatible, JSON.stringify(formattedData)]);
 
+  if (state.matches({ match: "failed" })) {
+    return (
+      <ErrorView
+        message={"Erreur lors de la requête"}
+        retry={() => {
+          machine.send("RELOAD");
+        }}
+      />
+    );
+  }
   if (loading || (state.matches("match") && !state.context.matches)) {
     return <ActivityIndicator />;
   }
