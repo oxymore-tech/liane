@@ -171,13 +171,17 @@ public abstract class BaseIntegrationTest
   private static MongoSettings GetMongoSettings()
   {
     var host = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
-    return new MongoSettings(host, "mongo", "secret");
+    var password = Environment.GetEnvironmentVariable("MONGO_PASSWORD") ?? "secret";
+    var username = Environment.GetEnvironmentVariable("MONGO_USERNAME") ?? "mongo";
+    return new MongoSettings(host, username, password);
   }
 
   private static DatabaseSettings GetDatabaseSettings()
   {
     var host = Environment.GetEnvironmentVariable("POSTGIS_HOST") ?? "localhost";
-    return new DatabaseSettings(host, "liane_test", "mongo", "secret");
+    var password = Environment.GetEnvironmentVariable("POSTGIS_PASSWORD") ?? "secret";
+    var username = Environment.GetEnvironmentVariable("POSTGIS_USERNAME") ?? "mongo";
+    return new DatabaseSettings(host, "liane_test", username, password);
   }
 
   private static OsrmClient GetOsrmClient()

@@ -77,7 +77,7 @@ public abstract record Filter<T>
   {
     internal override string ToSql(NamedParams namedParams)
     {
-      return $"{Distance.ToSql(namedParams)} <= {namedParams.Add(Radius * 1609.34)}";
+      return $"{Distance.ToSql(namedParams)} <= {namedParams.Add(Radius)}";
     }
   }
 
