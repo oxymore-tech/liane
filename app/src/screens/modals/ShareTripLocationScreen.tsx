@@ -19,8 +19,9 @@ import Geolocation from "react-native-geolocation-service";
 import { displayNotifeeNotification } from "@/api/service/notification";
 import { Reminder } from "@/api/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { enableLocation } from "../../../native-modules/geolocation";
 import { useAppNavigation } from "@/api/navigation";
+import { getTripFromLiane } from "@/components/trip/trip";
+import BackgroundGeolocationService from "native-modules/geolocation";
 
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
@@ -33,10 +34,11 @@ export const ShareTripLocationScreen = WithFullscreenModal(
       const now = new Date();
 
       const startGeoloc = () => {
-        enableLocation()
+        BackgroundGeolocationService.enableLocation()
           .then(async () => {
             try {
-              await sendLocationPings(liane.id!, liane!.wayPoints);
+              const trip = getTripFromLiane(liane, user!);
+              await sendLocationPings(liane.id!, trip.wayPoints);
               navigation.navigate("LianeDetail", { liane });
             } catch (e) {
               console.warn(e);
