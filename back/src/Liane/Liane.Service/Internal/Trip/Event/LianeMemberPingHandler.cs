@@ -53,16 +53,22 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
       return;
     }
 
+    if (liane.State == LianeState.NotStarted && e.Coordinate is not null)
+    {
+      // First location ping -> go to started state
+      liane = await mongo.GetCollection<LianeDb>()
+        .FindOneAndUpdateAsync(Builders<LianeDb>.Filter.Where(l => l.Id == e.Liane),
+          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started),
+          new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+        );
+    }
+
     var tracker = await trackers.GetOrAdd(liane.Id, async _ =>
     {
       var l = await lianeService.Get(liane.Id);
       return new LianeTracker(serviceProvider, l, () =>
       {
         // Go to "finished" state if driver pings close to arrival
-        return Task.CompletedTask;
-      },  () =>
-      {
-        // Go to "started" state if driver pings while driving away from departure
         return Task.CompletedTask;
       });
     });
@@ -90,13 +96,11 @@ public sealed class LianeTracker
   private readonly Api.Trip.Liane liane;
   private readonly ConcurrentDictionary<string, (DateTime At, int NextPointIndex, TimeSpan Delay, LatLng? Coordinate,  LatLng? RawCoordinate,  double PointDistance)?> currentLocationMap = new();
   private readonly Func<Task> onTripArrivedDestination;
-  private readonly Func<Task> onTripStarted;
   private readonly IOsrmService osrmService; 
-  public LianeTracker(IServiceProvider serviceProvider, Api.Trip.Liane liane, Func<Task> onTripArrivedDestination, Func<Task> onTripStarted)
+  public LianeTracker(IServiceProvider serviceProvider, Api.Trip.Liane liane, Func<Task> onTripArrivedDestination)
   {
     this.liane = liane;
     this.onTripArrivedDestination = onTripArrivedDestination;
-    this.onTripStarted = onTripStarted;
     osrmService =  serviceProvider.GetRequiredService<IOsrmService>();
  
   }
@@ -147,11 +151,6 @@ public sealed class LianeTracker
     {
       // Getting out of a way point zone
       pingNextPointIndex++;
-      if (nextPointIndex == 0 && ping.User.Id == liane.Driver.User.Id)
-      {
-        // Driver left departure point
-        await onTripStarted();
-      }
     }
     var coordinate = (await osrmService.Nearest(ping.Coordinate.Value)) ?? ping.Coordinate.Value;
     var table = await osrmService.Table(new List<LatLng> { coordinate, nextPoint.Location });

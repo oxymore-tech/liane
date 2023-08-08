@@ -9,8 +9,8 @@ import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView 
 import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, WayPoint } from "@/api";
 import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatDate, formatMonthDay } from "@/api/i18n";
-import { formatDuration } from "@/util/datetime";
+import { formatDate, formatMonthDay, formatTime } from "@/api/i18n";
+import { addSeconds, formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -29,7 +29,9 @@ import { showLocation } from "react-native-map-link";
 import { AppIcon } from "@/components/base/AppIcon";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
-
+import { TripGeolocationProvider, useMemberTripGeolocation, useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
+import { AppButton } from "@/components/base/AppButton";
+import { DriverLocationMarker } from "@/screens/detail/DriverLocationMarker";
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeJoinRequestDetail">();
@@ -60,7 +62,13 @@ export const LianeDetailScreen = () => {
   });
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
-
+  if (liane && liane.state === "Started") {
+    return (
+      <TripGeolocationProvider liane={liane}>
+        <LianeDetailPage match={match} />
+      </TripGeolocationProvider>
+    );
+  }
   return <LianeDetailPage match={match} />;
 };
 
@@ -86,6 +94,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     //console.log(bbox, bSheetTop);
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.page}>
@@ -117,6 +126,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
               }
               return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} />;
             })}
+          {match && <DriverLocationMarker user={match.liane.members.find(m => m.user.id === match.liane.driver.user)!.user} />}
         </AppMapView>
         <AppBottomSheet
           onScrolled={v => {
@@ -152,9 +162,21 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
 
 const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
   const { navigation } = useAppNavigation();
-
+  const geoloc = useTripGeolocation();
   return (
-    <Row style={{ justifyContent: "flex-end", paddingHorizontal: 24 }} spacing={8}>
+    <Row style={{ justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }} spacing={8}>
+      {geoloc && (
+        <AppButton
+          onPress={() => {
+            if (!geoloc.isActive) {
+              navigation.navigate("ShareTripLocationScreen", { liane: match.liane });
+            }
+          }}
+          color={geoloc.isActive ? AppColorPalettes.gray[400] : "red"}
+          icon={"pin-outline"}
+        />
+      )}
+
       {match.liane.state !== "Archived" && match.liane.state !== "Canceled" && match.liane.members.length > 1 && (
         <ActionFAB
           onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
@@ -415,6 +437,11 @@ const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; liane: Li
   let nextPoint = getNextPoint();
   nextPoint = nextPoint?.rallyingPoint.id === wayPoint.rallyingPoint.id ? nextPoint : null;
 
+  const lastLocUpdate = useMemberTripGeolocation(liane.driver.user);
+  const showEstimate =
+    !!lastLocUpdate &&
+    wayPoint.rallyingPoint.id !== liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id &&
+    lastLocUpdate.nextPoint === wayPoint.rallyingPoint.id;
   return (
     <Column>
       {started && nextPoint && (
@@ -450,17 +477,25 @@ const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; liane: Li
             </Row>
           </Pressable>
         )}
-
-      <Row style={{ position: "relative", left: 12 * (liane.members.length - 1), justifyContent: "flex-end" }}>
-        {liane.members
-          .filter(m => m.from === wayPoint.rallyingPoint.id)
-          .map((m, i) => {
-            return (
-              <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
-                <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
-              </View>
-            );
-          })}
+      <Row style={{ justifyContent: "space-between" }}>
+        {!showEstimate && <View style={{ flex: 1 }} />}
+        {showEstimate && (
+          <Row style={{ alignItems: "center" }}>
+            <AppIcon name={"arrowhead-right-outline"} size={16} />
+            <AppText>Départ estimé à {formatTime(addSeconds(new Date(wayPoint.eta), lastLocUpdate.delay))}</AppText>
+          </Row>
+        )}
+        <Row style={{ position: "relative", left: 12 * (liane.members.length - 1), justifyContent: "flex-end" }}>
+          {liane.members
+            .filter(m => m.from === wayPoint.rallyingPoint.id)
+            .map((m, i) => {
+              return (
+                <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
+                  <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
+                </View>
+              );
+            })}
+        </Row>
       </Row>
     </Column>
   );
