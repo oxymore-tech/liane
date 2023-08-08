@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -135,7 +134,7 @@ public sealed class LianeStatusUpdate : CronJobService
             continue;
           }
           var rallyingPoint = await w.RallyingPoint.Resolve(rallyingPointService.Get);
-          var message = $"Vous avez rendez-vous à {w.Eta.ToString("H:mm", CultureInfo.InvariantCulture)} à \"{rallyingPoint.Label}\". Cliquez pour activer le suivi de votre position.";
+          var message = $"Vous avez rendez-vous à \"{rallyingPoint.Label}\". Cliquez pour activer le suivi de votre position.";
           var nextWayPoints = await liane.WayPoints.Skip(i)
             .SelectAsync(async w => new WayPoint(await rallyingPointService.Get(w.RallyingPoint), w.Duration, w.Distance, w.Eta));
           

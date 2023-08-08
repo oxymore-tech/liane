@@ -271,7 +271,7 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
     //@ts-ignore
     return BackgroundService.start<LocationPingsSenderProps>(shareLocationTask, {
       taskTitle: "Géolocalisation en cours",
-      taskName: "geolocation",
+      taskName: "geolocation_" + lianeId,
       taskDesc: "Liane partage votre position sur le trajet à destination de " + wayPoints[wayPoints.length - 1].rallyingPoint.label,
       taskIcon: { name: "ic_launcher", type: "mipmap" },
       parameters: { liane: lianeId, trip: wayPoints, delay }
@@ -292,6 +292,9 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
     });
   }
 }
+
+export const isLocationServiceRunning = () =>
+  Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
 
 const nearWayPointRadius = 1000;
 const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
@@ -322,7 +325,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
           type: "MemberPing",
           liane: liane,
           coordinate,
-          timestamp: position.timestamp
+          timestamp: Math.trunc(position.timestamp)
         },
         ...(delay > 0 ? { delay } : {})
       };

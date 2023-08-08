@@ -30,7 +30,6 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
 import { TripGeolocationProvider, useMemberTripGeolocation, useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
-import { AppButton } from "@/components/base/AppButton";
 import { DriverLocationMarker } from "@/screens/detail/DriverLocationMarker";
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -62,7 +61,7 @@ export const LianeDetailScreen = () => {
   });
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
-  if (liane && liane.state === "Started") {
+  if (liane && ["Started", "StartingSoon"].includes(getLianeStatus(liane))) {
     return (
       <TripGeolocationProvider liane={liane}>
         <LianeDetailPage match={match} />
@@ -163,16 +162,17 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
 const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
   const { navigation } = useAppNavigation();
   const geoloc = useTripGeolocation();
+
   return (
     <Row style={{ justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }} spacing={8}>
-      {geoloc && (
-        <AppButton
+      {geoloc !== undefined && (
+        <ActionFAB
           onPress={() => {
             if (!geoloc.isActive) {
               navigation.navigate("ShareTripLocationScreen", { liane: match.liane });
             }
           }}
-          color={geoloc.isActive ? AppColorPalettes.gray[400] : "red"}
+          color={geoloc.isActive ? AppColorPalettes.gray[400] : AppColors.darkBlue}
           icon={"pin-outline"}
         />
       )}

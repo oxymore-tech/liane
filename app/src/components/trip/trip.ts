@@ -80,7 +80,7 @@ export const getLianeStatus = (liane: Liane): LianeStatus => {
   //console.debug(liane.state, liane.members.length);
 
   if (liane.state === "NotStarted") {
-    if (delta > 0 && delta < 3600) {
+    if (delta > 0 && delta < 900) {
       if (liane.members.length > 1) {
         return "StartingSoon";
       }
