@@ -30,6 +30,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
+import { ShareTripLocationScreen } from "@/screens/modals/ShareTripLocationScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -87,7 +88,7 @@ function Home() {
         "Notifications",
         ({ focused }) => {
           const queryClient = useQueryClient();
-          services.chatHub.subscribeToNotifications(async (_: Notification) => {
+          services.realTimeHub.subscribeToNotifications(async (_: Notification) => {
             await queryClient.invalidateQueries(NotificationQueryKey); //TODO just add received notification
           });
           return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
@@ -101,8 +102,8 @@ function Home() {
 function Navigation() {
   const { user, services } = useContext(AppContext);
 
+  const initialNotification = services.notification.getInitialNotification();
   useEffect(() => {
-    const initialNotification = services.notification.getInitialNotification();
     if (user && initialNotification) {
       // check if app was opened by a notification
       const navigate = getNotificationNavigation(initialNotification);
@@ -110,7 +111,7 @@ function Navigation() {
         navigate(RootNavigation);
       }
     }
-  }, [services.notification, user]);
+  }, [user, initialNotification]);
 
   if (user) {
     return (
@@ -122,6 +123,7 @@ function Navigation() {
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ShareTripLocationScreen" component={ShareTripLocationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />

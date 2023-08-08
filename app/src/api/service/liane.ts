@@ -12,7 +12,8 @@ import {
   Ref
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
-import { JoinRequest } from "@/api/event";
+import { JoinRequest, MemberPing } from "@/api/event";
+import { TimeInSeconds } from "@/util/datetime";
 
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
@@ -29,8 +30,18 @@ export interface LianeService {
   updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   getContact(id: string, memberId: string): Promise<string>;
+  warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
 }
 export class LianeServiceClient implements LianeService {
+  async warnDelay(id: string, delay: number): Promise<void> {
+    const ping: MemberPing = {
+      type: "MemberPing",
+      liane: id,
+      timestamp: new Date().getTime(),
+      delay
+    };
+    await postAs(`/event/member_ping`, { body: ping }).catch(e => console.warn(e));
+  }
   async delete(lianeId: string): Promise<void> {
     await del(`/liane/${lianeId}`);
   }

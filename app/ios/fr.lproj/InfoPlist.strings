@@ -1,4 +1,4 @@
-NSLocationWhenInUseUsageDescription = "L'accès à votre position est requis pour vous localiser sur la carte.";
-NSLocationAlwaysAndWhenInUseUsageDescription = "Autorisez l'accès à votre position pour la partager avec un autre utilisateur.";
-NSPhotoLibraryUsageDescription = "Autorisez l'accès à votre galerie pour choisir une image.";
-NSCameraUsageDescription = "Autorisez l'accès à votre appareil photo pour prendre une nouvelle photo.";
+NSLocationWhenInUseUsageDescription = "L'accès à votre position est requis pour vous géolocaliser.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Liane utilise votre position pour valider vos trajets effectués.";
+NSPhotoLibraryUsageDescription = "Autorisez l'accès à votre galerie pour importer une image.";
+NSCameraUsageDescription = "Autorisez l'accès à votre appareil photo pour importer une nouvelle photo.";

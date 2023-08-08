@@ -1,11 +1,12 @@
-import { ChatMessage, ConversationGroup, FullUser, PaginatedRequestParams, PaginatedResponse, Ref } from "@/api";
+import { ChatMessage, ConversationGroup, FullUser, PaginatedRequestParams, PaginatedResponse, Ref, TrackedMemberLocation, UTCDateTime } from "@/api";
 import { BaseUrl, get, tryRefreshToken } from "@/api/http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { getAccessToken, getCurrentUser, getRefreshToken, storeCurrentUser } from "@/api/storage";
 import { NetworkUnavailable } from "@/api/exception";
-import { AbstractHubService } from "@/api/service/interfaces/hub";
+import { AbstractHubService, OnLocationCallback } from "@/api/service/interfaces/hub";
 import { LianeEvent } from "@/api/event";
 import { Answer } from "@/api/notification";
+import { SubscriptionLike } from "rxjs";
 
 function createChatConnection(): HubConnection {
   return new HubConnectionBuilder()
@@ -54,6 +55,7 @@ export class HubServiceClient extends AbstractHubService {
       });
       this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
       this.hub.on("ReceiveNotification", this.receiveNotification);
+      this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
       this.hub.onclose(err => {
         if (!alreadyClosed) {
           if (__DEV__ && err) {
@@ -97,11 +99,10 @@ export class HubServiceClient extends AbstractHubService {
     return get<PaginatedResponse<ChatMessage>>(`/conversation/${id}/message`, { params });
   }
 
-  async leaveGroupChat() {
+  async readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime) {
     await this.checkConnection();
-    await this.hub.invoke("LeaveGroupChat", this.currentConversationId);
+    await this.hub.invoke("ReadConversation", conversation, timestamp);
   }
-
   async joinGroupChat(conversationId: Ref<ConversationGroup>) {
     await this.checkConnection();
     return this.hub.invoke<ConversationGroup>("JoinGroupChat", conversationId);
@@ -130,4 +131,22 @@ export class HubServiceClient extends AbstractHubService {
       await this.hub.start();
     }
   };
+  async subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike> {
+    await this.checkConnection();
+    if (this.onReceiveLocationUpdateCallback) {
+      await this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId);
+    }
+    const lastUpdate: TrackedMemberLocation | null = await this.hub.invoke("SubscribeToLocationsUpdates", lianeId, memberId);
+    if (lastUpdate) {
+      callback(lastUpdate);
+    }
+    this.onReceiveLocationUpdateCallback = callback;
+    return {
+      closed: this.onReceiveLocationUpdateCallback !== callback,
+      unsubscribe: () => {
+        this.onReceiveLocationUpdateCallback = null;
+        this.checkConnection().then(() => this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId));
+      }
+    };
+  }
 }

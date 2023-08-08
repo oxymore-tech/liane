@@ -1,14 +1,14 @@
 import { NotificationServiceMock } from "@/api/service/mock/notification";
 import { HubServiceMock } from "@/api/service/mock/chat";
 import { firstValueFrom, take, toArray } from "rxjs";
-import { ChatHubService } from "@/api/service/interfaces/hub";
+import { HubService } from "@/api/service/interfaces/hub";
 import { NotificationService } from "@/api/service/interfaces/notification";
 
 describe("notifications counter", () => {
-  const initServices = async (): Promise<{ notification: NotificationService; chatHub: ChatHubService }> => {
+  const initServices = async (): Promise<{ notification: NotificationService; chatHub: HubService }> => {
     const services = {
       notification: new NotificationServiceMock(1) as NotificationService,
-      chatHub: new HubServiceMock(1, { delay: 200, count: 1 }) as ChatHubService
+      chatHub: new HubServiceMock(1, { delay: 200, count: 1 }) as HubService
     };
     await services.chatHub.start();
     services.notification.initUnreadNotificationCount(services.chatHub.unreadNotificationCount);

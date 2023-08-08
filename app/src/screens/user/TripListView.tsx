@@ -72,7 +72,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
   const [statusText, color] = getLianeStatusStyle(item);
 
   const { services, user } = useContext(AppContext);
-  const unread = useObservable(services.chatHub.unreadConversations, undefined);
+  const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = item.members.find(l => l.user.id === item.driver.user)!.user;
   return (
     <Pressable

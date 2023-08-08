@@ -139,7 +139,7 @@ public sealed class AuthServiceImpl : IAuthService
       .Find(u => u.Id == request.UserId)
       .FirstOrDefaultAsync();
 
-    if (dbUser.RefreshToken is null)
+    if (dbUser?.RefreshToken is null)
     {
       throw new UnauthorizedAccessException();
     }

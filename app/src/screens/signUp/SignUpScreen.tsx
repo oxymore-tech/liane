@@ -36,8 +36,9 @@ const SignUpPage = () => {
   const sendCode = async () => {
     try {
       setError("");
-      await services.auth.sendSms(value);
-      machine.send("SET_PHONE", { data: { phone: value } });
+      const phone = state.matches("phone") ? value : state.context.phone!;
+      await services.auth.sendSms(phone);
+      machine.send("SET_PHONE", { data: { phone: phone } });
     } catch (e) {
       console.error("Sign up error ", e);
       setError("Impossible d'effectuer la demande");

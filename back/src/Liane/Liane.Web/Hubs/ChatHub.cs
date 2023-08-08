@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.Hub;
+using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Event;
@@ -24,9 +25,10 @@ public sealed class ChatHub : Hub<IHubClient>
   private readonly IHubService hubService;
   private readonly INotificationService notificationService;
   private readonly EventDispatcher eventDispatcher;
+  private readonly ILianeMemberTracker lianeMemberTracker;
 
   public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService,
-    EventDispatcher eventDispatcher)
+    EventDispatcher eventDispatcher, ILianeMemberTracker lianeMemberTracker)
   {
     this.logger = logger;
     this.chatService = chatService;
@@ -35,6 +37,7 @@ public sealed class ChatHub : Hub<IHubClient>
     this.hubService = hubService;
     this.notificationService = notificationService;
     this.eventDispatcher = eventDispatcher;
+    this.lianeMemberTracker = lianeMemberTracker;
   }
 
   public async Task PostEvent(LianeEvent lianeEvent)
@@ -61,7 +64,6 @@ public sealed class ChatHub : Hub<IHubClient>
     // Add user to group if he is a member and update last connection date
     var nowCursor = Cursor.Now();
     var updatedConversation = await chatService.ReadAndGetConversation(groupId, userId, nowCursor.Timestamp);
-    //await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
     logger.LogInformation("User '{userId}' joined conversation '{groupId}'", userId, groupId);
     var caller = Clients.Caller;
     // Send latest messages async
@@ -74,10 +76,10 @@ public sealed class ChatHub : Hub<IHubClient>
     return updatedConversation;
   }
 
-  public async Task LeaveGroupChat(string groupId)
+  public async Task ReadConversation(string convId, DateTime timestamp)
   {
     var userId = currentContext.CurrentUser().Id;
-    //return Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
+    await chatService.ReadConversation(convId, userId, timestamp);
   }
 
   public override async Task OnConnectedAsync()
@@ -102,5 +104,17 @@ public sealed class ChatHub : Hub<IHubClient>
     await hubService.RemoveUser(userId, Context.ConnectionId);
     await base.OnDisconnectedAsync(exception);
     await userService.UpdateLastConnection(userId, now);
+  }
+
+  public async Task<TrackedMemberLocation?> SubscribeToLocationsUpdates(string lianeId, string memberId)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    return await lianeMemberTracker.Subscribe(userId, lianeId, memberId);
+  }
+  
+  public async Task UnsubscribeFromLocationsUpdates(string lianeId, string memberId)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    await lianeMemberTracker.Unsubscribe(userId, lianeId, memberId);
   }
 }

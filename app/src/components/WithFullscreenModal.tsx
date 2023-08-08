@@ -1,13 +1,15 @@
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const WithFullscreenModal = (WrappedComponent: React.ComponentType, title: string) => (props: any) => {
   return (
     <View style={[styles.page, { backgroundColor: AppColors.darkBlue }]}>
+      {Platform.OS === "android" && <AppStatusBar style="light-content" />}
       <Row style={{ paddingVertical: 4 }}>
         <Pressable onPress={props.navigation.goBack}>
           <AppIcon name="close-outline" size={32} color={AppColors.white} />

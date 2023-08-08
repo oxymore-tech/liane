@@ -569,7 +569,6 @@ const HomeScreen = () => {
     })
   );
   const machine = useInterpret(m);
-  machine.subscribe(s => console.log(JSON.stringify(s.history?.value)));
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

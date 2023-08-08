@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import AppMapView, { LianeMatchRouteLayer, WayPointDisplay } from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
@@ -9,7 +9,7 @@ import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView 
 import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, WayPoint } from "@/api";
 import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatDate, formatMonthDay, formatTime } from "@/api/i18n";
+import { formatDate, formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/ContextProvider";
@@ -19,8 +19,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useQueryClient } from "react-query";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { useQuery, useQueryClient } from "react-query";
+import { JoinRequestDetailQueryKey, JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { AppText } from "@/components/base/AppText";
 import { AppStyles } from "@/theme/styles";
@@ -34,28 +34,30 @@ export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeJoinRequestDetail">();
   const lianeParam = route.params!.request;
-  const [request, setRequest] = useState(typeof lianeParam === "string" ? undefined : lianeParam);
-
-  useEffect(() => {
+  const { data: request } = useQuery(JoinRequestDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
     if (typeof lianeParam === "string") {
-      services.liane.getDetailedJoinRequest(lianeParam).then(l => setRequest(l));
+      return services.liane.getDetailedJoinRequest(lianeParam);
+    } else {
+      return lianeParam;
     }
-  }, [lianeParam, services.liane]);
+  });
   const match = useMemo(() => (request ? { liane: request.targetLiane, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
 
   return <LianeDetailPage match={match} request={request} />;
 };
+
 export const LianeDetailScreen = () => {
   const { services, user } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeDetail">();
   const lianeParam = route.params!.liane;
-  const [liane, setLiane] = useState(typeof lianeParam === "string" ? undefined : lianeParam);
 
-  useEffect(() => {
+  const { data: liane } = useQuery(LianeDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
     if (typeof lianeParam === "string") {
-      services.liane.get(lianeParam).then(l => setLiane(l));
+      return services.liane.get(lianeParam);
+    } else {
+      return lianeParam;
     }
-  }, [lianeParam, services.liane]);
+  });
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
 
@@ -471,7 +473,6 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
   const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
 
   const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
-  const formattedReturnTime = liane.liane.returnTime ? formatTime(new Date(liane.liane.returnTime)) : null;
 
   // const passengers = liane.liane.members.filter(m => m.user !== liane.liane.driver.user);
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
@@ -500,7 +501,7 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
       <SectionSeparator />
 
       <Column style={styles.section} spacing={4}>
-        {!!liane.liane.returnTime && <InfoItem icon={"corner-down-right-outline"} value={"Retour à " + formattedReturnTime!} />}
+        {/*!!liane.liane.returnTime && <InfoItem icon={"corner-down-right-outline"} value={"Retour à " + formattedReturnTime!} />*/}
         <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
         <InfoItem icon={"twisting-arrow"} value={tripDistance} />
       </Column>

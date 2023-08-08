@@ -9,6 +9,8 @@ import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, P
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RootNavigation } from "@/api/navigation";
+import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
+import Splashscreen from "native-modules/splashscreen";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -52,9 +54,9 @@ async function initContext(service: AppServices): Promise<{
 
   if (authUser?.isSignedUp) {
     try {
-      user = await service.chatHub.start();
+      user = await service.realTimeHub.start();
       // Branch hub to notifications
-      service.notification.initUnreadNotificationCount(service.chatHub.unreadNotificationCount);
+      service.notification.initUnreadNotificationCount(service.realTimeHub.unreadNotificationCount);
     } catch (e) {
       if (__DEV__) {
         console.warn("[INIT] Could not start hub :", e);
@@ -89,7 +91,7 @@ async function initContext(service: AppServices): Promise<{
 }
 
 async function destroyContext(service: AppServices): Promise<void> {
-  await service.chatHub.stop();
+  await service.realTimeHub.stop();
 }
 
 interface ContextProviderProps {
@@ -108,6 +110,7 @@ interface ContextProviderState {
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
   private unsubscribeToUserInteraction: (() => void) | undefined = undefined;
   private unsubscribeToStateChange: NativeEventSubscription | undefined = undefined;
+  private unsubscribeToNetworkChange: NetInfoSubscription | undefined = undefined;
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
@@ -136,16 +139,18 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         status: p.online ? "online" : "offline"
       }));
       if (p.online && p.user) {
-        SERVICES.chatHub.subscribeToNotifications(async n => {
+        SERVICES.realTimeHub.subscribeToNotifications(async n => {
           //console.debug("dbg ------>", this.state.appState);
           await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
         });
       }
+
+      Splashscreen.hide();
     });
   }
 
   private handleAppStateChange = (appState: AppStateStatus) => {
-    SERVICES.chatHub.updateActiveState(appState === "active");
+    SERVICES.realTimeHub.updateActiveState(appState === "active");
     this.setState(prev => ({
       ...prev,
       appState: appState
@@ -154,6 +159,12 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   componentDidMount() {
     this.initContext();
+    this.unsubscribeToNetworkChange = NetInfo.addEventListener(state => {
+      this.setState(prev => ({
+        ...prev,
+        status: state.isConnected ? "online" : "offline"
+      }));
+    });
     this.unsubscribeToUserInteraction = RootNavigation.addListener("state", _ => {
       // Try to reload on user interaction
       if (this.state.status === "offline") {
@@ -170,6 +181,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
     if (this.unsubscribeToStateChange) {
       this.unsubscribeToStateChange.remove();
+    }
+    if (this.unsubscribeToNetworkChange) {
+      this.unsubscribeToNetworkChange();
     }
     destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
   }
@@ -204,7 +218,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       let user: User;
       if (a) {
         await registerRumUser(a);
-        user = await SERVICES.chatHub.start();
+        user = await SERVICES.realTimeHub.start();
       }
       this.setState(prev => ({
         ...prev,
@@ -233,6 +247,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         </View>
       );
     }
+    console.log("loaded");
 
     return (
       <AppContext.Provider

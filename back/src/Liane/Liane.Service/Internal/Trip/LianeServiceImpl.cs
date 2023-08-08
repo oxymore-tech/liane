@@ -219,7 +219,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       {
         toUpdate.Members[0].User,
         newMember.User
-      }, DateTime.Now), toUpdate.CreatedBy!);
+      }, DateTime.UtcNow), toUpdate.CreatedBy!);
       updateDef = updateDef.Set<LianeDb, Ref<ConversationGroup>?>(l => l.Conversation, conv.Id!);
     }
     else
@@ -451,9 +451,9 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       case LianeState.Started:
         // TODO adjust time delta
         var pickupPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.From);
-        if (pickupPoint!.Eta > DateTime.Now.AddSeconds(30)) return LianeState.NotStarted;
+        if (pickupPoint!.Eta > DateTime.UtcNow.AddSeconds(30)) return LianeState.NotStarted;
         var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.To);
-        if (depositPoint!.Eta < DateTime.Now) return LianeState.Finished;
+        if (depositPoint!.Eta < DateTime.UtcNow) return LianeState.Finished;
         break;
       case LianeState.Finished:
         if (member.Feedback is not null) return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;

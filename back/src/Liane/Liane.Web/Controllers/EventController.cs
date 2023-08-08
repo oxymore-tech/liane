@@ -27,6 +27,14 @@ public sealed class EventController : ControllerBase
     await eventDispatcher.Dispatch(lianeEvent);
     return NoContent(); // TODO return event 
   }
+  
+  [HttpPost("member_ping")]
+  public async Task<IActionResult> Create([FromBody] LianeEvent.MemberPing lianeEvent)
+  {
+    await eventDispatcher.Dispatch(lianeEvent);
+    return NoContent(); // TODO return event 
+  }
+
 
   [HttpGet("join_request")]
   public async Task<PaginatedResponse<JoinLianeRequest>> ListJoinRequest([FromQuery] Pagination pagination)

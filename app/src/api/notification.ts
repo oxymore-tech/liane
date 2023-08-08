@@ -1,4 +1,4 @@
-import { ConversationGroup, Liane, RallyingPoint, Ref, User, UTCDateTime } from "@/api/index";
+import { ConversationGroup, Liane, Ref, User, UTCDateTime, WayPoint } from "@/api/index";
 import { LianeEvent } from "@/api/event";
 
 export type Notification = (Info | Reminder | Event | NewMessage) & AbstractNotification;
@@ -33,8 +33,9 @@ export type Reminder = Readonly<{
   type: "Reminder";
   payload: {
     liane: Ref<Liane>;
-    rallyingPoint: RallyingPoint;
-    at: UTCDateTime;
+    trip: WayPoint[];
+    //   rallyingPoint: RallyingPoint;
+    //  at: UTCDateTime;
   };
 }> &
   AbstractNotification;
