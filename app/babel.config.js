@@ -15,6 +15,7 @@ module.exports = {
       "module-resolver",
       {
         alias: {
+          "native-modules": "./native-modules",
           "@/assets": "./assets",
           "@/components": "./src/components",
           "@/api": "./src/api",

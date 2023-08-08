@@ -30,14 +30,14 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const queryClient = useQueryClient();
 
   const acceptRequest = async () => {
-    await services.chatHub.postAnswer(request.id!, Answer.Accept);
+    await services.realTimeHub.postAnswer(request.id!, Answer.Accept);
     await queryClient.invalidateQueries(NotificationQueryKey);
     await queryClient.invalidateQueries(LianeQueryKey);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
     navigation.goBack();
   };
   const refuseRequest = async () => {
-    await services.chatHub.postAnswer(request.id!, Answer.Reject);
+    await services.realTimeHub.postAnswer(request.id!, Answer.Reject);
     await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();
   };

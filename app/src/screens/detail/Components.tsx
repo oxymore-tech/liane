@@ -73,7 +73,7 @@ export const PassengerListView = (props: { members: LianeMember[] }) => {
         <AppText style={{ fontWeight: "bold", fontSize: 16 }}>Passagers ({props.members.length})</AppText>
       </View>
       {props.members.map(m => (
-        <AppPressableOverlay style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
+        <AppPressableOverlay key={m.user.id} style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
           <Row spacing={24} style={{ alignItems: "center" }}>
             <UserPicture id={m.user.id} url={m.user.pictureUrl} />
             <AppText>{m.user.pseudo}</AppText>

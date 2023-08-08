@@ -259,7 +259,6 @@ export type JoinLianeRequestDetailed = Readonly<
     message: string;
     accepted?: boolean;
     match: Match;
-    //wayPoints: WayPoint[];
     createdBy?: User;
     createdAt?: UTCDateTime;
   } & Identity
@@ -267,3 +266,12 @@ export type JoinLianeRequestDetailed = Readonly<
 
 export type RallyingPointLink = { deposit: RallyingPoint; hours: UTCDateTime[] };
 export type NearestLinks = { pickup: RallyingPoint; destinations: RallyingPointLink[] }[];
+
+export type TrackedMemberLocation = {
+  member: Ref<User>;
+  liane: Ref<Liane>;
+  at: UTCDateTime;
+  nextPoint: Ref<RallyingPoint>;
+  delay: TimeInSeconds;
+  location?: LatLng;
+};

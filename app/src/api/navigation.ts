@@ -1,5 +1,6 @@
 import {
   createNavigationContainerRef,
+  LinkingOptions,
   NavigationContainerRefWithCurrent,
   NavigationProp,
   RouteProp,
@@ -16,12 +17,8 @@ export type NavigationParamList = {
   Home: undefined;
   Publish: { initialValue?: Partial<InternalLianeRequest> };
   SignUp: undefined;
-  //SearchResults: { filter: InternalLianeSearchFilter };
-  //Search: { filter: InternalLianeSearchFilter };
   RequestJoin: { request: JoinLianeRequestDetailed };
-  //LianeWizard: { formData?: LianeWizardFormData };
-  //LianeMatchDetail: { lianeMatch: LianeMatch; filter: InternalLianeSearchFilter };
-  LianeJoinRequestDetail: { request: JoinLianeRequestDetailed };
+  LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User };
@@ -29,6 +26,7 @@ export type NavigationParamList = {
   ArchivedTrips: undefined;
   Settings: undefined;
   OpenValidateTrip: { liane: Liane };
+  ShareTripLocationScreen: { liane: Liane | string };
 };
 
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
@@ -36,6 +34,18 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
   const navigation = useNavigation<NativeStackNavigationProp<NavigationParamList, ScreenName>>();
 
   return { navigation, route };
+};
+
+export const AppLinking: LinkingOptions<NavigationParamList> = {
+  prefixes: ["liane://"],
+  config: {
+    initialRouteName: "Home",
+    screens: {
+      LianeDetail: {
+        path: "liane/:liane"
+      }
+    }
+  }
 };
 
 export function getNotificationNavigation(notification: Notification) {
@@ -49,7 +59,7 @@ export function getNotificationNavigation(notification: Notification) {
     }
   } else if (UnionUtils.isInstanceOf<Reminder>(notification, "Reminder")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-      navigation.navigate("LianeDetail", { liane: notification.payload.liane });
+      navigation.navigate("ShareTripLocationScreen", { liane: notification.payload.liane });
   } else if (UnionUtils.isInstanceOf<NewMessage>(notification, "NewMessage")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("Chat", { conversationId: notification.conversation });

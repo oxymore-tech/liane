@@ -98,27 +98,56 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     return false;
   }
 
-  private Task<string> Send(string deviceToken, Notification notification)
+  private Message GetFirebaseMessage(Notification notification)
   {
-    var firebaseMessage = new Message
+    return notification switch
     {
-      Token = deviceToken,
-      Notification = new FirebaseAdmin.Messaging.Notification
+      Notification.Reminder r => new Message
       {
-        Title = notification.Title,
-        Body = notification.Message
+        Notification = new FirebaseAdmin.Messaging.Notification
+        {
+          Title = notification.Title,
+          Body = notification.Message,
+        },
+
+        Apns = new ApnsConfig { Aps = new Aps { ContentAvailable = true } },
+        Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.High },
+        Data = BuildPayLoad(r),
+
       },
-      Data = notification switch
+      Notification.Event r => new Message
       {
-        Notification.Reminder r => BuildPayLoad(r),
-        Notification.Event r => BuildPayLoad(r),
-        _ => ImmutableDictionary<string, string>.Empty
+        Notification = new FirebaseAdmin.Messaging.Notification
+        {
+          Title = notification.Title,
+          Body = notification.Message,
+        },
+        Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.Normal },
+        Data = BuildPayLoad(r)
+      },
+      _ => new Message
+      {
+        Notification = new FirebaseAdmin.Messaging.Notification
+        {
+          Title = notification.Title,
+          Body = notification.Message,
+        }
+
       }
+
     };
+  }
+
+  private Task<string> Send(string deviceToken, Notification notification)
+  {  
     if (FirebaseMessaging.DefaultInstance is null)
     {
-      return Task.FromResult("noop");
+         return Task.FromResult("noop");
     }
+
+    var firebaseMessage = GetFirebaseMessage(notification);
+    firebaseMessage.Token = deviceToken;
+  
 
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }

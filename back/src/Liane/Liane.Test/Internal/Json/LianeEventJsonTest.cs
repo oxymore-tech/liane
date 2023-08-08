@@ -28,9 +28,9 @@ public sealed class LianeEventJsonTest
   [Test]
   public void ShouldSerializeMemberPing()
   {
-    var actual = JsonSerializer.Serialize(new LianeEvent.MemberPing("XXXX", "augustin", TimeSpan.FromMinutes(15), null), options);
+    var actual = JsonSerializer.Serialize(new LianeEvent.MemberPing("XXXX", ((DateTimeOffset)DateTime.Parse("2023-03-03")).ToUnixTimeMilliseconds(),TimeSpan.FromMinutes(15), null), options);
     Assert.AreEqual(
-      "{\"liane\":\"XXXX\",\"member\":\"augustin\",\"delay\":\"00:15:00\",\"coordinate\":null}",
+      "{\"liane\":\"XXXX\",\"timestamp\":1677798000000,\"delay\":\"00:15:00\",\"coordinate\":null}",
       actual);
   }
   

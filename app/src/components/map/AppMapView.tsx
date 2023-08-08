@@ -904,7 +904,6 @@ const AppMapView = forwardRef(
               deposit_cluster: rp_deposit_cluster_icon
             }}
           />
-
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
           {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>

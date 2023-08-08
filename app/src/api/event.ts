@@ -39,10 +39,17 @@ export type MemberHasLeft = Readonly<{
   liane: Ref<Liane>;
 }>;
 
-export type MemberPing = Readonly<{
-  type: "MemberPing";
-  member: Ref<User>;
-  liane: Ref<Liane>;
-  delay: TimeInSeconds;
-  coordinate?: LatLng;
-}>;
+export type MemberPing = Readonly<
+  {
+    type: "MemberPing";
+    //member: Ref<User>;
+    liane: Ref<Liane>;
+    timestamp: number;
+  } & (
+    | { delay: TimeInSeconds; coordinate?: LatLng }
+    | {
+        coordinate: LatLng;
+        delay?: TimeInSeconds;
+      }
+  )
+>;

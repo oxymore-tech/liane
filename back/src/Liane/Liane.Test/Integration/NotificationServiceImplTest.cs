@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
@@ -67,9 +69,11 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
 
     var now = DateTime.UtcNow;
 
-    var notification1 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.BlajouxParking, now));
-    var notification2 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.QuezacParking, now));
-    var notification3 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, LabeledPositions.BlajouxParking, now));
+    var trip1 = new List<WayPoint> { new WayPoint(LabeledPositions.BlajouxParking, 0, 0, DateTime.Now), new WayPoint(LabeledPositions.QuezacParking, 6000, 8000, DateTime.Now.AddMinutes(10)) }.ToImmutableList();
+    var trip2 = new List<WayPoint> { new WayPoint(LabeledPositions.BlajouxParking, 0, 0, DateTime.Now), new WayPoint(LabeledPositions.QuezacParking, 6000, 8000, DateTime.Now.AddMinutes(10)) }.ToImmutableList();
+    var notification1 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, trip1, true));
+    var notification2 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, trip2, true));
+    var notification3 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, trip1, true));
 
     
     var mockPushService = ServiceProvider.GetRequiredService<MockPushServiceImpl>();

@@ -9,7 +9,7 @@ import { useQueries, useQueryClient } from "react-query";
 import { AppContext } from "@/components/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { TripListView } from "@/screens/user/TripListView";
-import { UnionUtils } from "@/api";
+import { Liane, Ref, UnionUtils } from "@/api";
 import { Event } from "@/api/notification";
 
 const MyTripsScreen = () => {
@@ -21,7 +21,7 @@ const MyTripsScreen = () => {
     { queryKey: LianeQueryKey, queryFn: () => services.liane.list() }
   ]);
   useEffect(() => {
-    const s = services.chatHub.subscribeToNotifications(async n => {
+    const s = services.realTimeHub.subscribeToNotifications(async n => {
       // TODO make sure "type" is serialized via Hub
 
       //  @ts-ignore
@@ -116,5 +116,7 @@ const styles = StyleSheet.create({
 });
 
 export const LianeQueryKey = "getLianes";
+export const LianeDetailQueryKey = (id: Ref<Liane>) => ["liane", id];
 export const JoinRequestsQueryKey = "getJoinRequests";
+export const JoinRequestDetailQueryKey = (id: Ref<Liane>) => ["join_request", id];
 export default MyTripsScreen;

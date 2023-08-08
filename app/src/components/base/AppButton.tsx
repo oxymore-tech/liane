@@ -7,14 +7,12 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 
 // @ts-ignore
-export interface AppButtonProps extends PressableProps {
-  title?: string;
+export type AppButtonProps = PressableProps & {
   color?: ColorValue;
   disabled?: boolean;
-  icon?: IconName;
   kind?: "circular" | "rounded";
   foregroundColor?: ColorValue;
-}
+} & ({ title: string; icon?: IconName } | { icon: IconName; title?: string });
 
 export function AppButton({
   color = AppColorPalettes.orange[500],

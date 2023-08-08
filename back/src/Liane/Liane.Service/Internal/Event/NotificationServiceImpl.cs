@@ -42,7 +42,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
   {
     if (memoryCache.TryGetValue(reminder, out var n))
     {
-      return n as Notification;
+      return (n as Notification)!;
     }
 
     var notification = new Notification.Reminder(
@@ -155,7 +155,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     var memberIndex = e.Recipients.FindIndex(r => r.User.Id == userId);
     await Mongo.GetCollection<Notification>()
       .UpdateOneAsync(n => n.Id! == id.Id,
-        Builders<Notification>.Update.Set(n => n.Recipients[memberIndex].SeenAt, DateTime.Now)
+        Builders<Notification>.Update.Set(n => n.Recipients[memberIndex].SeenAt, DateTime.UtcNow)
       );
   }
 

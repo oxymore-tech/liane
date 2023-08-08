@@ -8,6 +8,7 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Trip.Event;
 
@@ -19,9 +20,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   private readonly ILianeService lianeService;
   private readonly IUserService userService;
   private readonly ICurrentContext currentContext;
+  private readonly ILogger<LianeRequestServiceImpl> logger;
 
   public LianeRequestServiceImpl(INotificationService notificationService, IRallyingPointService rallyingPointService, ILianeService lianeService, IUserService userService,
-    ICurrentContext currentContext, EventDispatcher eventDispatcher)
+    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger)
   {
     this.notificationService = notificationService;
     this.rallyingPointService = rallyingPointService;
@@ -29,6 +31,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     this.userService = userService;
     this.currentContext = currentContext;
     this.eventDispatcher = eventDispatcher;
+    this.logger = logger;
   }
 
   public async Task OnEvent(LianeEvent.JoinRequest joinRequest)
@@ -61,6 +64,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
       }
       catch (Exception e)
       {
+        logger.LogWarning("Error on JoinLianeRequest {id} : {message}", j.Id, e.Message);
         return null;
       }
     });
