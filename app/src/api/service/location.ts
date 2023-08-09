@@ -265,8 +265,21 @@ export async function checkLocationPingsPermissions(): Promise<boolean> {
   }
   return true;
 }
+
+export async function cancelSendLocationPings() {
+  if (Platform.OS === "ios") {
+    await BackgroundService.stop();
+  } else {
+    await BackgroundGeolocationService.stop();
+  }
+}
 export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], delay: number = 0): Promise<void> {
   console.debug("[GEOPINGS]", "start...");
+  console.debug(
+    "[GEOPINGS]",
+    lianeId,
+    wayPoints.map(w => w.rallyingPoint.label)
+  );
   if (Platform.OS === "ios") {
     //@ts-ignore
     return BackgroundService.start<LocationPingsSenderProps>(shareLocationTask, {
@@ -284,7 +297,7 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
 
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;
-    BackgroundGeolocationService.startBackgroundGeolocationService({
+    await BackgroundGeolocationService.start({
       delay,
       pingConfig: { lianeId, userId: user!.id!, token: token!, url: BaseUrl },
       timeout,

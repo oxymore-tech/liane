@@ -21,10 +21,12 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
 
 
   @ReactMethod
-  fun stopService() {
+  fun stopService(promise: Promise) {
      if (::mServiceIntent.isInitialized) {
       reactApplicationContext.stopService(mServiceIntent)
+       promise.resolve(null)
     }
+    promise.reject("no service running")
   }
 
   @ReactMethod
@@ -33,15 +35,17 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
   }
 
   @ReactMethod
-  fun startService(config: ReadableMap) {
+  fun startService(config: ReadableMap, promise: Promise) {
     if (!isMyServiceRunning(LocationService::class.java,  reactApplicationContext)) {
        mServiceIntent = Intent(reactApplicationContext, LocationService::class.java)
        mServiceIntent.putExtras(Arguments.toBundle(config)!!)
 
       reactApplicationContext.startService(mServiceIntent)
       Log.d(LogTag, "start service")
+      promise.resolve(null)
     } else {
       Log.d(LogTag, "service was already started")
+      promise.reject("service already started")
   }
   }
 }

@@ -1,12 +1,15 @@
-import notifee, { EventType, TriggerType } from "@notifee/react-native";
-import { FullUser, PaginatedResponse, UnionUtils } from "@/api";
+import notifee, { AndroidAction, AndroidImportance, Event, EventType, TriggerType } from "@notifee/react-native";
+import { FullUser, PaginatedResponse, RallyingPoint } from "@/api";
 import { get, patch } from "@/api/http";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { AuthService } from "@/api/service/auth";
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import { AbstractNotificationService } from "@/api/service/interfaces/notification";
-import { Notification, Reminder } from "@/api/notification";
-import { RootNavigation } from "@/api/navigation";
+import { Notification } from "@/api/notification";
+import { formatTime } from "@/api/i18n";
+import DeviceInfo from "react-native-device-info";
+import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
+import { LianeServiceClient } from "@/api/service/liane";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
@@ -50,9 +53,9 @@ const DefaultAndroidSettings = {
   largeIcon: "ic_launcher"
 };
 
-const AndroidReminderActions = [
+const AndroidReminderActions: AndroidAction[] = [
   {
-    title: "Partager ma position",
+    title: "Démarrer",
     pressAction: {
       id: "loc"
     }
@@ -80,43 +83,63 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
   });
 }
 
-// Called when notification is pressed and app is open
-notifee.onBackgroundEvent(async ({ type, detail }) => {
+const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
   console.debug("[NOTIFEE]", JSON.stringify(detail));
 
-  // Check if the user pressed the loc action
-  if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "loc" && !!notification.data?.jsonPayload) {
-    const data = JSON.parse(<string>notification.data!.jsonPayload);
-    if (UnionUtils.isInstanceOf<Reminder>(data, "Reminder")) {
-      RootNavigation.navigate("ShareTripLocationScreen", { liane: data.payload.liane });
+  if (type === EventType.PRESS && notification?.data?.uri) {
+    await Linking.openURL(<string>notification.data.uri);
+  } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
+    if (pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
+      // start sending pings
+      const lianeId = notification.data.liane as string;
+      const liane = await new LianeServiceClient().get(lianeId);
+      await sendLocationPings(liane.id!, liane.wayPoints);
     } else {
-      console.warn("Unknown notification type", data);
+      await Linking.openURL(<string>notification.data.uri);
     }
-  } /*else if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "default") {
-    getNotificationNavigation(notification.data as Notification);
-  }*/
-});
-
-export async function displayNotifeeNotification(notification: Notification, at: Date | null = null) {
-  if (at) {
-    await notifee.createTriggerNotification(
-      {
-        android: DefaultAndroidSettings,
-        title: notification.title,
-        body: notification.message,
-        data: notification
-      },
-      { timestamp: at.getTime(), type: TriggerType.TIMESTAMP, alarmManager: true }
-    );
-  } else {
-    await notifee.displayNotification({
-      android: DefaultAndroidSettings,
-      title: notification.title,
-      body: notification.message,
-      data: notification
-    });
+  } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
+    console.warn("[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
   }
+};
+
+// Called when notification is pressed and app is open
+notifee.onBackgroundEvent(openNotification);
+notifee.onForegroundEvent(openNotification);
+
+export async function displayNotifeeNotification(notification: Notification) {
+  await notifee.displayNotification({
+    android: DefaultAndroidSettings,
+    title: notification.title,
+    body: notification.message,
+    data: notification
+  });
+}
+
+export async function cancelReminder(lianeId: string) {
+  await notifee.cancelTriggerNotification(lianeId);
+}
+export async function createReminder(lianeId: string, departureLocation: RallyingPoint, departureTime: Date) {
+  await notifee.createTriggerNotification(
+    {
+      id: lianeId,
+      ios: {
+        categoryId: "reminder",
+        interruptionLevel: "timeSensitive"
+      },
+      android: {
+        ...DefaultAndroidSettings,
+        lightUpScreen: true,
+        importance: AndroidImportance.HIGH,
+        tag: "reminder",
+        actions: AndroidReminderActions
+      },
+      title: "Départ imminent",
+      body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
+      data: { uri: `liane://liane/${lianeId}/start`, liane: lianeId }
+    },
+    { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime()), type: TriggerType.TIMESTAMP, alarmManager: true }
+  );
 }
 
 export async function initializeNotification() {
@@ -186,31 +209,6 @@ const setInitialPushNotification = (m: FirebaseMessagingTypes.RemoteMessage | nu
   if (m && m.data?.jsonPayload) {
     console.debug("[NOTIF] opened via", JSON.stringify(m));
     initialPushNotification = JSON.parse(m.data!.jsonPayload);
-  }
-  return Promise.resolve();
-};
-
-const handleReminder = async (m: FirebaseMessagingTypes.RemoteMessage | null) => {
-  if (m) {
-    console.debug("[NOTIF] bg", JSON.stringify(m));
-    if (m.data?.jsonPayload) {
-      const payload = JSON.parse(m.data?.jsonPayload) as Reminder;
-      await notifee.displayNotification({
-        ios: {
-          categoryId: "reminder"
-        },
-
-        android: {
-          ...DefaultAndroidSettings,
-          lightUpScreen: true,
-          tag: "reminder",
-          actions: AndroidReminderActions
-        },
-        title: "Départ imminent",
-        body: payload.message,
-        data: m.data
-      });
-    }
   }
   return Promise.resolve();
 };

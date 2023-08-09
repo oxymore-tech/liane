@@ -14,6 +14,8 @@ import {
 import { get, postAs, del, patch } from "@/api/http";
 import { JoinRequest, MemberPing } from "@/api/event";
 import { TimeInSeconds } from "@/util/datetime";
+import { retrieveAsync, storeAsync } from "@/api/storage";
+import { cancelReminder, createReminder } from "@/api/service/notification";
 
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
@@ -31,6 +33,7 @@ export interface LianeService {
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   getContact(id: string, memberId: string): Promise<string>;
   warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
+  cancel(id: string): Promise<void>;
 }
 export class LianeServiceClient implements LianeService {
   async warnDelay(id: string, delay: number): Promise<void> {
@@ -49,7 +52,8 @@ export class LianeServiceClient implements LianeService {
     let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Canceled";
     //TODO cursor
     const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
-    console.debug(JSON.stringify(lianes));
+    //console.debug(JSON.stringify(lianes));
+    this.syncWithStorage(lianes.data);
     return lianes;
   }
 
@@ -65,6 +69,9 @@ export class LianeServiceClient implements LianeService {
     return postAs<Liane>("/liane/", { body: liane });
   }
 
+  async cancel(lianeId: string) {
+    await postAs(`/liane/${lianeId}/cancel`);
+  }
   pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
     const body = { pickup, lianes };
     return postAs("/liane/links", { body });
@@ -98,4 +105,34 @@ export class LianeServiceClient implements LianeService {
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
     return postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
   }
+
+  private async syncWithStorage(lianes: Liane[]) {
+    let local = (await retrieveAsync<LocalLianeData[]>("lianes")) || [];
+    const now = new Date().getTime() + 1000 * 60 * 10;
+    local = local.filter(l => new Date(l.departureTime).getTime() > now);
+    const online = [...lianes].filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
+
+    // Remove reminders for updated and deleted lianes
+    const fetchedLianeIds: { [id: string]: Liane } = online.reduce((a, v) => ({ ...a, [v.id!]: v }), {});
+    for (let i = local.length - 1; i >= 0; i--) {
+      if (!fetchedLianeIds[local[i].lianeId] || fetchedLianeIds[local[i].lianeId].departureTime !== local[i].departureTime) {
+        // Remove liane
+        local.splice(i, 1);
+        await cancelReminder(local[i].lianeId);
+      }
+    }
+    // Create reminder for updated or new lianes
+    const storedLianeIds = new Set(local.map(d => d.lianeId));
+    const toAdd = online.filter(l => !storedLianeIds.has(l.id!));
+    for (let liane of toAdd) {
+      await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
+      local.push({ lianeId: liane.id!, departureTime: liane.departureTime });
+    }
+    await storeAsync("lianes", local);
+  }
 }
+
+export type LocalLianeData = {
+  lianeId: string;
+  departureTime: UTCDateTime;
+};

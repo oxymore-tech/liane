@@ -1,7 +1,7 @@
-import { ConversationGroup, Liane, Ref, User, UTCDateTime, WayPoint } from "@/api/index";
+import { ConversationGroup, Ref, User, UTCDateTime } from "@/api/index";
 import { LianeEvent } from "@/api/event";
 
-export type Notification = (Info | Reminder | Event | NewMessage) & AbstractNotification;
+export type Notification = (Info | Event | NewMessage) & AbstractNotification;
 
 export enum Answer {
   Accept = "Accept",
@@ -28,7 +28,7 @@ export type Info = Readonly<{
   type: "Info";
 }> &
   AbstractNotification;
-
+/*
 export type Reminder = Readonly<{
   type: "Reminder";
   payload: {
@@ -38,7 +38,7 @@ export type Reminder = Readonly<{
     //  at: UTCDateTime;
   };
 }> &
-  AbstractNotification;
+  AbstractNotification;*/
 
 export type NewMessage = Readonly<{
   type: "NewMessage";

@@ -2,8 +2,8 @@ import { NativeModules, Platform } from "react-native";
 const { BackgroundGeolocationServiceModule } = NativeModules;
 const NativeModule = BackgroundGeolocationServiceModule as BackgroundGeolocationServiceInterface;
 interface BackgroundGeolocationServiceInterface {
-  startService(config: BackgroundGeolocationServiceConfig): void;
-  stopService(): void;
+  startService(config: BackgroundGeolocationServiceConfig): Promise<void>;
+  stopService(): Promise<void>;
   enableLocation(): Promise<void>;
   isRunning(): Promise<boolean>;
 }
@@ -29,18 +29,19 @@ export const DefaultConfig = {
   }
 };
 
-const startBackgroundGeolocationService = (config: BackgroundGeolocationServiceConfig) => {
+const start = (config: BackgroundGeolocationServiceConfig) => {
   if (Platform.OS === "android") {
     const nativeConfig: any = config;
     nativeConfig.geolocationConfig = config.geolocationConfig || DefaultConfig.geolocationConfig;
     nativeConfig.wayPoints = config.wayPoints.map(w => w.join(",")).join(";");
-    NativeModule.startService(nativeConfig);
+    return NativeModule.startService(nativeConfig);
   }
+  return Promise.reject();
 };
 
 export default {
-  startBackgroundGeolocationService,
-  stopBackgroundGeolocationService: Platform.OS === "android" ? NativeModule.stopService : () => {},
+  start,
+  stop: Platform.OS === "android" ? NativeModule.stopService : () => Promise.reject(),
   enableLocation: Platform.OS === "android" ? NativeModule.enableLocation : Promise.resolve,
   isRunning: Platform.OS === "android" ? NativeModule.isRunning : () => Promise.resolve(false)
 };

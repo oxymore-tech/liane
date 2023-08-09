@@ -59,4 +59,9 @@ public abstract record LianeEvent
     TimeSpan? Delay,
     LatLng? Coordinate
   ) : LianeEvent;
+  
+  public sealed record MemberHasCanceled(
+    Ref<Trip.Liane> Liane,
+    Ref<User.User> Member
+  ) : LianeEvent;
 }

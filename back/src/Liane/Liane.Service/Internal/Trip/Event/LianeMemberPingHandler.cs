@@ -56,11 +56,8 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     if (liane.State == LianeState.NotStarted && e.Coordinate is not null)
     {
       // First location ping -> go to started state
-      liane = await mongo.GetCollection<LianeDb>()
-        .FindOneAndUpdateAsync(Builders<LianeDb>.Filter.Where(l => l.Id == e.Liane),
-          Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started),
-          new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
-        );
+      await lianeService.UpdateState(e.Liane, LianeState.Started);
+      liane = liane with { State = LianeState.Started };
     }
 
     var tracker = await trackers.GetOrAdd(liane.Id, async _ =>
@@ -68,7 +65,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
       var l = await lianeService.Get(liane.Id);
       return new LianeTracker(serviceProvider, l, () =>
       {
-        // Go to "finished" state if driver pings close to arrival
+        // TODO go to "finished" state if driver pings close to arrival
         return Task.CompletedTask;
       });
     });

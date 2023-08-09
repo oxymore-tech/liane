@@ -9,6 +9,7 @@ using Google.Apis.Auth.OAuth2;
 using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.User;
+using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using Notification = Liane.Api.Event.Notification;
@@ -113,7 +114,6 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
         Apns = new ApnsConfig { Aps = new Aps { ContentAvailable = true } },
         Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.High },
         Data = BuildPayLoad(r),
-
       },
       Notification.Event r => new Message
       {
@@ -123,33 +123,47 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
           Body = notification.Message,
         },
         Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.Normal },
-        Data = BuildPayLoad(r)
+        Data = BuildUri(r).GetOrDefault(u => new Dictionary<string, string> {{"uri", u }})
       },
-      _ => new Message
+      _ => new Message 
       {
         Notification = new FirebaseAdmin.Messaging.Notification
         {
           Title = notification.Title,
           Body = notification.Message,
-        }
-
+        },
+        Data = BuildUri(notification).GetOrDefault(u => new Dictionary<string, string> {{"uri", u }})
       }
-
     };
   }
 
   private Task<string> Send(string deviceToken, Notification notification)
-  {  
+  {
     if (FirebaseMessaging.DefaultInstance is null)
     {
-         return Task.FromResult("noop");
+      return Task.FromResult("noop");
     }
 
     var firebaseMessage = GetFirebaseMessage(notification);
     firebaseMessage.Token = deviceToken;
-  
+
 
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
+  }
+
+  private string? BuildUri(Notification notification)
+  {
+    return notification switch
+    {
+      Notification.Event e => e.Payload switch
+      {
+        LianeEvent.JoinRequest => "liane://join_request/"+ notification.Id,
+        LianeEvent.MemberAccepted m => "liane://liane/"+m.Liane.Id,
+        _ => null
+      },
+      Notification.NewMessage m => "liane://chat/"+m.Conversation.Id,
+      _ => null
+    };
   }
 
   private IReadOnlyDictionary<string, string> BuildPayLoad(Notification payload)

@@ -35,6 +35,7 @@ export const TripListView = ({ data, isFetching, onRefresh }: TripListViewProps)
     <SectionList
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
+      showsVerticalScrollIndicator={false}
       renderItem={renderItem}
       keyExtractor={item => item.id!}
       renderSectionHeader={renderSectionHeader}

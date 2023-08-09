@@ -16,8 +16,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { checkLocationPingsPermissions, hasLocationPermission, sendLocationPings } from "@/api/service/location";
 import Geolocation from "react-native-geolocation-service";
-import { displayNotifeeNotification } from "@/api/service/notification";
-import { Reminder } from "@/api/notification";
+import { createReminder } from "@/api/service/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
 import { getTripFromLiane } from "@/components/trip/trip";
@@ -51,18 +50,9 @@ export const ShareTripLocationScreen = WithFullscreenModal(
       };
       const delay = async (d: Date) => {
         await services.liane.warnDelay(liane.id!, (d.getTime() - now.getTime()) / 1000);
-        const rem: Reminder = {
-          type: "Reminder",
-          createdBy: user!.id!,
-          createdAt: now.toISOString(),
-          payload: { liane: liane.id!, trip: liane.wayPoints },
-          recipients: [{ user: user!.id! }],
-          answers: [],
-          title: "Rappel: départ imminent",
-          message: "Prêt à partir? Cliquez pour activer le partage de votre position."
-        };
-        await displayNotifeeNotification(rem, d);
+        await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, d);
       };
+
       useEffect(() => {
         const askPermissions = async (): Promise<boolean> => {
           const locationPermission = await hasLocationPermission();
@@ -176,7 +166,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
             }
           });
         };
-        Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, "", [
+        Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
           { text: "Go to Settings", onPress: openSetting },
           { text: "Don't Use Location", onPress: () => {} }
         ]);

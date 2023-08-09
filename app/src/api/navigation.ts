@@ -10,7 +10,7 @@ import {
 import { JoinLianeRequestDetailed, Liane, UnionUtils, User } from "./index";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
-import { Event, NewMessage, Notification, Reminder } from "@/api/notification";
+import { Event, NewMessage, Notification } from "@/api/notification";
 import { JoinRequest, MemberAccepted } from "@/api/event";
 
 export type NavigationParamList = {
@@ -43,6 +43,15 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
     screens: {
       LianeDetail: {
         path: "liane/:liane"
+      },
+      ShareTripLocationScreen: {
+        path: "liane/:liane/start"
+      },
+      Chat: {
+        path: "chat/:conversationId"
+      },
+      OpenJoinLianeRequest: {
+        path: "join_request/:request"
       }
     }
   }
@@ -57,9 +66,6 @@ export function getNotificationNavigation(notification: Notification) {
       return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
         navigation.navigate("LianeDetail", { liane: notification.payload.liane });
     }
-  } else if (UnionUtils.isInstanceOf<Reminder>(notification, "Reminder")) {
-    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-      navigation.navigate("ShareTripLocationScreen", { liane: notification.payload.liane });
   } else if (UnionUtils.isInstanceOf<NewMessage>(notification, "NewMessage")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("Chat", { conversationId: notification.conversation });

@@ -31,6 +31,7 @@ import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
 import { TripGeolocationProvider, useMemberTripGeolocation, useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { DriverLocationMarker } from "@/screens/detail/DriverLocationMarker";
+import { cancelSendLocationPings } from "@/api/service/location";
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeJoinRequestDetail">();
@@ -279,11 +280,11 @@ const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: str
                 style: "cancel"
               },
               {
-                text: "Annuler",
+                text: "Confirmer",
                 onPress: async () => {
-                  //TODO
-                  //await queryClient.invalidateQueries(LianeQueryKey);
-                  //navigation.goBack();
+                  await services.liane.cancel(liane.id!);
+                  navigation.goBack();
+                  await queryClient.invalidateQueries(LianeQueryKey);
                 },
                 style: "default"
               }
@@ -355,11 +356,14 @@ const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: str
                 style: "cancel"
               },
               {
-                text: "Annuler",
+                text: "Confirmer",
                 onPress: async () => {
-                  //TODO
-                  //navigation.goBack();
-                  //await queryClient.invalidateQueries(LianeQueryKey);
+                  // Cancel ongoing geolocation
+                  await cancelSendLocationPings();
+                  // TODO probably fill in some form
+                  await services.liane.cancel(liane.id!);
+                  navigation.goBack();
+                  await queryClient.invalidateQueries(LianeQueryKey);
                 },
                 style: "default"
               }

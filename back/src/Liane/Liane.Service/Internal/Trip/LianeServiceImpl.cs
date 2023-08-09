@@ -615,4 +615,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       .FindOneAndUpdateAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.DepartureTime, departureTime));
     // TODO notify members ?
   }
+
+  public async Task UpdateState(Ref<Api.Trip.Liane> liane, LianeState state)
+  {
+    await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state));
+  }
 }

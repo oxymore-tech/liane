@@ -58,6 +58,13 @@ public sealed class LianeController : ControllerBase
   {
     await lianeService.UpdateDepartureTime(id, departureTime);
   }
+  
+  [HttpPost("{id}/cancel")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task CancelLiane([FromRoute] string id)
+  {
+    await eventDispatcher.Dispatch(new LianeEvent.MemberHasCanceled(id, currentContext.CurrentUser().Id));
+  }
 
   [HttpDelete("{id}/members/{memberId}")]
   public async Task Delete([FromRoute] string id, [FromRoute] string memberId)

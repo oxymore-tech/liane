@@ -45,6 +45,9 @@ export abstract class AbstractNotificationService implements NotificationService
   abstract list(): Promise<PaginatedResponse<Notification>>;
 
   markAsRead = async (_: Notification) => {
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
+    if (this.unreadNotificationCount.getValue() - 1 < 0) {
+      console.warn("Read count < 0");
+    }
+    this.unreadNotificationCount.next(Math.max(0, this.unreadNotificationCount.getValue() - 1));
   };
 }
