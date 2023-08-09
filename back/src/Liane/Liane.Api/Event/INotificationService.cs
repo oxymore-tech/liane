@@ -14,7 +14,7 @@ public interface INotificationService : ICrudService<Notification>
 
   Task<Notification> SendInfo(string title, string message, Ref<User.User> to);
 
-  Task<Notification> SendEvent(string title, string message, Ref<User.User> to, LianeEvent lianeEvent, params Answer[] answers);
+  Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<User.User> to, LianeEvent lianeEvent, params Answer[] answers);
 
   Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<User.User>> to, Reminder reminder);
 

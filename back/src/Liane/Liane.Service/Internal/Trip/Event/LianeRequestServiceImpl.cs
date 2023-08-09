@@ -12,6 +12,30 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Trip.Event;
 
+public sealed class AutomaticAnswerService
+{
+  private readonly EventDispatcher eventDispatcher;
+  private readonly ILianeService lianeService;
+  private readonly IUserService userService;
+
+  public AutomaticAnswerService(EventDispatcher eventDispatcher, ILianeService lianeService, IUserService userService)
+  {
+    this.eventDispatcher = eventDispatcher;
+    this.lianeService = lianeService;
+    this.userService = userService;
+  }
+
+  public async Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User> newMember)
+  {
+    
+    var liane = await lianeService.Get(joinRequest.Liane);
+    var creator = await userService.GetFullUser(liane.CreatedBy);
+    if (!creator.LastName.Equals("$")) return false;  
+
+    await eventDispatcher.Dispatch(new LianeEvent.MemberAccepted(liane, newMember, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip), creator);
+    return true;
+  }
+}
 public sealed class LianeRequestServiceImpl : ILianeRequestService
 {
   private readonly INotificationService notificationService;
@@ -21,9 +45,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   private readonly IUserService userService;
   private readonly ICurrentContext currentContext;
   private readonly ILogger<LianeRequestServiceImpl> logger;
+  private readonly IAutomaticAnswerService automaticAnswerService;
 
   public LianeRequestServiceImpl(INotificationService notificationService, IRallyingPointService rallyingPointService, ILianeService lianeService, IUserService userService,
-    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger)
+    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService)
   {
     this.notificationService = notificationService;
     this.rallyingPointService = rallyingPointService;
@@ -32,16 +57,26 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     this.currentContext = currentContext;
     this.eventDispatcher = eventDispatcher;
     this.logger = logger;
+    this.automaticAnswerService = automaticAnswerService;
   }
 
-  public async Task OnEvent(LianeEvent.JoinRequest joinRequest)
+  public async Task OnEvent(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User>? sender = null)
   {
     var liane = await lianeService.Get(joinRequest.Liane);
     var role = joinRequest.Seats > 0 ? "conducteur" : "passager";
-    await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
+    var member = sender ?? currentContext.CurrentUser().Id;
+    if (await automaticAnswerService.TryAcceptRequest(joinRequest, member))
+    {
+      // Creator is a bot or automatically accepts requests
+      return;
+    }
+    else
+    {
+      await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
+    }
   }
 
-  public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer)
+  public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
   {
     LianeEvent lianeEvent = answer switch
     {

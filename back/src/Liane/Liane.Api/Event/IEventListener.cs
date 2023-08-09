@@ -1,30 +1,31 @@
 using System;
 using System.Threading.Tasks;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
 
 public interface IEventListener
 {
-  Task OnEvent(LianeEvent e);
-  Task OnAnswer(Notification.Event e, Answer answer);
+  Task OnEvent(LianeEvent e, Ref<Api.User.User>? sender = null);
+  Task OnAnswer(Notification.Event e, Answer answer, Ref<Api.User.User>? sender = null);
 }
 
 public interface IEventListener<in TEvent> : IEventListener
   where TEvent : LianeEvent
 {
-  Task IEventListener.OnEvent(LianeEvent e)
+  Task IEventListener.OnEvent(LianeEvent e, Ref<Api.User.User>? sender)
   {
-    return e.GetType().IsAssignableTo(typeof(TEvent)) ? OnEvent((TEvent)e) : Task.CompletedTask;
+    return e.GetType().IsAssignableTo(typeof(TEvent)) ? OnEvent((TEvent)e, sender) : Task.CompletedTask;
   }
 
-  Task IEventListener.OnAnswer(Notification.Event e, Answer answer)
+  Task IEventListener.OnAnswer(Notification.Event e, Answer answer, Ref<Api.User.User>? sender)
   {
-    return e.Payload.GetType().IsAssignableTo(typeof(TEvent)) ? OnAnswer(e, (TEvent)e.Payload, answer) : Task.CompletedTask;
+    return e.Payload.GetType().IsAssignableTo(typeof(TEvent)) ? OnAnswer(e, (TEvent)e.Payload, answer, sender) : Task.CompletedTask;
   }
 
-  Task OnEvent(TEvent lianeEvent);
+  Task OnEvent(TEvent lianeEvent, Ref<Api.User.User>? sender = null);
 
-  Task OnAnswer(Notification.Event e, TEvent lianeEvent, Answer answer)
+  Task OnAnswer(Notification.Event e, TEvent lianeEvent, Answer answer, Ref<Api.User.User>? sender = null)
   {
     throw new NotImplementedException();
   }

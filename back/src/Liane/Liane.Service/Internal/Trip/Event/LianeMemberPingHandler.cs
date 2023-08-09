@@ -32,10 +32,10 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     this.currentContext = currentContext;
   }
 
-  public async Task OnEvent(LianeEvent.MemberPing e)
+  public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.User.User>? sender = null)
   {
     var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).DateTime.ToUniversalTime();
-    var memberId = currentContext.CurrentUser().Id;
+    var memberId = sender ?? currentContext.CurrentUser().Id;
     var ping = new UserPing(memberId, at, e.Delay ?? TimeSpan.Zero, e.Coordinate);
     var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Liane)
                  & Builders<LianeDb>.Filter.Or(Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, DateTime.UtcNow + TimeSpan.FromMinutes(15)),

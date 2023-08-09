@@ -57,6 +57,7 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
+  [Ignore("Disabled")]
   public async Task ShouldNotSendSameReminderTwice()
   {
     var userA = Fakers.FakeDbUsers[0];

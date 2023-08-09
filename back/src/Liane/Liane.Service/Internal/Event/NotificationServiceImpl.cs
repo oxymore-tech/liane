@@ -33,9 +33,9 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), ImmutableHashSet<Answer>.Empty, title, message)
   );
 
-  public Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
+  public Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
     new Notification.Event(
-      null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
+      null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
   );
 
   public async Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
@@ -52,8 +52,8 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       title,
       message,
       reminder);
-    memoryCache.Set(reminder, notification, TimeSpan.FromMinutes(10));
-    await Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));
+   memoryCache.Set(reminder, notification, TimeSpan.FromMinutes(10));
+   /*  await Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));*/
     return notification;
   }
 
@@ -67,8 +67,10 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       }
 
       memoryCache.Set(notification.Payload, notification, TimeSpan.FromMinutes(10));
-      return Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));
+     // return Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));
+     return Task.CompletedTask;
     }));
+    
   }
 
   public new async Task<Notification> Create(Notification obj)
