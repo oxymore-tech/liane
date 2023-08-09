@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Trip.Event;
 
-public sealed class AutomaticAnswerService
+public sealed class AutomaticAnswerService: IAutomaticAnswerService
 {
   private readonly EventDispatcher eventDispatcher;
   private readonly ILianeService lianeService;
