@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Liane.Web.Internal.Json;
 
-public sealed class LngLatTupleConverter : JsonConverter<Tuple<double, double>>
+internal sealed class LngLatTupleConverter : JsonConverter<Tuple<double, double>>
 {
   public override Tuple<double, double> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
   {

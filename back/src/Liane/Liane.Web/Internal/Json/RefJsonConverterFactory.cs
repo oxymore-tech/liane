@@ -6,7 +6,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
-public sealed class RefJsonConverterFactory : JsonConverterFactory
+internal sealed class RefJsonConverterFactory : JsonConverterFactory
 {
   public override bool CanConvert(Type typeToConvert)
     => IsSubclassOfRawGeneric(typeof(Ref<>), typeToConvert);

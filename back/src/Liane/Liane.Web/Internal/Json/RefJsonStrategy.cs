@@ -7,7 +7,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
-public static class RefJsonStrategy
+internal static class RefJsonStrategy
 {
   private static readonly MethodInfo AsResolvedMethod = typeof(RefJsonStrategy).GetMethod(nameof(AsResolved), BindingFlags.Static | BindingFlags.NonPublic)!;
 

@@ -52,22 +52,22 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
       {
         var parameterName = p.Name!.ToLower();
         var value = jsonObject[parameterName];
-        if (value is null)
+        if (value is not null)
         {
-          if (p.HasDefaultValue)
-          {
-            return p.DefaultValue;
-          }
-
-          if (!p.IsNullable())
-          {
-            missing.Add(parameterName);
-          }
-
-          return p.HasDefaultValue ? p.DefaultValue : null;
+          return value.Deserialize(p.ParameterType, options) ?? throw new JsonException("Unable to deserialize parameter");
         }
 
-        return value.Deserialize(p.ParameterType, options) ?? throw new JsonException("Unable to deserialize parameter");
+        if (p.HasDefaultValue)
+        {
+          return p.DefaultValue;
+        }
+
+        if (!p.IsNullable())
+        {
+          missing.Add(parameterName);
+        }
+
+        return p.HasDefaultValue ? p.DefaultValue : null;
       }).ToArray();
     if (!missing.IsNullOrEmpty())
     {
@@ -75,12 +75,6 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
     }
 
     return (TRoot)constructorInfo.Invoke(parameters);
-  }
-
-  private static IEnumerable<Type> GetSubTypes(Type rootType)
-  {
-    return rootType.GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Public)
-      .SelectMany(t => t.IsAbstract ? GetSubTypes(t) : ImmutableList.Create(t));
   }
 
   public override void Write(Utf8JsonWriter writer, TRoot value, JsonSerializerOptions options)
@@ -96,6 +90,12 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
     }
 
     writer.WriteEndObject();
+  }
+
+  private static IEnumerable<Type> GetSubTypes(Type rootType)
+  {
+    return rootType.GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Public)
+      .SelectMany(t => t.IsAbstract ? GetSubTypes(t) : ImmutableList.Create(t));
   }
 
   private Type GetSubType(JsonObject jsonObject)
