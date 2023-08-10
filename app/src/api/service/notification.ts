@@ -10,6 +10,8 @@ import { formatTime } from "@/api/i18n";
 import DeviceInfo from "react-native-device-info";
 import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
 import { LianeServiceClient } from "@/api/service/liane";
+import { getTripFromLiane } from "@/components/trip/trip";
+import { getCurrentUser } from "@/api/storage";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
@@ -70,6 +72,14 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
   });
 }
 
+const pressActionMap = {
+  loc: async (lianeId: string) => {
+    const liane = await new LianeServiceClient().get(lianeId);
+    const user = await getCurrentUser();
+    const trip = getTripFromLiane(liane, user!);
+    await sendLocationPings(liane.id!, trip.wayPoints);
+  }
+} as const;
 const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
   console.debug("[NOTIFEE]", JSON.stringify(detail));
@@ -79,9 +89,7 @@ const openNotification = async ({ type, detail }: Event) => {
   } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
     if (pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
       // start sending pings
-      const lianeId = notification.data.liane as string;
-      const liane = await new LianeServiceClient().get(lianeId);
-      await sendLocationPings(liane.id!, liane.wayPoints);
+      await pressActionMap.loc(notification.data.liane as string);
     } else {
       await Linking.openURL(<string>notification.data.uri);
     }
@@ -216,9 +224,7 @@ export const checkInitialNotification = async (): Promise<string | undefined | n
     if (n.notification.data?.uri) {
       if (n.pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
         // start sending pings
-        const lianeId = n.notification.data.liane as string;
-        const liane = await new LianeServiceClient().get(lianeId);
-        await sendLocationPings(liane.id!, liane.wayPoints);
+        await pressActionMap.loc(n.notification.data.liane as string);
         return undefined;
       } else {
         return <string>n.notification.data?.uri;

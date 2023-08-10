@@ -14,9 +14,10 @@ import {
 import { get, postAs, del, patch } from "@/api/http";
 import { JoinRequest, MemberPing } from "@/api/event";
 import { TimeInSeconds } from "@/util/datetime";
-import { retrieveAsync, storeAsync } from "@/api/storage";
+import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { cancelReminder, createReminder } from "@/api/service/notification";
 import { sync } from "@/util/store";
+import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
@@ -110,8 +111,11 @@ export class LianeServiceClient implements LianeService {
   private async syncWithStorage(lianes: Liane[]) {
     let local = (await retrieveAsync<LocalLianeData[]>("lianes")) || [];
     const now = new Date().getTime() + 1000 * 60 * 5;
+    const user = await getCurrentUser();
     local = local.filter(l => new Date(l.departureTime).getTime() > now);
-    const online = [...lianes].filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
+    const online = lianes
+      .map(l => ({ ...l, departureTime: getTripFromLiane(l, user!).departureTime }))
+      .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
 
     const { added, removed, stored } = sync(
       online,

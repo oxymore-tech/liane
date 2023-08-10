@@ -33,6 +33,13 @@ CREATE TABLE IF NOT EXISTS rallying_point
   PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS ongoing_trip(
+  id          varchar(24),
+  geometry geometry(LineString, 4326),
+  PRIMARY KEY (id)
+);
+
+
 -- Add indexes
 CREATE INDEX IF NOT EXISTS segment_geometry_index
   ON segment

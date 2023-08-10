@@ -123,7 +123,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
        set.Add(user);
        return set;
     });
-    var lastValue = lastValueCache.Get((member.Id, member.Id));
+    var lastValue = lastValueCache.Get((liane.Id, member.Id));
     return lastValue is not TrackedMemberLocation update ? null : update;
   }
 

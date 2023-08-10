@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Postgis;
 
-public sealed class PostgisServiceImpl : IPostgisService
+ public  sealed partial class PostgisServiceImpl : IPostgisService
 {
   private readonly PostgisDatabase db;
   private readonly ILogger<PostgisServiceImpl> logger;

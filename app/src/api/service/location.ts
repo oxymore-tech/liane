@@ -311,14 +311,10 @@ export const isLocationServiceRunning = () =>
 
 const nearWayPointRadius = 1000;
 const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
-  const user = await getCurrentUser();
   const tripDuration = new Date(trip[trip.length - 1].eta).getTime() - new Date().getTime();
   const timeout = tripDuration + 3600 * 1000;
   let preciseTrackingMode = true;
   let watchId: number = 0;
-  if (!user) {
-    throw new Error("User not found");
-  }
 
   console.debug("[GEOPINGS]", `tracking timeout = ${timeout} ms`);
   await new Promise<void>(async resolve => {
