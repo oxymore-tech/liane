@@ -1,7 +1,7 @@
 import React, { ForwardedRef, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { ColorValue, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ColorValue, Platform, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger } from "@maplibre/maplibre-react-native";
-import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, Ref, UnionUtils } from "@/api";
+import { Exact, getPoint, LatLng, LianeMatch, RallyingPoint, Ref, UnionUtils, User } from "@/api";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Feature, FeatureCollection, GeoJSON, Point, Position } from "geojson";
 import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
@@ -25,6 +25,7 @@ import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
+import { UserPicture } from "../UserPicture";
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -45,15 +46,10 @@ Logger.setLogCallback(log => {
 
 export interface AppMapViewController {
   setCenter: (position: LatLng, zoom?: number, duration?: number) => Promise<void> | undefined;
-
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
-
   fitBounds: (bbox: DisplayBoundingBox, duration?: number) => void;
-
   getZoom: () => Promise<number> | undefined;
-
   getCenter: () => Promise<Position> | undefined;
-
   queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
 }
 // @ts-ignore
@@ -653,6 +649,7 @@ export const RallyingPointsFeaturesDisplayLayer = ({
 export const WayPointDisplay = ({
   rallyingPoint,
   type,
+  user,
   active = true,
   size = 14,
   offsetY
@@ -660,6 +657,7 @@ export const WayPointDisplay = ({
 {
   rallyingPoint: RallyingPoint;
   type: "to" | "from" | "step" | "pickup" | "deposit";
+  user?: User;
   active?: boolean;
   size?: number;
   offsetY?: number;
@@ -689,21 +687,34 @@ export const WayPointDisplay = ({
   const showIcon = icon !== undefined;
   return (
     <MarkerView id={rallyingPoint.id!} coordinate={[rallyingPoint.location.lng, rallyingPoint.location.lat]}>
-      <View
-        style={{
-          padding: 4,
-          alignItems: "center",
-          justifyContent: "center",
-          width: type !== "step" && showIcon ? size + 10 : 8,
-          height: type !== "step" && showIcon ? size + 10 : 8,
-          backgroundColor: color,
-          borderRadius: 48,
-          borderColor: AppColors.white,
-          borderWidth: 1,
-          position: "relative",
-          top: offsetY
-        }}>
-        {showIcon && icon}
+      <View pointerEvents="none" style={[styles.wayPointContainer, { top: offsetY }]}>
+        {
+          // If start or step, display profile icon of user
+          (user && type === "from") || type === "step" ? (
+            <View style={styles.wayPointContainer}>
+              <View style={styles.userNameContainer}>
+                <Text style={styles.userNameText}>{user?.pseudo}</Text>
+              </View>
+              <View style={styles.userPictureContainer}>
+                <UserPicture url={user?.pictureUrl} />
+              </View>
+            </View>
+          ) : null
+        }
+
+        <View
+          style={{
+            padding: 4,
+            marginBottom: type === "from" ? 54 : type === "step" ? 54 : 0,
+            width: type !== "step" && showIcon ? size + 10 : 8,
+            height: type !== "step" && showIcon ? size + 10 : 8,
+            backgroundColor: color,
+            borderRadius: 48,
+            borderColor: AppColors.white,
+            borderWidth: 1
+          }}>
+          {showIcon && icon}
+        </View>
       </View>
     </MarkerView>
   );
@@ -1022,5 +1033,29 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     paddingBottom: 32
+  },
+  wayPointContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative"
+  },
+  userNameContainer: {
+    borderRadius: 10,
+    padding: 8,
+    margin: 4,
+    backgroundColor: AppColors.white
+  },
+  userNameText: {
+    color: AppColors.black,
+    fontSize: 18,
+    fontWeight: "bold"
+  },
+  userPictureContainer: {
+    padding: 2,
+    borderRadius: 56,
+    width: 56,
+    height: 56,
+    borderColor: AppColors.orange,
+    borderWidth: 2
   }
 });

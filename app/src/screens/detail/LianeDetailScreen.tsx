@@ -6,7 +6,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView } from "@/screens/detail/Components";
-import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, WayPoint } from "@/api";
+import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, User, WayPoint } from "@/api";
 import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatDate, formatMonthDay, formatTime } from "@/api/i18n";
@@ -94,6 +94,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     //console.log(bbox, bSheetTop);
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
+  const currentUser: User | undefined = match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -111,7 +112,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
               } else {
                 type = "step";
               }
-              return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
+              return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} user={currentUser} />;
             })}
           {request &&
             match &&
@@ -124,9 +125,9 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
               } else {
                 type = "step";
               }
-              return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} />;
+              return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} user={currentUser} />;
             })}
-          {match && <DriverLocationMarker user={match.liane.members.find(m => m.user.id === match.liane.driver.user)!.user} />}
+          {match && <DriverLocationMarker user={currentUser} />}
         </AppMapView>
         <AppBottomSheet
           onScrolled={v => {
@@ -150,11 +151,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           )}
         </AppBottomSheet>
 
-        <FloatingBackButton
-          onPress={() => {
-            navigation.goBack();
-          }}
-        />
+        <FloatingBackButton onPress={navigation.goBack} />
       </View>
     </GestureHandlerRootView>
   );
