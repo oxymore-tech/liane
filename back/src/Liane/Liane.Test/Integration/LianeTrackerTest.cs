@@ -10,8 +10,11 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Osrm;
+using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip;
 using Liane.Test.Util;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -58,7 +61,7 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider);
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!);
  
     var pings = geojsonPings.Features.Select(f =>
     {

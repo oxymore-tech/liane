@@ -9,7 +9,6 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -63,10 +62,8 @@ public sealed class LianeTracker
       return this;
     }
 
-    public async Task<LianeTracker> Build(ServiceProvider serviceProvider)
+    public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService)
     {
-      var osrmService = serviceProvider.GetService<IOsrmService>()!;
-      var postgisService = serviceProvider.GetService<IPostgisService>()!;
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location));
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
       tripSession  = await postgisService.CreateOngoingTrip(liane.Id, routeAsLineString);

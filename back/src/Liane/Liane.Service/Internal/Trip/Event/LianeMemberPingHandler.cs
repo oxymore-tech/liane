@@ -20,14 +20,16 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
   private readonly ConcurrentDictionary<string, Task<LianeTracker>> trackers = new();
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
-  private readonly ServiceProvider serviceProvider;
-  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService, IPostgisService postgisService, ServiceProvider serviceProvider)
+  private readonly IOsrmService osrmService;
+  private readonly IPostgisService postgisService;
+  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService, IPostgisService postgisService)
   {
     mongo = db;
     this.lianeMemberTracker = lianeMemberTracker;
     this.lianeService = lianeService;
     this.currentContext = currentContext;
-    this.serviceProvider = serviceProvider;
+    this.osrmService = osrmService;
+    this.postgisService = postgisService;
   }
 
   private async Task EndTrip(Ref<Api.Trip.Liane> liane)
@@ -77,7 +79,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
         })
         .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
         , 3600 * 1000)
-        .Build(serviceProvider);
+        .Build(osrmService, postgisService);
     });
     
     await tracker.Push(ping);
