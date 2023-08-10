@@ -5,23 +5,26 @@ namespace Liane.Api.Util.Exception;
 
 public sealed class ValidationException : System.Exception
 {
-  public ValidationException(string field, ValidationMessage message, object? value = null)
+  public ValidationException(string field, ValidationMessage message) : this(Format(field, message))
   {
-    var builder = ImmutableDictionary.CreateBuilder<string, string>();
-    var valueSuffix = value == null ? "" : $":{value}";
-    builder.Add(ToCamelCase(field), $"{message.Value}{valueSuffix}");
-    Errors = builder.ToImmutable();
-    Message = string.Join(", ", Errors.Select(e => $"{e.Key}: {e.Value}"));
+  }
+
+  private static ImmutableDictionary<string, ValidationMessage> Format(string field, ValidationMessage message)
+  {
+    var builder = ImmutableDictionary.CreateBuilder<string, ValidationMessage>();
+    builder.Add(field, message);
+    return builder.ToImmutable();
+  }
+
+  public ValidationException(IImmutableDictionary<string, ValidationMessage> errors)
+  {
+    Errors = errors.ToImmutableDictionary(e => e.Key.Uncapitalize(), e => e.Value.Value);
+    Message = string.Join(", ", errors.Select(e => $"{e.Key}: {e.Value}"));
   }
 
   public IImmutableDictionary<string, string> Errors { get; }
 
   public override string Message { get; }
-
-  private static string ToCamelCase(string field)
-  {
-    return char.ToLowerInvariant(field[0]) + field.Substring(1);
-  }
 }
 
 public sealed class ValidationMessage
@@ -33,5 +36,6 @@ public sealed class ValidationMessage
     Value = value;
   }
 
-  public static ValidationMessage MalFormed => new("validation.malFormed");
+  public static ValidationMessage IsRequired => new("validation.required");
+  public static ValidationMessage HasWrongFormat => new("validation.wrong-format");
 }

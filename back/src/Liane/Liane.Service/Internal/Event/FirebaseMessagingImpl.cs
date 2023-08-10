@@ -147,7 +147,6 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     var firebaseMessage = GetFirebaseMessage(notification);
     firebaseMessage.Token = deviceToken;
 
-
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
   }
 

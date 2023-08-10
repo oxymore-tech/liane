@@ -37,7 +37,6 @@ public sealed class RefJsonTest
       actual);
   }
 
-
   [Test]
   public void ShouldSerializeUnresolvedRef()
   {
@@ -56,7 +55,8 @@ public sealed class RefJsonTest
   public void ShouldSerializeResolvedRef()
   {
     var actual = JsonSerializer.Serialize((Ref<RallyingPoint>)new RallyingPoint("33", "Mende", new LatLng(30.0, 12.0), LocationType.CarpoolArea, "", "15000", "", null, true), options);
-    Assert.AreEqual("{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":\"CarpoolArea\",\"address\":\"\",\"zipCode\":\"15000\",\"city\":\"\",\"placeCount\":null,\"isActive\":true}",
+    Assert.AreEqual(
+      "{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":\"CarpoolArea\",\"address\":\"\",\"zipCode\":\"15000\",\"city\":\"\",\"placeCount\":null,\"isActive\":true}",
       actual);
   }
 
@@ -64,7 +64,8 @@ public sealed class RefJsonTest
   public void ShouldDeserializeResolvedRef()
   {
     var actual = JsonSerializer.Deserialize<Ref<RallyingPoint>>(
-      "{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":\"CarpoolArea\",\"address\":\"\",\"zipCode\":\"15000\",\"city\":\"\",\"placeCount\":null,\"isActive\":true}", options);
+      "{\"id\":\"33\",\"label\":\"Mende\",\"location\":{\"lat\":30,\"lng\":12},\"type\":\"CarpoolArea\",\"address\":\"\",\"zipCode\":\"15000\",\"city\":\"\",\"placeCount\":null,\"isActive\":true}",
+      options);
     Assert.AreEqual((Ref<RallyingPoint>)new RallyingPoint("33", "Mende", new LatLng(30.0, 12.0), LocationType.CarpoolArea, "", "15000", "", null, true), actual);
   }
 }

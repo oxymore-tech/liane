@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Dapper;
 using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -21,6 +22,7 @@ using Liane.Service.Internal.Trip.Import;
 using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace Liane.Service.Internal.Trip;
 

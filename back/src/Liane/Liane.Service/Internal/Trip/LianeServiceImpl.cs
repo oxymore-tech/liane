@@ -95,7 +95,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
 
     if (from.Equals(to))
     {
-      throw new ValidationException("To", ValidationMessage.MalFormed);
+      throw new ValidationException("To", ValidationMessage.HasWrongFormat);
     }
 
     var targetRoute = await routingService.GetRoute(ImmutableList.Create(from.Location, to.Location), cancellationToken);
@@ -380,7 +380,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var result = await routingService.GetTrip(departureTime, driverSegment, segments);
     if (result == null)
     {
-      throw new ValidationException("members", ValidationMessage.MalFormed);
+      throw new ValidationException("members", ValidationMessage.HasWrongFormat);
     }
 
     return result;
@@ -432,7 +432,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
   {
     if (lianeRequest.From == lianeRequest.To)
     {
-      throw new ValidationException("To", ValidationMessage.MalFormed);
+      throw new ValidationException("To", ValidationMessage.HasWrongFormat);
     }
 
     var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats) };
