@@ -2,7 +2,7 @@ import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext, useState } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { ScrollView } from "react-native";
 import { AppColors, defaultTextColor } from "@/theme/colors";

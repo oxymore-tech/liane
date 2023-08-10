@@ -4,7 +4,7 @@ import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, S
 import { useAppNavigation } from "@/api/navigation";
 import { getLianeStatusStyle } from "@/components/trip/trip";
 import React, { useContext, useMemo } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { useObservable } from "@/util/hooks/subscription";
 import { LianeView } from "@/components/trip/LianeView";
 import { AppIcon } from "@/components/base/AppIcon";

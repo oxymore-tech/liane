@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
 import React, { useContext, useState } from "react";
 import { AppText } from "@/components/base/AppText";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { AppServices } from "@/api/service";
 import { AppColors } from "@/theme/colors";

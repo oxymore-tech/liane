@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import NotificationScreen, { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -100,18 +100,7 @@ function Home() {
 }
 
 function Navigation() {
-  const { user, services } = useContext(AppContext);
-
-  const initialNotification = services.notification.getInitialNotification();
-  useEffect(() => {
-    if (user && initialNotification) {
-      // check if app was opened by a notification
-      const navigate = getNotificationNavigation(initialNotification);
-      if (navigate) {
-        navigate(RootNavigation);
-      }
-    }
-  }, [user, initialNotification]);
+  const { user } = useContext(AppContext);
 
   if (user) {
     return (

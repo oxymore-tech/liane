@@ -21,19 +21,6 @@ export class NotificationServiceClient extends AbstractNotificationService {
     await patch(`/notification/${notification.id}`);
   };
 
-  checkInitialNotification = async (): Promise<void> => {
-    if (initialPushNotification) {
-      this.initialNotification = initialPushNotification;
-      return;
-    }
-    const n = await notifee.getInitialNotification();
-    if (n && n.notification.data?.jsonPayload && n.pressAction.id !== "loc") {
-      //TODO or just === "default" ?
-      this.initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
-      console.debug("[NOTIF] opened via", JSON.stringify(n));
-    }
-  };
-
   override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
     if (display) {
@@ -132,13 +119,14 @@ export async function createReminder(lianeId: string, departureLocation: Rallyin
         lightUpScreen: true,
         importance: AndroidImportance.HIGH,
         tag: "reminder",
-        actions: AndroidReminderActions
+        actions: AndroidReminderActions,
+        ongoing: true
       },
       title: "Départ imminent",
       body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
       data: { uri: `liane://liane/${lianeId}/start`, liane: lianeId }
     },
-    { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime()), type: TriggerType.TIMESTAMP, alarmManager: true }
+    { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000), type: TriggerType.TIMESTAMP, alarmManager: true }
   );
 }
 
@@ -182,8 +170,8 @@ export async function initializePushNotification(user: FullUser, authService: Au
       // Update server's token
       await authService.updatePushToken(pushToken);
     }
-    PushNotifications?.onTokenRefresh(async pushToken => {
-      await authService.updatePushToken(pushToken);
+    PushNotifications?.onTokenRefresh(async p => {
+      await authService.updatePushToken(p);
     });
     PushNotifications?.onMessage(onMessageReceived);
     return true;
@@ -203,16 +191,43 @@ export const PushNotifications = (() => {
   }
   return undefined;
 })();
-
-let initialPushNotification: Notification | undefined;
-const setInitialPushNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
-  if (m && m.data?.jsonPayload) {
-    console.debug("[NOTIF] opened via", JSON.stringify(m));
-    initialPushNotification = JSON.parse(m.data!.jsonPayload);
+const openFirebaseNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
+  if (!m) {
+    return;
   }
-  return Promise.resolve();
+  console.debug("[NOTIF] opened via", JSON.stringify(m));
+  if (m?.data?.uri) {
+    Linking.openURL(<string>m.data.uri);
+  }
 };
 
-PushNotifications?.onNotificationOpenedApp(setInitialPushNotification);
-// PushNotifications?.setBackgroundMessageHandler(handleReminder);
-PushNotifications?.getInitialNotification()?.then(setInitialPushNotification);
+PushNotifications?.onNotificationOpenedApp(openFirebaseNotification);
+
+export const checkInitialNotification = async (): Promise<string | undefined | null> => {
+  const firebaseNotification = await PushNotifications?.getInitialNotification();
+  if (firebaseNotification) {
+    console.debug("[NOTIF] opened via", JSON.stringify(firebaseNotification));
+    return firebaseNotification.data?.uri;
+  }
+  const n = await notifee.getInitialNotification();
+  if (n) {
+    console.debug("[NOTIF] opened via", JSON.stringify(n));
+
+    if (n.notification.data?.uri) {
+      if (n.pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
+        // start sending pings
+        const lianeId = n.notification.data.liane as string;
+        const liane = await new LianeServiceClient().get(lianeId);
+        await sendLocationPings(liane.id!, liane.wayPoints);
+        return undefined;
+      } else {
+        return <string>n.notification.data?.uri;
+      }
+    }
+  }
+  const url = await Linking.getInitialURL();
+  if (url) {
+    console.debug("[DEEP LINK] opened with", url);
+  }
+  return url;
+};

@@ -1,6 +1,6 @@
 import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import React, { useContext, useState } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";

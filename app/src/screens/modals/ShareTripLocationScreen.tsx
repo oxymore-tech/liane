@@ -1,6 +1,6 @@
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import React, { useContext, useEffect, useState } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { TripCard } from "@/components/TripCard";
 import { Column, Row } from "@/components/base/AppLayout";
 import { LianeView } from "@/components/trip/LianeView";

@@ -1,6 +1,6 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { Liane, Ref, TrackedMemberLocation, User } from "@/api";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { getLianeStatus } from "@/components/trip/trip";
 import { isLocationServiceRunning } from "@/api/service/location";

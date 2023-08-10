@@ -2,11 +2,11 @@ import React from "react";
 import { StatusBar } from "react-native";
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "react-query";
-import ContextProvider from "@/components/ContextProvider";
+import ContextProvider from "@/components/context/ContextProvider";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { AppWindowsSizeProvider } from "@/components/base/AppWindowsSizeProvider";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/context/Navigation";
 import { AppLinking, RootNavigation } from "@/api/navigation";
 import { NavigationContainer } from "@react-navigation/native";
 

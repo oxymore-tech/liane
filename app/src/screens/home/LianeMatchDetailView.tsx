@@ -14,7 +14,7 @@ import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { formatDuration } from "@/util/datetime";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
 import { DriverInfo } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";

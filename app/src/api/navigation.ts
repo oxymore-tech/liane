@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/ty
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { Event, NewMessage, Notification } from "@/api/notification";
 import { JoinRequest, MemberAccepted } from "@/api/event";
+import { checkInitialNotification } from "@/api/service/notification";
 
 export type NavigationParamList = {
   Home: undefined;
@@ -38,6 +39,7 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 
 export const AppLinking: LinkingOptions<NavigationParamList> = {
   prefixes: ["liane://"],
+  getInitialURL: checkInitialNotification,
   config: {
     initialRouteName: "Home",
     screens: {

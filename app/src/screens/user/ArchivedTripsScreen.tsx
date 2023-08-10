@@ -5,7 +5,7 @@ import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { TripListView } from "@/screens/user/TripListView";
 import { Liane } from "@/api";
-import { HomeScreenHeader } from "@/components/Navigation";
+import { HomeScreenHeader } from "@/components/context/Navigation";
 
 export const ArchivedTripsScreen = () => {
   return (

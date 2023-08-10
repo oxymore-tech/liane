@@ -10,7 +10,7 @@ import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RootNavigation } from "@/api/navigation";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
-import Splashscreen from "native-modules/splashscreen";
+import Splashscreen from "../../../native-modules/splashscreen";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -85,7 +85,6 @@ async function initContext(service: AppServices): Promise<{
 
   const locationPermission = LocationPermissionLevel.NEVER;
   const position = await getLastKnownLocation();
-  await service.notification.checkInitialNotification();
 
   return { user, locationPermission, position, online };
 }

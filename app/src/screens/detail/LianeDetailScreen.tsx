@@ -12,7 +12,7 @@ import { capitalize } from "@/util/strings";
 import { formatDate, formatMonthDay, formatTime } from "@/api/i18n";
 import { addSeconds, formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { ActionItem } from "@/components/ActionItem";
 import { GestureHandlerRootView } from "react-native-gesture-handler";

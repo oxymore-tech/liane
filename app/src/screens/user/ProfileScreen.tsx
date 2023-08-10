@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, StyleSheet } from "react-native";
 import React, { useContext } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { APP_VERSION } from "@env";

@@ -6,7 +6,7 @@ import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { useAppNavigation } from "@/api/navigation";
 import { useQueries, useQueryClient } from "react-query";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { TripListView } from "@/screens/user/TripListView";
 import { Liane, Ref, UnionUtils } from "@/api";

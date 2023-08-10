@@ -6,7 +6,7 @@ import { AppText } from "@/components/base/AppText";
 import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation, getNotificationNavigation } from "@/api/navigation";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { Notification } from "@/api/notification";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";
 

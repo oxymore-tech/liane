@@ -7,7 +7,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";

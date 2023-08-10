@@ -16,6 +16,7 @@ import { JoinRequest, MemberPing } from "@/api/event";
 import { TimeInSeconds } from "@/util/datetime";
 import { retrieveAsync, storeAsync } from "@/api/storage";
 import { cancelReminder, createReminder } from "@/api/service/notification";
+import { sync } from "@/util/store";
 
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
@@ -108,27 +109,26 @@ export class LianeServiceClient implements LianeService {
 
   private async syncWithStorage(lianes: Liane[]) {
     let local = (await retrieveAsync<LocalLianeData[]>("lianes")) || [];
-    const now = new Date().getTime() + 1000 * 60 * 10;
+    const now = new Date().getTime() + 1000 * 60 * 5;
     local = local.filter(l => new Date(l.departureTime).getTime() > now);
     const online = [...lianes].filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
 
-    // Remove reminders for updated and deleted lianes
-    const fetchedLianeIds: { [id: string]: Liane } = online.reduce((a, v) => ({ ...a, [v.id!]: v }), {});
-    for (let i = local.length - 1; i >= 0; i--) {
-      if (!fetchedLianeIds[local[i].lianeId] || fetchedLianeIds[local[i].lianeId].departureTime !== local[i].departureTime) {
-        // Remove liane
-        local.splice(i, 1);
-        await cancelReminder(local[i].lianeId);
-      }
+    const { added, removed, stored } = sync(
+      online,
+      local,
+      liane => ({ lianeId: liane.id!, departureTime: liane.departureTime }),
+      l => l.id!,
+      d => d.lianeId,
+      (l, d) => l.departureTime !== d.departureTime
+    );
+    for (let r of removed) {
+      await cancelReminder(r.lianeId);
     }
-    // Create reminder for updated or new lianes
-    const storedLianeIds = new Set(local.map(d => d.lianeId));
-    const toAdd = online.filter(l => !storedLianeIds.has(l.id!));
-    for (let liane of toAdd) {
+    for (let liane of added) {
       await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
-      local.push({ lianeId: liane.id!, departureTime: liane.departureTime });
     }
-    await storeAsync("lianes", local);
+
+    await storeAsync("lianes", stored);
   }
 }
 

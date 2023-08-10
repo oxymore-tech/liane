@@ -5,7 +5,7 @@ import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import LianeLogo from "@/assets/logo.svg";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";

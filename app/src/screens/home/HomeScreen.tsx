@@ -11,7 +11,7 @@ import AppMapView, {
 } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
 import { AnimatedFloatingBackButton, MapHeader, SearchModal } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
@@ -30,7 +30,7 @@ import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
-import { useBottomBarStyle } from "@/components/Navigation";
+import { useBottomBarStyle } from "@/components/context/Navigation";
 import { useAppNavigation } from "@/api/navigation";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";

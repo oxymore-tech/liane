@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { LatLng } from "@/api";
 import { AppPressable } from "@/components/base/AppPressable";
 import { View } from "react-native";

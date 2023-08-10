@@ -6,7 +6,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Feature, FeatureCollection, GeoJSON, Point, Position } from "geojson";
 import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { DisplayBoundingBox, fromBoundingBox, isFeatureCollection } from "@/util/geometry";
 import { AppIcon } from "@/components/base/AppIcon";
 import { contains } from "@/api/geo";

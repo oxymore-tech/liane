@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -141,7 +142,6 @@ class LocationService : Service() {
   }
 
   private fun createNotification(): Notification {
-    //  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
     val intent = Intent(Intent.ACTION_VIEW)
     if (::pingConfig.isInitialized) intent.data = Uri.parse("liane://liane/" + pingConfig.lianeId)
     val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
@@ -150,7 +150,7 @@ class LocationService : Service() {
     val builder =
       notificationBuilder.setOngoing(true)
         .setContentTitle("Trajet en cours")
-        .setContentText("Liane partage votre position sur ce trajet. Ne désactivez pas votre GPS.")
+        .setContentText("Ne désactivez pas votre GPS.")
         .setSmallIcon(R.drawable.ic_notification)
         .setCategory(Notification.CATEGORY_SERVICE)
         .setContentIntent(pendingIntent)
@@ -169,47 +169,51 @@ class LocationService : Service() {
     super.onStartCommand(intent, flags, startId)
     if (intent != null && intent.extras != null) {
 
-      val pingConfigRaw = intent.extras!!.getBundle("pingConfig")!!
-      this.pingConfig = PingConfig(
-        lianeId = pingConfigRaw.getString("lianeId")!!,
-        userId = pingConfigRaw.getString("userId")!!,
-        token = pingConfigRaw.getString("token")!!,
-        url = pingConfigRaw.getString("url")!!
-      )
-      delay = intent.extras!!.getDouble("delay").toInt()
-      val timeout = intent.extras!!.getDouble("timeout").toLong()
-      val geolocConfigRaw = intent.extras!!.getBundle("geolocationConfig")!!
-      this.geolocationConfig = GeolocationConfig(
-        defaultInterval = geolocConfigRaw.getDouble("interval").toLong() * 1000,
-        nearWayPointInterval = geolocConfigRaw.getDouble("nearWayPointInterval").toLong() * 1000,
-        nearWayPointRadius = geolocConfigRaw.getDouble("nearWayPointRadius").toInt()
-      )
+      try {
+        val pingConfigRaw = intent.extras!!.getBundle("pingConfig")!!
+        this.pingConfig = PingConfig(
+                lianeId = pingConfigRaw.getString("lianeId")!!,
+                userId = pingConfigRaw.getString("userId")!!,
+                token = pingConfigRaw.getString("token")!!,
+                url = pingConfigRaw.getString("url")!!
+        )
+        delay = intent.extras!!.getDouble("delay").toInt()
+        val timeout = intent.extras!!.getDouble("timeout").toLong()
+        val geolocConfigRaw = intent.extras!!.getBundle("geolocationConfig")!!
+        this.geolocationConfig = GeolocationConfig(
+                defaultInterval = geolocConfigRaw.getDouble("interval").toLong() * 1000,
+                nearWayPointInterval = geolocConfigRaw.getDouble("nearWayPointInterval").toLong() * 1000,
+                nearWayPointRadius = geolocConfigRaw.getDouble("nearWayPointRadius").toInt()
+        )
 
-      val wayPointsRaw = intent.extras!!.getString("wayPoints")!!
-      wayPoints.clear()
-      for (s in wayPointsRaw.split(";")) {
-        val coords = s.split(",")
-        val loc = Location("trip")
-        loc.latitude = coords[1].toDouble()
-        loc.longitude = coords[0].toDouble()
-        wayPoints.add(loc)
-      }
-      val notification = createNotification()
-      val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-      mNotificationManager.notify(serviceId, notification)
-
-      startTracking(true)
-      Timer().schedule(object : TimerTask() {
-        override fun run() {
-          Log.w(LogTag, "Service timed out")
-          stopSelf()
+        val wayPointsRaw = intent.extras!!.getString("wayPoints")!!
+        wayPoints.clear()
+        for (s in wayPointsRaw.split(";")) {
+          val coords = s.split(",")
+          val loc = Location("trip")
+          loc.latitude = coords[1].toDouble()
+          loc.longitude = coords[0].toDouble()
+          wayPoints.add(loc)
         }
-      }, timeout)
+        val notification = createNotification()
+        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.notify(serviceId, notification)
+
+        startTracking(true)
+        Timer().schedule(object : TimerTask() {
+          override fun run() {
+            Log.w(LogTag, "Service timed out")
+            stopSelf()
+          }
+        }, timeout)
+      } catch (e: Exception){
+          Toast.makeText(this, "Erreur: impossible de démarrer la géolocalisation", Toast.LENGTH_SHORT).show()
+          e.printStackTrace()
+      }
     }
 
     if (!::pingConfig.isInitialized || !::geolocationConfig.isInitialized) {
       Log.e(LogTag, "Config incomplete")
-
     }
     return START_STICKY
   }

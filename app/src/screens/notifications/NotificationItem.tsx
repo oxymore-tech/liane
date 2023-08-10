@@ -8,7 +8,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext, useState } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 
 export const NotificationItem = ({ notification: item, navigate, read }: { notification: Notification; navigate: () => void; read: () => void }) => {
   const { user } = useContext(AppContext);
