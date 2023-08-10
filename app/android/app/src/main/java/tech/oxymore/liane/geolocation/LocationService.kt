@@ -71,8 +71,8 @@ class LocationService : Service() {
           val os = DataOutputStream(outputStream)
           os.writeBytes(jsonBody)
 
-          os.flush();
-          os.close();
+          os.flush()
+          os.close()
 
           if (this.getResponseCode() != 204) Log.d("PING", "Response code was : " + this.getResponseCode().toString())
 
@@ -104,9 +104,15 @@ class LocationService : Service() {
           val closeToWayPointIndex = wayPoints.indexOfFirst { it.distanceTo(location) <= geolocationConfig.nearWayPointRadius }
           if (closeToWayPointIndex > -1) {
             if (!preciseTrackingMode) startTracking(true)
-            else if (closeToWayPointIndex == wayPoints.lastIndex && wayPoints.last().distanceTo(location) < 25) {
+            else if (closeToWayPointIndex == wayPoints.lastIndex) {
               // Stop tracking
-              Log.d(LogTag, "Done!")
+              Log.d(LogTag, "Reached destination. Service will stop in 5 minutes.")
+              Timer().schedule(object : TimerTask() {
+                override fun run() {
+                  stopSelf()
+                  Log.w(LogTag, "Service stopped.")
+                }
+              }, 5*60*100)
               stopSelf()
             }
           } else if (preciseTrackingMode) {

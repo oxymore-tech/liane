@@ -320,7 +320,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     throw new Error("User not found");
   }
 
-  console.debug("[GEOPINGS]", `will stop in ${timeout} ms`);
+  console.debug("[GEOPINGS]", `tracking timeout = ${timeout} ms`);
   await new Promise<void>(async resolve => {
     const getDistanceFilter = () => (preciseTrackingMode ? 10 : nearWayPointRadius / 2);
 
@@ -328,6 +328,12 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
       Geolocation.clearWatch(watchId);
       preciseTrackingMode = precise;
       startTracking(precise ? "best" : "nearestTenMeters", getDistanceFilter());
+    };
+
+    const stopTracking = () => {
+      Geolocation.clearWatch(watchId);
+
+      resolve();
     };
     const positionCallback: Geolocation.SuccessCallback = position => {
       // Send position ping
@@ -348,10 +354,12 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
         if (!preciseTrackingMode) {
           // Enable precise tracking
           switchTrackingMode(true);
-        } else if (nearWayPointIndex === trip.length - 1 && distance(coordinate, trip[trip.length - 1].rallyingPoint.location) < 25) {
-          // Stop tracking
-          console.debug("[GEOPINGS] Done!");
-          resolve();
+        } else if (nearWayPointIndex === trip.length - 1) {
+          console.debug("[GEOPINGS] Reached destination. Tracking will stop in 5 minutes.");
+          sleep(5 * 60 * 1000).then(() => {
+            console.debug("[GEOPINGS] Done!");
+            stopTracking();
+          });
         }
       } else if (preciseTrackingMode) {
         // Disable precise tracking
@@ -378,9 +386,8 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     startTracking("best", getDistanceFilter());
     await sleep(timeout);
     // Clean up
-    Geolocation.clearWatch(watchId);
     console.debug("[GEOPINGS] Service timed out");
-    resolve();
+    stopTracking();
   });
 };
 
