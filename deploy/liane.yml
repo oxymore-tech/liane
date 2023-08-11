@@ -33,7 +33,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-martin.rule=Host(`${DOMAIN}`) && (PathPrefix(`/liane_display`) || PathPrefix(`/rallying_point_display`))"
-      - "traefik.http.routers.${PROJECT}-martin.entrypoints=web-secure"
+      - "traefik.http.routers.${PROJECT}-martin.entrypoints=web,web-secure"
       - "traefik.http.services.${PROJECT}-martin.loadbalancer.server.port=3000"
     environment:
       DB_USER: ${MONGO_USERNAME}
@@ -54,7 +54,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-back.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/swagger`))"
-      - "traefik.http.routers.${PROJECT}-back.entrypoints=web-secure"
+      - "traefik.http.routers.${PROJECT}-back.entrypoints=web,web-secure"
       - "traefik.http.services.${PROJECT}-back.loadbalancer.server.port=5000"
     depends_on:
       - mongo
@@ -90,7 +90,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.${PROJECT}-web.entrypoints=web-secure"
+      - "traefik.http.routers.${PROJECT}-web.entrypoints=web,web-secure"
       - "traefik.http.services.${PROJECT}-web.loadbalancer.server.port=3000"
     restart: unless-stopped
     networks:
