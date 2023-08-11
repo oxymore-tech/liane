@@ -40,7 +40,7 @@ public sealed class ImageServiceImpl : IImageService
 
     var result = await UploadImage(input, imageId);
 
-    await userService.UpdateAvatar(currentUserId, GetPicturelUrl(result.Result.Id, Variant.Avatar));
+    await userService.UpdateAvatar(currentUserId, GetPicturelUrl(result.Result!.Id, Variant.Avatar));
   }
 
   private async Task<ImageReponse> UploadImage(IFormFile input, string id)

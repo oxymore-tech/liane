@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
@@ -33,11 +34,11 @@ public sealed class RequestLoggerFilter : IAsyncActionFilter
     var stopwatch = new Stopwatch();
     stopwatch.Start();
     logger.LogInformation("Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
-      request.Protocol, request.Method, request.Scheme, request.Host, request.PathBase, request.Path, request.QueryString, request.ContentType, request.ContentLength);
+      request.Protocol, request.Method, request.Scheme, request.Host, request.PathBase, request.Path, request.QueryString, request.ContentType ?? "-", request.ContentLength?.ToString(CultureInfo.InvariantCulture) ?? "-");
     await next();
     var response = context.HttpContext.Response;
     logger.LogInformation("Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
       request.Protocol, request.Method, request.Scheme, request.Host, request.PathBase, request.Path, request.QueryString,
-      response.StatusCode, response.ContentLength, response.ContentType, stopwatch.ElapsedMilliseconds);
+      response.StatusCode, response.ContentLength?.ToString(CultureInfo.InvariantCulture) ?? "-", response.ContentType ?? "-", stopwatch.ElapsedMilliseconds);
   }
 }
