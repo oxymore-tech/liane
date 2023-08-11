@@ -61,7 +61,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
-  {  
+  {
     var createdBy =  owner ?? currentContext.CurrentUser().Id;
     if (entity.Recurrence  is null)
     {
@@ -75,13 +75,13 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   }
 
   public async Task<Api.Trip.Liane> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null)
-  {  
+  {
     var createdBy =  owner ?? currentContext.CurrentUser().Id;
     var recurrenceResolved = await lianeRecurrenceService.Get(recurrence);
     var entity = recurrenceResolved.GetLianeRequest();
     var liane =  await CreateWithReturn(entity, createdBy, recurrence);
     if (entity.Recurrence is null) return liane;
-    
+
     // Only plan up to a week ahead
     foreach (var nextOccurence in entity.Recurrence.Value.GetNextActiveDates(liane.DepartureTime, DateTime.UtcNow.Date.AddDays(7)))
     {
@@ -92,9 +92,9 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   }
   private async Task<Api.Trip.Liane> CreateWithReturn(LianeRequest entity, Ref<Api.User.User> createdBy, Ref<LianeRecurrence>? recurrence)
   {
-  
+
     var createdAt = DateTime.UtcNow;
-  
+
     var toCreate = new List<LianeDb>();
     // Handle return here
     if (entity.ReturnTime is not null)
@@ -120,7 +120,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     return await Get(created.Id);
   }
-  
+
   private async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy, Ref<LianeRecurrence>? recurrence)
   {
     if (lianeRequest.From == lianeRequest.To)
@@ -134,6 +134,13 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
     return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime, null, members.ToImmutableList(), driverData,
       LianeState.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, null, recurrence);
+  }
+
+  public async Task<Api.Trip.Liane> GetForCurrentUser(Ref<Api.Trip.Liane> l)
+    {
+      var liane = await Get(l);
+      var member = liane.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!;
+      return liane with { State = GetUserState(liane.State, member) };
   }
 
 
@@ -214,7 +221,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     if (lianeFilter is { ForCurrentUser: true, States.Length: > 0 })
     {
       // Return with user's version of liane state
-      var result = paginatedLianes.Select(l => l with { State = GetUserState(l, currentContext.CurrentUser().Id) });
+      var result = paginatedLianes.Select(l => l with { State = GetUserState(l.State, l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
       paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
     }
 
@@ -479,24 +486,15 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   }
 
 
-  private static LianeState GetUserState(LianeDb liane, Ref<Api.User.User> forUser)
+  private static LianeState GetUserState(LianeState current, LianeMember member)
   {
-    var member = liane.Members.Find(m => m.User.Id == forUser.Id)!;
-    switch (liane.State)
+    // Only handle states that are final here (ie. final state is either canceled or archived for the current user)
+    if (current == LianeState.Finished && member.Feedback is not null)
     {
-      case LianeState.Started:
-        // TODO adjust time delta
-        var pickupPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.From);
-        if (pickupPoint!.Eta > DateTime.UtcNow.AddSeconds(30)) return LianeState.NotStarted;
-        var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.To);
-        if (depositPoint!.Eta < DateTime.UtcNow) return LianeState.Finished;
-        break;
-      case LianeState.Finished:
-        if (member.Feedback is not null) return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;
-        break;
+      return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;
     }
 
-    return liane.State;
+    return current;
   }
 
   private async Task<ImmutableList<LianeSegment>> GetLianeSegments(IEnumerable<Api.Trip.Liane> lianes)
@@ -656,7 +654,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state));
   }
-  
+
   public async Task RemoveRecurrence(Ref<LianeRecurrence> recurrence)
   {
     // Directly delete liane without other members
@@ -667,3 +665,4 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         Builders<LianeDb>.Update.Unset(l => l.Recurrence));
   }
 }
+

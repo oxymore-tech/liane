@@ -45,7 +45,7 @@ public sealed class LianeController : ControllerBase
   public async Task<Api.Trip.Liane> Get([FromRoute] string id)
   {
     var current = currentContext.CurrentResource<Api.Trip.Liane>();
-    return current ?? await lianeService.Get(id);
+    return await lianeService.GetForCurrentUser(current is not null? current : id);
   }
 
   [HttpDelete("{id}")]
