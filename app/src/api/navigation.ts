@@ -23,6 +23,7 @@ export type NavigationParamList = {
   Chat: { conversationId: string; liane?: Liane };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User };
+  ProfileEdit: undefined;
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
   ArchivedTrips: undefined;
   Settings: undefined;

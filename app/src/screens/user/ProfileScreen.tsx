@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet } from "react-native";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
@@ -17,6 +17,8 @@ import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { useIsFocused } from "@react-navigation/native";
+import { useQueryClient } from "react-query";
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
@@ -29,21 +31,24 @@ export const ProfileScreen = () => {
 };
 
 const ProfileView = WithFetchResource<User>(
-  ({ data: user }) => {
+  ({ data: user, refresh }) => {
     const { user: loggedUser } = useContext(AppContext);
     const { navigation } = useAppNavigation<"Profile">();
-
     const displayedUser = user || loggedUser!;
     const { top: insetsTop } = useSafeAreaInsets();
     const isMyPage = user!.id === loggedUser!.id;
+    const isFocused = useIsFocused();
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+      queryClient.invalidateQueries(`GetUser${user.id}`);
+      refresh();
+    }, [isFocused]);
+
     return (
       <ScrollView overScrollMode="never">
         <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
-          <Pressable
-            style={{ position: "absolute", left: 24, top: insetsTop + 24 }}
-            onPress={() => {
-              navigation.goBack();
-            }}>
+          <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
             <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
           </Pressable>
           <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
@@ -70,23 +75,10 @@ const Actions = () => {
   const { navigation } = useAppNavigation();
   return (
     <Column>
-      <ActionItem onPress={() => {}} iconName={"edit-outline"} text={"Mes informations"} />
+      <ActionItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
       <ActionItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
-      <ActionItem
-        onPress={() => {
-          // @ts-ignore
-          navigation.navigate("ArchivedTrips");
-        }}
-        iconName={"history"}
-        text={"Historique des trajets"}
-      />
-      <ActionItem
-        onPress={() => {
-          navigation.navigate("Settings");
-        }}
-        iconName={"settings-outline"}
-        text={"Paramètres"}
-      />
+      <ActionItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
+      <ActionItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
       <LineSeparator />
       <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
       <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />

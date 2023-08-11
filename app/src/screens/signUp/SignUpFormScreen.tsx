@@ -96,7 +96,7 @@ const TextField = ({ name, required = true }: { name: keyof FormValues; required
 
   return (
     <Column style={{ minHeight: fieldState.invalid ? 56 : 40 }}>
-      <View style={[styles.inputContainer, { borderColor: borderColor }]}>
+      <View style={[AppStyles.inputContainer, { borderColor: borderColor }]}>
         <AppTextInput
           style={AppStyles.input}
           placeholder={placeholders[name] + (required ? "*" : "")}
@@ -118,17 +118,5 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "bold"
-  },
-  inputContainer: {
-    backgroundColor: AppColors.white,
-    borderRadius: 8,
-    maxHeight: 40,
-    minHeight: 40,
-    flex: 1,
-
-    borderWidth: 1,
-    marginHorizontal: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8
   }
 });
