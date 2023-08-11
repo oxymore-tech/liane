@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Image;
 using Liane.Api.User;
+using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,7 @@ public sealed class ImageServiceImpl : IImageService
     var currentUserId = currentContext.CurrentUser().Id;
     var imageId = $"user_{currentUserId}";
 
-    await httpClient.DeleteAsync(GetApiUri(imageId));
+    await DeleteImage(imageId);
 
     var result = await UploadImage(input, imageId);
 
@@ -57,6 +58,23 @@ public sealed class ImageServiceImpl : IImageService
     using var response = await httpClient.SendAsync(requestMessage);
     var result = await response.CheckAndReadResponseAs<ImageReponse>(jsonOptions);
     return result;
+  }
+
+  private async Task<bool> DeleteImage(string id)
+  {
+    try
+    {
+      var requestUri = GetApiUri(id);
+      using var requestMessage = new HttpRequestMessage(HttpMethod.Delete, requestUri);
+      requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", cloudflareSettings.ApiKey);
+      using var response = await httpClient.SendAsync(requestMessage);
+      var result = await response.CheckAndReadResponseAs<ImageReponse>(jsonOptions);
+      return result.Success;
+    }
+    catch (ResourceNotFoundException)
+    {
+      return false;
+    }
   }
 
   private string GetPicturelUrl(string imageId, Variant variant) => $"https://imagedelivery.net/{cloudflareSettings.AccountHash}/{imageId}/{variant.ToString().ToLowerInvariant()}";
