@@ -66,8 +66,8 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     if (entity.ReturnTime is not null)
     {
       var createdReturn = await ToDb(
-        new LianeRequest(null, entity.ReturnTime.Value, null, entity.AvailableSeats, entity.To, entity.From),
-        ObjectId.GenerateNewId().ToString(), 
+        new LianeRequest(null, entity.ReturnTime.Value, null, entity.AvailableSeats, entity.To, entity.From, entity.Recurrence),
+        ObjectId.GenerateNewId().ToString(),
         DateTime.UtcNow,
         owner ?? CurrentContext.CurrentUser().Id
       );
@@ -75,14 +75,14 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     }
     var created = await ToDb(entity with {ReturnTime = null}, ObjectId.GenerateNewId().ToString(), DateTime.UtcNow, owner ?? CurrentContext.CurrentUser().Id);
     toCreate.Add(entity.ReturnTime is null ? created : created with { Return = toCreate[0].Id } );
-    
+
     await Mongo.GetCollection<LianeDb>().InsertManyAsync(toCreate);
     foreach (var lianeDb in toCreate)
     {
       var liane = await Get(lianeDb.Id);
       await postgisService.UpdateGeometry(liane);
-    } 
-    
+    }
+
     return await Get(created.Id);
   }
 
@@ -423,10 +423,10 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
       return new WayPoint(rallyingPoint, w.Duration, w.Distance, w.Eta);
     });
     var users = await liane.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
-    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
+    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation, liane.Recurrence);
   }
-  
-  
+
+
 
   protected override async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy)
   {
@@ -440,7 +440,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
     var wayPoints = await GetWayPoints(lianeRequest.DepartureTime, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
     return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime, null, members.ToImmutableList(), driverData,
-      LianeState.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, null);
+      LianeState.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, null, lianeRequest.Recurrence);
   }
 
   private static LianeState GetUserState(LianeDb liane, Ref<Api.User.User> forUser)
@@ -588,7 +588,7 @@ public sealed class LianeServiceImpl : MongoCrudEntityService<LianeRequest, Lian
         (int)dDeposit.Duration,
         (int)dDeposit.Distance
       ), pickupPoint.Id!, depositPoint.Id!, newWayPoints);
-      
+
       DateTime? returnTime = null;
       if (liane.Return is not null)
       {

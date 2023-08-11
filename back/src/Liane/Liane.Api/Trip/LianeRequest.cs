@@ -9,5 +9,6 @@ public sealed record LianeRequest(
   DateTime? ReturnTime,
   int AvailableSeats,
   Ref<RallyingPoint> From,
-  Ref<RallyingPoint> To
+  Ref<RallyingPoint> To,
+  DayOfTheWeekFlag? Recurrence = null
 ) : IIdentity;

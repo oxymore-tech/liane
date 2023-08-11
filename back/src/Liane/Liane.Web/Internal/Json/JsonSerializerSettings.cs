@@ -13,6 +13,7 @@ public static class JsonSerializerSettings
     new CursorJsonConverter(),
     new JsonStringEnumConverter(),
     new LngLatTupleConverter(),
+    new DayOfTheWeekFlagConverter(),
     new UnionJsonConverterFactory()
   };
 
