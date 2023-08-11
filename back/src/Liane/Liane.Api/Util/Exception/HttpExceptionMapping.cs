@@ -13,7 +13,6 @@ public static class HttpExceptionMapping
 {
   public static System.Exception Map(HttpStatusCode? code, string responseContent)
   {
-    // ReSharper disable once SwitchStatementMissingSomeCases
     switch (code)
     {
       case HttpStatusCode.NotFound:
@@ -33,7 +32,7 @@ public static class HttpExceptionMapping
   {
     switch (exception)
     {
-      case TaskCanceledException e:
+      case TaskCanceledException:
         logger?.LogInformation("Request canceled");
         return new BadRequestObjectResult("Request canceled");
 

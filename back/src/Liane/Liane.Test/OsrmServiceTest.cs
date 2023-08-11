@@ -11,14 +11,8 @@ namespace Liane.Test;
 [TestFixture(Category = "Integration")]
 public sealed class OsrmServiceTest
 {
-  private readonly IOsrmService tested;
-  private readonly ImmutableList<LatLng> coordinates;
-
-  public OsrmServiceTest()
-  {
-    tested = new OsrmClient(new OsrmSettings(new Uri("http://liane.app:5000")));
-    coordinates = ImmutableList.Create(Positions.Mende, Positions.Florac);
-  }
+  private readonly IOsrmService tested = new OsrmClient(new OsrmSettings(new Uri("http://gjini.co:5000")));
+  private readonly ImmutableList<LatLng> coordinates = ImmutableList.Create(Positions.Mende, Positions.Florac);
 
   [Test]
   public async Task ShouldGetADefaultRoute()

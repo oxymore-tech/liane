@@ -38,4 +38,5 @@ public sealed class ValidationMessage
 
   public static ValidationMessage IsRequired => new("validation.required");
   public static ValidationMessage HasWrongFormat => new("validation.wrong-format");
+  public static ValidationMessage TooShort(int minLength) => new($"validation.too-short minLength:{minLength}");
 }

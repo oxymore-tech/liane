@@ -3,11 +3,13 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Liane.Api.Image;
 using Liane.Api.Util;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Image;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
@@ -64,6 +66,10 @@ public static class Startup
     services.AddService<PostgisDatabase>();
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
+
+    services.AddService<ImageServiceImpl>();
+    services.AddSettings<CloudflareSettings>(context);
+    services.AddHttpClient<IImageService, ImageServiceImpl>();
 
     services.AddSettings<MongoSettings>(context);
     services.AddService<MigrationService>();
