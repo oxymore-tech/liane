@@ -57,7 +57,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
-          source: "/tmp/${{ env.project }}-test/test-results.trx"
+          source: "/tmp/it-${{ env.project }}/test-results.trx"
           target: "test-results.trx"
 
       - name: Test Report
