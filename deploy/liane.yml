@@ -91,11 +91,6 @@ services:
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
       - "traefik.http.routers.${PROJECT}-web.entrypoints=web-secure"
-      - "traefik.http.routers.${PROJECT}-web.middlewares=redirect@file"
-      - "traefik.http.routers.${PROJECT}-web-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.${PROJECT}-web-secure.entrypoints=web-secure"
-      - "traefik.http.routers.${PROJECT}-web-secure.middlewares=compress@file"
-      - "traefik.http.routers.${PROJECT}-web-secure.tls.certResolver=gjinico"
       - "traefik.http.services.${PROJECT}-web.loadbalancer.server.port=3000"
     restart: unless-stopped
     networks:
