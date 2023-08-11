@@ -1,14 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import AppMapView, {
-  AppMapViewController,
-  LianeShapeDisplayLayer,
-  LianeDisplayLayer,
-  PotentialLianeLayer,
-  RallyingPointsFeaturesDisplayLayer,
-  WayPointDisplay,
-  PickupDestinationsDisplayLayer
-} from "@/components/map/AppMapView";
+import AppMapView, { AppMapViewController } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -37,6 +29,11 @@ import { feature, featureCollection } from "@turf/helpers";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { getSetting } from "@/api/storage";
 import { useIsFocused } from "@react-navigation/native";
+import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer";
+import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
+import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
+import { LianeDisplayLayer, PickupDestinationsDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
+import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);

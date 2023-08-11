@@ -8,13 +8,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
 import { CachedPlaceLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
-import { FloatingBackButton } from "@/screens/detail/Components";
+
 import { SearchedLocation, Trip } from "@/api/service/location";
 import { AppText } from "@/components/base/AppText";
-import { useAppBackController } from "@/components/AppBackContextProvider";
 import { AppPressable, AppPressableIcon } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
-import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { AppContext } from "@/components/context/ContextProvider";
 import { HomeScreenHeader } from "@/components/context/Navigation";
 import { HomeMapContext } from "@/screens/home/StateMachine";
@@ -22,6 +20,7 @@ import { useSelector } from "@xstate/react";
 import { capitalize } from "@/util/strings";
 import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
+import { FloatingBackButton } from "@/components/FloatingBackButton";
 
 export const RallyingPointField = forwardRef(
   (

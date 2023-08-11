@@ -16,7 +16,6 @@ import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { DriverInfo } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
@@ -26,6 +25,7 @@ import { LianeMatchItemView } from "@/screens/home/BottomSheetView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideInLeft, SlideInRight, SlideOutDown, SlideOutLeft } from "react-native-reanimated";
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
+import { DriverInfo } from "@/screens/detail/components/DriverInfo";
 
 export const LianeMatchDetailView = () => {
   const machine = useContext(HomeMapContext);
@@ -81,7 +81,7 @@ export const LianeMatchDetailView = () => {
     setStep(firstEdit ? step + 1 : 3);
   }, [firstEdit, step]);
   useEffect(() => {
-    console.log(step, isSeatsStep, isReturnStep);
+    //console.log(step, isSeatsStep, isReturnStep);
     if (step === 1 && !isSeatsStep) {
       nextStep();
     } else if (step === 2 && !isReturnStep) {
