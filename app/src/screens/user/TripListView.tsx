@@ -74,7 +74,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 
   const { services, user } = useContext(AppContext);
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
-  const driver = item.members.find(l => l.user.id === item.driver.user)!.user;
+  const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   return (
     <Pressable
       onPress={() => {
@@ -170,6 +170,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 
   // else render join request
   const { navigation } = useAppNavigation();
+  const driver = useMemo(() => item.targetLiane.members.find(l => l.user.id === item.targetLiane.driver.user)!.user, [item]);
   return (
     <Pressable
       onPress={() => {
@@ -180,6 +181,10 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
       }}
       style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <View>
+        <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
+          <UserPicture url={undefined} size={24} id={driver.id} />
+          <AppText style={{ fontSize: 14, fontWeight: "500" }}>{driver.pseudo}</AppText>
+        </Row>
         <View style={{ flexGrow: 1, marginRight: 40 }}>
           <JoinRequestSegmentOverview request={item} />
         </View>
