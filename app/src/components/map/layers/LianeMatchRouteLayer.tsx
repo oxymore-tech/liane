@@ -1,8 +1,8 @@
 import { Exact, getPoint, LianeMatch, RallyingPoint, UnionUtils } from "@/api";
-import { FeatureCollection, GeoJSON } from "geojson";
+import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { getTripMatch } from "@/components/trip/trip";
+import { getTripFromMatch, getTripMatch } from "@/components/trip/trip";
 import { useQuery } from "react-query";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import MapLibreGL from "@maplibre/maplibre-react-native";
@@ -32,7 +32,7 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
     return trip.wayPoints; //.slice(trip.departureIndex, trip.arrivalIndex + 1);
   }, [fromPoint, match, toPoint]);
 
-  console.log(to, from, wayPoints);
+  //console.log(to, from, wayPoints);
   const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.liane.id!], () => {
     const wp = [...(isSamePickup ? [] : [from!.location]), ...wayPoints.map(w => w.rallyingPoint.location), ...(isSameDeposit ? [] : [to!.location])];
 
@@ -65,6 +65,70 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
 
   if (!mapFeatures || isLoading) {
     return <LianeShapeDisplayLayer lianeDisplay={props.loadingFeatures} loading={true} useWidth={3} />;
+  }
+
+  return (
+    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
+      <LineLayer
+        id={"match_route_display"}
+        filter={["!", ["get", "isWalk"]]}
+        style={{
+          lineColor: AppColors.darkBlue,
+          lineWidth: 3
+        }}
+      />
+      <LineLayer
+        id={"match_remainder_display"}
+        filter={["get", "isWalk"]}
+        style={{
+          lineColor: AppColorPalettes.gray[800],
+          lineWidth: 3,
+          lineCap: "round",
+          lineDasharray: [0, 2]
+        }}
+      />
+    </ShapeSource>
+  );
+};
+
+export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFeatures?: FeatureCollection; match: LianeMatch }) => {
+  const { services } = useContext(AppContext);
+
+  const { wayPoints } = useMemo(() => getTripFromMatch(match), [match]);
+  //console.log(to, from, wayPoints);
+  const { data, isLoading } = useQuery(
+    ["match", wayPoints[0].rallyingPoint.id, wayPoints[wayPoints.length - 1].rallyingPoint.id, match.liane.id!],
+    () => {
+      const wp = wayPoints.map(w => w.rallyingPoint.location);
+
+      return services.routing.getRoute(wp);
+    }
+  );
+
+  const mapFeatures: GeoJSON.FeatureCollection | undefined = useMemo(() => {
+    if (!data || data.geometry.coordinates.length === 0) {
+      return undefined;
+    }
+
+    const features: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: data.geometry.coordinates.map((line): GeoJSON.Feature => {
+        return {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: line
+          }
+        };
+      })
+    };
+
+    return features;
+  }, [data]);
+
+  if (!mapFeatures || isLoading) {
+    return <LianeShapeDisplayLayer lianeDisplay={loadingFeatures} loading={true} useWidth={3} />;
   }
 
   return (

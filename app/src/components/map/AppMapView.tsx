@@ -10,7 +10,7 @@ import React, {
   useState
 } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
-import MapLibreGL, { Expression, Logger, MarkerViewProps } from "@maplibre/maplibre-react-native";
+import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
 import { LatLng } from "@/api";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { FeatureCollection, Position } from "geojson";
@@ -28,6 +28,8 @@ import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
 import DeviceInfo from "react-native-device-info";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
+import { useSubject } from "@/util/hooks/subscription";
+import { SubscriptionLike } from "rxjs";
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -53,14 +55,17 @@ export interface AppMapViewController {
   getZoom: () => Promise<number> | undefined;
   getCenter: () => Promise<Position> | undefined;
   queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
+  subscribeToRegionChanges: (callback: (payload: RegionPayload) => void) => SubscriptionLike;
 }
 // @ts-ignore
 const MapControllerContext = React.createContext<AppMapViewController>();
 
 export const useAppMapViewController = () => useContext<AppMapViewController>(MapControllerContext);
+
+export type MapMovedCallback = (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
 export interface AppMapViewProps extends PropsWithChildren {
   // position: LatLng;
-  onRegionChanged?: (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
+  onRegionChanged?: MapMovedCallback;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
   onSelectFeatures?: (features: { location: LatLng; properties: any }[]) => void;
@@ -91,6 +96,7 @@ const AppMapView = forwardRef(
 
     const wd = useWindowDimensions();
     const scale = Platform.OS === "android" ? wd.scale : 1;
+    const regionSubject = useSubject<RegionPayload>();
 
     const controller: AppMapViewController = {
       getCenter: () => mapRef.current?.getCenter(),
@@ -126,7 +132,8 @@ const AppMapView = forwardRef(
       getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
       getZoom: () => mapRef.current?.getZoom(),
       fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
-        cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration)
+        cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
+      subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
     };
 
     useImperativeHandle(ref, () => controller);
@@ -179,6 +186,7 @@ const AppMapView = forwardRef(
               setShowActions(flyingToLocation || false);
             }
           }}
+          onRegionIsChanging={feature => regionSubject.next(feature.properties)}
           onRegionDidChange={feature => {
             if (animated) {
               moving.current = false;
@@ -192,16 +200,17 @@ const AppMapView = forwardRef(
             }
           }}
           onDidFinishLoadingMap={async () => {
-            //   await mapRef.current?.setSourceVisibility(false, "maptiler_planet", "poi");
-            let position = services.location.getLastKnownLocation();
-            if (!contains(FR_BBOX, position)) {
-              position = DEFAULT_TLS;
+            if (!bounds) {
+              let position = services.location.getLastKnownLocation();
+              if (!contains(FR_BBOX, position)) {
+                position = DEFAULT_TLS;
+              }
+              cameraRef.current?.setCamera({
+                centerCoordinate: [position.lng, position.lat],
+                zoomLevel: 10,
+                animationDuration: 0
+              });
             }
-            cameraRef.current?.setCamera({
-              centerCoordinate: [position.lng, position.lat],
-              zoomLevel: 10,
-              animationDuration: 0
-            });
             setAnimated(true);
             console.debug("[MAP] loading done");
             if (onMapLoaded) {

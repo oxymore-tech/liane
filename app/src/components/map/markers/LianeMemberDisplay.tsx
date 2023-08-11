@@ -1,33 +1,47 @@
-import { RallyingPoint, User } from "@/api";
-import { ColorValue, StyleSheet, Text, View } from "react-native";
+import { LatLng, User } from "@/api";
+import { StyleSheet, Text, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import React from "react";
 import { MarkerView, useAppMapViewController } from "../AppMapView";
 import { AppStyles } from "@/theme/styles";
+import { useSubscription } from "@/util/hooks/subscription";
+import Svg, { Path } from "react-native-svg";
+import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
 
 export const LianeMemberDisplay = ({
-  rallyingPoint,
+  location,
   user,
   active = true,
   size = 56,
-  offsetY
+  showLocationPin = true,
+  minZoom
 }: // showIcon = true
 {
-  rallyingPoint: RallyingPoint;
+  location: LatLng;
   user: User;
   active?: boolean;
   size?: number;
-  offsetY?: number;
+  showLocationPin?: boolean;
+  minZoom?: number | undefined;
 }) => {
+  const controller = useAppMapViewController();
+  const region = useSubscription(controller.subscribeToRegionChanges);
+  const zoom = region?.zoomLevel || 10;
+
+  if (minZoom && zoom <= minZoom) {
+    return null;
+  }
   return (
-    <MarkerView id={rallyingPoint.id!} coordinate={[rallyingPoint.location.lng, rallyingPoint.location.lat]}>
-      <View pointerEvents="none" style={[styles.wayPointContainer, { top: offsetY }]}>
+    <MarkerView id={user.id!} coordinate={[location.lng, location.lat]} anchor={{ x: 0.5, y: 1 }}>
+      <Animated.View entering={FadeIn} exiting={FadeOut} pointerEvents="none" style={[styles.wayPointContainer, { bottom: -4 }]}>
         {
           <View style={styles.wayPointContainer}>
-            <View style={styles.userNameContainer}>
-              <Text style={styles.userNameText}>{user.pseudo}</Text>
-            </View>
+            {zoom > 7.5 && (
+              <Animated.View style={styles.userNameContainer} entering={ZoomIn}>
+                <Text style={styles.userNameText}>{user.pseudo}</Text>
+              </Animated.View>
+            )}
             <View
               style={[
                 styles.userPictureContainer,
@@ -38,23 +52,25 @@ export const LianeMemberDisplay = ({
           </View>
         }
 
-        <View
-          style={{
-            padding: 4,
-            marginTop: 4,
-            marginBottom: size + 40,
-            backgroundColor: AppColors.darkBlue,
-            borderRadius: 4,
-            borderColor: AppColors.white,
-            borderWidth: 1,
-            opacity: 0
-          }}
-        />
-      </View>
+        <Svg width="10" height="16" viewBox="0 0 13 18" fill="none" opacity={showLocationPin ? 1 : 0} transform={[{ translateY: -4 }]}>
+          <Path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M0.63916 0.521484L6.71387 17.1348L12.7568 0.608887C10.8748 0.866699 8.95288 1 7 1C4.83765 1 2.71362 0.836426 0.63916 0.521484Z"
+            fill={AppColors.orange}
+          />
+        </Svg>
+      </Animated.View>
     </MarkerView>
   );
 };
 
+/*
+<svg width="17" height="23" viewBox="0 0 17 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.5 23L0.272758 0.5L16.7272 0.5L8.5 23Z" fill="#FF4F2C"/>
+</svg>
+
+ */
 const styles = StyleSheet.create({
   wayPointContainer: {
     alignItems: "center",
@@ -70,7 +86,7 @@ const styles = StyleSheet.create({
   },
   userNameText: {
     color: AppColors.black,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold"
   },
   userPictureContainer: {

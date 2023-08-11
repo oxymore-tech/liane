@@ -6,8 +6,8 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils } from "@/api";
-import { getLianeStatus, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
+import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
+import { getLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
@@ -21,8 +21,8 @@ import { useQuery } from "react-query";
 import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
-import { DriverLocationMarker } from "@/components/map/markers/DriverLocationMarker";
-import { LianeMatchRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
+import { DriverLocationMarker } from "@/screens/detail/components/DriverLocationMarker";
+import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
 import { LianeActionRow } from "@/screens/detail/components/LianeActionRow";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
@@ -32,6 +32,7 @@ import { LianeStatusRow } from "@/screens/detail/components/LianeStatusRow";
 import { WayPointActionView } from "@/screens/detail/components/WayPointActionView";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { LianeMemberDisplay } from "@/components/map/markers/LianeMemberDisplay";
+import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -80,65 +81,63 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   const { top: insetsTop } = useSafeAreaInsets();
   const [bSheetTop, setBSheetTop] = useState<number>(0.7 * height);
 
-  const [fromPoint, toPoint] = match ? [getPoint(match, "pickup"), getPoint(match, "deposit")] : [undefined, undefined];
+  const tripMatch = useMemo(() => (match ? getTripFromMatch(match) : undefined), [match]);
 
   const mapBounds = useMemo(() => {
     if (!match) {
       return undefined;
     }
     const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : height * bSheetTop;
-    const bbox = getBoundingBox(match!.liane.wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]));
+    const bbox = getBoundingBox(tripMatch!.wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]));
     bbox.paddingTop = bSheetTopPixels < height / 2 ? insetsTop + 96 : 24;
     bbox.paddingLeft = 72;
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
-    //console.log(bbox, bSheetTop);
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
 
-  const driver = match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user;
   const { user } = useContext(AppContext);
+  const driver = useMemo(() => match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user, [match]);
+  const tripPassengers = useMemo(() => {
+    return match?.liane.members
+      .map(m => {
+        if (m.user.id === user!.id || m.user.id === driver?.id) {
+          return null;
+        }
+        const currentRallyingPointIndex = match.liane.wayPoints.findIndex(w => w.rallyingPoint.id === m.from);
+        if (currentRallyingPointIndex < tripMatch!.departureIndex) {
+          return null;
+        }
+        const currentRallyingPoint = match.liane.wayPoints[currentRallyingPointIndex].rallyingPoint;
+        const currentUser = m.user;
+        return { user: currentUser, departurePoint: currentRallyingPoint };
+      })
+      .filter(m => m !== null) as { user: User; departurePoint: RallyingPoint }[];
+  }, [driver?.id, match, tripMatch, user?.id]);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.page}>
         <AppMapView bounds={mapBounds} showGeolocation={false}>
-          {match && <LianeMatchRouteLayer match={match} />}
-          {match &&
-            match.liane.members
-              .filter(m => m.user.id !== user!.id)
-              .map(m => {
-                const currentRallyingPoint = match.liane.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint;
-                const currentUser = m.user;
-                return <LianeMemberDisplay rallyingPoint={currentRallyingPoint} size={48} user={currentUser} offsetY={-4} />;
-              })}
-          {match &&
-            !request &&
-            match.liane.wayPoints.map(w => {
+          {match && <LianeMatchUserRouteLayer match={match} />}
+
+          {tripPassengers &&
+            tripPassengers.map(p => {
+              return <PassengerLocationMarker user={p.user} defaultLocation={p.departurePoint.location} />;
+            })}
+          {tripMatch &&
+            tripMatch.wayPoints.map((w, i) => {
               let type: "to" | "from" | "step";
-              if (w.rallyingPoint.id === fromPoint!.id) {
+              if (i === 0) {
                 type = "from";
-              } else if (w.rallyingPoint.id === toPoint!.id) {
+              } else if (i === tripMatch!.wayPoints.length - 1) {
                 type = "to";
               } else {
                 type = "step";
               }
               return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
             })}
-          {request &&
-            match &&
-            [request.from, request.to].map((w, i) => {
-              let type: "to" | "from" | "step";
-              if (i === 0) {
-                type = "from";
-              } else if (i === match.liane.wayPoints.length - 1) {
-                type = "to";
-              } else {
-                type = "step";
-              }
-              return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} />;
-            })}
 
-          {match && <DriverLocationMarker user={driver!} />}
+          {driver && tripMatch && <DriverLocationMarker user={driver!} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
         </AppMapView>
         <AppBottomSheet
           onScrolled={v => {
@@ -182,16 +181,11 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
 };
 
 const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRequest?: boolean }) => {
-  const fromPoint = getPoint(liane, "pickup");
-  const toPoint = getPoint(liane, "deposit");
-  const wayPoints = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
-
-  const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
+  const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
 
   const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
 
   // const passengers = liane.liane.members.filter(m => m.user !== liane.liane.driver.user);
-  const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
   const tripDuration = formatDuration(getTotalDuration(currentTrip));
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
@@ -210,7 +204,7 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
       <Column style={styles.section}>
         <DetailedLianeMatchView
           departureTime={liane.liane.departureTime}
-          wayPoints={wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1)}
+          wayPoints={currentTrip}
           renderWayPointAction={wayPoint => (isRequest ? undefined : <WayPointActionView wayPoint={wayPoint} liane={liane.liane} />)}
         />
       </Column>

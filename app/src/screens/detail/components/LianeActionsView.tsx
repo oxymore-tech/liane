@@ -23,7 +23,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
   const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
   const currentUserIsDriver = currentUserIsMember && liane.driver.user === user!.id;
-  console.log(user, currentUserIsMember, liane.members);
+  //console.log(user, currentUserIsMember, liane.members);
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,7 +36,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         Liane postée le <AppText style={{ fontWeight: "bold" }}>{formatDate(new Date(liane.createdAt!))}</AppText> par{" "}
         <AppText style={{ fontWeight: "bold" }}>{creator.pseudo}</AppText>
       </AppText>
-      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} id={liane.id!} />
+      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={liane} />
       {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
       {currentUserIsDriver && liane.state === "NotStarted" && (
         <ActionItem
