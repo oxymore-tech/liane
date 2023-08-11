@@ -23,6 +23,7 @@ using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
 using Liane.Web.Hubs;
 using Liane.Web.Internal.Auth;
+using Liane.Web.Internal.Debug;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
@@ -190,7 +191,11 @@ public static class Startup
       }
     );
 
-    services.AddControllers(options => { options.Filters.Add<ExceptionFilter>(); });
+    services.AddControllers(options =>
+    {
+      options.Filters.Add<RequestLoggerFilter>();
+      options.Filters.Add<ExceptionFilter>();
+    });
     services.AddService<HttpContextAccessor>();
     services.AddSwaggerDocument(settings =>
     {

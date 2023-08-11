@@ -35,12 +35,7 @@ public sealed class ImageServiceImpl : IImageService
     var currentUserId = currentContext.CurrentUser().Id;
     var imageId = $"user_{currentUserId}";
 
-    var user = await userService.Get(currentUserId);
-
-    if (user.PictureUrl is not null)
-    {
-      await httpClient.DeleteAsync(GetApiUri(imageId));
-    }
+    await httpClient.DeleteAsync(GetApiUri(imageId));
 
     var result = await UploadImage(input, imageId);
 

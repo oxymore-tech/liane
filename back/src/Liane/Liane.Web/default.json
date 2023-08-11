@@ -4,7 +4,6 @@
       "Default": "Debug",
       "System": "Warning",
       "Microsoft": "Error",
-      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information",
       "Liane.Web.Internal.Debug": "Debug",
       "Liane.Service.Internal": "Debug"
     }
