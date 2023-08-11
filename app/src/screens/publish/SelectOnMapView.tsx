@@ -9,10 +9,12 @@ import { AppStyles } from "@/theme/styles";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
-import AppMapView, { RallyingPointsDisplayLayer, WayPointDisplay } from "@/components/map/AppMapView";
+import AppMapView from "@/components/map/AppMapView";
 import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
+import { RallyingPointsDisplayLayer } from "@/components/map/layers/RallyingPointsDisplayLayer";
+import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 
 export interface SelectOnMapViewProps {
   onSelect: (rp: RallyingPoint) => void;

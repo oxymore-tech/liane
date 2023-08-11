@@ -7,6 +7,7 @@ import { View } from "react-native";
 import { Route } from "@/api/service/routing";
 import { AppIcon } from "@/components/base/AppIcon";
 import { MapStyleProps } from "@/api/location";
+import { MarkerView } from "@/components/map/AppMapView";
 
 const TripMapView = ({ data, params }: { data: Route; params: { liane: Liane } }) => {
   const boundingBox = getBoundingBox(data.geometry.coordinates.flat(), 24);
@@ -61,22 +62,22 @@ const TripMapView = ({ data, params }: { data: Route; params: { liane: Liane } }
       </MapLibreGL.ShapeSource>
       {displayedWayPoints.map(point => {
         return (
-          <MapLibreGL.MarkerView
+          <MarkerView
             coordinate={[point.rallyingPoint.location.lng, point.rallyingPoint.location.lat]}
             id={point.rallyingPoint.id!}
             key={point.rallyingPoint.id!}>
             <View style={{ backgroundColor: "red", width: 6, height: 6, borderRadius: 6 }} />
-          </MapLibreGL.MarkerView>
+          </MarkerView>
         );
       })}
-      <MapLibreGL.MarkerView
+      <MarkerView
         key={destinationWayPoint.rallyingPoint.id!}
         coordinate={[destinationWayPoint.rallyingPoint.location.lng, destinationWayPoint.rallyingPoint.location.lat]}
         id={destinationWayPoint.rallyingPoint.id!}>
         <View style={{ position: "absolute", paddingLeft: 12, paddingBottom: 12 }}>
           <AppIcon name={"flag"} color={"red"} size={24} />
         </View>
-      </MapLibreGL.MarkerView>
+      </MarkerView>
     </MapLibreGL.MapView>
   );
 };
@@ -148,23 +149,23 @@ const TripChangeMapView = ({ data, params }: { data: LianeMatchRoutesGeometry; p
         const isMain =
           point.rallyingPoint.id === departureWayPoint.rallyingPoint.id || point.rallyingPoint.id === destinationWayPoint.rallyingPoint.id;
         return (
-          <MapLibreGL.MarkerView
+          <MarkerView
             coordinate={[point.rallyingPoint.location.lng, point.rallyingPoint.location.lat]}
             key={point.rallyingPoint.id!}
             id={point.rallyingPoint.id!}>
             <View style={{ backgroundColor: "red", width: isMain ? 8 : 6, height: isMain ? 8 : 6, borderRadius: 6 }} />
-          </MapLibreGL.MarkerView>
+          </MarkerView>
         );
       })}
 
-      <MapLibreGL.MarkerView
+      <MarkerView
         key={destinationWayPoint.rallyingPoint.id!}
         coordinate={[destinationWayPoint.rallyingPoint.location.lng, destinationWayPoint.rallyingPoint.location.lat]}
         id={destinationWayPoint.rallyingPoint.id!}>
         <View style={{ position: "absolute", paddingLeft: 8, paddingBottom: 18 }}>
           <AppIcon name={"flag"} color={"red"} size={20} />
         </View>
-      </MapLibreGL.MarkerView>
+      </MarkerView>
     </MapLibreGL.MapView>
   );
 };

@@ -1,37 +1,38 @@
-import React, { useCallback, useContext, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
-import AppMapView, { LianeMatchRouteLayer, WayPointDisplay } from "@/components/map/AppMapView";
+import React, { useContext, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
-import { ActionFAB, DriverInfo, FloatingBackButton, InfoItem, PassengerListView } from "@/screens/detail/Components";
-import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils, User, WayPoint } from "@/api";
-import { getLianeStatus, getLianeStatusStyle, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
+import { FloatingBackButton } from "@/components/FloatingBackButton";
+import { Exact, getPoint, JoinLianeRequestDetailed, Liane, LianeMatch, UnionUtils } from "@/api";
+import { getLianeStatus, getTotalDistance, getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatDate, formatMonthDay, formatTime } from "@/api/i18n";
-import { addSeconds, formatDuration } from "@/util/datetime";
+import { formatMonthDay } from "@/api/i18n";
+import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
-import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
-import { ActionItem } from "@/components/ActionItem";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useQuery, useQueryClient } from "react-query";
-import { JoinRequestDetailQueryKey, JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
-import { SlideUpModal } from "@/components/modal/SlideUpModal";
+import { useQuery } from "react-query";
+import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
-import { AppStyles } from "@/theme/styles";
-import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelector";
-import { showLocation } from "react-native-map-link";
-import { AppIcon } from "@/components/base/AppIcon";
-import { DebugIdView } from "@/components/base/DebugIdView";
-import { UserPicture } from "@/components/UserPicture";
-import { TripGeolocationProvider, useMemberTripGeolocation, useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
-import { DriverLocationMarker } from "@/screens/detail/DriverLocationMarker";
-import { cancelSendLocationPings } from "@/api/service/location";
+import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
+import { DriverLocationMarker } from "@/components/map/markers/DriverLocationMarker";
+import { LianeMatchRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
+import { LianeActionRow } from "@/screens/detail/components/LianeActionRow";
+import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
+import { InfoItem } from "@/screens/detail/components/InfoItem";
+import { DriverInfo } from "@/screens/detail/components/DriverInfo";
+import { PassengerListView } from "@/screens/detail/components/PassengerListView";
+import { LianeStatusRow } from "@/screens/detail/components/LianeStatusRow";
+import { WayPointActionView } from "@/screens/detail/components/WayPointActionView";
+import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
+import { LianeMemberDisplay } from "@/components/map/markers/LianeMemberDisplay";
+
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeJoinRequestDetail">();
@@ -94,13 +95,22 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     //console.log(bbox, bSheetTop);
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
-  const currentUser: User | undefined = match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user;
 
+  const driver = match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user;
+  const { user } = useContext(AppContext);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.page}>
         <AppMapView bounds={mapBounds} showGeolocation={false}>
           {match && <LianeMatchRouteLayer match={match} />}
+          {match &&
+            match.liane.members
+              .filter(m => m.user.id !== user!.id)
+              .map(m => {
+                const currentRallyingPoint = match.liane.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint;
+                const currentUser = m.user;
+                return <LianeMemberDisplay rallyingPoint={currentRallyingPoint} size={48} user={currentUser} offsetY={-4} />;
+              })}
           {match &&
             !request &&
             match.liane.wayPoints.map(w => {
@@ -112,7 +122,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
               } else {
                 type = "step";
               }
-              return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} user={currentUser} />;
+              return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
             })}
           {request &&
             match &&
@@ -125,9 +135,10 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
               } else {
                 type = "step";
               }
-              return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} user={currentUser} />;
+              return <WayPointDisplay key={w.id!} rallyingPoint={w} type={type} />;
             })}
-          {match && <DriverLocationMarker user={currentUser} />}
+
+          {match && <DriverLocationMarker user={driver!} />}
         </AppMapView>
         <AppBottomSheet
           onScrolled={v => {
@@ -157,234 +168,6 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   );
 };
 
-const LianeActionRow = ({ liane: match }: { liane: LianeMatch }) => {
-  const { navigation } = useAppNavigation();
-  const geoloc = useTripGeolocation();
-
-  return (
-    <Row style={{ justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }} spacing={8}>
-      {geoloc !== undefined && (
-        <ActionFAB
-          onPress={() => {
-            if (!geoloc.isActive) {
-              navigation.navigate("ShareTripLocationScreen", { liane: match.liane });
-            }
-          }}
-          color={geoloc.isActive ? AppColorPalettes.gray[400] : AppColors.darkBlue}
-          icon={"pin-outline"}
-        />
-      )}
-
-      {match.liane.state !== "Archived" && match.liane.state !== "Canceled" && match.liane.members.length > 1 && (
-        <ActionFAB
-          onPress={() => navigation.navigate("Chat", { conversationId: match.liane.conversation, liane: match.liane })}
-          color={AppColors.blue}
-          icon={"message-circle-full"}
-        />
-      )}
-    </Row>
-  );
-};
-
-const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
-  const liane = match.liane;
-  const { user, services } = useContext(AppContext);
-  const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
-  const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
-  const currentUserIsDriver = currentUserIsMember && liane.driver.user === user!.id;
-  console.log(user, currentUserIsMember, liane.members);
-  const { navigation } = useAppNavigation();
-  const queryClient = useQueryClient();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [date, setDate] = useState(new Date(liane.departureTime));
-  const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
-
-  return (
-    <Column>
-      <AppText numberOfLines={-1} style={{ paddingVertical: 4, paddingHorizontal: 24 }}>
-        Liane postée le <AppText style={{ fontWeight: "bold" }}>{formatDate(new Date(liane.createdAt!))}</AppText> par{" "}
-        <AppText style={{ fontWeight: "bold" }}>{creator.pseudo}</AppText>
-      </AppText>
-      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} id={liane.id!} />
-      {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
-      {currentUserIsDriver && liane.state === "NotStarted" && (
-        <ActionItem
-          onPress={() => {
-            setModalVisible(true);
-          }}
-          iconName={"clock-outline"}
-          text={"Modifier l'horaire de départ"}
-        />
-      )}
-      <SlideUpModal
-        actionText={"Modifier l'horaire"}
-        backgroundColor={AppColors.yellow}
-        onAction={() => {}}
-        visible={modalVisible}
-        setVisible={setModalVisible}>
-        <Column spacing={16} style={{ marginBottom: 16 }}>
-          <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand partez-vous ?</AppText>
-          <DatePagerSelector date={date} onSelectDate={setDate} />
-          <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
-        </Column>
-      </SlideUpModal>
-      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
-        <ActionItem
-          onPress={() => {
-            const fromPoint = getPoint(match, "pickup");
-            const toPoint = getPoint(match, "deposit");
-            navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint } });
-          }}
-          iconName={"repeat"}
-          text={"Relancer ce trajet"}
-        />
-      )}
-
-      <LineSeparator />
-      {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1 && (
-        <ActionItem
-          onPress={() => {
-            Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer cette liane ?", [
-              {
-                text: "Annuler",
-                onPress: () => {},
-                style: "cancel"
-              },
-              {
-                text: "Supprimer",
-                onPress: async () => {
-                  await services.liane.delete(liane.id!);
-                  await queryClient.invalidateQueries(LianeQueryKey);
-                  navigation.goBack();
-                },
-                style: "default"
-              }
-            ]);
-          }}
-          color={ContextualColors.redAlert.text}
-          iconName={"trash-outline"}
-          text={"Supprimer l'annonce"}
-        />
-      )}
-
-      {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1 && (
-        <ActionItem
-          onPress={() => {
-            Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
-              {
-                text: "Fermer",
-                onPress: () => {},
-                style: "cancel"
-              },
-              {
-                text: "Confirmer",
-                onPress: async () => {
-                  await services.liane.cancel(liane.id!);
-                  navigation.goBack();
-                  await queryClient.invalidateQueries(LianeQueryKey);
-                },
-                style: "default"
-              }
-            ]);
-          }}
-          color={ContextualColors.redAlert.text}
-          iconName={"close-outline"}
-          text={"Annuler ce trajet"}
-        />
-      )}
-
-      {!currentUserIsMember && request && (
-        <ActionItem
-          onPress={() => {
-            Alert.alert("Retirer la demande", "Voulez-vous vraiment retirer votre demande ?", [
-              {
-                text: "Annuler",
-                onPress: () => {},
-                style: "cancel"
-              },
-              {
-                text: "Retirer",
-                onPress: async () => {
-                  await services.liane.deleteJoinRequest(request);
-                  await queryClient.invalidateQueries(JoinRequestsQueryKey);
-                  navigation.goBack();
-                },
-                style: "default"
-              }
-            ]);
-          }}
-          color={ContextualColors.redAlert.text}
-          iconName={"trash-outline"}
-          text={"Retirer la demande"}
-        />
-      )}
-      {currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner && (
-        <ActionItem
-          onPress={() => {
-            Alert.alert("Quitter la liane", "Voulez-vous vraiment quitter cette liane ?", [
-              {
-                text: "Annuler",
-                onPress: () => {},
-                style: "cancel"
-              },
-              {
-                text: "Quitter",
-                onPress: async () => {
-                  await services.liane.leave(liane.id!, user!.id!);
-                  await queryClient.invalidateQueries(LianeQueryKey);
-                  navigation.goBack();
-                },
-                style: "default"
-              }
-            ]);
-          }}
-          color={ContextualColors.redAlert.text}
-          iconName={"log-out-outline"}
-          text={"Quitter la liane"}
-        />
-      )}
-      {currentUserIsMember && liane.state === "Started" && (
-        <ActionItem
-          onPress={() => {
-            Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
-              {
-                text: "Fermer",
-                onPress: () => {},
-                style: "cancel"
-              },
-              {
-                text: "Confirmer",
-                onPress: async () => {
-                  // Cancel ongoing geolocation
-                  await cancelSendLocationPings();
-                  // TODO probably fill in some form
-                  await services.liane.cancel(liane.id!);
-                  navigation.goBack();
-                  await queryClient.invalidateQueries(LianeQueryKey);
-                },
-                style: "default"
-              }
-            ]);
-          }}
-          color={ContextualColors.redAlert.text}
-          iconName={"close-outline"}
-          text={"Annuler ce trajet"}
-        />
-      )}
-
-      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") && (
-        <ActionItem
-          onPress={() => {
-            // TODO
-          }}
-          iconName={"alert-circle-outline"}
-          text={"Assistance"}
-        />
-      )}
-    </Column>
-  );
-};
-
 const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
   const m = liane.members.find(m => m.user.id === memberId)!;
   return {
@@ -398,109 +181,6 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
   };
 };
 
-const LianeStatusRow = ({ liane }: { liane: LianeMatch }) => {
-  const [status, color] = getLianeStatusStyle(liane.liane);
-  return (
-    <View>
-      {!!status && (
-        <Row style={{ marginHorizontal: 24, marginVertical: 4 }}>
-          <View style={{ borderRadius: 4, padding: 4, backgroundColor: color }}>
-            <AppText>{status}</AppText>
-          </View>
-        </Row>
-      )}
-    </View>
-  );
-};
-
-const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; liane: Liane }) => {
-  const lianeStatus = getLianeStatus(liane);
-  const { user } = useContext(AppContext);
-  const lianeMember = liane.members.find(m => m.user.id === user!.id)!;
-
-  const isDriver = liane.driver.user === user?.id;
-  const started = lianeStatus === "Started" || lianeStatus === "StartingSoon";
-  //const nextPoint = isDriver ? liane.wayPoints.find(w => new Date(w.eta) > new Date()) : (lianeMember.);
-  const fromPoint = liane.wayPoints.findIndex(w => w.rallyingPoint.id === lianeMember.from);
-
-  const getNextPoint = useCallback(() => {
-    const now = new Date();
-    if (isDriver) {
-      return liane.wayPoints.find(w => new Date(w.eta) > now);
-    } else {
-      if (new Date(liane.wayPoints[fromPoint].eta) > now) {
-        return liane.wayPoints[fromPoint];
-      }
-    }
-    return null;
-  }, [fromPoint, isDriver, liane.wayPoints]);
-
-  let nextPoint = getNextPoint();
-  nextPoint = nextPoint?.rallyingPoint.id === wayPoint.rallyingPoint.id ? nextPoint : null;
-
-  const lastLocUpdate = useMemberTripGeolocation(liane.driver.user);
-  const showEstimate =
-    !!lastLocUpdate &&
-    wayPoint.rallyingPoint.id !== liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint.id &&
-    lastLocUpdate.nextPoint === wayPoint.rallyingPoint.id;
-  return (
-    <Column>
-      {started && nextPoint && (
-        <Pressable
-          onPress={() => {
-            showLocation({
-              latitude: nextPoint!.rallyingPoint.location.lat,
-              longitude: nextPoint!.rallyingPoint.location.lng,
-              title: nextPoint!.rallyingPoint.label,
-              dialogTitle: "Se rendre au point de rendez-vous",
-              googleForceLatLon: true,
-              cancelText: "Annuler",
-              appsWhiteList: ["google-maps", "apple-maps", "waze"],
-              directionsMode: "walk"
-            });
-          }}>
-          <Row spacing={8} style={{ marginVertical: 4 }}>
-            <AppIcon name={"navigation-2-outline"} size={16} color={AppColors.blue} />
-            <AppText style={{ textDecorationLine: "underline", color: AppColors.blue, fontWeight: "500" }}>Démarrer la navigation</AppText>
-          </Row>
-        </Pressable>
-      )}
-      {lianeStatus === "NotStarted" &&
-        (isDriver ||
-          liane.wayPoints[fromPoint].rallyingPoint.id === wayPoint.rallyingPoint.id ||
-          liane.wayPoints.find(w => w.rallyingPoint.id === lianeMember.to)!.rallyingPoint.id === wayPoint.rallyingPoint.id) && (
-          <Pressable>
-            <Row spacing={8} style={{ marginVertical: 4 }}>
-              <AppIcon name={"edit-outline"} size={16} color={AppColorPalettes.gray[500]} />
-              <AppText style={{ textDecorationLine: "underline", color: AppColorPalettes.gray[500], fontWeight: "500" }}>
-                Changer de point de rendez-vous
-              </AppText>
-            </Row>
-          </Pressable>
-        )}
-      <Row style={{ justifyContent: "space-between" }}>
-        {!showEstimate && <View style={{ flex: 1 }} />}
-        {showEstimate && (
-          <Row style={{ alignItems: "center" }}>
-            <AppIcon name={"arrowhead-right-outline"} size={16} />
-            <AppText>Départ estimé à {formatTime(addSeconds(new Date(wayPoint.eta), lastLocUpdate.delay))}</AppText>
-          </Row>
-        )}
-        <Row style={{ position: "relative", left: 12 * (liane.members.length - 1), justifyContent: "flex-end" }}>
-          {liane.members
-            .filter(m => m.from === wayPoint.rallyingPoint.id)
-            .map((m, i) => {
-              return (
-                <View key={m.user.id} style={{ position: "relative", left: -12 * i }}>
-                  <UserPicture size={24} url={m.user.pictureUrl} id={m.user.id} />
-                </View>
-              );
-            })}
-        </Row>
-      </Row>
-    </Column>
-  );
-};
 const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRequest?: boolean }) => {
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");
