@@ -17,7 +17,7 @@ public sealed class RequestLoggerFilter : IAsyncActionFilter
 
   public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
   {
-    if (!logger.IsEnabled(LogLevel.Information))
+    if (!logger.IsEnabled(LogLevel.Debug))
     {
       await next();
       return;
@@ -32,11 +32,11 @@ public sealed class RequestLoggerFilter : IAsyncActionFilter
 
     var stopwatch = new Stopwatch();
     stopwatch.Start();
-    logger.LogInformation("Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+    logger.LogDebug("Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
       request.Protocol, request.Method, request.Scheme, request.Host, request.PathBase, request.Path, request.QueryString, request.ContentType ?? "-", request.ContentLength?.ToString(CultureInfo.InvariantCulture) ?? "-");
     await next();
     var response = context.HttpContext.Response;
-    logger.LogInformation("Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+    logger.LogDebug("Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
       request.Protocol, request.Method, request.Scheme, request.Host, request.PathBase, request.Path, request.QueryString,
       response.StatusCode, response.ContentLength?.ToString(CultureInfo.InvariantCulture) ?? "-", response.ContentType ?? "-", stopwatch.ElapsedMilliseconds);
   }
