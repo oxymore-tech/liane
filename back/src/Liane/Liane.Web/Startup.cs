@@ -194,8 +194,8 @@ public static class Startup
 
     services.AddControllers(options =>
     {
-      options.Filters.Add<RequestLoggerFilter>(0);
-      options.Filters.Add<ExceptionFilter>(1);
+      options.Filters.Add<RequestLoggerFilter>();
+      options.Filters.Add<ExceptionFilter>();
     });
     services.AddService<HttpContextAccessor>();
     services.AddSwaggerDocument(settings =>
