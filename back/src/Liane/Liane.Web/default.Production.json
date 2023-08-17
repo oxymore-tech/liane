@@ -4,7 +4,7 @@
       "Default": "Information",
       "System": "Warning",
       "Microsoft": "Error",
-      "Liane.Web.Internal.Debug": "Information"
+      "Liane.Web.Internal.Debug": "Debug"
     }
   },
   "Mongo": {
