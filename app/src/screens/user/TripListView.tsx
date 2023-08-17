@@ -112,9 +112,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
           </Pressable>
         )}
       </View>
-      <Row
-        style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
-        spacing={8}>
+      <Row style={styles.statusRowContainer} spacing={8}>
         {statusText && (
           <Row
             style={{
@@ -162,7 +160,6 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 
 const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
   const isRequest = isResolvedJoinLianeRequest(item);
-  // console.debug(JSON.stringify(item));
   if (!isRequest) {
     // @ts-ignore
     return renderLianeItem({ item, index, section });
@@ -190,17 +187,8 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
         </View>
       </View>
 
-      <Row
-        style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
-        spacing={8}>
-        <Row
-          style={{
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderRadius: 4,
-            alignItems: "center",
-            backgroundColor: AppColorPalettes.gray[100]
-          }}>
+      <Row style={styles.statusRowContainer} spacing={8}>
+        <Row style={styles.statusContainer}>
           <AppText>En attente de validation</AppText>
         </Row>
       </Row>
@@ -209,7 +197,10 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 };
 const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
   <View style={[styles.header, styles.grayBorder]}>
-    <AppText style={styles.headerTitle}>{capitalize(formatMonthDay(new Date(date)))}</AppText>
+    <AppText style={styles.headerTitle}>
+      {/*recurrence ? `Les ${formatDaysOfTheWeek(recurrence)}` : capitalize(formatMonthDay(new Date(date)))*/}
+      {capitalize(formatMonthDay(new Date(date)))}
+    </AppText>
   </View>
 );
 
@@ -244,5 +235,20 @@ const styles = StyleSheet.create({
   itemLast: {
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16
+  },
+  statusRowContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingTop: 8,
+    borderTopWidth: 1,
+    marginTop: 16,
+    borderColor: AppColorPalettes.gray[100]
+  },
+  statusContainer: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignItems: "center",
+    backgroundColor: AppColorPalettes.gray[100]
   }
 });

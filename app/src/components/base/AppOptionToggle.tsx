@@ -1,7 +1,7 @@
-import { AppColors } from "@/theme/colors";
 import React, { useState } from "react";
+import { ColorValue, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { ColorValue, Text, TouchableOpacity, View } from "react-native";
+import { AppColors } from "@/theme/colors";
 
 export interface AppOptionToggleProps<T> {
   options: T[];
@@ -25,42 +25,14 @@ export const CreateAppOptionToggle =
 
     return (
       <View>
-        <View
-          style={{
-            height: 44,
-            minWidth: 216,
-            backgroundColor: "white",
-            borderRadius: 24,
-            borderWidth: 1,
-            borderColor: selectionColor,
-            flexDirection: "row",
-            justifyContent: "center",
-            padding: 2
-          }}>
+        <View style={[styles.toggleContainer, { borderColor: selectionColor }]}>
           {options.map((option, index) => (
             <TouchableOpacity
               key={index}
               activeOpacity={1}
-              onPress={() => {
-                if (onSelectValue) {
-                  onSelectValue(option);
-                }
-                setSelectedValue(option);
-              }}
-              style={{
-                flex: 1,
-
-                backgroundColor: option === selectedValue ? selectionColor : AppColors.white,
-                borderRadius: 24,
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
-              <Text
-                style={{
-                  color: option === selectedValue ? AppColors.white : selectionColor
-                }}>
-                {formatter(option)}
-              </Text>
+              onPress={() => toggleOption(option, onSelectValue, setSelectedValue)}
+              style={[styles.toggleOption, { backgroundColor: option === selectedValue ? selectionColor : AppColors.white }]}>
+              <Text style={{ color: option === selectedValue ? AppColors.white : selectionColor }}>{formatter(option)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -68,5 +40,31 @@ export const CreateAppOptionToggle =
     );
   };
 
-export const AppSwitchToggle = CreateAppOptionToggle<boolean>(option => (option ? "Oui" : "Non"));
+const toggleOption = <T extends unknown>(option: T, onSelectValue: ((option: T) => void) | undefined, setSelectedValue: (option: T) => void) => {
+  if (onSelectValue) {
+    onSelectValue(option);
+  }
+  setSelectedValue(option);
+};
+
+const styles = StyleSheet.create({
+  toggleContainer: {
+    height: 44,
+    minWidth: 216,
+    backgroundColor: "white",
+    borderRadius: 24,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 2
+  },
+  toggleOption: {
+    flex: 1,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center"
+  }
+});
+
 export const AppToggle = CreateAppOptionToggle<string>(option => option);
+export const AppSwitchToggle = CreateAppOptionToggle<boolean>(option => (option ? "Oui" : "Non"));
