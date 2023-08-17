@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver.Core.Operations;
 
 namespace Liane.Web.Internal.Debug;
 

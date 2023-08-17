@@ -12,7 +12,7 @@ public sealed class LianeMockGenerator : CronJobService
   private readonly IMockService mockService;
   private readonly ILogger<LianeMockGenerator> logger;
 
-  public LianeMockGenerator(ILogger<LianeMockGenerator> logger, IMockService mockService) : base(logger, CronExpression, false)
+  public LianeMockGenerator(ILogger<LianeMockGenerator> logger, IMockService mockService, GeneratorSettings settings) : base(logger, CronExpression, false, settings.IsEnabled)
   {
     this.logger = logger;
     this.mockService = mockService;

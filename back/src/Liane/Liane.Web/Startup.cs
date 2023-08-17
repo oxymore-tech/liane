@@ -99,6 +99,7 @@ public static class Startup
 
     services.AddService<MockServiceImpl>();
 
+    services.AddSettings<GeneratorSettings>(context);
     services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
 

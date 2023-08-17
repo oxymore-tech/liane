@@ -15,17 +15,24 @@ public abstract class CronJobService : IHostedService, IDisposable
   private readonly TimeZoneInfo timeZoneInfo;
   private readonly bool runImmediately;
   private readonly ILogger logger;
+  private readonly bool isEnabled;
 
-  protected CronJobService(ILogger logger, string cronExpression, bool runImmediately)
+  protected CronJobService(ILogger logger, string cronExpression, bool runImmediately, bool isEnabled = true)
   {
     this.logger = logger;
     expression = CronExpression.Parse(cronExpression);
     this.runImmediately = runImmediately;
     timeZoneInfo = TimeZoneInfo.Local;
+    this.isEnabled = isEnabled;
   }
 
   public virtual async Task StartAsync(CancellationToken cancellationToken)
   {
+    if (!isEnabled)
+    {
+      return;
+    }
+
     try
     {
       await ScheduleJob(cancellationToken);
@@ -87,6 +94,11 @@ public abstract class CronJobService : IHostedService, IDisposable
 
   public virtual async Task StopAsync(CancellationToken cancellationToken)
   {
+    if (!isEnabled)
+    {
+      return;
+    }
+
     logger.LogInformation("{job} stopped", GetType().Name);
     timer?.Stop();
     await Task.CompletedTask;
