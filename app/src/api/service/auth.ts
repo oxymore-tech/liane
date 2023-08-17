@@ -10,6 +10,7 @@ export interface AuthService {
   updatePushToken(token: string): Promise<void>;
   updateUserInfo(info: UserInfo): Promise<void>;
   currentUser(): Promise<FullUser | undefined>;
+  storeUserPicture(data: FormData): Promise<void>;
 }
 
 export class AuthServiceClient implements AuthService {
@@ -42,5 +43,9 @@ export class AuthServiceClient implements AuthService {
 
   async updateUserInfo(info: UserInfo): Promise<void> {
     await patch("/user", { body: info });
+  }
+
+  async storeUserPicture(data: FormData): Promise<void> {
+    await post("/image/profile", { body: data });
   }
 }

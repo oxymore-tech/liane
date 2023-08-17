@@ -20,6 +20,7 @@ import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { capitalize } from "@/util/strings";
 import { getCurrentUser, storeCurrentUser } from "@/api/storage";
+import { dataURLtoFile } from "@/util/file";
 
 export const ProfileEditScreen = () => {
   return (
@@ -37,7 +38,7 @@ const ProfileEditView = () => {
 
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
-  const [profilePicture, setProfilePicture] = useState<string | undefined>("");
+  const [profilePicture, setProfilePicture] = useState<string | null | undefined>("");
   const [userInfos, setUserInfo] = useState<FullUser | undefined>(undefined);
   const [isEditingUserName, setIsEditingUserName] = useState<boolean>(false);
 
@@ -56,7 +57,7 @@ const ProfileEditView = () => {
         <Pressable style={[styles.backContainer, { top: insetsTop + 24 }]} onPress={navigation.goBack}>
           <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
         </Pressable>
-        <Pressable onPress={() => openGallery(setProfilePicture, setUserInfo, userInfos, firstName, lastName, profilePicture, services)}>
+        <Pressable onPress={() => openGallery(setProfilePicture, setUserInfo, userInfos, firstName, lastName, services)}>
           <UserPicture size={180} url={profilePicture} id={userInfos?.id} />
         </Pressable>
       </Center>
@@ -134,35 +135,38 @@ const saveUserName = (
 };
 
 const openGallery = (
-  setProfilePicture: (uri: string | undefined) => void,
+  setProfilePicture: (uri: string | null | undefined) => void,
   setUserInfo: (userInfo: FullUser | undefined) => void,
   userInfos: FullUser | undefined,
   firstName: string,
   lastName: string,
-  profilePicture: string | undefined,
   services: AppServices
 ) => {
-  launchImageLibrary({ mediaType: "photo" }, (imageData: ImagePickerResponse) => {
-    const newUri = imageData?.assets ? imageData?.assets[0]?.uri : "";
+  launchImageLibrary({ mediaType: "photo", includeBase64: true }, async (imageData: ImagePickerResponse) => {
+    const localImageBase64 = imageData?.assets ? `data:image/image;base64,${imageData?.assets[0]?.base64}` : "";
     const newFullUser = {
       firstName: firstName,
       lastName: lastName,
-      gender: userInfos?.gender ?? "Unspecified",
-      pictureUrl: newUri
+      gender: userInfos?.gender ?? "Unspecified"
     };
 
-    // TODO: Upload image and get distant URI
-    console.log(imageData);
-    setProfilePicture(newUri);
-    services.auth.updateUserInfo(newFullUser);
+    const formData = new FormData();
+    formData.append("file", dataURLtoFile(localImageBase64 as string, "profile.png"));
 
-    getCurrentUser().then((fullUser: FullUser | undefined) => {
+    try {
+      await services.auth.storeUserPicture(formData);
+      services.auth.updateUserInfo(newFullUser);
+
+      const fullUser = await getCurrentUser();
       if (fullUser && newFullUser) {
         const updatedUserData = { ...fullUser, ...newFullUser };
         storeCurrentUser(updatedUserData);
         setUserInfo(updatedUserData);
+        setProfilePicture(updatedUserData?.pictureUrl);
       }
-    });
+    } catch (e) {
+      console.error(e);
+    }
   });
 };
 
