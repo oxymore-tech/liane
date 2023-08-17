@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Liane.Api.Event;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -19,7 +20,7 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
 
   Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
-
+  Task UpdateState(Ref<Liane> liane, LianeState state);
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
   Task UpdateFeedback(Ref<Liane> liane, Feedback feedback);
   public Task<ImmutableList<ClosestPickups>> GetPickupLinks(LinkFilterPayload payload);

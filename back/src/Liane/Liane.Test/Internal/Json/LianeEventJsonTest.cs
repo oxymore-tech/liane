@@ -16,21 +16,21 @@ public sealed class LianeEventJsonTest
   [Test]
   public void ShouldSerialize()
   {
-    var e = new Notification.Event("id", "augustin", DateTime.Parse("2023-03-03"), ImmutableList<Recipient>.Empty, ImmutableHashSet.Create(Answer.Accept, Answer.Reject),
+    var e = new Notification.Event("id", "augustin", DateTime.Parse("2023-03-03T00:00:00Z").ToUniversalTime(), ImmutableList<Recipient>.Empty, ImmutableHashSet.Create(Answer.Accept, Answer.Reject),
       "Titre", "Augustin a quitté la liane",
       new LianeEvent.MemberHasLeft("6408a644437b60cfd3b15874", "augustin"));
     var actual = JsonSerializer.Serialize(e, options);
     Assert.AreEqual(
-      "{\"id\":\"id\",\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"type\":\"MemberHasLeft\",\"liane\":\"6408a644437b60cfd3b15874\",\"member\":\"augustin\"},\"seenAt\":null}",
+      "{\"type\":\"Event\",\"id\":\"id\",\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00Z\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"type\":\"MemberHasLeft\",\"liane\":\"6408a644437b60cfd3b15874\",\"member\":\"augustin\"},\"seenAt\":null}",
       actual);
   }
 
   [Test]
   public void ShouldSerializeMemberPing()
   {
-    var actual = JsonSerializer.Serialize(new LianeEvent.MemberPing("XXXX", "augustin", TimeSpan.FromMinutes(15), null), options);
+    var actual = JsonSerializer.Serialize(new LianeEvent.MemberPing("XXXX", ((DateTimeOffset)DateTime.Parse("2023-03-03T00:00:00Z")).ToUnixTimeMilliseconds(),TimeSpan.FromMinutes(15), null), options);
     Assert.AreEqual(
-      "{\"liane\":\"XXXX\",\"member\":\"augustin\",\"delay\":\"00:15:00\",\"coordinate\":null}",
+      "{\"type\":\"MemberPing\",\"liane\":\"XXXX\",\"timestamp\":1677801600000,\"delay\":\"00:15:00\",\"coordinate\":null}",
       actual);
   }
   

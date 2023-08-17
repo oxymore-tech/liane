@@ -12,7 +12,12 @@ import {
   Ref
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
-import { JoinRequest } from "@/api/event";
+import { JoinRequest, MemberPing } from "@/api/event";
+import { TimeInSeconds } from "@/util/datetime";
+import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
+import { cancelReminder, createReminder } from "@/api/service/notification";
+import { sync } from "@/util/store";
+import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeService {
   list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
@@ -29,8 +34,19 @@ export interface LianeService {
   updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   getContact(id: string, memberId: string): Promise<string>;
+  warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
+  cancel(id: string): Promise<void>;
 }
 export class LianeServiceClient implements LianeService {
+  async warnDelay(id: string, delay: number): Promise<void> {
+    const ping: MemberPing = {
+      type: "MemberPing",
+      liane: id,
+      timestamp: new Date().getTime(),
+      delay
+    };
+    await postAs(`/event/member_ping`, { body: ping }).catch(e => console.warn(e));
+  }
   async delete(lianeId: string): Promise<void> {
     await del(`/liane/${lianeId}`);
   }
@@ -38,7 +54,8 @@ export class LianeServiceClient implements LianeService {
     let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Canceled";
     //TODO cursor
     const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
-    console.debug(JSON.stringify(lianes));
+    //console.debug(JSON.stringify(lianes));
+    this.syncWithStorage(lianes.data);
     return lianes;
   }
 
@@ -54,6 +71,9 @@ export class LianeServiceClient implements LianeService {
     return postAs<Liane>("/liane/", { body: liane });
   }
 
+  async cancel(lianeId: string) {
+    await postAs(`/liane/${lianeId}/cancel`);
+  }
   pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
     const body = { pickup, lianes };
     return postAs("/liane/links", { body });
@@ -87,4 +107,36 @@ export class LianeServiceClient implements LianeService {
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
     return postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
   }
+
+  private async syncWithStorage(lianes: Liane[]) {
+    let local = (await retrieveAsync<LocalLianeData[]>("lianes")) || [];
+    const now = new Date().getTime() + 1000 * 60 * 5;
+    const user = await getCurrentUser();
+    local = local.filter(l => new Date(l.departureTime).getTime() > now);
+    const online = lianes
+      .map(l => ({ ...l, departureTime: getTripFromLiane(l, user!).departureTime }))
+      .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
+
+    const { added, removed, stored } = sync(
+      online,
+      local,
+      liane => ({ lianeId: liane.id!, departureTime: liane.departureTime }),
+      l => l.id!,
+      d => d.lianeId,
+      (l, d) => l.departureTime !== d.departureTime
+    );
+    for (let r of removed) {
+      await cancelReminder(r.lianeId);
+    }
+    for (let liane of added) {
+      await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
+    }
+
+    await storeAsync("lianes", stored);
+  }
 }
+
+export type LocalLianeData = {
+  lianeId: string;
+  departureTime: UTCDateTime;
+};

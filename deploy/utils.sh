@@ -40,6 +40,10 @@ function dump {
   liane_compose exec -T mongo mongodump --archive --gzip -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}"
 }
 
+function dump_pg {
+  liane_compose exec -T postgis pg_dump --clean --username="${MONGO_USERNAME}" "liane"
+}
+
 function start {
   create_osm_network
   docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d

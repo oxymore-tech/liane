@@ -6,7 +6,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import WelcomeBg from "@/assets/images/tutorial/welcome_bg.svg";
 import { AppRoundedButton, AppRoundedButtonOutline } from "@/components/base/AppRoundedButton";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { shouldShowTutorial } from "@/api/storage";
 
 export const WelcomeWizardModal = () => {

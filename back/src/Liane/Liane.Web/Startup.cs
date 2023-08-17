@@ -3,11 +3,13 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Liane.Api.Image;
 using Liane.Api.Util;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Image;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Mongo.Migration;
 using Liane.Service.Internal.Osrm;
@@ -15,11 +17,13 @@ using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
 using Liane.Web.Hubs;
 using Liane.Web.Internal.Auth;
+using Liane.Web.Internal.Debug;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
@@ -64,6 +68,10 @@ public static class Startup
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
 
+    services.AddService<ImageServiceImpl>();
+    services.AddSettings<CloudflareSettings>(context);
+    services.AddHttpClient<IImageService, ImageServiceImpl>();
+
     services.AddSettings<MongoSettings>(context);
     services.AddService<MigrationService>();
 
@@ -85,11 +93,13 @@ public static class Startup
     services.AddService<FirebaseMessagingImpl>();
 
     services.AddEventListeners();
+    services.AddService<AutomaticAnswerService>();
 
     services.AddSingleton(MongoFactory.Create);
 
     services.AddService<MockServiceImpl>();
 
+    services.AddSettings<GeneratorSettings>(context);
     services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
 
@@ -182,7 +192,11 @@ public static class Startup
       }
     );
 
-    services.AddControllers(options => { options.Filters.Add<ExceptionFilter>(); });
+    services.AddControllers(options =>
+    {
+      options.Filters.Add<RequestLoggerFilter>();
+      options.Filters.Add<ExceptionFilter>();
+    });
     services.AddService<HttpContextAccessor>();
     services.AddSwaggerDocument(settings =>
     {

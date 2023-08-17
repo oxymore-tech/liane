@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
+using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
 
@@ -18,4 +19,6 @@ public interface IHubClient
 
   Task Me(FullUser user);
   
+  Task ReceiveLianeMemberLocationUpdate(TrackedMemberLocation update);
+
 }

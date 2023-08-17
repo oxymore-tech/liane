@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
@@ -99,43 +97,6 @@ public static class MongoFactory
     db.GetCollection<DbUser>()
       .Indexes
       .CreateOne(new CreateIndexModel<DbUser>(Builders<DbUser>.IndexKeys.Ascending(l => l.Phone), new CreateIndexOptions { Name = "phone_index", Unique = true }));
-
-    CreateIndex(db, "location_index", Builders<RallyingPoint>.IndexKeys.Geo2DSphere(l => l.Location));
-
-    db.GetCollection<RallyingPoint>()
-      .Indexes
-      .CreateOne(new CreateIndexModel<RallyingPoint>(Builders<RallyingPoint>.IndexKeys.Combine(
-        Builders<RallyingPoint>.IndexKeys.Text(m => m.Label),
-        Builders<RallyingPoint>.IndexKeys.Text(m => m.City),
-        Builders<RallyingPoint>.IndexKeys.Text(m => m.ZipCode),
-        Builders<RallyingPoint>.IndexKeys.Text(m => m.Address)
-      ), new CreateIndexOptions
-      {
-        Name = "text_index",
-        Weights = new BsonDocument(new Dictionary<string, int>
-        {
-          { nameof(RallyingPoint.Label), 10 },
-          { nameof(RallyingPoint.City), 5 },
-          { nameof(RallyingPoint.ZipCode), 5 },
-          { nameof(RallyingPoint.Address), 1 },
-        })
-      }));
-
-    db.GetCollection<Notification.Reminder>()
-      .Indexes
-      .CreateOne(new CreateIndexModel<Notification.Reminder>(
-        Builders<Notification.Reminder>.IndexKeys.Combine(
-          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.RallyingPoint),
-          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.Liane),
-          Builders<Notification.Reminder>.IndexKeys.Ascending(n => n.Payload.At)
-        ),
-        new CreateIndexOptions<Notification.Reminder>
-        {
-          Unique = true,
-          Name = "reminder_index",
-          PartialFilterExpression = Builders<Notification.Reminder>.Filter.IsInstanceOf<Notification.Reminder, Notification.Reminder>()
-        }
-      ));
   }
 
   private static void CreateIndex<T>(IMongoDatabase db, string name, IndexKeysDefinition<T> indexKey, CreateIndexOptions? options = null)

@@ -33,6 +33,13 @@ CREATE TABLE IF NOT EXISTS rallying_point
   PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS ongoing_trip(
+  id          varchar(24),
+  geometry geometry(LineString, 4326),
+  PRIMARY KEY (id)
+);
+
+
 -- Add indexes
 CREATE INDEX IF NOT EXISTS segment_geometry_index
   ON segment
@@ -696,7 +703,7 @@ $$ LANGUAGE plpgsql IMMUTABLE
 
 -- search liane (detour or partial route match)
 CREATE OR REPLACE
-  FUNCTION match_liane(geom geometry, after timestamp, before timestamp)
+  FUNCTION match_liane(geom geometry, after timestamp with time zone, before timestamp with time zone)
   RETURNS table
           (
             liane_id text,

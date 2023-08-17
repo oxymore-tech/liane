@@ -114,9 +114,8 @@ export async function storeRefreshToken(token?: string | undefined) {
 }
 
 export async function clearStorage() {
-  await storeAccessToken(undefined);
-  await storeRefreshToken(undefined);
-  await storeUserSession(undefined);
+  await AsyncStorage.clear();
+  await EncryptedStorage.clear();
 }
 
 export async function processAuthResponse(authResponse: AuthResponse): Promise<AuthUser> {

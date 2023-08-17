@@ -6,6 +6,7 @@ namespace Liane.Api.User;
 
 public interface IUserService : IResourceResolverService<User>
 {
+  Task UpdateAvatar(string id, string picturelUrl);
   Task UpdateLastConnection(string id, DateTime timestamp);
   Task UpdatePushToken(string id, string pushToken);
   Task UpdateInfo(string id, UserInfo info);

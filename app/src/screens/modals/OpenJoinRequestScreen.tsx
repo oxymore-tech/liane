@@ -2,7 +2,7 @@ import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
@@ -26,18 +26,18 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const insets = useSafeAreaInsets();
 
   const { services } = useContext(AppContext);
-  const request = route.params.request;
+  const requestId = typeof route.params.request === "string" ? route.params.request : route.params.request.id;
   const queryClient = useQueryClient();
 
   const acceptRequest = async () => {
-    await services.chatHub.postAnswer(request.id!, Answer.Accept);
+    await services.realTimeHub.postAnswer(requestId!, Answer.Accept);
     await queryClient.invalidateQueries(NotificationQueryKey);
     await queryClient.invalidateQueries(LianeQueryKey);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
     navigation.goBack();
   };
   const refuseRequest = async () => {
-    await services.chatHub.postAnswer(request.id!, Answer.Reject);
+    await services.realTimeHub.postAnswer(requestId!, Answer.Reject);
     await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();
   };
@@ -51,7 +51,7 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
           paddingTop: 8,
           paddingBottom: 20
         }}>
-        <DetailedRequestView params={{ request }} />
+        <DetailedRequestView params={{ request: { id: requestId } }} />
       </Column>
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>

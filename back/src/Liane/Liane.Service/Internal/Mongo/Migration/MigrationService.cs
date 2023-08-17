@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -8,7 +7,7 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService
 {
-  private const int Version = 9;
+  private const int Version = 13;
 
   private readonly IMongoDatabase db;
   private readonly ILogger<MigrationService> logger;
@@ -21,8 +20,7 @@ public sealed class MigrationService
 
   private async Task Migrate()
   {
-    await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(l => true, Builders<LianeDb>.Update.Unset("geometry"));
+    await db.DropCollectionAsync("rallying_point");
   }
 
   public async Task Execute()

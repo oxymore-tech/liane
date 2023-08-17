@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
 import React, { useContext, useState } from "react";
 import { AppText } from "@/components/base/AppText";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { UnauthorizedError } from "@/api/exception";
 import { AppServices } from "@/api/service";
 import { AppColors } from "@/theme/colors";
@@ -35,15 +35,17 @@ export const WithFetchResource =
   <T,>(
     WrappedComponent: React.ComponentType<WithFetchResourceProps<T> & WithFetchResourceParams>,
     loadData: (repository: AppServices, params: any) => Promise<T>,
-    queryKey: string | ((params: any) => string),
+    queryKey: string | string[] | ((params: any) => string | string[]),
     ErrorComponent?: React.ComponentType<WithFetchResourceErrorComponentProps>
   ) =>
   (props: any & WithFetchResourceParams) => {
     const { services } = useContext(AppContext);
     const [refreshing, setRefreshing] = useState(false);
+    const { route } = useAppNavigation();
 
-    const realQueryKey = typeof queryKey === "string" ? queryKey : queryKey(props.params);
-    const { isLoading, error, data, refetch } = useQuery<T, Error>(realQueryKey, () => loadData(services, props.params));
+    const params = props.params || route.params;
+    const realQueryKey = typeof queryKey === "function" ? queryKey(params) : queryKey;
+    const { isLoading, error, data, refetch } = useQuery<T, Error>(realQueryKey, () => loadData(services, params));
 
     const onRefresh = async () => {
       setRefreshing(true); // isRefetching causes glitters

@@ -37,3 +37,5 @@ export const isToday = (date: Date) => {
   const now = new Date();
   return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear() && date.getDate() === now.getDate();
 };
+
+export const sleep = (timeInMillis: number) => new Promise<void>(resolve => setTimeout(() => resolve(), timeInMillis));

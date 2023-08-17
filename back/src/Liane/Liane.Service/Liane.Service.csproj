@@ -19,6 +19,7 @@
         <PackageReference Include="MongoDB.Bson" Version="2.19.2" />
         <PackageReference Include="MongoDB.Driver" Version="2.19.2" />
         <PackageReference Include="Npgsql" Version="7.0.4" />
+        <PackageReference Include="Npgsql.GeoJSON" Version="7.0.4" />
         <PackageReference Include="Twilio" Version="6.2.4" />
     </ItemGroup>
 
@@ -29,5 +30,6 @@
     <ItemGroup>
       <EmbeddedResource Include="Resources\*.*" />
     </ItemGroup>
+
 
 </Project>

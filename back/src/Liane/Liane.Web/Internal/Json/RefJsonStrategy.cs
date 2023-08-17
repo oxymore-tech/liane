@@ -1,78 +1,59 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
-public class RefJsonStrategy
+internal static class RefJsonStrategy
 {
-  
-  private static Ref<T>? SetResolvedState<T>(Ref<T> reference, bool expectResolved) where T: class, IIdentity
-  {
-    if (!expectResolved)
-    {
-      return reference.Id; 
-    }
-    else if (reference is not Ref<T>.Resolved)
-    {
-      return null;
-    }
-    
-    return reference;
-  }
+  private static readonly MethodInfo AsResolvedMethod = typeof(RefJsonStrategy).GetMethod(nameof(AsResolved), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-  public static Action<JsonTypeInfo> CreateRefResolutionModifier(JsonNamingPolicy namingStrategy)
+  public static Action<JsonTypeInfo> CreateRefResolutionModifier()
   {
     return typeInfo =>
     {
-      var refProperties = typeInfo.Type.GetProperties()
-        .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Ref<>)).ToArray();
-      if (refProperties.Length == 0) return;
+      var jsonPropertyInfos = typeInfo.Properties.Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Ref<>));
 
-      // Map properties name to their json name
-      var propsMap = refProperties.ToDictionary<PropertyInfo, string>(p => namingStrategy.ConvertName(p.Name));
-      var targetProps = typeInfo.Properties.Where(p => propsMap.ContainsKey(p.Name));
-      var refConverterMethod = typeof(RefJsonStrategy).GetMethod(nameof(SetResolvedState), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-
-      foreach (var propertyInfo in targetProps)
+      foreach (var jsonPropertyInfo in jsonPropertyInfos)
       {
-        var targetProperty = propsMap[propertyInfo.Name];
-        
-        if (propertyInfo.Get is null || targetProperty.PropertyType != propertyInfo.PropertyType)
+        if (jsonPropertyInfo.Get is null)
+        {
           continue;
+        }
 
-        // Check if ref has attribute
-        var serializationAttributes = propertyInfo.AttributeProvider?.GetCustomAttributes(typeof(SerializeAsResolvedRefAttribute), false);
-        var attribute = serializationAttributes?.Length == 1 ? (SerializeAsResolvedRefAttribute)serializationAttributes[0] : null;
-        var serializeAsResolved = attribute is not null;
+        var propertyInfo = typeInfo.Type.GetProperty(jsonPropertyInfo.Name.Capitalize());
+        if (propertyInfo is null)
+        {
+          continue;
+        }
 
-        // Get ref type
-        var refType = propertyInfo.PropertyType.GenericTypeArguments[0];
-        
-          propertyInfo.Get = serializedObject =>
+        var expectResolved = jsonPropertyInfo.AttributeProvider?.GetCustomAttributes(typeof(SerializeAsResolvedRefAttribute), true).Any() ?? false;
+
+        jsonPropertyInfo.Get = o =>
+        {
+          var value = propertyInfo.GetValue(o);
+          if (value is null)
           {
-            // Update serialized value
-            var propertyRefValue = targetProperty.GetValue(serializedObject);
-            if (propertyRefValue is null) return null;
-            var newRefPropertyValue = refConverterMethod.MakeGenericMethod(refType)
-              .Invoke(null, new[] { propertyRefValue, serializeAsResolved });
-            if (newRefPropertyValue is null)
-            {
-              throw new ArgumentException($"Expected resolved Ref {propertyRefValue}");
-            } 
-            return newRefPropertyValue;
-          };
-        
+            return null;
+          }
 
+          var asResolved = AsResolvedMethod.MakeGenericMethod(jsonPropertyInfo.PropertyType.GenericTypeArguments[0]);
+          return asResolved.Invoke(null, new[] { value, expectResolved });
+        };
       }
-
-
     };
   }
 
-  
+  private static Ref<T>? AsResolved<T>(Ref<T> reference, bool expectResolved) where T : class, IIdentity
+  {
+    if (!expectResolved)
+    {
+      return reference.Id;
+    }
+
+    return reference is not Ref<T>.Resolved ? null : reference;
+  }
 }

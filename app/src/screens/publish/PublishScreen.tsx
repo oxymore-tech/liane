@@ -1,6 +1,6 @@
 import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import React, { useContext, useState } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -50,7 +50,7 @@ export const PublishScreenView = () => {
   const isReturnStep = state.matches("return");
   const isOverviewStep = state.matches("overview");
   const isSubmittingStep = state.matches("submitting");
-  console.log(state.value, state.context.request);
+  //console.log(state.value, state.context.request);
 
   const step = useSharedValue(0);
 
@@ -464,7 +464,7 @@ export const PublishScreen = () => {
         availableSeats: ctx.request.availableSeats!,
         returnTime: ctx.request.returnTime?.toISOString()
       });
-      console.log(ctx, liane);
+      //console.log(ctx, liane);
       if (liane) {
         await queryClient.invalidateQueries(LianeQueryKey);
         await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });

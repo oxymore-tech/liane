@@ -6,18 +6,14 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
-public sealed class RefJsonConverterFactory : JsonConverterFactory
+internal sealed class RefJsonConverterFactory : JsonConverterFactory
 {
   public override bool CanConvert(Type typeToConvert)
-    => typeToConvert.IsGenericType
-       && typeToConvert.GetGenericTypeDefinition() == typeof(Ref<>);
+    => IsSubclassOfRawGeneric(typeof(Ref<>), typeToConvert);
 
   public override JsonConverter CreateConverter(
     Type typeToConvert, JsonSerializerOptions options)
   {
-    System.Diagnostics.Debug.Assert(typeToConvert.IsGenericType &&
-                                    typeToConvert.GetGenericTypeDefinition() == typeof(Ref<>));
-
     var elementType = typeToConvert.GetGenericArguments()[0];
 
     return (JsonConverter)Activator.CreateInstance(
@@ -27,5 +23,22 @@ public sealed class RefJsonConverterFactory : JsonConverterFactory
       binder: null,
       args: null,
       culture: null)!;
+  }
+
+  private static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
+  {
+    var current = toCheck;
+    while (current != null && current != typeof(object))
+    {
+      var cur = current.IsGenericType ? current.GetGenericTypeDefinition() : current;
+      if (generic == cur)
+      {
+        return true;
+      }
+
+      current = current.BaseType;
+    }
+
+    return false;
   }
 }

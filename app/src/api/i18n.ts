@@ -56,7 +56,8 @@ const dateFormatter = new Intl.DateTimeFormat(locale, {
 // Load time formatter
 const timeFormatter = new Intl.DateTimeFormat(locale, {
   hour: "2-digit",
-  minute: "2-digit"
+  minute: "2-digit",
+  hour12: false
 });
 
 const monthYearFormatter = new Intl.DateTimeFormat(locale, {

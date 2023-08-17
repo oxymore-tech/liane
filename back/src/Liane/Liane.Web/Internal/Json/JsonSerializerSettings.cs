@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Liane.Web.Internal.Json;
 
@@ -11,7 +12,8 @@ public static class JsonSerializerSettings
     new RefJsonConverterFactory(),
     new CursorJsonConverter(),
     new JsonStringEnumConverter(),
-    new LngLatTupleConverter()
+    new LngLatTupleConverter(),
+    new UnionJsonConverterFactory()
   };
 
   private static readonly JsonNamingPolicy NamingPolicy = JsonNamingPolicy.CamelCase;
@@ -31,8 +33,9 @@ public static class JsonSerializerSettings
       options.Converters.Add(converter);
     }
 
-    options.TypeInfoResolver = new PolymorphicTypeResolver {
-       Modifiers = { RefJsonStrategy.CreateRefResolutionModifier(NamingPolicy) }
+    options.TypeInfoResolver = new DefaultJsonTypeInfoResolver
+    {
+      Modifiers = { RefJsonStrategy.CreateRefResolutionModifier() }
     };
     options.PropertyNamingPolicy = NamingPolicy;
     options.PropertyNameCaseInsensitive = true;

@@ -5,7 +5,7 @@ import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import LianeLogo from "@/assets/logo.svg";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
@@ -33,34 +33,33 @@ const SignUpPage = () => {
   const [error, setError] = useState("");
   const { services } = useContext(AppContext);
 
-  const submit = async () => {
-    if (state.matches("phone")) {
-      try {
-        setError("");
-        await services.auth.sendSms(value);
-        machine.send("SET_PHONE", { data: { phone: value } });
-      } catch (e) {
-        console.error("Sign up error ", e);
-        setError("Impossible d'effectuer la demande");
-      }
-    } else if (state.matches("code")) {
-      try {
-        const pushToken = await getPushToken();
-        const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
-
-        machine.send("LOGIN", { data: { authUser } });
-      } catch (e: any) {
-        if (e instanceof UnauthorizedError) {
-          setError("Le code est incorrect");
-        } else {
-          console.warn("Error during login", e);
-          setError(e.toString());
-        }
-      }
-    } else {
-      console.error("Bad step", state.value);
+  const sendCode = async () => {
+    try {
+      setError("");
+      const phone = state.matches("phone") ? value : state.context.phone!;
+      await services.auth.sendSms(phone);
+      machine.send("SET_PHONE", { data: { phone: phone } });
+    } catch (e) {
+      console.error("Sign up error ", e);
+      setError("Impossible d'effectuer la demande");
     }
   };
+  const submitCode = async () => {
+    try {
+      const pushToken = await getPushToken();
+      const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
+
+      machine.send("LOGIN", { data: { authUser } });
+    } catch (e: any) {
+      if (e instanceof UnauthorizedError) {
+        setError("Le code est incorrect");
+      } else {
+        console.warn("Error during login", e);
+        setError(e.toString());
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
@@ -72,9 +71,9 @@ const SignUpPage = () => {
           {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
         </AppText>
         {state.matches("phone") ? (
-          <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={submit} />
+          <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={sendCode} />
         ) : (
-          <CodeInput code={value} onChange={setValue} onValidate={submit} />
+          <CodeInput code={value} onChange={setValue} onValidate={submitCode} retry={sendCode} />
         )}
         <AppText style={styles.errorText}>{error || " "}</AppText>
       </View>

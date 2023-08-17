@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using Liane.Api.Chat;
-using Liane.Api.Trip;
+using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
@@ -77,4 +77,4 @@ public abstract record Notification : IEntity
   ) : Notification;
 }
 
-public sealed record Reminder(Ref<Trip.Liane> Liane, Ref<RallyingPoint> RallyingPoint, DateTime At);
+public sealed record Reminder(Ref<Trip.Liane> Liane, ImmutableList<WayPoint> Trip, bool Driver);

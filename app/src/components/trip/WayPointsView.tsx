@@ -104,7 +104,7 @@ export const DetailedLianeMatchView = ({
           {wayPoint.rallyingPoint.label}
         </AppText>
         <View style={{ flex: 1 }} />
-        <TimeView style={[styles.mainWayPointTime, { paddingVertical: 4, position: "relative", top: 2 }]} value={wayPoint.eta} />
+        <TimeView style={[styles.mainWayPointTime, { paddingVertical: 4, position: "relative", top: 2, flexShrink: 0 }]} value={wayPoint.eta} />
       </Row>
 
       <Column

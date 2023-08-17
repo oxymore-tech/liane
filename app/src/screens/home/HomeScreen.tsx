@@ -1,17 +1,9 @@
 import { StyleSheet, View } from "react-native";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import AppMapView, {
-  AppMapViewController,
-  LianeShapeDisplayLayer,
-  LianeDisplayLayer,
-  PotentialLianeLayer,
-  RallyingPointsFeaturesDisplayLayer,
-  WayPointDisplay,
-  PickupDestinationsDisplayLayer
-} from "@/components/map/AppMapView";
+import AppMapView, { AppMapViewController } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
 import { AnimatedFloatingBackButton, MapHeader, SearchModal } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
@@ -30,13 +22,18 @@ import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
-import { useBottomBarStyle } from "@/components/Navigation";
+import { useBottomBarStyle } from "@/components/context/Navigation";
 import { useAppNavigation } from "@/api/navigation";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { getSetting } from "@/api/storage";
 import { useIsFocused } from "@react-navigation/native";
+import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer";
+import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
+import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
+import { LianeDisplayLayer, PickupDestinationsDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
+import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -569,7 +566,6 @@ const HomeScreen = () => {
     })
   );
   const machine = useInterpret(m);
-  machine.subscribe(s => console.log(JSON.stringify(s.history?.value)));
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

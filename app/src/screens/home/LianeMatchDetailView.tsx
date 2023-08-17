@@ -14,9 +14,8 @@ import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { formatDuration } from "@/util/datetime";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { DriverInfo } from "@/screens/detail/Components";
 import { JoinRequest } from "@/api/event";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
@@ -26,6 +25,7 @@ import { LianeMatchItemView } from "@/screens/home/BottomSheetView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideInLeft, SlideInRight, SlideOutDown, SlideOutLeft } from "react-native-reanimated";
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
+import { DriverInfo } from "@/screens/detail/components/DriverInfo";
 
 export const LianeMatchDetailView = () => {
   const machine = useContext(HomeMapContext);
@@ -75,13 +75,13 @@ export const LianeMatchDetailView = () => {
     //@ts-ignore
     navigation.navigate("Home", { screen: "Mes trajets" });
   };
-  const isReturnStep = step === 2 && !!liane.liane.returnTime;
+  const isReturnStep = step === 2 && !!liane.returnTime;
   const isSeatsStep = step === 1 && liane.freeSeatsCount > 1;
   const nextStep = useCallback(() => {
     setStep(firstEdit ? step + 1 : 3);
   }, [firstEdit, step]);
   useEffect(() => {
-    console.log(step, isSeatsStep, isReturnStep);
+    //console.log(step, isSeatsStep, isReturnStep);
     if (step === 1 && !isSeatsStep) {
       nextStep();
     } else if (step === 2 && !isReturnStep) {
@@ -103,7 +103,7 @@ export const LianeMatchDetailView = () => {
             from={wayPoints[tripMatch.departureIndex]}
             to={wayPoints[tripMatch.arrivalIndex]}
             freeSeatsCount={liane.freeSeatsCount}
-            returnTime={liane.liane.returnTime} /*TODO*/
+            returnTime={liane.returnTime} /*TODO*/
           />
         </Column>
 
@@ -160,13 +160,13 @@ export const LianeMatchDetailView = () => {
           </Animated.View>
         )}
 
-        {(step >= 2 || !firstEdit) && !!liane.liane.returnTime && (
+        {(step >= 2 || !firstEdit) && !!liane.returnTime && (
           <Animated.View entering={SlideInRight} style={{ backgroundColor: isReturnStep ? AppColorPalettes.blue[100] : undefined }}>
             {isReturnStep && (
               <Column style={{ paddingHorizontal: 12, paddingVertical: 12 }}>
                 <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
                   <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }} numberOfLines={2}>
-                    Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.liane.returnTime), formatTime)}?
+                    Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.returnTime), formatTime)}?
                   </AppText>
                 </Animated.View>
 
@@ -200,7 +200,7 @@ export const LianeMatchDetailView = () => {
             )}
             {(step > 2 || !firstEdit) && !isReturnStep && (
               <Animated.View exiting={firstEdit ? undefined : FadeOut} entering={FadeIn}>
-                <AppPressable onPress={() => setStep(liane.liane.returnTime ? 2 : step)}>
+                <AppPressable onPress={() => setStep(liane.returnTime ? 2 : step)}>
                   <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
                     <AppIcon name={"corner-down-right-outline"} />
                     <AppText
@@ -210,7 +210,7 @@ export const LianeMatchDetailView = () => {
                         alignSelf: "center",
                         textAlignVertical: "center"
                       }}>
-                      {takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.liane.returnTime), formatTime) : "Aller simple"}
+                      {takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.returnTime), formatTime) : "Aller simple"}
                     </AppText>
                   </Row>
                 </AppPressable>
@@ -218,7 +218,7 @@ export const LianeMatchDetailView = () => {
             )}
           </Animated.View>
         )}
-        {(step > 2 || !firstEdit) && !!liane.liane.returnTime && (
+        {(step > 2 || !firstEdit) && !!liane.returnTime && (
           <Animated.View entering={FadeIn}>
             <LineSeparator />
           </Animated.View>

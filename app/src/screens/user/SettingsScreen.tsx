@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { HomeScreenHeader } from "@/components/Navigation";
+import { HomeScreenHeader } from "@/components/context/Navigation";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 import { AppSettings, getSetting, saveSetting } from "@/api/storage";
 import { AppColorPalettes, AppColors } from "@/theme/colors";

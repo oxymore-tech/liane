@@ -55,8 +55,13 @@ public abstract record LianeEvent
 
   public sealed record MemberPing(
     Ref<Trip.Liane> Liane,
-    Ref<User.User> Member,
-    TimeSpan Delay,
+    long Timestamp,
+    TimeSpan? Delay,
     LatLng? Coordinate
+  ) : LianeEvent;
+  
+  public sealed record MemberHasCanceled(
+    Ref<Trip.Liane> Liane,
+    Ref<User.User> Member
   ) : LianeEvent;
 }

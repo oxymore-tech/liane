@@ -82,6 +82,10 @@ services:
       LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
       LIANE_Auth__TestAccount: ${AUTH_TEST_ACCOUNT}
       LIANE_Auth__TestCode: ${AUTH_TEST_CODE}
+      LIANE_Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
+      LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
+      LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}
+      LIANE_Generator__IsEnabled: ${GENERATOR_IS_ENABLED}
     restart: unless-stopped
     networks:
       - gateway

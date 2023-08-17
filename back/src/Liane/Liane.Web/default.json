@@ -4,7 +4,6 @@
       "Default": "Debug",
       "System": "Warning",
       "Microsoft": "Error",
-      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information",
       "Liane.Web.Internal.Debug": "Debug",
       "Liane.Service.Internal": "Debug"
     }
@@ -16,5 +15,8 @@
     "Validity": "0.08:00:00",
     "Issuer": "Liane",
     "Audience": "Liane"
+  },
+  "Generator": {
+    "IsEnabled": false
   }
 }

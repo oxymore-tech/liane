@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Liane } from "@/api";
 import { WayPointsView } from "@/components/trip/WayPointsView";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeViewProps {

@@ -5,7 +5,7 @@ using Liane.Api.Util.Pagination;
 
 namespace Liane.Web.Internal.Json;
 
-public sealed class CursorJsonConverter : JsonConverter<Cursor>
+internal sealed class CursorJsonConverter : JsonConverter<Cursor>
 {
   public override Cursor Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
   {

@@ -1,9 +1,9 @@
-import { ChatMessage, ConversationGroup, FullUser, PaginatedRequestParams, PaginatedResponse, Ref } from "@/api";
+import { ChatMessage, ConversationGroup, FullUser, PaginatedRequestParams, PaginatedResponse, Ref, TrackedMemberLocation, UTCDateTime } from "@/api";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { Answer, Notification } from "@/api/notification";
 import { LianeEvent } from "@/api/event";
 
-export interface ChatHubService {
+export interface HubService {
   list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
   stop(): Promise<void>;
@@ -18,6 +18,8 @@ export interface ChatHubService {
   postEvent(lianeEvent: LianeEvent): Promise<void>;
   postAnswer(notificationId: string, answer: Answer): Promise<void>;
   updateActiveState(active: boolean): void;
+  readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
+  subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
 
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
 
@@ -29,13 +31,14 @@ export type ConsumeMessage = (res: ChatMessage) => void;
 export type Disconnect = () => Promise<void>;
 export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
 export type OnNotificationCallback = (n: Notification) => void;
+export type OnLocationCallback = (l: TrackedMemberLocation) => void;
 
 type UnreadOverview = Readonly<{
   notificationsCount: number;
   conversations: Ref<ConversationGroup>[];
 }>;
 
-export abstract class AbstractHubService implements ChatHubService {
+export abstract class AbstractHubService implements HubService {
   protected currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
@@ -46,6 +49,7 @@ export abstract class AbstractHubService implements ChatHubService {
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage | null = null;
+  protected onReceiveLocationUpdateCallback: OnLocationCallback | null = null;
   protected appStateActive: boolean = true;
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
@@ -55,7 +59,7 @@ export abstract class AbstractHubService implements ChatHubService {
       return false;
     }
     if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
-      await this.onReceiveMessageCallback(message);
+      this.onReceiveMessageCallback(message);
       return true;
     } else if (!this.unreadConversations.getValue().includes(convId)) {
       this.unreadConversations.next([...this.unreadConversations.getValue(), convId]);
@@ -86,7 +90,7 @@ export abstract class AbstractHubService implements ChatHubService {
   protected receiveLatestMessages = async (messages: PaginatedResponse<ChatMessage>) => {
     // Called after joining a conversation
     if (this.onReceiveLatestMessagesCallback) {
-      await this.onReceiveLatestMessagesCallback(messages);
+      this.onReceiveLatestMessagesCallback(messages);
     }
   };
 
@@ -126,7 +130,6 @@ export abstract class AbstractHubService implements ChatHubService {
     if (this.currentConversationId) {
       this.onReceiveLatestMessagesCallback = null;
       this.onReceiveMessageCallback = null;
-      await this.leaveGroupChat();
       console.debug("[HUB] left " + this.currentConversationId);
       this.currentConversationId = undefined;
     } else if (__DEV__) {
@@ -148,9 +151,16 @@ export abstract class AbstractHubService implements ChatHubService {
     }
   };
 
-  abstract leaveGroupChat(): Promise<void>;
+  protected receiveLocationUpdateCallback: OnLocationCallback = l => {
+    if (this.onReceiveLocationUpdateCallback) {
+      this.onReceiveLocationUpdateCallback(l);
+    }
+  };
+
+  abstract readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
   abstract sendToGroup(message: ChatMessage): Promise<void>;
   abstract joinGroupChat(conversationId: Ref<ConversationGroup>): Promise<ConversationGroup>;
   abstract postEvent(lianeEvent: LianeEvent): Promise<void>;
   abstract postAnswer(notificationId: string, answer: Answer): Promise<void>;
+  abstract subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
 }

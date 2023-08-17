@@ -26,6 +26,7 @@ public sealed record Delta(int TotalInSeconds, int TotalInMeters, int PickupInSe
 public sealed record LianeMatch(
   Liane Liane,
   int FreeSeatsCount,
+  DateTime? ReturnTime,
   Match Match
 )
 {

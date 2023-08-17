@@ -1,6 +1,8 @@
 import { CameraPadding } from "@maplibre/maplibre-react-native";
 import { FeatureCollection, GeoJSON } from "geojson";
 import { BoundingBox } from "@/api/geo";
+import d from "@turf/distance";
+import { LatLng } from "@/api";
 
 export type DisplayBoundingBox = Required<CameraPadding> & { ne: GeoJSON.Position; sw: GeoJSON.Position };
 export const getBoundingBox = (coordinates: GeoJSON.Position[], padding: number = 0): DisplayBoundingBox => {
@@ -38,6 +40,7 @@ export function intersect(a: Iterable<any>, b: Iterable<any>) {
   return Array.from(intersection);
 }
 
+export const distance = (p1: LatLng, p2: LatLng) => d([p1.lng, p1.lat], [p2.lng, p2.lat], { units: "meters" });
 export const EmptyFeatureCollection = <FeatureCollection>{
   type: "FeatureCollection",
   features: []

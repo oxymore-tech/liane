@@ -1,13 +1,13 @@
 import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@/api";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
@@ -113,6 +113,7 @@ export const ChatScreen = () => {
     // console.log([m, ...messages]);
     setMessages(oldList => [m, ...oldList]);
     setInputValue("");
+    services.realTimeHub.readConversation(groupId, new Date().toISOString()).catch(e => console.warn(e));
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage>) => {
@@ -123,7 +124,7 @@ export const ChatScreen = () => {
   const fetchNextPage = async () => {
     //console.log(paginationCursor);
     if (paginationCursor) {
-      const paginatedResult = await services.chatHub.list(groupId, { cursor: paginationCursor, limit: 15 });
+      const paginatedResult = await services.realTimeHub.list(groupId, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
@@ -132,7 +133,7 @@ export const ChatScreen = () => {
   };
 
   useEffect(() => {
-    services.chatHub
+    services.realTimeHub
       .connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
       .then(conv => {
         /* if (__DEV__) {
@@ -143,13 +144,13 @@ export const ChatScreen = () => {
       .catch(e => setError(e));
 
     return () => {
-      services.chatHub.disconnectFromChat(route.params.conversationId).catch(e => {
+      services.realTimeHub.disconnectFromChat(route.params.conversationId).catch(e => {
         if (__DEV__) {
           console.warn(e);
         }
       });
     };
-  }, [route.params.conversationId, services.chatHub]);
+  }, [route.params.conversationId, services.realTimeHub]);
 
   const sendButton = (
     <AppPressableIcon
@@ -157,7 +158,7 @@ export const ChatScreen = () => {
       onPress={async () => {
         if (inputValue && inputValue.length > 0) {
           setIsSending(true);
-          await services.chatHub.send({ text: inputValue });
+          await services.realTimeHub.send({ text: inputValue });
           setIsSending(false);
         }
       }}

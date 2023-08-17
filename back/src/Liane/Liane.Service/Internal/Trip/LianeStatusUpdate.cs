@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Event;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util;
@@ -120,19 +121,31 @@ public sealed class LianeStatusUpdate : CronJobService
           Builders<LianeDb>.Update.Set(l => l.State, LianeState.Started)
         ));
       }
-
-      foreach (var wayPoint in liane.WayPoints.Where(w => w.Eta > from && w.Eta <= to))
+      
+      for (var i = 0; i < liane.WayPoints.Count; i++)
       {
-        var members = await GetRecipients(liane, wayPoint);
-        if (members.IsEmpty)
+        var w = liane.WayPoints[i];
+        if (w.Eta > to) break;
+        else if (w.Eta > from)
         {
-          continue;
+          var members = await GetRecipients(liane, w);
+          if (members.IsEmpty)
+          {
+            continue;
+          }
+          var rallyingPoint = await w.RallyingPoint.Resolve(rallyingPointService.Get);
+          var message = $"Vous avez rendez-vous à \"{rallyingPoint.Label}\". Cliquez pour activer le suivi de votre position.";
+          var nextWayPoints = await liane.WayPoints.Skip(i)
+            .SelectAsync(async w => new WayPoint(await rallyingPointService.Get(w.RallyingPoint), w.Duration, w.Distance, w.Eta));
+          
+          foreach (var member in members)
+          {
+            reminders.Add( CreateReminder(from, $"Départ imminent", message, member, liane, nextWayPoints));
+          }
+         
         }
-
-        var rallyingPoint = await wayPoint.RallyingPoint.Resolve(rallyingPointService.Get);
-        reminders.Add(CreateReminder(from, $"Départ dans {ReminderDelayInMinutes} minutes", $"Vous avez rendez-vous dans {ReminderDelayInMinutes} minutes à \"{rallyingPoint.Label}\".", members,
-          new Reminder(liane.Id, wayPoint.RallyingPoint, wayPoint.Eta)));
       }
+      
     }
 
     await notificationService.SendReminders(from, reminders);
@@ -144,10 +157,19 @@ public sealed class LianeStatusUpdate : CronJobService
     }
   }
 
+  private Notification.Reminder  CreateReminder(DateTime now, string title, string message, Ref<Api.User.User> to, LianeDb liane, ImmutableList<WayPoint> nextWayPoints) 
+  {
+    var lianeMember = liane.Members.First(m => m.User.Id == to.Id);
+    var memberTrip = nextWayPoints
+      .TakeUntilInclusive(w => w.RallyingPoint.Id == lianeMember.To.Id);
+
+    return new Notification.Reminder(null, null, now, ImmutableList.Create(new Recipient(to)), ImmutableHashSet<Answer>.Empty, title, message, new Reminder(liane.Id, memberTrip.ToImmutableList(), liane.Driver.User.Id == to.Id));
+  }
+  /*
   private static Notification.Reminder CreateReminder(DateTime now, string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
   {
     return new Notification.Reminder(null, null, now, to.Select(t => new Recipient(t)).ToImmutableList(), ImmutableHashSet<Answer>.Empty, title, message, reminder);
-  }
+  }*/
 
   private async Task<ImmutableList<Ref<Api.User.User>>> GetRecipients(LianeDb liane, WayPointDb wayPoint)
   {

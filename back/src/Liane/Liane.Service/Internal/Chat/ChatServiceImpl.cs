@@ -65,12 +65,27 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return conversation with { Members = conversation.Members.Select(m => m with { User = members[m.User.Id] }).ToImmutableList() };
   }
 
+  public async Task ReadConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
+  {
+    // Retrieve conversation and user's membership data
+    var conversationGroup = await Get(group);
+    var userMembershipIndex = conversationGroup.Members.FindIndex(m => m.User.Id == user.Id);
+    if (userMembershipIndex < 0) throw new NullReferenceException();
+
+    // Update Member's last connection
+    await Mongo.GetCollection<ConversationGroup>()
+      .UpdateOneAsync<ConversationGroup>(
+        g => g.Id == group.Id,
+        Builders<ConversationGroup>.Update.Set(g => g.Members[userMembershipIndex].LastReadAt, timestamp)
+      );
+  }
+
   public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
   {
     // Get conversations ids where user's last read is before the latest message
-
-    var userConversations = Mongo.GetCollection<ConversationGroup>()
-      .Find(Builders<ConversationGroup>.Filter.ElemMatch(c => c.Members, m => m.User == user.Id)).ToEnumerable();
+    var userConversations = await Mongo.GetCollection<ConversationGroup>()
+      .Find(Builders<ConversationGroup>.Filter.ElemMatch(c => c.Members, m => m.User == user.Id))
+      .ToListAsync();
     return userConversations
       .Where(c =>
       {
@@ -95,7 +110,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     var createdAt = DateTime.UtcNow;
     var sent = message with { Id = ObjectId.GenerateNewId().ToString(), CreatedBy = author.Id, CreatedAt = createdAt };
     await Mongo.GetCollection<DbChatMessage>()
-      .InsertOneAsync(new DbChatMessage(sent.Id, groupId, sent.CreatedBy, createdAt, sent.Text));
+      .InsertOneAsync(new DbChatMessage(sent.Id!, groupId, sent.CreatedBy, createdAt, sent.Text));
     var conversation = await Mongo.GetCollection<ConversationGroup>()
       .FindOneAndUpdateAsync<ConversationGroup>(c => c.Id == groupId,
         Builders<ConversationGroup>.Update.Set(c => c.LastMessageAt, createdAt),
@@ -111,7 +126,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
 
   public async Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group)
   {
-    // Get messages in DESC order 
+    // Get messages in DESC order
     var messages = await Mongo.Paginate(
       pagination,
       m => m.CreatedAt,

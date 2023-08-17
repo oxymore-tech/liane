@@ -4,7 +4,7 @@ import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, S
 import { useAppNavigation } from "@/api/navigation";
 import { getLianeStatusStyle } from "@/components/trip/trip";
 import React, { useContext, useMemo } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { useObservable } from "@/util/hooks/subscription";
 import { LianeView } from "@/components/trip/LianeView";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -35,6 +35,7 @@ export const TripListView = ({ data, isFetching, onRefresh }: TripListViewProps)
     <SectionList
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
+      showsVerticalScrollIndicator={false}
       renderItem={renderItem}
       keyExtractor={item => item.id!}
       renderSectionHeader={renderSectionHeader}
@@ -72,8 +73,8 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
   const [statusText, color] = getLianeStatusStyle(item);
 
   const { services, user } = useContext(AppContext);
-  const unread = useObservable(services.chatHub.unreadConversations, undefined);
-  const driver = item.members.find(l => l.user.id === item.driver.user)!.user;
+  const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
+  const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   return (
     <Pressable
       onPress={() => {
@@ -169,6 +170,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 
   // else render join request
   const { navigation } = useAppNavigation();
+  const driver = useMemo(() => item.targetLiane.members.find(l => l.user.id === item.targetLiane.driver.user)!.user, [item]);
   return (
     <Pressable
       onPress={() => {
@@ -179,6 +181,10 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
       }}
       style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
       <View>
+        <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
+          <UserPicture url={undefined} size={24} id={driver.id} />
+          <AppText style={{ fontSize: 14, fontWeight: "500" }}>{driver.pseudo}</AppText>
+        </Row>
         <View style={{ flexGrow: 1, marginRight: 40 }}>
           <JoinRequestSegmentOverview request={item} />
         </View>

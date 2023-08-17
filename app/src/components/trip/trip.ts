@@ -1,7 +1,7 @@
-import { Liane, LianeState, RallyingPoint, User, UTCDateTime, WayPoint } from "@/api";
+import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
 import { ColorValue } from "react-native";
-import { AppColorPalettes, ContextualColors } from "@/theme/colors";
+import { AppColorPalettes } from "@/theme/colors";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -17,6 +17,18 @@ export const getTotalDistance = (trip: WayPoint[]) => {
 export const getTripFromLiane = (liane: Liane, user: User) => {
   const member = liane.members.find(m => m.user.id === user!.id);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
+};
+
+export const getTripFromMatch = (liane: LianeMatch) => {
+  const wayPoints = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  const departureIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.pickup);
+  const arrivalIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.deposit);
+  return <UserTripMatch>{
+    wayPoints: wayPoints.slice(departureIndex, arrivalIndex + 1),
+    departureTime: wayPoints[departureIndex].eta,
+    departureIndex,
+    arrivalIndex
+  };
 };
 
 export const getTrip = (departureTime: UTCDateTime, wayPoints: WayPoint[], to?: string, from?: string) => {
@@ -80,7 +92,7 @@ export const getLianeStatus = (liane: Liane): LianeStatus => {
   //console.debug(liane.state, liane.members.length);
 
   if (liane.state === "NotStarted") {
-    if (delta > 0 && delta < 3600) {
+    if (delta > 0 && delta < 900) {
       if (liane.members.length > 1) {
         return "StartingSoon";
       }

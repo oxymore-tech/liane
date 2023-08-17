@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, StyleSheet } from "react-native";
 import React, { useContext } from "react";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { APP_VERSION } from "@env";
@@ -17,10 +17,6 @@ import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
-
-export interface ProfileProps {
-  user: User;
-}
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();

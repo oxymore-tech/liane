@@ -1,12 +1,17 @@
-import notifee, { EventType } from "@notifee/react-native";
-import { FullUser, PaginatedResponse } from "@/api";
+import notifee, { AndroidAction, AndroidImportance, Event, EventType, TriggerType } from "@notifee/react-native";
+import { FullUser, PaginatedResponse, RallyingPoint } from "@/api";
 import { get, patch } from "@/api/http";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { AuthService } from "@/api/service/auth";
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import { AbstractNotificationService } from "@/api/service/interfaces/notification";
 import { Notification } from "@/api/notification";
-import { getNotificationNavigation } from "@/api/navigation";
+import { formatTime } from "@/api/i18n";
+import DeviceInfo from "react-native-device-info";
+import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
+import { LianeServiceClient } from "@/api/service/liane";
+import { getTripFromLiane } from "@/components/trip/trip";
+import { getCurrentUser } from "@/api/storage";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(): Promise<PaginatedResponse<Notification>> {
@@ -16,18 +21,6 @@ export class NotificationServiceClient extends AbstractNotificationService {
     // TODO find out how to use super
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
     await patch(`/notification/${notification.id}`);
-  };
-
-  checkInitialNotification = async (): Promise<void> => {
-    if (initialPushNotification) {
-      this.initialNotification = initialPushNotification;
-      return;
-    }
-    const n = await notifee.getInitialNotification();
-    if (n && n.notification.data?.jsonPayload) {
-      this.initialNotification = JSON.parse(<string>n.notification.data!.jsonPayload);
-      console.debug("[NOTIF] opened via", JSON.stringify(n));
-    }
   };
 
   override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
@@ -49,6 +42,22 @@ const DefaultAndroidSettings = {
   largeIcon: "ic_launcher"
 };
 
+const AndroidReminderActions: AndroidAction[] = [
+  {
+    title: "Démarrer",
+    pressAction: {
+      id: "loc"
+    }
+  },
+  {
+    title: "J'ai du retard",
+    pressAction: {
+      id: "delay",
+      launchActivity: "default"
+    }
+  }
+];
+
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
   console.log("[NOTIF] received push", JSON.stringify(message));
   if (!message.notification) {
@@ -63,22 +72,37 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
   });
 }
 
-// Called when notification is pressed and app is open
-notifee.onBackgroundEvent(async ({ type, detail }) => {
+const pressActionMap = {
+  loc: async (lianeId: string) => {
+    const liane = await new LianeServiceClient().get(lianeId);
+    const user = await getCurrentUser();
+    const trip = getTripFromLiane(liane, user!);
+    await sendLocationPings(liane.id!, trip.wayPoints);
+  }
+} as const;
+const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
   console.debug("[NOTIFEE]", JSON.stringify(detail));
 
-  // Check if the user pressed the "Mark as read" action
-  if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "mark-as-read") {
-    // Remove the notification
-    await notifee.cancelNotification(notification.id!);
+  if (type === EventType.PRESS && notification?.data?.uri) {
+    await Linking.openURL(<string>notification.data.uri);
+  } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
+    if (pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
+      // start sending pings
+      await pressActionMap.loc(notification.data.liane as string);
+    } else {
+      await Linking.openURL(<string>notification.data.uri);
+    }
+  } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
+    console.warn("[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
   }
-  if (notification && type === EventType.ACTION_PRESS && pressAction?.id === "default") {
-    getNotificationNavigation(notification.data as Notification);
-  }
-});
+};
 
-async function displayNotifeeNotification(notification: Notification) {
+// Called when notification is pressed and app is open
+notifee.onBackgroundEvent(openNotification);
+notifee.onForegroundEvent(openNotification);
+
+export async function displayNotifeeNotification(notification: Notification) {
   await notifee.displayNotification({
     android: DefaultAndroidSettings,
     title: notification.title,
@@ -87,8 +111,35 @@ async function displayNotifeeNotification(notification: Notification) {
   });
 }
 
+export async function cancelReminder(lianeId: string) {
+  await notifee.cancelTriggerNotification(lianeId);
+}
+export async function createReminder(lianeId: string, departureLocation: RallyingPoint, departureTime: Date) {
+  await notifee.createTriggerNotification(
+    {
+      id: lianeId,
+      ios: {
+        categoryId: "reminder",
+        interruptionLevel: "timeSensitive"
+      },
+      android: {
+        ...DefaultAndroidSettings,
+        lightUpScreen: true,
+        importance: AndroidImportance.HIGH,
+        tag: "reminder",
+        actions: AndroidReminderActions,
+        ongoing: true
+      },
+      title: "Départ imminent",
+      body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
+      data: { uri: `liane://liane/${lianeId}/start`, liane: lianeId }
+    },
+    { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000), type: TriggerType.TIMESTAMP, alarmManager: true }
+  );
+}
+
 export async function initializeNotification() {
-  // Request permissions (required for iOS)
+  // Request permissions (required for iOS & Android > 13)
   await notifee.requestPermission();
 
   // Create a channel (required for Android)
@@ -96,6 +147,27 @@ export async function initializeNotification() {
     id: DefaultChannelId,
     name: "Général"
   });
+
+  // Set IOS categories
+  await notifee.setNotificationCategories([
+    {
+      id: "default"
+    },
+    {
+      id: "reminder",
+      actions: [
+        {
+          title: "Partager ma position",
+          id: "loc"
+        },
+        {
+          title: "J'ai du retard",
+          foreground: true,
+          id: "delay"
+        }
+      ]
+    }
+  ]);
 }
 
 export async function initializePushNotification(user: FullUser, authService: AuthService) {
@@ -106,8 +178,8 @@ export async function initializePushNotification(user: FullUser, authService: Au
       // Update server's token
       await authService.updatePushToken(pushToken);
     }
-    PushNotifications?.onTokenRefresh(async (pushToken) => {
-      await authService.updatePushToken(pushToken);
+    PushNotifications?.onTokenRefresh(async p => {
+      await authService.updatePushToken(p);
     });
     PushNotifications?.onMessage(onMessageReceived);
     return true;
@@ -123,20 +195,45 @@ export const PushNotifications = (() => {
       return messaging();
     }
   } catch (e) {
-    console.error("[NOTIF] Counld not init push notifications", e);
+    console.error("[NOTIF] Could not init push notifications", e);
   }
   return undefined;
 })();
-
-let initialPushNotification: Notification | undefined;
-const setInitialPushNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
-  if (m && m.data?.jsonPayload) {
-    console.debug("[NOTIF] opened via", JSON.stringify(m));
-    initialPushNotification = JSON.parse(m.data!.jsonPayload);
+const openFirebaseNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
+  if (!m) {
+    return;
   }
-  return Promise.resolve();
+  console.debug("[NOTIF] opened via", JSON.stringify(m));
+  if (m?.data?.uri) {
+    Linking.openURL(<string>m.data.uri);
+  }
 };
 
-PushNotifications?.onNotificationOpenedApp(setInitialPushNotification);
-//PushNotifications?.setBackgroundMessageHandler(setInitialPushNotification);
-PushNotifications?.getInitialNotification()?.then(setInitialPushNotification);
+PushNotifications?.onNotificationOpenedApp(openFirebaseNotification);
+
+export const checkInitialNotification = async (): Promise<string | undefined | null> => {
+  const firebaseNotification = await PushNotifications?.getInitialNotification();
+  if (firebaseNotification) {
+    console.debug("[NOTIF] opened via", JSON.stringify(firebaseNotification));
+    return firebaseNotification.data?.uri;
+  }
+  const n = await notifee.getInitialNotification();
+  if (n) {
+    console.debug("[NOTIF] opened via", JSON.stringify(n));
+
+    if (n.notification.data?.uri) {
+      if (n.pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
+        // start sending pings
+        await pressActionMap.loc(n.notification.data.liane as string);
+        return undefined;
+      } else {
+        return <string>n.notification.data?.uri;
+      }
+    }
+  }
+  const url = await Linking.getInitialURL();
+  if (url) {
+    console.debug("[DEEP LINK] opened with", url);
+  }
+  return url;
+};

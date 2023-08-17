@@ -25,22 +25,34 @@ public sealed record FullUser(
   string? Id,
   string Phone,
   DateTime? CreatedAt,
-  string FirstName, 
-  string LastName,  
+  string FirstName,
+  string LastName,
   Gender Gender,
   string? PictureUrl = null,
   string? PushToken = null
 ) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl)
 {
-  public static string GetPseudo(string firstName, string lastName)
+  public static string GetPseudo(string? firstName, string? lastName)
   {
-    return firstName + " " + lastName[0] + ".";
+    if (firstName is null)
+    {
+      return "Utilisateur inconnu";
+    }
+
+    if (lastName is null)
+    {
+      return firstName;
+    }
+
+    return $"{firstName} {lastName[0]}.";
   }
 }
 
-public sealed record UserInfo(string FirstName,
+public sealed record UserInfo(
+  string FirstName,
   string LastName,
   string? PictureUrl,
-  Gender Gender);
-  
+  Gender Gender
+);
+
 public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0);

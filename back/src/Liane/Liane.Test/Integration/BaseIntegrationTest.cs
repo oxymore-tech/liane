@@ -13,6 +13,7 @@ using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
@@ -93,16 +94,18 @@ public abstract class BaseIntegrationTest
     services.AddService(new FirebaseSettings(null));
     services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
+    services.AddService(Moq.Mock.Of<ILianeMemberTracker>());
     services.AddService<LianeServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<PushServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
+    services.AddService<MockAutomaticAnswerService>();
     services.AddEventListeners();
-    
+
     var databaseSettings = GetDatabaseSettings();
-    var postgisDatabase = await PostgisFactory.CreateForTest(databaseSettings);
-    services.AddService(postgisDatabase);
+
+    services.AddService<PostgisDatabase>();
     services.AddService(databaseSettings);
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
@@ -115,8 +118,7 @@ public abstract class BaseIntegrationTest
     CurrentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     mongo = ServiceProvider.GetRequiredService<IMongoDatabase>();
     MongoFactory.InitSchema(mongo);
-    // Init postgis
-    var postgis = ServiceProvider.GetRequiredService<PostgisServiceImpl>();
+    var postgisDatabase = ServiceProvider.GetRequiredService<PostgisDatabase>();
     await PostgisFactory.UpdateSchema(postgisDatabase, true);
 
     mongo.Drop();
@@ -124,8 +126,9 @@ public abstract class BaseIntegrationTest
     Setup(mongo);
     // Insert mock users & rallying points
     await mongo.GetCollection<DbUser>().InsertManyAsync(Fakers.FakeDbUsers);
-    await mongo.GetCollection<RallyingPoint>().InsertManyAsync(LabeledPositions.RallyingPoints);
-    await postgis.InsertRallyingPoints(LabeledPositions.RallyingPoints);
+
+    var rallyingPointService = ServiceProvider.GetRequiredService<IRallyingPointService>();
+    await rallyingPointService.Insert(LabeledPositions.RallyingPoints);
   }
 
   protected virtual void SetupServices(IServiceCollection services)
@@ -170,13 +173,17 @@ public abstract class BaseIntegrationTest
   private static MongoSettings GetMongoSettings()
   {
     var host = Environment.GetEnvironmentVariable("MONGO_HOST") ?? "localhost";
-    return new MongoSettings(host, "mongoadmin", "secret");
+    var password = Environment.GetEnvironmentVariable("MONGO_PASSWORD") ?? "secret";
+    var username = Environment.GetEnvironmentVariable("MONGO_USERNAME") ?? "mongo";
+    return new MongoSettings(host, username, password);
   }
 
   private static DatabaseSettings GetDatabaseSettings()
   {
     var host = Environment.GetEnvironmentVariable("POSTGIS_HOST") ?? "localhost";
-    return new DatabaseSettings(host, "liane_test", "mongoadmin", "secret");
+    var password = Environment.GetEnvironmentVariable("POSTGIS_PASSWORD") ?? "secret";
+    var username = Environment.GetEnvironmentVariable("POSTGIS_USERNAME") ?? "mongo";
+    return new DatabaseSettings(host, "liane_test", username, password);
   }
 
   private static OsrmClient GetOsrmClient()

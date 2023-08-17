@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
 import { asSearchedLocation, getKeyForTrip, isRallyingPointSearchedLocation, SearchedLocation, Trip } from "@/api/service/location";
 import { RallyingPoint, Ref } from "@/api";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";

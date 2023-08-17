@@ -5,10 +5,6 @@ import { Notification } from "@/api/notification";
 export interface NotificationService {
   receiveNotification(notification: Notification, display?: boolean): Promise<void>;
 
-  checkInitialNotification(): Promise<void>;
-
-  getInitialNotification(): Notification | undefined;
-
   list(): Promise<PaginatedResponse<Notification>>;
 
   markAsRead(notification: Notification): Promise<void>;
@@ -19,10 +15,6 @@ export interface NotificationService {
 }
 
 export abstract class AbstractNotificationService implements NotificationService {
-  protected initialNotification?: Notification;
-
-  getInitialNotification = () => this.initialNotification;
-
   unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
 
   protected _sub?: SubscriptionLike;
@@ -40,11 +32,13 @@ export abstract class AbstractNotificationService implements NotificationService
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
   };
 
-  abstract checkInitialNotification(): Promise<void>;
-
   abstract list(): Promise<PaginatedResponse<Notification>>;
 
   markAsRead = async (_: Notification) => {
+    if (this.unreadNotificationCount.getValue() - 1 < 0) {
+      console.warn("Read count < 0");
+      return;
+    }
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
   };
 }

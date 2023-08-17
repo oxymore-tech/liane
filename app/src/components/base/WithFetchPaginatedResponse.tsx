@@ -8,7 +8,7 @@ import {
 import { AppServices } from "@/api/service";
 import { PaginatedResponse } from "@/api";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { useInfiniteQuery } from "react-query";
 import { UnauthorizedError } from "@/api/exception";
 import { AppText } from "@/components/base/AppText";

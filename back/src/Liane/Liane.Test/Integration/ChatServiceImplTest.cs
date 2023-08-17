@@ -86,7 +86,7 @@ public sealed class ChatServiceImplTest : BaseIntegrationTest
     var author = conversation.Members[0].User.Id;
     var receiver = conversation.Members[1].User.Id;
     var convId = (await CreateConversation(conversation, author, 0)).Id!;
-    var timestamp = DateTime.Parse("2023-02-01").ToUniversalTime();
+    var timestamp = DateTime.Parse("2023-02-01T00:00:00Z", null, System.Globalization.DateTimeStyles.RoundtripKind);
     var updated = await testedService.ReadAndGetConversation(convId, receiver, timestamp);
 
     Assert.AreEqual(timestamp, updated.Members.FirstOrDefault(m => m.User.Id == receiver)?.LastReadAt);

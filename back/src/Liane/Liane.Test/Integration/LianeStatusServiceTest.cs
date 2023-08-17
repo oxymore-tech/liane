@@ -57,10 +57,10 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var departureTime = DateTime.UtcNow.AddMinutes(5);
 
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
-    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende, false));
+    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
 
     currentContext.SetCurrentUser(userA);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id, userA.Id, TimeSpan.Zero, null));
+    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id,  ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.Zero, null));
 
     var actual = await lianeService.Get(liane1.Id);
 
@@ -80,10 +80,10 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var departureTime = DateTime.UtcNow.AddMinutes(5);
 
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
-    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende, false));
+    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
 
     currentContext.SetCurrentUser(userA);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id, userA.Id, TimeSpan.FromMinutes(5), null));
+    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id,  ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
 
     var actual = await lianeService.Get(liane1.Id);
 

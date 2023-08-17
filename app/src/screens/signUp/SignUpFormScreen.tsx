@@ -8,7 +8,7 @@ import { AppStyles } from "@/theme/styles";
 import { FieldValue, FieldValues, FormProvider, SubmitErrorHandler, SubmitHandler, useController, useForm } from "react-hook-form";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppToggle } from "@/components/base/AppOptionToggle";
-import { AppContext } from "@/components/ContextProvider";
+import { AppContext } from "@/components/context/ContextProvider";
 import { SignUpLianeContext } from "@/screens/signUp/StateMachine";
 
 export const SignUpFormScreen = () => {
