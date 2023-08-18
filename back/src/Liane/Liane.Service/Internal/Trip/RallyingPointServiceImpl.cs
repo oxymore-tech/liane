@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
-using Dapper;
 using Liane.Api.Address;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -22,7 +21,6 @@ using Liane.Service.Internal.Trip.Import;
 using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -77,6 +75,8 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();
     logger.LogDebug("Loading town halls...");
     rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
+    logger.LogDebug("Loading custom rallying points...");
+    rawRallyingPoints = rawRallyingPoints.Concat(LoadCustom());
 
     logger.LogDebug("Clustering...");
 
@@ -173,6 +173,13 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     }
 
     return await connection.QueryAsync(query);
+  }
+
+  private IEnumerable<RallyingPoint> LoadCustom()
+  {
+    yield return new RallyingPoint("custom:001", "Living Objects", new LatLng(43.567936, 1.390924), LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
+    yield return new RallyingPoint("custom:002", "Michel Labrousse", new LatLng(43.568356, 1.386925), LocationType.Parking, "11 rue Michel Labrousse", "31000", "Toulouse", null, true);
+    yield return new RallyingPoint("custom:003", "Basso com'pôtes", new LatLng(43.565190, 1.388705), LocationType.Supermarket, "17 rue Paulin Talabot", "31000", "Toulouse", null, true);
   }
 
   private static string ToSearchPattern(string search)
