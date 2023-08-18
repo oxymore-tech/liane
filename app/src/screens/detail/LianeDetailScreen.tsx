@@ -31,7 +31,6 @@ import { PassengerListView } from "@/screens/detail/components/PassengerListView
 import { LianeStatusRow } from "@/screens/detail/components/LianeStatusRow";
 import { WayPointActionView } from "@/screens/detail/components/WayPointActionView";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import { LianeMemberDisplay } from "@/components/map/markers/LianeMemberDisplay";
 import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
 
 export const LianeJoinRequestDetailScreen = () => {

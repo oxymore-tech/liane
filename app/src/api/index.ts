@@ -117,7 +117,10 @@ export type Liane = Entity &
     driver: { user: Ref<User>; canDrive: boolean };
     conversation: Ref<ConversationGroup>;
     state: LianeState;
-    recurrence: DayOfTheWeekFlag;
+    recurrence?: {
+      id: string;
+      days: DayOfTheWeekFlag;
+    };
   }>;
 
 export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
