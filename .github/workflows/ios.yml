@@ -113,8 +113,17 @@ jobs:
 
       - name: 'Upload app to TestFlight'
         uses: apple-actions/upload-testflight-build@v1
+        if: env.app_env == 'dev'
         with:
           app-path: 'output.ipa'
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: 'Upload app to App Store Connect'
+        if: env.app_env == 'production'
+        env:
+          APP_STORE_CONNECT_USERNAME: ${{ secrets.APPSTORE_CONNECT_USERNAME }}
+          APP_STORE_CONNECT_PASSWORD: ${{ secrets.APPSTORE_CONNECT_PASSWORD }}
+        run: |
+          xcrun altool --upload-app -t ios -f output.ipa -u "$APP_STORE_CONNECT_USERNAME" -p "$APP_STORE_CONNECT_PASSWORD"

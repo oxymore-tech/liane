@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Liane.Api.Image;
 using Liane.Web.Internal.Auth;
+using Liane.Web.Internal.Debug;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ public sealed class ImageController
   }
 
   [HttpPost("profile")]
+  [DebugRequest]
   public Task UploadProfile([FromForm] IFormFile file)
   {
     return imageService.UploadProfile(file);

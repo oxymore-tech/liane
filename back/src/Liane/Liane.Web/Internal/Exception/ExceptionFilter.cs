@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Exception;
 
-public sealed class ExceptionFilter : IAsyncExceptionFilter
+public sealed class ExceptionFilter : IAsyncExceptionFilter, IOrderedFilter
 {
   private readonly ILogger<ExceptionFilter> logger;
 
@@ -27,4 +27,6 @@ public sealed class ExceptionFilter : IAsyncExceptionFilter
 
     return Task.CompletedTask;
   }
+
+  public int Order => 1;
 }

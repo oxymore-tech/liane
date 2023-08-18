@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Debug;
 
-public sealed class DebugRequestFilter : IAsyncAuthorizationFilter
+public sealed class DebugRequestFilter : IAsyncAuthorizationFilter, IOrderedFilter
 {
   private readonly ILogger<DebugRequestFilter> logger;
 
@@ -30,4 +30,6 @@ public sealed class DebugRequestFilter : IAsyncAuthorizationFilter
       }
     }
   }
+
+  public int Order => 2;
 }

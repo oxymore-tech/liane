@@ -3,7 +3,8 @@
     "LogLevel": {
       "Default": "Information",
       "System": "Warning",
-      "Microsoft": "Error"
+      "Microsoft": "Error",
+      "Liane.Web.Internal.Debug": "Debug"
     }
   },
   "Mongo": {
