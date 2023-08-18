@@ -27,7 +27,7 @@ public sealed record LianeMember(
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   int SeatCount = -1, // Defaults to a passenger seat
-  int? Delay = null, // TimeInSeconds
+  int? Delay = null, // TODO remove unused
   Feedback? Feedback = null,
   bool? TakesReturnTrip = null  //TODO remove when migration ok
 ) : IResourceMember;
@@ -37,6 +37,9 @@ public sealed record Driver
   Ref<User.User> User,
   bool CanDrive = true
 );
+
+public sealed record Recurrence
+  (Ref<LianeRecurrence> Id,  DayOfTheWeekFlag Days);
 
 public sealed record Liane(
   string Id,
@@ -48,5 +51,6 @@ public sealed record Liane(
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,
-  Ref<ConversationGroup>? Conversation
+  Ref<ConversationGroup>? Conversation,
+  Recurrence? Recurrence = null
 ) : IEntity, ISharedResource<LianeMember>;

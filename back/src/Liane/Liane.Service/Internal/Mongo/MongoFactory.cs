@@ -63,6 +63,7 @@ public static class MongoFactory
         return use;
       });
       BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
+      BsonSerializer.RegisterSerializer(new DayOfTheWeekFlagSerializer());
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));

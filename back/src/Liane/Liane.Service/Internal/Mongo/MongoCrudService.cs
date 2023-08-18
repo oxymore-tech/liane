@@ -77,7 +77,7 @@ public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TD
   {
   }
 
-  public async Task<TOut> Create(TIn obj)
+  public virtual async Task<TOut> Create(TIn obj)
   {
     var id = obj.Id ?? ObjectId.GenerateNewId()
       .ToString();

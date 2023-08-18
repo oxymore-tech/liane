@@ -15,8 +15,10 @@ using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using DayOfWeek = System.DayOfWeek;
 
 namespace Liane.Test.Integration;
 
@@ -395,5 +397,27 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.IsTrue(compatible.Delta.TotalInSeconds < 15 * 60);
     Assert.AreEqual("mairie:31324", compatible.Pickup.Id);
     Assert.AreEqual("mairie:31557", compatible.Deposit.Id);
+  }
+
+  [Test]
+  public async Task ShouldCreateRecurrentLiane()
+  {
+    var now = DateTime.UtcNow;
+    var bertrand = Fakers.FakeDbUsers[2];
+    var departureTime = now.AddDays(3);
+    currentContext.SetCurrentUser(bertrand);
+    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
+    var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
+    Assert.NotNull(created.Recurrence);
+    
+    var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    
+    Assert.AreEqual(4, lianes.Data.Count);
+    Assert.True(lianes.Data.All(l => l.Recurrence == created.Recurrence));
+    
+    var dates = recurrence.GetNextActiveDates(departureTime, DateTime.UtcNow.AddDays(7)).Concat(new []{departureTime}).Select(d => d.ToShortDateString()+d.ToShortTimeString()).ToList();
+    var lianeDates = lianes.Data.Select(l => l.DepartureTime.ToShortDateString()+l.DepartureTime.ToShortTimeString());
+    CollectionAssert.AreEquivalent(dates, lianeDates);
+    
   }
 }

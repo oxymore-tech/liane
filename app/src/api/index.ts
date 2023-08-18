@@ -95,6 +95,8 @@ export type RallyingPoint = Identity &
     isActive: boolean;
   }>;
 
+export type DayOfTheWeekFlag = `${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}` | null;
+
 export type LianeRequest = Identity &
   Readonly<{
     departureTime: UTCDateTime;
@@ -102,6 +104,7 @@ export type LianeRequest = Identity &
     availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
+    recurrence: DayOfTheWeekFlag;
     // shareWith: Ref<User>[];
   }>;
 
@@ -114,6 +117,10 @@ export type Liane = Entity &
     driver: { user: Ref<User>; canDrive: boolean };
     conversation: Ref<ConversationGroup>;
     state: LianeState;
+    recurrence?: {
+      id: string;
+      days: DayOfTheWeekFlag;
+    };
   }>;
 
 export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
