@@ -90,6 +90,9 @@ export function post(uri: string, options: QueryPostOptions<any> = {}) {
 export function patch(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("PATCH", uri, options);
 }
+export async function patchAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  return fetchAndCheckAs<T>("PATCH", uri, options);
+}
 
 // @ts-ignore
 async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {

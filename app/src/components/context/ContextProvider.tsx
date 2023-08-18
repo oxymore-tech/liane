@@ -1,5 +1,5 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, LatLng, LocationPermissionLevel, User } from "@/api";
+import { AuthUser, FullUser, LatLng, LocationPermissionLevel } from "@/api";
 import { getLastKnownLocation } from "@/api/location";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
@@ -16,7 +16,7 @@ interface AppContextProps {
   locationPermission: LocationPermissionLevel;
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
-  user?: User;
+  user?: FullUser;
   setAuthUser: (authUser?: AuthUser) => void;
   services: AppServices;
   status: "online" | "offline";
@@ -35,7 +35,7 @@ export const AppContext = createContext<AppContextProps>({
 });
 
 async function initContext(service: AppServices): Promise<{
-  user: User | undefined;
+  user: FullUser | undefined;
   locationPermission: LocationPermissionLevel;
   position: LatLng;
   online: boolean;
@@ -101,7 +101,7 @@ interface ContextProviderState {
   appLoaded: boolean;
   locationPermission: LocationPermissionLevel;
   position?: LatLng;
-  user?: User;
+  user?: FullUser;
   status: "online" | "offline";
   appState: AppStateStatus;
 }
@@ -141,6 +141,12 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         SERVICES.realTimeHub.subscribeToNotifications(async n => {
           //console.debug("dbg ------>", this.state.appState);
           await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
+        });
+        SERVICES.auth.subscribeToUserChanges(user => {
+          this.setState(prev => ({
+            ...prev,
+            user
+          }));
         });
       }
 
@@ -214,7 +220,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   setAuthUser = async (a?: AuthUser) => {
     try {
-      let user: User;
+      let user: FullUser;
       if (a) {
         await registerRumUser(a);
         user = await SERVICES.realTimeHub.start();

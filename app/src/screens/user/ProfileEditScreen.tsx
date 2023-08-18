@@ -1,13 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import React, { useContext, useState } from "react";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { launchImageLibrary, ImagePickerResponse } from "react-native-image-picker";
-
-import { FullUser } from "@/api";
 import { formatMonthYear } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
-import { AppServices } from "@/api/service";
-
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
@@ -15,11 +11,10 @@ import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
-
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { capitalize } from "@/util/strings";
-import { getCurrentUser, storeCurrentUser } from "@/api/storage";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export const ProfileEditScreen = () => {
   return (
@@ -32,23 +27,37 @@ export const ProfileEditScreen = () => {
 
 const ProfileEditView = () => {
   const { navigation } = useAppNavigation<"ProfileEdit">();
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const { top: insetsTop } = useSafeAreaInsets();
 
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
-  const [profilePicture, setProfilePicture] = useState<string | null | undefined>("");
-  const [userInfos, setUserInfo] = useState<FullUser | undefined>(undefined);
-  const [isEditingUserName, setIsEditingUserName] = useState<boolean>(false);
+  const [firstName, setFirstName] = useState<string>(user!.firstName);
+  const [lastName, setLastName] = useState<string>(user!.lastName);
+  const [profilePicture, setProfilePicture] = useState<string | null | undefined>(user!.pictureUrl);
 
-  useEffect(() => {
-    services.auth.currentUser().then((user: FullUser | undefined) => {
-      setUserInfo(user);
-      setFirstName(user?.firstName ?? "");
-      setLastName(user?.lastName ?? "");
-      setProfilePicture(user?.pictureUrl ?? "");
-    });
-  }, []);
+  const [isEditingUserName, setIsEditingUserName] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+
+  const updateUserPicture = async (uri: string, formData: FormData) => {
+    setLoading(true);
+    setProfilePicture(uri);
+    await services.auth.uploadProfileImage(formData);
+    setLoading(false);
+  };
+
+  const saveUserName = async () => {
+    setIsEditingUserName(false);
+
+    // Send data only if one input is modified
+    if (user!.firstName !== firstName || user!.lastName !== lastName) {
+      const newUserData = {
+        firstName: firstName,
+        lastName: lastName,
+        gender: user!.gender ?? "Unspecified",
+        pictureUrl: user!.pictureUrl ?? ""
+      };
+      await services.auth.updateUserInfo(newUserData);
+    }
+  };
 
   return (
     <ScrollView overScrollMode="never">
@@ -56,8 +65,32 @@ const ProfileEditView = () => {
         <Pressable style={[styles.backContainer, { top: insetsTop + 24 }]} onPress={navigation.goBack}>
           <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
         </Pressable>
-        <Pressable onPress={() => openGallery(setProfilePicture, setUserInfo, services)}>
-          <UserPicture size={180} url={profilePicture} id={userInfos?.id} />
+        <Pressable onPress={() => openGallery(updateUserPicture)}>
+          <UserPicture size={180} url={profilePicture} id={user!.id} />
+          {loading && (
+            <Animated.View style={{ position: "absolute" }} entering={FadeIn} exiting={FadeOut}>
+              <Center
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                  borderRadius: 180,
+                  height: 180,
+                  width: 180
+                }}>
+                <ActivityIndicator />
+              </Center>
+            </Animated.View>
+          )}
+          {!loading && (
+            <Center
+              style={{
+                position: "absolute",
+                borderRadius: 180,
+                height: 180,
+                width: 180
+              }}>
+              <AppIcon name={"edit-outline"} size={90} color={"rgba(255,255,255,0.6)"} />
+            </Center>
+          )}
         </Pressable>
       </Center>
 
@@ -79,64 +112,25 @@ const ProfileEditView = () => {
           <AppText style={styles.userName}>{`${firstName} ${lastName}`}</AppText>
         )}
         {isEditingUserName ? (
-          <Pressable onPress={() => saveUserName(setIsEditingUserName, setUserInfo, userInfos, firstName, lastName, services)}>
+          <Pressable onPress={saveUserName}>
             <AppIcon name={"checkmark-outline"} color={AppColors.black} />
           </Pressable>
         ) : (
-          <Pressable onPress={() => editUserName(setIsEditingUserName)}>
+          <Pressable onPress={() => setIsEditingUserName(true)}>
             <AppIcon name={"edit-outline"} color={AppColors.black} />
           </Pressable>
         )}
       </Row>
 
-      {userInfos ? (
-        <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-          <AppText style={styles.userDateContainer}>Membre depuis {capitalize(formatMonthYear(new Date(userInfos?.createdAt!)))}</AppText>
-          <AppText style={styles.userDateContainer}>{userInfos?.phone}</AppText>
-        </Column>
-      ) : null}
+      <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
+        <AppText style={styles.userDateContainer}>Membre depuis {capitalize(formatMonthYear(new Date(user!.createdAt!)))}</AppText>
+        <AppText style={styles.userDateContainer}>{user!.phone}</AppText>
+      </Column>
     </ScrollView>
   );
 };
 
-const editUserName = (setIsEditingUserName: (state: boolean) => void) => {
-  setIsEditingUserName(true);
-};
-
-const saveUserName = async (
-  setIsEditingUserName: (state: boolean) => void,
-  setUserInfo: (userInfo: FullUser | undefined) => void,
-  userInfos: FullUser | undefined,
-  firstName: string,
-  lastName: string,
-  services: AppServices
-) => {
-  setIsEditingUserName(false);
-
-  // Send data only if one input is modified
-  if (userInfos?.firstName !== firstName || userInfos?.lastName !== lastName) {
-    const newFullUser = {
-      firstName: firstName,
-      lastName: lastName,
-      gender: userInfos?.gender ?? "Unspecified",
-      pictureUrl: userInfos?.pictureUrl ?? ""
-    };
-    await services.auth.updateUserInfo(newFullUser);
-
-    const fullUser = await getCurrentUser();
-    if (fullUser && newFullUser) {
-      const updatedUserData = { ...fullUser, ...newFullUser, pseudo: `${newFullUser.firstName} ${newFullUser.lastName.charAt(0)}.` };
-      await storeCurrentUser(updatedUserData);
-      setUserInfo(updatedUserData);
-    }
-  }
-};
-
-const openGallery = async (
-  setProfilePicture: (uri: string | null | undefined) => void,
-  setUserInfo: (userInfo: FullUser | undefined) => void,
-  services: AppServices
-) => {
+const openGallery = async (onFileSelected: (uri: string, data: FormData) => void) => {
   await launchImageLibrary({ mediaType: "photo", includeBase64: true }, async (imageData: ImagePickerResponse) => {
     if (!imageData?.assets?.length) {
       return;
@@ -145,24 +139,15 @@ const openGallery = async (
     if (!asset.uri || !asset.type) {
       return;
     }
-
+    const uri = Platform.OS === "android" ? asset.uri : asset.uri.replace("file://", "");
     const formData = new FormData();
     // @ts-ignore
     formData.append("file", {
       name: asset.fileName ?? "image",
       type: asset.type,
-      uri: Platform.OS === "android" ? asset.uri : asset.uri.replace("file://", "")
+      uri
     });
-
-    const pictureUrl = await services.auth.uploadProfileImage(formData);
-
-    const fullUser = await getCurrentUser();
-    if (fullUser) {
-      const updatedUserData = { ...fullUser, pictureUrl };
-      await storeCurrentUser(updatedUserData);
-      setUserInfo(updatedUserData);
-      setProfilePicture(pictureUrl);
-    }
+    onFileSelected(uri, formData);
   });
 };
 

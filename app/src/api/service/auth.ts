@@ -1,6 +1,7 @@
-import { patch, post, postAs, postAsString } from "@/api/http";
+import { patch, patchAs, post, postAs, postAsString } from "@/api/http";
 import { AuthRequest, AuthResponse, AuthUser, FullUser, UserInfo } from "@/api";
-import { clearStorage, getCurrentUser, getUserSession, processAuthResponse } from "@/api/storage";
+import { clearStorage, getCurrentUser, getUserSession, processAuthResponse, storeCurrentUser } from "@/api/storage";
+import { Subject, SubscriptionLike } from "rxjs";
 
 export interface AuthService {
   login(request: AuthRequest): Promise<AuthUser>;
@@ -8,12 +9,14 @@ export interface AuthService {
   sendSms(phone: string): Promise<void>;
   logout(): Promise<void>;
   updatePushToken(token: string): Promise<void>;
-  updateUserInfo(info: UserInfo): Promise<void>;
+  updateUserInfo(info: UserInfo): Promise<FullUser>;
   currentUser(): Promise<FullUser | undefined>;
   uploadProfileImage(data: FormData): Promise<string>;
+  subscribeToUserChanges(callback: (user: FullUser) => void): SubscriptionLike;
 }
 
 export class AuthServiceClient implements AuthService {
+  private userSubject = new Subject<FullUser>();
   async authUser(): Promise<AuthUser | undefined> {
     return getUserSession();
   }
@@ -41,11 +44,23 @@ export class AuthServiceClient implements AuthService {
     await patch("/user/push_token", { body: token });
   }
 
-  async updateUserInfo(info: UserInfo): Promise<void> {
-    await patch("/user", { body: info });
-  }
+  updateUserInfo = async (info: UserInfo) => {
+    const user = await patchAs<FullUser>("/user", { body: info });
+    await storeCurrentUser(user);
+    this.userSubject.next(user);
+    return user;
+  };
 
-  uploadProfileImage(data: FormData): Promise<string> {
-    return postAsString("/image/profile", { body: data });
-  }
+  uploadProfileImage = async (data: FormData) => {
+    const pictureUrl = await postAsString("/image/profile", { body: data });
+    const currentUser = await getCurrentUser();
+    const updatedUserData = { ...currentUser!, pictureUrl };
+    await storeCurrentUser(updatedUserData);
+    this.userSubject.next(updatedUserData);
+    return pictureUrl;
+  };
+
+  subscribeToUserChanges = (callback: (user: FullUser) => void) => {
+    return this.userSubject.subscribe(callback);
+  };
 }

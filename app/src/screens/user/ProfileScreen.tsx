@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet } from "react-native";
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
@@ -17,58 +17,54 @@ import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
-import { useIsFocused } from "@react-navigation/native";
-import { useQueryClient } from "react-query";
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
+  const { user: loggedUser } = useContext(AppContext);
+  const isMyPage = route.params.user.id === loggedUser!.id;
   return (
     <>
       <AppStatusBar style="light-content" />
-      <ProfileView params={route.params} />
+      {isMyPage ? <ProfileView user={loggedUser!} /> : <OtherUserProfileView params={route.params} />}
     </>
   );
 };
 
-const ProfileView = WithFetchResource<User>(
-  ({ data: user, refresh }) => {
-    const { user: loggedUser } = useContext(AppContext);
-    const { navigation } = useAppNavigation<"Profile">();
-    const displayedUser = user || loggedUser!;
-    const { top: insetsTop } = useSafeAreaInsets();
-    const isMyPage = user!.id === loggedUser!.id;
-    const isFocused = useIsFocused();
-    const queryClient = useQueryClient();
-
-    useEffect(() => {
-      queryClient.invalidateQueries(`GetUser${user.id}`);
-      refresh();
-    }, [isFocused]);
-
-    return (
-      <ScrollView overScrollMode="never">
-        <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
-          <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
-            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
-          </Pressable>
-          <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
-          <Column style={{ marginVertical: 8, alignItems: "center" }}>
-            <AppText style={styles.name}>{displayedUser.pseudo}</AppText>
-          </Column>
-        </Center>
-        <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-          {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
-          <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
-          {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
-          <DebugIdView id={user.id!} />
-        </Column>
-        {isMyPage && <Actions />}
-      </ScrollView>
-    );
-  },
+const OtherUserProfileView = WithFetchResource<User>(
+  ({ data: user }) => <ProfileView user={user} />,
   (_, params) => params.user,
   params => "GetUser" + params.user.id
 );
+
+const ProfileView = ({ user }: { user: User }) => {
+  const { user: loggedUser } = useContext(AppContext);
+  const { navigation } = useAppNavigation<"Profile">();
+
+  const { top: insetsTop } = useSafeAreaInsets();
+  const isMyPage = user!.id === loggedUser!.id;
+  const displayedUser = isMyPage ? loggedUser! : user;
+
+  return (
+    <ScrollView overScrollMode="never">
+      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
+        <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
+          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+        </Pressable>
+        <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
+        <Column style={{ marginVertical: 8, alignItems: "center" }}>
+          <AppText style={styles.name}>{displayedUser.pseudo}</AppText>
+        </Column>
+      </Center>
+      <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
+        {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
+        <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
+        {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
+        <DebugIdView object={user} />
+      </Column>
+      {isMyPage && <Actions />}
+    </ScrollView>
+  );
+};
 
 const Actions = () => {
   const { services, setAuthUser } = useContext(AppContext);

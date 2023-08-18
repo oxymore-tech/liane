@@ -31,7 +31,7 @@ export const UserPicture = ({ url, size = 48, id }: UserPictureProps) => {
       }}>
       {url ? (
         <Image
-          source={{ uri: url }}
+          source={{ uri: url, cache: "reload" }}
           style={{
             borderRadius: size,
             height: size,
