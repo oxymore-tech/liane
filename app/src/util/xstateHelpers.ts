@@ -36,7 +36,7 @@ export const CreateSubmittingState = <K>(machineId: string, cancelTargetState?: 
         10000: { target: "failure" }
       }
     },
-    success: { type: "final" },
+    success: { always: { target: "#" + machineId + ".done" } },
     failure: {
       on: {
         RETRY: { target: "#" + machineId + ".submitting" }
