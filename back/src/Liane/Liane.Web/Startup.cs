@@ -83,6 +83,7 @@ public static class Startup
     services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
+    services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
 
