@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS liane_waypoint
   to_id    VARCHAR(24),
   liane_id VARCHAR(24),
   eta      TIMESTAMP,
-  recurrence VARCHAR(7), -- '0'/'1' flags, representing days of the week
   PRIMARY KEY (from_id, to_id, liane_id),
   CONSTRAINT liane_waypoints_segments_from_id_to_id_fk
     FOREIGN KEY (from_id, to_id) REFERENCES segment

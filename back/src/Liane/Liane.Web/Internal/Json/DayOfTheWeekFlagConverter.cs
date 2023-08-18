@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Liane.Api.Trip;
@@ -13,7 +14,13 @@ public class DayOfTheWeekFlagConverter : JsonConverter<DayOfTheWeekFlag>
     {
       throw new JsonException();
     }
-    return new DayOfTheWeekFlag{FlagValue = reader.GetString()!};
+
+    var value = reader.GetString()!;
+    if (value.All(c => c == '1' || c == '0') && value.Length == 7)
+    {
+      return new DayOfTheWeekFlag { FlagValue = value };
+    } 
+    throw new JsonException($"Wrong flag format: '{value}'");
   }
 
   public override void Write(Utf8JsonWriter writer, DayOfTheWeekFlag value, JsonSerializerOptions options)

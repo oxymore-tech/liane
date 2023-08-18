@@ -38,6 +38,9 @@ public sealed record Driver
   bool CanDrive = true
 );
 
+public sealed record Recurrence
+  (Ref<LianeRecurrence> Id,  DayOfTheWeekFlag Days);
+
 public sealed record Liane(
   string Id,
   Ref<User.User> CreatedBy,
@@ -49,5 +52,5 @@ public sealed record Liane(
   Driver Driver,
   LianeState State,
   Ref<ConversationGroup>? Conversation,
-  DayOfTheWeekFlag? Recurrence = null
+  Recurrence? Recurrence = null
 ) : IEntity, ISharedResource<LianeMember>;

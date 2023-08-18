@@ -31,7 +31,7 @@ public sealed record LianeDb(
   ImmutableList<WayPointDb> WayPoints,
   ImmutableList<UserPing> Pings,
   Ref<ConversationGroup>? Conversation,
-  DayOfTheWeekFlag? Recurrence = null
+  Ref<LianeRecurrence>? Recurrence = null
 ) : IEntity, ISharedResource<LianeMember>
 {
   [BsonElement] public int TotalSeatCount => Members.Aggregate(0, (sum, v) => sum + v.SeatCount);

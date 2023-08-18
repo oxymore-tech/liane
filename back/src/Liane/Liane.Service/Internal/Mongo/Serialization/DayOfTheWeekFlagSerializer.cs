@@ -14,8 +14,7 @@ internal sealed class DayOfTheWeekFlagSerializer : StructSerializerBase<DayOfThe
 
     public override DayOfTheWeekFlag Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
     {
-        var serializer = BsonSerializer.LookupSerializer(typeof(BsonDocument));
-        var value = serializer.Deserialize(context, args).ToString()!;
+        var value = context.Reader.ReadString()!;
         return new DayOfTheWeekFlag { FlagValue = value };
     }
 }

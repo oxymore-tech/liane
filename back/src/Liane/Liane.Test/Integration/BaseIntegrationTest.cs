@@ -100,6 +100,7 @@ public abstract class BaseIntegrationTest
     services.AddService<PushServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
+    services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();
     services.AddEventListeners();
 
