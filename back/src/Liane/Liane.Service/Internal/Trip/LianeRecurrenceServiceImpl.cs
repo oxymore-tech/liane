@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
@@ -33,7 +34,12 @@ public class LianeRecurrenceServiceImpl: MongoCrudEntityService<LianeRecurrence>
     }
   
   }
-  
+
+  public async Task<ImmutableList<LianeRecurrence>> ListForCurrentUser()
+  {
+    return (await Mongo.GetCollection<LianeRecurrence>().Find(r => r.CreatedBy == CurrentContext.CurrentUser().Id).ToListAsync()).ToImmutableList();
+  }
+
   protected override Task<LianeRecurrence> ToDb(LianeRecurrence inputDto, string originalId, DateTime createdAt, string createdBy)
   {
     return Task.FromResult(inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy });

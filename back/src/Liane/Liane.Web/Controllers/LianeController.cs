@@ -154,6 +154,19 @@ public sealed class LianeController : ControllerBase
     return await mockService.GenerateLianes(count, from, to, radius);
   }
   
+      
+  [HttpGet("recurrence")]
+  public Task<ImmutableList<LianeRecurrence>> ListRecurrences()
+  {
+    return lianeRecurrenceService.ListForCurrentUser();
+  }
+  
+  [HttpGet("recurrence/{id}")]
+  public Task<LianeRecurrence> GetRecurrence([FromRoute] string id)
+  {
+    return lianeRecurrenceService.Get(id);
+  }
+
     
   [HttpDelete("recurrence/{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
