@@ -11,8 +11,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    labels:
-      - "com.datadoghq.ad.logs=[{'project': '${PROJECT}'}]"
     restart: unless-stopped
 
   postgis:
@@ -25,8 +23,6 @@ services:
       POSTGRES_DB: liane
       POSTGRES_USER: ${MONGO_USERNAME}
       POSTGRES_PASSWORD: ${MONGO_PASSWORD}
-    labels:
-      - "com.datadoghq.ad.logs=[{'project': '${PROJECT}'}]"
     restart: unless-stopped
     
   martin:
@@ -35,7 +31,6 @@ services:
     volumes:
       - "./martin/config.yaml:/config.yaml:ro"
     labels:
-      - "com.datadoghq.ad.logs=[{'project': '${PROJECT}'}]"
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-martin.rule=Host(`${DOMAIN}`) && (PathPrefix(`/liane_display`) || PathPrefix(`/rallying_point_display`))"
@@ -60,7 +55,6 @@ services:
   back:
     build: ../back
     labels:
-      - "com.datadoghq.ad.logs=[{'project': '${PROJECT}'}]"
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-back.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/swagger`))"
@@ -103,7 +97,6 @@ services:
       args:
         DOMAIN: ${DOMAIN}
     labels:
-      - "com.datadoghq.ad.logs=[{'project': '${PROJECT}'}]"
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
       - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"

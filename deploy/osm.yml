@@ -9,8 +9,6 @@ services:
     volumes:
       - "/data/osm:/data:ro"
     restart: unless-stopped
-    labels:
-      - "com.datadoghq.ad.logs=[{'project': 'osm'}]"
     networks:
       - osm
 
@@ -22,8 +20,6 @@ services:
     volumes:
       - "/data/osm/nominatim:/var/lib/postgresql/12/main"
     restart: unless-stopped
-    labels:
-      - "com.datadoghq.ad.logs=[{'project': 'osm'}]"
     networks:
       - gateway
       - osm
