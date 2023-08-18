@@ -200,6 +200,8 @@ async function headers(body?: any) {
   }
   if (!isRawBody(body)) {
     h.append("Content-Type", "application/json; charset=utf-8");
+  } else if (body instanceof FormData) {
+    h.append("Content-Type", "multipart/form-data");
   }
   return h;
 }
