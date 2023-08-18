@@ -3,6 +3,14 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
+public record BaseLianeRequest
+(
+  DateTime DepartureTime,
+  DateTime? ReturnTime,
+  int AvailableSeats,
+  Ref<RallyingPoint> From,
+  Ref<RallyingPoint> To
+);
 public sealed record LianeRequest(
   string? Id,
   DateTime DepartureTime,
@@ -11,4 +19,4 @@ public sealed record LianeRequest(
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   DayOfTheWeekFlag? Recurrence = null
-) : IIdentity;
+) : BaseLianeRequest(DepartureTime, ReturnTime, AvailableSeats, From, To) ,IIdentity;
