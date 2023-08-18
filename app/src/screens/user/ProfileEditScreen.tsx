@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { launchImageLibrary, ImagePickerResponse } from "react-native-image-picker";
 
-import { FullUser, UserInfo } from "@/api";
+import { FullUser } from "@/api";
 import { formatMonthYear } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { AppServices } from "@/api/service";
@@ -20,7 +20,6 @@ import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { capitalize } from "@/util/strings";
 import { getCurrentUser, storeCurrentUser } from "@/api/storage";
-import { dataURLtoFile } from "@/util/file";
 
 export const ProfileEditScreen = () => {
   return (
@@ -57,7 +56,7 @@ const ProfileEditView = () => {
         <Pressable style={[styles.backContainer, { top: insetsTop + 24 }]} onPress={navigation.goBack}>
           <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
         </Pressable>
-        <Pressable onPress={() => openGallery(setProfilePicture, setUserInfo, userInfos, firstName, lastName, services)}>
+        <Pressable onPress={() => openGallery(setProfilePicture, setUserInfo, services)}>
           <UserPicture size={180} url={profilePicture} id={userInfos?.id} />
         </Pressable>
       </Center>
@@ -65,7 +64,7 @@ const ProfileEditView = () => {
       <Row style={styles.userNameContainer}>
         {isEditingUserName ? (
           <Column style={styles.userName}>
-            <View style={[AppStyles.inputContainer, , { marginBottom: 8 }]}>
+            <View style={[AppStyles.inputContainer, { marginBottom: 8 }]}>
               <AppTextInput placeholder="Prénom" onChangeText={setFirstName} style={[AppStyles.input, styles.userNameInput]}>
                 {firstName}
               </AppTextInput>
@@ -104,7 +103,7 @@ const editUserName = (setIsEditingUserName: (state: boolean) => void) => {
   setIsEditingUserName(true);
 };
 
-const saveUserName = (
+const saveUserName = async (
   setIsEditingUserName: (state: boolean) => void,
   setUserInfo: (userInfo: FullUser | undefined) => void,
   userInfos: FullUser | undefined,
@@ -122,50 +121,47 @@ const saveUserName = (
       gender: userInfos?.gender ?? "Unspecified",
       pictureUrl: userInfos?.pictureUrl ?? ""
     };
-    services.auth.updateUserInfo(newFullUser);
+    await services.auth.updateUserInfo(newFullUser);
 
-    getCurrentUser().then((fullUser: FullUser | undefined) => {
-      if (fullUser && newFullUser) {
-        const updatedUserData = { ...fullUser, ...newFullUser, pseudo: `${newFullUser.firstName} ${newFullUser.lastName.charAt(0)}.` };
-        storeCurrentUser(updatedUserData);
-        setUserInfo(updatedUserData);
-      }
-    });
+    const fullUser = await getCurrentUser();
+    if (fullUser && newFullUser) {
+      const updatedUserData = { ...fullUser, ...newFullUser, pseudo: `${newFullUser.firstName} ${newFullUser.lastName.charAt(0)}.` };
+      await storeCurrentUser(updatedUserData);
+      setUserInfo(updatedUserData);
+    }
   }
 };
 
-const openGallery = (
+const openGallery = async (
   setProfilePicture: (uri: string | null | undefined) => void,
   setUserInfo: (userInfo: FullUser | undefined) => void,
-  userInfos: FullUser | undefined,
-  firstName: string,
-  lastName: string,
   services: AppServices
 ) => {
-  launchImageLibrary({ mediaType: "photo", includeBase64: true }, async (imageData: ImagePickerResponse) => {
-    const localImageBase64 = imageData?.assets ? `data:image/image;base64,${imageData?.assets[0]?.base64}` : "";
-    const newFullUser = {
-      firstName: firstName,
-      lastName: lastName,
-      gender: userInfos?.gender ?? "Unspecified"
-    };
+  await launchImageLibrary({ mediaType: "photo", includeBase64: true }, async (imageData: ImagePickerResponse) => {
+    if (!imageData?.assets?.length) {
+      return;
+    }
+    const asset = imageData?.assets[0];
+    if (!asset.uri || !asset.type) {
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("file", dataURLtoFile(localImageBase64 as string, "profile.png"));
+    // @ts-ignore
+    formData.append("file", {
+      name: asset.fileName ?? "image",
+      type: asset.type,
+      uri: Platform.OS === "android" ? asset.uri : asset.uri.replace("file://", "")
+    });
 
-    try {
-      await services.auth.storeUserPicture(formData);
-      services.auth.updateUserInfo(newFullUser);
+    const pictureUrl = await services.auth.uploadProfileImage(formData);
 
-      const fullUser = await getCurrentUser();
-      if (fullUser && newFullUser) {
-        const updatedUserData = { ...fullUser, ...newFullUser };
-        storeCurrentUser(updatedUserData);
-        setUserInfo(updatedUserData);
-        setProfilePicture(updatedUserData?.pictureUrl);
-      }
-    } catch (e) {
-      console.error(e);
+    const fullUser = await getCurrentUser();
+    if (fullUser) {
+      const updatedUserData = { ...fullUser, pictureUrl };
+      await storeCurrentUser(updatedUserData);
+      setUserInfo(updatedUserData);
+      setProfilePicture(pictureUrl);
     }
   });
 };

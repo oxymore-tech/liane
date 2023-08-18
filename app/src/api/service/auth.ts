@@ -1,4 +1,4 @@
-import { patch, post, postAs } from "@/api/http";
+import { patch, post, postAs, postAsString } from "@/api/http";
 import { AuthRequest, AuthResponse, AuthUser, FullUser, UserInfo } from "@/api";
 import { clearStorage, getCurrentUser, getUserSession, processAuthResponse } from "@/api/storage";
 
@@ -10,7 +10,7 @@ export interface AuthService {
   updatePushToken(token: string): Promise<void>;
   updateUserInfo(info: UserInfo): Promise<void>;
   currentUser(): Promise<FullUser | undefined>;
-  storeUserPicture(data: FormData): Promise<void>;
+  uploadProfileImage(data: FormData): Promise<string>;
 }
 
 export class AuthServiceClient implements AuthService {
@@ -45,7 +45,7 @@ export class AuthServiceClient implements AuthService {
     await patch("/user", { body: info });
   }
 
-  async storeUserPicture(data: FormData): Promise<void> {
-    await post("/image/profile", { body: data });
+  uploadProfileImage(data: FormData): Promise<string> {
+    return postAsString("/image/profile", { body: data });
   }
 }

@@ -31,7 +31,7 @@ public sealed class ImageServiceImpl : IImageService
     this.userService = userService;
   }
 
-  public async Task UploadProfile(IFormFile input)
+  public async Task<string> UploadProfile(IFormFile input)
   {
     var currentUserId = currentContext.CurrentUser().Id;
     var imageId = $"user_{currentUserId}";
@@ -40,7 +40,9 @@ public sealed class ImageServiceImpl : IImageService
 
     var result = await UploadImage(input, imageId);
 
-    await userService.UpdateAvatar(currentUserId, GetPicturelUrl(result.Result!.Id, Variant.Avatar));
+    var picturelUrl = GetPicturelUrl(result.Result!.Id, Variant.Avatar);
+    await userService.UpdateAvatar(currentUserId, picturelUrl);
+    return picturelUrl;
   }
 
   private async Task<ImageReponse> UploadImage(IFormFile input, string id)

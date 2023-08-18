@@ -74,6 +74,11 @@ export async function postAs<T>(uri: string, options: QueryPostOptions<T> = {}):
   return fetchAndCheckAs<T>("POST", uri, options);
 }
 
+export async function postAsString(uri: string, options: QueryPostOptions<any> = {}): Promise<string> {
+  const response = await fetchAndCheck("POST", uri, options);
+  return await response.text();
+}
+
 export async function del(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("DELETE", uri, options);
 }
