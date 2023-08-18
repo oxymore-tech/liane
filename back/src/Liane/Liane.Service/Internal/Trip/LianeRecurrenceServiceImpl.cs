@@ -11,8 +11,11 @@ namespace Liane.Service.Internal.Trip;
 
 public class LianeRecurrenceServiceImpl: MongoCrudEntityService<LianeRecurrence>, ILianeRecurrenceService
 {
-  public LianeRecurrenceServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext) : base(mongo, currentContext)
+
+  private readonly IRallyingPointService rallyingPointService;
+  public LianeRecurrenceServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService) : base(mongo, currentContext)
   {
+    this.rallyingPointService = rallyingPointService;
   }
 
   public async Task Update(Ref<LianeRecurrence> recurrence, DayOfTheWeekFlag days)
@@ -35,9 +38,28 @@ public class LianeRecurrenceServiceImpl: MongoCrudEntityService<LianeRecurrence>
   
   }
 
+  private async Task<LianeRecurrence> ResolveRallyingPoints(LianeRecurrence recurrence)
+  {
+    return recurrence with
+    {
+      InitialRequest = recurrence.InitialRequest with
+      {
+        From = await rallyingPointService.Get(recurrence.InitialRequest.From),
+        To = await rallyingPointService.Get(recurrence.InitialRequest.To)
+      }
+    };
+  }
+
   public async Task<ImmutableList<LianeRecurrence>> ListForCurrentUser()
   {
-    return (await Mongo.GetCollection<LianeRecurrence>().Find(r => r.CreatedBy == CurrentContext.CurrentUser().Id).ToListAsync()).ToImmutableList();
+    return await Mongo.GetCollection<LianeRecurrence>().Find(r => r.CreatedBy == CurrentContext.CurrentUser().Id)
+      .SelectAsync(ResolveRallyingPoints);
+  }
+
+  public async Task<LianeRecurrence> GetWithResolvedRefs(Ref<LianeRecurrence> recurrence)
+  {
+    var fetched = await Get(recurrence);
+    return await ResolveRallyingPoints(fetched);
   }
 
   protected override Task<LianeRecurrence> ToDb(LianeRecurrence inputDto, string originalId, DateTime createdAt, string createdBy)

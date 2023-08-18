@@ -8,7 +8,9 @@ public record BaseLianeRequest
   DateTime DepartureTime,
   DateTime? ReturnTime,
   int AvailableSeats,
+  [property:SerializeAsResolvedRef]
   Ref<RallyingPoint> From,
+  [property:SerializeAsResolvedRef]
   Ref<RallyingPoint> To
 );
 public sealed record LianeRequest(

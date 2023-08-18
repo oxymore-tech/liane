@@ -9,5 +9,6 @@ public interface ILianeRecurrenceService : ICrudEntityService<LianeRecurrence>
 {
   Task Update(Ref<LianeRecurrence> recurrence, DayOfTheWeekFlag days);
   Task<ImmutableList<LianeRecurrence>> ListForCurrentUser();
+  Task<LianeRecurrence> GetWithResolvedRefs(Ref<LianeRecurrence> recurrence);
 
 }

@@ -164,7 +164,7 @@ public sealed class LianeController : ControllerBase
   [HttpGet("recurrence/{id}")]
   public Task<LianeRecurrence> GetRecurrence([FromRoute] string id)
   {
-    return lianeRecurrenceService.Get(id);
+    return lianeRecurrenceService.GetWithResolvedRefs(id);
   }
 
     
