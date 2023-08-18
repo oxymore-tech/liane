@@ -3,6 +3,7 @@ services:
 
   mongo:
     image: "mongo:4.4"
+    command: mongod --quiet
     volumes:
       - "/data/${PROJECT}/mongo:/data/db"
     ports:
