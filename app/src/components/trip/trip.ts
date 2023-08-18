@@ -1,7 +1,7 @@
-import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
+import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
-import { ColorValue } from "react-native";
-import { AppColorPalettes } from "@/theme/colors";
+import { useContext } from "react";
+import { AppContext } from "@/components/context/ContextProvider";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -86,18 +86,30 @@ export const getTripMatch = (to: RallyingPoint, from: RallyingPoint, originalTri
 
 export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
 
-export const getLianeStatus = (liane: Liane): LianeStatus => {
+const getTimeForUser = (liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] => {
+  const pointId = liane.members.find(m => m.user.id === user)![type];
+  const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
   // @ts-ignore
-  const delta = (new Date(liane.departureTime) - new Date()) / 1000;
-  //console.debug(liane.state, liane.members.length);
+  const delta = (time - new Date()) / 1000;
+  return [time, delta];
+};
 
-  if (liane.state === "NotStarted") {
+export const useLianeStatus = (liane: Liane): LianeStatus => {
+  const { user } = useContext(AppContext);
+
+  if (liane.state === "NotStarted" || liane.state === "Started") {
+    const [_, delta] = getTimeForUser(liane, user!.id!, "from");
     if (delta > 0 && delta < 900) {
       if (liane.members.length > 1) {
         return "StartingSoon";
       }
     } else if (delta <= 0) {
-      return "Started";
+      const [_, deltaArrival] = getTimeForUser(liane, user!.id!, "to");
+      if (deltaArrival <= 0) {
+        return "Finished";
+      } else {
+        return "Started";
+      }
     }
     if (liane.members.length < 2) {
       if (liane.driver.canDrive) {
@@ -108,41 +120,4 @@ export const getLianeStatus = (liane: Liane): LianeStatus => {
     }
   }
   return liane.state;
-};
-
-export const getLianeStatusStyle = (liane: Liane): [string | undefined, ColorValue] => {
-  const lianeStatus = getLianeStatus(liane);
-  let status;
-  let color: ColorValue = AppColorPalettes.gray[100];
-  switch (lianeStatus) {
-    case "StartingSoon":
-      status = "Départ imminent";
-      //  color = AppColorPalettes.yellow[100];
-      break;
-    case "Started":
-      status = "En cours";
-      //  color = ContextualColors.greenValid.light;
-      break;
-    case "Finished":
-      status = "Terminé";
-      // color = AppColorPalettes.blue[100];
-      break;
-    case "Canceled":
-      status = "Annulé";
-      // color = ContextualColors.redAlert.light;
-      break;
-    case "AwaitingDriver":
-      status = "Sans conducteur";
-      //  color = ContextualColors.redAlert.light;
-      break;
-    case "AwaitingPassengers":
-      status = "En attente de passagers";
-      // color = AppColorPalettes.gray[100];
-      break;
-    case "Archived":
-      status = "Archivé";
-      //  color = AppColorPalettes.gray[100];
-      break;
-  }
-  return [status, color];
 };
