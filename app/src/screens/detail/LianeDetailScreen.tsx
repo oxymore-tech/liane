@@ -9,7 +9,7 @@ import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
 import { useLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatMonthDay } from "@/api/i18n";
+import { formatDaysOfTheWeek, formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -214,6 +214,9 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
         {/*!!liane.liane.returnTime && <InfoItem icon={"corner-down-right-outline"} value={"Retour à " + formattedReturnTime!} />*/}
         <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
         <InfoItem icon={"twisting-arrow"} value={tripDistance} />
+        {liane.liane.recurrence?.id && (
+          <InfoItem icon={"sync-outline"} value={`Trajet régulier (${formatDaysOfTheWeek(liane.liane.recurrence?.days!)})`} />
+        )}
       </Column>
 
       <LineSeparator />

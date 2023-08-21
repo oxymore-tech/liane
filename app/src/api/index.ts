@@ -142,6 +142,21 @@ export type LianeMember = Readonly<{
   delay?: TimeInSeconds;
 }>;
 
+export type LianeRecurrence = {
+  id: string;
+  createdBy: Ref<User>;
+  createdAt: UTCDateTime;
+  days: DayOfTheWeekFlag;
+  initialRequest: {
+    to: RallyingPoint;
+    from: RallyingPoint;
+    departureTime: Date;
+    availableSeats: number;
+    returnTime: Date | null | undefined;
+  };
+  active: boolean;
+};
+
 // A date time in ISO 8601 format
 export type UTCDateTime = string;
 
