@@ -33,9 +33,9 @@ export const LianeHistoryQueryKey = "getLianeHistory";
 
 const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
   ({ data, refresh, refreshing }) => {
-    return <TripListView data={data} isFetching={refreshing} onRefresh={refresh} />;
+    return <TripListView data={data} isFetching={refreshing} onRefresh={refresh} reverseSort={true} />;
   },
-  repository => repository.liane.list(false),
+  repository => repository.liane.list(["Finished", "Archived", "Canceled"]),
   LianeHistoryQueryKey,
   NoHistoryView
 );

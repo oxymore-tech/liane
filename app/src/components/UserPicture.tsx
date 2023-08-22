@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Image } from "react-native";
+import { Image, StyleProp, ViewStyle } from "react-native";
 
 import { AppIcon } from "@/components/base/AppIcon";
 import { Center } from "@/components/base/AppLayout";
@@ -11,9 +11,12 @@ export interface UserPictureProps {
   url: string | null | undefined;
   size?: number;
   id?: string;
+  style?: StyleProp<ViewStyle>;
+  borderWidth?: number;
+  borderColor?: string;
 }
 
-export const UserPicture = ({ url, size = 48, id }: UserPictureProps) => {
+export const UserPicture = ({ url, size = 48, id, style, borderWidth = 0, borderColor = "transparent" }: UserPictureProps) => {
   const color = useMemo(() => {
     if (id) {
       const hue = (getUniqueColor(id) + 360) % 360;
@@ -23,23 +26,38 @@ export const UserPicture = ({ url, size = 48, id }: UserPictureProps) => {
   }, [id]);
   return (
     <Center
-      style={{
-        backgroundColor: color,
-        borderRadius: size,
-        height: size,
-        width: size
-      }}>
+      style={[
+        style,
+        {
+          backgroundColor: color,
+          borderRadius: size,
+          height: size,
+          width: size
+        }
+      ]}>
       {url ? (
         <Image
           source={{ uri: url, cache: "reload" }}
           style={{
+            borderWidth: borderWidth,
+            borderColor: borderColor,
             borderRadius: size,
             height: size,
             width: size
           }}
         />
       ) : (
-        <AppIcon name={"person-outline"} size={0.6 * size} />
+        <AppIcon
+          name={"person-outline"}
+          size={0.6 * size}
+          style={{
+            borderWidth: borderWidth,
+            borderColor: borderColor,
+            borderRadius: size,
+            height: size,
+            width: size
+          }}
+        />
       )}
     </Center>
   );
