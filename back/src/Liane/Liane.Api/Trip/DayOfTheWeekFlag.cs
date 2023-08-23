@@ -19,10 +19,10 @@ public struct DayOfTheWeekFlag
   {
     for (var day = 1; day <= 7; day++)
     {
-      var flag = FlagValue[(day + (int)start - 1) % 7];
+      var flag = FlagValue[Mod(day + (int)start - 1, 7)];
       if (flag == '1')
       {
-        yield return (DayOfWeek)(((int)start + day ) % 7);
+        yield return (DayOfWeek) Mod((int)start + day, 7);
       }
     }
   }
@@ -36,7 +36,7 @@ public struct DayOfTheWeekFlag
       {
         break;
       }
-      var flag = FlagValue[(day + (int)start - 1) % 7];
+      var flag = FlagValue[Mod(day + (int)start-1, 7)];
       if (flag == '1')
       {
         yield return fromDate.AddDays(day);
@@ -49,9 +49,13 @@ public struct DayOfTheWeekFlag
     var flag = Enumerable.Repeat('0', 7).ToArray();
     foreach (var d in days)
     {
-      flag[(int)d - 1] = '1';
+      var index = Mod((int)d-1, 7);
+      flag[index] = '1';
     }
     return new DayOfTheWeekFlag { FlagValue = new string(flag) };
   }
 
+  private static int Mod(int x, int m) {
+    return (x%m + m)%m;
+  }
 }
