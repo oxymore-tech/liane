@@ -119,7 +119,7 @@ function formatBodyAsJsonIfNeeded(body?: any) {
 }
 
 function isRawBody(body?: any) {
-  return !body || body instanceof Blob || body instanceof FormData || typeof body === "string";
+  return !body || body instanceof Blob || body instanceof FormData;
 }
 
 const refreshTokenMutex = new Mutex();
