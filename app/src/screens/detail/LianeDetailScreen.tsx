@@ -63,7 +63,8 @@ export const LianeDetailScreen = () => {
   });
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
-  if (liane && ["Started", "StartingSoon"].includes(useLianeStatus(liane))) {
+  const lianeStatus = useLianeStatus(liane ? liane : undefined);
+  if (liane && ["Started", "StartingSoon"].includes(lianeStatus!)) {
     return (
       <TripGeolocationProvider liane={liane}>
         <LianeDetailPage match={match} />

@@ -1,6 +1,6 @@
 import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 
 export type UserTrip = {
@@ -86,6 +86,31 @@ export const getTripMatch = (to: RallyingPoint, from: RallyingPoint, originalTri
 
 export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
 
+const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
+  if (liane.state === "NotStarted" || liane.state === "Started") {
+    const [_, delta] = getTimeForUser(liane, user, "from");
+    if (delta > 0 && delta < 900) {
+      if (liane.members.length > 1) {
+        return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
+      }
+    } else if (delta <= 0) {
+      const [_, deltaArrival] = getTimeForUser(liane, user, "to");
+      if (deltaArrival <= 0) {
+        return { status: "Finished", nextUpdateMillis: deltaArrival * 1000 };
+      } else {
+        return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
+      }
+    }
+    if (liane.members.length < 2) {
+      if (liane.driver.canDrive) {
+        return { status: "AwaitingPassengers" };
+      } else {
+        return { status: "AwaitingDriver" };
+      }
+    }
+  }
+  return { status: liane.state };
+};
 const getTimeForUser = (liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] => {
   const pointId = liane.members.find(m => m.user.id === user)![type];
   const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
@@ -94,30 +119,20 @@ const getTimeForUser = (liane: Liane, user: Ref<User>, type: "to" | "from"): [Da
   return [time, delta];
 };
 
-export const useLianeStatus = (liane: Liane): LianeStatus => {
+export const useLianeStatus = (liane: Liane | undefined): LianeStatus | undefined => {
   const { user } = useContext(AppContext);
+  const userId = user!.id!;
 
-  if (liane.state === "NotStarted" || liane.state === "Started") {
-    const [_, delta] = getTimeForUser(liane, user!.id!, "from");
-    if (delta > 0 && delta < 900) {
-      if (liane.members.length > 1) {
-        return "StartingSoon";
-      }
-    } else if (delta <= 0) {
-      const [_, deltaArrival] = getTimeForUser(liane, user!.id!, "to");
-      if (deltaArrival <= 0) {
-        return "Finished";
-      } else {
-        return "Started";
-      }
+  const [status, setStatus] = useState(liane ? getLianeStatus(liane, userId) : undefined);
+
+  useEffect(() => {
+    if (liane && status?.nextUpdateMillis !== undefined) {
+      const timeout = setTimeout(() => {
+        setStatus(getLianeStatus(liane, userId));
+      }, status.nextUpdateMillis);
+      return () => clearTimeout(timeout);
     }
-    if (liane.members.length < 2) {
-      if (liane.driver.canDrive) {
-        return "AwaitingPassengers";
-      } else {
-        return "AwaitingDriver";
-      }
-    }
-  }
-  return liane.state;
+  }, [status?.nextUpdateMillis, liane?.id, userId]);
+
+  return status?.status;
 };
