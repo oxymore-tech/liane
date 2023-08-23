@@ -57,9 +57,9 @@ public sealed class LianeController : ControllerBase
 
   [HttpPatch("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task Reschedule([FromRoute] string id, [FromBody] DateTime departureTime)
+  public async Task Update([FromRoute] string id, [FromBody] LianeUpdate update)
   {
-    await lianeService.UpdateDepartureTime(id, departureTime);
+    await lianeService.UpdateDepartureTime(id, update.DepartureTime);
   }
   
   [HttpPost("{id}/cancel")]

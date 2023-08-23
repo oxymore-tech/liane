@@ -154,17 +154,10 @@ export type Feedback = Readonly<{
   comment: string | null;
   canceled: boolean;
 }>;
-/*
-export type LianeSegment = Readonly<{
-  coordinates: GeoJSON.Position[];
-  lianes: Ref<Liane>[];
-}>;
 
-export type LianeDisplay = Readonly<{
-  segments: LianeSegment[];
-  lianes: Liane[];
-}>;
-*/
+export type LianeUpdate = {
+  departureTime: UTCDateTime;
+};
 
 export type LianeMatchDisplay = Readonly<{ features: FeatureCollection; lianeMatches: LianeMatch[] }>;
 export type ChatMessage = Readonly<
