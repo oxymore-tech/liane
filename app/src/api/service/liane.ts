@@ -9,7 +9,8 @@ import {
   NearestLinks,
   Feedback,
   RallyingPoint,
-  Ref
+  Ref,
+  LianeUpdate
 } from "@/api";
 import { get, postAs, del, patch } from "@/api/http";
 import { JoinRequest, MemberPing } from "@/api/event";
@@ -98,7 +99,7 @@ export class LianeServiceClient implements LianeService {
   }
 
   async updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void> {
-    await patch(`/liane/${id}`, { body: departureTime });
+    await patch(`/liane/${id}`, { body: <LianeUpdate>{ departureTime } });
   }
 
   async updateFeedback(id: string, feedback: Feedback): Promise<void> {
