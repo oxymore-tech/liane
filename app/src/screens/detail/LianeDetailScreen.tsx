@@ -7,7 +7,7 @@ import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
 import { LineSeparator, SectionSeparator } from "@/components/Separator";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
-import { getLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
+import { useLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
@@ -63,7 +63,8 @@ export const LianeDetailScreen = () => {
   });
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
-  if (liane && ["Started", "StartingSoon"].includes(getLianeStatus(liane))) {
+  const lianeStatus = useLianeStatus(liane ? liane : undefined);
+  if (liane && ["Started", "StartingSoon"].includes(lianeStatus!)) {
     return (
       <TripGeolocationProvider liane={liane}>
         <LianeDetailPage match={match} />

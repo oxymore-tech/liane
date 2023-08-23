@@ -1,5 +1,5 @@
 import { Liane, WayPoint } from "@/api";
-import { getLianeStatus } from "@/components/trip/trip";
+import { useLianeStatus } from "@/components/trip/trip";
 import React, { useCallback, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
@@ -14,7 +14,7 @@ import { addSeconds } from "@/util/datetime";
 import { UserPicture } from "@/components/UserPicture";
 
 export const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; liane: Liane }) => {
-  const lianeStatus = getLianeStatus(liane);
+  const lianeStatus = useLianeStatus(liane);
   const { user } = useContext(AppContext);
   const lianeMember = liane.members.find(m => m.user.id === user!.id)!;
 

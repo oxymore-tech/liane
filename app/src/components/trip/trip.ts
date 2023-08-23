@@ -1,7 +1,7 @@
-import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
+import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
-import { ColorValue } from "react-native";
-import { AppColorPalettes } from "@/theme/colors";
+import { useContext, useEffect, useState } from "react";
+import { AppContext } from "@/components/context/ContextProvider";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -86,63 +86,53 @@ export const getTripMatch = (to: RallyingPoint, from: RallyingPoint, originalTri
 
 export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
 
-export const getLianeStatus = (liane: Liane): LianeStatus => {
-  // @ts-ignore
-  const delta = (new Date(liane.departureTime) - new Date()) / 1000;
-  //console.debug(liane.state, liane.members.length);
-
-  if (liane.state === "NotStarted") {
+const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
+  if (liane.state === "NotStarted" || liane.state === "Started") {
+    const [_, delta] = getTimeForUser(liane, user, "from");
     if (delta > 0 && delta < 900) {
       if (liane.members.length > 1) {
-        return "StartingSoon";
+        return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
       }
     } else if (delta <= 0) {
-      return "Started";
+      const [_, deltaArrival] = getTimeForUser(liane, user, "to");
+      if (deltaArrival <= 0) {
+        return { status: "Finished", nextUpdateMillis: deltaArrival * 1000 };
+      } else {
+        return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
+      }
     }
     if (liane.members.length < 2) {
       if (liane.driver.canDrive) {
-        return "AwaitingPassengers";
+        return { status: "AwaitingPassengers" };
       } else {
-        return "AwaitingDriver";
+        return { status: "AwaitingDriver" };
       }
     }
   }
-  return liane.state;
+  return { status: liane.state };
+};
+const getTimeForUser = (liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] => {
+  const pointId = liane.members.find(m => m.user.id === user)![type];
+  const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
+  // @ts-ignore
+  const delta = (time - new Date()) / 1000;
+  return [time, delta];
 };
 
-export const getLianeStatusStyle = (liane: Liane): [string | undefined, ColorValue] => {
-  const lianeStatus = getLianeStatus(liane);
-  let status;
-  let color: ColorValue = AppColorPalettes.gray[100];
-  switch (lianeStatus) {
-    case "StartingSoon":
-      status = "Départ imminent";
-      //  color = AppColorPalettes.yellow[100];
-      break;
-    case "Started":
-      status = "En cours";
-      //  color = ContextualColors.greenValid.light;
-      break;
-    case "Finished":
-      status = "Terminé";
-      // color = AppColorPalettes.blue[100];
-      break;
-    case "Canceled":
-      status = "Annulé";
-      // color = ContextualColors.redAlert.light;
-      break;
-    case "AwaitingDriver":
-      status = "Sans conducteur";
-      //  color = ContextualColors.redAlert.light;
-      break;
-    case "AwaitingPassengers":
-      status = "En attente de passagers";
-      // color = AppColorPalettes.gray[100];
-      break;
-    case "Archived":
-      status = "Archivé";
-      //  color = AppColorPalettes.gray[100];
-      break;
-  }
-  return [status, color];
+export const useLianeStatus = (liane: Liane | undefined): LianeStatus | undefined => {
+  const { user } = useContext(AppContext);
+  const userId = user!.id!;
+
+  const [status, setStatus] = useState(liane ? getLianeStatus(liane, userId) : undefined);
+
+  useEffect(() => {
+    if (liane && status?.nextUpdateMillis !== undefined) {
+      const timeout = setTimeout(() => {
+        setStatus(getLianeStatus(liane, userId));
+      }, status.nextUpdateMillis);
+      return () => clearTimeout(timeout);
+    }
+  }, [status?.nextUpdateMillis, liane?.id, userId]);
+
+  return status?.status;
 };

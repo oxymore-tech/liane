@@ -2,7 +2,6 @@ import { JoinLianeRequestDetailed, Liane, UTCDateTime } from "@/api";
 import { extractDatePart } from "@/util/datetime";
 import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { useAppNavigation } from "@/api/navigation";
-import { getLianeStatusStyle } from "@/components/trip/trip";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useObservable } from "@/util/hooks/subscription";
@@ -16,6 +15,7 @@ import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegment
 import { capitalize } from "@/util/strings";
 import { formatMonthDay } from "@/api/i18n";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LianeStatusView } from "@/components/trip/LianeStatusView";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -70,7 +70,6 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[]): Trip
 
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
   const { navigation } = useAppNavigation();
-  const [statusText, color] = getLianeStatusStyle(item);
 
   const { services, user } = useContext(AppContext);
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
@@ -112,20 +111,16 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
           </Pressable>
         )}
       </View>
-      <Row style={styles.statusRowContainer} spacing={8}>
-        {statusText && (
-          <Row
-            style={{
-              paddingHorizontal: 4,
-              paddingVertical: 4,
-              borderRadius: 4,
-              alignItems: "center",
-              alignSelf: "center",
-              backgroundColor: color
-            }}>
-            <AppText>{statusText}</AppText>
-          </Row>
-        )}
+      <Row
+        style={{ flex: 1, justifyContent: "flex-start", paddingTop: 8, borderTopWidth: 1, marginTop: 16, borderColor: AppColorPalettes.gray[100] }}
+        spacing={8}>
+        <Row
+          style={{
+            alignItems: "center",
+            alignSelf: "center"
+          }}>
+          <LianeStatusView liane={item} />
+        </Row>
         <View style={{ flex: 1 }} />
         {(item.state === "NotStarted" || item.state === "Started") && (
           <Row style={{ position: "relative", left: 12 * (item.members.length - 1) }}>

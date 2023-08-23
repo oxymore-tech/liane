@@ -2,7 +2,7 @@ import React, { createContext, PropsWithChildren, useContext, useEffect, useStat
 import { Liane, Ref, TrackedMemberLocation, User } from "@/api";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
-import { getLianeStatus } from "@/components/trip/trip";
+import { useLianeStatus } from "@/components/trip/trip";
 import { isLocationServiceRunning } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
 
@@ -18,7 +18,7 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   const { services } = useContext(AppContext);
   const [observables, setObservables] = useState<{ [k: string]: Observable<TrackedMemberLocation | null> }>({});
   const isFocused = useIsFocused();
-  const lianeStatus = getLianeStatus(liane);
+  const lianeStatus = useLianeStatus(liane);
   useEffect(() => {
     if ((isFocused && lianeStatus === "Started") || lianeStatus === "StartingSoon") {
       isLocationServiceRunning().then(setGeolocRunning);

@@ -23,4 +23,5 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
   Task RemoveRecurrence(Ref<LianeRecurrence> recurrence);
   Task<Liane> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null);
+  Task<Liane> GetForCurrentUser(Ref<Liane> liane);
 }

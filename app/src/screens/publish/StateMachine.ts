@@ -192,7 +192,8 @@ export const CreatePublishLianeMachine = (
           }
         },
         // @ts-ignore
-        submitting: { ...CreateSubmittingState("publish"), type: "final" }
+        submitting: { ...CreateSubmittingState("publish") },
+        done: { type: "final" }
       }
     },
     {
