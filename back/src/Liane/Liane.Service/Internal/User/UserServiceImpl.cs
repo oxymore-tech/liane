@@ -29,7 +29,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     await UpdateField(id, u => u.PushToken, pushToken);
   }
 
-  public async Task UpdateInfo(string id, UserInfo info)
+  public async Task<FullUser> UpdateInfo(string id, UserInfo info)
   {
     var minLength = 2;
     if (info.FirstName.Length < minLength) throw new ValidationException(nameof(UserInfo.FirstName), ValidationMessage.TooShort(minLength));
@@ -42,6 +42,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
           .Set(i => i.UserInfo!.LastName, info.LastName)
           .Set(i => i.UserInfo!.Gender, info.Gender)
       );
+    return  await GetFullUser(id);
   }
 
   public async Task<FullUser> GetByPhone(string phone)

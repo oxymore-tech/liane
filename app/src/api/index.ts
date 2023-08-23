@@ -55,6 +55,8 @@ export type User = Readonly<
 
 export type FullUser = Readonly<
   {
+    firstName: string;
+    lastName: string;
     pushToken?: string;
   } & User
 >;

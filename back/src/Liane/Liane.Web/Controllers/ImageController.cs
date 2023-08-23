@@ -20,8 +20,7 @@ public sealed class ImageController
   }
 
   [HttpPost("profile")]
-  [DebugRequest]
-  public Task UploadProfile([FromForm] IFormFile file)
+  public Task<string> UploadProfile([FromForm] IFormFile file)
   {
     return imageService.UploadProfile(file);
   }

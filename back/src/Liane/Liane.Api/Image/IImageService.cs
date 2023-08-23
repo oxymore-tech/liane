@@ -5,5 +5,5 @@ namespace Liane.Api.Image;
 
 public interface IImageService
 {
-  Task UploadProfile(IFormFile input);
+  Task<string> UploadProfile(IFormFile input);
 }

@@ -20,6 +20,18 @@ export const AppStyles = StyleSheet.create({
     fontSize: 18,
     color: AppColorPalettes.gray[800]
   },
+  inputContainer: {
+    backgroundColor: AppColors.white,
+    borderRadius: 20,
+    maxHeight: 40,
+    minHeight: 40,
+    flex: 1,
+
+    borderWidth: 1,
+    marginHorizontal: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
   center: {
     alignItems: "center",
     justifyContent: "center"

@@ -6,13 +6,14 @@ import { Row } from "@/components/base/AppLayout";
 export interface AppTextInputProps extends TextInputProps {
   leading?: JSX.Element;
   trailing?: JSX.Element;
+  placeholder?: string;
 }
 
-export const AppTextInput = forwardRef(({ leading, trailing, style, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
+export const AppTextInput = forwardRef(({ leading, trailing, style, placeholder, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
   return (
     <Row style={styles.container} spacing={8}>
       {leading}
-      <TextInput placeholderTextColor={AppColorPalettes.gray[500]} ref={ref} style={[styles.input, style]} {...props} />
+      <TextInput placeholder={placeholder} placeholderTextColor={AppColorPalettes.gray[500]} ref={ref} style={[styles.input, style]} {...props} />
       {trailing}
     </Row>
   );
