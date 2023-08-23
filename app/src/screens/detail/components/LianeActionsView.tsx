@@ -3,7 +3,7 @@ import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { DayOfTheWeekFlag, FullUser, getPoint, Liane, LianeMatch, LianeRecurrence } from "@/api";
+import { FullUser, getPoint, Liane, LianeMatch, LianeRecurrence } from "@/api";
 import { NavigationParamList, useAppNavigation } from "@/api/navigation";
 import { formatDate } from "@/api/i18n";
 import { cancelSendLocationPings } from "@/api/service/location";
@@ -22,6 +22,7 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
+import { ChoiceModal } from "@/components/modal/ChoiceModal";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
@@ -34,7 +35,9 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
 
-  const [modalVisible, setModalVisible] = useState(false);
+  const [timeModalVisible, setTimeModalVisible] = useState(false);
+  const [recurrenceModalVisible, setRecurrenceModalVisible] = useState(false);
+  const [editOptionsModalVisible, setEditOptionsModalVisible] = useState(false);
   const [date, setDate] = useState(new Date(liane.departureTime));
   const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || null);
   const [recurrenceDetails, setRecurrenceDetails] = useState<LianeRecurrence | null>(null);
@@ -65,29 +68,69 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
       {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
       {currentUserIsDriver && liane.state === "NotStarted" && (
-        <ActionItem onPress={() => setModalVisible(true)} iconName={"clock-outline"} text={"Modifier l'horaire de départ"} />
+        <ActionItem onPress={() => setEditOptionsModalVisible(true)} iconName={"edit-outline"} text={"Modifier le trajet"} />
       )}
+      <ChoiceModal
+        visible={editOptionsModalVisible}
+        setVisible={setEditOptionsModalVisible}
+        backgroundColor={AppColors.white}
+        choices={[
+          {
+            icon: "clock-outline",
+            text: "Modifier l'horaire de départ",
+            action: () => {
+              setTimeModalVisible(true);
+            }
+          },
+          {
+            icon: "calendar-outline",
+            text: "Modifier les jours de trajet",
+            action: () => {
+              setRecurrenceModalVisible(true);
+            }
+          }
+        ]}
+      />
 
       <SlideUpModal
         actionText={"Modifier l'horaire"}
         backgroundColor={AppColors.yellow}
-        onAction={() => validateDateEdition(services, queryClient, date, !!liane.recurrence?.id, daysOfTheWeek, liane, setModalVisible)}
-        visible={modalVisible}
-        setVisible={setModalVisible}>
+        onAction={async () => {
+          await services.liane.updateDepartureTime(liane.id!, date.toISOString());
+          await queryClient.invalidateQueries(LianeQueryKey);
+          setTimeModalVisible(false);
+        }}
+        visible={timeModalVisible}
+        setVisible={setTimeModalVisible}>
         <Column spacing={16} style={{ marginBottom: 16 }}>
           <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand partez-vous ?</AppText>
-          {liane.recurrence?.id ? (
-            <View>
-              <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
-              <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
-            </View>
-          ) : (
-            <View>
-              <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
-            </View>
-          )}
+
+          <View>
+            <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
+          </View>
         </Column>
       </SlideUpModal>
+
+      {liane.recurrence && (
+        <SlideUpModal
+          actionText={"Modifier les jours de trajet"}
+          backgroundColor={AppColors.yellow}
+          onAction={async () => {
+            await services.liane.updateRecurrence(liane.recurrence!.id!, daysOfTheWeek);
+            await queryClient.invalidateQueries(LianeQueryKey);
+            setRecurrenceModalVisible(false);
+          }}
+          visible={recurrenceModalVisible}
+          setVisible={setRecurrenceModalVisible}>
+          <Column spacing={16} style={{ marginBottom: 16 }}>
+            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand partez-vous ?</AppText>
+
+            <View>
+              <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
+            </View>
+          </Column>
+        </SlideUpModal>
+      )}
 
       {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
         <ActionItem onPress={() => relaunchLiane(navigation, match)} iconName={"repeat"} text={"Relancer ce trajet"} />
@@ -152,26 +195,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   );
 };
 
-const validateDateEdition = async (
-  services: AppServices,
-  queryClient: QueryClient,
-  date: Date,
-  isRecurrent: boolean,
-  recurrence: DayOfTheWeekFlag,
-  liane: Liane,
-  setModalVisible: (visible: boolean) => void
-) => {
-  if (isRecurrent) {
-    // If recurrent, capability to edit recurrence
-    services.liane.updateRecurrence(liane.recurrence?.id!, recurrence);
-  }
-
-  // In all cases, update departure time
-  services.liane.updateDepartureTime(liane.id!, date.toISOString());
-  await queryClient.invalidateQueries(LianeQueryKey);
-  setModalVisible(false);
-};
-
 const pauseLiane = (services: AppServices, queryClient: QueryClient, liane: Liane, pause: boolean) => {
   Alert.alert(
     pause ? "Mettre en pause" : "Réactiver la liane",
@@ -185,8 +208,11 @@ const pauseLiane = (services: AppServices, queryClient: QueryClient, liane: Lian
       {
         text: pause ? "Pause" : "Réactiver",
         onPress: async () => {
-          if (pause) await services.liane.pause(liane.id!);
-          else await services.liane.unpause(liane.id!);
+          if (pause) {
+            await services.liane.pause(liane.id!);
+          } else {
+            await services.liane.unpause(liane.id!);
+          }
 
           await queryClient.invalidateQueries(LianeQueryKey);
         },
