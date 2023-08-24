@@ -25,7 +25,7 @@ import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
-  list(states: LianeState[], cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
+  list(states: LianeState[], cursor?: string, pageSize?: number, asc?: boolean): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
@@ -55,11 +55,25 @@ export class LianeServiceClient implements LianeService {
     return await get<Liane>(`/liane/${id}`);
   }
 
-  async list(states: LianeState[] = ["NotStarted", "Started"], cursor: string | undefined = undefined, pageSize: number = 10) {
-    let paramString = states.map((state: string, index: number) => `${index === 0 ? "?" : "&"}state=${state}`).join("");
-    //TODO cursor
+  async list(
+    states: LianeState[] = ["NotStarted", "Started"],
+    cursor: string | undefined = undefined,
+    pageSize: number = 10,
+    asc: boolean | undefined = undefined
+  ) {
+    let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
+    if (cursor) {
+      paramString += `&cursor=${cursor}&limit=${pageSize}`;
+    }
+    if (asc !== undefined) {
+      paramString += `&asc=${asc}`;
+    }
     const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
-    this.syncWithStorage(lianes.data);
+
+    // Sync coming trips with local storage
+    if (states.includes("NotStarted")) {
+      this.syncWithStorage(lianes.data.filter(l => l.state === "NotStarted"));
+    }
     return lianes;
   }
 

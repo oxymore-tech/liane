@@ -39,21 +39,25 @@ export interface TripListViewProps {
   isFetching?: boolean;
   onRefresh?: () => void;
   reverseSort?: boolean;
+  loadMore?: () => void;
 }
 
-export const TripListView = ({ data, isFetching, onRefresh, reverseSort }: TripListViewProps) => {
+export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: TripListViewProps) => {
   const insets = useSafeAreaInsets();
   const sections = useMemo(() => {
     return convertToDateSections(data, reverseSort ?? false);
   }, [data]);
   return (
     <SectionList
+      style={{ flex: 1 }}
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
       showsVerticalScrollIndicator={false}
       renderItem={renderItem}
       keyExtractor={item => item.id!}
       renderSectionHeader={renderSectionHeader}
+      onEndReachedThreshold={0.2}
+      onEndReached={loadMore}
       renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 + insets.bottom : 24 }} />}
     />
   );
@@ -102,9 +106,10 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
           {["Finished", "Archived", "Canceled"].includes(item.state) &&
             item.members
               .filter(m => m.user.id !== driver.id)
-              .map((m, index) => (
+              .map((m, i) => (
                 <UserPicture
-                  style={{ position: "absolute", left: index * 8, zIndex: -index }}
+                  key={m.user.id}
+                  style={{ position: "absolute", left: i * 8, zIndex: -i }}
                   id={m.user.id}
                   url={m.user.pictureUrl}
                   size={24}

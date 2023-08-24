@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { AppColorPalettes } from "@/theme/colors";
-import { FlatList, RefreshControl, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppText } from "@/components/base/AppText";
 import { Center } from "@/components/base/AppLayout";
@@ -21,7 +21,7 @@ const NoNotificationView = () => {
 };
 
 const NotificationScreen = WithFetchPaginatedResponse<Notification>(
-  ({ data, refresh, refreshing }) => {
+  ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
     const { services, user } = useContext(AppContext);
@@ -49,13 +49,22 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
         keyExtractor={i => i.id!}
         data={data}
         renderItem={renderItem}
+        onEndReachedThreshold={0.2}
+        onEndReached={fetchNextPage}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={{ alignItems: "center" }}>
+              <ActivityIndicator />
+            </View>
+          ) : undefined
+        }
         ItemSeparatorComponent={() => <View style={{ borderBottomWidth: 1, borderBottomColor: AppColorPalettes.gray[200], marginHorizontal: 24 }} />}
         contentContainerStyle={{ flexGrow: 1 }}
         style={{ marginBottom: 80 + insets.bottom }}
       />
     );
   },
-  repo => repo.notification.list(),
+  (repo, _, cursor) => repo.notification.list(cursor),
   NotificationQueryKey,
   NoNotificationView
 );

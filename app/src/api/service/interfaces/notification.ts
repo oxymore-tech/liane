@@ -5,7 +5,7 @@ import { Notification } from "@/api/notification";
 export interface NotificationService {
   receiveNotification(notification: Notification, display?: boolean): Promise<void>;
 
-  list(): Promise<PaginatedResponse<Notification>>;
+  list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>>;
 
   markAsRead(notification: Notification): Promise<void>;
 

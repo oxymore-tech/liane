@@ -1,20 +1,18 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-
 import { Liane, Ref, UnionUtils } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { Event } from "@/api/notification";
-
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
-
 import { AppColors } from "@/theme/colors";
+import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
@@ -22,10 +20,9 @@ const MyTripsScreen = () => {
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started", "Finished", "Archived"]) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"]) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
-  const isLianeUpcoming = (liane: Liane) => ["NotStarted", "Started"].includes(liane.state);
 
   useEffect(() => {
     const s = services.realTimeHub.subscribeToNotifications(async n => {
@@ -90,16 +87,41 @@ const MyTripsScreen = () => {
         selectedColor={AppColors.darkBlue}
         fontSize={18}
       />
-
-      <TripListView
-        data={data.filter(liane => (selectedTab === 0 ? isLianeUpcoming(liane as Liane) : !isLianeUpcoming(liane as Liane)))}
-        isFetching={isFetching}
-        onRefresh={() => queriesData.forEach(q => q.refetch())}
-        reverseSort={selectedTab === 1}
-      />
+      {selectedTab === 0 ? (
+        <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
+      ) : (
+        <PastLianeListView />
+      )}
     </Column>
   );
 };
+
+const NoRecentTrip = () => {
+  return (
+    <Center>
+      <AppText>Vous n'avez pas encore effectué de trajets</AppText>
+    </Center>
+  );
+};
+export const LianePastQueryKey = "getPastTrips";
+
+const PastLianeListView = WithFetchPaginatedResponse<Liane>(
+  ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
+    return (
+      <>
+        <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
+        {isFetchingNextPage && (
+          <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
+            <ActivityIndicator />
+          </View>
+        )}
+      </>
+    );
+  },
+  (repository, params, cursor) => repository.liane.list(["Finished", "Archived"], cursor, 10, false),
+  LianePastQueryKey,
+  NoRecentTrip
+);
 
 const refetch = (queriesData: UseQueryResult[]) => {
   if (queriesData[0].error) {
