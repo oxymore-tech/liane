@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
@@ -643,10 +644,20 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     return await rallyingPointService.SnapViaRoute(intersection, SnapDistanceInMeters);
   }
 
-  public async Task UpdateDepartureTime(Ref<Api.Trip.Liane> liane, DateTime departureTime)
+  public async Task<Api.Trip.Liane> UpdateDepartureTime(Ref<Api.Trip.Liane> liane, DateTime departureTime)
   {
+    var found = await Mongo.GetCollection<LianeDb>()
+      .Find(p => p.Id == liane.Id)
+      .FirstOrDefaultAsync();
+    var delta = departureTime - found!.DepartureTime;
+    found = found with { DepartureTime = departureTime, WayPoints = found.WayPoints.Select(w => w with { Eta = w.Eta + delta }).ToImmutableList() };
+   
     await Mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.DepartureTime, departureTime));
+      .ReplaceOneAsync(l => l.Id == liane.Id, found);
+    var updated = await MapEntity(found);
+    
+    await postgisService.UpdateGeometry(updated);
+    return updated;
   }
 
   public async Task UpdateState(Ref<Api.Trip.Liane> liane, LianeState state)
@@ -658,7 +669,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   public async Task RemoveRecurrence(Ref<LianeRecurrence> recurrence)
   {
     // Directly delete liane without other members
-    await Mongo.GetCollection<LianeDb>().DeleteManyAsync(l => l.Recurrence == recurrence.Id && l.Members.Count <= 1);
+    Expression<Func<LianeDb,bool>> filter = l => l.Recurrence == recurrence.Id && l.Members.Count <= 1;
+    var toDelete = await Mongo.GetCollection<LianeDb>().Find(filter).SelectAsync(async l => l.Id);
+    await postgisService.Clear(toDelete);
+    await Mongo.GetCollection<LianeDb>().DeleteManyAsync(filter);
+    
     // Remove recurrence ref for others
     await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync(l => l.Recurrence == recurrence.Id,

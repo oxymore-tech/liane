@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
@@ -9,7 +9,7 @@ import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
 import { useLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
-import { formatMonthDay } from "@/api/i18n";
+import { formatDaysOfTheWeek, formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -54,13 +54,20 @@ export const LianeDetailScreen = () => {
   const { route } = useAppNavigation<"LianeDetail">();
   const lianeParam = route.params!.liane;
 
-  const { data: liane } = useQuery(LianeDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
+  const { data: liane, refetch } = useQuery(LianeDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
     if (typeof lianeParam === "string") {
       return services.liane.get(lianeParam);
     } else {
       return lianeParam;
     }
   });
+
+  useEffect(() => {
+    // Refresh page if object passed as param has changed
+    if (typeof lianeParam !== "string") {
+      refetch();
+    }
+  }, [refetch, lianeParam]);
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
   const lianeStatus = useLianeStatus(liane ? liane : undefined);
@@ -214,6 +221,9 @@ const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRe
         {/*!!liane.liane.returnTime && <InfoItem icon={"corner-down-right-outline"} value={"Retour à " + formattedReturnTime!} />*/}
         <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
         <InfoItem icon={"twisting-arrow"} value={tripDistance} />
+        {liane.liane.recurrence?.id && (
+          <InfoItem icon={"sync-outline"} value={`Trajet régulier (${formatDaysOfTheWeek(liane.liane.recurrence?.days!)})`} />
+        )}
       </Column>
 
       <LineSeparator />

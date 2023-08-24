@@ -57,9 +57,9 @@ public sealed class LianeController : ControllerBase
 
   [HttpPatch("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task Update([FromRoute] string id, [FromBody] LianeUpdate update)
+  public Task<Api.Trip.Liane> Update([FromRoute] string id, [FromBody] LianeUpdate update)
   {
-    await lianeService.UpdateDepartureTime(id, update.DepartureTime);
+    return lianeService.UpdateDepartureTime(id, update.DepartureTime);
   }
   
   [HttpPost("{id}/cancel")]
@@ -187,8 +187,8 @@ public sealed class LianeController : ControllerBase
     // If flag is all 0, we stop here, else reactivate recurrence and create lianes
     if (!days.IsNever)
     {
-      await lianeService.CreateFromRecurrence(id);
       await lianeRecurrenceService.Update(id, days);
+      await lianeService.CreateFromRecurrence(id);
     }
   }
 
