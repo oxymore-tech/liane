@@ -1,6 +1,6 @@
 import Modal from "react-native-modal/dist/modal";
 import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
-import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import React, { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ export type Choice = {
   text: string;
   icon: IconName;
   action: () => void;
+  color?: ColorValue;
 };
 export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, choices }: ChoiceModalProps) => {
   const [selected, setSelected] = useState<number | undefined>(undefined);
@@ -56,8 +57,8 @@ export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, set
                   setVisible(false);
                 }}>
                 <Row spacing={24} style={{ alignItems: "center" }}>
-                  <AppIcon name={c.icon} />
-                  <AppText>{c.text}</AppText>
+                  <AppIcon name={c.icon} color={c.color ?? AppColorPalettes.gray[800]} />
+                  <AppText style={{ color: c.color ?? AppColorPalettes.gray[800] }}>{c.text}</AppText>
                 </Row>
               </AppPressableOverlay>
             ))}

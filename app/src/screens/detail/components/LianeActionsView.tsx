@@ -3,7 +3,7 @@ import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { FullUser, getPoint, Liane, LianeMatch, LianeRecurrence } from "@/api";
+import { DayOfTheWeekFlag, FullUser, getPoint, Liane, LianeMatch, LianeRecurrence } from "@/api";
 import { NavigationParamList, useAppNavigation } from "@/api/navigation";
 import { formatDate } from "@/api/i18n";
 import { cancelSendLocationPings } from "@/api/service/location";
@@ -69,6 +69,12 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
               action: () => {
                 setRecurrenceModalVisible(true);
               }
+            },
+            {
+              icon: "calendar-outline",
+              text: "Supprimer la régularité",
+              color: ContextualColors.redAlert.text,
+              action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible)
             }
           ]
         : [])
@@ -128,18 +134,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         <SlideUpModal
           actionText={"Modifier les jours de trajet"}
           backgroundColor={AppColors.yellow}
-          onAction={async () => {
-            await services.liane.updateRecurrence(liane.recurrence!.id!, daysOfTheWeek);
-            // Update current liane content
-            navigation.dispatch(CommonActions.setParams({ liane: { ...liane, recurrence: { ...liane.recurrence, days: daysOfTheWeek } } }));
-            // Update liane list
-            await queryClient.invalidateQueries(LianeQueryKey);
-            setRecurrenceModalVisible(false);
-            // Return to list if regularity is removed on the day of this trip
-            if (daysOfTheWeek[(new Date(liane.departureTime).getUTCDay() + 7) % 7] === "0") {
-              navigation.goBack();
-            }
-          }}
+          onAction={() => updateRecurrence(navigation, services, queryClient, liane, daysOfTheWeek, setRecurrenceModalVisible)}
           visible={recurrenceModalVisible}
           setVisible={setRecurrenceModalVisible}>
           <Column spacing={16} style={{ marginBottom: 16 }}>
@@ -242,6 +237,25 @@ const pauseLiane = (services: AppServices, queryClient: QueryClient, liane: Lian
   );
 };
 
+const updateRecurrence = async (
+  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
+  services: AppServices,
+  queryClient: QueryClient,
+  liane: Liane,
+  daysOfTheWeek: DayOfTheWeekFlag,
+  setRecurrenceModalVisible: (v: boolean) => void
+) => {
+  await services.liane.updateRecurrence(liane.recurrence!.id!, daysOfTheWeek);
+  // Update current liane content
+  navigation.dispatch(CommonActions.setParams({ liane: { ...liane, recurrence: { ...liane.recurrence, days: daysOfTheWeek } } }));
+  // Update liane list
+  await queryClient.invalidateQueries(LianeQueryKey);
+  setRecurrenceModalVisible(false);
+  // Return to list if regularity is removed on the day of this trip
+  if (daysOfTheWeek[(new Date(liane.departureTime).getUTCDay() + 7) % 7] === "0") {
+    navigation.goBack();
+  }
+};
 const relaunchLiane = (navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>, match: LianeMatch) => {
   const fromPoint = getPoint(match, "pickup");
   const toPoint = getPoint(match, "deposit");
