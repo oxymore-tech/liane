@@ -218,7 +218,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   public async Task<PaginatedResponse<Api.Trip.Liane>> List(LianeFilter lianeFilter, Pagination pagination, CancellationToken cancellationToken = default)
   {
     var filter = BuildFilter(lianeFilter);
-    var paginatedLianes = await Mongo.Paginate(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
+    var paginatedLianes = await Mongo.Paginate<LianeDb, Cursor.Time>(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
     if (lianeFilter is { ForCurrentUser: true, States.Length: > 0 })
     {
       // Return with user's version of liane state

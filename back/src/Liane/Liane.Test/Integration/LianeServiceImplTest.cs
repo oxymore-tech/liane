@@ -353,6 +353,30 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
+  public async Task TestListAll()
+  {
+    var userA = Fakers.FakeDbUsers[0];
+    currentContext.SetCurrentUser(userA);
+    const int total = 20;
+    const int pageSize = 10;
+    for (var i = 0; i < total; i++)
+    {
+      var lianeA = Fakers.LianeRequestFaker.Generate();
+      await testedService.Create(lianeA, userA.Id);
+    }
+
+   var firstPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
+   Assert.AreEqual(pageSize, firstPage.Data.Count);
+   Assert.NotNull(firstPage.Next);
+   
+   var lastPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
+   Assert.AreEqual(pageSize, lastPage.Data.Count);
+   Assert.Null(lastPage.Next);
+   
+   Assert.True(firstPage.Data.First().DepartureTime > lastPage.Data.First().DepartureTime);
+  }
+
+  [Test]
   public async Task JbShouldMatchAugustinsLiane()
   {
     var augustin = Fakers.FakeDbUsers[0].Id;

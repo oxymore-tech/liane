@@ -54,14 +54,14 @@ public static class MongoDatabaseExtensions
       .FirstOrDefaultAsync();
   }
 
-  public static async Task<PaginatedResponse<TData>> Paginate<TData>(
+  public static async Task<PaginatedResponse<TData>> Paginate<TData, TCursor>(
     this IMongoDatabase mongo,
     Pagination pagination,
     Expression<Func<TData, object?>> paginationField,
     FilterDefinition<TData> baseFilter,
     bool? sortAsc = null,
     CancellationToken cancellationToken = default
-  ) where TData : IIdentity
+  ) where TData : IIdentity where TCursor : Cursor
   {
     var effectiveSortAsc = sortAsc ?? pagination.SortAsc;
     var sort = effectiveSortAsc
@@ -77,14 +77,13 @@ public static class MongoDatabaseExtensions
     var find = collection.Find(filter)
       .Sort(sort)
       .Limit(pagination.Limit + 1);
-    var total = await find.CountDocumentsAsync(cancellationToken);
     var result = await find.ToListAsync(cancellationToken: cancellationToken);
 
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
     var data = result.GetRange(0, count);
-    var cursor = hasNext ? pagination.Cursor?.From(data.Last(), paginationField) : null;
-    return new PaginatedResponse<TData>(count, cursor, data.ToImmutableList(), (int)total);
+    var cursor = hasNext ? Cursor.From<TCursor, TData>(data.Last(), paginationField) : null;
+    return new PaginatedResponse<TData>(count, cursor, data.Take(pagination.Limit).ToImmutableList());
   }
 
   private static FilterDefinition<TData> CreatePaginationFilter<TData>(Cursor cursor, bool sortAsc, Expression<Func<TData, object?>> indexedField)

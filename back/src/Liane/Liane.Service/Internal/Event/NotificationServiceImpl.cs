@@ -112,7 +112,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       filter &= Builders<Notification>.Filter.Eq("payload.liane", notificationFilter.Liane);
     }
 
-    return await Mongo.Paginate(pagination, r => r.CreatedAt, filter, false);
+    return await Mongo.Paginate<Notification, Cursor.Time>(pagination, r => r.CreatedAt, filter, false);
   }
 
   public Task CleanJoinLianeRequests(ImmutableList<Ref<Api.Trip.Liane>> lianes)
