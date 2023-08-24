@@ -14,8 +14,9 @@ import { getTripFromLiane } from "@/components/trip/trip";
 import { getCurrentUser } from "@/api/storage";
 
 export class NotificationServiceClient extends AbstractNotificationService {
-  async list(): Promise<PaginatedResponse<Notification>> {
-    return await get("/notification");
+  async list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>> {
+    const paramString = cursor ? `?cursor=${cursor}` : "";
+    return await get("/notification" + paramString);
   }
   markAsRead = async (notification: Notification) => {
     // TODO find out how to use super
@@ -127,8 +128,7 @@ export async function createReminder(lianeId: string, departureLocation: Rallyin
         lightUpScreen: true,
         importance: AndroidImportance.HIGH,
         tag: "reminder",
-        actions: AndroidReminderActions,
-        ongoing: true
+        actions: AndroidReminderActions
       },
       title: "Départ imminent",
       body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,

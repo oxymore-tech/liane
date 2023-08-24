@@ -14,6 +14,7 @@ import LianeIcon from "@/assets/icon.svg";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { Row } from "@/components/base/AppLayout";
 import { ProfileScreen } from "@/screens/user/ProfileScreen";
+import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
 import HomeScreen from "@/screens/home/HomeScreen";
 import { WithBadge } from "@/components/base/WithBadge";
@@ -112,6 +113,7 @@ function Navigation() {
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ShareTripLocationScreen" component={ShareTripLocationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />

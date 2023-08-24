@@ -9,6 +9,12 @@ export class ValidationError extends Error {
   }
 }
 
+export class BadRequest extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export class NetworkUnavailable extends Error {
   constructor() {
     super("Network request failed");

@@ -65,8 +65,8 @@ public static class EnumerableExtensions
     return outs.ToImmutableList();
   }
 
-  public static PaginatedResponse<T> Paginate<T>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
-    where T : IIdentity
+  public static PaginatedResponse<T> Paginate<T, TCursor>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
+    where T : IIdentity where TCursor : Cursor
   {
     var totalCount = collection.Count;
     IEnumerable<T> enumerable = collection;
@@ -78,10 +78,6 @@ public static class EnumerableExtensions
       var filter = pagination.Cursor.ToFilter(pagination.SortAsc, paginationField);
       enumerable = enumerable.Where(e => filter.Compile()(e));
     }
-    else
-    {
-      enumerable = enumerable.OrderBy(e => e.Id);
-    }
 
     var paginated = enumerable
       .Take(pagination.Limit + 1)
@@ -90,7 +86,7 @@ public static class EnumerableExtensions
       .ToImmutableList();
     var last = limited.LastOrDefault();
     var limit = limited.Count;
-    var next = paginated.Count > limited.Count && last is not null ? pagination.Cursor?.From(last, paginationField) : null;
+    var next = paginated.Count > limited.Count && last is not null ? Cursor.From<TCursor, T>(last, paginationField) : null;
     return new PaginatedResponse<T>(limit, next, limited, totalCount);
   }
 

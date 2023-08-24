@@ -20,73 +20,61 @@ import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
+  const { user: loggedUser } = useContext(AppContext);
+  const isMyPage = route.params.user.id === loggedUser!.id;
   return (
     <>
       <AppStatusBar style="light-content" />
-      <ProfileView params={route.params} />
+      {isMyPage ? <ProfileView user={loggedUser!} /> : <OtherUserProfileView params={route.params} />}
     </>
   );
 };
 
-const ProfileView = WithFetchResource<User>(
-  ({ data: user }) => {
-    const { user: loggedUser } = useContext(AppContext);
-    const { navigation } = useAppNavigation<"Profile">();
-
-    const displayedUser = user || loggedUser!;
-    const { top: insetsTop } = useSafeAreaInsets();
-    const isMyPage = user!.id === loggedUser!.id;
-    return (
-      <ScrollView overScrollMode="never">
-        <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
-          <Pressable
-            style={{ position: "absolute", left: 24, top: insetsTop + 24 }}
-            onPress={() => {
-              navigation.goBack();
-            }}>
-            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
-          </Pressable>
-          <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
-          <Column style={{ marginVertical: 8, alignItems: "center" }}>
-            <AppText style={styles.name}>{displayedUser.pseudo}</AppText>
-          </Column>
-        </Center>
-        <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-          {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
-          <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
-          {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
-          <DebugIdView id={user.id!} />
-        </Column>
-        {isMyPage && <Actions />}
-      </ScrollView>
-    );
-  },
+const OtherUserProfileView = WithFetchResource<User>(
+  ({ data: user }) => <ProfileView user={user} />,
   (_, params) => params.user,
   params => "GetUser" + params.user.id
 );
+
+const ProfileView = ({ user }: { user: User }) => {
+  const { user: loggedUser } = useContext(AppContext);
+  const { navigation } = useAppNavigation<"Profile">();
+
+  const { top: insetsTop } = useSafeAreaInsets();
+  const isMyPage = user!.id === loggedUser!.id;
+  const displayedUser = isMyPage ? loggedUser! : user;
+
+  return (
+    <ScrollView overScrollMode="never">
+      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
+        <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
+          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+        </Pressable>
+        <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
+        <Column style={{ marginVertical: 8, alignItems: "center" }}>
+          <AppText style={styles.name}>{displayedUser.pseudo}</AppText>
+        </Column>
+      </Center>
+      <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
+        {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
+        <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
+        {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
+        <DebugIdView object={user} />
+      </Column>
+      {isMyPage && <Actions />}
+    </ScrollView>
+  );
+};
 
 const Actions = () => {
   const { services, setAuthUser } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   return (
     <Column>
-      <ActionItem onPress={() => {}} iconName={"edit-outline"} text={"Mes informations"} />
+      <ActionItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
       <ActionItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
-      <ActionItem
-        onPress={() => {
-          // @ts-ignore
-          navigation.navigate("ArchivedTrips");
-        }}
-        iconName={"history"}
-        text={"Historique des trajets"}
-      />
-      <ActionItem
-        onPress={() => {
-          navigation.navigate("Settings");
-        }}
-        iconName={"settings-outline"}
-        text={"Paramètres"}
-      />
+      <ActionItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
+      <ActionItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
       <LineSeparator />
       <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
       <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />

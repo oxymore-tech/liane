@@ -1,4 +1,4 @@
-import { RallyingPoint } from "@/api";
+import { DayOfTheWeekFlag, RallyingPoint } from "@/api";
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 
 import { createStateSequence, CreateSubmittingState, SubmittingEvents } from "@/util/xstateHelpers";
@@ -22,6 +22,7 @@ export type InternalLianeRequest = {
   departureTime: Date;
   availableSeats: number;
   returnTime: Date | null | undefined;
+  recurrence: DayOfTheWeekFlag | null;
 };
 
 export type PublishContext = {
@@ -191,7 +192,8 @@ export const CreatePublishLianeMachine = (
           }
         },
         // @ts-ignore
-        submitting: { ...CreateSubmittingState("publish"), type: "final" }
+        submitting: { ...CreateSubmittingState("publish") },
+        done: { type: "final" }
       }
     },
     {

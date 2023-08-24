@@ -1,8 +1,8 @@
 import { API_URL, APP_ENV, TILES_URL } from "@env";
 import { Mutex } from "async-mutex";
-import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
+import { BadRequest, ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
-import { clearStorage, getRefreshToken, getAccessToken, getUserSession, processAuthResponse } from "@/api/storage";
+import { clearStorage, getAccessToken, getRefreshToken, getUserSession, processAuthResponse } from "@/api/storage";
 import { AuthResponse } from "@/api/index";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
@@ -28,7 +28,6 @@ export interface QueryAsOptions<T> {
 }
 
 export interface QueryPostOptions<T> extends QueryAsOptions<T> {
-  bodyAsJson?: boolean;
   body?: any;
 }
 
@@ -75,6 +74,11 @@ export async function postAs<T>(uri: string, options: QueryPostOptions<T> = {}):
   return fetchAndCheckAs<T>("POST", uri, options);
 }
 
+export async function postAsString(uri: string, options: QueryPostOptions<any> = {}): Promise<string> {
+  const response = await fetchAndCheck("POST", uri, options);
+  return await response.text();
+}
+
 export async function del(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("DELETE", uri, options);
 }
@@ -85,6 +89,9 @@ export function post(uri: string, options: QueryPostOptions<any> = {}) {
 
 export function patch(uri: string, options: QueryPostOptions<any> = {}) {
   return fetchAndCheck("PATCH", uri, options);
+}
+export async function patchAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  return fetchAndCheckAs<T>("PATCH", uri, options);
 }
 
 // @ts-ignore
@@ -104,43 +111,41 @@ async function fetchAndCheckAs<T>(method: MethodType, uri: string, options: Quer
   }
 }
 
-function formatBody(body?: any, bodyAsJson: boolean = true) {
-  if (!body) {
-    return null;
+function formatBodyAsJsonIfNeeded(body?: any) {
+  if (isRawBody(body)) {
+    return body;
   }
-  if (bodyAsJson) {
-    return JSON.stringify(body);
-  }
-  return body;
+  return JSON.stringify(body);
+}
+
+function isRawBody(body?: any) {
+  return !body || body instanceof Blob || body instanceof FormData;
 }
 
 const refreshTokenMutex = new Mutex();
 
 async function fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}): Promise<Response> {
-  const { body, bodyAsJson } = options;
+  const { body } = options;
   const url = formatUrl(uri, options);
-  const formatedBody = formatBody(body, bodyAsJson);
-  const formatedHeaders = await headers(body, bodyAsJson);
+  const formattedBody = formatBodyAsJsonIfNeeded(body);
+  const formattedHeaders = await headers(body);
   if (__DEV__) {
-    console.debug(`[HTTP] Fetch API ${method} "${url}"`, formatedBody ?? "");
+    console.debug(`[HTTP] Fetch API ${method} "${url}"`, formattedBody ?? "");
   }
   const response = await fetch(url, {
-    headers: formatedHeaders,
+    headers: formattedHeaders,
     method,
-    body: formatedBody
+    body: formattedBody
   });
   if (response.status !== 200 && response.status !== 201 && response.status !== 204) {
     switch (response.status) {
       case 400:
-        /*
-                const message400 = await response.text();
-                console.log(`Error 400 on ${method} ${uri}`, response.status, message400);
-                throw new Error(message400); */
         if (response.headers.get("content-type") === "application/json" || response.headers.get("content-type") === "application/problem+json") {
           const json = await response.json();
           throw new ValidationError(json?.errors);
         }
-        throw new ResourceNotFoundError(await response.text());
+        const text = await response.text();
+        throw new BadRequest(text);
       case 404:
         throw new ResourceNotFoundError(await response.text());
       case 401:
@@ -195,14 +200,16 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
   throw new UnauthorizedError();
 }
 
-async function headers(body?: any, bodyAsJson: boolean = true) {
+async function headers(body?: any) {
   const h = new Headers();
   const token = await getAccessToken();
   if (token) {
     h.append("Authorization", `Bearer ${token}`);
   }
-  if (body && bodyAsJson) {
+  if (!isRawBody(body)) {
     h.append("Content-Type", "application/json; charset=utf-8");
+  } else if (body instanceof FormData) {
+    h.append("Content-Type", "multipart/form-data");
   }
   return h;
 }

@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS liane_waypoint;
+
 /** Create tables **/
 
 CREATE TABLE IF NOT EXISTS segment

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,13 +29,15 @@ public sealed class LianeController : ControllerBase
   private readonly ICurrentContext currentContext;
   private readonly IMockService mockService;
   private readonly EventDispatcher eventDispatcher;
+  private readonly ILianeRecurrenceService lianeRecurrenceService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
     this.eventDispatcher = eventDispatcher;
+    this.lianeRecurrenceService = lianeRecurrenceService;
   }
 
   [HttpGet("{id}")]
@@ -42,7 +45,7 @@ public sealed class LianeController : ControllerBase
   public async Task<Api.Trip.Liane> Get([FromRoute] string id)
   {
     var current = currentContext.CurrentResource<Api.Trip.Liane>();
-    return current ?? await lianeService.Get(id);
+    return await lianeService.GetForCurrentUser(current is not null? current : id);
   }
 
   [HttpDelete("{id}")]
@@ -54,9 +57,9 @@ public sealed class LianeController : ControllerBase
 
   [HttpPatch("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task UpdateDeparture([FromRoute] string id, [FromBody] DateTime departureTime)
+  public Task<Api.Trip.Liane> Update([FromRoute] string id, [FromBody] LianeUpdate update)
   {
-    await lianeService.UpdateDepartureTime(id, departureTime);
+    return lianeService.UpdateDepartureTime(id, update.DepartureTime);
   }
   
   [HttpPost("{id}/cancel")]
@@ -150,4 +153,43 @@ public sealed class LianeController : ControllerBase
 
     return await mockService.GenerateLianes(count, from, to, radius);
   }
+  
+      
+  [HttpGet("recurrence")]
+  public Task<ImmutableList<LianeRecurrence>> ListRecurrences()
+  {
+    return lianeRecurrenceService.ListForCurrentUser();
+  }
+  
+  [HttpGet("recurrence/{id}")]
+  public Task<LianeRecurrence> GetRecurrence([FromRoute] string id)
+  {
+    return lianeRecurrenceService.GetWithResolvedRefs(id);
+  }
+
+    
+  [HttpDelete("recurrence/{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
+  public async Task RemoveRecurrence([FromRoute] string id)
+  {
+      await lianeRecurrenceService.Delete(id);
+      await lianeService.RemoveRecurrence(id);
+  }
+  
+      
+  [HttpPatch("recurrence/{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
+  public async Task UpdateRecurrence([FromRoute] string id, [FromBody] DayOfTheWeekFlag days)
+  {
+    // Deactivate recurrence while cleaning up old lianes
+    await lianeRecurrenceService.Update(id, DayOfTheWeekFlag.Create(new HashSet<DayOfWeek>()));
+    await lianeService.RemoveRecurrence(id);
+    // If flag is all 0, we stop here, else reactivate recurrence and create lianes
+    if (!days.IsNever)
+    {
+      await lianeRecurrenceService.Update(id, days);
+      await lianeService.CreateFromRecurrence(id);
+    }
+  }
+
 }

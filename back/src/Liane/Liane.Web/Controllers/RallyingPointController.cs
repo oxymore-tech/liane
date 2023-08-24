@@ -13,10 +13,12 @@ namespace Liane.Web.Controllers;
 public sealed class RallyingPointController : ControllerBase
 {
   private readonly IRallyingPointService rallyingPointService;
+  private readonly IRallyingPointGenerator rallyingPointGenerator;
 
-  public RallyingPointController(IRallyingPointService rallyingPointService)
+  public RallyingPointController(IRallyingPointService rallyingPointService, IRallyingPointGenerator rallyingPointGenerator)
   {
     this.rallyingPointService = rallyingPointService;
+    this.rallyingPointGenerator = rallyingPointGenerator;
   }
 
   [HttpPost("")]
@@ -42,9 +44,9 @@ public sealed class RallyingPointController : ControllerBase
 
   [HttpPost("generate")]
   [RequiresAdminAuth]
-  public async Task Generate()
+  public Task Generate()
   {
-    await rallyingPointService.Generate();
+    return rallyingPointGenerator.Generate();
   }
 
   [HttpGet("")]

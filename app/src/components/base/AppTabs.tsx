@@ -1,10 +1,12 @@
+import React from "react";
+import { ColorValue, LayoutChangeEvent, StyleSheet, View } from "react-native";
+import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
-import { ColorValue, View } from "react-native";
+
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import React from "react";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 export interface AppTabsProps {
   items: string[];
@@ -14,64 +16,80 @@ export interface AppTabsProps {
   selectedTextColor?: ColorValue;
   selectedIndex?: number;
   isSelectable?: ((index: number) => boolean) | undefined;
+  fontSize?: number;
 }
 
 export const AppTabs = ({
   items,
-  selectedIndex = 0,
   isSelectable,
-  selectedColor = AppColors.orange,
   onSelect,
+  selectedIndex = 0,
+  selectedColor = AppColors.orange,
   unselectedTextColor = AppColorPalettes.gray[800],
-  selectedTextColor = AppColorPalettes.gray[800]
+  selectedTextColor = AppColorPalettes.gray[800],
+  fontSize = 14
 }: AppTabsProps) => {
   const offset = useSharedValue(0);
   const width = useSharedValue(0);
 
   const translateStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: offset.value
-      }
-    ],
+    transform: [{ translateX: offset.value }],
     width: width.value
   }));
 
   return (
     <Column>
       <Row>
-        {items.map((item, index) => {
-          return (
-            <AppPressableOverlay
-              disabled={isSelectable ? !isSelectable(index) : false}
-              onLayout={event => {
-                if (index === selectedIndex) {
-                  width.value = withTiming(event.nativeEvent.layout.width, {
-                    duration: 300,
-                    easing: Easing.out(Easing.exp)
-                  });
-                  offset.value = withTiming(event.nativeEvent.layout.x, {
-                    duration: 300,
-                    easing: Easing.out(Easing.ease)
-                  });
-                }
-              }}
-              onPress={() => onSelect(index)}>
-              <AppText
-                style={{
-                  paddingHorizontal: 24,
-                  fontWeight: selectedIndex === index ? "bold" : undefined,
-                  paddingVertical: 16,
-                  color: selectedIndex === index ? selectedTextColor : unselectedTextColor
-                }}>
-                {item}
-              </AppText>
-            </AppPressableOverlay>
-          );
-        })}
+        {items.map((item, index) => (
+          <AppPressableOverlay
+            key={index}
+            disabled={isSelectable ? !isSelectable(index) : false}
+            onLayout={event => onLayout(event, index, selectedIndex, width, offset)}
+            onPress={() => onSelect(index)}>
+            <AppText
+              style={[
+                styles.textStyle,
+                { fontSize: fontSize },
+                { fontWeight: selectedIndex === index ? "bold" : undefined },
+                { color: selectedIndex === index ? selectedTextColor : unselectedTextColor }
+              ]}>
+              {item}
+            </AppText>
+          </AppPressableOverlay>
+        ))}
       </Row>
-      <View style={{ borderBottomColor: AppColorPalettes.gray[200], borderBottomWidth: 1 }} />
-      <Animated.View style={[{ borderRadius: 2, height: 4, backgroundColor: selectedColor, position: "relative", top: -3 }, translateStyle]} />
+      <View style={styles.underline} />
+      <Animated.View style={[styles.animatedView, translateStyle, { backgroundColor: selectedColor }]} />
     </Column>
   );
 };
+
+const onLayout = (event: LayoutChangeEvent, index: number, selectedIndex: number, width: SharedValue<number>, offset: SharedValue<number>) => {
+  if (index === selectedIndex) {
+    width.value = withTiming(event.nativeEvent.layout.width, {
+      duration: 300,
+      easing: Easing.out(Easing.exp)
+    });
+    offset.value = withTiming(event.nativeEvent.layout.x, {
+      duration: 300,
+      easing: Easing.out(Easing.ease)
+    });
+  }
+};
+
+const styles = StyleSheet.create({
+  textStyle: {
+    paddingHorizontal: 24,
+    paddingVertical: 16
+  },
+  underline: {
+    borderBottomColor: AppColorPalettes.gray[200],
+    borderBottomWidth: 1
+  },
+  animatedView: {
+    borderRadius: 2,
+    height: 4,
+    position: "relative",
+    top: -3
+  }
+});

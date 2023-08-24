@@ -28,7 +28,7 @@ public sealed class UserController : ControllerBase
   }
   
   [HttpPatch]
-  public Task UpdateInfo([FromBody] UserInfo info)
+  public Task<FullUser> UpdateInfo([FromBody] UserInfo info)
   {
     return userService.UpdateInfo(currentContext.CurrentUser().Id, info);
   }

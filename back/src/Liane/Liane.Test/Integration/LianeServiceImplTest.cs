@@ -15,8 +15,10 @@ using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
 using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using DayOfWeek = System.DayOfWeek;
 
 namespace Liane.Test.Integration;
 
@@ -26,12 +28,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   private LianeServiceImpl testedService = null!;
   private MockCurrentContext currentContext = null!;
   private IRoutingService routingService = null!;
+  private ILianeRecurrenceService recurrenceService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     testedService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     routingService = ServiceProvider.GetRequiredService<IRoutingService>();
+    recurrenceService = ServiceProvider.GetRequiredService<ILianeRecurrenceService>();
   }
 
   protected override void SetupServices(IServiceCollection services)
@@ -349,6 +353,30 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
+  public async Task TestListAll()
+  {
+    var userA = Fakers.FakeDbUsers[0];
+    currentContext.SetCurrentUser(userA);
+    const int total = 20;
+    const int pageSize = 10;
+    for (var i = 0; i < total; i++)
+    {
+      var lianeA = Fakers.LianeRequestFaker.Generate();
+      await testedService.Create(lianeA, userA.Id);
+    }
+
+   var firstPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
+   Assert.AreEqual(pageSize, firstPage.Data.Count);
+   Assert.NotNull(firstPage.Next);
+   
+   var lastPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
+   Assert.AreEqual(pageSize, lastPage.Data.Count);
+   Assert.Null(lastPage.Next);
+   
+   Assert.True(firstPage.Data.First().DepartureTime > lastPage.Data.First().DepartureTime);
+  }
+
+  [Test]
   public async Task JbShouldMatchAugustinsLiane()
   {
     var augustin = Fakers.FakeDbUsers[0].Id;
@@ -395,5 +423,61 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Assert.IsTrue(compatible.Delta.TotalInSeconds < 15 * 60);
     Assert.AreEqual("mairie:31324", compatible.Pickup.Id);
     Assert.AreEqual("mairie:31557", compatible.Deposit.Id);
+  }
+
+  [Test]
+  public async Task ShouldCreateRecurrentLiane()
+  {
+    var now = DateTime.UtcNow;
+    var bertrand = Fakers.FakeDbUsers[2];
+    var departureTime = now.AddDays(3);
+    currentContext.SetCurrentUser(bertrand);
+    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
+    var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
+    Assert.NotNull(created.Recurrence);
+    
+    var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    
+    Assert.AreEqual(4, lianes.Data.Count);
+    Assert.True(lianes.Data.All(l => l.Recurrence == created.Recurrence));
+    
+    var dates = recurrence.GetNextActiveDates(departureTime, DateTime.UtcNow.AddDays(7)).Concat(new []{departureTime}).Select(d => d.ToShortDateString()+d.ToShortTimeString()).ToList();
+    var lianeDates = lianes.Data.Select(l => l.DepartureTime.ToShortDateString()+l.DepartureTime.ToShortTimeString());
+    CollectionAssert.AreEquivalent(dates, lianeDates);
+    
+  }
+
+  [Test]
+  public async Task ShouldUpdateRecurrentTrips()
+  {
+    var now = DateTime.UtcNow;
+    var bertrand = Fakers.FakeDbUsers[2];
+    var departureTime = now.AddDays(3);
+    currentContext.SetCurrentUser(bertrand);
+    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
+    var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
+
+    // Deactivate recurrence while cleaning up old lianes
+    await recurrenceService.Update(created.Recurrence!.Id, DayOfTheWeekFlag.Create(new HashSet<DayOfWeek>()));
+    await testedService.RemoveRecurrence(created.Recurrence!.Id);
+    
+    // Test recurrence is deactivated
+    var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    Assert.AreEqual(0, lianes.Data.Count);
+    var dbRecurrence = await recurrenceService.Get(created.Recurrence!.Id);
+    Assert.False(dbRecurrence.Active);
+    Assert.AreEqual(dbRecurrence.Days, recurrence);
+
+    
+    // Update recurrence
+    var newRecurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
+    await recurrenceService.Update(created.Recurrence!.Id, newRecurrence);
+    await testedService.CreateFromRecurrence(created.Recurrence!.Id);
+    // Test liane added correctly
+    lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    Assert.AreEqual(1, lianes.Data.Count);
+    dbRecurrence = await recurrenceService.Get(created.Recurrence!.Id);
+    Assert.True(dbRecurrence.Active);
+    Assert.AreEqual(dbRecurrence.Days, newRecurrence);
   }
 }

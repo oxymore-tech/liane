@@ -127,7 +127,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   public async Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group)
   {
     // Get messages in DESC order
-    var messages = await Mongo.Paginate(
+    var messages = await Mongo.Paginate<DbChatMessage, Cursor.Time>(
       pagination,
       m => m.CreatedAt,
       Builders<DbChatMessage>.Filter.Where(m => m.Group == group.Id),

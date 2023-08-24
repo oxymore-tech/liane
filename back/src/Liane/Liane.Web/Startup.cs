@@ -83,8 +83,10 @@ public static class Startup
     services.AddService<HubServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
+    services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
+    services.AddService<LianeRecurrenceServiceImpl>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
@@ -102,6 +104,7 @@ public static class Startup
     services.AddSettings<GeneratorSettings>(context);
     services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
+    services.AddHostedService<LianeRecurrenceScheduler>();
 
     services.AddHealthChecks();
   }

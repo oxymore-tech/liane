@@ -55,6 +55,8 @@ export type User = Readonly<
 
 export type FullUser = Readonly<
   {
+    firstName: string;
+    lastName: string;
     pushToken?: string;
   } & User
 >;
@@ -95,6 +97,8 @@ export type RallyingPoint = Identity &
     isActive: boolean;
   }>;
 
+export type DayOfTheWeekFlag = `${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}`;
+
 export type LianeRequest = Identity &
   Readonly<{
     departureTime: UTCDateTime;
@@ -102,6 +106,7 @@ export type LianeRequest = Identity &
     availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
+    recurrence: DayOfTheWeekFlag;
     // shareWith: Ref<User>[];
   }>;
 
@@ -114,6 +119,10 @@ export type Liane = Entity &
     driver: { user: Ref<User>; canDrive: boolean };
     conversation: Ref<ConversationGroup>;
     state: LianeState;
+    recurrence?: {
+      id: string;
+      days: DayOfTheWeekFlag;
+    };
   }>;
 
 export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
@@ -133,6 +142,21 @@ export type LianeMember = Readonly<{
   delay?: TimeInSeconds;
 }>;
 
+export type LianeRecurrence = {
+  id: string;
+  createdBy: Ref<User>;
+  createdAt: UTCDateTime;
+  days: DayOfTheWeekFlag;
+  initialRequest: {
+    to: RallyingPoint;
+    from: RallyingPoint;
+    departureTime: Date;
+    availableSeats: number;
+    returnTime: Date | null | undefined;
+  };
+  active: boolean;
+};
+
 // A date time in ISO 8601 format
 export type UTCDateTime = string;
 
@@ -145,17 +169,10 @@ export type Feedback = Readonly<{
   comment: string | null;
   canceled: boolean;
 }>;
-/*
-export type LianeSegment = Readonly<{
-  coordinates: GeoJSON.Position[];
-  lianes: Ref<Liane>[];
-}>;
 
-export type LianeDisplay = Readonly<{
-  segments: LianeSegment[];
-  lianes: Liane[];
-}>;
-*/
+export type LianeUpdate = {
+  departureTime: UTCDateTime;
+};
 
 export type LianeMatchDisplay = Readonly<{ features: FeatureCollection; lianeMatches: LianeMatch[] }>;
 export type ChatMessage = Readonly<

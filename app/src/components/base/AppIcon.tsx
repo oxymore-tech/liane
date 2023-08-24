@@ -1,8 +1,7 @@
 import React from "react";
 import { Icon } from "react-native-eva-icons";
-import { AppDimensions } from "@/theme/dimensions";
-import { ColorValue } from "react-native";
-import { AppColorPalettes } from "@/theme/colors";
+import { ColorValue, StyleProp, ViewStyle } from "react-native";
+
 import CarQuestionMark from "@/assets/icons/car_question_mark.svg";
 import CarCheckMark from "@/assets/icons/car_check_mark.svg";
 import CarStrikeThrough from "@/assets/icons/car_strike_through.svg";
@@ -16,6 +15,9 @@ import PositionOff from "@/assets/icons/position-off.svg";
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 import Seat from "@/assets/icons/seat.svg";
 
+import { AppDimensions } from "@/theme/dimensions";
+import { AppColorPalettes } from "@/theme/colors";
+
 export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number] | CustomIconName;
 
 export type AppIconProps = {
@@ -23,10 +25,11 @@ export type AppIconProps = {
   color?: ColorValue;
   size?: number;
   opacity?: number;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, opacity = 1 }: AppIconProps) {
-  const props = { color, width: size, height: size };
+export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, opacity = 1, style }: AppIconProps) {
+  const props = { color, width: size, height: size, style };
   switch (name) {
     case "car-check-mark":
       return <CarCheckMark {...props} />;

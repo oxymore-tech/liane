@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -32,10 +32,19 @@ const NoHistoryView = () => {
 export const LianeHistoryQueryKey = "getLianeHistory";
 
 const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
-  ({ data, refresh, refreshing }) => {
-    return <TripListView data={data} isFetching={refreshing} onRefresh={refresh} />;
+  ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
+    return (
+      <>
+        <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
+        {isFetchingNextPage && (
+          <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
+            <ActivityIndicator />
+          </View>
+        )}
+      </>
+    );
   },
-  repository => repository.liane.list(false),
+  (repository, params, cursor) => repository.liane.list(["Archived", "Canceled"], cursor, 15, false),
   LianeHistoryQueryKey,
   NoHistoryView
 );

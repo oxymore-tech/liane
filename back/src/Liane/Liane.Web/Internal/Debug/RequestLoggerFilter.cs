@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Debug;
 
-public sealed class RequestLoggerFilter : IAsyncActionFilter
+public sealed class RequestLoggerFilter : IAsyncActionFilter, IOrderedFilter
 {
   private readonly ILogger<RequestLoggerFilter> logger;
 
@@ -40,4 +40,6 @@ public sealed class RequestLoggerFilter : IAsyncActionFilter
       request.Protocol, request.Method, request.Scheme, request.Host, request.PathBase, request.Path, request.QueryString,
       response.StatusCode, response.ContentLength?.ToString(CultureInfo.InvariantCulture) ?? "-", response.ContentType ?? "-", stopwatch.ElapsedMilliseconds);
   }
+
+  public int Order => 0;
 }

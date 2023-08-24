@@ -9,9 +9,13 @@ import {
   NearestLinks,
   Feedback,
   RallyingPoint,
-  Ref
+  Ref,
+  LianeUpdate,
+  DayOfTheWeekFlag,
+  LianeRecurrence,
+  LianeState
 } from "@/api";
-import { get, postAs, del, patch } from "@/api/http";
+import { get, postAs, del, patch, patchAs } from "@/api/http";
 import { JoinRequest, MemberPing } from "@/api/event";
 import { TimeInSeconds } from "@/util/datetime";
 import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
@@ -20,24 +24,109 @@ import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeService {
-  list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
+  get(lianeId: string): Promise<Liane>;
+  list(states: LianeState[], cursor?: string, pageSize?: number, asc?: boolean): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
+  join(joinRequest: JoinRequest): Promise<JoinRequest>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks>;
-  join(joinRequest: JoinRequest): Promise<JoinRequest>;
-  leave(id: string, userId: string): Promise<void>;
-  getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
-  get(lianeId: string): Promise<Liane>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
+  getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
+  getContact(id: string, memberId: string): Promise<string>;
+  getRecurrence(id: string): Promise<LianeRecurrence>;
+
+  addRecurrence(lianeId: string, recurrence: DayOfTheWeekFlag): Promise<void>;
+  updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
+  updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void>;
+  updateFeedback(id: string, feedback: Feedback): Promise<void>;
+  warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
+  pause(id: string): Promise<void>;
+  unpause(id: string): Promise<void>;
+  cancel(id: string): Promise<void>;
+
+  leave(id: string, userId: string): Promise<void>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
-  updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void>;
-  updateFeedback(id: string, feedback: Feedback): Promise<void>;
-  getContact(id: string, memberId: string): Promise<string>;
-  warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
-  cancel(id: string): Promise<void>;
+  deleteRecurrence(id: string): Promise<void>;
 }
 export class LianeServiceClient implements LianeService {
+  // GET
+  async get(id: string): Promise<Liane> {
+    return await get<Liane>(`/liane/${id}`);
+  }
+
+  async list(
+    states: LianeState[] = ["NotStarted", "Started"],
+    cursor: string | undefined = undefined,
+    pageSize: number = 10,
+    asc: boolean | undefined = undefined
+  ) {
+    let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
+    if (cursor) {
+      paramString += `&cursor=${cursor}&limit=${pageSize}`;
+    }
+    if (asc !== undefined) {
+      paramString += `&asc=${asc}`;
+    }
+    const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
+
+    // Sync coming trips with local storage
+    if (states.includes("NotStarted")) {
+      this.syncWithStorage(lianes.data.filter(l => l.state === "NotStarted"));
+    }
+    return lianes;
+  }
+
+  async post(liane: LianeRequest): Promise<Liane> {
+    return await postAs<Liane>("/liane/", { body: liane });
+  }
+
+  async join(joinRequest: JoinRequest): Promise<JoinRequest> {
+    return await postAs<JoinRequest>(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
+  }
+
+  async match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
+    return await postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
+  }
+
+  async pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
+    const body = { pickup, lianes };
+    return await postAs("/liane/links", { body });
+  }
+
+  async listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>> {
+    return await get<PaginatedResponse<JoinLianeRequestDetailed>>("/event/join_request/");
+  }
+
+  async getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
+    return await get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
+  }
+
+  async getContact(id: string, memberId: string): Promise<string> {
+    return await get<string>(`/liane/${id}/members/${memberId}/contact`);
+  }
+
+  async getRecurrence(id: string): Promise<LianeRecurrence> {
+    return await get<LianeRecurrence>(`/liane/recurrence/${id}`);
+  }
+
+  // PATCH
+  async addRecurrence(lianeId: string, recurrence: DayOfTheWeekFlag): Promise<void> {
+    console.log("TODO: ADD RECURRENCE TO ALREADY CREATE LIANE ROUTE", lianeId, recurrence);
+  }
+
+  updateDepartureTime(id: string, departureTime: string): Promise<Liane> {
+    return patchAs<Liane>(`/liane/${id}`, { body: <LianeUpdate>{ departureTime } });
+  }
+
+  async updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void> {
+    await patch(`/liane/recurrence/${id}`, { body: recurrence });
+  }
+
+  async updateFeedback(id: string, feedback: Feedback): Promise<void> {
+    await postAs(`/liane/${id}/feedback`, { body: feedback });
+  }
+
   async warnDelay(id: string, delay: number): Promise<void> {
     const ping: MemberPing = {
       type: "MemberPing",
@@ -47,68 +136,36 @@ export class LianeServiceClient implements LianeService {
     };
     await postAs(`/event/member_ping`, { body: ping }).catch(e => console.warn(e));
   }
+
+  async pause(id: string): Promise<void> {
+    console.log("TODO: PAUSE LIANE ROUTE", id);
+  }
+
+  async unpause(id: string): Promise<void> {
+    console.log("TODO: UNPAUSE LIANE ROUTE", id);
+  }
+
   async delete(lianeId: string): Promise<void> {
     await del(`/liane/${lianeId}`);
-  }
-  async list(current: boolean = true, cursor: string | undefined = undefined, pageSize: number = 10) {
-    let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Canceled";
-    //TODO cursor
-    const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
-    //console.debug(JSON.stringify(lianes));
-    this.syncWithStorage(lianes.data);
-    return lianes;
-  }
-
-  listJoinRequests() {
-    return get<PaginatedResponse<JoinLianeRequestDetailed>>("/event/join_request/");
-  }
-
-  get(id: string) {
-    return get<Liane>(`/liane/${id}`);
-  }
-
-  post(liane: LianeRequest) {
-    return postAs<Liane>("/liane/", { body: liane });
-  }
-
-  async cancel(lianeId: string) {
-    await postAs(`/liane/${lianeId}/cancel`);
-  }
-  pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
-    const body = { pickup, lianes };
-    return postAs("/liane/links", { body });
-  }
-
-  join(joinRequest: JoinRequest) {
-    return postAs<JoinRequest>(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
   async leave(id: string, userId: string) {
     await del(`/liane/${id}/members/${userId}`);
-  }
-  getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed> {
-    return get<JoinLianeRequestDetailed>("/event/join_request/" + joinRequestId);
-  }
-  getContact(id: string, memberId: string): Promise<string> {
-    return get<string>(`/liane/${id}/members/${memberId}/contact`);
   }
 
   async deleteJoinRequest(id: string): Promise<void> {
     await del(`/event/join_request/${id}`);
   }
 
-  async updateDepartureTime(id: string, departureTime: UTCDateTime): Promise<void> {
-    await patch(`/liane/${id}`, { body: departureTime });
+  async cancel(lianeId: string): Promise<void> {
+    await postAs(`/liane/${lianeId}/cancel`);
   }
 
-  async updateFeedback(id: string, feedback: Feedback): Promise<void> {
-    await postAs(`/liane/${id}/feedback`, { body: feedback });
-  }
-  match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
-    return postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
+  async deleteRecurrence(id: string): Promise<void> {
+    await del(`/liane/recurrence/${id}`);
   }
 
-  private async syncWithStorage(lianes: Liane[]) {
+  private async syncWithStorage(lianes: Liane[]): Promise<void> {
     let local = (await retrieveAsync<LocalLianeData[]>("lianes")) || [];
     const now = new Date().getTime() + 1000 * 60 * 5;
     const user = await getCurrentUser();

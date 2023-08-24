@@ -3,6 +3,7 @@ import { NativeModules, Platform } from "react-native";
 import { NavigationParamList } from "./navigation";
 import en from "../../assets/translations/en.json";
 import fr from "../../assets/translations/fr.json";
+import { DayOfTheWeekFlag } from ".";
 
 type SupportedLanguages = "fr" | "en";
 
@@ -101,4 +102,12 @@ export const formatTime = (date?: number | Date | undefined) => {
 
 export const formatDateTime = (date: Date) => {
   return `${formatMonthDay(date)} à ${formatTime(date)}`;
+};
+
+export const daysList = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+export const formatDaysOfTheWeek = (daysOfTheWeek: DayOfTheWeekFlag) => {
+  return daysList
+    .filter((_day: string, index: number) => daysOfTheWeek?.charAt(index) === "1")
+    .map((day: string) => `${day.toLocaleLowerCase()}s`)
+    .join(", ");
 };

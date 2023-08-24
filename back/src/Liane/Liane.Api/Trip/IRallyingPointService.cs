@@ -11,11 +11,9 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
 {
   const int MaxRadius = 50_000;
 
-  Task Generate();
-
   Task<ImmutableList<RallyingPoint>> List(LatLng? center, int? distance = null, string? search = null, int? limit = null);
 
-  Task Insert(IEnumerable<RallyingPoint> rallyingPoints);
+  Task Insert(IEnumerable<RallyingPoint> rallyingPoints, bool clearAll = false);
 
   Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto);
 
