@@ -21,7 +21,7 @@ import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
 
 export interface LianeService {
-  list(current?: boolean, cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
+  list(states: string[], cursor?: string, pageSize?: number): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks>;
@@ -51,11 +51,10 @@ export class LianeServiceClient implements LianeService {
   async delete(lianeId: string): Promise<void> {
     await del(`/liane/${lianeId}`);
   }
-  async list(current: boolean = true, cursor: string | undefined = undefined, pageSize: number = 10) {
-    let paramString = current ? "?state=NotStarted&state=Started&state=Finished" : "?state=Archived&state=Canceled";
+  async list(states: string[] = ["NotStarted", "Started"], cursor: string | undefined = undefined, pageSize: number = 10) {
+    let paramString = states.map((state: string, index: number) => `${index === 0 ? "?" : "&"}state=${state}`).join("");
     //TODO cursor
     const lianes = await get<PaginatedResponse<Liane>>("/liane" + paramString);
-    //console.debug(JSON.stringify(lianes));
     this.syncWithStorage(lianes.data);
     return lianes;
   }

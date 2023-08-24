@@ -1,16 +1,20 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { UseQueryResult, useQueries, useQueryClient } from "react-query";
+
+import { Liane, Ref, UnionUtils } from "@/api";
+import { UnauthorizedError } from "@/api/exception";
+import { useAppNavigation } from "@/api/navigation";
+import { Event } from "@/api/notification";
+
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
-import { useAppNavigation } from "@/api/navigation";
-import { useQueries, useQueryClient } from "react-query";
 import { AppContext } from "@/components/context/ContextProvider";
-import { UnauthorizedError } from "@/api/exception";
 import { TripListView } from "@/screens/user/TripListView";
-import { Liane, Ref, UnionUtils } from "@/api";
-import { Event } from "@/api/notification";
+
+import { AppColors } from "@/theme/colors";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
@@ -18,8 +22,11 @@ const MyTripsScreen = () => {
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list() }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started", "Finished", "Archived"]) }
   ]);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const isLianeUpcoming = (liane: Liane) => ["NotStarted", "Started"].includes(liane.state);
+
   useEffect(() => {
     const s = services.realTimeHub.subscribeToNotifications(async n => {
       // TODO make sure "type" is serialized via Hub
@@ -29,15 +36,12 @@ const MyTripsScreen = () => {
         await queryClient.invalidateQueries(LianeQueryKey);
         await queryClient.invalidateQueries(JoinRequestsQueryKey);
       }
-      console.log("trips notif received", UnionUtils.isInstanceOf<Event>(n, "Event"));
     });
     return () => s.unsubscribe();
   }, []);
 
   const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
-
   const error: any = queriesData[0].error || queriesData[1].error;
-
   const isFetching = queriesData[0].isFetching || queriesData[1].isFetching;
 
   // Create section list from a list of Liane objects
@@ -55,6 +59,7 @@ const MyTripsScreen = () => {
       </View>
     );
   }
+
   if (error) {
     // Show content depending on the error or propagate it
     if (error instanceof UnauthorizedError) {
@@ -67,19 +72,7 @@ const MyTripsScreen = () => {
             {error.message}
           </AppText>
           <Center>
-            <AppButton
-              color={AppColors.orange}
-              title={"Réessayer"}
-              icon={"refresh-outline"}
-              onPress={() => {
-                if (queriesData[0].error) {
-                  queriesData[0].refetch();
-                }
-                if (queriesData[1].error) {
-                  queriesData[1].refetch();
-                }
-              }}
-            />
+            <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
           </Center>
         </View>
       );
@@ -88,24 +81,33 @@ const MyTripsScreen = () => {
 
   return (
     <Column spacing={16} style={styles.container}>
-      <AppButton
-        icon="plus-outline"
-        title="Publier une liane"
-        onPress={() => {
-          // @ts-ignore
-          navigation.navigate("Publish");
-        }}
+      <AppButton icon="plus-outline" title="Publier une liane" onPress={() => navigation.navigate("Publish", {})} />
+      <AppTabs
+        items={["A venir", "Passés"]}
+        onSelect={setSelectedTab}
+        selectedIndex={selectedTab}
+        isSelectable={() => true}
+        selectedColor={AppColors.darkBlue}
+        fontSize={18}
       />
 
       <TripListView
-        data={data}
+        data={data.filter(liane => (selectedTab === 0 ? isLianeUpcoming(liane as Liane) : !isLianeUpcoming(liane as Liane)))}
         isFetching={isFetching}
-        onRefresh={() => {
-          queriesData.forEach(q => q.refetch());
-        }}
+        onRefresh={() => queriesData.forEach(q => q.refetch())}
+        reverseSort={selectedTab === 1}
       />
     </Column>
   );
+};
+
+const refetch = (queriesData: UseQueryResult[]) => {
+  if (queriesData[0].error) {
+    queriesData[0].refetch();
+  }
+  if (queriesData[1].error) {
+    queriesData[1].refetch();
+  }
 };
 
 const styles = StyleSheet.create({
