@@ -15,7 +15,7 @@ import {
   LianeRecurrence,
   LianeState
 } from "@/api";
-import { get, postAs, del, patch } from "@/api/http";
+import { get, postAs, del, patch, patchAs } from "@/api/http";
 import { JoinRequest, MemberPing } from "@/api/event";
 import { TimeInSeconds } from "@/util/datetime";
 import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
@@ -36,7 +36,7 @@ export interface LianeService {
   getRecurrence(id: string): Promise<LianeRecurrence>;
 
   addRecurrence(lianeId: string, recurrence: DayOfTheWeekFlag): Promise<void>;
-  updateDepartureTime(id: string, departureTime: string): Promise<void>;
+  updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
   updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
@@ -101,8 +101,8 @@ export class LianeServiceClient implements LianeService {
     console.log("TODO: ADD RECURRENCE TO ALREADY CREATE LIANE ROUTE", lianeId, recurrence);
   }
 
-  async updateDepartureTime(id: string, departureTime: string): Promise<void> {
-    await patch(`/liane/${id}`, { body: <LianeUpdate>{ departureTime } });
+  updateDepartureTime(id: string, departureTime: string): Promise<Liane> {
+    return patchAs<Liane>(`/liane/${id}`, { body: <LianeUpdate>{ departureTime } });
   }
 
   async updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void> {

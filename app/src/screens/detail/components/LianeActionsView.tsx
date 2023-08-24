@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,6 +23,7 @@ import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScree
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
+import { CommonActions } from "@react-navigation/native";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
@@ -39,7 +40,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const [recurrenceModalVisible, setRecurrenceModalVisible] = useState(false);
   const [editOptionsModalVisible, setEditOptionsModalVisible] = useState(false);
   const [date, setDate] = useState(new Date(liane.departureTime));
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || null);
+  const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || "0000000");
   const [recurrenceDetails, setRecurrenceDetails] = useState<LianeRecurrence | null>(null);
 
   useEffect(() => {
@@ -49,6 +50,30 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       });
     }
   }, []);
+
+  const lianeHasRecurrence = !!liane.recurrence;
+  const editOptions = useMemo(() => {
+    return [
+      {
+        icon: "clock-outline",
+        text: "Modifier l'horaire de départ",
+        action: () => {
+          setTimeModalVisible(true);
+        }
+      },
+      ...(lianeHasRecurrence
+        ? [
+            {
+              icon: "calendar-outline",
+              text: "Modifier la régularité",
+              action: () => {
+                setRecurrenceModalVisible(true);
+              }
+            }
+          ]
+        : [])
+    ];
+  }, [lianeHasRecurrence]);
 
   return (
     <Column>
@@ -74,29 +99,17 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         visible={editOptionsModalVisible}
         setVisible={setEditOptionsModalVisible}
         backgroundColor={AppColors.white}
-        choices={[
-          {
-            icon: "clock-outline",
-            text: "Modifier l'horaire de départ",
-            action: () => {
-              setTimeModalVisible(true);
-            }
-          },
-          {
-            icon: "calendar-outline",
-            text: "Modifier les jours de trajet",
-            action: () => {
-              setRecurrenceModalVisible(true);
-            }
-          }
-        ]}
+        choices={editOptions}
       />
 
       <SlideUpModal
         actionText={"Modifier l'horaire"}
         backgroundColor={AppColors.yellow}
         onAction={async () => {
-          await services.liane.updateDepartureTime(liane.id!, date.toISOString());
+          const updated = await services.liane.updateDepartureTime(liane.id!, date.toISOString());
+          // Update current page's content
+          navigation.dispatch(CommonActions.setParams({ liane: updated }));
+          // Update liane list
           await queryClient.invalidateQueries(LianeQueryKey);
           setTimeModalVisible(false);
         }}
@@ -117,8 +130,15 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           backgroundColor={AppColors.yellow}
           onAction={async () => {
             await services.liane.updateRecurrence(liane.recurrence!.id!, daysOfTheWeek);
+            // Update current liane content
+            navigation.dispatch(CommonActions.setParams({ liane: { ...liane, recurrence: { ...liane.recurrence, days: daysOfTheWeek } } }));
+            // Update liane list
             await queryClient.invalidateQueries(LianeQueryKey);
             setRecurrenceModalVisible(false);
+            // Return to list if regularity is removed on the day of this trip
+            if (daysOfTheWeek[(new Date(liane.departureTime).getUTCDay() + 7) % 7] === "0") {
+              navigation.goBack();
+            }
           }}
           visible={recurrenceModalVisible}
           setVisible={setRecurrenceModalVisible}>

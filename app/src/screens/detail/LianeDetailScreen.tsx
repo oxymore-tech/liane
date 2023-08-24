@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
@@ -54,13 +54,20 @@ export const LianeDetailScreen = () => {
   const { route } = useAppNavigation<"LianeDetail">();
   const lianeParam = route.params!.liane;
 
-  const { data: liane } = useQuery(LianeDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
+  const { data: liane, refetch } = useQuery(LianeDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
     if (typeof lianeParam === "string") {
       return services.liane.get(lianeParam);
     } else {
       return lianeParam;
     }
   });
+
+  useEffect(() => {
+    // Refresh page if object passed as param has changed
+    if (typeof lianeParam !== "string") {
+      refetch();
+    }
+  }, [refetch, lianeParam]);
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
   const lianeStatus = useLianeStatus(liane ? liane : undefined);
