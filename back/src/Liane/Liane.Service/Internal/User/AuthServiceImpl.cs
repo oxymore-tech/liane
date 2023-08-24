@@ -48,38 +48,41 @@ public sealed class AuthServiceImpl : IAuthService
 
   public async Task SendSms(string phone)
   {
+    if (authSettings.TestAccount != null && phone.Equals(authSettings.TestAccount))
+    {
+      // Ignore this step for demo account
+      return;
+    }
+
     if (!ValidPhoneNumber.IsMatch(phone))
     {
       throw new ArgumentException("Invalid phone number");
     }
 
-    if (authSettings.TestAccount == null || !phone.Equals(authSettings.TestAccount))
+    var phoneNumber = phone.ToPhoneNumber();
+
+    if (smsCodeCache.TryGetValue($"attempt:{phoneNumber}", out _))
     {
-      var phoneNumber = phone.ToPhoneNumber();
+      throw new UnauthorizedAccessException("Too many requests");
+    }
 
-      if (smsCodeCache.TryGetValue($"attempt:{phoneNumber}", out _))
-      {
-        throw new UnauthorizedAccessException("Too many requests");
-      }
+    smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
 
-      smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
+    if (twilioSettings is { Account: not null, Token: not null })
+    {
+      TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
+      var generator = new Random();
+      var code = generator.Next(0, 1000000).ToString("D6");
 
-      if (twilioSettings is { Account: not null, Token: not null })
-      {
-        TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-        var generator = new Random();
-        var code = generator.Next(0, 1000000).ToString("D6");
+      smsCodeCache.Set(phoneNumber.ToString(), code, TimeSpan.FromMinutes(2));
 
-        smsCodeCache.Set(phoneNumber.ToString(), code, TimeSpan.FromMinutes(2));
+      var message = await MessageResource.CreateAsync(
+        body: $"{code} est votre code liane",
+        from: new PhoneNumber(twilioSettings.From),
+        to: phoneNumber
+      );
 
-        var message = await MessageResource.CreateAsync(
-          body: $"{code} est votre code liane",
-          from: new PhoneNumber(twilioSettings.From),
-          to: phoneNumber
-        );
-
-        logger.LogInformation("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
-      }
+      logger.LogInformation("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
     }
   }
 
