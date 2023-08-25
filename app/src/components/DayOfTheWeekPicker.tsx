@@ -1,9 +1,12 @@
-import { DayOfTheWeekFlag } from "@/api";
 import React from "react";
 import { StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
-import { Row } from "./base/AppLayout";
-import { AppColors } from "@/theme/colors";
+
+import { DayOfTheWeekFlag } from "@/api";
 import { daysList } from "@/api/i18n";
+
+import { Row } from "@/components/base/AppLayout";
+
+import { AppColors } from "@/theme/colors";
 
 export const DayOfTheWeekPicker = ({
   selectedDays,
@@ -11,11 +14,12 @@ export const DayOfTheWeekPicker = ({
   fontSize,
   daysSize
 }: {
-  selectedDays: DayOfTheWeekFlag;
+  selectedDays: DayOfTheWeekFlag | null;
   onChangeDays: (daysOfTheWeek: DayOfTheWeekFlag) => void;
   fontSize?: number;
   daysSize?: number;
 }) => {
+  const selectedDaysString = selectedDays ?? "0000000";
   return (
     <View>
       <Row style={styles.rowContainer}>
@@ -24,14 +28,14 @@ export const DayOfTheWeekPicker = ({
             key={day}
             style={[
               styles.dayContainer,
-              selectedDays?.charAt(index) === "1" ? styles.daySelectedContainer : null,
+              selectedDaysString?.charAt(index) === "1" ? styles.daySelectedContainer : null,
               { width: daysSize ?? 50, height: daysSize ?? 50, borderRadius: daysSize ? daysSize / 2 : 25 }
             ]}>
-            <TouchableWithoutFeedback onPress={() => selectDate(index, onChangeDays, selectedDays)}>
+            <TouchableWithoutFeedback onPress={() => selectDate(index, onChangeDays, selectedDaysString)}>
               <Text
                 style={[
                   styles.textContainer,
-                  selectedDays?.charAt(index) === "1" ? styles.textSelectedContainer : null,
+                  selectedDaysString?.charAt(index) === "1" ? styles.textSelectedContainer : null,
                   { fontSize: fontSize ?? 18 }
                 ]}>
                 {day.substring(0, 2)}
