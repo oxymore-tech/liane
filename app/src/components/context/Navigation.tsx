@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
@@ -20,7 +20,7 @@ import HomeScreen from "@/screens/home/HomeScreen";
 import { WithBadge } from "@/components/base/WithBadge";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { useObservable } from "@/util/hooks/subscription";
-import { getNotificationNavigation, RootNavigation, useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/api/navigation";
 import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
 import { useQueryClient } from "react-query";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
