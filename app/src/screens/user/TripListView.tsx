@@ -123,7 +123,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
           <LianeView liane={item} />
         </View>
 
-        {item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
+        {item.conversation && !["Finished", "Archived", "Canceled"].includes(item.state) && (
           <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
             <AppIcon name={"message-circle-full"} size={32} color={AppColors.blue} />
             {unread && unread.includes(item.conversation) && <View style={styles.chatBadge} />}
