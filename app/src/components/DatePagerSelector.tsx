@@ -105,8 +105,8 @@ export const TimeWheelPicker = ({
   onChange: (d: Date) => void;
   date?: Date;
   minuteStep?: 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30;
-  minDate?: Date;
-  maxDate?: Date;
+  minDate?: Date | undefined;
+  maxDate?: Date | undefined;
 }) => {
   const [hours, minutes] = useMemo(() => {
     return [

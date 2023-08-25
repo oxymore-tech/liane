@@ -66,7 +66,7 @@ export const PublishScreen = () => {
         departureTime: ctx.request.departureTime!.toISOString(),
         availableSeats: ctx.request.availableSeats!,
         returnTime: ctx.request.returnTime?.toISOString(),
-        recurrence: ctx.request.recurrence ?? "0000000"
+        recurrence: ctx.request.recurrence || null
       });
 
       if (liane) {
@@ -262,7 +262,7 @@ const DateStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
 
   const [date, setDate] = useState(initialMinDate);
   const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfTheWeekFlag | null>(initialValue?.recurrence ?? null);
+  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfTheWeekFlag>(initialValue?.recurrence ?? "0000000");
 
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
@@ -296,7 +296,6 @@ const DateStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
               selectionColor={AppColorPalettes.yellow[800]}
               onSelectValue={(option: string) => {
                 setIsRecurrent(option !== optionsRecurrentLiane[0]);
-                setDaysOfTheWeek(null);
               }}
             />
           </Center>
@@ -325,7 +324,7 @@ const DateStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
-              onPress={() => onChange({ date: date, recurrence: daysOfTheWeek })}>
+              onPress={() => onChange({ date: date, recurrence: isRecurrent ? daysOfTheWeek : null })}>
               <Center>
                 <Row spacing={4}>
                   <AppText>Valider</AppText>

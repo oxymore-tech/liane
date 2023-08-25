@@ -106,7 +106,7 @@ export type LianeRequest = Identity &
     availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
-    recurrence: DayOfTheWeekFlag;
+    recurrence: DayOfTheWeekFlag | null;
     // shareWith: Ref<User>[];
   }>;
 
