@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from "react";
 import AppMapView, { AppMapViewController } from "@/components/map/AppMapView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { getPoint, Liane, Ref } from "@/api";
@@ -34,7 +34,6 @@ import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDispla
 import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
 import { LianeDisplayLayer, PickupDestinationsDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
   // const [isLoadingDisplay, setLoadingDisplay] = useState<boolean>(false);
@@ -68,9 +67,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
 
   const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
-  // const [displayBar, setDisplayBar] = useState(true);
-
-  //console.debug(bottomSheetDisplay);
   const bbStyle = useBottomBarStyle();
   React.useLayoutEffect(() => {
     navigation.setOptions(
@@ -80,7 +76,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   });
 
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
-  //const [hintPhrase, setHintPhrase] = useState<string | null>(null);
 
   const features = useObservable(mapFeatureSubject, undefined);
   const hasFeatures = !!features;
@@ -96,14 +91,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             onMovingStateChanged={setMovingDisplay}
             onZoomChanged={z => {
               console.debug("[MAP] zoom", z);
-              /*if (z < 8) {
-                setHintPhrase("Zoomez pour afficher les points de ralliement");
-              } else {
-                setHintPhrase(null);
-              } */
             }}
-            // onFetchingDisplay={setLoadingDisplay}
-            // loading={loadingDisplay || loadingList}
           />
         </View>
         {state.matches("form") && (
@@ -118,7 +106,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         {!offline && !isMapState && !isPointState && (
           <HomeBottomSheetContainer
             onScrolled={(v, expanded) => {
-              //setMapBottom(v);
               bottomSheetScroll.next({ expanded, top: v });
             }}
             display={bottomSheetDisplay}
@@ -126,14 +113,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
 
             {isMatchState && <LianeMatchListView loading={loadingList} />}
-
-            {/*isPointState && (
-              <LianeDestinations
-                pickup={state.context.filter.from!}
-                date={state.context.filter.targetTime?.dateTime}
-                mapFeatureObservable={mapFeatureSubject}
-              />
-            )*/}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
           </HomeBottomSheetContainer>
         )}
@@ -159,16 +138,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
           />
         )}
         {isMapState && (
-          /*(
-          <RPFormHeader
-            setBarVisible={setDisplayBar}
-            hintPhrase={hintPhrase}
-            animateEntry={!state.history?.matches("point") && !state.history?.matches("match")}
-            title={"Carte des lianes"}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
-            trip={state.context.filter}
-          />
-        )*/ <MapHeader
+          <MapHeader
             hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
             title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
@@ -178,6 +148,17 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         {isPointState && (
           <MapHeader
             hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
+            action={
+              isPointState && !hasFeatures
+                ? {
+                    icon: "play-circle-outline",
+                    title: "Proposer un trajet depuis ce point",
+                    onPress: () => {
+                      navigation.navigate("Publish", { initialValue: { from: state.context.filter!.from } });
+                    }
+                  }
+                : null
+            }
             animateEntry={false}
             title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
@@ -201,42 +182,21 @@ interface BottomSheetObservableMessage {
   expanded: boolean;
   top: number;
 }
-/*
-const HomeHeader = (props: { onPress: () => void; bottomSheetObservable: Observable<BottomSheetObservableMessage> }) => {
-  const insets = useSafeAreaInsets();
 
-  const { expanded } = useObservable(props.bottomSheetObservable, { expanded: false, top: 0 });
-
-  return (
-    <Column style={[styles.floatingSearchBar, { marginTop: insets.top }]} spacing={8}>
-      <Pressable style={[AppStyles.inputBar, !expanded ? AppStyles.shadow : styles.border]} onPress={props.onPress}>
-        <AppTextInput
-          style={AppStyles.input}
-          leading={<AppIcon name={"search-outline"} color={AppColorPalettes.gray[400]} />}
-          editable={false}
-          placeholder={"Trouver une Liane"}
-          onPressIn={props.onPress}
-        />
-      </Pressable>
-      <View style={{ backgroundColor: AppColors.white, borderRadius: 8 }}>
-        <FilterSelector />
-      </View>
-    </Column>
-  );
-};*/
 const HomeMap = ({
   onMovingStateChanged,
   onZoomChanged,
   bottomSheetObservable,
   displaySource: matchDisplaySource,
-  featureSubject
+  featureSubject,
+  children
 }: {
   onMovingStateChanged: (moving: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
   displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]>;
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
   onZoomChanged?: (z: number) => void;
-}) => {
+} & PropsWithChildren) => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
   const isMatchStateIdle = state.matches({ match: "idle" });
@@ -393,13 +353,7 @@ const HomeMap = ({
             //featureSubject?.next([]);
           }
         });
-      } /*else {
-        const features = await appMapRef.current?.queryFeatures(undefined, undefined, ["lianeLayerFiltered"]);
-        if (features) {
-          console.debug("[MAP] found", features.features.length, "features");
-          featureSubject?.next(features.features);
-        }
-      }*/
+      }
     }
   };
 
@@ -424,20 +378,7 @@ const HomeMap = ({
         onStartMovingRegion={() => {
           onMovingStateChanged(true);
         }}
-        ref={appMapRef}
-        /* onSelectFeatures={features => {
-          if (features.length > 0) {
-            if (Platform.OS === "android") {
-              ToastAndroid.showWithGravity(
-                JSON.stringify(features.map(feat => feat.properties["name:latin"])),
-                ToastAndroid.SHORT,
-                ToastAndroid.CENTER
-              );
-            }
-            appMapRef.current?.setCenter(features[0].location, 12.1);
-          }
-        }}*/
-      >
+        ref={appMapRef}>
         {state.matches("map") && (
           <LianeDisplayLayer
             trafficAsWidth={trafficAsWidth}
@@ -511,6 +452,7 @@ const HomeMap = ({
             //  active={!isDetailState || !state.context.filter.to || state.context.filter.to.id === detailStateData!.deposit.id}
           />
         )}
+        {children}
       </AppMapView>
       {["point", "map"].some(state.matches) && (
         <SearchModal
@@ -533,12 +475,6 @@ const HomeMap = ({
               );
             } else if (placeFeature.geometry.type === "Point") {
               appMapRef.current?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000);
-              /*  if (placeFeature.place_type[0] === "rallying_point") {
-                // Select it
-                setTimeout(() => {
-                  machine.send("SELECT", { data: placeFeature.properties });
-                }, 1000);
-              }*/
             }
             return true;
           }}

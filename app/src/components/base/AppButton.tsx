@@ -32,7 +32,7 @@ export function AppButton({
     <AppPressableOverlay {...props} backgroundStyle={{ backgroundColor, borderRadius }} style={styles.contentContainer} disabled={disabled}>
       {icon && (
         <View style={styles.iconContainer}>
-          <AppIcon name={icon} color={textColor} />
+          <AppIcon name={icon} color={textColor} size={20} />
         </View>
       )}
 
@@ -43,7 +43,8 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   iconContainer: {
-    paddingVertical: AppDimensions.button.paddingVertical
+    paddingVertical: AppDimensions.button.paddingVertical,
+    justifyContent: "center"
   },
   contentContainer: {
     flexDirection: "row",

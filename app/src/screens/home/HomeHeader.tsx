@@ -1,7 +1,7 @@
 import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import { AppIcon } from "@/components/base/AppIcon";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,7 +11,7 @@ import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "reac
 
 import { SearchedLocation, Trip } from "@/api/service/location";
 import { AppText } from "@/components/base/AppText";
-import { AppPressable, AppPressableIcon } from "@/components/base/AppPressable";
+import { AppPressable, AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { AppContext } from "@/components/context/ContextProvider";
 import { HomeScreenHeader } from "@/components/context/Navigation";
@@ -169,17 +169,17 @@ export const RallyingPointField2 = forwardRef(
 export const MapHeader = ({
   trip,
   title,
-
   updateTrip,
   animateEntry = false,
-  hintPhrase = null
+  hintPhrase = null,
+  action = null
 }: {
   updateTrip: (trip: Partial<Trip>) => void;
   title: string;
-
   trip: Partial<Trip>;
   animateEntry?: boolean;
   hintPhrase?: string | null;
+  action?: { title: string; icon: IconName; onPress: () => void } | null;
 }) => {
   //const insets = useSafeAreaInsets();
   const { to, from } = trip;
@@ -188,16 +188,17 @@ export const MapHeader = ({
 
   return (
     <View>
-      <View style={{ position: "absolute", backgroundColor: AppColorPalettes.gray[100], top: 0, left: 0, right: 0, bottom: 16 }} />
-      <HomeScreenHeader label={title} isRootHeader={true} style={{ paddingBottom: 0, minHeight: 0 }} />
-      <View style={{ paddingTop: 4, zIndex: 5 }}>
-        <View style={{ position: "absolute", height: 20, bottom: 0, left: 0, right: 0, backgroundColor: AppColors.white }} />
-        <Row style={{ justifyContent: "space-between" }}>
-          <View style={{ height: 40, backgroundColor: AppColors.white, borderTopRightRadius: 32, paddingRight: 2, paddingTop: 2 }}>
-            <FilterSelector shortFormat={true} />
-          </View>
-          <View style={{ backgroundColor: AppColorPalettes.gray[100], borderBottomLeftRadius: 40, flex: 1, marginLeft: 2 }} />
-        </Row>
+      <View style={{ backgroundColor: AppColorPalettes.gray[100], zIndex: 5 }}>
+        <HomeScreenHeader label={title} isRootHeader={true} style={{ paddingBottom: 0, minHeight: 0 }} />
+        <View style={{ paddingTop: 4 }}>
+          <View style={{ position: "absolute", height: 20, bottom: 0, left: 0, right: 0, backgroundColor: AppColors.white }} />
+          <Row style={{}}>
+            <View style={{ height: 40, backgroundColor: AppColors.white, borderTopRightRadius: 20, paddingRight: 2, paddingTop: 2 }}>
+              <FilterSelector shortFormat={true} />
+            </View>
+            <View style={{ backgroundColor: AppColorPalettes.gray[100], borderBottomLeftRadius: 20, flex: 1, marginLeft: 2 }} />
+          </Row>
+        </View>
       </View>
       {!from && (
         <Animated.View
@@ -320,6 +321,32 @@ export const MapHeader = ({
             )}
           </Column>
         </View>
+      )}
+      {action && (
+        <Animated.View
+          style={[
+            {
+              backgroundColor: AppColors.orange,
+              //  alignItems: "flex-start",
+              borderBottomRightRadius: 24,
+              borderBottomLeftRadius: 24,
+              marginHorizontal: 4,
+              paddingTop: 16 + 2,
+              paddingBottom: 2,
+              paddingHorizontal: 4,
+              zIndex: -1,
+              position: "relative",
+              top: -16
+            },
+            AppStyles.shadow
+          ]}>
+          <AppPressableOverlay onPress={action.onPress} backgroundStyle={{ borderRadius: 16 }}>
+            <Row style={{ alignItems: "center", padding: 8 }} spacing={8}>
+              <AppIcon name={action.icon} color={AppColors.white} />
+              <AppText style={{ fontWeight: "bold", color: AppColors.white }}>{action.title}</AppText>
+            </Row>
+          </AppPressableOverlay>
+        </Animated.View>
       )}
     </View>
   );
