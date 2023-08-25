@@ -5,7 +5,7 @@ import { AppServices, CreateAppServices } from "@/api/service";
 import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
 import { initializeNotification, initializePushNotification } from "@/api/service/notification";
-import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { RootNavigation } from "@/api/navigation";
@@ -73,13 +73,9 @@ async function initContext(service: AppServices): Promise<{
 
   if (online && user) {
     try {
-      if (Platform.OS === "android") {
-        await initializePushNotification(user, service.auth);
-      }
+      await initializePushNotification(user, service.auth);
     } catch (e) {
-      if (__DEV__) {
-        console.warn("[INIT] Could not init notifications :", e);
-      }
+      console.warn("[INIT] Could not init notifications :", e);
     }
   }
 

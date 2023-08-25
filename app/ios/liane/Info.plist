@@ -66,14 +66,14 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Liane needs to access your camera to take photos.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Liane needs to access your position to display it on a map.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Liane needs to access your position to display it on a map.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Liane needs to access your library to upload photos.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Liane needs to access your camera to take photos.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Inter-Bold.ttf</string>
@@ -87,6 +87,7 @@
 		<string>fetch</string>
 		<string>location</string>
 		<string>processing</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
