@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { WithFetchResourceErrorComponentProps, WithFetchResourceParams, WithFetchResourceProps } from "@/components/base/WithFetchResource";
 import { AppServices } from "@/api/service";
 import { PaginatedResponse } from "@/api";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useInfiniteQuery } from "react-query";
 import { UnauthorizedError } from "@/api/exception";
@@ -23,6 +23,7 @@ export const WithFetchPaginatedResponse =
     WrappedComponent: React.ComponentType<WithFetchPaginatedResponseProps<T> & WithFetchResourceParams>,
     loadData: (repository: AppServices, params: any, cursor: string | undefined) => Promise<PaginatedResponse<T>>,
     queryKey: string | string[] | ((params: any) => string | string[]),
+    EmptyResponseComponent: React.ComponentType,
     ErrorComponent?: React.ComponentType<WithFetchResourceErrorComponentProps>
   ) =>
   (props: any & WithFetchResourceParams) => {
@@ -79,10 +80,18 @@ export const WithFetchPaginatedResponse =
       }
     }
 
+    const dataList = data.pages.map(p => p.data).flat();
+    if (dataList!.length === 0) {
+      return (
+        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+          <EmptyResponseComponent />
+        </ScrollView>
+      );
+    }
     return (
       <WrappedComponent
         {...props}
-        data={data.pages.map(p => p.data).flat()}
+        data={dataList}
         refresh={onRefresh}
         refreshing={refreshing}
         fetchNextPage={onFetchNextPage}
@@ -99,33 +108,3 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   }
 });
-/*
-export const WithFetchPaginatedResponse = <T,>(
-  WrappedComponent: React.ComponentType<WithFetchPaginatedResponseProps<T> & WithFetchResourceParams>,
-  loadData: (repository: AppServices, params: any) => Promise<PaginatedResponse<T>>,
-  queryKey: string | ((params: any) => string),
-  EmptyResponseComponent: React.ComponentType,
-  ErrorComponent?: React.ComponentType<WithFetchResourceErrorComponentProps>
-) =>
-  WithFetchResource(
-    ({ data, refresh, refreshing, ...props }) => {
-      const dataList = data.data;
-
-      if (dataList.length === 0) {
-        return (
-          <ScrollView
-            scrollEnabled={false}
-            contentContainerStyle={{ flex: 1 }}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
-            <EmptyResponseComponent />
-          </ScrollView>
-        );
-      } else {
-        return <WrappedComponent data={dataList} refresh={refresh} refreshing={refreshing} {...props} />;
-      }
-    },
-    loadData,
-    queryKey,
-    ErrorComponent
-  );
-*/

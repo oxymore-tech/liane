@@ -29,7 +29,7 @@ const Retry = (props: { retry: () => void }) => {
     <Column style={{ alignItems: "center" }} spacing={4}>
       {allowRetryCountdown > 0 && (
         <AppText style={{ color: AppColors.white }}>
-          Temps restant: <AppText style={{ fontWeight: "bold", color: AppColors.white }}>0:{allowRetryCountdown.toString().padStart(2, 0)}</AppText>
+          Temps restant: <AppText style={{ fontWeight: "bold", color: AppColors.white }}>0:{allowRetryCountdown.toString().padStart(2, "0")}</AppText>
         </AppText>
       )}
       {allowRetryCountdown === 0 && <AppText style={{ color: AppColors.white }}>Vous n'avez rien reçu ?</AppText>}
@@ -73,8 +73,8 @@ export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps)
             maxLength={6}
           />
           <Row style={{ position: "absolute", bottom: 8 }} spacing={4}>
-            {Array.from({ ...code.split(""), length: 6 }).map(c => (
-              <View style={{ borderColor: AppColorPalettes.gray[500], borderBottomWidth: 1 }}>
+            {Array.from({ ...code.split(""), length: 6 }).map((c, index) => (
+              <View key={index} style={{ borderColor: AppColorPalettes.gray[500], borderBottomWidth: 1 }}>
                 <AppText style={[{ fontSize: 24, color: "transparent" }]}>{c || "0"}</AppText>
               </View>
             ))}

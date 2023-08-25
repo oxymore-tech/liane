@@ -140,7 +140,7 @@ export type AppSettings = Readonly<{
   "map.lianeTrafficAsColor": boolean;
 }>;
 export function getSettings() {
-  return retrieveAsync<AppSettings>("settings", { "map.lianeTrafficAsWidth": true, "map.lianeTrafficAsColor": true });
+  return retrieveAsync<AppSettings>("settings", { "map.lianeTrafficAsWidth": false, "map.lianeTrafficAsColor": false });
 }
 
 export async function getSetting(name: keyof AppSettings) {
