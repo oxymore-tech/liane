@@ -24,6 +24,7 @@ import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
+import { IconName } from "@/components/base/AppIcon";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
@@ -43,6 +44,8 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || "0000000");
   const [recurrenceDetails, setRecurrenceDetails] = useState<LianeRecurrence | null>(null);
 
+  const initialMinDate = new Date(new Date().getTime() + 10 * 60000);
+
   useEffect(() => {
     if (liane.recurrence) {
       services.liane.getRecurrence(liane.recurrence?.id!).then((recurrence: LianeRecurrence) => {
@@ -55,7 +58,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const editOptions = useMemo(() => {
     return [
       {
-        icon: "clock-outline",
+        icon: "clock-outline" as IconName,
         text: "Modifier l'horaire de départ",
         action: () => {
           setTimeModalVisible(true);
@@ -64,14 +67,14 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       ...(lianeHasRecurrence
         ? [
             {
-              icon: "calendar-outline",
+              icon: "calendar-outline" as IconName,
               text: "Modifier la régularité",
               action: () => {
                 setRecurrenceModalVisible(true);
               }
             },
             {
-              icon: "calendar-outline",
+              icon: "calendar-outline" as IconName,
               text: "Supprimer la régularité",
               color: ContextualColors.redAlert.text,
               action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible)
@@ -125,7 +128,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand partez-vous ?</AppText>
 
           <View>
-            <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} />
+            <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} minDate={initialMinDate} />
           </View>
         </Column>
       </SlideUpModal>
