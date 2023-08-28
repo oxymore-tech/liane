@@ -24,9 +24,10 @@ public sealed class LianeRecurrenceScheduler : CronJobService
 
   protected override async Task DoWork(CancellationToken cancellationToken)
   {
-    var dayOfWeek = DateTime.UtcNow.DayOfWeek;
+    Logger.Log(LogLevel.Debug, "Running recurrence scheduler...");
+    var now = DateTime.UtcNow;
     var pattern = Enumerable.Repeat('.', 7).ToArray();
-    pattern[(int)dayOfWeek - 1] = '1';
+    pattern[(int)now.DayOfWeek - 1] = '1';
     var filter = Builders<LianeRecurrence>.Filter.Where(r => r.Active) & Builders<LianeRecurrence>.Filter.Regex(r => r.Days, new BsonRegularExpression(new string(pattern)));
     var recurrences = await mongo.GetCollection<LianeRecurrence>()
       .FindAsync(filter, cancellationToken: cancellationToken);

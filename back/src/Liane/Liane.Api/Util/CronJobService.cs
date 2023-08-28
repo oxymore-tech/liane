@@ -14,12 +14,12 @@ public abstract class CronJobService : IHostedService, IDisposable
   private readonly CronExpression expression;
   private readonly TimeZoneInfo timeZoneInfo;
   private readonly bool runImmediately;
-  private readonly ILogger logger;
   private readonly bool isEnabled;
+  protected readonly ILogger Logger;
 
   protected CronJobService(ILogger logger, string cronExpression, bool runImmediately, bool isEnabled = true)
   {
-    this.logger = logger;
+    this.Logger = logger;
     expression = CronExpression.Parse(cronExpression);
     this.runImmediately = runImmediately;
     timeZoneInfo = TimeZoneInfo.Local;
@@ -39,7 +39,7 @@ public abstract class CronJobService : IHostedService, IDisposable
     }
     catch (System.Exception e)
     {
-      logger.LogError(e, "{job} : job scheduling failed", GetType().Name);
+      Logger.LogError(e, "{job} : job scheduling failed", GetType().Name);
     }
   }
 
@@ -47,7 +47,7 @@ public abstract class CronJobService : IHostedService, IDisposable
   {
     if (runImmediately)
     {
-      logger.LogInformation("{job} : starts immediately...", GetType().Name);
+      Logger.LogInformation("{job} : starts immediately...", GetType().Name);
       await DoWork(cancellationToken);
     }
 
@@ -57,12 +57,12 @@ public abstract class CronJobService : IHostedService, IDisposable
       var delayMs = (next.Value - DateTimeOffset.Now).TotalMilliseconds;
       if (delayMs <= 0) // prevent non-positive values from being passed into Timer
       {
-        logger.LogInformation("{job} : starts...", GetType().Name);
+        Logger.LogInformation("{job} : starts...", GetType().Name);
         await ScheduleJob(cancellationToken);
         return;
       }
 
-      logger.LogInformation("{job} : will run at '{at}'", GetType().Name, next.Value);
+      Logger.LogInformation("{job} : will run at '{at}'", GetType().Name, next.Value);
       timer = new Timer(delayMs);
       timer.Elapsed += async (_, _) =>
       {
@@ -77,7 +77,7 @@ public abstract class CronJobService : IHostedService, IDisposable
           }
           catch (System.Exception e)
           {
-            logger.LogError(e, "{job} : job execution failed", GetType().Name);
+            Logger.LogError(e, "{job} : job execution failed", GetType().Name);
           }
         }
 
@@ -99,7 +99,7 @@ public abstract class CronJobService : IHostedService, IDisposable
       return;
     }
 
-    logger.LogInformation("{job} stopped", GetType().Name);
+    Logger.LogInformation("{job} stopped", GetType().Name);
     timer?.Stop();
     await Task.CompletedTask;
   }
