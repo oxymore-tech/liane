@@ -1,4 +1,4 @@
-NSLocationWhenInUseUsageDescription = "L'accès à votre position est requis pour vous géolocaliser.";
-NSLocationAlwaysAndWhenInUseUsageDescription = "Liane utilise votre position pour valider vos trajets effectués.";
+NSLocationWhenInUseUsageDescription = "Autorisez l'accès à votre position pour afficher les Lianes autour de vous.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Pendant un trajet, Liane a besoin d'accéder à votre position même lorsque l'application est en arrière-plan afin de le valider.";
 NSPhotoLibraryUsageDescription = "Autorisez l'accès à votre galerie pour importer une image.";
 NSCameraUsageDescription = "Autorisez l'accès à votre appareil photo pour importer une nouvelle photo.";

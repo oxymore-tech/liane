@@ -1,4 +1,4 @@
-NSLocationWhenInUseUsageDescription = "Liane needs to access your position to use geolocation.";
-NSLocationAlwaysAndWhenInUseUsageDescription = "Liane uses your position to verify your trips.";
+NSLocationWhenInUseUsageDescription = "Allow access to your position to see available trips in your area.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Allow access to your position while Liane is in the background to validate your trips.";
 NSPhotoLibraryUsageDescription = "Allow access to your library to upload a new picture.";
 NSCameraUsageDescription = "Allow access to your camera to upload a new picture.";
