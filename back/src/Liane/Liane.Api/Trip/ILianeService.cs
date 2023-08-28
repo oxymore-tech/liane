@@ -22,6 +22,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<string> GetContact(Ref<Liane> id, Ref<User.User> requester, Ref<User.User> member);
   Task<Liane> UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
   Task RemoveRecurrence(Ref<LianeRecurrence> recurrence);
-  Task<Liane> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null);
+  Task CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null);
   Task<Liane> GetForCurrentUser(Ref<Liane> liane);
 }

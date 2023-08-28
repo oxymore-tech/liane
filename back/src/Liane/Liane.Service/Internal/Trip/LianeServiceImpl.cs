@@ -71,25 +71,36 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     else
     {
       var recurrence =  await lianeRecurrenceService.Create(LianeRecurrence.FromLianeRequest(entity), owner);
-      return await CreateFromRecurrence(recurrence, createdBy);
+      var liane = await CreateWithReturn(entity, createdBy, recurrence);
+      await CreateFromRecurrence(recurrence, createdBy);
+      return liane;
     }
   }
-
-  public async Task<Api.Trip.Liane> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null)
+  
+  public async Task CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null)
   {
     var createdBy =  owner ?? currentContext.CurrentUser().Id;
     var recurrenceResolved = await lianeRecurrenceService.Get(recurrence);
+    
+    var now = DateTime.UtcNow;
+    
+    var existing = await Mongo.GetCollection<LianeDb>()
+      .Find(l => l.Recurrence == recurrence.Id && l.DepartureTime > now)
+      .Sort(Builders<LianeDb>.Sort.Descending(m => m.DepartureTime))
+      .Limit(7)
+      .SelectAsync(MapEntity);
+    
     var entity = recurrenceResolved.GetLianeRequest();
-    var liane =  await CreateWithReturn(entity, createdBy, recurrence);
-    if (entity.Recurrence is null) return liane;
 
     // Only plan up to a week ahead
-    foreach (var nextOccurence in entity.Recurrence.Value.GetNextActiveDates(liane.DepartureTime, DateTime.UtcNow.Date.AddDays(7)))
+    var fromDate =  new DateTime(now.Year, now.Month, now.Day, entity.DepartureTime.Hour, entity.DepartureTime.Minute, entity.DepartureTime.Second, DateTimeKind.Utc);
+    foreach (var nextOccurence in entity.Recurrence!.Value.GetNextActiveDates(fromDate, DateTime.UtcNow.Date.AddDays(7)))
     {
-      await CreateWithReturn(entity with { DepartureTime =  nextOccurence}, createdBy, recurrence);
+      if (existing.Find(l => l.DepartureTime.ToShortDateString() == nextOccurence.ToShortDateString()) is null)
+      {
+        await CreateWithReturn(entity with { DepartureTime = nextOccurence }, createdBy, recurrence);
+      }
     }
-
-    return liane;
   }
   private async Task<Api.Trip.Liane> CreateWithReturn(LianeRequest entity, Ref<Api.User.User> createdBy, Ref<LianeRecurrence>? recurrence)
   {

@@ -1,14 +1,4 @@
-import React, {
-  ComponentType,
-  ForwardedRef,
-  forwardRef,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from "react";
+import React, { ComponentType, ForwardedRef, forwardRef, PropsWithChildren, useContext, useImperativeHandle, useRef, useState } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
 import { LatLng } from "@/api";
@@ -25,11 +15,11 @@ import distance from "@turf/distance";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
-import DeviceInfo from "react-native-device-info";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
 import { useSubject } from "@/util/hooks/subscription";
 import { SubscriptionLike } from "rxjs";
+import { displayInfo } from "@/components/base/InfoDisplayer";
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -142,9 +132,6 @@ const AppMapView = forwardRef(
 
     const [showUserLocation, setShowUserLocation] = useState(false);
     const [flyingToLocation, setFlyingToLocation] = useState(false);
-    useEffect(() => {
-      DeviceInfo.isLocationEnabled().then(setShowUserLocation);
-    }, []);
 
     return (
       <View style={styles.map}>
@@ -283,6 +270,7 @@ const AppMapView = forwardRef(
                 //locationEnabled={showUserLocation}
                 onPosition={async currentLocation => {
                   if (!contains(FR_BBOX, currentLocation)) {
+                    displayInfo("Désolé, Liane n'est pas disponible sur votre territoire.");
                     return;
                   }
                   setShowUserLocation(true);

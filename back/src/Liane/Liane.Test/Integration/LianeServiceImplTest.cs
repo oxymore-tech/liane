@@ -430,9 +430,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var now = DateTime.UtcNow;
     var bertrand = Fakers.FakeDbUsers[2];
-    var departureTime = now.AddDays(3);
+    var departureTime = now;
     currentContext.SetCurrentUser(bertrand);
-    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
+    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
     var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
     Assert.NotNull(created.Recurrence);
     
@@ -445,6 +445,29 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var lianeDates = lianes.Data.Select(l => l.DepartureTime.ToShortDateString()+l.DepartureTime.ToShortTimeString());
     CollectionAssert.AreEquivalent(dates, lianeDates);
     
+  }
+  
+  [Test]
+  public async Task ShouldRepeatRecurrentLiane()
+  {
+    var now = DateTime.UtcNow;
+    var bertrand = Fakers.FakeDbUsers[2];
+    var departureTime = now;
+    currentContext.SetCurrentUser(bertrand);
+    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
+    var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
+    Assert.NotNull(created.Recurrence);
+    
+    var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    
+    Assert.AreEqual(4, lianes.Data.Count);
+    
+    // Delete last and test if it is recreated without duplication
+    await testedService.Delete(lianes.Data.Last().Id);
+    await testedService.CreateFromRecurrence(lianes.Data.First().Recurrence!.Id, bertrand.Id);
+
+    var updatedLianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    Assert.AreEqual(4, updatedLianes.Data.Count);
   }
 
   [Test]
