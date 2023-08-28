@@ -110,7 +110,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
   {
     using var connection = db.NewConnection();
     var query = Query.Select<RallyingPoint>()
-      .Where(Filter<RallyingPoint>.Near(x => x.Location, position, radius));
+      .OrderBy(new FieldDefinition<RallyingPoint>.Distance(FieldDefinition<RallyingPoint>.From(r => r.Location), position));
     return await connection.FirstOrDefaultAsync(query);
   }
 
@@ -118,7 +118,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
   {
     using var connection = db.NewConnection();
     var query = Query.Select<RallyingPoint>()
-      .Where(Filter<RallyingPoint>.Near(x => x.Location, position, radius));
+      .OrderBy(new FieldDefinition<RallyingPoint>.Distance(FieldDefinition<RallyingPoint>.From(r => r.Location), position));
     var list = await connection.QueryAsync(query);
 
     if (list.Count < 1) return null;

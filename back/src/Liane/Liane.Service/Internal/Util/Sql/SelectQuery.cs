@@ -49,5 +49,6 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
   public SelectQuery<T> Take(int? take) => this with { InternalTakeValue = take };
   public SelectQuery<T> Skip(int? skip) => this with { InternalSkipValue = skip };
 
+  public SelectQuery<T> OrderBy(FieldDefinition<T> fieldDefinition) => this with { InternalOrderBy = InternalOrderBy.Add(fieldDefinition) };
   public SelectQuery<T> OrderBy(Expression<Func<T, object?>> expression) => this with { InternalOrderBy = InternalOrderBy.Add(FieldDefinition<T>.From(expression)) };
 }

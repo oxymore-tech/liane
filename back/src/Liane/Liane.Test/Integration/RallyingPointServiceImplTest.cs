@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -22,4 +23,16 @@ public sealed class RallyingPointServiceImplTest : BaseIntegrationTest
     var actual = await testedService.List(null);
     Assert.IsNotEmpty(actual);
   }
+  
+  [Test]
+  public async Task ShouldSnap()
+  {
+    var actual = await testedService.Snap(new LatLng(44.352838, 3.524227), 10000);
+    Assert.AreEqual(LabeledPositions.QuezacParking, actual);
+    
+    var actual2 = await testedService.SnapViaRoute(new LatLng(44.352838, 3.524227), 10000);
+    Assert.AreEqual(LabeledPositions.QuezacParking, actual2);
+  }
+  
+    
 }

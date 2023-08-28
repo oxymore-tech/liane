@@ -67,7 +67,7 @@ const ProfileView = ({ user }: { user: User }) => {
 };
 
 const Actions = () => {
-  const { services, setAuthUser } = useContext(AppContext);
+  const { logout } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   return (
     <Column>
@@ -82,7 +82,7 @@ const Actions = () => {
       <LineSeparator />
       <ActionItem
         onPress={() => {
-          services.auth.logout().then(() => setAuthUser(undefined));
+          logout();
         }}
         color={ContextualColors.redAlert.text}
         iconName={"log-out-outline"}
