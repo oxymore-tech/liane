@@ -17,7 +17,8 @@ interface AppContextProps {
   setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
   user?: FullUser;
-  setAuthUser: (authUser?: AuthUser) => void;
+  logout: () => void;
+  login: (user: AuthUser) => void;
   services: AppServices;
   status: "online" | "offline";
   appState: AppStateStatus;
@@ -28,7 +29,8 @@ const SERVICES = CreateAppServices();
 export const AppContext = createContext<AppContextProps>({
   locationPermission: LocationPermissionLevel.NEVER,
   setLocationPermission: () => {},
-  setAuthUser: () => {},
+  logout: () => {},
+  login: () => {},
   services: SERVICES,
   status: "offline",
   appState: "active"
@@ -248,14 +250,23 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         </View>
       );
     }
-    console.log("loaded");
+
+    const logout = async () => {
+      await SERVICES.realTimeHub.stop();
+      await SERVICES.auth.logout();
+      console.debug("[LOGOUT] Disconnected.");
+      await setAuthUser(undefined);
+    };
+
+    const login = setAuthUser;
 
     return (
       <AppContext.Provider
         value={{
           locationPermission,
           setLocationPermission,
-          setAuthUser,
+          logout,
+          login,
           position,
           user,
           status,

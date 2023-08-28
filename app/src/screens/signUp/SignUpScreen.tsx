@@ -9,7 +9,6 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
-import { UnauthorizedError } from "@/api/exception";
 import { useActor, useInterpret } from "@xstate/react";
 import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateMachine";
 import { DoneEvent } from "xstate";
@@ -45,19 +44,19 @@ const SignUpPage = () => {
     }
   };
   const submitCode = async () => {
-    try {
-      const pushToken = await getPushToken();
-      const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
-
-      machine.send("LOGIN", { data: { authUser } });
-    } catch (e: any) {
+    // try {
+    const pushToken = await getPushToken();
+    const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
+    console.debug("[LOGIN] as ", authUser, machine.send);
+    machine.send("LOGIN", { data: { authUser } });
+    /*  } catch (e: any) {
       if (e instanceof UnauthorizedError) {
         setError("Le code est incorrect");
       } else {
         console.warn("Error during login", e);
         setError(e.toString());
       }
-    }
+    }*/
   };
 
   return (
@@ -82,13 +81,13 @@ const SignUpPage = () => {
 };
 
 const SignUpScreen = () => {
-  const { setAuthUser } = useContext(AppContext);
+  const { login } = useContext(AppContext);
   const [m] = useState(() => CreateSignUpMachine());
   const machine = useInterpret(m);
   const [state] = useActor(machine);
   machine.onDone((d: DoneEvent) => {
     console.log(JSON.stringify(d));
-    setAuthUser({ ...state.context.authUser!, isSignedUp: true });
+    login({ ...state.context.authUser! });
   });
 
   return (

@@ -89,10 +89,12 @@ export class HubServiceClient extends AbstractHubService {
     });
   };
 
-  stop = () => {
+  stop = async () => {
     console.log("[HUB] stop");
     // TODO close all observables
-    return this.hub.stop();
+
+    await this.hub.stop();
+    this.isStarted = false;
   };
 
   async list(id: Ref<ConversationGroup>, params: PaginatedRequestParams) {
