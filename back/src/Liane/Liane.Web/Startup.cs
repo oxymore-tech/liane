@@ -67,6 +67,7 @@ public static class Startup
     services.AddService<PostgisDatabase>();
     services.AddService<PostgisUpdateService>();
     services.AddService<PostgisServiceImpl>();
+    services.AddService<PostgisSyncService>();
 
     services.AddService<ImageServiceImpl>();
     services.AddSettings<CloudflareSettings>(context);
@@ -318,6 +319,13 @@ public static class Startup
 
     var postgisMigrationService = app.ApplicationServices.GetRequiredService<PostgisUpdateService>();
     postgisMigrationService.Execute()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
+    
+    
+    var postgisSyncService = app.ApplicationServices.GetRequiredService<PostgisSyncService>();
+    postgisSyncService.Execute()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
