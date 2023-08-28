@@ -94,11 +94,13 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     // Only plan up to a week ahead
     var fromDate =  new DateTime(now.Year, now.Month, now.Day, entity.DepartureTime.Hour, entity.DepartureTime.Minute, entity.DepartureTime.Second, DateTimeKind.Utc);
+    var dReturn = entity.ReturnTime is not null ? entity.ReturnTime - entity.DepartureTime: null;
     foreach (var nextOccurence in entity.Recurrence!.Value.GetNextActiveDates(fromDate, DateTime.UtcNow.Date.AddDays(7)))
     {
       if (existing.Find(l => l.DepartureTime.ToShortDateString() == nextOccurence.ToShortDateString()) is null)
       {
-        await CreateWithReturn(entity with { DepartureTime = nextOccurence }, createdBy, recurrence);
+        DateTime? returnTime = entity.ReturnTime is not null ? nextOccurence + dReturn : null;
+        await CreateWithReturn(entity with { DepartureTime = nextOccurence, ReturnTime = returnTime }, createdBy, recurrence);
       }
     }
   }

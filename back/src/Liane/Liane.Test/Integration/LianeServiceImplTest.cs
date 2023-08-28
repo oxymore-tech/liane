@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
@@ -433,16 +434,24 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var departureTime = now;
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
-    var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
+    var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(3), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
     Assert.NotNull(created.Recurrence);
     
     var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
-    
-    Assert.AreEqual(4, lianes.Data.Count);
-    Assert.True(lianes.Data.All(l => l.Recurrence == created.Recurrence));
+    Assert.AreEqual(8, lianes.Data.Count);
+
+    var forthTrips = lianes.Data.Where(l => l.Return is not null).ToImmutableList();
+    Assert.AreEqual(4, forthTrips.Count);
+    Assert.True(forthTrips.All(l => l.Recurrence == created.Recurrence));
+    Assert.True((await forthTrips.SelectAsync(async l =>
+    {
+      var returnTrip = await testedService.Get(l.Return!);
+      var t=  returnTrip.DepartureTime - l.DepartureTime;
+      return t  == TimeSpan.FromHours(3);
+    })).All(result => result));
     
     var dates = recurrence.GetNextActiveDates(departureTime, DateTime.UtcNow.AddDays(7)).Concat(new []{departureTime}).Select(d => d.ToShortDateString()+d.ToShortTimeString()).ToList();
-    var lianeDates = lianes.Data.Select(l => l.DepartureTime.ToShortDateString()+l.DepartureTime.ToShortTimeString());
+    var lianeDates = forthTrips.Select(l => l.DepartureTime.ToShortDateString()+l.DepartureTime.ToShortTimeString());
     CollectionAssert.AreEquivalent(dates, lianeDates);
     
   }
