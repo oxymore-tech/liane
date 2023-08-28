@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
@@ -28,8 +30,11 @@ public class LianeRecurrenceServiceImpl: MongoCrudEntityService<LianeRecurrence>
     }
     else
     {
-      await Mongo.GetCollection<LianeRecurrence>().FindOneAndUpdateAsync(r => r.Id == recurrence.Id, 
+      var nextRecurrenceDate = days.GetNextActiveDates(DateTime.UtcNow, DateTime.UtcNow.AddDays(7)).First();
+      var resolved = await Get(recurrence);
+      await Mongo.GetCollection<LianeRecurrence>().UpdateOneAsync(r => r.Id == recurrence.Id, 
         Builders<LianeRecurrence>.Update.Combine(
+          Builders<LianeRecurrence>.Update.Set(r => r.InitialRequest, resolved.InitialRequest with { DepartureTime = new DateTime(nextRecurrenceDate.Year, nextRecurrenceDate.Month, nextRecurrenceDate.Day, resolved.InitialRequest.DepartureTime.Hour, resolved.InitialRequest.DepartureTime.Minute, resolved.InitialRequest.DepartureTime.Second, DateTimeKind.Utc)}),
           Builders<LianeRecurrence>.Update.Set(r => r.Days, days),
           Builders<LianeRecurrence>.Update.Set(r => r.Active, true)
         )
