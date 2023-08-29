@@ -48,9 +48,14 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     })!;
   }
 
-  public Task<Dictionary<string, RallyingPoint>> GetMany(ImmutableList<Ref<RallyingPoint>> references)
+  public async Task<Dictionary<string, RallyingPoint>> GetMany(ImmutableList<Ref<RallyingPoint>> references)
   {
-    throw new NotImplementedException();
+    using var connection = db.NewConnection();
+
+    var query = Query.Select<RallyingPoint>()
+      .Where(Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, references));
+    var results = await connection.QueryAsync(query);
+    return results.ToDictionary(r => r.Id!);
   }
 
   public async Task<ImmutableList<RallyingPoint>> List(LatLng? center, int? distance = null, string? search = null, int? limit = null)
@@ -110,7 +115,8 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
   {
     using var connection = db.NewConnection();
     var query = Query.Select<RallyingPoint>()
-      .OrderBy(new FieldDefinition<RallyingPoint>.Distance(FieldDefinition<RallyingPoint>.From(r => r.Location), position));
+      .OrderBy(new FieldDefinition<RallyingPoint>.Distance(FieldDefinition<RallyingPoint>.From(r => r.Location), position))
+      .Take(1);
     return await connection.FirstOrDefaultAsync(query);
   }
 
@@ -118,7 +124,8 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
   {
     using var connection = db.NewConnection();
     var query = Query.Select<RallyingPoint>()
-      .OrderBy(new FieldDefinition<RallyingPoint>.Distance(FieldDefinition<RallyingPoint>.From(r => r.Location), position));
+      .OrderBy(new FieldDefinition<RallyingPoint>.Distance(FieldDefinition<RallyingPoint>.From(r => r.Location), position))
+      .Take(10);
     var list = await connection.QueryAsync(query);
 
     if (list.Count < 1) return null;
