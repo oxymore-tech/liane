@@ -9,4 +9,5 @@ public interface ICurrentContext
   AuthUser CurrentUser();
   T? CurrentResource<T>() where T : class, IIdentity;
   ResourceAccessLevel CurrentResourceAccessLevel();
+  bool AllowPastResourceCreation();
 }

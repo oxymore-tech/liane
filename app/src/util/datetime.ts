@@ -1,4 +1,4 @@
-import { UTCDateTime } from "@/api";
+import { DayOfTheWeekFlag, UTCDateTime } from "@/api";
 export type TimeInSeconds = number;
 export const toTimeInSeconds = (datetime: Date) => {
   return (datetime.getHours() * 60 + datetime.getMinutes()) * 60 + datetime.getSeconds();
@@ -39,3 +39,13 @@ export const isToday = (date: Date) => {
 };
 
 export const sleep = (timeInMillis: number) => new Promise<void>(resolve => setTimeout(() => resolve(), timeInMillis));
+
+export const getFirstFutureDate = (date: Date, recurrence: DayOfTheWeekFlag) => {
+  const currentDay = (date.getUTCDay() + 6) % 7;
+  const comingDays = recurrence.substring(currentDay) + recurrence.substring(0, currentDay);
+  const dDay = comingDays.indexOf("1");
+  if (dDay < 0) {
+    return null;
+  }
+  return addSeconds(date, 3600 * 24 * dDay);
+};

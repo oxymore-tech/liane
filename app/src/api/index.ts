@@ -97,7 +97,7 @@ export type RallyingPoint = Identity &
     isActive: boolean;
   }>;
 
-export type DayOfTheWeekFlag = `${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}`;
+export type DayOfTheWeekFlag = `${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}`; // First index is Monday
 
 export type LianeRequest = Identity &
   Readonly<{

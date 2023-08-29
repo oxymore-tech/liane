@@ -36,7 +36,7 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    var liane = await lianeService.Create(new LianeRequest(null, DateTime.Now, null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
+    var liane = await lianeService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
 
     CurrentContext.SetCurrentUser(userB);
     var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");

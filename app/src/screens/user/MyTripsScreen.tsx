@@ -20,7 +20,7 @@ const MyTripsScreen = () => {
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"]) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"], undefined, 25, false) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -36,6 +36,15 @@ const MyTripsScreen = () => {
     });
     return () => s.unsubscribe();
   }, []);
+
+  const isFetchingFutureLianes = queryClient.isFetching({
+    predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
+  });
+  useEffect(() => {
+    if (isFetchingFutureLianes) {
+      setSelectedTab(0);
+    }
+  }, [isFetchingFutureLianes]);
 
   const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
   const error: any = queriesData[0].error || queriesData[1].error;
@@ -87,19 +96,26 @@ const MyTripsScreen = () => {
         selectedColor={AppColors.darkBlue}
         fontSize={18}
       />
-      {selectedTab === 0 ? (
+      {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
+      {selectedTab === 0 && data.length > 0 && (
         <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
-      ) : (
-        <PastLianeListView />
       )}
+      {selectedTab === 1 && <PastLianeListView />}
     </Column>
   );
 };
 
+const NoFutureTrip = () => {
+  return (
+    <Center>
+      <AppText>Vous n'avez aucun trajet à venir.</AppText>
+    </Center>
+  );
+};
 const NoRecentTrip = () => {
   return (
     <Center>
-      <AppText>Vous n'avez pas encore effectué de trajets</AppText>
+      <AppText>Vous n'avez pas encore effectué de trajets.</AppText>
     </Center>
   );
 };

@@ -1,6 +1,6 @@
 import { getBoundingBox } from "@/util/geometry";
 describe("geometry", () => {
-  test("compute bounding box", () => {
+  test("should compute bounding box", () => {
     const coordinates = [
       [1.602816, 44.836218],
       [1.60225, 44.93615],

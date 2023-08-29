@@ -43,6 +43,11 @@ public sealed class CurrentContextImpl : ICurrentContext
     return ResourceAccessLevel.Any;
   }
 
+  public bool AllowPastResourceCreation()
+  {
+    return false;
+  }
+
   public AuthUser CurrentUser()
   {
     if (httpContextAccessor.HttpContext == null)

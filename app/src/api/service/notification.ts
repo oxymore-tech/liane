@@ -19,9 +19,12 @@ export class NotificationServiceClient extends AbstractNotificationService {
     return await get("/notification" + paramString);
   }
   markAsRead = async (notification: Notification) => {
-    // TODO find out how to use super
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
     await patch(`/notification/${notification.id}`);
+    if (this.unreadNotificationCount.getValue() - 1 < 0) {
+      console.warn("Read count < 0");
+      return;
+    }
+    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
   };
 
   override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {

@@ -381,9 +381,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   public async Task JbShouldMatchAugustinsLiane()
   {
     var augustin = Fakers.FakeDbUsers[0].Id;
-
-    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
-    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T09:00:00+01:00"), Direction.Arrival)),
+    
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.UtcNow.AddHours(25), Direction.Arrival)),
       new Pagination());
 
     // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
@@ -404,13 +404,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var samuel = Fakers.FakeDbUsers[0];
     var bertrand = Fakers.FakeDbUsers[1];
-
+    
     currentContext.SetCurrentUser(samuel);
-    var liane = await testedService.Create(new LianeRequest(null, DateTime.Parse("2023-03-02T08:00:00+01:00"), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
+    var liane = await testedService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
 
     currentContext.SetCurrentUser(bertrand);
     var actual = await testedService.Match(
-      new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.Parse("2023-03-02T08:00:00+01:00"), Direction.Departure)),
+      new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.UtcNow.AddHours(23), Direction.Departure)),
       new Pagination());
 
     // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
@@ -431,7 +431,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var now = DateTime.UtcNow;
     var bertrand = Fakers.FakeDbUsers[2];
-    var departureTime = now;
+    var departureTime = now.AddHours(5);
+    
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
     var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(3), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
@@ -461,7 +462,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var now = DateTime.UtcNow;
     var bertrand = Fakers.FakeDbUsers[2];
-    var departureTime = now;
+    var departureTime = now.AddHours(-2);
+    
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
     var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
@@ -469,14 +471,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     
     var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     
-    Assert.AreEqual(4, lianes.Data.Count);
+    Assert.AreEqual(3, lianes.Data.Count);
     
     // Delete last and test if it is recreated without duplication
     await testedService.Delete(lianes.Data.Last().Id);
     await testedService.CreateFromRecurrence(lianes.Data.First().Recurrence!.Id, bertrand.Id);
 
     var updatedLianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
-    Assert.AreEqual(4, updatedLianes.Data.Count);
+    Assert.AreEqual(3, updatedLianes.Data.Count);
   }
 
   [Test]

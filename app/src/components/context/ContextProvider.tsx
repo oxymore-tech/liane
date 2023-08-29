@@ -11,6 +11,7 @@ import { AppText } from "@/components/base/AppText";
 import { RootNavigation } from "@/api/navigation";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
 import Splashscreen from "../../../native-modules/splashscreen";
+import { SubscriptionLike } from "rxjs";
 
 interface AppContextProps {
   locationPermission: LocationPermissionLevel;
@@ -42,17 +43,18 @@ async function initContext(service: AppServices): Promise<{
   position: LatLng;
   online: boolean;
 }> {
-  // await SplashScreen.preventAutoHideAsync();
   let authUser = await service.auth.authUser();
 
   let user;
   let online = true;
-  //let notificationSubscription = undefined;
+
   if (!__DEV__) {
     await initializeRum();
   }
 
-  await initializeNotification();
+  if (authUser) {
+    await initializeNotification();
+  }
 
   if (authUser?.isSignedUp) {
     try {
@@ -108,6 +110,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   private unsubscribeToUserInteraction: (() => void) | undefined = undefined;
   private unsubscribeToStateChange: NativeEventSubscription | undefined = undefined;
   private unsubscribeToNetworkChange: NetInfoSubscription | undefined = undefined;
+  private userChangeSubscription: SubscriptionLike | undefined = undefined;
+  private notificationSubscription: SubscriptionLike | undefined = undefined;
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
@@ -136,11 +140,11 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         status: p.online ? "online" : "offline"
       }));
       if (p.online && p.user) {
-        SERVICES.realTimeHub.subscribeToNotifications(async n => {
+        this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
           //console.debug("dbg ------>", this.state.appState);
           await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
         });
-        SERVICES.auth.subscribeToUserChanges(user => {
+        this.userChangeSubscription = SERVICES.auth.subscribeToUserChanges(user => {
           this.setState(prev => ({
             ...prev,
             user
@@ -187,6 +191,12 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
     if (this.unsubscribeToNetworkChange) {
       this.unsubscribeToNetworkChange();
+    }
+    if (this.userChangeSubscription) {
+      this.userChangeSubscription.unsubscribe();
+    }
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
     }
     destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
   }
