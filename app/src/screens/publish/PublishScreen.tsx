@@ -291,7 +291,7 @@ const DateStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
         {editable && (
           <Center>
             <AppToggle
-              defaultSelectedValue={optionsRecurrentLiane[0]}
+              defaultSelectedValue={optionsRecurrentLiane[isRecurrent ? 1 : 0]}
               options={optionsRecurrentLiane}
               selectionColor={AppColorPalettes.yellow[800]}
               onSelectValue={(option: string) => {
@@ -401,8 +401,7 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
 
 const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onRequestEdit, after }: StepProps<Date | null> & { after: Date }) => {
   const [date, setDate] = useState(initialDate);
-  const initialMinDate = new Date(new Date().getTime() + 10 * 60000);
-
+  const initialMinDate = new Date(after.getTime() + 60000);
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       <Column spacing={8}>

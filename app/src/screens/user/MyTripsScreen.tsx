@@ -20,7 +20,7 @@ const MyTripsScreen = () => {
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"]) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"], undefined, 25, false) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -36,6 +36,15 @@ const MyTripsScreen = () => {
     });
     return () => s.unsubscribe();
   }, []);
+
+  const isFetchingFutureLianes = queryClient.isFetching({
+    predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
+  });
+  useEffect(() => {
+    if (isFetchingFutureLianes) {
+      setSelectedTab(0);
+    }
+  }, [isFetchingFutureLianes]);
 
   const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
   const error: any = queriesData[0].error || queriesData[1].error;
