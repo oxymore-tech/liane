@@ -124,7 +124,8 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     }
     var created = await ToDb(entity with {ReturnTime = null}, ObjectId.GenerateNewId().ToString()!, createdAt, createdBy, recurrence);
     toCreate.Add(entity.ReturnTime is null ? created : created with { Return = toCreate[0].Id } );
-
+    
+    toCreate = toCreate.Where(l => l.DepartureTime > createdAt).ToList();
     await Mongo.GetCollection<LianeDb>().InsertManyAsync(toCreate);
     foreach (var lianeDb in toCreate)
     {
