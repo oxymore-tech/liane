@@ -96,19 +96,26 @@ const MyTripsScreen = () => {
         selectedColor={AppColors.darkBlue}
         fontSize={18}
       />
-      {selectedTab === 0 ? (
+      {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
+      {selectedTab === 0 && data.length > 0 && (
         <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
-      ) : (
-        <PastLianeListView />
       )}
+      {selectedTab === 1 && <PastLianeListView />}
     </Column>
   );
 };
 
+const NoFutureTrip = () => {
+  return (
+    <Center>
+      <AppText>Vous n'avez aucun trajet à venir.</AppText>
+    </Center>
+  );
+};
 const NoRecentTrip = () => {
   return (
     <Center>
-      <AppText>Vous n'avez pas encore effectué de trajets</AppText>
+      <AppText>Vous n'avez pas encore effectué de trajets.</AppText>
     </Center>
   );
 };
