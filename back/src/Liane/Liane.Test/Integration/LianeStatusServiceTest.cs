@@ -34,6 +34,7 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
 
+    currentContext.SetAllowPastResourceCreation(true);
     var now = DateTime.UtcNow;
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-1));

@@ -10,6 +10,7 @@ namespace Liane.Test.Integration;
 public sealed class MockCurrentContext : ICurrentContext
 {
   private AuthUser? CurrentAuthUser { get; set; }
+  private bool allowPastResources;
 
   public AuthUser CurrentUser()
   {
@@ -29,5 +30,15 @@ public sealed class MockCurrentContext : ICurrentContext
   public ResourceAccessLevel CurrentResourceAccessLevel()
   {
     throw new NotImplementedException();
+  }
+
+  public void SetAllowPastResourceCreation(bool allow)
+  {
+    allowPastResources = allow;
+  }
+
+  public bool AllowPastResourceCreation()
+  {
+    return allowPastResources;
   }
 }
