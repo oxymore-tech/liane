@@ -44,6 +44,7 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
+import { getFirstFutureDate } from "@/util/datetime";
 
 interface StepProps<T> {
   editable: boolean;
@@ -203,7 +204,7 @@ export const PublishScreenView = () => {
           <DateStepView
             animationType={step.value < 3 ? "firstEntrance" : "ease"}
             editable={isDateStep}
-            initialValue={state.context.request.departureTime ? { date: state.context.request.departureTime, recurrence: null } : undefined}
+            initialValue={{ date: state.context.request.departureTime, recurrence: state.context.request.recurrence }}
             onRequestEdit={() => machine.send("EDIT", { data: "date" })}
             onChange={data => {
               machine.send("NEXT", { data: { departureTime: data.date, recurrence: data.recurrence } });
@@ -256,7 +257,12 @@ export const PublishScreenView = () => {
   );
 };
 
-const DateStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<{ date: Date; recurrence: DayOfTheWeekFlag | null }>) => {
+const DateStepView = ({
+  editable,
+  onChange,
+  initialValue,
+  onRequestEdit
+}: StepProps<{ date: Date | undefined; recurrence: DayOfTheWeekFlag | null | undefined }>) => {
   const optionsRecurrentLiane = ["Date unique", "Trajet régulier"];
   const initialMinDate = new Date(new Date().getTime() + 10 * 60000);
 
@@ -324,7 +330,11 @@ const DateStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
-              onPress={() => onChange({ date: date, recurrence: isRecurrent ? daysOfTheWeek : null })}>
+              disabled={isRecurrent && daysOfTheWeek === "0000000"}
+              onPress={() => {
+                const departureTime = isRecurrent ? getFirstFutureDate(date, daysOfTheWeek) : date;
+                onChange({ date: departureTime!, recurrence: isRecurrent ? daysOfTheWeek : null });
+              }}>
               <Center>
                 <Row spacing={4}>
                   <AppText>Valider</AppText>
