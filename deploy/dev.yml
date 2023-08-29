@@ -32,6 +32,8 @@ services:
     environment:
       DB_USER: ${MONGO_USERNAME}
       DB_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "3000:3000"
     depends_on:
       - postgis
     restart: unless-stopped
