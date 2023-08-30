@@ -5,6 +5,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import React from "react";
 import { MarkerView } from "../AppMapView";
 
+export type WayPointDisplayType = "to" | "from" | "step" | "pickup" | "deposit";
 export const WayPointDisplay = ({
   rallyingPoint,
   type,
@@ -14,7 +15,7 @@ export const WayPointDisplay = ({
 }: // showIcon = true
 {
   rallyingPoint: RallyingPoint;
-  type: "to" | "from" | "step" | "pickup" | "deposit";
+  type: WayPointDisplayType;
   active?: boolean;
   size?: number;
   offsetY?: number;
@@ -30,10 +31,10 @@ export const WayPointDisplay = ({
       icon = <AppIcon name={"pin"} color={active ? AppColors.orange : AppColors.black} size={size} />;
       break;
     case "pickup":
-      icon = <AppIcon name={"car"} color={active ? AppColors.orange : AppColors.black} size={size} />;
+      icon = <AppIcon name={"car"} color={active ? AppColors.white : AppColors.black} size={size} />;
       break;
     case "deposit":
-      icon = <AppIcon name={"directions-walk"} color={active ? AppColors.pink : AppColors.black} size={size} />;
+      icon = <AppIcon name={"directions-walk"} color={active ? AppColors.white : AppColors.black} size={size} />;
       break;
     default:
       icon = undefined;

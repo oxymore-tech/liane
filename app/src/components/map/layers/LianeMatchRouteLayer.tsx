@@ -1,14 +1,15 @@
-import { Exact, getPoint, LianeMatch, RallyingPoint, UnionUtils } from "@/api";
+import { Exact, getPoint, LianeMatch, RallyingPoint, UnionUtils, WayPoint } from "@/api";
 import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { getTripFromMatch, getTripMatch } from "@/components/trip/trip";
 import { useQuery } from "react-query";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import MapLibreGL from "@maplibre/maplibre-react-native";
+import MapLibreGL, { LineLayerStyle } from "@maplibre/maplibre-react-native";
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
 import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
+import { StyleProp } from "react-native";
 
 export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPoint; from?: RallyingPoint; loadingFeatures?: FeatureCollection }) => {
   const { services } = useContext(AppContext);
@@ -91,20 +92,23 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   );
 };
 
-export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFeatures?: FeatureCollection; match: LianeMatch }) => {
+export const RouteLayer = ({
+  wayPoints,
+  id,
+  loadingFeatures,
+  style
+}: {
+  wayPoints: WayPoint[];
+  id?: string;
+  loadingFeatures?: FeatureCollection;
+  style?: StyleProp<LineLayerStyle>;
+}) => {
   const { services } = useContext(AppContext);
+  const { data, isLoading } = useQuery(["match", wayPoints[0].rallyingPoint.id, wayPoints[wayPoints.length - 1].rallyingPoint.id], () => {
+    const wp = wayPoints.map(w => w.rallyingPoint.location);
 
-  const { wayPoints } = useMemo(() => getTripFromMatch(match), [match]);
-  //console.log(to, from, wayPoints);
-  const { data, isLoading } = useQuery(
-    ["match", wayPoints[0].rallyingPoint.id, wayPoints[wayPoints.length - 1].rallyingPoint.id, match.liane.id!],
-    () => {
-      const wp = wayPoints.map(w => w.rallyingPoint.location);
-
-      return services.routing.getRoute(wp);
-    }
-  );
-
+    return services.routing.getRoute(wp);
+  });
   const mapFeatures: GeoJSON.FeatureCollection | undefined = useMemo(() => {
     if (!data || data.geometry.coordinates.length === 0) {
       return undefined;
@@ -131,26 +135,22 @@ export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFe
     return <LianeShapeDisplayLayer lianeDisplay={loadingFeatures} loading={true} useWidth={3} />;
   }
 
+  const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
   return (
     <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
       <LineLayer
-        id={"match_route_display"}
-        filter={["!", ["get", "isWalk"]]}
+        aboveLayerID="Highway"
+        id={"match_route_display" + (id ? "_" + id : "")}
         style={{
           lineColor: AppColors.darkBlue,
-          lineWidth: 3
-        }}
-      />
-      <LineLayer
-        id={"match_remainder_display"}
-        filter={["get", "isWalk"]}
-        style={{
-          lineColor: AppColorPalettes.gray[800],
           lineWidth: 3,
-          lineCap: "round",
-          lineDasharray: [0, 2]
+          ...argStyle
         }}
       />
     </ShapeSource>
   );
+};
+export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFeatures?: FeatureCollection; match: LianeMatch }) => {
+  const { wayPoints } = useMemo(() => getTripFromMatch(match), [match]);
+  return <RouteLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={match.liane.id} />;
 };
