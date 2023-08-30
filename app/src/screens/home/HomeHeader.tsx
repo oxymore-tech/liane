@@ -429,7 +429,7 @@ export const SearchModal = (props: {
         }}>
         <AppIcon name={"search-outline"} color={AppColors.white} />
       </Pressable>
-      <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal}>
+      <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={() => setModalOpen(false)}>
         <View style={{ backgroundColor: AppColors.white, padding: 16, height: "100%", paddingTop: 16 + top }}>
           <Row style={{ marginBottom: 16, alignItems: "center" }} spacing={8}>
             <AppPressableIcon onPress={closeModal} name={"close-outline"} />

@@ -29,6 +29,7 @@ export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, set
   }, [visible]);
   return (
     <Modal
+      onBackButtonPress={() => setVisible(false)}
       onBackdropPress={() => setVisible(false)}
       isVisible={visible}
       onSwipeComplete={() => setVisible(false)}

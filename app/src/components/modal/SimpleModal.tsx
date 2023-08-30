@@ -13,7 +13,12 @@ export interface SimpleModalProps extends PropsWithChildren {
 }
 export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children }: SimpleModalProps) => {
   return (
-    <Modal onBackdropPress={() => setVisible(false)} isVisible={visible} onSwipeComplete={() => setVisible(false)} style={styles.modal}>
+    <Modal
+      onBackButtonPress={() => setVisible(false)}
+      onBackdropPress={() => setVisible(false)}
+      isVisible={visible}
+      onSwipeComplete={() => setVisible(false)}
+      style={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
         <View style={{ backgroundColor, padding: 24, margin: 32, borderRadius: 8 }}>
           <Row style={{ marginBottom: 8 }}>
