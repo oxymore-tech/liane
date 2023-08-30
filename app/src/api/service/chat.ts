@@ -123,7 +123,6 @@ export class HubServiceClient extends AbstractHubService {
   async postAnswer(notificationId: string, answer: Answer) {
     await this.checkConnection();
     await this.hub.invoke("PostAnswer", notificationId, answer);
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
   }
 
   private checkConnection = async () => {

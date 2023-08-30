@@ -81,7 +81,6 @@ export abstract class AbstractHubService implements HubService {
     }
     if (this.appStateActive) {
       this.notificationSubject.next(notification);
-      this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
       return true;
     }
     return false;

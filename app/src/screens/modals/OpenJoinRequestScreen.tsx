@@ -1,7 +1,7 @@
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -28,8 +28,15 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { services } = useContext(AppContext);
   const requestId = typeof route.params.request === "string" ? route.params.request : route.params.request.id;
   const queryClient = useQueryClient();
+  const readNotification = useRef<Promise<void> | undefined>();
 
+  useEffect(() => {
+    readNotification.current = services.notification.markAsRead(requestId!);
+  }, [requestId, services.notification]);
   const acceptRequest = async () => {
+    if (readNotification.current) {
+      await readNotification.current;
+    }
     await services.realTimeHub.postAnswer(requestId!, Answer.Accept);
     await queryClient.invalidateQueries(NotificationQueryKey);
     await queryClient.invalidateQueries(LianeQueryKey);
@@ -37,6 +44,9 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
     navigation.goBack();
   };
   const refuseRequest = async () => {
+    if (readNotification.current) {
+      await readNotification.current;
+    }
     await services.realTimeHub.postAnswer(requestId!, Answer.Reject);
     await queryClient.invalidateQueries(NotificationQueryKey);
     navigation.goBack();

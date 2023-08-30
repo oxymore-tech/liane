@@ -1,4 +1,4 @@
-import { PaginatedResponse } from "@/api";
+import { PaginatedResponse, Ref } from "@/api";
 import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
 import { Notification } from "@/api/notification";
 
@@ -7,7 +7,7 @@ export interface NotificationService {
 
   list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>>;
 
-  markAsRead(notification: Notification): Promise<void>;
+  markAsRead(notification: Ref<Notification>): Promise<void>;
 
   initUnreadNotificationCount(initialCount: Observable<number>): void;
 
@@ -15,7 +15,7 @@ export interface NotificationService {
 }
 
 export abstract class AbstractNotificationService implements NotificationService {
-  unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  readonly unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
 
   protected _sub?: SubscriptionLike;
 
@@ -28,17 +28,21 @@ export abstract class AbstractNotificationService implements NotificationService
     });
   };
 
-  receiveNotification = async (_: Notification) => {
+  protected incrementCounter = async (_: Ref<Notification>) => {
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
   };
 
   abstract list(): Promise<PaginatedResponse<Notification>>;
 
-  markAsRead = async (_: Notification) => {
+  protected decrementCounter = async (_: Ref<Notification>) => {
     if (this.unreadNotificationCount.getValue() - 1 < 0) {
       console.warn("Read count < 0");
       return;
     }
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
   };
+
+  markAsRead = this.decrementCounter;
+
+  receiveNotification = async (notification: Notification) => this.incrementCounter(notification.id!);
 }

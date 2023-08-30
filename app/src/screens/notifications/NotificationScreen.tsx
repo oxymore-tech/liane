@@ -32,7 +32,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
         notification={item}
         navigate={() => getNotificationNavigation(item)?.(navigation)}
         read={async () => {
-          await services.notification.markAsRead(item);
+          await services.notification.markAsRead(item.id!);
           if (item.answers && item.answers.length > 0) {
             refresh();
           } else {

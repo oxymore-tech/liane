@@ -22,7 +22,7 @@ export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => 
     return () => {
       sub.unsubscribe();
     };
-  }, [observable]); //TODO dep here ?
+  }, []);
   return value;
 };
 
