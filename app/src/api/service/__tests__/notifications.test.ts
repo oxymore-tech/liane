@@ -1,6 +1,6 @@
 import { AbstractHubService, HubService } from "@/api/service/interfaces/hub";
 import { AbstractNotificationService, NotificationService } from "@/api/service/interfaces/notification";
-import { ChatMessage, ConversationGroup, PaginatedResponse, Ref, User } from "@/api";
+import { ChatMessage, ConversationGroup, FullUser, PaginatedResponse, Ref, User } from "@/api";
 import { delay, interval, Subject, SubscriptionLike, firstValueFrom, take, toArray } from "rxjs";
 import { Notification } from "@/api/notification";
 
@@ -21,7 +21,7 @@ describe("notifications counter", () => {
     await expect(firstValueFrom(services.notification.unreadNotificationCount)).resolves.toEqual(1);
   });
 
-  test.skip("counter should be 0 after read", async () => {
+  test("counter should be 0 after read", async () => {
     const services = await initServices();
     const notifications = await services.notification.list();
     expect(notifications.pageSize).toEqual(1);
@@ -30,11 +30,11 @@ describe("notifications counter", () => {
 
     // Read notification
     const notification = notifications.data[0];
-    await services.notification.markAsRead(notification);
+    await services.notification.markAsRead(notification.id!);
     expect(counter).toEqual(0);
 
     // Read same notification again
-    await services.notification.markAsRead(notification);
+    await services.notification.markAsRead(notification.id!);
     expect(counter).toEqual(0);
     sub.unsubscribe();
   });
@@ -56,7 +56,9 @@ export class HubServiceMock extends AbstractHubService {
     return { pageSize: this.messages.length, data: this.messages };
   }
 
-  readonly mockMe: User = {
+  readonly mockMe: FullUser = {
+    firstName: "John",
+    lastName: "Doe",
     gender: "Unspecified",
     pictureUrl: undefined,
     id: "00000",
@@ -87,7 +89,7 @@ export class HubServiceMock extends AbstractHubService {
     this.unreadNotificationsCount = unreadNotificationsCount;
     this.notificationEmitter = notificationEmitter;
   }
-  start = async (): Promise<User> => {
+  start = async (): Promise<FullUser> => {
     await this.receiveUnreadOverview({ notificationsCount: this.unreadNotificationsCount, conversations: [] });
     // Emit notifications
     await new Promise(resolve => setTimeout(resolve, this.notificationEmitter.delay));
@@ -168,14 +170,14 @@ export class NotificationServiceMock extends AbstractNotificationService {
   }
   private notifications: Notification[] = [];
 
-  markAsRead = async (notification: Notification) => {
+  override markAsRead = async (notification: Ref<Notification>) => {
     this.notifications = this.notifications.map(n => {
-      if (n.id === notification.id) {
+      if (n.id === notification) {
         n = { ...n, recipients: n.recipients.map(r => ({ ...r, seenAt: new Date().toISOString() })) };
       }
       return n;
     });
-    // TODO super ...
+    await this.decrementCounter(notification);
   };
 
   async list(): Promise<PaginatedResponse<Notification>> {
