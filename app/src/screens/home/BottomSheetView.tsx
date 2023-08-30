@@ -19,6 +19,7 @@ import { SectionSeparator } from "@/components/Separator";
 import { UserPicture } from "@/components/UserPicture";
 import { formatDuration } from "@/util/datetime";
 import { AppButton } from "@/components/base/AppButton";
+import { AppContext } from "@/components/context/ContextProvider";
 
 const EmptyResultView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center" }]}>{props.message}</AppText>
@@ -48,13 +49,15 @@ export const LianeMatchItemView = ({
   to,
   freeSeatsCount,
   returnTime,
-  duration
+  duration,
+  userIsMember = false
 }: {
   duration: string;
   from: WayPoint;
   to: WayPoint;
   returnTime?: UTCDateTime | undefined;
   freeSeatsCount: number;
+  userIsMember?: boolean;
 }) => {
   return (
     <Column>
@@ -65,41 +68,49 @@ export const LianeMatchItemView = ({
           { alignSelf: "flex-start", width: "100%", borderColor: AppColorPalettes.gray[200], marginTop: 12, marginBottom: 8 }
         ]}
       />
-      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Column>
-          <Row spacing={2} style={{ position: "relative", left: -4, alignItems: "center" }}>
-            <AppIcon name={"clock-outline"} color={AppColorPalettes.gray[500]} size={18} />
-            <AppText>{duration}</AppText>
-          </Row>
-          <Row style={{ position: "relative", left: -4, alignItems: "center" }}>
-            <AppIcon name={returnTime ? "corner-down-right-outline" : "arrow-forward"} color={AppColorPalettes.gray[500]} size={15} />
+      {userIsMember && (
+        <Center>
+          <AppText>Vous êtes déjà membre de cette Liane.</AppText>
+        </Center>
+      )}
+      {!userIsMember && (
+        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <Column>
+            <Row spacing={2} style={{ position: "relative", left: -4, alignItems: "center" }}>
+              <AppIcon name={"clock-outline"} color={AppColorPalettes.gray[500]} size={18} />
+              <AppText>{duration}</AppText>
+            </Row>
+            <Row style={{ position: "relative", left: -4, alignItems: "center" }}>
+              <AppIcon name={returnTime ? "corner-down-right-outline" : "arrow-forward"} color={AppColorPalettes.gray[500]} size={15} />
 
-            {!returnTime && <AppText>Aller simple</AppText>}
-            {!!returnTime && (
-              <Row>
-                <AppText>{"Retour à "}</AppText>
-                <TimeView style={{ fontWeight: "bold" }} value={returnTime} />
-              </Row>
-            )}
-          </Row>
-        </Column>
-        <Column style={{ alignItems: "flex-end" }}>
-          <Row style={{ alignItems: "center" }}>
-            <AppText style={{ fontWeight: "bold", fontSize: 16 }}>5€ / </AppText>
-            <AppIcon name={"person-outline"} size={18} />
-          </Row>
-          <Row style={{ alignItems: "center" }}>
-            <AppText style={{ fontWeight: "bold", fontSize: 16 }}>{freeSeatsCount}</AppText>
-            <AppIcon name={"seat"} />
-          </Row>
-        </Column>
-      </Row>
+              {!returnTime && <AppText>Aller simple</AppText>}
+              {!!returnTime && (
+                <Row>
+                  <AppText>{"Retour à "}</AppText>
+                  <TimeView style={{ fontWeight: "bold" }} value={returnTime} />
+                </Row>
+              )}
+            </Row>
+          </Column>
+          <Column style={{ alignItems: "flex-end" }}>
+            <Row style={{ alignItems: "center" }}>
+              <AppText style={{ fontWeight: "bold", fontSize: 16 }}>5€ / </AppText>
+              <AppIcon name={"person-outline"} size={18} />
+            </Row>
+            <Row style={{ alignItems: "center" }}>
+              <AppText style={{ fontWeight: "bold", fontSize: 16 }}>{freeSeatsCount}</AppText>
+              <AppIcon name={"seat"} />
+            </Row>
+          </Column>
+        </Row>
+      )}
     </Column>
   );
 };
 
 export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) => {
   const machine = useContext(HomeMapContext);
+  const { user } = useContext(AppContext);
   const [state] = useActor(machine);
   const displayedLianes = state.context.matches ?? [];
   const { navigation } = useAppNavigation();
@@ -153,13 +164,18 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   const renderItem = ({ item }: { item: any }) => {
     const driver = item.lianeMatch.liane.members.find((l: LianeMember) => l.user.id === item.lianeMatch.liane.driver.user)!.user;
     const duration = formatDuration(getTotalDuration(item.trip.wayPoints.slice(1)));
+    const userIsMember = !!item.lianeMatch.liane.members.find(m => m.user.id === user!.id);
     return (
       <Column>
         <AppPressableOverlay
           foregroundColor={WithAlpha(AppColors.black, 0.1)}
           style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 }}
           onPress={() => {
-            machine.send("DETAIL", { data: item.lianeMatch });
+            if (userIsMember) {
+              navigation.navigate("LianeDetail", { liane: item.lianeMatch.liane });
+            } else {
+              machine.send("DETAIL", { data: item.lianeMatch });
+            }
           }}>
           <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
             <UserPicture url={undefined} size={24} id={driver.id} />
@@ -172,6 +188,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
               to={item.trip.wayPoints[item.trip.wayPoints.length - 1]}
               freeSeatsCount={item.lianeMatch.freeSeatsCount}
               returnTime={item.returnTime}
+              userIsMember={userIsMember}
             />
           </View>
         </AppPressableOverlay>
