@@ -89,14 +89,14 @@ export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "
 const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
   if (liane.state === "NotStarted" || liane.state === "Started") {
     const [_, delta] = getTimeForUser(liane, user, "from");
-    if (delta > 0 && delta < 900) {
+    if (delta > 0 && delta < 120) {
       if (liane.members.length > 1) {
         return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
       }
     } else if (delta <= 0) {
       const [_, deltaArrival] = getTimeForUser(liane, user, "to");
       if (deltaArrival <= 0) {
-        return { status: "Finished", nextUpdateMillis: deltaArrival * 1000 };
+        return { status: "Started" };
       } else {
         return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
       }
@@ -126,13 +126,19 @@ export const useLianeStatus = (liane: Liane | undefined): LianeStatus | undefine
   const [status, setStatus] = useState(liane ? getLianeStatus(liane, userId) : undefined);
 
   useEffect(() => {
+    if (!liane) {
+      return;
+    }
+    setStatus(getLianeStatus(liane, userId));
+  }, [liane, userId]);
+  useEffect(() => {
     if (liane && status?.nextUpdateMillis !== undefined) {
       const timeout = setTimeout(() => {
         setStatus(getLianeStatus(liane, userId));
       }, status.nextUpdateMillis);
       return () => clearTimeout(timeout);
     }
-  }, [status?.nextUpdateMillis, liane?.id, userId]);
+  }, [status?.nextUpdateMillis, liane, userId]);
 
   return status?.status;
 };

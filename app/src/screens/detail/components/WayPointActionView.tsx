@@ -1,6 +1,6 @@
-import { Liane, WayPoint } from "@/api";
+import { Liane, TrackedMemberLocation, WayPoint } from "@/api";
 import { useLianeStatus } from "@/components/trip/trip";
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -12,6 +12,28 @@ import { AppText } from "@/components/base/AppText";
 import { formatTime } from "@/api/i18n";
 import { addSeconds } from "@/util/datetime";
 import { UserPicture } from "@/components/UserPicture";
+
+const EstimatedDelayDisplay = ({ locationUpdate, initialTime }: { locationUpdate: TrackedMemberLocation; initialTime: Date }) => {
+  const initialTimeMillis = initialTime.getTime();
+  const [delay, setDelay] = useState(new Date().getTime() / 1000 - initialTimeMillis / 1000 + locationUpdate.delay);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("update delay", new Date().getTime() / 1000 - initialTimeMillis / 1000);
+      setDelay(new Date().getTime() / 1000 - initialTimeMillis / 1000 + locationUpdate.delay);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [initialTimeMillis, locationUpdate.delay]);
+
+  const estimated = addSeconds(initialTime, delay);
+  const isOnTime = estimated.getMinutes() === initialTime.getMinutes() && estimated.getHours() === initialTime.getHours();
+  return (
+    <Row style={{ alignItems: "center" }}>
+      <AppIcon name={"arrowhead-right-outline"} size={16} color={AppColorPalettes.gray[500]} />
+      {isOnTime && <AppText style={{ color: AppColorPalettes.gray[500] }}>Départ à l'heure prévue</AppText>}
+      {!isOnTime && <AppText style={{ color: AppColorPalettes.gray[500] }}>Départ estimé à {formatTime(estimated)}</AppText>}
+    </Row>
+  );
+};
 
 export const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; liane: Liane }) => {
   const lianeStatus = useLianeStatus(liane);
@@ -80,12 +102,7 @@ export const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; li
         )}
       <Row style={{ justifyContent: "space-between" }}>
         {!showEstimate && <View style={{ flex: 1 }} />}
-        {showEstimate && (
-          <Row style={{ alignItems: "center" }}>
-            <AppIcon name={"arrowhead-right-outline"} size={16} />
-            <AppText>Départ estimé à {formatTime(addSeconds(new Date(wayPoint.eta), lastLocUpdate.delay))}</AppText>
-          </Row>
-        )}
+        {showEstimate && <EstimatedDelayDisplay locationUpdate={lastLocUpdate} initialTime={new Date(wayPoint.eta)} />}
         <Row style={{ position: "relative", left: 12 * (liane.members.length - 1), justifyContent: "flex-end" }}>
           {liane.members
             .filter(m => m.from === wayPoint.rallyingPoint.id)

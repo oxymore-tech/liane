@@ -129,7 +129,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
 
           {tripPassengers &&
             tripPassengers.map(p => {
-              return <PassengerLocationMarker user={p.user} defaultLocation={p.departurePoint.location} />;
+              return <PassengerLocationMarker key={p.user.id!} user={p.user} defaultLocation={p.departurePoint.location} />;
             })}
           {tripMatch &&
             tripMatch.wayPoints.map((w, i) => {

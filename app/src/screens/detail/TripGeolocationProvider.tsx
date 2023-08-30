@@ -32,18 +32,20 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
     for (let m of liane.members) {
       subjects[m.user.id!] = new BehaviorSubject<TrackedMemberLocation | null>(null);
     }
-    // Only subscribe to driver for now
-    const sus = services.realTimeHub.subscribeToPosition(liane.id!, liane.driver.user, l => {
-      console.debug(l);
-      subjects[liane.driver.user].next(l);
-    });
+    const subscriptions = liane.members.map(member =>
+      services.realTimeHub.subscribeToPosition(liane.id!, member.user.id!, l => {
+        subjects[member.user.id!].next(l);
+      })
+    );
     setObservables(subjects);
     return () => {
-      sus.then(s => {
-        s.unsubscribe();
-      });
+      subscriptions.forEach(sus =>
+        sus.then(s => {
+          s.unsubscribe();
+        })
+      );
     };
-  }, [liane.id!]);
+  }, [liane, services.realTimeHub]);
 
   if (geolocRunning === undefined) {
     return null;
@@ -55,7 +57,6 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
       return observables[memberId]?.subscribe(callback);
     }
   };
-  console.log(value);
 
   return <TripGeolocationContext.Provider value={value}>{children}</TripGeolocationContext.Provider>;
 };
