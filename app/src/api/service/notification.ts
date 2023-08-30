@@ -1,5 +1,5 @@
 import notifee, { AndroidAction, AndroidImportance, Event, EventType, TriggerType } from "@notifee/react-native";
-import { FullUser, PaginatedResponse, RallyingPoint } from "@/api";
+import { FullUser, PaginatedResponse, RallyingPoint, Ref } from "@/api";
 import { get, patch } from "@/api/http";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { AuthService } from "@/api/service/auth";
@@ -18,17 +18,13 @@ export class NotificationServiceClient extends AbstractNotificationService {
     const paramString = cursor ? `?cursor=${cursor}` : "";
     return await get("/notification" + paramString);
   }
-  markAsRead = async (notification: Notification) => {
-    await patch(`/notification/${notification.id}`);
-    if (this.unreadNotificationCount.getValue() - 1 < 0) {
-      console.warn("Read count < 0");
-      return;
-    }
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
+  override markAsRead = async (notification: Ref<Notification>) => {
+    await patch(`/notification/${notification}`);
+    await this.decrementCounter(notification);
   };
 
   override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
+    await this.incrementCounter(notification.id!);
     if (display) {
       await displayNotifeeNotification(notification);
     }

@@ -59,6 +59,7 @@ function AppTabBar(props: BottomTabBarProps) {
 function Home() {
   const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  console.log(notificationCount);
   const iconSize = 24;
   return (
     <Tab.Navigator

@@ -12,20 +12,22 @@ public sealed class LianeMemberRejectedHandler : IEventListener<LianeEvent.Membe
   private readonly ILianeService lianeService; 
   private readonly INotificationService notificationService;
   private readonly ICurrentContext currentContext;
+  private readonly IRallyingPointService rallyingPointService;
 
-  public LianeMemberRejectedHandler(ILianeService lianeService, INotificationService notificationService, ICurrentContext currentContext)
+  public LianeMemberRejectedHandler(ILianeService lianeService, INotificationService notificationService, ICurrentContext currentContext, IRallyingPointService rallyingPointService)
   {
     this.lianeService = lianeService;
     this.notificationService = notificationService;
     this.currentContext = currentContext;
+    this.rallyingPointService = rallyingPointService;
   }
 
   public async Task OnEvent(LianeEvent.MemberRejected e, Ref<Api.User.User>? sender = null)
   {
     var liane = await lianeService.Get(e.Liane);
-    var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
-    await notificationService.SendEvent("Demande déclinée", 
-      "Votre demande de trajet à destination de "+destination+" n'a pas été acceptée.", 
+    var destination = await rallyingPointService.Get(e.To);
+    await notificationService.SendEvent("Demande déclinée",
+      $"Votre demande de trajet à destination de {destination.Label} n'a pas été acceptée.", 
       sender ?? currentContext.CurrentUser().Id,
       e.Member, 
       e);
