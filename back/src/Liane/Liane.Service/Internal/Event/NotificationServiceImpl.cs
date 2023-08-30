@@ -94,9 +94,13 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     var filter = Builders<Notification>.Filter.Empty;
     if (notificationFilter.Recipient is not null)
     {
-      filter &= Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.SeenAt == null);
+      filter &= 
+        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.SeenAt == null)
+        | (
+          Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.Answer == null)
+          & Builders<Notification>.Filter.SizeGt(r => r.Answers, 0)
+        );
     }
-
     if (notificationFilter.Sender is not null)
     {
       filter &= Builders<Notification>.Filter.Eq(r => r.CreatedBy, notificationFilter.Sender);
