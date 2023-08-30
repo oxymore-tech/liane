@@ -24,5 +24,6 @@ public interface IPostgisService
   Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch);
   Task Clear(ImmutableList<string> lianes);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to);
+  Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to);
   Task<IOngoingTripSession> CreateOngoingTrip(string id, LineString route);
 }

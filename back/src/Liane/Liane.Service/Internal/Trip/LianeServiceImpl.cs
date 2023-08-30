@@ -30,9 +30,8 @@ using LngLatTuple = Tuple<double, double>;
 public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Liane>, ILianeService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
-  private const int MaxDepositDeltaInMeters = 1000;
+  private const int MaxDepositDeltaInMeters = 2000;
   private const int LianeMatchPageDeltaInHours = 24;
-  private const int SnapDistanceInMeters = 10000;
 
   private readonly IRoutingService routingService;
   private readonly IRallyingPointService rallyingPointService;
@@ -202,7 +201,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     var timer = new Stopwatch();
     timer.Start();
-    var results = await postgisService.GetMatchingLianes(targetRoute, lowerBound, upperBound);
+
+    var results =
+      await postgisService.GetMatchingLianes(from.Location, to.Location, lowerBound, upperBound);
+    results = results.Concat(await postgisService.GetMatchingLianes(targetRoute, lowerBound, upperBound)).ToImmutableList();
+    
     timer.Stop();
     logger.LogDebug("Posgis match {count} lianes in {Elapsed} ms", results.Count, timer.ElapsedMilliseconds);
 
@@ -212,11 +215,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     var hasAvailableSeats = Builders<LianeDb>.Filter.Gte(l => l.TotalSeatCount, -filter.AvailableSeats);
 
-    var userIsMember = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == currentContext.CurrentUser().Id);
+   // var userIsMember = Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == currentContext.CurrentUser().Id);
 
     timer.Restart();
     var lianes = await Mongo.GetCollection<LianeDb>()
-      .Find(isDriverSearch & hasAvailableSeats & !userIsMember & Builders<LianeDb>.Filter.In(l => l.Id, resultDict.Keys.Select(k => (string)k)))
+      .Find(isDriverSearch & hasAvailableSeats & Builders<LianeDb>.Filter.In(l => l.Id, resultDict.Keys.Select(k => (string)k)))
       .ToListAsync(cancellationToken);
     timer.Stop();
     logger.LogDebug("Find {count} compatible liane by filter in {Elapsed} ms", lianes.Count, timer.ElapsedMilliseconds);
@@ -368,10 +371,10 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       update = update.Set(l => l.Conversation, null);
     }
 
-    await Mongo.GetCollection<LianeDb>()
-      .UpdateOneAsync(l => l.Id == liane.Id, update);
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id, update, new FindOneAndUpdateOptions<LianeDb>{ReturnDocument = ReturnDocument.After});
 
-    var updatedLiane = await MapEntity(toUpdate with { Members = newMembers });
+    var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
     return updatedLiane;
   }
@@ -604,8 +607,10 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     foreach (var candidate in new List<LianeMatchCandidate?> { detourCandidate, partialCandidate }.Where(c => c is not null))
     {
-      pickupPoint = await SnapOrDefault(candidate!.Pickup);
-      depositPoint = await SnapOrDefault(candidate.Deposit);
+     
+      pickupPoint = await rallyingPointService.Snap(candidate!.Pickup, 1500);
+      depositPoint = await rallyingPointService.Snap(candidate!.Deposit, 1500);
+    
 
       if (pickupPoint is null || depositPoint is null || pickupPoint == depositPoint)
       {
@@ -623,7 +628,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       }
 
       var delta = newWayPoints.TotalDuration() - initialTripDuration;
-      var maxBound = filter.MaxDeltaInSeconds ?? Math.Min(initialTripDuration * 0.25 + 60, MaxDeltaInSeconds);
+      var maxBound = filter.MaxDeltaInSeconds ?? Math.Min(initialTripDuration * 0.25 + 90, MaxDeltaInSeconds);
       if (delta > maxBound)
       {
         // Too far for driver
@@ -667,11 +672,6 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     }
 
     return null;
-  }
-
-  private async Task<RallyingPoint?> SnapOrDefault(LatLng intersection)
-  {
-    return await rallyingPointService.SnapViaRoute(intersection, SnapDistanceInMeters);
   }
 
   public async Task<Api.Trip.Liane> UpdateDepartureTime(Ref<Api.Trip.Liane> liane, DateTime departureTime)

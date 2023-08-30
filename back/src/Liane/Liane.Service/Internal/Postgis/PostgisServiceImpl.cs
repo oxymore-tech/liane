@@ -51,6 +51,15 @@ namespace Liane.Service.Internal.Postgis;
     return candidates.ToImmutableList();
   }
 
+  public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to)
+  {
+    using var connection = db.NewConnection();
+    var candidates = await connection.QueryAsync<LianeMatchCandidate>(
+      "SELECT liane_id as liane, pickup, deposit, l_start as start_fraction, l_end as end_fraction, mode FROM match_liane_by_rallying_points(@pickup_location::geometry(Point, 4326), @deposit_location::geometry(Point, 4326), @from, @to)",
+      new { from = from.ToUniversalTime(), to = to.ToUniversalTime(), pickup_location = pickup, deposit_location = deposit });
+    return candidates.ToImmutableList();
+  }
+
   private async Task<BatchGeometryUpdate> ComputeLianeBatch(BatchGeometryUpdateInput input, Api.Trip.Liane liane)
   {
     var wayPoints = new List<LianeWaypointDb>();

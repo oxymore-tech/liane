@@ -33,8 +33,9 @@ CREATE TABLE IF NOT EXISTS rallying_point
   PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS ongoing_trip(
-  id          varchar(24),
+CREATE TABLE IF NOT EXISTS ongoing_trip
+(
+  id       varchar(24),
   geometry geometry(LineString, 4326),
   PRIMARY KEY (id)
 );
@@ -310,12 +311,12 @@ CREATE OR REPLACE
   RETURNS bytea AS
 $$
 DECLARE
-  mvt             bytea;
-  after           timestamp;
-  timezone_offset integer;
-  min_length      integer; -- min displayed distance in km
-  simplify_factor double precision;
-  from_location   text;
+  mvt                     bytea;
+  after                   timestamp;
+  timezone_offset         integer;
+  min_length              integer; -- min displayed distance in km
+  simplify_factor         double precision;
+  from_location           text;
   points_cluster_distance double precision;
 BEGIN
   SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
@@ -403,9 +404,11 @@ BEGIN
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids
                              from lianes_parts
                                     inner join clipped_points on
-                                      case when z > 7 then
-                               st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
-                                          500) else clipped_points.id = lianes_parts.destination end
+                               case
+                                 when z > 7 then
+                                   st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                              500)
+                                 else clipped_points.id = lianes_parts.destination end
                              group by id, label, location, type, address, zip_code, city, place_count),
 
        -- Create clusters along segments
@@ -413,17 +416,27 @@ BEGIN
        -- (2) : join subdivided lines and its suggestion points
        -- (3) : remove duplicated points occurrences then make clusters
        -- (4) : remove clustered points from suggestions
-       subdivided as (select liane_id, destination, geometry as geom, (points_cluster_distance*i/len) as l_start,  (points_cluster_distance*(i+1)/len) as l_end, len, i
+       subdivided as (select liane_id, destination, geometry as geom, (points_cluster_distance * i / len) as l_start, (points_cluster_distance * (i + 1) / len) as l_end, len, i
                       from (select *, st_length(geometry::geography) as len from longest_lianes where points_cluster_distance is not null and z > 7) as measured
                              cross join lateral (select i from generate_series(0, floor(len / points_cluster_distance)::integer - 1) as t(i)) as iterator),
-       subdivided_suggestions as (select *, row_number() over (partition by id) as point_occurence from
-         (select subdivided.liane_id, destination, i,
-         st_lineinterpolatepoint(geom, (l_start+l_end)/2) as middle,
-         suggestion_points.*
-         from subdivided inner join suggestion_points on subdivided.liane_id = any(suggestion_points.liane_ids)
-         ) as x  where st_distancesphere(middle, location) < points_cluster_distance/2),
-       clustered_points as (select middle as location, array_agg(id) as ids, count(id) as point_count from subdivided_suggestions where point_occurence = 1 and id != destination group by middle having count(id) > 1),
-       solo_points as (select suggestion_points.* from suggestion_points left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id where c.id is null),
+       subdivided_suggestions as (select *, row_number() over (partition by id) as point_occurence
+                                  from (select subdivided.liane_id,
+                                               destination,
+                                               i,
+                                               st_lineinterpolatepoint(geom, (l_start + l_end) / 2) as middle,
+                                               suggestion_points.*
+                                        from subdivided
+                                               inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
+                                  where st_distancesphere(middle, location) < points_cluster_distance / 2),
+       clustered_points as (select middle as location, array_agg(id) as ids, count(id) as point_count
+                            from subdivided_suggestions
+                            where point_occurence = 1 and id != destination
+                            group by middle
+                            having count(id) > 1),
+       solo_points as (select suggestion_points.*
+                       from suggestion_points
+                              left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id
+                       where c.id is null),
 
        other_points as (select id,
                                label,
@@ -451,14 +464,17 @@ BEGIN
                       select *, null as liane_ids, 'active' as point_type, null::integer as point_count
                       from other_points
                       union
-                      select null as id,
-                             null as label,
+                      select null         as id,
+                             null         as label,
                              location,
-                             null as type,
-                             null as address,
-                             null as zip_code,
-                             null as city,
-                             null as place_count, null as liane_ids, 'suggestion' as point_type, point_count::integer
+                             null         as type,
+                             null         as address,
+                             null         as zip_code,
+                             null         as city,
+                             null         as place_count,
+                             null         as liane_ids,
+                             'suggestion' as point_type,
+                             point_count::integer
                       from clustered_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
@@ -582,17 +598,19 @@ BEGIN
                           from rallying_point
                           where z >= 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-                          and st_distancesphere(from_location, location) > 500 -- don't display points that are too close from pickup location
+                            and st_distancesphere(from_location, location) > 200 -- don't display points that are too close from pickup location
 
        ),
 
        suggestion_points as (select clipped_points.*,
-                                    string_agg(lianes_parts.liane_id, ',') as liane_ids,
+                                    string_agg(lianes_parts.liane_id, ',')                                                               as liane_ids,
                                     case when bool_or(clipped_points.id = lianes_parts.destination) then 'deposit' else 'suggestion' end as point_type
                              from lianes_parts
                                     inner join clipped_points on
-                               case when z >= 6 then st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
-                                          500) else clipped_points.id = lianes_parts.destination end
+                               case
+                                 when z >= 6 then st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                                             500)
+                                 else clipped_points.id = lianes_parts.destination end
 
                              group by id, label, location, type, address, zip_code, city, place_count),
        other_points as (select id,
@@ -715,25 +733,31 @@ CREATE OR REPLACE
           )
 AS
 $$
-with filtered_lianes as (select *
+with time_filtered_lianes as (select *
                          from liane_waypoint
                          where eta between after and before),
      filtered_segments as (select st_snaptogrid(segment.geometry, 0.000001) as geometry, from_id, to_id
                            from segment
                            where st_distancesphere(st_envelope(geom), st_envelope(geometry)) <
                                  st_length(st_boundingdiagonal(geometry)::geography)),
-     lianes as (select filtered_lianes.liane_id,
-                       ST_LineMerge(st_collect(filtered_segments.geometry order by eta)) as geometry,
+     geo_filtered_lianes as (select distinct time_filtered_lianes.liane_id
+                             from filtered_segments
+                                    inner join time_filtered_lianes
+                                               on filtered_segments.from_id = time_filtered_lianes.from_id and
+                                                  filtered_segments.to_id = time_filtered_lianes.to_id),
+     lianes as (select geo_filtered_lianes.liane_id,
+                       ST_LineMerge(st_collect(segment.geometry order by eta)) as geometry,
                        st_removerepeatedpoints(
                          st_union(
-                           st_collect(st_startpoint(filtered_segments.geometry)),
-                           st_collect(st_endpoint(filtered_segments.geometry)))
+                           st_collect(st_startpoint(segment.geometry)),
+                           st_collect(st_endpoint(segment.geometry)))
                          )                                                               as waypoints
-                from filtered_segments
-                       inner join filtered_lianes
-                                  on filtered_segments.from_id = filtered_lianes.from_id and
-                                     filtered_segments.to_id = filtered_lianes.to_id
-                group by liane_id),
+                from geo_filtered_lianes
+                       inner join time_filtered_lianes on geo_filtered_lianes.liane_id = time_filtered_lianes.liane_id
+                       inner join segment
+                                  on segment.from_id = time_filtered_lianes.from_id and
+                                     segment.to_id = time_filtered_lianes.to_id
+                group by geo_filtered_lianes.liane_id),
      exact_candidates as (select *,
                                  ST_LineLocatePoint(geometry, st_startpoint(geom)) as l_start,
                                  ST_LineLocatePoint(geometry, st_endpoint(geom))   as l_end
@@ -777,21 +801,20 @@ with filtered_lianes as (select *
                                             'partial'                                  as mode
                                      from (select liane_id,
                                                   geometry,
-                                                  min(least(l_start, l_end)) as l_start,
-                                                  max(greatest(l_start, l_end)) as l_end,
-                                                  min(least(tl_start, tl_end)) as tl_start,
+                                                  min(least(l_start, l_end))      as l_start,
+                                                  max(greatest(l_start, l_end))   as l_end,
+                                                  min(least(tl_start, tl_end))    as tl_start,
                                                   max(greatest(tl_start, tl_end)) as tl_end
                                            from (select *,
                                                         st_linelocatepoint(geometry, st_startpoint(intersections)) as l_start,
                                                         st_linelocatepoint(geometry, st_endpoint(intersections))   as l_end, -- will be null if intersection is a point
-                                                        st_linelocatepoint(geom, st_endpoint(intersections)) as tl_end,
-                                                        st_linelocatepoint(geom, st_startpoint(intersections)) as tl_start
+                                                        st_linelocatepoint(geom, st_endpoint(intersections))       as tl_end,
+                                                        st_linelocatepoint(geom, st_startpoint(intersections))     as tl_start
 
-                                                   from partial_candidates) as x
+                                                 from partial_candidates) as x
                                            group by liane_id, geometry) as intersections
-                                     -- keep matches that cover at least 35% of the target route
-                                      where tl_end - tl_start > 0.35
-                                     ),
+                                          -- keep matches that cover at least 35% of the target route
+                                     where tl_end - tl_start > 0.35),
      candidates as
        (select * from filtered_exact_candidates union all select * from filtered_detour_candidates union all select * from filtered_partial_candidates)
 
@@ -803,3 +826,50 @@ $$ LANGUAGE SQL
   RETURNS NULL ON NULL INPUT
   PARALLEL SAFE;
 
+
+CREATE OR REPLACE
+  FUNCTION match_liane_by_rallying_points(pickup_location geometry(Point, 4326), deposit_location geometry(Point, 4326), after timestamp with time zone, before timestamp with time zone)
+  RETURNS table
+          (
+            liane_id text,
+            pickup   geometry,
+            deposit  geometry,
+            l_start  double precision,
+            l_end    double precision,
+            mode     text
+          )
+AS
+$$
+with time_filtered_lianes as (select *
+                              from liane_waypoint
+                              where eta between after and before),
+     filtered_segments as (select st_snaptogrid(segment.geometry, 0.000001) as geometry, from_id, to_id
+                           from segment
+                           where st_distancesphere(geometry, pickup_location) < 500
+                              or st_distancesphere(geometry, deposit_location) < 500),
+     geo_filtered_lianes as (select distinct time_filtered_lianes.liane_id
+                             from filtered_segments
+                                    inner join time_filtered_lianes
+                                               on filtered_segments.from_id = time_filtered_lianes.from_id and
+                                                  filtered_segments.to_id = time_filtered_lianes.to_id),
+     lianes as (select geo_filtered_lianes.liane_id,
+                       ST_LineMerge(st_collect(segment.geometry order by eta)) as geometry
+                from geo_filtered_lianes
+                       inner join time_filtered_lianes on geo_filtered_lianes.liane_id = time_filtered_lianes.liane_id
+                       inner join segment
+                                  on segment.from_id = time_filtered_lianes.from_id and
+                                     segment.to_id = time_filtered_lianes.to_id
+                group by geo_filtered_lianes.liane_id),
+     candidates as (select liane_id, st_linelocatepoint(geometry, pickup_location) as l_start, st_linelocatepoint(geometry, deposit_location) as l_end
+                    from lianes
+                    where st_linelocatepoint(geometry, pickup_location) < st_linelocatepoint(geometry, deposit_location)
+                      and st_distancesphere(geometry, pickup_location) < 500
+                      and st_distancesphere(geometry, deposit_location) < 500)
+select liane_id, pickup_location as pickup, deposit_location as deposit, l_start, l_end, 'partial' as mode
+from candidates;
+
+
+$$ LANGUAGE SQL
+  IMMUTABLE
+  RETURNS NULL ON NULL INPUT
+  PARALLEL SAFE;
