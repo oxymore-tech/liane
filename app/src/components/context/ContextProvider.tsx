@@ -1,6 +1,5 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, FullUser, LatLng, LocationPermissionLevel } from "@/api";
-import { getLastKnownLocation } from "@/api/location";
+import { AuthUser, FullUser, LatLng } from "@/api";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
 import { initializeRum, registerRumUser } from "@/api/rum";
@@ -14,8 +13,6 @@ import Splashscreen from "../../../native-modules/splashscreen";
 import { SubscriptionLike } from "rxjs";
 
 interface AppContextProps {
-  locationPermission: LocationPermissionLevel;
-  setLocationPermission: (locationPermissionGranted: LocationPermissionLevel) => void;
   position?: LatLng;
   user?: FullUser;
   logout: () => void;
@@ -28,8 +25,6 @@ interface AppContextProps {
 const SERVICES = CreateAppServices();
 
 export const AppContext = createContext<AppContextProps>({
-  locationPermission: LocationPermissionLevel.NEVER,
-  setLocationPermission: () => {},
   logout: () => {},
   login: () => {},
   services: SERVICES,
@@ -39,12 +34,9 @@ export const AppContext = createContext<AppContextProps>({
 
 async function initContext(service: AppServices): Promise<{
   user: FullUser | undefined;
-  locationPermission: LocationPermissionLevel;
-  position: LatLng;
   online: boolean;
 }> {
   let authUser = await service.auth.authUser();
-
   let user;
   let online = true;
 
@@ -83,10 +75,7 @@ async function initContext(service: AppServices): Promise<{
     }
   }
 
-  const locationPermission = LocationPermissionLevel.NEVER;
-  const position = await getLastKnownLocation();
-
-  return { user, locationPermission, position, online };
+  return { user, online };
 }
 
 async function destroyContext(service: AppServices): Promise<void> {
@@ -99,8 +88,6 @@ interface ContextProviderProps {
 
 interface ContextProviderState {
   appLoaded: boolean;
-  locationPermission: LocationPermissionLevel;
-  position?: LatLng;
   user?: FullUser;
   status: "online" | "offline";
   appState: AppStateStatus;
@@ -115,9 +102,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
-      locationPermission: LocationPermissionLevel.NEVER,
       appLoaded: false,
-      position: undefined,
       user: undefined,
       status: "offline",
       appState: "active"
@@ -134,8 +119,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       this.setState(prev => ({
         ...prev,
         user: p.user,
-        locationPermission: p.locationPermission,
-        position: p.position,
         appLoaded: true,
         status: p.online ? "online" : "offline"
       }));
@@ -219,19 +202,13 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
   }
 
-  setLocationPermission = (locationPermissionGranted: LocationPermissionLevel) => {
-    this.setState(prev => ({
-      ...prev,
-      locationPermission: locationPermissionGranted
-    }));
-  };
-
   setAuthUser = async (a?: AuthUser) => {
     try {
       let user: FullUser;
       if (a) {
         await registerRumUser(a);
         user = await SERVICES.realTimeHub.start();
+        console.debug("[LOGIN]", JSON.stringify(user));
       }
       this.setState(prev => ({
         ...prev,
@@ -241,11 +218,16 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       console.error("[INIT] Problem while setting auth user : ", e);
     }
   };
-
+  logout = async () => {
+    await SERVICES.realTimeHub.stop();
+    await SERVICES.auth.logout();
+    console.debug("[LOGOUT] Disconnected.");
+    await this.setAuthUser(undefined);
+  };
   render() {
     const { children } = this.props;
-    const { appLoaded, locationPermission, position, user, status, appState } = this.state;
-    const { setLocationPermission, setAuthUser } = this;
+    const { appLoaded, user, status, appState } = this.state;
+    const { setAuthUser: login, logout } = this;
 
     if (!appLoaded) {
       return (
@@ -261,23 +243,11 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       );
     }
 
-    const logout = async () => {
-      await SERVICES.realTimeHub.stop();
-      await SERVICES.auth.logout();
-      console.debug("[LOGOUT] Disconnected.");
-      await setAuthUser(undefined);
-    };
-
-    const login = setAuthUser;
-
     return (
       <AppContext.Provider
         value={{
-          locationPermission,
-          setLocationPermission,
           logout,
           login,
-          position,
           user,
           status,
           appState,

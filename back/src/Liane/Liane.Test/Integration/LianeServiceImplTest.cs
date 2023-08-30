@@ -432,17 +432,17 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var now = DateTime.UtcNow;
     var bertrand = Fakers.FakeDbUsers[2];
     var departureTime = now.AddHours(5);
-    
+    var expectedCount = departureTime.Day == now.Day ? 4 : 3;
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
     var created = await testedService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(3), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
     Assert.NotNull(created.Recurrence);
     
     var lianes = await testedService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
-    Assert.AreEqual(8, lianes.Data.Count);
+    Assert.AreEqual(expectedCount*2, lianes.Data.Count);
 
     var forthTrips = lianes.Data.Where(l => l.Return is not null).ToImmutableList();
-    Assert.AreEqual(4, forthTrips.Count);
+    Assert.AreEqual(expectedCount, forthTrips.Count);
     Assert.True(forthTrips.All(l => l.Recurrence == created.Recurrence));
     Assert.True((await forthTrips.SelectAsync(async l =>
     {

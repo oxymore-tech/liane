@@ -6,9 +6,7 @@ import {
   PaginatedResponse,
   UTCDateTime,
   LianeMatchDisplay,
-  NearestLinks,
   Feedback,
-  RallyingPoint,
   Ref,
   LianeUpdate,
   DayOfTheWeekFlag,
@@ -28,13 +26,11 @@ export interface LianeService {
   list(states: LianeState[], cursor?: string, pageSize?: number, asc?: boolean): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
-  match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
-  pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks>;
+  match(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   getContact(id: string, memberId: string): Promise<string>;
   getRecurrence(id: string): Promise<LianeRecurrence>;
-
   addRecurrence(lianeId: string, recurrence: DayOfTheWeekFlag): Promise<void>;
   updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
   updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void>;
@@ -43,7 +39,6 @@ export interface LianeService {
   pause(id: string): Promise<void>;
   unpause(id: string): Promise<void>;
   cancel(id: string): Promise<void>;
-
   leave(id: string, userId: string): Promise<void>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
@@ -85,13 +80,8 @@ export class LianeServiceClient implements LianeService {
     return await postAs<JoinRequest>(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
-  async match2(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
+  async match(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
     return await postAs<LianeMatchDisplay>("/liane/match/geojson", { body: filter });
-  }
-
-  async pickupLinks(pickup: Ref<RallyingPoint>, lianes: Ref<Liane>[]): Promise<NearestLinks> {
-    const body = { pickup, lianes };
-    return await postAs("/liane/links", { body });
   }
 
   async listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>> {
