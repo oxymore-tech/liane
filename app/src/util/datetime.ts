@@ -21,7 +21,7 @@ export const formatDuration = (duration: TimeInSeconds) => {
 };
 
 export const addSeconds = (date: Date, seconds: number) => {
-  date.setSeconds(seconds + date.getUTCSeconds());
+  new Date(date).setSeconds(seconds + date.getUTCSeconds());
   return new Date(date);
 };
 

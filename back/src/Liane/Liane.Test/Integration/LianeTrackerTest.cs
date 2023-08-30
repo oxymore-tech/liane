@@ -27,7 +27,7 @@ public class LianeTrackerTest: BaseIntegrationTest
   {
     var departureTime = DateTime.Parse("2023-08-08T16:12:53.061Z");
     var liane =  new global::Liane.Api.Trip.Liane(
-      "x",
+      "6410edc1e02078e7108a5895",
       userId,
       DateTime.Today,
       departureTime,
@@ -61,7 +61,7 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!);
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!);
  
     var pings = geojsonPings.Features.Select(f =>
     {

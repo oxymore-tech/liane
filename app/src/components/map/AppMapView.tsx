@@ -58,7 +58,6 @@ export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: MapMovedCallback;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
-  onSelectFeatures?: (features: { location: LatLng; properties: any }[]) => void;
   showGeolocation?: boolean;
   bounds?: DisplayBoundingBox | undefined;
   onMapLoaded?: () => void;
@@ -66,16 +65,7 @@ export interface AppMapViewProps extends PropsWithChildren {
 
 const AppMapView = forwardRef(
   (
-    {
-      onRegionChanged,
-      onStartMovingRegion,
-      children,
-      showGeolocation = false,
-      bounds,
-      onMapLoaded,
-      onStopMovingRegion,
-      onSelectFeatures
-    }: AppMapViewProps,
+    { onRegionChanged, onStartMovingRegion, children, showGeolocation = false, bounds, onMapLoaded, onStopMovingRegion }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const { services } = useContext(AppContext);
@@ -209,37 +199,6 @@ const AppMapView = forwardRef(
           style={styles.map}
           {...MapStyleProps}
           logoEnabled={false}
-          onPress={async f => {
-            if (__DEV__ && "coordinates" in f.geometry) {
-              //console.debug(JSON.stringify(f.geometry.coordinates));
-              //@ts-ignore
-              const pointInView = await mapRef.current?.getPointInView(f.geometry.coordinates)!;
-              //console.debug(wd.width, wd.height, wd.scale, JSON.stringify(pointInView));
-              /*const q = await mapRef.current?.queryRenderedFeaturesInRect(
-                [(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
-                ["==", ["geometry-type"], "Point"],
-                ["poi", "place", "town", "city", "airport", "parking", "station"]
-              );*/
-
-              const q = await mapRef.current?.queryRenderedFeaturesAtPoint(
-                pointInView,
-                ["==", ["geometry-type"], "Point"],
-                ["poi", "place", "town", "city", "airport", "parking", "station"]
-              );
-
-              if (q) {
-                const features = q.features.map(feat => ({
-                  //@ts-ignore
-                  location: { lat: feat.geometry.coordinates[1], lng: feat.geometry.coordinates[0] },
-                  properties: feat.properties
-                }));
-                if (onSelectFeatures) {
-                  onSelectFeatures(features);
-                }
-                console.debug("[MAP]", JSON.stringify(features));
-              }
-            }
-          }}
           attributionEnabled={false}>
           <MapLibreGL.Camera
             bounds={bounds}

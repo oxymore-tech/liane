@@ -38,7 +38,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
             try {
               const trip = getTripFromLiane(liane, user!);
               await sendLocationPings(liane.id!, trip.wayPoints);
-              navigation.navigate("LianeDetail", { liane });
+              navigation.replace("LianeDetail", { liane });
             } catch (e) {
               console.warn(e);
             }

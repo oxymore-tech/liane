@@ -15,11 +15,15 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { formatDuration } from "@/util/datetime";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { TripCard } from "@/components/TripCard";
-import { TripChangeOverview, TripOverview } from "@/components/map/TripOverviewMap";
 import { useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 import { Answer } from "@/api/notification";
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { MapStyleProps } from "@/api/location";
+import MapLibreGL from "@maplibre/maplibre-react-native";
+import { WayPointDisplay, WayPointDisplayType } from "@/components/map/markers/WayPointDisplay";
+import { RouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
+import { getBoundingBox } from "@/util/geometry";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -101,8 +105,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
         </AppText>
         <TripCard header={headerDate} content={tripContent} />
         <View style={{ backgroundColor: AppColorPalettes.gray[400], borderRadius: 16, overflow: "hidden" }}>
-          {reqIsExactMatch && <TripOverview params={{ liane: data.targetLiane }} />}
-          {!reqIsExactMatch && <TripChangeOverview params={{ liane: data.targetLiane, newWayPoints: wayPoints }} />}
+          <TripOverview request={data} />
         </View>
         {data.message.length > 0 && (
           <Row spacing={12} style={[styles.card, { alignItems: "center" }]}>
@@ -138,6 +141,43 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
 );
 
 const DetailedRequestQueryKey = "DetailedRequestQueryKey";
+
+const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
+  const reqIsExactMatch = UnionUtils.isInstanceOf<Exact>(request.match, "Exact");
+  const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const boundingBox = getBoundingBox(
+    wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]),
+    24
+  );
+  return (
+    <MapLibreGL.MapView
+      style={{ height: 160, width: "100%" }}
+      {...MapStyleProps}
+      logoEnabled={false}
+      rotateEnabled={false}
+      scrollEnabled={false}
+      zoomEnabled={false}
+      attributionEnabled={false}>
+      <MapLibreGL.Camera bounds={boundingBox} animationMode={"moveTo"} />
+      {wayPoints.map((w, i) => {
+        let type: WayPointDisplayType;
+        if (i === 0) {
+          type = "from";
+        } else if (i === wayPoints.length - 1) {
+          type = "to";
+        } else if (w.rallyingPoint.id === request.match.pickup || w.rallyingPoint.id === request.match.deposit) {
+          type = "pickup";
+        } else {
+          type = "step";
+        }
+        return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
+      })}
+      <RouteLayer wayPoints={request.targetLiane.wayPoints} />
+      {!reqIsExactMatch && <RouteLayer wayPoints={request.match.wayPoints} id={"alternative"} style={{ lineDasharray: [3, 2] }} />}
+    </MapLibreGL.MapView>
+  );
+};
+
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,

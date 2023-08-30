@@ -7,8 +7,6 @@ import tech.oxymore.liane.geolocation.Util.isMyServiceRunning
 
 public const val LogTag = "BackgroundGeoService"
 class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactContextBaseJavaModule(context) {
-
-  private lateinit var mServiceIntent: Intent
   override fun getName(): String {
     return "BackgroundGeolocationServiceModule";
   }
@@ -22,11 +20,12 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
 
   @ReactMethod
   fun stopService(promise: Promise) {
-     if (::mServiceIntent.isInitialized) {
-      reactApplicationContext.stopService(mServiceIntent)
-       promise.resolve(null)
+    if (isMyServiceRunning(LocationService::class.java,  reactApplicationContext)) {
+      reactApplicationContext.stopService(Intent(reactApplicationContext, LocationService::class.java))
+      promise.resolve(null)
+    } else {
+      promise.reject("no service running")
     }
-    promise.reject("no service running")
   }
 
   @ReactMethod
@@ -37,7 +36,7 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
   @ReactMethod
   fun startService(config: ReadableMap, promise: Promise) {
     if (!isMyServiceRunning(LocationService::class.java,  reactApplicationContext)) {
-       mServiceIntent = Intent(reactApplicationContext, LocationService::class.java)
+       val mServiceIntent = Intent(reactApplicationContext, LocationService::class.java)
        mServiceIntent.putExtras(Arguments.toBundle(config)!!)
 
       reactApplicationContext.startService(mServiceIntent)
