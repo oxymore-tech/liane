@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
+using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -18,22 +21,24 @@ public sealed class LianeTracker
   private const double NearPointDistanceInMeters = 500;
   private const double NearPointTimeSpanInMinutes = 5 ;
   private readonly Api.Trip.Liane liane;
-  private readonly ConcurrentDictionary<string, (DateTime At, int NextPointIndex, TimeSpan Delay, LatLng? Coordinate,  LatLng? RawCoordinate,  double PointDistance)?> currentLocationMap = new();
+  private readonly ConcurrentDictionary<string, MemberLocationSample?> currentLocationMap = new();
   private readonly Action onTripArrivedDestination;
   private readonly IOsrmService osrmService;
+  private readonly IMongoDatabase mongo;
   private readonly IOngoingTripSession ongoingTripSession;
   private readonly double[] wayPointFractions;
-  private LianeTracker(IOsrmService osrmService, Api.Trip.Liane liane, Action onTripArrivedDestination, IOngoingTripSession ongoingTripSession)
+  private LianeTracker(IOsrmService osrmService, IMongoDatabase mongo, Api.Trip.Liane liane, Action onTripArrivedDestination, IOngoingTripSession ongoingTripSession)
   {
     this.liane = liane;
     this.onTripArrivedDestination = onTripArrivedDestination;
     this.ongoingTripSession = ongoingTripSession;
+    this.mongo = mongo;
     this.osrmService = osrmService;
     wayPointFractions = new double[liane.WayPoints.Count];
     Array.Fill(wayPointFractions, -1);
     wayPointFractions[0] = 0.0;
   }
-
+  
   public sealed class Builder
   {
     private readonly Api.Trip.Liane liane;
@@ -62,7 +67,7 @@ public sealed class LianeTracker
       return this;
     }
 
-    public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService)
+    public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService, IMongoDatabase mongo)
     {
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location));
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
@@ -71,7 +76,9 @@ public sealed class LianeTracker
       {
         SetAutoDisposeTimeout(() => Task.CompletedTask, 3600 * 1000);
       }
-      return new LianeTracker(osrmService, liane, onTripArrivedDestination ?? delegate {  }, tripSession);
+
+      await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(liane, ImmutableList<MemberLocationSample>.Empty, DateTime.UtcNow));
+      return new LianeTracker(osrmService, mongo, liane, onTripArrivedDestination ?? delegate {  }, tripSession);
     }
   }
   private int GetFirstPoint(Ref<Api.User.User> user)
@@ -79,17 +86,25 @@ public sealed class LianeTracker
     var member = liane.Members.First(m => m.User.Id == user.Id);
     return liane.WayPoints.FindIndex(w => w.RallyingPoint.Id == member.From.Id);
   }
+
+  private async Task InsertMemberLocation(Ref<Api.User.User> user, MemberLocationSample data)
+  {
+    currentLocationMap[user.Id] = data;
+    await mongo.GetCollection<LianeTrackReport>()
+      .FindOneAndUpdateAsync(r => r.Id == liane.Id, Builders<LianeTrackReport>.Update.Push(r => r.MemberLocations,data ));
+  }
   
   public async Task Push(UserPing ping)
   {
     var now = DateTime.UtcNow;
+    var pingTime = ping.At;
 
     currentLocationMap.TryGetValue(ping.User.Id, out var currentLocation);
     var nextPointIndex = currentLocation?.NextPointIndex ?? GetFirstPoint(ping.User.Id);
 
     if (ping.Coordinate is null)
     {
-      currentLocationMap[ping.User.Id] = (ping.At, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity);
+      await InsertMemberLocation(ping.User.Id, new (pingTime, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User));
       return;
     }
  
@@ -105,12 +120,14 @@ public sealed class LianeTracker
       if (nextPointIndex == liane.WayPoints.Count - 1 && ping.User == liane.Driver.User)
       {
         // Driver arrived near destination point
+        await mongo.GetCollection<LianeTrackReport>()
+          .FindOneAndUpdateAsync(r => r.Id == liane.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
         onTripArrivedDestination();
       }
-      currentLocationMap[ping.User.Id] = (ping.At, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value,nextPointDistance);
+      await InsertMemberLocation(ping.User.Id,  new (pingTime, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value,nextPointDistance, ping.User));
       return;
     }
-    else if (currentLocation is not null && currentLocation.Value.PointDistance <= NearPointDistanceInMeters)
+    else if (currentLocation is not null && currentLocation.PointDistance <= NearPointDistanceInMeters)
     {
       // Getting out of a way point zone
       pingNextPointIndex++;
@@ -130,9 +147,9 @@ public sealed class LianeTracker
 
     var table = await osrmService.Table(new List<LatLng> { locationOnRoute.nearestPoint, nextPoint.Location });
     var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-    var delay = now + estimatedDuration - liane.WayPoints.First(w => w.RallyingPoint.Id == nextPoint.Id).Eta + ping.Delay;
-   
-    currentLocationMap[ping.User.Id] = (ping.At, pingNextPointIndex, delay, locationOnRoute.nearestPoint, ping.Coordinate.Value, nextPointDistance);
+    var delay = estimatedDuration + ping.Delay;
+    
+    await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, delay, locationOnRoute.nearestPoint, ping.Coordinate.Value, nextPointDistance, ping.User));
     
   }
 
@@ -170,16 +187,15 @@ public sealed class LianeTracker
     currentLocationMap.TryGetValue(liane.Driver.User.Id, out var driverCurrentLocation);
     if (driverCurrentLocation is null || memberCurrentLocation is null) return false;
     var lianeMember = liane.Members.First(m => m.User.Id == member.Id);
-    return memberCurrentLocation.Value.NextPointIndex == driverCurrentLocation.Value.NextPointIndex 
-           && lianeMember.From.Id == liane.WayPoints[driverCurrentLocation.Value.NextPointIndex].RallyingPoint.Id
-           && (memberCurrentLocation.Value.PointDistance < NearPointDistanceInMeters || liane.WayPoints[driverCurrentLocation.Value.NextPointIndex].Eta - DateTime.Now < TimeSpan.FromMinutes(NearPointTimeSpanInMinutes));
+    return memberCurrentLocation.NextPointIndex == driverCurrentLocation.NextPointIndex 
+           && lianeMember.From.Id == liane.WayPoints[driverCurrentLocation.NextPointIndex].RallyingPoint.Id
+           && (memberCurrentLocation.PointDistance < NearPointDistanceInMeters || liane.WayPoints[driverCurrentLocation.NextPointIndex].Eta - DateTime.Now < TimeSpan.FromMinutes(NearPointTimeSpanInMinutes));
   }
 
   public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.User.User> member)
   {
     currentLocationMap.TryGetValue(member.Id, out var currentLocation);
     if (currentLocation is null) return null;
-    
-    return new TrackedMemberLocation(member, liane, currentLocation.Value.At, liane.WayPoints[currentLocation.Value.NextPointIndex].RallyingPoint, (long)currentLocation.Value.Delay.TotalSeconds, currentLocation.Value.Coordinate);
+    return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.Coordinate);
   }
 }

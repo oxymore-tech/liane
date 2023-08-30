@@ -8,7 +8,6 @@ using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
-using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip.Event;
@@ -40,7 +39,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
 
   public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.User.User>? sender = null)
   {
-    var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).DateTime.ToUniversalTime();
+    var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).UtcDateTime;
     var memberId = sender ?? currentContext.CurrentUser().Id;
     var ping = new UserPing(memberId, at, e.Delay ?? TimeSpan.Zero, e.Coordinate);
     var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Liane)
@@ -79,7 +78,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
         })
         .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
         , 3600 * 1000)
-        .Build(osrmService, postgisService);
+        .Build(osrmService, postgisService, mongo);
     });
     
     await tracker.Push(ping);
