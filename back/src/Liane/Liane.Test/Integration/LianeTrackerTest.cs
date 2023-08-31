@@ -19,7 +19,7 @@ using MongoDB.Driver;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
-
+[TestFixture(Category = "Integration")]
 public class LianeTrackerTest: BaseIntegrationTest
 {
 
