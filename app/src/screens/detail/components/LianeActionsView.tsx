@@ -14,7 +14,6 @@ import { DebugIdView } from "@/components/base/DebugIdView";
 import { LineSeparator } from "@/components/Separator";
 import { ActionItem } from "@/components/ActionItem";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
-import { TimeWheelPicker } from "@/components/DatePagerSelector";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppColors, ContextualColors } from "@/theme/colors";
@@ -23,6 +22,7 @@ import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
 import { IconName } from "@/components/base/AppIcon";
 import { APP_ENV } from "@env";
+import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
