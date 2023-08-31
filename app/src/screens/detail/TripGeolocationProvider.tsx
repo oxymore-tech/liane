@@ -3,7 +3,7 @@ import { Liane, Ref, TrackedMemberLocation, User } from "@/api";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";
-import { isLocationServiceRunning } from "@/api/service/location";
+import { isLocationServiceRunning, watchLocationServiceState } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
 
 export interface TripGeolocation {
@@ -20,12 +20,17 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   const isFocused = useIsFocused();
   const lianeStatus = useLianeStatus(liane);
   useEffect(() => {
-    if ((isFocused && lianeStatus === "Started") || lianeStatus === "StartingSoon") {
+    if (isFocused && (lianeStatus === "Started" || lianeStatus === "StartingSoon")) {
       isLocationServiceRunning().then(setGeolocRunning);
     } else {
       setGeolocRunning(false);
     }
   }, [isFocused, liane.id, lianeStatus]);
+
+  useEffect(() => {
+    const sub = watchLocationServiceState(setGeolocRunning);
+    return () => sub.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const subjects: { [k: string]: Subject<TrackedMemberLocation | null> } = {};

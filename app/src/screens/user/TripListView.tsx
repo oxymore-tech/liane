@@ -102,21 +102,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
       onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
       <View>
         <Row style={styles.driverContainer} spacing={8}>
-          <UserPicture url={driver?.pictureUrl} size={24} id={driver.id} />
-          {["Finished", "Archived", "Canceled"].includes(item.state) &&
-            item.members
-              .filter(m => m.user.id !== driver.id)
-              .map((m, i) => (
-                <UserPicture
-                  key={m.user.id}
-                  style={{ position: "absolute", left: i * 8, zIndex: -i }}
-                  id={m.user.id}
-                  url={m.user.pictureUrl}
-                  size={24}
-                  borderWidth={2}
-                  borderColor={AppColors.white}
-                />
-              ))}
+          <UserPicture url={driver.pictureUrl} size={24} id={driver.id} />
           <AppText style={styles.driverText}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
         </Row>
         <View style={styles.lianeContainer}>

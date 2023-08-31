@@ -61,6 +61,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     if (liane.State == LianeState.NotStarted && e.Coordinate is not null)
     {
       // First location ping -> go to started state
+      // TODO -> or start ony at first driver's ping ?
       await lianeService.UpdateState(e.Liane, LianeState.Started);
       liane = liane with { State = LianeState.Started };
     }

@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
+using GeoJSON.Text.Geometry;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -607,11 +608,9 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     foreach (var candidate in new List<LianeMatchCandidate?> { detourCandidate, partialCandidate }.Where(c => c is not null))
     {
-     
       pickupPoint = await rallyingPointService.Snap(candidate!.Pickup, 1500);
       depositPoint = await rallyingPointService.Snap(candidate!.Deposit, 1500);
-    
-
+      
       if (pickupPoint is null || depositPoint is null || pickupPoint == depositPoint)
       {
         continue;
@@ -700,7 +699,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   {
     // Directly delete liane without other members
     Expression<Func<LianeDb,bool>> filter = l => l.Recurrence == recurrence.Id && l.Members.Count <= 1;
-    var toDelete = await Mongo.GetCollection<LianeDb>().Find(filter).SelectAsync(async l => l.Id);
+    var toDelete = await Mongo.GetCollection<LianeDb>().Find(filter).SelectAsync( l => Task.FromResult(l.Id));
     await postgisService.Clear(toDelete);
     await Mongo.GetCollection<LianeDb>().DeleteManyAsync(filter);
     
@@ -709,5 +708,29 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .FindOneAndUpdateAsync(l => l.Recurrence == recurrence.Id,
         Builders<LianeDb>.Update.Unset(l => l.Recurrence));
   }
+
+  public async Task<FeatureCollection> GetGeolocationPings(Ref<Api.Trip.Liane> liane)
+  {
+    var lianeDb = await Mongo.GetCollection<LianeDb>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
+    var features = lianeDb.Pings
+      .Where(ping => ping.Coordinate is not null)
+      .Select(ping => new Feature(
+        new Point(new Position(ping.Coordinate!.Value.Lat, ping.Coordinate!.Value.Lng)),
+        new Dictionary<string, object> {["user"] = ping.User.Id, ["at"] = ping.At}
+        ))
+      .ToList();
+    return new FeatureCollection(features);
+  }
+
+  public async Task ForceSyncDatabase()
+  {
+    var cursor = await Mongo.GetCollection<LianeDb>()
+      .FindAsync(l => l.State == LianeState.NotStarted);
+    var results = await cursor.ToListAsync();
+    // TODO use IAsyncEnumerable in C# 8
+    await postgisService.SyncGeometries(await results.SelectAsync(MapEntity));
+  }
+  
+  
 }
 

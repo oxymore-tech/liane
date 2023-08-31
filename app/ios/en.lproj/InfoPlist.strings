@@ -1,4 +1,5 @@
 NSLocationWhenInUseUsageDescription = "Allow access to your position to see available trips in your area.";
 NSLocationAlwaysAndWhenInUseUsageDescription = "Allow access to your position while Liane is in the background to validate your trips.";
+NSLocationAlwaysUsageDescription = "Allow access to your position while Liane is in the background to validate your trips.";
 NSPhotoLibraryUsageDescription = "Allow access to your library to upload a new picture.";
 NSCameraUsageDescription = "Allow access to your camera to upload a new picture.";

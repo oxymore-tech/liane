@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Routing;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
@@ -33,15 +34,49 @@ namespace Liane.Service.Internal.Postgis;
 
     await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE liane_id = @id", new { id = liane.Id }, tx);
 
+    await InsertLianeWaypoints(liane, connection, tx);
+    await DeleteOrphanSegments(connection, tx);
+    tx.Commit();
+  }
+
+  private async Task InsertLianeWaypoints(Api.Trip.Liane liane, IDbConnection connection, IDbTransaction tx)
+  {
     if (liane.Members.Select(m => m.SeatCount).Aggregate(0, (v, acc) => v + acc) > 0)
     {
       // Only add liane to research if it has available seats
       await GetStatsAndExecuteBatch(i => ComputeLianeBatch(i, liane), connection, tx);
     }
+  }
 
+  public async Task SyncGeometries(IEnumerable<Api.Trip.Liane> source)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    
+    await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE true", tx);
+    foreach (var l in source)
+    {
+      await InsertLianeWaypoints(l, connection, tx);
+    }
+    await DeleteOrphanSegments(connection, tx);
     tx.Commit();
   }
 
+  public async Task<ImmutableList<Ref<Api.Trip.Liane>>> ListSearchableLianes()
+  {
+    using var connection = db.NewConnection();
+    var results = await connection.QueryAsync<string>(
+      "SELECT liane_id FROM liane_waypoint");
+    return results.Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
+  }
+
+  public async Task<ImmutableList<Ref<Api.Trip.Liane>>> ListOngoingLianes()
+  {
+    using var connection = db.NewConnection();
+    var results = await connection.QueryAsync<string>(
+      "SELECT id FROM ongoing_trip");
+    return results.Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
+  }
   public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to)
   {
     using var connection = db.NewConnection();
@@ -112,12 +147,12 @@ namespace Liane.Service.Internal.Postgis;
   {
     var segmentsAdded = await connection.InsertMultipleAsync(segments, tx);
     var wayPointsAdded = await connection.InsertMultipleAsync(lianeWaypoints, tx);
-    var segmentsDeleted = await DeleteOrphanSegments(connection, tx);
-    logger.LogInformation("Added {segmentsAdded} segments and {wayPointsAdded} liane waypoints. {segmentsDeleted} orphan segments", segmentsAdded, wayPointsAdded, segmentsDeleted);
+    logger.LogInformation("Added {segmentsAdded} segments and {wayPointsAdded} liane waypoints.", segmentsAdded, wayPointsAdded);
   }
 
-  private static async Task<int> DeleteOrphanSegments(IDbConnection connection, IDbTransaction tx)
+  private async Task DeleteOrphanSegments(IDbConnection connection, IDbTransaction tx)
   {
-    return await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)", tx);
+     var segmentsDeleted = await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)", tx);
+     logger.LogInformation("Deleted {segmentsDeleted} orphan segments.", segmentsDeleted);
   }
 }

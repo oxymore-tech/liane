@@ -10,17 +10,18 @@ import { LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { formatMonthDay, formatTime } from "@/api/i18n";
-import { ActivityIndicator, Alert, Linking, PermissionsAndroid, Platform, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Platform, View } from "react-native";
 import { AppButton } from "@/components/base/AppButton";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { checkLocationPingsPermissions, hasLocationPermission, sendLocationPings } from "@/api/service/location";
-import Geolocation from "react-native-geolocation-service";
+import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
 import { createReminder } from "@/api/service/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
 import { getTripFromLiane } from "@/components/trip/trip";
 import BackgroundGeolocationService from "native-modules/geolocation";
+import { PERMISSIONS, request } from "react-native-permissions";
+import { useAppState } from "@react-native-community/hooks";
 
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
@@ -53,18 +54,15 @@ export const ShareTripLocationScreen = WithFullscreenModal(
         await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, d);
       };
 
-      useEffect(() => {
-        const askPermissions = async (): Promise<boolean> => {
-          const locationPermission = await hasLocationPermission();
+      const appState = useAppState();
 
-          if (!locationPermission) {
-            return askPermissions();
-          } else {
-            return await checkLocationPingsPermissions();
-          }
-        };
-        askPermissions().then(setHasPingsPermissions);
-      }, []);
+      useEffect(() => {
+        if (appState === "active") {
+          checkLocationPingsPermissions().then(setHasPingsPermissions);
+        } else {
+          setHasPingsPermissions(undefined);
+        }
+      }, [appState]);
 
       if (!hasPingsPermissions) {
         if (hasPingsPermissions === false) {
@@ -148,36 +146,57 @@ export const ShareTripLocationScreen = WithFullscreenModal(
 const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => {
   const requestBackgroundGeolocation = async () => {
     if (Platform.OS === "ios") {
-      const status = await Geolocation.requestAuthorization("always");
-
-      if (status === "granted") {
-        return true;
-      }
-
-      if (status === "denied") {
-        Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
-      }
-
-      if (status === "disabled") {
-        const openSetting = () => {
-          Linking.openSettings().catch(() => {
-            if (__DEV__) {
-              console.warn("[LOCATION] Unable to open settings");
-            }
-          });
-        };
-        Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
-          { text: "Go to Settings", onPress: openSetting },
-          { text: "Don't Use Location", onPress: () => {} }
-        ]);
+      if (parseInt(Platform.Version, 10) < 13) {
+        const status = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
+        if (status === "granted") {
+          return true;
+        } else if (status === "denied") {
+          Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+        } else if (status === "unavailable") {
+          Alert.alert(`Erreur: géolocalisation indisponible.`);
+        } else if (status === "blocked") {
+          const openSetting = () => {
+            Linking.openSettings().catch(() => {
+              if (__DEV__) {
+                console.warn("[LOCATION] Unable to open settings");
+              }
+            });
+          };
+          Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
+            { text: "Modifier les paramètres", onPress: openSetting },
+            { text: "Ignorer", onPress: () => {} }
+          ]);
+        }
+      } else {
+        await Linking.openSettings();
       }
     } else if (Platform.OS === "android") {
-      const status = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION);
-      if (status === PermissionsAndroid.RESULTS.GRANTED) {
-        return true;
-      }
-      if (status === PermissionsAndroid.RESULTS.DENIED || status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+      if (Platform.Version <= 29) {
+        const status = await request(
+          Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+        );
+        console.log(status);
+        if (status === "granted") {
+          return true;
+        } else if (status === "denied") {
+          Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+        } else if (status === "unavailable") {
+          Alert.alert(`Erreur: géolocalisation indisponible.`);
+        } else if (status === "blocked") {
+          const openSetting = () => {
+            Linking.openSettings().catch(() => {
+              if (__DEV__) {
+                console.warn("[LOCATION] Unable to open settings");
+              }
+            });
+          };
+          Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
+            { text: "Modifier les paramètres", onPress: openSetting },
+            { text: "Ignorer", onPress: () => {} }
+          ]);
+        }
+      } else {
+        await Linking.openSettings();
       }
     }
     return false;
@@ -185,10 +204,48 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
 
   return (
     <Column style={{ alignItems: "center" }} spacing={16}>
-      <AppText>
-        Liane a besoin de suivre votre position tout au long de votre trajet pour pouvoir le valider. Pour cela accordez l'accès à votre position même
-        lorsque l'application est fermée.
+      <AppText numberOfLines={4} style={{ color: AppColors.white, fontSize: 15 }}>
+        Liane a besoin de suivre votre position tout au long de votre trajet pour pouvoir le valider.
       </AppText>
+      <Row spacing={16} style={{ alignItems: "center" }}>
+        <AppIcon name={"info-outline"} color={AppColors.white} />
+
+        <AppText numberOfLines={4} style={{ color: AppColors.white, fontSize: 15 }}>
+          Accordez l'accès à votre position même lorsque l'application est fermée.
+        </AppText>
+      </Row>
+
+      <Row spacing={16} style={{ alignItems: "center" }}>
+        <AppIcon name={"info-outline"} color={AppColors.white} opacity={0} />
+
+        {Platform.OS === "ios" && parseInt(Platform.Version, 10) >= 13 && (
+          <AppText numberOfLines={5} style={{ color: AppColors.white, fontSize: 14 }}>
+            1. Appuyez sur "Autoriser la géolocalisation"{"\n"}
+            2. Allez dans "Position"{"\n"}
+            3. Sélectionnez "Toujours" dans la liste des autorisations
+          </AppText>
+        )}
+        {Platform.OS === "ios" && parseInt(Platform.Version, 10) < 13 && (
+          <AppText numberOfLines={5} style={{ color: AppColors.white, fontSize: 14 }}>
+            1. Appuyez sur "Autoriser la géolocalisation"{"\n"}
+            2. Sélectionnez "Toujours" dans la liste des autorisations
+          </AppText>
+        )}
+        {Platform.OS === "android" && Platform.Version === 29 && (
+          <AppText numberOfLines={5} style={{ color: AppColors.white, fontSize: 14 }}>
+            1. Appuyez sur "Autoriser la géolocalisation"{"\n"}
+            2. Sélectionnez "Toujours autoriser" dans la liste des autorisations
+          </AppText>
+        )}
+        {Platform.OS === "android" && Platform.Version > 29 && (
+          <AppText numberOfLines={5} style={{ color: AppColors.white, fontSize: 14 }}>
+            1. Appuyez sur "Autoriser la géolocalisation"{"\n"}
+            2. Allez dans "Permissions"{"\n"}
+            3. Sélectionnez "Position"{"\n"}
+            2. Sélectionnez "Toujours autoriser" dans la liste des autorisations
+          </AppText>
+        )}
+      </Row>
       <AppButton
         title={"Autoriser la géolocalisation"}
         color={AppColors.orange}
