@@ -69,7 +69,8 @@ const styles = StyleSheet.create({
   rowContainer: {
     padding: 2,
     textAlign: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    flexWrap: "wrap"
   },
   dayContainer: {
     marginHorizontal: 2,
