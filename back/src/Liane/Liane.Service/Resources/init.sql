@@ -316,7 +316,8 @@ DECLARE
   timezone_offset         integer;
   min_length              integer; -- min displayed distance in km
   simplify_factor         double precision;
-  from_location           text;
+  origin_point_location   text;
+  filter_type          text;
   points_cluster_distance double precision;
 BEGIN
   SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
@@ -324,7 +325,16 @@ BEGIN
           make_interval(mins => timezone_offset))
   INTO after;
 
-  SELECT location from rallying_point where (query_params ->> 'pickup') = rallying_point.id INTO from_location;
+  if query_params ->> 'pickup' is not null then
+    SELECT location from rallying_point where (query_params ->> 'pickup') = rallying_point.id INTO origin_point_location;
+    SELECT 'pickup' into filter_type;
+  elsif query_params ->> 'deposit' is not null then
+    SELECT location from rallying_point where (query_params ->> 'deposit') = rallying_point.id INTO origin_point_location;
+    SELECT 'deposit' into filter_type;
+  else
+    raise notice 'pickup or deposit point missing';
+  end if;
+
 
   SELECT (case
             when z < 5 then 80
@@ -383,9 +393,14 @@ BEGIN
                                  ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)
                                  )               as geom
                                -- ST_Intersection(geometry,     ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)) as geom
-                        from (select liane_id, destination, st_linesubstring(geometry, st_linelocatepoint(geometry, from_location), 1) as geom
+                        from (select
+                                liane_id,
+                                destination,
+                                case when filter_type = 'pickup' then
+                                       st_linesubstring(geometry, st_linelocatepoint(geometry, origin_point_location), 1)
+                                     else  st_linesubstring(geometry, 0, st_linelocatepoint(geometry, origin_point_location))  end as geom
                               from longest_lianes
-                              where st_dwithin(geometry::geography, from_location::geography, 500)
+                              where st_dwithin(geometry::geography, origin_point_location::geography, 500)
                                 and length > min_length) as sub
                         where st_length(geom::geography) > 500),
        clipped_points as (select id,
@@ -399,7 +414,7 @@ BEGIN
                           from rallying_point
                           where z > 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-                            and st_distancesphere(from_location, location) > 200),
+                            and st_distancesphere(origin_point_location, location) > 200),
 
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids
                              from lianes_parts

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -18,10 +19,11 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
   Task UpdateState(Ref<Liane> liane, LianeState state);
   Task UpdateFeedback(Ref<Liane> liane, Feedback feedback);
-  public Task<ImmutableList<ClosestPickups>> GetPickupLinks(LinkFilterPayload payload);
   Task<string> GetContact(Ref<Liane> id, Ref<User.User> requester, Ref<User.User> member);
   Task<Liane> UpdateDepartureTime(Ref<Liane> liane, DateTime departureTime);
   Task RemoveRecurrence(Ref<LianeRecurrence> recurrence);
   Task<ImmutableList<Liane>> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null);
   Task<Liane> GetForCurrentUser(Ref<Liane> liane);
+  Task<FeatureCollection> GetGeolocationPings(Ref<Liane> liane);
+  Task ForceSyncDatabase();
 }

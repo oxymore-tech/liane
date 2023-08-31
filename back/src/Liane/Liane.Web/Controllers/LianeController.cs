@@ -92,13 +92,21 @@ public sealed class LianeController : ControllerBase
     return NoContent();
   }
 
-  [HttpGet("display/geojson")]
-  public Task<FeatureCollection> DisplayGeoJson([FromQuery] double lat, [FromQuery] double lng, [FromQuery] double lat2, [FromQuery] double lng2, [FromQuery] long? after,
-    CancellationToken cancellationToken)
+  
+  [HttpGet("{id}/geolocation")]
+  [RequiresAdminAuth]
+  public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id)
   {
-    //TODO remove
-    return Task.FromResult(new FeatureCollection());
+    return lianeService.GetGeolocationPings(id);
   }
+  
+  [HttpPost("sync")]
+  [RequiresAdminAuth]
+  public Task ForceSyncDatabase()
+  {
+    return lianeService.ForceSyncDatabase();
+  }
+
 
   [HttpPost("match")]
   [DebugRequest]
@@ -107,17 +115,11 @@ public sealed class LianeController : ControllerBase
     return lianeService.Match(filter, pagination, cancellationToken);
   }
 
-  [HttpPost("match/geojson")] //TODO use query option
+  [HttpPost("match/geojson")]
   [DebugRequest]
   public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
     return lianeService.MatchWithDisplay(filter, pagination, cancellationToken);
-  }
-
-  [HttpPost("links")]
-  public async Task<ImmutableList<ClosestPickups>> GetNear([FromBody] LinkFilterPayload payload)
-  {
-    return await lianeService.GetPickupLinks(payload);
   }
 
   [HttpGet("")]
