@@ -11,6 +11,7 @@ import { MemberPing } from "@/api/event";
 import { sleep } from "@/util/datetime";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { distance } from "@/util/geometry";
+import { check, PERMISSIONS } from "react-native-permissions";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -252,16 +253,13 @@ export const hasLocationPermission = async () => {
 
 export async function checkLocationPingsPermissions(): Promise<boolean> {
   if (Platform.OS === "ios") {
-    const access = await Geolocation.requestAuthorization("always");
+    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
     console.debug("[GEOPINGS]", access);
     return access === "granted";
   } else if (Platform.OS === "android") {
-    return (
-      Platform.Version < 23 ||
-      (await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)) ||
-      Platform.Version < 29 ||
-      (await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION))
-    );
+    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
+    console.debug("[GEOPINGS]", access);
+    return access === "granted";
   }
   return true;
 }
@@ -308,6 +306,7 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
 
 export const isLocationServiceRunning = () =>
   Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
+export const watchLocationServiceState = (callback: (running: boolean) => void) => BackgroundGeolocationService.watch(callback); //TODO IOS
 
 const nearWayPointRadius = 1000;
 const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
