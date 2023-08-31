@@ -178,7 +178,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
             }
           }}>
           <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
-            <UserPicture url={undefined} size={24} id={driver.id} />
+            <UserPicture url={driver.pictureUrl} size={24} id={driver.id} />
             <AppText style={{ fontSize: 14, fontWeight: "500" }}>{driver.pseudo}</AppText>
           </Row>
           <View style={{ paddingHorizontal: 8 }}>
