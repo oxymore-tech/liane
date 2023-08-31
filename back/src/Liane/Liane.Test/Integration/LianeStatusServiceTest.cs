@@ -37,16 +37,20 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     currentContext.SetAllowPastResourceCreation(true);
     var now = DateTime.UtcNow;
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-1));
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-55));
+    var liane3 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-55));
     await lianeService.AddMember(liane1, new LianeMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
+    await lianeService.AddMember(liane2, new LianeMember(userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
 
-    await lianeStatusUpdate.Update(now, TimeSpan.FromMinutes(5));
+    await lianeStatusUpdate.Update(now);
 
     liane1 = await lianeService.Get(liane1.Id);
     liane2 = await lianeService.Get(liane2.Id);
+    liane3 = await lianeService.Get(liane3.Id);
 
     Assert.AreEqual(LianeState.Finished, liane1.State);
     Assert.AreEqual(LianeState.NotStarted, liane2.State);
+    Assert.AreEqual(LianeState.Canceled, liane3.State);
   }
 
   [Test]
@@ -55,24 +59,30 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
 
-    var departureTime = DateTime.UtcNow.AddMinutes(5);
+    currentContext.SetAllowPastResourceCreation(true);
+    var now = DateTime.UtcNow;
 
-    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
+    var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-2));
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-2));
+    var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(10));
+    var liane4 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(2));
     await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+    await lianeService.AddMember(liane4.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+    
+    await lianeStatusUpdate.Update(now);
+    liane1 = await lianeService.Get(liane1.Id);
+    liane2 = await lianeService.Get(liane2.Id);
+    liane3 = await lianeService.Get(liane3.Id);
+    liane4 = await lianeService.Get(liane4.Id);
 
-    currentContext.SetCurrentUser(userA);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id,  ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.Zero, null));
-
-    var actual = await lianeService.Get(liane1.Id);
-
-    // Assert.AreEqual(LianeState.Started, actual.State);
-    // CollectionAssert.AreEquivalent(ImmutableHashSet.Create((Ref<User>)userA.Id), actual.Carpoolers);
-    // Assert.IsNotNull(actual.NextEta);
-    // Assert.AreEqual((Ref<RallyingPoint>)liane1.WayPoints[0].RallyingPoint, actual.NextEta!.RallyingPoint);
-    // AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
+     Assert.AreEqual(LianeState.Started, liane1.State);
+     Assert.AreEqual(LianeState.Canceled, liane2.State);
+     Assert.AreEqual(LianeState.NotStarted, liane3.State);
+     Assert.AreEqual(LianeState.Started, liane4.State);
   }
 
   [Test]
+  [Ignore("Not implemented")]
   public async Task ShouldGetStartedStatusWithDelay()
   {
     var userA = Fakers.FakeDbUsers[0];

@@ -1,14 +1,12 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
-import { DayOfTheWeekFlag, FullUser, getPoint, Liane, LianeMatch, LianeRecurrence } from "@/api";
+import { DayOfTheWeekFlag, FullUser, getPoint, Liane, LianeMatch } from "@/api";
 import { NavigationParamList, useAppNavigation } from "@/api/navigation";
 import { formatDate } from "@/api/i18n";
 import { cancelSendLocationPings } from "@/api/service/location";
 import { AppServices } from "@/api/service";
-
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -18,13 +16,13 @@ import { ActionItem } from "@/components/ActionItem";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { TimeWheelPicker } from "@/components/DatePagerSelector";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
-
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
 import { IconName } from "@/components/base/AppIcon";
+import { APP_ENV } from "@env";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
@@ -42,20 +40,22 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const [editOptionsModalVisible, setEditOptionsModalVisible] = useState(false);
   const [date, setDate] = useState(new Date(liane.departureTime));
   const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || "0000000");
-  const [recurrenceDetails, setRecurrenceDetails] = useState<LianeRecurrence | null>(null);
 
   const initialMinDate = new Date(new Date().getTime() + 10 * 60000);
 
-  useEffect(() => {
-    if (liane.recurrence) {
-      services.liane.getRecurrence(liane.recurrence?.id!).then((recurrence: LianeRecurrence) => {
-        setRecurrenceDetails(recurrence);
-      });
-    }
-  }, []);
-
   const lianeHasRecurrence = !!liane.recurrence;
   const editOptions = useMemo(() => {
+    if (APP_ENV !== "dev") {
+      // TODO remove when production ready
+      return [
+        {
+          icon: "calendar-outline" as IconName,
+          text: "Supprimer la régularité",
+          color: ContextualColors.redAlert.text,
+          action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible)
+        }
+      ];
+    }
     return [
       {
         icon: "clock-outline" as IconName,
@@ -91,14 +91,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         <AppText style={{ fontWeight: "bold" }}>{creator.pseudo}</AppText>
       </AppText>
       <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={liane} />
-
-      {false && currentUserIsDriver && liane.state == "NotStarted" && liane.recurrence?.id && (
-        <ActionItem
-          onPress={() => pauseLiane(services, queryClient, liane, !!recurrenceDetails?.active)}
-          iconName={recurrenceDetails?.active ? "pause-circle-outline" : "play-circle-outline"}
-          text={recurrenceDetails?.active ? "Mettre en pause la Liane" : "Réactiver la liane"}
-        />
-      )}
 
       {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
       {currentUserIsDriver && liane.state === "NotStarted" && (

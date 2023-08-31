@@ -89,7 +89,8 @@ export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "
 const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
   if (liane.state === "NotStarted" || liane.state === "Started") {
     const [_, delta] = getTimeForUser(liane, user, "from");
-    if (delta > 0 && delta < 120) {
+    console.log(delta);
+    if (delta > 0 && delta <= 5 * 60) {
       if (liane.members.length > 1) {
         return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
       }

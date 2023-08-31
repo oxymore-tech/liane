@@ -4,7 +4,7 @@ using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Trip.Event;
 
-namespace Liane.Test.Integration;
+namespace Liane.Test.Mock;
 
 public sealed class MockAutomaticAnswerService : IAutomaticAnswerService
 {
