@@ -56,14 +56,7 @@ namespace Liane.Service.Internal.Postgis;
     await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE true", tx);
     foreach (var l in source)
     {
-      try
-      {
-        await InsertLianeWaypoints(l, connection, tx);
-      }
-      catch (Exception e)
-      {
-        logger.LogWarning($"Could not update geometry for liane {l.Id}: "+e.Message);
-      }
+      await InsertLianeWaypoints(l, connection, tx);
     }
     await DeleteOrphanSegments(connection, tx);
     tx.Commit();
