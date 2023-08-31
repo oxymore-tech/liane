@@ -57,8 +57,11 @@ public sealed class LianeStatusUpdate : CronJobService
         .ToListAsync())
       .ToImmutableHashSet();
     
-    await lianeService.BulkUpdateState(canceled.Select(l => (Ref<Api.Trip.Liane>)l).ToImmutableList(), LianeState.Canceled);
-
+    await Parallel.ForEachAsync(canceled, async (id, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      await lianeService.UpdateState(id, LianeState.Canceled);
+    });
     await postgisService.Clear(canceled.ToImmutableList());
   }
 
@@ -84,7 +87,11 @@ public sealed class LianeStatusUpdate : CronJobService
     // TODO remove 
     await notificationService.CleanNotifications(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
     
-    await lianeService.BulkUpdateState(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList(), LianeState.Finished);
+    await Parallel.ForEachAsync(finishedLianes, async (lianeDb, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      await lianeService.UpdateState(lianeDb.Id, LianeState.Finished);
+    });
     await postgisService.Clear(finishedLianes.Select(l => l.Id).ToImmutableList());
   }
 
@@ -106,9 +113,12 @@ public sealed class LianeStatusUpdate : CronJobService
       return;
     }
 
-    await lianeService.BulkUpdateState(activeLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList(), LianeState.Started);
-
-
+    await Parallel.ForEachAsync(activeLianes, async (lianeDb, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      await lianeService.UpdateState(lianeDb.Id, LianeState.Started);
+    });
+    
     // TODO create ongoing trip here ?
     await postgisService.Clear(activeLianes.Select(l => l.Id).ToImmutableList());
   }
@@ -127,7 +137,7 @@ public sealed class LianeStatusUpdate : CronJobService
       foreach (var lianeMember in liane.Members)
       {
         var resolved = await lianeService.GetForCurrentUser(liane.Id, lianeMember.User);
-        await lianeUpdateObserver.Push(resolved, ImmutableList.Create(lianeMember.User));
+        await lianeUpdateObserver.Push(resolved, lianeMember.User);
       }
     });
   }

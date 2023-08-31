@@ -333,7 +333,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
-    await lianeUpdateObserver.Push(updatedLiane);
+    await PushUpdate(updated);
     return updatedLiane;
   }
 
@@ -401,7 +401,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
-    await lianeUpdateObserver.Push(updatedLiane);
+    await PushUpdate(updated);
     return updatedLiane;
   }
 
@@ -444,11 +444,24 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       );
     if (updated.Members.All(m => m.Feedback is not null))
     {
-      await Mongo.GetCollection<LianeDb>()
-        .UpdateOneAsync(
+     updated = await Mongo.GetCollection<LianeDb>()
+        .FindOneAndUpdateAsync<LianeDb>(
           l => l.Id == liane,
-          Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? LianeState.Canceled : LianeState.Archived)
+          Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? LianeState.Canceled : LianeState.Archived),
+          new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
         );
+    }
+
+    await PushUpdate(updated);
+
+  }
+
+  private async Task PushUpdate(LianeDb liane)
+  {
+    foreach (var lianeMember in liane.Members)
+    {
+      var resolved = await GetForCurrentUser(liane.Id, lianeMember.User);
+      await lianeUpdateObserver.Push(resolved, lianeMember.User);
     }
   }
 
@@ -679,10 +692,10 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
   public async Task UpdateState(Ref<Api.Trip.Liane> liane, LianeState state)
   {
-    await Mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state));
-    
-    await lianeUpdateObserver.Push(await Get(liane));
+    var lianeDb = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state), new FindOneAndUpdateOptions<LianeDb>{ReturnDocument = ReturnDocument.After});
+
+    await PushUpdate(lianeDb);
   }
 
   public async Task RemoveRecurrence(Ref<LianeRecurrence> recurrence)
@@ -720,22 +733,5 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .Find(l => l.State == LianeState.NotStarted)
       .SelectAsync(MapEntity);
     await postgisService.SyncGeometries(results);
-  }
-
-  public async Task BulkUpdateState(ImmutableList<Ref<Api.Trip.Liane>> lianes, LianeState state)
-  {
-    
-    await Mongo.GetCollection<LianeDb>()
-      .BulkWriteAsync(lianes
-        .Select(liane => new UpdateOneModel<LianeDb>(
-          Builders<LianeDb>.Filter.Where(l => l.Id == liane.Id),
-          Builders<LianeDb>.Update.Set(l => l.State, state))
-        ));
-
-    await Parallel.ForEachAsync(lianes, async (liane, token) =>
-    {
-      if (token.IsCancellationRequested) return;
-      await lianeUpdateObserver.Push(await Get(liane));
-    });
   }
 }

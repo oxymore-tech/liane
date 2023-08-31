@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
@@ -151,15 +150,12 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
     }
   }
 
-  public async Task Push(Api.Trip.Liane liane, ImmutableList<Ref<User>>? toMembers = null)
+  public async Task Push(Api.Trip.Liane liane, Ref<User> recipient)
   {
-    foreach (var member in toMembers ?? liane.Members.Select(m => m.User))
-    {
-      var connectionId = GetConnectionId(member);
+    var connectionId = GetConnectionId(recipient);
       if (connectionId is not null)
       {
         await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
       }
-    }
   }
 }
