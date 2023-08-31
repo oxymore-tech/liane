@@ -42,6 +42,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly IPostgisService postgisService;
   private readonly ILianeRecurrenceService lianeRecurrenceService;
   private readonly ILogger<LianeServiceImpl> logger;
+  private readonly ILianeUpdateObserver lianeUpdateObserver;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -49,7 +50,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService) : base(mongo)
+    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -59,6 +60,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     this.userService = userService;
     this.postgisService = postgisService;
     this.lianeRecurrenceService = lianeRecurrenceService;
+    this.lianeUpdateObserver = lianeUpdateObserver;
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
@@ -170,11 +172,12 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       LianeState.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, null, recurrence);
   }
 
-  public async Task<Api.Trip.Liane> GetForCurrentUser(Ref<Api.Trip.Liane> l)
+  public async Task<Api.Trip.Liane> GetForCurrentUser(Ref<Api.Trip.Liane> l, Ref<Api.User.User>? user = null)
   {
+    var target = user ?? currentContext.CurrentUser().Id;
     var liane = await Get(l);
-    var member = liane.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!;
-    return liane with { State = GetUserState(liane.State, member) };
+      var member = liane.Members.Find(m => m.User.Id == target)!;
+      return liane with { State = LianeStatusUpdate.GetUserState(liane, member) };
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
@@ -258,9 +261,8 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     if (lianeFilter is { ForCurrentUser: true, States.Length: > 0 })
     {
       // Return with user's version of liane state
-      paginatedLianes = paginatedLianes
-        .Select(l => l with { State = GetUserState(l.State, l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) })
-        .Where(l => lianeFilter.States.Contains(l.State));
+      var result = await paginatedLianes.SelectAsync(async l => l with { State = LianeStatusUpdate.GetUserState(await MapEntity(l), l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
+      paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
     }
 
     return await paginatedLianes.SelectAsync(MapEntity);
@@ -331,6 +333,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
+    await lianeUpdateObserver.Push(updatedLiane);
     return updatedLiane;
   }
 
@@ -398,6 +401,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
+    await lianeUpdateObserver.Push(updatedLiane);
     return updatedLiane;
   }
 
@@ -511,20 +515,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     });
     var users = await liane.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
     var recurrence = liane.Recurrence is null ? null : await lianeRecurrenceService.Get(liane.Recurrence);
-    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation,
-      recurrence.GetOrDefault(r => new Recurrence(r.Id, r.Days)));
-  }
-
-
-  private static LianeState GetUserState(LianeState current, LianeMember member)
-  {
-    // Only handle states that are final here (ie. final state is either canceled or archived for the current user)
-    if (current == LianeState.Finished && member.Feedback is not null)
-    {
-      return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;
-    }
-
-    return current;
+    return new Api.Trip.Liane(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation, recurrence.GetOrDefault(r => new Recurrence(r.Id!, r.Days)));
   }
 
   private async Task<ImmutableList<LianeSegment>> GetLianeSegments(IEnumerable<Api.Trip.Liane> lianes)
@@ -690,6 +681,8 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   {
     await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state));
+    
+    await lianeUpdateObserver.Push(await Get(liane));
   }
 
   public async Task RemoveRecurrence(Ref<LianeRecurrence> recurrence)
@@ -727,5 +720,22 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .Find(l => l.State == LianeState.NotStarted)
       .SelectAsync(MapEntity);
     await postgisService.SyncGeometries(results);
+  }
+
+  public async Task BulkUpdateState(ImmutableList<Ref<Api.Trip.Liane>> lianes, LianeState state)
+  {
+    
+    await Mongo.GetCollection<LianeDb>()
+      .BulkWriteAsync(lianes
+        .Select(liane => new UpdateOneModel<LianeDb>(
+          Builders<LianeDb>.Filter.Where(l => l.Id == liane.Id),
+          Builders<LianeDb>.Update.Set(l => l.State, state))
+        ));
+
+    await Parallel.ForEachAsync(lianes, async (liane, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      await lianeUpdateObserver.Push(await Get(liane));
+    });
   }
 }

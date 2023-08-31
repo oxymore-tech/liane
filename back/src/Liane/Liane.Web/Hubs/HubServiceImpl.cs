@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
@@ -16,7 +17,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Hubs;
 
-public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberTracker
+public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberTracker, ILianeUpdateObserver
 {
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
@@ -116,7 +117,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
   
   }
 
-  public async Task<TrackedMemberLocation?>  Subscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
+  public Task<TrackedMemberLocation?>  Subscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
     locationTrackers.AddOrUpdate((liane.Id, member.Id), _ => new HashSet<string> { user }, (_, set) =>
     {
@@ -124,14 +125,15 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
        return set;
     });
     var lastValue = lastValueCache.Get((liane.Id, member.Id));
-    return lastValue is not TrackedMemberLocation update ? null : update;
+    return Task.FromResult(lastValue is not TrackedMemberLocation update ? null : update);
   }
 
-  public async Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
+  public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
     var set = locationTrackers[(liane.Id, member.Id)];
     set.Remove(user);
     if (set.Count == 0) locationTrackers.Remove((liane.Id, member.Id), out _);
+    return Task.CompletedTask;
   }
 
   public async Task Push(TrackedMemberLocation update)
@@ -145,6 +147,18 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
       if (connectionId is not null)
       {
         await hubContext.Clients.Client(connectionId).ReceiveLianeMemberLocationUpdate(update);
+      }
+    }
+  }
+
+  public async Task Push(Api.Trip.Liane liane, ImmutableList<Ref<User>>? toMembers = null)
+  {
+    foreach (var member in toMembers ?? liane.Members.Select(m => m.User))
+    {
+      var connectionId = GetConnectionId(member);
+      if (connectionId is not null)
+      {
+        await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
       }
     }
   }
