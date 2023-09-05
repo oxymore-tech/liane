@@ -60,6 +60,7 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
       this.hub.on("ReceiveNotification", this.receiveNotification);
       this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
+      this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
       this.hub.onclose(err => {
         if (!alreadyClosed) {
           if (__DEV__ && err) {

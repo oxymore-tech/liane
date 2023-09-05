@@ -5,7 +5,7 @@ import { UserPicture } from "@/components/UserPicture";
 import React from "react";
 import { MarkerView, useAppMapViewController } from "../AppMapView";
 import { AppStyles } from "@/theme/styles";
-import { useSubscription } from "@/util/hooks/subscription";
+import { useSubscriptionValue } from "@/util/hooks/subscription";
 import Svg, { Path } from "react-native-svg";
 import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
 
@@ -26,7 +26,7 @@ export const LianeMemberDisplay = ({
   minZoom?: number | undefined;
 }) => {
   const controller = useAppMapViewController();
-  const region = useSubscription(controller.subscribeToRegionChanges);
+  const region = useSubscriptionValue(controller.subscribeToRegionChanges);
   const zoom = region?.zoomLevel || 10;
 
   if (minZoom && zoom <= minZoom) {

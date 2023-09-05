@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-import { Liane, Ref, UnionUtils } from "@/api";
+import { JoinLianeRequestDetailed, Liane, Ref, UnionUtils } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { Event } from "@/api/notification";
@@ -14,6 +14,7 @@ import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";
+import { useSubscription } from "@/util/hooks/subscription";
 import { UserPicture } from "@/components/UserPicture";
 
 const MyTripsScreen = () => {
@@ -39,6 +40,8 @@ const MyTripsScreen = () => {
     return () => s.unsubscribe();
   }, []);
 
+  useSubscription(services.realTimeHub.lianeUpdates, liane => {});
+
   const isFetchingFutureLianes = queryClient.isFetching({
     predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
   });
@@ -48,12 +51,12 @@ const MyTripsScreen = () => {
     }
   }, [isFetchingFutureLianes]);
 
-  const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
-  const error: any = queriesData[0].error || queriesData[1].error;
-  const isFetching = queriesData[0].isFetching || queriesData[1].isFetching;
+  const isLoading = queriesData.some(q => q.isLoading);
+  const error: any = queriesData.find(q => q.error)?.error;
+  const isFetching = queriesData.some(q => q.isFetching);
 
   // Create section list from a list of Liane objects
-  const data = useMemo(() => {
+  const data: (JoinLianeRequestDetailed | Liane)[] = useMemo(() => {
     if (queriesData[0].data && queriesData[1].data) {
       return [...queriesData[0].data!.data, ...queriesData[1].data!.data];
     }
