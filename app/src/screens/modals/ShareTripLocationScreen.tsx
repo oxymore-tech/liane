@@ -37,7 +37,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
         BackgroundGeolocationService.enableLocation()
           .then(async () => {
             try {
-              const trip = getTripFromLiane(liane, user!);
+              const trip = getTripFromLiane(liane, user!.id!);
               await sendLocationPings(liane.id!, trip.wayPoints);
               navigation.replace("LianeDetail", { liane });
             } catch (e) {

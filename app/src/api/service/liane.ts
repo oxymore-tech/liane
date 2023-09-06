@@ -161,7 +161,7 @@ export class LianeServiceClient implements LianeService {
     const user = await getCurrentUser();
     local = local.filter(l => new Date(l.departureTime).getTime() > now);
     const online = lianes
-      .map(l => ({ ...l, departureTime: getTripFromLiane(l, user!).departureTime }))
+      .map(l => ({ ...l, departureTime: getTripFromLiane(l, user!.id!).departureTime }))
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
 
     const { added, removed, stored } = sync(

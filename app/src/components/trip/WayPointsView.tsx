@@ -201,6 +201,11 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
 
   const intermediateWayPoint = (index: number) => {
     const wayPoint = steps[index];
+    const label =
+      steps.slice(0, index).find(w => w.rallyingPoint.city === wayPoint.rallyingPoint.city) ||
+      steps.slice(index + 1, steps.length).find(w => w.rallyingPoint.city === wayPoint.rallyingPoint.city)
+        ? wayPoint.rallyingPoint.label
+        : wayPoint.rallyingPoint.city;
     return (
       <AppText
         key={index}
@@ -209,7 +214,7 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
           style={[styles.intermediateWayPointLabel, index + 1 === di ? styles.intermediateFromWayPointLabelColor : {}]}
           value={wayPoint.eta}
         />{" "}
-        - {wayPoint.rallyingPoint.city}
+        - {label}
       </AppText>
     );
   };
@@ -231,12 +236,16 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
       </Column>
 
       <Column style={[styles.column, styles.shrink]}>
-        <AppText style={[styles.mainWayPointLabel, di === 0 ? styles.fromLabel : styles.overallFromLabel]}>{from.rallyingPoint.city}</AppText>
+        <AppText style={[styles.mainWayPointLabel, di === 0 ? styles.fromLabel : styles.overallFromLabel]}>
+          {from.rallyingPoint[from.rallyingPoint.city === to.rallyingPoint.city ? "label" : "city"]}
+        </AppText>
 
         {steps.length <= 3 && steps.map((_, i) => intermediateWayPoint(i))}
         {steps.length > 3 && [intermediateWayPoint(0), <AppText>{steps.length - 2} étapes</AppText>, intermediateWayPoint(steps.length - 1)]}
 
-        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>{to.rallyingPoint.city}</AppText>
+        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>
+          {to.rallyingPoint[from.rallyingPoint.city === to.rallyingPoint.city ? "label" : "city"]}
+        </AppText>
       </Column>
     </Row>
   );

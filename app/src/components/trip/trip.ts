@@ -1,4 +1,4 @@
-import { Exact, Liane, LianeMatch, LianeState, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
+import { Exact, JoinLianeRequestDetailed, Liane, LianeMatch, LianeState, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from "@/api";
 import { addSeconds } from "@/util/datetime";
 import { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -14,9 +14,16 @@ export const getTotalDuration = (trip: WayPoint[]) => {
 export const getTotalDistance = (trip: WayPoint[]) => {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 };
-export const getTripFromLiane = (liane: Liane, user: User) => {
-  const member = liane.members.find(m => m.user.id === user!.id);
+export const getTripFromLiane = (liane: Liane, user: Ref<User>) => {
+  const member = liane.members.find(m => m.user.id === user);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
+};
+export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
+  const wayPoints = UnionUtils.isInstanceOf<Exact>(request.match, "Exact") ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
+  const arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
+  const departureTime = wayPoints[departureIndex].eta;
+  return { wayPoints: wayPoints.slice(departureIndex, arrivalIndex + 1), departureTime };
 };
 
 export const getTripFromMatch = (liane: LianeMatch) => {
@@ -89,7 +96,7 @@ export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "
 const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
   if (liane.state === "NotStarted" || liane.state === "Started") {
     const [_, delta] = getTimeForUser(liane, user, "from");
-    console.log(delta);
+
     if (delta > 0 && delta <= 5 * 60) {
       if (liane.members.length > 1) {
         return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };

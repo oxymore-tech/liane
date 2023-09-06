@@ -70,7 +70,7 @@ const MessageBubble = ({
 };
 
 const AttachedLianeOverview = ({ liane, user }: { liane: Liane; user: User }) => {
-  const { wayPoints, departureTime } = getTripFromLiane(liane, user);
+  const { wayPoints, departureTime } = getTripFromLiane(liane, user!.id!);
 
   return (
     <View style={{ paddingLeft: 56, paddingTop: 8, paddingRight: 16 }}>
@@ -224,7 +224,7 @@ export const ChatScreen = () => {
           )}
         </Row>
         {/* TODO attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />*/}
-        {conversation && <DebugIdView id={conversation.id!} />}
+        {conversation && <DebugIdView object={conversation} />}
       </View>
 
       <KeyboardAvoidingView
