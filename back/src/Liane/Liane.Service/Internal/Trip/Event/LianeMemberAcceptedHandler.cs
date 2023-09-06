@@ -26,7 +26,7 @@ public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.Membe
     var liane = await lianeService.AddMember(e.Liane, member);
     if (e.TakeReturnTrip)
     {
-      await lianeService.AddMember(liane.Return!, member);
+      await lianeService.AddMember(liane.Return!, member with {From = e.To, To = e.From});
     }
     var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
     await notificationService.SendEvent("Demande acceptée", 
