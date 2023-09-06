@@ -28,7 +28,7 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { DatePagerSelector, TimeWheelPicker } from "@/components/DatePagerSelector";
+import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { AppToggle } from "@/components/base/AppOptionToggle";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
@@ -45,6 +45,7 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { getFirstFutureDate } from "@/util/datetime";
+import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 
 interface StepProps<T> {
   editable: boolean;

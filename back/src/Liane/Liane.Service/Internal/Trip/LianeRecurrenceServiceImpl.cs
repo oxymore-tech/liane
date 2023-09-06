@@ -34,7 +34,12 @@ public class LianeRecurrenceServiceImpl: MongoCrudEntityService<LianeRecurrence>
       var resolved = await Get(recurrence);
       await Mongo.GetCollection<LianeRecurrence>().UpdateOneAsync(r => r.Id == recurrence.Id, 
         Builders<LianeRecurrence>.Update.Combine(
-          Builders<LianeRecurrence>.Update.Set(r => r.InitialRequest, resolved.InitialRequest with { DepartureTime = new DateTime(nextRecurrenceDate.Year, nextRecurrenceDate.Month, nextRecurrenceDate.Day, resolved.InitialRequest.DepartureTime.Hour, resolved.InitialRequest.DepartureTime.Minute, resolved.InitialRequest.DepartureTime.Second, DateTimeKind.Utc)}),
+          Builders<LianeRecurrence>.Update.Set(r => r.InitialRequest,
+            resolved.InitialRequest with
+            {
+              DepartureTime = new DateTime(nextRecurrenceDate.Year, nextRecurrenceDate.Month, nextRecurrenceDate.Day, resolved.InitialRequest.DepartureTime.Hour, resolved.InitialRequest.DepartureTime.Minute, resolved.InitialRequest.DepartureTime.Second, DateTimeKind.Utc),
+              ReturnTime = resolved.InitialRequest.ReturnTime is null ? null : new DateTime(nextRecurrenceDate.Year, nextRecurrenceDate.Month, nextRecurrenceDate.Day, resolved.InitialRequest.ReturnTime.Value.Hour, resolved.InitialRequest.ReturnTime.Value.Minute, resolved.InitialRequest.ReturnTime.Value.Second, DateTimeKind.Utc),
+            }),
           Builders<LianeRecurrence>.Update.Set(r => r.Days, days),
           Builders<LianeRecurrence>.Update.Set(r => r.Active, true)
         )

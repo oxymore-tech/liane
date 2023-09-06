@@ -159,7 +159,7 @@ export class LocationServiceClient implements LocationService {
       url += `&proximity=${[closeTo.lng, closeTo.lat]}`;
     }
 
-    console.log(url);
+    //console.log(url);
     const response = await fetch(url, {
       method: "GET"
     });

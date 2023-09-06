@@ -12,7 +12,7 @@ import {
   View
 } from "react-native";
 
-import { JoinLianeRequestDetailed, Liane, UTCDateTime, User } from "@/api";
+import { JoinLianeRequestDetailed, Liane, UTCDateTime, User, Ref } from "@/api";
 import { formatMonthDay } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 
@@ -29,6 +29,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { extractDatePart } from "@/util/datetime";
 import { useObservable } from "@/util/hooks/subscription";
 import { capitalize } from "@/util/strings";
+import { getTripFromJoinRequest, getTripFromLiane } from "@/components/trip/trip";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -44,9 +45,11 @@ export interface TripListViewProps {
 
 export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: TripListViewProps) => {
   const insets = useSafeAreaInsets();
+  const { user } = useContext(AppContext);
+  const userId = user!.id!;
   const sections = useMemo(() => {
-    return convertToDateSections(data, reverseSort ?? false);
-  }, [data]);
+    return convertToDateSections(data, userId, reverseSort);
+  }, [data, userId, reverseSort]);
   return (
     <SectionList
       style={{ flex: 1 }}
@@ -67,13 +70,15 @@ const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): ite
   return (item as JoinLianeRequestDetailed).targetLiane !== undefined;
 };
 
-const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], reverseSort: boolean): TripSection[] =>
+const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
   Object.entries(
     data.reduce((tmp, item) => {
-      const liane: Liane = isResolvedJoinLianeRequest(item) ? item.targetLiane : item;
+      const departureTime = isResolvedJoinLianeRequest(item)
+        ? getTripFromJoinRequest(item).departureTime
+        : getTripFromLiane(item, member).departureTime;
 
       // Use date for grouping
-      const group = extractDatePart(liane.departureTime);
+      const group = extractDatePart(departureTime);
 
       // Add item to this group (or create the group)
       if (!tmp[group]) {

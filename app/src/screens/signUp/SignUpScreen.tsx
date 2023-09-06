@@ -14,6 +14,8 @@ import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateM
 import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { Center } from "@/components/base/AppLayout";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { APP_VERSION } from "@env";
 
 const t = scopedTranslate("SignUp");
 
@@ -31,6 +33,7 @@ const SignUpPage = () => {
   const [value, setValue] = useState<string>("");
   const [error, setError] = useState("");
   const { services } = useContext(AppContext);
+  const insets = useSafeAreaInsets();
 
   const sendCode = async () => {
     try {
@@ -75,6 +78,9 @@ const SignUpPage = () => {
           <CodeInput code={value} onChange={setValue} onValidate={submitCode} retry={sendCode} />
         )}
         <AppText style={styles.errorText}>{error || " "}</AppText>
+      </View>
+      <View style={[styles.bottomContainer, { bottom: insets.bottom }]}>
+        <AppText style={styles.bottomText}>Version: {APP_VERSION}</AppText>
       </View>
     </View>
   );
@@ -130,6 +136,16 @@ const styles = StyleSheet.create({
     color: "red", // TODO red 600,
     textAlign: "center",
     margin: 4
+  },
+  bottomContainer: {
+    position: "absolute",
+    marginBottom: 16,
+    left: 0,
+    right: 0
+  },
+  bottomText: {
+    color: AppColorPalettes.gray[100],
+    alignSelf: "center"
   }
 });
 

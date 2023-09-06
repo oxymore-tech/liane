@@ -10,5 +10,5 @@ export interface LianeViewProps {
 
 export const LianeView = ({ liane }: LianeViewProps) => {
   const { user } = useContext(AppContext);
-  return <WayPointsView {...getTripFromLiane(liane, user!)} />;
+  return <WayPointsView {...getTripFromLiane(liane, user!.id!)} />;
 };
