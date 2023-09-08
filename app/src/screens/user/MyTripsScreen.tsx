@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-import { JoinLianeRequestDetailed, Liane, Ref, UnionUtils } from "@/api";
+import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse, Ref, UnionUtils } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { Event } from "@/api/notification";
@@ -20,10 +20,11 @@ import { UserPicture } from "@/components/UserPicture";
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
+  const futureStates: LianeState[] = ["NotStarted", "Started"];
   const { services, user } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"], undefined, 25, false) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(futureStates, undefined, 25, false) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -33,14 +34,34 @@ const MyTripsScreen = () => {
 
       //  @ts-ignore
       if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
-        await queryClient.invalidateQueries(LianeQueryKey);
+        //    await queryClient.invalidateQueries(LianeQueryKey);
         await queryClient.invalidateQueries(JoinRequestsQueryKey);
       }
     });
     return () => s.unsubscribe();
   }, []);
 
-  useSubscription(services.realTimeHub.lianeUpdates, liane => {});
+  useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
+    queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
+      console.log(new Date(), liane);
+      if (!old) {
+        return { next: undefined, pageSize: 1, data: [liane] };
+      }
+      const found = old.data.findIndex(l => l.id === liane.id);
+      if (futureStates.includes(liane.state)) {
+        if (found >= 0) {
+          old.data[found] = liane;
+          return old;
+        } else {
+          old.data.unshift(liane);
+          return { ...old, pageSize: old.pageSize + 1 };
+        }
+      } else if (found >= 0) {
+        return { ...old, pageSize: old.pageSize - 1, data: old.data.splice(found, 1) };
+      }
+      return old;
+    });
+  });
 
   const isFetchingFutureLianes = queryClient.isFetching({
     predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
@@ -145,6 +166,7 @@ const NoRecentTrip = () => {
     </Center>
   );
 };
+
 export const LianePastQueryKey = "getPastTrips";
 
 const PastLianeListView = WithFetchPaginatedResponse<Liane>(
