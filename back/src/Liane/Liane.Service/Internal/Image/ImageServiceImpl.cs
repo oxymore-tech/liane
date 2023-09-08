@@ -45,6 +45,13 @@ public sealed class ImageServiceImpl : IImageService
     return picturelUrl;
   }
 
+  public async Task DeleteProfile(string userId)
+  {
+    var imageId = $"user_{userId}";
+
+    await DeleteImage(imageId);
+  }
+
   private async Task<ImageReponse> UploadImage(IFormFile input, string id)
   {
     var requestUri = GetApiUri();
@@ -62,7 +69,7 @@ public sealed class ImageServiceImpl : IImageService
     return result;
   }
 
-  private async Task<bool> DeleteImage(string id)
+  private async Task DeleteImage(string id)
   {
     try
     {
@@ -70,12 +77,10 @@ public sealed class ImageServiceImpl : IImageService
       using var requestMessage = new HttpRequestMessage(HttpMethod.Delete, requestUri);
       requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", cloudflareSettings.ApiKey);
       using var response = await httpClient.SendAsync(requestMessage);
-      var result = await response.CheckAndReadResponseAs<ImageReponse>(jsonOptions);
-      return result.Success;
+      await response.CheckAndReadResponseAs<ImageReponse>(jsonOptions);
     }
     catch (ResourceNotFoundException)
     {
-      return false;
     }
   }
 

@@ -28,14 +28,14 @@ public sealed class MockServiceImpl : IMockService
     this.mongoDatabase = mongoDatabase;
     this.rallyingPointService = rallyingPointService;
   }
-  
-  public static Faker<DbUser> DbUserFaker => new Faker<DbUser>()
+
+  private static Faker<DbUser> DbUserFaker => new Faker<DbUser>()
     .CustomInstantiator(f => new DbUser(
-        ObjectId.GenerateNewId().ToString(),
+        ObjectId.GenerateNewId().ToString()!,
         false,
         f.Phone.PhoneNumber("0#########"),
-        null, null, null, DateTime.UtcNow, null, 
-        new UserInfo(f.Name.FirstName(null)+"-Bot","$",null, Gender.Unspecified)
+        null, null, null, DateTime.UtcNow, null,
+        new UserInfo(f.Name.FirstName() + "-Bot", "$", null, Gender.Unspecified)
       )
     );
 

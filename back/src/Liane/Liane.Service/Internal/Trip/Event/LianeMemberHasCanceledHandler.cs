@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
