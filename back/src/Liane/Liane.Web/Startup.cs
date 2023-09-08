@@ -81,6 +81,7 @@ public static class Startup
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<HubServiceImpl>();
+    services.AddService<DeleteAccountServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<RallyingPointGenerator>();

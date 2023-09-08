@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Api.Event;
 using Liane.Api.User;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
@@ -47,6 +47,12 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return deleteOneAsync.DeletedCount > 0;
   }
 
+  public async Task Clear(IEnumerable<string> toDelete)
+  {
+    await Mongo.GetCollection<ConversationGroup>()
+      .DeleteOneAsync(g => toDelete.Contains(g.Id!));
+  }
+
   public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
   {
     // Retrieve conversation and user's membership data
@@ -74,7 +80,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
 
     // Update Member's last connection
     await Mongo.GetCollection<ConversationGroup>()
-      .UpdateOneAsync<ConversationGroup>(
+      .UpdateOneAsync(
         g => g.Id == group.Id,
         Builders<ConversationGroup>.Update.Set(g => g.Members[userMembershipIndex].LastReadAt, timestamp)
       );
@@ -93,16 +99,6 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
         return lastReadAt is null || lastReadAt.Value < c.LastMessageAt;
       })
       .Select(c => (Ref<ConversationGroup>)c.Id!).ToImmutableList();
-  }
-
-  public Task PostEvent(LianeEvent lianeEvent)
-  {
-    throw new NotImplementedException();
-  }
-
-  public Task PostAnswer(Ref<Notification> id, Answer answer)
-  {
-    throw new NotImplementedException();
   }
 
   public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)

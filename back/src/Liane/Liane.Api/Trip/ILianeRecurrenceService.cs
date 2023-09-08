@@ -11,4 +11,5 @@ public interface ILianeRecurrenceService : ICrudEntityService<LianeRecurrence>
   Task<ImmutableList<LianeRecurrence>> ListForCurrentUser();
   Task<LianeRecurrence> GetWithResolvedRefs(Ref<LianeRecurrence> recurrence);
 
+  Task ClearForMember(string id);
 }

@@ -89,7 +89,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     {
       var currentLocation = tracker.GetCurrentMemberLocation(memberId);
       if (currentLocation is not null) await lianeMemberTracker.Push(currentLocation);
-    } else if (tracker.IsCloseToPickup(memberId))
+    } else // disable for now : if (tracker.IsCloseToPickup(memberId))
     {
       var currentLocation = tracker.GetCurrentMemberLocation(memberId);
       if (currentLocation is not null) await lianeMemberTracker.Push(currentLocation);

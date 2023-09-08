@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Trip.Event;
 
-public sealed class AutomaticAnswerService: IAutomaticAnswerService
+public sealed class AutomaticAnswerService : IAutomaticAnswerService
 {
   private readonly EventDispatcher eventDispatcher;
   private readonly ILianeService lianeService;
@@ -27,15 +27,15 @@ public sealed class AutomaticAnswerService: IAutomaticAnswerService
 
   public async Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User> newMember)
   {
-    
     var liane = await lianeService.Get(joinRequest.Liane);
     var creator = await userService.GetFullUser(liane.CreatedBy);
-    if (!creator.LastName.Equals("$")) return false;  
+    if (!creator.LastName.Equals("$")) return false;
 
     await eventDispatcher.Dispatch(new LianeEvent.MemberAccepted(liane, newMember, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip), creator);
     return true;
   }
 }
+
 public sealed class LianeRequestServiceImpl : ILianeRequestService
 {
   private readonly INotificationService notificationService;
@@ -70,10 +70,8 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
       // Creator is a bot or automatically accepts requests
       return;
     }
-    else
-    {
-      await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
-    }
+
+    await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
@@ -132,10 +130,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     var to = await rallyingPointService.Get(joinRequest.To);
     var liane = await lianeService.Get(joinRequest.Liane);
     var createdBy = await userService.Get(lianeEvent.CreatedBy!);
-    
+
     if (liane.State != LianeState.NotStarted)
     {
-      throw new ConstraintException("This request is linked to a liane with state "+ liane.State);
+      throw new ConstraintException("This request is linked to a liane with state " + liane.State);
     }
 
     var match = await lianeService.GetNewTrip(liane, from, to, joinRequest.Seats > 0);

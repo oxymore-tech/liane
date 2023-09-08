@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Postgis;
 
- public  sealed partial class PostgisServiceImpl : IPostgisService
+public sealed partial class PostgisServiceImpl : IPostgisService
 {
   private readonly PostgisDatabase db;
   private readonly ILogger<PostgisServiceImpl> logger;
@@ -52,12 +52,13 @@ namespace Liane.Service.Internal.Postgis;
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
-    
+
     await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE true", tx);
     foreach (var l in source)
     {
       await InsertLianeWaypoints(l, connection, tx);
     }
+
     await DeleteOrphanSegments(connection, tx);
     tx.Commit();
   }
@@ -77,6 +78,7 @@ namespace Liane.Service.Internal.Postgis;
       "SELECT id FROM ongoing_trip");
     return results.Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
   }
+
   public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to)
   {
     using var connection = db.NewConnection();
@@ -116,15 +118,7 @@ namespace Liane.Service.Internal.Postgis;
     return new BatchGeometryUpdate(segments, wayPoints);
   }
 
-  public async Task UpdateGeometry(Func<BatchGeometryUpdateInput, Task<BatchGeometryUpdate>> batch)
-  {
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-    await GetStatsAndExecuteBatch(batch, connection, tx);
-    tx.Commit();
-  }
-
-  public async Task Clear(ImmutableList<string> lianes)
+  public async Task Clear(IEnumerable<string> lianes)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -152,7 +146,7 @@ namespace Liane.Service.Internal.Postgis;
 
   private async Task DeleteOrphanSegments(IDbConnection connection, IDbTransaction tx)
   {
-     var segmentsDeleted = await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)", tx);
-     logger.LogInformation("Deleted {segmentsDeleted} orphan segments.", segmentsDeleted);
+    var segmentsDeleted = await connection.ExecuteAsync("DELETE FROM segment WHERE ARRAY [from_id, to_id] NOT IN (SELECT ARRAY [from_id, to_id] FROM liane_waypoint)", tx);
+    logger.LogInformation("Deleted {segmentsDeleted} orphan segments.", segmentsDeleted);
   }
 }

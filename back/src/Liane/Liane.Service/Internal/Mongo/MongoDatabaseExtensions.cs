@@ -93,6 +93,12 @@ public static class MongoDatabaseExtensions
     return cursor.ToFilter(sortAsc, indexedField);
   }
 
+  public static async Task<ImmutableList<TOut>> Select<T, TOut>(this IAsyncCursorSource<T> source, Func<T, TOut> transformer, bool parallel = false, CancellationToken cancellationToken = default)
+  {
+    return await (await source.ToListAsync(cancellationToken))
+      .SelectAsync(t => Task.FromResult(transformer(t)), parallel);
+  }
+  
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IAsyncCursorSource<T> source, Func<T, Task<TOut>> transformer, bool parallel = false, CancellationToken cancellationToken = default)
   {
     return await (await source.ToListAsync(cancellationToken))

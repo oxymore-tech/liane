@@ -67,7 +67,7 @@ const ProfileView = ({ user }: { user: User }) => {
 };
 
 const Actions = () => {
-  const { logout } = useContext(AppContext);
+  const { logout, services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   return (
     <Column>
@@ -80,15 +80,16 @@ const Actions = () => {
       <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
 
       <LineSeparator />
+      <ActionItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
       <ActionItem
-        onPress={() => {
+        onPress={async () => {
+          await services.auth.logout();
           logout();
         }}
         color={ContextualColors.redAlert.text}
         iconName={"log-out-outline"}
         text={"Se déconnecter"}
       />
-
       <LineSeparator />
       <AppText style={{ marginLeft: 32, marginVertical: 8 }}>Version : {APP_VERSION}</AppText>
     </Column>

@@ -82,16 +82,21 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], membe
 
       // Add item to this group (or create the group)
       if (!tmp[group]) {
-        tmp[group] = [item];
+        tmp[group] = [{ departureTime, item }];
       } else {
-        tmp[group].unshift(item);
+        tmp[group].unshift({ departureTime, item });
       }
-
       // add this item to its group
       return tmp;
-    }, {} as { [key: UTCDateTime]: (Liane | JoinLianeRequestDetailed)[] })
+    }, {} as { [key: UTCDateTime]: { departureTime: UTCDateTime; item: Liane | JoinLianeRequestDetailed }[] })
   )
-    .map(([group, items]) => ({ date: group, data: items } as TripSection))
+    .map(
+      ([group, items]) =>
+        ({
+          date: group,
+          data: items.sort((a, b) => a.departureTime.localeCompare(b.departureTime)).map(i => i.item)
+        } as TripSection)
+    )
     .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
 
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {

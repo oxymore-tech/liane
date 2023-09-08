@@ -46,6 +46,15 @@ public sealed record FullUser(
 
     return $"{firstName} {lastName[0]}.";
   }
+
+  public static FullUser Unknown(string userId) => new(
+    userId,
+    "XXXXXXXXXX",
+    DateTime.UtcNow,
+    "Utilisateur inconnu",
+    "",
+    Gender.Unspecified
+  );
 }
 
 public sealed record UserInfo(

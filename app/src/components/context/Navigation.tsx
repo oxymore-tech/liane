@@ -32,6 +32,7 @@ import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen"
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { ShareTripLocationScreen } from "@/screens/modals/ShareTripLocationScreen";
+import { AccountScreen } from "@/screens/user/AccountScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -119,6 +120,7 @@ function Navigation() {
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }

@@ -31,7 +31,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
   public async Task<FullUser> UpdateInfo(string id, UserInfo info)
   {
-    var minLength = 2;
+    const int minLength = 2;
     if (info.FirstName.Length < minLength) throw new ValidationException(nameof(UserInfo.FirstName), ValidationMessage.TooShort(minLength));
     if (info.LastName.Length < minLength) throw new ValidationException(nameof(UserInfo.LastName), ValidationMessage.TooShort(minLength));
 
@@ -42,7 +42,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
           .Set(i => i.UserInfo!.LastName, info.LastName)
           .Set(i => i.UserInfo!.Gender, info.Gender)
       );
-    return  await GetFullUser(id);
+    return await GetFullUser(id);
   }
 
   public async Task<FullUser> GetByPhone(string phone)
@@ -66,12 +66,15 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   public async Task<FullUser> GetFullUser(string userId)
   {
     var userDb = await Mongo.Get<DbUser>(userId);
-    if (userDb is null)
-    {
-      throw new ResourceNotFoundException($"User ${userId}");
-    }
+    return userDb is null
+      ? FullUser.Unknown(userId)
+      : MapUser(userDb);
+  }
 
-    return MapUser(userDb);
+  public Task Delete(string id)
+  {
+    return Mongo.GetCollection<DbUser>()
+      .DeleteOneAsync(u => u.Id == id);
   }
 
   private static FullUser MapUser(DbUser dbUser)

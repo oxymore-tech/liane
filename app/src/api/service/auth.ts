@@ -1,4 +1,4 @@
-import { patch, patchAs, post, postAs, postAsString } from "@/api/http";
+import { del, patch, patchAs, post, postAs, postAsString } from "@/api/http";
 import { AuthRequest, AuthResponse, AuthUser, FullUser, UserInfo } from "@/api";
 import { clearStorage, getCurrentUser, getUserSession, processAuthResponse, storeCurrentUser } from "@/api/storage";
 import { Subject, SubscriptionLike } from "rxjs";
@@ -13,6 +13,7 @@ export interface AuthService {
   currentUser(): Promise<FullUser | undefined>;
   uploadProfileImage(data: FormData): Promise<string>;
   subscribeToUserChanges(callback: (user: FullUser) => void): SubscriptionLike;
+  deleteAccount(): Promise<void>;
 }
 
 export class AuthServiceClient implements AuthService {
@@ -37,6 +38,11 @@ export class AuthServiceClient implements AuthService {
 
   async logout(): Promise<void> {
     await post("/auth/logout");
+    await clearStorage();
+  }
+
+  async deleteAccount(): Promise<void> {
+    await del("/user");
     await clearStorage();
   }
 
