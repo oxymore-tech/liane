@@ -219,8 +219,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
   };
   logout = async () => {
+    // do not call "logout" endpoint here as this could be used after account deletion, account switch, etc.
     await SERVICES.realTimeHub.stop();
-    await SERVICES.auth.logout();
     console.debug("[LOGOUT] Disconnected.");
     await this.setAuthUser(undefined);
   };

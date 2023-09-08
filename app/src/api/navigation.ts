@@ -24,6 +24,7 @@ export type NavigationParamList = {
   LianeDetail: { liane: Liane | string };
   Profile: { user: User };
   ProfileEdit: undefined;
+  Account: undefined;
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
   ArchivedTrips: undefined;
   Settings: undefined;
