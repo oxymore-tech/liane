@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { APP_VERSION } from "@env";
+import { APP_ENV, APP_VERSION } from "@env";
 import { Center, Column } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -91,7 +91,10 @@ const Actions = () => {
         text={"Se déconnecter"}
       />
       <LineSeparator />
-      <AppText style={{ marginLeft: 32, marginVertical: 8 }}>Version : {APP_VERSION}</AppText>
+      <AppText style={{ marginLeft: 32, marginVertical: 8 }}>
+        Version : {APP_VERSION}
+        {APP_ENV === "production" ? "" : "(dev)"}
+      </AppText>
     </Column>
   );
 };

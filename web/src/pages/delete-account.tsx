@@ -21,7 +21,7 @@ export default function Page() {
         </div>
         <div className="p-4">
           <div className="text-lg font-bold">
-            La suppression de votre compte entrainera:
+            La suppression de votre compte entrainera :
           </div>
           <div className="p-4">
             <li>La suppression des informations personnelles vous concernant : prénom, nom, genre, photo de profil, numéro de téléphone</li>
@@ -30,7 +30,7 @@ export default function Page() {
         </div>
         <div className="p-4">
           <div className="text-lg font-bold">
-            Si vous supprimez votre compte:
+            Si vous supprimez votre compte :
           </div>
           <div className="p-4">
             <li>Vous ne pourrez plus accéder à votre compte</li>

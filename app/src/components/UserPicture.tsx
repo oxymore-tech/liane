@@ -37,7 +37,7 @@ export const UserPicture = ({ url, size = 48, id, style, borderWidth = 0, border
       ]}>
       {url ? (
         <Image
-          source={{ uri: `${url}?time=${new Date()}`, cache: "reload" }}
+          source={{ uri: url }}
           style={{
             borderWidth: borderWidth,
             borderColor: borderColor,

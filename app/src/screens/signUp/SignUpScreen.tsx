@@ -15,7 +15,7 @@ import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { APP_VERSION } from "@env";
+import { APP_ENV, APP_VERSION } from "@env";
 
 const t = scopedTranslate("SignUp");
 
@@ -80,7 +80,10 @@ const SignUpPage = () => {
         <AppText style={styles.errorText}>{error || " "}</AppText>
       </View>
       <View style={[styles.bottomContainer, { bottom: insets.bottom }]}>
-        <AppText style={styles.bottomText}>Version: {APP_VERSION}</AppText>
+        <AppText style={styles.bottomText}>
+          Version: {APP_VERSION}
+          {APP_ENV === "production" ? "" : "(dev)"}
+        </AppText>
       </View>
     </View>
   );
