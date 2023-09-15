@@ -53,8 +53,8 @@ export const AppStyles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold"
   },
-  body: {
-    fontFamily: "Inter",
+  text: {
+    fontFamily: "SourceSans3",
     fontSize: 14
   }
 });

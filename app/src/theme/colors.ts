@@ -4,6 +4,11 @@ export type AppColorSwatch = Readonly<{ [name in 500]: ColorValue }> &
   Readonly<Partial<{ [name in 100 | 200 | 300 | 400 | 600 | 700 | 800 | 900]: ColorValue }>>;
 
 export enum AppColors {
+  primaryColor = "#f67280",
+  secondaryColor = "#1d77a8",
+  backgroundColor = "#FFFFFF",
+  fontColor = "#000000",
+
   white = "#FFFFFF",
   black = "#000000",
   blue = "#0B79F9",
