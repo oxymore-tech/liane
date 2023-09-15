@@ -369,16 +369,16 @@ export const HomeMapMachine = (services: {
         resetMatchesDisplay: () => services.observables.displaySubject.next([EmptyFeatureCollection, new Set()]),
         selectRallyingPoint: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
-            return { ...context.filter, from: event.data, to: undefined };
+            return { ...context.filter, to: event.data, from: undefined };
           }
         }),
         selectRallyingPoint2: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
-            if (context.filter.from!.id === event.data.id) {
+            if (context.filter.to!.id === event.data.id) {
               // Ignore if to & from are set to same value
               return context.filter;
             }
-            return { ...context.filter, to: event.data };
+            return { ...context.filter, from: event.data };
           }
         }),
         selectMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: (context, event) => event.data }),

@@ -200,7 +200,7 @@ export const MapHeader = ({
           </Row>
         </View>
       </View>
-      {!from && (
+      {!to && (
         <Animated.View
           entering={animateEntry ? SlideInUp : undefined}
           exiting={SlideOutUp}
@@ -216,11 +216,11 @@ export const MapHeader = ({
           ]}>
           <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
             <AppIcon name={"info-outline"} />
-            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point de départ"}</AppText>
+            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point d'arrivée"}</AppText>
           </Row>
         </Animated.View>
       )}
-      {!!from && (
+      {!!to && (
         <View
           style={[
             {
@@ -259,20 +259,20 @@ export const MapHeader = ({
                 <AppIcon name={"pin"} color={AppColors.orange} size={24} />
               </View>
               <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
-                <RallyingPointItem item={from} labelSize={15} showIcon={false} />
+                <RallyingPointItem item={to} labelSize={15} showIcon={false} />
               </View>
 
-              {!to && (
+              {!from && (
                 <AppPressableIcon
                   onPress={() => {
-                    updateTrip({ from: undefined });
+                    updateTrip({ to: undefined });
                   }}
                   name={"close-outline"}
                 />
               )}
             </Row>
             <View style={[{ width: "75%" }, styles.horizontalLine]} />
-            {!to && (
+            {!from && (
               <View style={{ paddingVertical: 4, paddingBottom: 8 }}>
                 {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
                 {!hintPhrase && (
@@ -293,7 +293,7 @@ export const MapHeader = ({
                 )}
               </View>
             )}
-            {!!to && (
+            {!!from && (
               <Row style={{ paddingTop: 4, paddingBottom: 8 }} spacing={16}>
                 <View
                   style={{
@@ -308,12 +308,12 @@ export const MapHeader = ({
                   <AppIcon name={"flag"} color={AppColors.pink} size={24} />
                 </View>
                 <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
-                  <RallyingPointItem item={to} labelSize={15} showIcon={false} />
+                  <RallyingPointItem item={from} labelSize={15} showIcon={false} />
                 </View>
 
                 <AppPressableIcon
                   onPress={() => {
-                    updateTrip({ to: undefined });
+                    updateTrip({ from: undefined });
                   }}
                   name={"close-outline"}
                 />

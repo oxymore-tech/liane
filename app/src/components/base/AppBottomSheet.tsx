@@ -25,6 +25,11 @@ export type BottomSheetRefProps = {
   getTop: () => number;
 };
 
+export interface BottomSheetObservableMessage {
+  expanded: boolean;
+  top: number;
+}
+
 interface BottomSheetContext {
   onScroll: (offset: number) => boolean;
   onEndScroll: (offset: number) => void;
