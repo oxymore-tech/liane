@@ -16,6 +16,7 @@ import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_ENV, APP_VERSION } from "@env";
+import { AppStyles } from "@/theme/styles";
 
 const t = scopedTranslate("SignUp");
 
@@ -106,9 +107,7 @@ const SignUpScreen = () => {
       {["code", "phone"].some(state.matches) && <SignUpPage />}
       {state.matches("form") && <SignUpFormScreen />}
       {!["code", "phone", "form"].some(state.matches) && (
-        <Center style={styles.container}>
-          <ActivityIndicator />
-        </Center>
+        <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
       )}
     </SignUpLianeContext.Provider>
   );

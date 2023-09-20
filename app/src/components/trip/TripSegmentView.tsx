@@ -19,37 +19,25 @@ export interface TripSegmentViewProps {
 export const TripSegmentView = ({ from, to, departureTime, arrivalTime }: TripSegmentViewProps) => {
   return (
     <Column spacing={4}>
-      <Row spacing={4} style={{ alignItems: "center" }}>
-        <Column spacing={16}>
-          <TimeView style={TripViewStyles.mainWayPointTime2} value={departureTime} />
-          <TimeView style={TripViewStyles.mainWayPointTime2} value={arrivalTime} />
-        </Column>
+      <Row spacing={8} style={{ alignItems: "center" }}>
         <Column style={{ justifyContent: "space-between", alignSelf: "stretch" }}>
-          <View
-            style={{
-              backgroundColor: AppColorPalettes.gray[100],
-              //    borderWidth: 1.5,
-              borderColor: AppColors.orange,
-              borderRadius: 16,
-              alignSelf: "center"
-            }}>
-            <AppIcon name={"pin"} size={18} color={AppColors.orange} />
-          </View>
-          <View style={[TripViewStyles.verticalLine, { borderColor: AppColorPalettes.gray[300] }]} />
-          <View
-            style={{
-              backgroundColor: AppColorPalettes.gray[100],
-              //    borderWidth: 1.5,
-              borderColor: AppColors.pink,
-              borderRadius: 16,
-              alignSelf: "center"
-            }}>
-            <AppIcon name={"flag"} size={18} color={AppColors.pink} />
-          </View>
+          <TimeView style={TripViewStyles.mainWayPointTime} value={departureTime} />
+          <TimeView style={TripViewStyles.mainWayPointTime} value={arrivalTime} />
+        </Column>
+        <Column style={{ justifyContent: "space-between", alignSelf: "stretch", paddingVertical: 8 }}>
+          <AppIcon name={"pin"} size={22} color={AppColors.primaryColor} />
+          <View style={TripViewStyles.verticalLine} />
+          <AppIcon name={"flag"} size={22} color={AppColors.primaryColor} />
         </Column>
         <Column spacing={16}>
-          <AppText style={TripViewStyles.mainWayPointLabel2}>{from.label}</AppText>
-          <AppText style={TripViewStyles.mainWayPointLabel2}>{to.label}</AppText>
+          <View>
+            <AppText style={TripViewStyles.mainWayPointCity}>{from.city}</AppText>
+            <AppText style={TripViewStyles.mainWayPointLabel}>{from.label}</AppText>
+          </View>
+          <View>
+            <AppText style={TripViewStyles.mainWayPointCity}>{to.city}</AppText>
+            <AppText style={TripViewStyles.mainWayPointLabel}>{to.label}</AppText>
+          </View>
         </Column>
       </Row>
 
@@ -84,19 +72,67 @@ export const TripViewStyles = StyleSheet.create({
   fromLabel: {
     color: AppColorPalettes.orange[500]
   },
+  mainWayPointCity: {
+    fontSize: 18,
+    fontWeight: "bold",
+    flexShrink: 1
+  },
+  mainWayPointLabel: {
+    marginTop: -4,
+    fontSize: 14,
+    fontWeight: "bold",
+    flexShrink: 1,
+    color: AppColorPalettes.gray[400]
+  },
+  mainWayPointTime: {
+    fontSize: 16,
+    fontWeight: "bold",
+    alignSelf: "center",
+    paddingVertical: 8,
+    color: AppColors.primaryColor
+  },
+  intermediateWayPointLabel: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: AppColorPalettes.gray[700]
+  },
+  intermediateFromWayPointLabelColor: {
+    color: AppColorPalettes.orange[500]
+  },
+  iconTravel: {
+    paddingVertical: 6,
+    marginHorizontal: 4
+  },
+  alignCenter: {
+    alignSelf: "center",
+    textAlignVertical: "center"
+  },
+  shrink: {
+    flexShrink: 1
+  },
+  column: {
+    justifyContent: "space-between"
+  },
+  waypointLine: {
+    borderLeftColor: AppColorPalettes.gray[400],
+    borderLeftWidth: 1,
+    minHeight: 12,
+    alignSelf: "center",
+    position: "relative",
+    top: -2
+  },
+  horizontalLine: {
+    marginVertical: 4,
+    borderLeftColor: AppColorPalettes.gray[200],
+    borderLeftWidth: 1,
+    minHeight: 18,
+    alignSelf: "center"
+  },
   mainWayPointTime2: {
     fontSize: 15,
     fontWeight: "700",
     textAlignVertical: "center",
     alignSelf: "center"
-  },
-  mainWayPointLabel: {
-    fontSize: 15,
-    fontWeight: "700",
-    textAlignVertical: "center",
-    alignSelf: "center",
-    flexShrink: 1,
-    maxWidth: "60%"
   },
   mainWayPointLabel2: {
     fontSize: 15,
@@ -104,26 +140,13 @@ export const TripViewStyles = StyleSheet.create({
     textAlignVertical: "center",
     flexShrink: 1
   },
-  horizontalLine: {
-    borderColor: AppColorPalettes.gray[400],
-    borderTopWidth: 1,
-    flexGrow: 1,
-    flexShrink: 2,
-    alignSelf: "center",
-    minWidth: 32
-  },
   verticalLine: {
-    borderColor: AppColorPalettes.gray[400],
+    borderColor: AppColorPalettes.gray[200],
     borderLeftWidth: 1,
     flexGrow: 1,
     flexShrink: 2,
     alignSelf: "center",
-    minHeight: 8
-  },
-  mainWayPointTime: {
-    fontSize: 13,
-    fontWeight: "700",
-    alignSelf: "center",
-    color: AppColorPalettes.gray[700]
+    minHeight: 8,
+    marginVertical: 4
   }
 });

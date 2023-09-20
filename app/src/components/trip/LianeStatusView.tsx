@@ -3,7 +3,7 @@ import { useLianeStatus, LianeStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
 import { ColorValue, View } from "react-native";
-import { AppColorPalettes } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 export const LianeStatusView = ({ liane }: { liane: Liane }) => {
   const lianeStatus = useLianeStatus(liane);
@@ -14,19 +14,19 @@ export const LianeStatusView = ({ liane }: { liane: Liane }) => {
   return (
     <View
       style={{
-        paddingHorizontal: 4,
-        paddingVertical: 4,
-        borderRadius: 4,
+        paddingHorizontal: 18,
+        paddingVertical: 6,
+        borderRadius: 10,
         backgroundColor: color
       }}>
-      <AppText>{statusText}</AppText>
+      <AppText style={{ color: AppColorPalettes.gray[500], fontWeight: "500" }}>{statusText}</AppText>
     </View>
   );
 };
 
 const getLianeStatusStyle = (lianeStatus: LianeStatus): [string | undefined, ColorValue] => {
   let status;
-  let color: ColorValue = AppColorPalettes.gray[100];
+  let color: ColorValue = AppColors.grayBackground;
   switch (lianeStatus) {
     case "StartingSoon":
       status = "Départ imminent";

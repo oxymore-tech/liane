@@ -76,13 +76,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
     textAlign: "center",
     justifyContent: "center",
-    borderColor: AppColors.black,
-    borderWidth: 1,
+    borderColor: AppColors.primaryColor,
+    borderWidth: 2,
     borderRadius: 20
   },
   daySelectedContainer: {
-    backgroundColor: AppColors.black,
-    borderColor: AppColors.yellow
+    borderWidth: 0,
+    backgroundColor: AppColors.primaryColor
   },
   textContainer: {
     color: AppColors.black,

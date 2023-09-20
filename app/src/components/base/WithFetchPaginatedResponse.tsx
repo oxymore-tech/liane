@@ -11,6 +11,7 @@ import { Center } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppColors } from "@/theme/colors";
 import { useAppNavigation } from "@/api/navigation";
+import { AppStyles } from "@/theme/styles";
 
 export interface WithFetchPaginatedResponseProps<T> extends WithFetchResourceProps<T[]> {
   hasNextPage: boolean;
@@ -53,11 +54,7 @@ export const WithFetchPaginatedResponse =
     };
 
     if (isLoading || !data?.pages) {
-      return (
-        <View style={styles.container}>
-          <ActivityIndicator size="large" />
-        </View>
-      );
+      return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
     }
     if (error) {
       // Show content depending on the error or propagate it

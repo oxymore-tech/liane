@@ -20,15 +20,15 @@ export const WayPointDisplay = ({
   size?: number;
   offsetY?: number;
 }) => {
-  let color: ColorValue = AppColors.darkBlue;
+  let color: ColorValue = AppColors.white;
   let icon;
 
   switch (type) {
     case "to":
-      icon = <AppIcon name={"flag"} color={active ? AppColors.pink : AppColors.black} size={size} />;
+      icon = <AppIcon name={"flag"} color={active ? AppColors.white : AppColors.black} size={size} />;
       break;
     case "from":
-      icon = <AppIcon name={"pin"} color={active ? AppColors.orange : AppColors.black} size={size} />;
+      icon = <AppIcon name={"pin"} color={active ? AppColors.white : AppColors.black} size={size} />;
       break;
     case "pickup":
       icon = <AppIcon name={"car"} color={active ? AppColors.white : AppColors.black} size={size} />;

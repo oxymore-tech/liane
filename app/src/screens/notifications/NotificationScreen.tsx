@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { AppColorPalettes } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppText } from "@/components/base/AppText";
@@ -9,13 +9,14 @@ import { useAppNavigation, getNotificationNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Notification } from "@/api/notification";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";
+import { AppStyles } from "@/theme/styles";
 
 export const NotificationQueryKey = "notification";
 
 const NoNotificationView = () => {
   return (
     <Center>
-      <AppText>Vous êtes à jour !</AppText>
+      <AppText style={AppStyles.noData}>Vous êtes à jour !</AppText>
     </Center>
   );
 };
@@ -54,7 +55,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={{ alignItems: "center" }}>
-              <ActivityIndicator />
+              <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
             </View>
           ) : undefined
         }

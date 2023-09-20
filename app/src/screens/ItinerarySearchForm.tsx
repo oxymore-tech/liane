@@ -1,4 +1,4 @@
-import { Column, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppText } from "@/components/base/AppText";
@@ -13,49 +13,25 @@ import { useDebounceValue } from "@/util/hooks/debounce";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
-import { capitalize } from "@/util/strings";
-import { filter } from "rxjs";
+import { AppStyles } from "@/theme/styles";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
-    <Row style={style} spacing={8}>
-      <Column style={{ justifyContent: "space-between", alignSelf: "stretch" }}>
-        <View
-          style={{
-            backgroundColor: AppColorPalettes.gray[100],
-            borderWidth: 1,
-            borderColor: AppColorPalettes.gray[200],
-            borderRadius: 16,
-            alignSelf: "center"
-          }}>
-          <AppIcon name={"pin"} size={18} color={AppColors.orange} />
-        </View>
-        <View style={[TripViewStyles.verticalLine, { borderColor: AppColorPalettes.gray[300] }]} />
-        <View
-          style={{
-            backgroundColor: AppColorPalettes.gray[100],
-            borderWidth: 1,
-            borderColor: AppColorPalettes.gray[200],
-            borderRadius: 16,
-            alignSelf: "center",
-            marginBottom: 16
-          }}>
-          <AppIcon name={"flag"} size={18} color={AppColors.pink} />
-        </View>
+    <Row style={style} spacing={12}>
+      <Column style={{ justifyContent: "space-between", alignSelf: "stretch", paddingVertical: 8 }}>
+        <AppIcon name={"pin"} size={24} color={AppColors.orange} />
+        <View style={[TripViewStyles.verticalLine]} />
+        <AppIcon name={"flag"} size={24} color={AppColors.pink} />
       </Column>
 
       <Column spacing={8}>
         <Column>
-          <AppText style={[TripViewStyles.mainWayPointLabel, /*TripViewStyles.fromLabel,*/ { alignSelf: "flex-start", maxWidth: undefined }]}>
-            {trip.from.label}
-          </AppText>
-          <AppText>{trip.from.city}</AppText>
+          <AppText style={[TripViewStyles.mainWayPointCity, { alignSelf: "flex-start", maxWidth: undefined }]}>{trip.from.city}</AppText>
+          <AppText style={[TripViewStyles.mainWayPointLabel]}>{trip.from.label}</AppText>
         </Column>
         <Column>
-          <AppText style={[TripViewStyles.mainWayPointLabel, /*TripViewStyles.toLabel,*/ { alignSelf: "flex-start", maxWidth: undefined }]}>
-            {trip.to.label}
-          </AppText>
-          <AppText>{trip.to.city}</AppText>
+          <AppText style={[TripViewStyles.mainWayPointCity, { alignSelf: "flex-start", maxWidth: undefined }]}>{trip.to.city}</AppText>
+          <AppText style={[TripViewStyles.mainWayPointLabel]}>{trip.to.label}</AppText>
         </Column>
       </Column>
     </Row>
@@ -77,24 +53,26 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?
 
   return (
     <Animated.View style={styles.page} entering={FadeIn}>
-      <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Trajets récents</AppText>
-
-      {recentTrips.length === 0 && <AppText style={{ padding: 16, alignSelf: "center", fontStyle: "italic" }}>Aucun trajet récent</AppText>}
-      <FlatList
-        data={recentTrips}
-        keyExtractor={i => getKeyForTrip(i)}
-        renderItem={({ item }) => {
-          return (
-            <AppPressableOverlay
-              style={{ borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200], marginHorizontal: 20 }}
-              onPress={async () => {
-                props.onSelect(item);
-              }}>
-              <RecentTrip trip={item} style={{ marginHorizontal: 0, marginVertical: 12 }} />
-            </AppPressableOverlay>
-          );
-        }}
-      />
+      {recentTrips.length === 0 ? (
+        <Center>
+          <AppText style={AppStyles.noData}>Aucun trajet récent</AppText>
+        </Center>
+      ) : (
+        <FlatList
+          style={styles.flatListStyle}
+          data={recentTrips}
+          keyExtractor={i => getKeyForTrip(i)}
+          renderItem={({ item, index }) => {
+            return (
+              <AppPressableOverlay
+                style={[index !== recentTrips.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}]}
+                onPress={async () => props.onSelect(item)}>
+                <RecentTrip trip={item} style={{ marginHorizontal: 16, marginVertical: 12 }} />
+              </AppPressableOverlay>
+            );
+          }}
+        />
+      )}
     </Animated.View>
   );
 };
@@ -148,12 +126,20 @@ export const CachedPlaceLocationsView = ({
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
         {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
         <FlatList
+          style={[styles.flatListStyle, { paddingVertical: 8 }]}
           keyboardShouldPersistTaps="always"
           data={locationList}
           keyExtractor={v => (isRallyingPointSearchedLocation(v) ? v.properties!.id! : v.properties!.ref)}
-          renderItem={({ item }) => (
-            <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
-              <PlaceItem item={item} />
+          renderItem={({ item, index }) => (
+            <AppPressableOverlay
+              key={item.id!}
+              style={[
+                styles.placeItemStyle,
+                index !== locationList.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}
+              ]}
+              onPress={() => updateValue(item)}
+              borderRadius={20}>
+              <PlaceItem item={item} labelSize={18} />
             </AppPressableOverlay>
           )}
         />
@@ -270,18 +256,18 @@ export const PlaceItem = ({
   labelSize?: number;
 }) => {
   let placeTypeName;
-  let placeName;
-  let placeNameLine2: string | undefined;
-  let iconName: IconName = "pin-outline";
+  let placeName: string | undefined;
+  let cityName: string;
+  let iconName: IconName = "pin";
 
   if (isRallyingPointSearchedLocation(item)) {
     placeTypeName = "Point de ralliement";
     placeName = item.properties!.label!;
     iconName = "rallying-point";
-    placeNameLine2 = (item.properties!.zipCode ? item.properties!.zipCode + ", " : "") + item.properties!.city;
+    cityName = item.properties!.city;
   } else {
     placeTypeName = item.place_type_name?.[0];
-    placeName = item.place_name;
+    cityName = item.place_name;
     if (!placeTypeName && item.place_type![0] === "poi") {
       if (item.properties?.categories.includes("bus stop")) {
         placeTypeName = "Arrêt de bus";
@@ -291,21 +277,21 @@ export const PlaceItem = ({
       }
     }
 
-    if (placeName.endsWith(", France") && item.context.length >= 3) {
-      placeName = placeName.substring(0, placeName.length - ", France".length) + ", " + item.context[item.context.length - 3].text;
+    if (cityName.endsWith(", France") && item.context.length >= 3) {
+      cityName = cityName.substring(0, cityName.length - ", France".length) + ", " + item.context[item.context.length - 3].text;
     }
   }
+
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
-      <AppIcon name={iconName} size={28} />
+      {iconName === "rallying-point" ? (
+        <AppIcon style={styles.rallyingPointStyle} name={iconName} size={24} color={AppColors.white} />
+      ) : (
+        <AppIcon name={iconName} size={28} color={AppColors.primaryColor} />
+      )}
       <Column style={{ flex: 1 }}>
-        <AppText style={{ color, fontSize: 11 }} numberOfLines={1}>
-          {capitalize(placeTypeName) || "Lieu"}
-        </AppText>
-        <AppText numberOfLines={2} style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>
-          {placeName}
-          {placeNameLine2 ? "\n" + placeNameLine2 : ""}
-        </AppText>
+        <AppText style={[styles.cityNameStyle, { color, fontSize: labelSize, marginTop: placeName ? 0 : 6 }]}>{cityName}</AppText>
+        {placeName && <AppText style={styles.placeNameStyle}>{placeName}</AppText>}
       </Column>
     </Row>
   );
@@ -344,15 +330,20 @@ export const RallyingPointSuggestions = (props: {
   }, [props.exceptValues, results]);
 
   if (loading) {
-    return <ActivityIndicator />;
+    return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
   }
 
   if (results.length === 0) {
-    return <AppText style={[{ padding: 16, color: AppColorPalettes.gray[600] }]}>Aucun résultat</AppText>;
+    return (
+      <Center>
+        <AppText style={AppStyles.noData}>Aucun résultat</AppText>
+      </Center>
+    );
   }
 
   return (
     <FlatList
+      style={styles.flatListStyle}
       keyboardShouldPersistTaps="always"
       data={locationList}
       keyExtractor={i => i.id!}
@@ -409,7 +400,7 @@ export const PlaceSuggestions = (props: {
   }, [props.exceptValues, results]);*/
 
   if (loading) {
-    return <ActivityIndicator />;
+    return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
   }
 
   if (error) {
@@ -417,19 +408,25 @@ export const PlaceSuggestions = (props: {
   }
 
   if (results.length === 0) {
-    return <AppText style={[{ padding: 16, color: AppColorPalettes.gray[600] }]}>Aucun résultat</AppText>;
+    return (
+      <Center>
+        <AppText style={AppStyles.noData}>Aucun résultat</AppText>
+      </Center>
+    );
   }
   return (
     <FlatList
+      style={[styles.flatListStyle, { paddingTop: 8 }]}
       keyboardShouldPersistTaps="always"
       data={results}
       keyExtractor={(item, index) => (isRallyingPointSearchedLocation(item) ? item.properties!.id! : item.properties!.ref) + index}
       renderItem={({ item, index }) => (
         <AppPressableOverlay
           key={(isRallyingPointSearchedLocation(item) ? item.properties!.id! : item.properties!.ref) + index}
-          style={{ paddingHorizontal: 16, paddingVertical: 8 }}
-          onPress={() => updateValue(item)}>
-          <PlaceItem item={item} />
+          style={[styles.placeItemStyle, index !== results.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}]}
+          onPress={() => updateValue(item)}
+          borderRadius={20}>
+          <PlaceItem item={item} labelSize={18} />
         </AppPressableOverlay>
       )}
     />
@@ -524,5 +521,34 @@ const styles = StyleSheet.create({
   page: {
     flex: 1
   },
-  bold: { fontWeight: "bold" }
+  bold: {
+    fontWeight: "bold"
+  },
+  flatListStyle: {
+    backgroundColor: AppColors.backgroundColor,
+    borderRadius: 20,
+    margin: 8,
+    paddingHorizontal: 12
+  },
+  placeItemStyle: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingBottom: 20,
+    height: 54
+  },
+  rallyingPointStyle: {
+    backgroundColor: AppColors.primaryColor,
+    borderRadius: 14,
+    marginLeft: 2
+  },
+  cityNameStyle: {
+    fontWeight: "bold",
+    lineHeight: 18
+  },
+  placeNameStyle: {
+    fontWeight: "bold",
+    color: AppColorPalettes.gray[400],
+    fontSize: 14,
+    marginTop: -2
+  }
 });

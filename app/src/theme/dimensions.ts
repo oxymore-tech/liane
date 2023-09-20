@@ -1,5 +1,5 @@
 export const AppDimensions = {
-  borderRadius: 16,
+  borderRadius: 10,
   iconSize: 24,
 
   textSize: {
@@ -11,14 +11,13 @@ export const AppDimensions = {
 
   button: {
     paddingHorizontal: 24,
-    paddingVertical: 12
+    paddingVertical: 10
   },
 
   bottomBar: {
-    height: 64,
+    height: 52,
     itemSpacing: 16,
-    borderRadius: 32,
-    marginHorizontal: 24,
-    marginVertical: 16
+    borderRadius: 20,
+    margin: 10
   }
 };

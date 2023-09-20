@@ -222,8 +222,9 @@ const AppMapView = forwardRef(
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
           {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
+        <View style={styles.blackOverlay} pointerEvents="none" />
         {showGeolocation && showActions && (
-          <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={[styles.mapOverlay, AppStyles.shadow]}>
+          <View style={styles.mapOverlay}>
             <Column spacing={8}>
               <PositionButton
                 //locationEnabled={showUserLocation}
@@ -253,7 +254,7 @@ const AppMapView = forwardRef(
                 onPositionError={() => setShowUserLocation(false)}
               />
             </Column>
-          </Animated.View>
+          </View>
         )}
         <View
           style={{
@@ -287,7 +288,6 @@ const AppMapView = forwardRef(
 );
 
 export default AppMapView;
-
 export const MarkerView: ComponentType<MarkerViewProps & PropsWithChildren> = MapLibreGL.MarkerView;
 
 const styles = StyleSheet.create({
@@ -307,27 +307,27 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     borderRadius: 24
   },
-  shadow: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-
-    elevation: 4
+  blackOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    top: 0
   },
   mapOverlay: {
     backgroundColor: AppColors.white,
     margin: 16,
 
-    paddingVertical: 6,
     position: "absolute",
-    left: 0,
+    right: -6,
+    bottom: 54,
 
     alignSelf: "center",
-    borderRadius: 16
+    padding: 2,
+    borderRadius: 20,
+
+    width: 40,
+    height: 40
   },
   footerContainer: {
     position: "absolute",

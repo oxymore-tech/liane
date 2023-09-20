@@ -24,9 +24,7 @@ export const AppTabs = ({
   isSelectable,
   onSelect,
   selectedIndex = 0,
-  selectedColor = AppColors.orange,
-  unselectedTextColor = AppColorPalettes.gray[800],
-  selectedTextColor = AppColorPalettes.gray[800],
+  selectedColor = AppColors.primaryColor,
   fontSize = 14
 }: AppTabsProps) => {
   const offset = useSharedValue(0);
@@ -38,28 +36,29 @@ export const AppTabs = ({
   }));
 
   return (
-    <Column>
-      <Row>
+    <Column style={styles.mainContainer}>
+      <Row style={styles.rowContainer}>
         {items.map((item, index) => (
           <AppPressableOverlay
             key={index}
+            style={styles.pressableStyle}
             disabled={isSelectable ? !isSelectable(index) : false}
             onLayout={event => onLayout(event, index, selectedIndex, width, offset)}
-            onPress={() => onSelect(index)}>
+            onPress={() => onSelect(index)}
+            borderRadius={18}>
             <AppText
               style={[
                 styles.textStyle,
+                selectedIndex === index ? styles.selected : styles.unselected,
                 { fontSize: fontSize },
-                { fontWeight: selectedIndex === index ? "bold" : undefined },
-                { color: selectedIndex === index ? selectedTextColor : unselectedTextColor }
+                { backgroundColor: selectedIndex === index ? selectedColor : AppColors.white },
+                { color: selectedIndex === index ? AppColors.backgroundColor : AppColors.fontColor }
               ]}>
               {item}
             </AppText>
           </AppPressableOverlay>
         ))}
       </Row>
-      <View style={styles.underline} />
-      <Animated.View style={[styles.animatedView, translateStyle, { backgroundColor: selectedColor }]} />
     </Column>
   );
 };
@@ -78,9 +77,21 @@ const onLayout = (event: LayoutChangeEvent, index: number, selectedIndex: number
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    marginHorizontal: 18
+  },
+  rowContainer: {
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  pressableStyle: {
+    borderRadius: 12
+  },
   textStyle: {
-    paddingHorizontal: 24,
-    paddingVertical: 16
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    borderRadius: 18,
+    borderWidth: 0
   },
   underline: {
     borderBottomColor: AppColorPalettes.gray[200],
@@ -91,5 +102,13 @@ const styles = StyleSheet.create({
     height: 4,
     position: "relative",
     top: -3
+  },
+  selected: {
+    fontWeight: "bold",
+    color: AppColors.white
+  },
+  unselected: {
+    borderWidth: 1,
+    borderColor: AppColors.fontColor
   }
 });

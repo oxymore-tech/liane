@@ -13,11 +13,12 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
+import { AppStyles } from "@/theme/styles";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
     { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"], undefined, 25, false) }
@@ -61,7 +62,7 @@ const MyTripsScreen = () => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
       </View>
     );
   }
@@ -73,34 +74,37 @@ const MyTripsScreen = () => {
     } else {
       return (
         <View style={styles.container}>
-          <AppText style={{ textAlign: "center" }}>
-            Error:
-            {error.message}
-          </AppText>
-          <Center>
-            <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
-          </Center>
+          <Column style={[AppStyles.center, AppStyles.fullHeight]}>
+            <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
+            <AppText style={AppStyles.errorData}>Message: {error.message}</AppText>
+            <View style={{ marginTop: 12 }}>
+              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
+            </View>
+          </Column>
         </View>
       );
     }
   }
 
   return (
-    <Column spacing={16} style={styles.container}>
-      <AppButton icon="plus-outline" title="Publier une liane" onPress={() => navigation.navigate("Publish", {})} />
-      <AppTabs
-        items={["A venir", "Passés"]}
-        onSelect={setSelectedTab}
-        selectedIndex={selectedTab}
-        isSelectable={() => true}
-        selectedColor={AppColors.darkBlue}
-        fontSize={18}
-      />
-      {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
-      {selectedTab === 0 && data.length > 0 && (
-        <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
-      )}
-      {selectedTab === 1 && <PastLianeListView />}
+    <Column style={{ backgroundColor: AppColors.lightGrayBackground }}>
+      <Column style={styles.headerContainer} spacing={16}>
+        <AppButton icon="plus-outline" kind="rounded" user={user} title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
+        <AppTabs
+          items={["Lianes à venir", "Lianes passés"]}
+          onSelect={setSelectedTab}
+          selectedIndex={selectedTab}
+          isSelectable={() => true}
+          fontSize={16}
+        />
+      </Column>
+      <Column spacing={16} style={styles.container}>
+        {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
+        {selectedTab === 0 && data.length > 0 && (
+          <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
+        )}
+        {selectedTab === 1 && <PastLianeListView />}
+      </Column>
     </Column>
   );
 };
@@ -108,14 +112,14 @@ const MyTripsScreen = () => {
 const NoFutureTrip = () => {
   return (
     <Center>
-      <AppText>Vous n'avez aucun trajet à venir.</AppText>
+      <AppText style={AppStyles.noData}>Vous n'avez aucun trajet à venir.</AppText>
     </Center>
   );
 };
 const NoRecentTrip = () => {
   return (
     <Center>
-      <AppText>Vous n'avez pas encore effectué de trajets.</AppText>
+      <AppText style={AppStyles.noData}>Vous n'avez pas encore effectué de trajets.</AppText>
     </Center>
   );
 };
@@ -128,7 +132,7 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
         <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
         {isFetchingNextPage && (
           <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
-            <ActivityIndicator />
+            <ActivityIndicator style={AppStyles.center} color={AppColors.primaryColor} size="large" />
           </View>
         )}
       </>
@@ -149,6 +153,12 @@ const refetch = (queriesData: UseQueryResult[]) => {
 };
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    padding: 12,
+    backgroundColor: AppColors.backgroundColor,
+    borderBottomRightRadius: 24,
+    borderBottomLeftRadius: 24
+  },
   container: {
     marginHorizontal: 16,
     height: "100%"

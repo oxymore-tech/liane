@@ -8,8 +8,9 @@ import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from 
 import { ActivityIndicator, View } from "react-native";
 import { AppDimensions } from "@/theme/dimensions";
 import { Row } from "@/components/base/AppLayout";
-import { AppColorPalettes } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
+import { AppStyles } from "@/theme/styles";
 
 export const HomeBottomSheetContainer = (
   props: {
@@ -107,7 +108,7 @@ export const TopRow = ({ loading = false, title }: { loading?: boolean; title: s
       <AppText numberOfLines={2} style={{ fontWeight: "bold", alignSelf: "center", color: AppColorPalettes.gray[600] }}>
         {title}
       </AppText>
-      {loading && <ActivityIndicator size={12} color={"red"} />}
+      {loading && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size={12} />}
     </Row>
   );
 };

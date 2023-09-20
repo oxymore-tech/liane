@@ -54,11 +54,7 @@ export const WithFetchResource =
     };
 
     if (isLoading) {
-      return (
-        <View style={styles.container}>
-          <ActivityIndicator size="large" />
-        </View>
-      );
+      return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
     }
     if (error) {
       // Show content depending on the error or propagate it
