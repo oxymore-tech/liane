@@ -76,11 +76,11 @@
 	<string>Allow access to your library to upload a new picture.</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Inter-Bold.ttf</string>
-		<string>Inter-ExtraLight.ttf</string>
-		<string>Inter-Medium.ttf</string>
-		<string>Inter-Regular.ttf</string>
-		<string>Inter-SemiBold.ttf</string>
+    <string>SourceSans3-Bold.ttf</string>
+    <string>SourceSans3-ExtraLight.ttf</string>
+    <string>SourceSans3-Medium.ttf</string>
+    <string>SourceSans3-Regular.ttf</string>
+    <string>SourceSans3-SemiBold.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
