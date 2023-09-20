@@ -4,7 +4,7 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { APP_ENV, APP_VERSION } from "@env";
-import { Center, Column } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,7 +46,7 @@ const ProfileView = ({ user }: { user: User }) => {
 
   return (
     <ScrollView overScrollMode="never">
-      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.darkBlue }}>
+      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.primaryColor }}>
         <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
           <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
         </Pressable>
@@ -70,27 +70,29 @@ const Actions = () => {
   const { logout, services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   return (
-    <Column>
-      <ActionItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
-      <ActionItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
-      <ActionItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
-      <ActionItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
-      <LineSeparator />
-      <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
-      <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
-
-      <LineSeparator />
-      <ActionItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
-      <ActionItem
-        onPress={async () => {
-          await services.auth.logout();
-          logout();
-        }}
-        color={ContextualColors.redAlert.text}
-        iconName={"log-out-outline"}
-        text={"Se déconnecter"}
-      />
-      <LineSeparator />
+    <Column style={{ alignItems: "center" }}>
+      <Row>
+        <ActionItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
+        <ActionItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
+        <ActionItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
+      </Row>
+      {/*<Row>
+        <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
+        <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
+      </Row>*/}
+      <Row>
+        <ActionItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
+        <ActionItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
+        <ActionItem
+          onPress={async () => {
+            await services.auth.logout();
+            logout();
+          }}
+          color={ContextualColors.redAlert.text}
+          iconName={"log-out-outline"}
+          text={"Se déconnecter"}
+        />
+      </Row>
       <AppText style={{ marginLeft: 32, marginVertical: 8 }}>
         Version : {APP_VERSION}
         {APP_ENV === "production" ? "" : "(dev)"}

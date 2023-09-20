@@ -8,6 +8,8 @@ export enum AppColors {
   secondaryColor = "#1d77a8",
   backgroundColor = "#FFFFFF",
   fontColor = "#000000",
+  grayBackground = "#E5E5E5",
+  lightGrayBackground = "#f7f7f7",
 
   white = "#FFFFFF",
   black = "#000000",

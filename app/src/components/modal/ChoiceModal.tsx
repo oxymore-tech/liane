@@ -6,6 +6,7 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import React, { useEffect, useState } from "react";
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
+import { ActionItem } from "../ActionItem";
 
 export interface ChoiceModalProps {
   backgroundColor?: ColorValue;
@@ -42,28 +43,22 @@ export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, set
         }
       }}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
-        <View style={{ backgroundColor, padding: 24, margin: 32, borderRadius: 8 }}>
-          <Row style={{ marginBottom: 8 }}>
-            <AppPressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>
-              <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
-            </AppPressable>
-          </Row>
-          <Column>
+        <View style={[styles.container, { backgroundColor }]}>
+          <Row>
             {choices.map((c, i) => (
-              <AppPressableOverlay
-                key={i}
-                style={{ paddingVertical: 12 }}
-                onPress={() => {
-                  setSelected(i);
-                  setVisible(false);
-                }}>
-                <Row spacing={24} style={{ alignItems: "center" }}>
-                  <AppIcon name={c.icon} color={c.color ?? AppColorPalettes.gray[800]} />
-                  <AppText style={{ color: c.color ?? AppColorPalettes.gray[800] }}>{c.text}</AppText>
-                </Row>
-              </AppPressableOverlay>
+              <View key={i} style={{ flex: 1 }}>
+                <ActionItem
+                  onPress={() => {
+                    setSelected(i);
+                    setVisible(false);
+                  }}
+                  color={c.color}
+                  iconName={c.icon}
+                  text={c.text}
+                  lines={2}></ActionItem>
+              </View>
             ))}
-          </Column>
+          </Row>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -73,5 +68,12 @@ export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, set
 const styles = StyleSheet.create({
   modal: {
     margin: 0
+  },
+  container: {
+    borderWidth: 2,
+    borderColor: AppColors.primaryColor,
+    padding: 24,
+    margin: 32,
+    borderRadius: 8
   }
 });

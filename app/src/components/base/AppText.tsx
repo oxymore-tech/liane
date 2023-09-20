@@ -20,7 +20,7 @@ export function AppText({ style, children, numberOfLines = 1, ...props }: AppTex
 
 const styles = StyleSheet.create({
   text: {
-    ...AppStyles.body,
+    ...AppStyles.text,
     flexWrap: "wrap",
     flexShrink: 1,
     textAlignVertical: "center",

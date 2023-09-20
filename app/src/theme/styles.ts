@@ -17,8 +17,8 @@ export const AppStyles = StyleSheet.create({
     paddingRight: 12
   },
   input: {
-    fontSize: 18,
-    color: AppColorPalettes.gray[800]
+    fontSize: 22,
+    color: AppColors.white
   },
   inputContainer: {
     backgroundColor: AppColors.white,
@@ -35,6 +35,20 @@ export const AppStyles = StyleSheet.create({
   center: {
     alignItems: "center",
     justifyContent: "center"
+  },
+  noData: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: AppColors.primaryColor,
+    paddingTop: 16
+  },
+  errorData: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: AppColors.primaryColor
+  },
+  fullHeight: {
+    height: "100%"
   },
   shadow: {
     shadowColor: "#000",

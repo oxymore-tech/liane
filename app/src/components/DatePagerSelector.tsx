@@ -6,7 +6,7 @@ import { Center, Row } from "@/components/base/AppLayout";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { isToday, withOffsetHours } from "@/util/datetime";
 import { capitalize } from "@/util/strings";
 
@@ -14,12 +14,14 @@ export const DatePagerSelector = ({
   date = new Date(),
   onSelectDate,
   formatter,
-  color = AppColorPalettes.gray[800]
+  color = AppColors.white,
+  size = 20
 }: {
   date: Date | undefined;
   onSelectDate: (d: Date) => void;
   formatter?: (d: Date) => string;
   color?: ColorValue;
+  size?: number;
 }) => {
   const dateIsToday = !date || isToday(date);
 
@@ -38,6 +40,7 @@ export const DatePagerSelector = ({
           onPress={() => (!dateIsToday ? previousDate(date, onSelectDate) : null)}
           name={"chevron-left"}
           color={color}
+          size={size + 26}
           opacity={dateIsToday ? 0.4 : 1}
         />
 
@@ -47,8 +50,7 @@ export const DatePagerSelector = ({
             onPress={() => setDatePickerVisible(true)}
             backgroundStyle={styles.buttonBorderRadius}>
             <Row spacing={6}>
-              <AppIcon name={"calendar-outline"} size={18} color={color} />
-              <AppText style={{ fontWeight: "bold", color }}>
+              <AppText style={{ fontWeight: "bold", color, fontSize: size }}>
                 {formatter ? formatter(date || new Date()) : capitalize(toRelativeDateString(date, formatShortMonthDay))}
               </AppText>
             </Row>
@@ -60,6 +62,7 @@ export const DatePagerSelector = ({
           onPress={() => (onSelectDate ? onSelectDate(new Date(withOffsetHours(24, date))) : null)}
           name={"chevron-right"}
           color={color}
+          size={size + 26}
         />
 
         <DateTimePickerModal

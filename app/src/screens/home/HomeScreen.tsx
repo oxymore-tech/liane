@@ -89,9 +89,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
-            onZoomChanged={z => {
-              console.debug("[MAP] zoom", z);
-            }}
+            onZoomChanged={z => console.debug("[MAP] zoom", z)}
           />
         </View>
         {state.matches("form") && (
@@ -105,9 +103,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
 
         {!offline && !isMapState && !isPointState && (
           <HomeBottomSheetContainer
-            onScrolled={(v, expanded) => {
-              bottomSheetScroll.next({ expanded, top: v });
-            }}
+            onScrolled={(v, expanded) => bottomSheetScroll.next({ expanded, top: v })}
             display={bottomSheetDisplay}
             canScroll={loadingDisplay && !movingDisplay}>
             {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
@@ -123,20 +119,12 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             // updateField={(field, value) => machine.send("UPDATE", { data: { [field]: value } })}
             animateEntry={state.history?.matches("map") || state.history?.matches("detail") || false}
             trip={state.context.filter}
-            onSelectTrip={t => {
-              machine.send("UPDATE", { data: t });
-            }}
+            onSelectTrip={t => machine.send("UPDATE", { data: t })}
             updateTrip={t => machine.send("UPDATE", { data: t })}
           />
         )}
 
-        {isDetailState && (
-          <AnimatedFloatingBackButton
-            onPress={() => {
-              machine.send("BACK");
-            }}
-          />
-        )}
+        {isDetailState && <AnimatedFloatingBackButton onPress={() => machine.send("BACK")} />}
         {isMapState && (
           <MapHeader
             hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
@@ -153,9 +141,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                 ? {
                     icon: "play-circle-outline",
                     title: "Proposer un trajet depuis ce point",
-                    onPress: () => {
-                      navigation.navigate("Publish", { initialValue: { from: state.context.filter!.from } });
-                    }
+                    onPress: () => navigation.navigate("Publish", { initialValue: { from: state.context.filter!.from } })
                   }
                 : null
             }

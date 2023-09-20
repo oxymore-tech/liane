@@ -21,6 +21,8 @@ import { capitalize } from "@/util/strings";
 import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
+import { AppTabs } from "@/components/base/AppTabs";
+import { useAppNavigation } from "@/api/navigation";
 
 export const RallyingPointField = forwardRef(
   (
@@ -69,9 +71,7 @@ export const RallyingPointField = forwardRef(
           leading={icon}
           placeholder={placeholder}
           value={value}
-          onChangeText={v => {
-            onChange(v);
-          }}
+          onChangeText={v => onChange(v)}
           onFocus={onFocus}
         />
       </View>
@@ -407,10 +407,11 @@ export const SearchModal = (props: {
   title?: string;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [searchTrips, setSearchTrips] = useState(false);
   const [inputText, setInputText] = useState("");
+  const [selectedTab, setSelectedTab] = useState(0);
   const { top } = useSafeAreaInsets();
   const { services } = useContext(AppContext);
+
   const inputRef = useRef<TextInput>();
   const closeModal = useCallback(() => {
     setModalOpen(false);
@@ -429,55 +430,44 @@ export const SearchModal = (props: {
         }}>
         <AppIcon name={"search-outline"} color={AppColors.white} />
       </Pressable>
-      <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={() => setModalOpen(false)}>
-        <View style={{ backgroundColor: AppColors.white, padding: 16, height: "100%", paddingTop: 16 + top }}>
-          <Row style={{ marginBottom: 16, alignItems: "center" }} spacing={8}>
-            <AppPressableIcon onPress={closeModal} name={"close-outline"} />
 
-            <AppText style={{ fontSize: 18, fontWeight: "500" }}>{props.title || "Rechercher"}</AppText>
-          </Row>
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
+      <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={() => setModalOpen(false)}>
+        <View style={{ height: "100%", paddingTop: top - 2 }}>
+          <Row spacing={8}>
             <View style={styles.inputContainer}>
               <AppTextInput
                 // @ts-ignore
                 ref={inputRef}
                 trailing={
                   inputText.length > 0 ? (
-                    <Pressable
-                      onPress={() => {
-                        setInputText("");
-                      }}>
-                      <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+                    <Pressable onPress={() => setInputText("")}>
+                      <AppIcon name={"close-outline"} color={AppColors.white} />
                     </Pressable>
                   ) : undefined
                 }
                 value={inputText}
                 onChangeText={setInputText}
-                style={[AppStyles.input, { fontSize: 16 }]}
+                style={[AppStyles.input, { fontSize: 18 }]}
                 placeholder={"Adresse, point de ralliement..."}
-                leading={<AppIcon name={"search-outline"} />}
+                leading={<AppIcon name={"search-outline"} color={AppColors.white} />}
               />
             </View>
+          </Row>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
             <View style={{ height: 16 }} />
-            <Row style={{ marginHorizontal: 8 }} spacing={8}>
-              {["Lieux", "Trajets passés"].map((e, i) => (
-                <AppPressable key={i} onPress={() => setSearchTrips(i === 1)}>
-                  <View
-                    style={{
-                      backgroundColor: i === (searchTrips ? 1 : 0) ? AppColors.darkBlue : undefined,
-                      borderWidth: 1,
-                      borderColor: i !== (searchTrips ? 1 : 0) ? AppColors.darkBlue : "transparent",
-                      paddingVertical: 4,
-                      paddingHorizontal: 8,
-                      borderRadius: 16
-                    }}>
-                    <AppText style={{ color: i === (searchTrips ? 1 : 0) ? AppColors.white : AppColors.darkBlue }}>{e}</AppText>
-                  </View>
-                </AppPressable>
-              ))}
-            </Row>
+
+            <Column style={{ marginHorizontal: 20 }} spacing={8}>
+              <AppTabs
+                items={["Lieux", "Trajets récents"]}
+                onSelect={setSelectedTab}
+                selectedIndex={selectedTab}
+                isSelectable={() => true}
+                fontSize={16}
+              />
+            </Column>
+
             <View style={{ flex: 1 }}>
-              {!searchTrips && inputText.length === 0 && (
+              {selectedTab === 0 && inputText.length === 0 && (
                 <CachedPlaceLocationsView
                   showUsePosition={false}
                   onSelect={async f => {
@@ -488,7 +478,7 @@ export const SearchModal = (props: {
                   }}
                 />
               )}
-              {searchTrips && (
+              {selectedTab === 1 && (
                 <CachedTripsView
                   filter={inputText.length > 0 ? inputText : undefined}
                   onSelect={t => {
@@ -499,7 +489,7 @@ export const SearchModal = (props: {
                   }}
                 />
               )}
-              {!searchTrips && inputText.length > 0 && (
+              {selectedTab === 0 && inputText.length > 0 && (
                 <PlaceSuggestions
                   currentSearch={inputText}
                   onSelect={f => {
@@ -515,6 +505,8 @@ export const SearchModal = (props: {
             </View>
           </KeyboardAvoidingView>
         </View>
+
+        <FloatingBackButton onPress={closeModal} topOffset={-10} />
       </Modal>
     </>
   );
@@ -538,16 +530,20 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 52
   },
-  title: { color: AppColors.white, ...AppStyles.title, paddingVertical: 4 },
+  title: {
+    color: AppColors.white,
+    ...AppStyles.title,
+    paddingVertical: 4
+  },
   smallActionButton: {
     padding: 16,
     borderRadius: 52
   },
   modal: {
     justifyContent: "flex-end",
-    margin: 0
+    margin: 0,
+    backgroundColor: AppColors.lightGrayBackground
   },
-
   headerContainer: {
     position: "absolute",
     top: 0,
@@ -555,20 +551,23 @@ const styles = StyleSheet.create({
     right: 0,
     flexShrink: 1,
     paddingBottom: 16,
-    backgroundColor: AppColors.darkBlue,
+    backgroundColor: AppColors.primaryColor,
     alignSelf: "center",
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     paddingHorizontal: 16
   },
   inputContainer: {
-    backgroundColor: AppColorPalettes.gray[100],
-    borderRadius: 8,
-    //flex: 1,
+    backgroundColor: AppColors.primaryColor,
+    borderRadius: 18,
+    flex: 1,
     marginHorizontal: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    minHeight: 40
+    minHeight: 48,
+    marginLeft: 80,
+    marginRight: 16,
+    color: AppColors.white
   },
   inputContainer2: {
     //backgroundColor: AppColors.white,

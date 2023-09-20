@@ -5,7 +5,7 @@ import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import React, { PropsWithChildren } from "react";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 
 export interface SlideUpModalProps extends PropsWithChildren {
   backgroundColor?: ColorValue;
@@ -23,16 +23,17 @@ export const SlideUpModal = ({ backgroundColor = AppColors.darkBlue, visible, se
       onSwipeComplete={() => setVisible(false)}
       style={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
-        <View style={{ backgroundColor, padding: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
-          <Row style={{ marginBottom: 8 }}>
-            <AppPressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>
-              <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
-            </AppPressable>
+        <View style={{ backgroundColor, paddingHorizontal: 12, paddingVertical: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
+          <Row style={{ position: "absolute", right: 20, top: 27, zIndex: 10 }}>
+            <AppPressableOverlay style={{ padding: 4 }} onPress={() => setVisible(false)} borderRadius={12}>
+              <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} size={28} />
+            </AppPressableOverlay>
           </Row>
+
           {children}
 
           <View style={{ justifyContent: "flex-end", paddingHorizontal: 24 }}>
-            <AppRoundedButton color={defaultTextColor(AppColors.orange)} onPress={onAction} backgroundColor={AppColors.orange} text={actionText} />
+            <AppRoundedButton color={AppColors.white} onPress={onAction} backgroundColor={AppColors.primaryColor} text={actionText} />
           </View>
         </View>
       </KeyboardAvoidingView>

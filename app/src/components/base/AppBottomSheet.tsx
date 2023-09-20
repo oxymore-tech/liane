@@ -17,6 +17,7 @@ export interface BottomSheetProps extends PropsWithChildren {
   padding?: { top?: number };
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
+  onExpand?: (isExpanded: boolean) => void;
 }
 
 export type BottomSheetRefProps = {
@@ -35,7 +36,7 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
+  ({ onScrolled, children, canScroll, stops, margins, padding, initialStop = 0, onExpand = () => {} }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
@@ -53,16 +54,17 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     const h = useSharedValue(pStops[currentStop.current]);
 
     const context = useSharedValue({ y: 0 });
-    const margin = useSharedValue({ bottom: marginBottom, left: margins?.left || 0, right: margins?.right || 0 });
+    const margin = useSharedValue({ bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 });
 
     useEffect(() => {
-      margin.value = { bottom: marginBottom, left: margins?.left || 0, right: margins?.right || 0 };
+      margin.value = { bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 };
     }, [margins?.bottom, margins?.left, margins?.right]);
 
     const expanded = new Subject<boolean>();
 
     const notifyExpanded = (v: boolean) => {
       expanded.next(v);
+      onExpand(isExpanded());
     };
 
     const updateCurrentStop = (index: number) => {
@@ -75,9 +77,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     };
     const scrollTo = (y: number) => {
       "worklet";
-      //  scrollValue.current = y;
       h.value = withSpring(getPixelValue(y), { damping: 50 });
-
       runOnJS(notifyExpanded)(isExpanded());
     };
 
@@ -120,7 +120,6 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       })
       .onEnd(event => {
         // Scroll to the closest stop
-
         const stopIndex = findClosestStop(h.value, event.translationY);
         runOnJS(updateCurrentStop)(stopIndex);
         const value = pStops[stopIndex];
@@ -199,11 +198,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                   }
                 : {},
               bSheetStyle
-            ]}
-            //exiting={SlideOutDown}
-            // entering={SlideInDown}
-          >
-            <Animated.View style={[styles.horizontalLine, handleStyle]} />
+            ]}>
             <BottomSheetContext.Provider
               value={{
                 expanded,
@@ -334,20 +329,9 @@ export const AppBottomSheetScrollView = WithBottomSheetContext(
 const styles = StyleSheet.create({
   bottomSheetContainer: {
     overflow: "hidden",
-    backgroundColor: AppColors.white,
     flex: 1,
     width: "100%",
     zIndex: 100,
-    alignSelf: "center",
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12
-  },
-  horizontalLine: {
-    width: 52,
-    height: 4,
-    backgroundColor: AppColorPalettes.gray[400],
-    alignSelf: "center",
-    marginVertical: 10,
-    borderRadius: 2
+    alignSelf: "center"
   }
 });

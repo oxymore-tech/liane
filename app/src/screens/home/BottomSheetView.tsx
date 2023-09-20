@@ -1,6 +1,6 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -20,6 +20,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { formatDuration } from "@/util/datetime";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
+import { AppStyles } from "@/theme/styles";
 
 const EmptyResultView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center" }]}>{props.message}</AppText>
@@ -62,46 +63,42 @@ export const LianeMatchItemView = ({
   return (
     <Column>
       <TripSegmentView from={from.rallyingPoint} to={to.rallyingPoint} departureTime={from.eta} arrivalTime={to.eta} />
-      <View
-        style={[
-          TripViewStyles.horizontalLine,
-          { alignSelf: "flex-start", width: "100%", borderColor: AppColorPalettes.gray[200], marginTop: 12, marginBottom: 8 }
-        ]}
-      />
+
       {userIsMember && (
         <Center>
           <AppText>Vous êtes déjà membre de cette Liane.</AppText>
         </Center>
       )}
+
       {!userIsMember && (
         <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
           <Column>
-            <Row spacing={2} style={{ position: "relative", left: -4, alignItems: "center" }}>
-              <AppIcon name={"clock-outline"} color={AppColorPalettes.gray[500]} size={18} />
-              <AppText>{duration}</AppText>
-            </Row>
             <Row style={{ position: "relative", left: -4, alignItems: "center" }}>
-              <AppIcon name={returnTime ? "corner-down-right-outline" : "arrow-forward"} color={AppColorPalettes.gray[500]} size={15} />
-
-              {!returnTime && <AppText>Aller simple</AppText>}
+              {!returnTime && (
+                <Row style={[AppStyles.center, { paddingTop: 8 }]}>
+                  <AppIcon name={returnTime ? "corner-down-right-outline" : "arrow-forward"} color={AppColorPalettes.gray[500]} size={15} />
+                  <AppText style={styles.infoTravel}>Aller simple</AppText>
+                </Row>
+              )}
               {!!returnTime && (
                 <Row>
+                  <AppIcon name={returnTime ? "corner-down-right-outline" : "arrow-forward"} color={AppColorPalettes.gray[500]} size={15} />
                   <AppText>{"Retour à "}</AppText>
                   <TimeView style={{ fontWeight: "bold" }} value={returnTime} />
                 </Row>
               )}
             </Row>
           </Column>
-          <Column style={{ alignItems: "flex-end" }}>
-            <Row style={{ alignItems: "center" }}>
-              <AppText style={{ fontWeight: "bold", fontSize: 16 }}>5€ / </AppText>
-              <AppIcon name={"person-outline"} size={18} />
+
+          <Row style={{ alignItems: "flex-end", paddingTop: 8 }}>
+            <Row style={{ alignItems: "center", marginRight: 16 }}>
+              <AppText style={styles.infoTravel}>{freeSeatsCount}</AppText>
+              <AppIcon name={"seat"} color={AppColorPalettes.gray[500]} />
             </Row>
-            <Row style={{ alignItems: "center" }}>
-              <AppText style={{ fontWeight: "bold", fontSize: 16 }}>{freeSeatsCount}</AppText>
-              <AppIcon name={"seat"} />
+            <Row style={{ alignItems: "center", paddingBottom: 1 }}>
+              <AppText style={styles.infoTravel}>5€</AppText>
             </Row>
-          </Column>
+          </Row>
         </Row>
       )}
     </Column>
@@ -155,7 +152,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
     );
   }
   if (loading || (state.matches("match") && !state.context.matches)) {
-    return <ActivityIndicator />;
+    return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
   }
   if (loading || !state.matches("match") || !state.context.matches) {
     return null;
@@ -167,48 +164,52 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
     const userIsMember = !!item.lianeMatch.liane.members.find(m => m.user.id === user!.id);
     return (
       <Column>
-        <AppPressableOverlay
-          foregroundColor={WithAlpha(AppColors.black, 0.1)}
-          style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 }}
-          onPress={() => {
-            if (userIsMember) {
-              navigation.navigate("LianeDetail", { liane: item.lianeMatch.liane });
-            } else {
-              machine.send("DETAIL", { data: item.lianeMatch });
-            }
-          }}>
-          <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
-            <UserPicture url={driver.pictureUrl} size={24} id={driver.id} />
-            <AppText style={{ fontSize: 14, fontWeight: "500" }}>{driver.pseudo}</AppText>
-          </Row>
-          <View style={{ paddingHorizontal: 8 }}>
-            <LianeMatchItemView
-              duration={duration}
-              from={item.trip.wayPoints[0]}
-              to={item.trip.wayPoints[item.trip.wayPoints.length - 1]}
-              freeSeatsCount={item.lianeMatch.freeSeatsCount}
-              returnTime={item.returnTime}
-              userIsMember={userIsMember}
-            />
-          </View>
-        </AppPressableOverlay>
-        <SectionSeparator style={{ marginVertical: 0 }} />
+        <View style={{ margin: 12 }}>
+          <AppPressableOverlay
+            foregroundColor={WithAlpha(AppColors.black, 0.1)}
+            style={styles.itemStyle}
+            onPress={() => {
+              if (userIsMember) {
+                navigation.navigate("LianeDetail", { liane: item.lianeMatch.liane });
+              } else {
+                machine.send("DETAIL", { data: item.lianeMatch });
+              }
+            }}
+            borderRadius={20}>
+            <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
+              <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
+              <AppText style={{ fontSize: 16, fontWeight: "500" }}>{driver.pseudo}</AppText>
+            </Row>
+            <View style={{ paddingHorizontal: 8 }}>
+              <LianeMatchItemView
+                duration={duration}
+                from={item.trip.wayPoints[0]}
+                to={item.trip.wayPoints[item.trip.wayPoints.length - 1]}
+                freeSeatsCount={item.lianeMatch.freeSeatsCount}
+                returnTime={item.returnTime}
+                userIsMember={userIsMember}
+              />
+            </View>
+          </AppPressableOverlay>
+        </View>
       </Column>
     );
   };
   const exactResultsCount = showCompatible ? displayedLianes.length - data.length : data.length;
   return (
-    <Column spacing={8}>
-      <AppTabs
-        items={["Résultats (" + exactResultsCount + ")", "Trajets alternatifs (" + (displayedLianes.length - exactResultsCount) + ")"]}
-        onSelect={i => {
-          const showCompat = i === 1;
-          setShowCompatible(showCompat);
-        }}
-        selectedIndex={showCompatible ? 1 : 0}
-        isSelectable={index => index !== 1 || displayedLianes.length - exactResultsCount !== 0}
-        unselectedTextColor={displayedLianes.length - exactResultsCount === 0 ? AppColorPalettes.gray[500] : undefined}
-      />
+    <Column>
+      <Column style={styles.headerListStyle}>
+        <AppTabs
+          items={["Résultats (" + exactResultsCount + ")", "Trajets alternatifs (" + (displayedLianes.length - exactResultsCount) + ")"]}
+          onSelect={i => {
+            const showCompat = i === 1;
+            setShowCompatible(showCompat);
+          }}
+          selectedIndex={showCompatible ? 1 : 0}
+          isSelectable={index => index !== 1 || displayedLianes.length - exactResultsCount !== 0}
+          unselectedTextColor={displayedLianes.length - exactResultsCount === 0 ? AppColorPalettes.gray[500] : undefined}
+        />
+      </Column>
       {data.length === 0 && <EmptyResultView message={"Aucun trajet ne correspond à votre recherche."} />}
       {data.length === 0 && (
         <Center style={{ paddingVertical: 8 }}>
@@ -230,6 +231,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
         onScrollEndDrag={event => {
           console.debug(JSON.stringify(event.nativeEvent));
         }}*/
+        style={styles.listStyle}
         data={data}
         keyExtractor={i => i.lianeMatch.liane.id!}
         renderItem={renderItem}
@@ -237,3 +239,30 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
     </Column>
   );
 };
+
+const styles = StyleSheet.create({
+  headerListStyle: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: AppColors.lightGrayBackground,
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColorPalettes.gray[200]
+  },
+  listStyle: {
+    backgroundColor: AppColors.lightGrayBackground
+  },
+  itemStyle: {
+    backgroundColor: AppColors.white,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16
+  },
+  infoTravel: {
+    fontSize: 16,
+    marginLeft: 6,
+    color: AppColorPalettes.gray[500]
+  }
+});

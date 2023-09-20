@@ -13,13 +13,13 @@ export interface AppRoundedButtonProps {
   enabled?: boolean;
 }
 export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true }: AppRoundedButtonProps) => {
-  color = color || defaultTextColor(backgroundColor);
+  color = color ?? defaultTextColor(backgroundColor);
   const content = useMemo(
     () => (
       <View style={styles.buttonPadding}>
         <AppText
           style={{
-            fontWeight: "600",
+            fontWeight: "bold",
             fontSize: 14,
             color,
             textAlign: "center",
@@ -38,7 +38,8 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
         backgroundColor,
         opacity,
         borderRadius: 24
-      }}>
+      }}
+      borderRadius={24}>
       {content}
     </AppPressableOverlay>
   ) : (

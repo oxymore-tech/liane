@@ -88,8 +88,8 @@ export const LianeDisplayLayer = ({
           lineSortKey: ["get", "count"],
           lineCap: "round",
           lineColor: trafficAsColor
-            ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.darkBlue, 5, "#8c2372"]
-            : AppColors.darkBlue,
+            ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.primaryColor, 5, "#8c2372"]
+            : AppColors.primaryColor,
           lineWidth: trafficAsWidth ? ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5] : 3
         }}
       />

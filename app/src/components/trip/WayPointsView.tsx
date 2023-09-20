@@ -98,7 +98,7 @@ export const DetailedLianeMatchView = ({
         <AppText
           style={[
             styles.mainWayPointLabel,
-            style === "from" ? styles.fromLabel : style === "to" ? styles.toLabel : styles.overallFromLabel,
+            style === "from" ? styles.fromCity : style === "to" ? styles.toLabel : styles.overallFromLabel,
             { flexGrow: 1, flexShrink: 1, maxWidth: "70%" }
           ]}>
           {wayPoint.rallyingPoint.label}
@@ -168,7 +168,7 @@ export const DetailedWayPointView = ({ wayPoints, departureTime, departureIndex,
   const ai = arrivalIndex ?? wayPoints.length - 1;
   const getStyle = (i: number) => {
     if (i === di) {
-      return styles.fromLabel;
+      return styles.fromCity;
     } else if (i === ai) {
       return styles.toLabel;
     } else {
@@ -220,11 +220,10 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
   };
 
   return (
-    <Row spacing={12}>
+    <Row spacing={4}>
       <Column style={styles.column}>
         <TimeView style={styles.mainWayPointTime} value={from.eta} />
 
-        {steps.length === 0 && <View style={styles.horizontalLine} />}
         {steps.length <= 3 && steps.map((_, i) => lianeSymbolView(i))}
         {steps.length > 3 && [
           lianeSymbolView(0),
@@ -235,43 +234,67 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
         <TimeView style={styles.mainWayPointTime} value={to.eta} />
       </Column>
 
+      <Column style={[styles.column, styles.iconTravel]}>
+        <AppIcon name={"pin"} color={AppColors.primaryColor} size={24} />
+        {steps.length === 0 && <View style={styles.horizontalLine} />}
+        <AppIcon name={"flag"} color={AppColors.primaryColor} size={24} />
+      </Column>
+
       <Column style={[styles.column, styles.shrink]}>
-        <AppText style={[styles.mainWayPointLabel, di === 0 ? styles.fromLabel : styles.overallFromLabel]}>
-          {from.rallyingPoint[from.rallyingPoint.city === to.rallyingPoint.city ? "label" : "city"]}
-        </AppText>
+        <View>
+          <AppText style={[styles.mainWayPointCity, di === 0 ? styles.fromCity : styles.overallFromCity]}>{from.rallyingPoint["city"]}</AppText>
+          <AppText style={[styles.mainWayPointLabel, di === 0 ? styles.fromLabel : styles.overallFromLabel]}>{from.rallyingPoint["label"]}</AppText>
+        </View>
 
         {steps.length <= 3 && steps.map((_, i) => intermediateWayPoint(i))}
         {steps.length > 3 && [intermediateWayPoint(0), <AppText>{steps.length - 2} étapes</AppText>, intermediateWayPoint(steps.length - 1)]}
 
-        <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>
-          {to.rallyingPoint[from.rallyingPoint.city === to.rallyingPoint.city ? "label" : "city"]}
-        </AppText>
+        <View>
+          <AppText style={[styles.mainWayPointCity, styles.toCity]}>{to.rallyingPoint["city"]}</AppText>
+          <AppText style={[styles.mainWayPointLabel, styles.toLabel]}>{to.rallyingPoint["label"]}</AppText>
+        </View>
       </Column>
     </Row>
   );
 };
 
 const styles = StyleSheet.create({
+  toCity: {
+    // color: AppColorPalettes.pink[500]
+  },
   toLabel: {
     // color: AppColorPalettes.pink[500]
+  },
+  overallFromCity: {
+    // color: AppColorPalettes.gray[500]
   },
   overallFromLabel: {
     // color: AppColorPalettes.gray[500]
   },
+  fromCity: {
+    // color: AppColorPalettes.orange[500]
+  },
   fromLabel: {
     // color: AppColorPalettes.orange[500]
   },
-  mainWayPointLabel: {
+  mainWayPointCity: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "bold",
     flexShrink: 1
+  },
+  mainWayPointLabel: {
+    marginTop: -4,
+    fontSize: 14,
+    fontWeight: "bold",
+    flexShrink: 1,
+    color: AppColorPalettes.gray[400]
   },
   mainWayPointTime: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "bold",
     alignSelf: "center",
-    paddingTop: 2,
-    color: AppColorPalettes.gray[700]
+    paddingVertical: 8,
+    color: AppColors.primaryColor
   },
   intermediateWayPointLabel: {
     fontSize: 15,
@@ -280,6 +303,10 @@ const styles = StyleSheet.create({
   },
   intermediateFromWayPointLabelColor: {
     color: AppColorPalettes.orange[500]
+  },
+  iconTravel: {
+    paddingVertical: 6,
+    marginHorizontal: 4
   },
   alignCenter: {
     alignSelf: "center",
@@ -299,9 +326,9 @@ const styles = StyleSheet.create({
     position: "relative",
     top: -2
   },
-
   horizontalLine: {
-    borderLeftColor: AppColorPalettes.gray[400],
+    marginVertical: 4,
+    borderLeftColor: AppColorPalettes.gray[200],
     borderLeftWidth: 1,
     minHeight: 18,
     alignSelf: "center"

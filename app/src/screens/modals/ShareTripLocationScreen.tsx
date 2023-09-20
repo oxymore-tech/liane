@@ -22,6 +22,7 @@ import { getTripFromLiane } from "@/components/trip/trip";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { PERMISSIONS, request } from "react-native-permissions";
 import { useAppState } from "@react-native-community/hooks";
+import { AppStyles } from "@/theme/styles";
 
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
@@ -71,7 +72,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
         return null;
       }
       if (!liane) {
-        return <ActivityIndicator />;
+        return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
       }
 
       const tripContent = <LianeView liane={liane} />;

@@ -8,7 +8,7 @@ import { formatDate } from "@/api/i18n";
 import { cancelSendLocationPings } from "@/api/service/location";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
-import { Column } from "@/components/base/AppLayout";
+import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { LineSeparator } from "@/components/Separator";
@@ -59,23 +59,19 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
     return [
       {
         icon: "clock-outline" as IconName,
-        text: "Modifier l'horaire de départ",
-        action: () => {
-          setTimeModalVisible(true);
-        }
+        text: "Modifier l'horaire",
+        action: () => setTimeModalVisible(true)
       },
       ...(lianeHasRecurrence
         ? [
             {
               icon: "calendar-outline" as IconName,
-              text: "Modifier la régularité",
-              action: () => {
-                setRecurrenceModalVisible(true);
-              }
+              text: "Modifier la récurrence",
+              action: () => setRecurrenceModalVisible(true)
             },
             {
               icon: "calendar-outline" as IconName,
-              text: "Supprimer la régularité",
+              text: "Supprimer la récurrence",
               color: ContextualColors.redAlert.text,
               action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible)
             }
@@ -86,16 +82,78 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
   return (
     <Column>
-      <AppText numberOfLines={-1} style={{ paddingVertical: 4, paddingHorizontal: 24 }}>
-        Liane postée le <AppText style={{ fontWeight: "bold" }}>{formatDate(new Date(liane.createdAt!))}</AppText> par{" "}
-        <AppText style={{ fontWeight: "bold" }}>{creator.pseudo}</AppText>
-      </AppText>
+      <Row style={{ justifyContent: "space-between" }}>
+        <ActionItem
+          disabled={!currentUserIsDriver || liane.state !== "NotStarted"}
+          onPress={() => setEditOptionsModalVisible(true)}
+          iconName={"edit-outline"}
+          text={"Modifier le trajet"}
+        />
+
+        {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
+          <ActionItem onPress={() => relaunchLiane(navigation, match)} iconName={"repeat"} text={"Relancer ce trajet"} />
+        )}
+
+        {
+          //currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") &&
+          <ActionItem
+            onPress={() => {
+              // TODO
+            }}
+            disabled={true}
+            iconName={"alert-circle-outline"}
+            text={"Assistance"}
+          />
+        }
+
+        {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1 && (
+          <ActionItem
+            onPress={() => cancelLiane(navigation, services, queryClient, liane)}
+            color={ContextualColors.redAlert.text}
+            iconName={"close-outline"}
+            text={"Annuler ce trajet"}
+          />
+        )}
+
+        {currentUserIsMember && liane.state === "Started" && (
+          <ActionItem
+            onPress={() => cancelStartedLiane(navigation, services, queryClient, liane)}
+            color={ContextualColors.redAlert.text}
+            iconName={"close-outline"}
+            text={"Annuler ce trajet"}
+          />
+        )}
+
+        {!currentUserIsMember && request && (
+          <ActionItem
+            onPress={() => cancelDemand(navigation, services, queryClient, request!)}
+            color={ContextualColors.redAlert.text}
+            iconName={"trash-outline"}
+            text={"Retirer la demande"}
+          />
+        )}
+
+        {currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner && (
+          <ActionItem
+            onPress={() => leaveLiane(navigation, services, queryClient, liane, user)}
+            color={ContextualColors.redAlert.text}
+            iconName={"log-out-outline"}
+            text={"Quitter la liane"}
+          />
+        )}
+
+        {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1 && (
+          <ActionItem
+            onPress={() => deleteLiane(navigation, services, queryClient, liane)}
+            color={ContextualColors.redAlert.text}
+            iconName={"trash-outline"}
+            text={"Supprimer l'annonce"}
+          />
+        )}
+      </Row>
+
       <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={liane} />
 
-      {currentUserIsDriver && liane.state === "NotStarted" && <LineSeparator />}
-      {currentUserIsDriver && liane.state === "NotStarted" && (
-        <ActionItem onPress={() => setEditOptionsModalVisible(true)} iconName={"edit-outline"} text={"Modifier le trajet"} />
-      )}
       <ChoiceModal
         visible={editOptionsModalVisible}
         setVisible={setEditOptionsModalVisible}
@@ -105,7 +163,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
       <SlideUpModal
         actionText={"Modifier l'horaire"}
-        backgroundColor={AppColors.yellow}
+        backgroundColor={AppColors.white}
         onAction={async () => {
           const updated = await services.liane.updateDepartureTime(liane.id!, date.toISOString());
           // Update current page's content
@@ -117,7 +175,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         visible={timeModalVisible}
         setVisible={setTimeModalVisible}>
         <Column spacing={16} style={{ marginBottom: 16 }}>
-          <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand partez-vous ?</AppText>
+          <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>À quelle heure partez-vous ?</AppText>
 
           <View>
             <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} minDate={initialMinDate} />
@@ -127,79 +185,19 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
       {liane.recurrence && (
         <SlideUpModal
-          actionText={"Modifier les jours de trajet"}
-          backgroundColor={AppColors.yellow}
+          actionText={"Modifier la récurrence"}
+          backgroundColor={AppColors.white}
           onAction={() => updateRecurrence(navigation, services, queryClient, liane, daysOfTheWeek, setRecurrenceModalVisible)}
           visible={recurrenceModalVisible}
           setVisible={setRecurrenceModalVisible}>
           <Column spacing={16} style={{ marginBottom: 16 }}>
-            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quand partez-vous ?</AppText>
+            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quels jours partez-vous ?</AppText>
 
             <View>
               <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
             </View>
           </Column>
         </SlideUpModal>
-      )}
-
-      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
-        <ActionItem onPress={() => relaunchLiane(navigation, match)} iconName={"repeat"} text={"Relancer ce trajet"} />
-      )}
-
-      <LineSeparator />
-      {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1 && (
-        <ActionItem
-          onPress={() => deleteLiane(navigation, services, queryClient, liane)}
-          color={ContextualColors.redAlert.text}
-          iconName={"trash-outline"}
-          text={"Supprimer l'annonce"}
-        />
-      )}
-
-      {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1 && (
-        <ActionItem
-          onPress={() => cancelLiane(navigation, services, queryClient, liane)}
-          color={ContextualColors.redAlert.text}
-          iconName={"close-outline"}
-          text={"Annuler ce trajet"}
-        />
-      )}
-
-      {!currentUserIsMember && request && (
-        <ActionItem
-          onPress={() => cancelDemand(navigation, services, queryClient, request)}
-          color={ContextualColors.redAlert.text}
-          iconName={"trash-outline"}
-          text={"Retirer la demande"}
-        />
-      )}
-
-      {currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner && (
-        <ActionItem
-          onPress={() => leaveLiane(navigation, services, queryClient, liane, user)}
-          color={ContextualColors.redAlert.text}
-          iconName={"log-out-outline"}
-          text={"Quitter la liane"}
-        />
-      )}
-
-      {currentUserIsMember && liane.state === "Started" && (
-        <ActionItem
-          onPress={() => cancelStartedLiane(navigation, services, queryClient, liane)}
-          color={ContextualColors.redAlert.text}
-          iconName={"close-outline"}
-          text={"Annuler ce trajet"}
-        />
-      )}
-
-      {currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") && (
-        <ActionItem
-          onPress={() => {
-            // TODO
-          }}
-          iconName={"alert-circle-outline"}
-          text={"Assistance"}
-        />
       )}
     </Column>
   );

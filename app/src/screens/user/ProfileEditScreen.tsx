@@ -76,7 +76,7 @@ const ProfileEditView = () => {
                   height: 180,
                   width: 180
                 }}>
-                <ActivityIndicator />
+                <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
               </Center>
             </Animated.View>
           )}
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
-    backgroundColor: AppColors.darkBlue
+    backgroundColor: AppColors.primaryColor
   },
   backContainer: {
     position: "absolute",

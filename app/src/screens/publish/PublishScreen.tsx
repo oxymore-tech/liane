@@ -201,7 +201,7 @@ export const PublishScreenView = () => {
         <Animated.View
           exiting={SlideOutUp.duration(20)}
           entering={SlideInUp.duration(300).springify().damping(20)}
-          style={[styles.footerContainer, AppStyles.shadow, { marginTop: offsetsTop.dateStep, backgroundColor: AppColors.yellow }]}>
+          style={[styles.footerContainer, AppStyles.shadow, { marginTop: offsetsTop.dateStep, backgroundColor: AppColors.lightGrayBackground }]}>
           <DateStepView
             animationType={step.value < 3 ? "firstEntrance" : "ease"}
             editable={isDateStep}
@@ -248,7 +248,9 @@ export const PublishScreenView = () => {
             <Row spacing={8}>
               <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Publier le trajet"}</AppText>
               {isOverviewStep && <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />}
-              {isSubmittingStep && state.matches({ submitting: "pending" }) && <ActivityIndicator color={AppColors.white} />}
+              {isSubmittingStep && state.matches({ submitting: "pending" }) && (
+                <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.white} size="large" />
+              )}
               {isSubmittingStep && state.matches({ submitting: "failure" }) && <AppIcon name={"refresh-outline"} color={AppColors.white} />}
             </Row>
           </AppPressableOverlay>
@@ -300,7 +302,7 @@ const DateStepView = ({
             <AppToggle
               defaultSelectedValue={optionsRecurrentLiane[isRecurrent ? 1 : 0]}
               options={optionsRecurrentLiane}
-              selectionColor={AppColorPalettes.yellow[800]}
+              selectionColor={AppColors.primaryColor}
               onSelectValue={(option: string) => {
                 setIsRecurrent(option !== optionsRecurrentLiane[0]);
               }}
@@ -310,7 +312,7 @@ const DateStepView = ({
 
         {editable && !isRecurrent && (
           <Animated.View exiting={FadeOutLeft.delay(40).duration(150)} entering={SlideInLeft.delay(550).duration(300).springify().damping(20)}>
-            <DatePagerSelector date={date} onSelectDate={setDate} />
+            <DatePagerSelector color={AppColors.fontColor} date={date} onSelectDate={setDate} />
           </Animated.View>
         )}
 
@@ -481,7 +483,7 @@ const styles = StyleSheet.create({
     left: 0,
     height: 4,
     borderTopRightRadius: 16,
-    backgroundColor: AppColors.orange
+    backgroundColor: AppColors.primaryColor
   },
   floatingSearchBar: {
     paddingVertical: 24,
@@ -512,7 +514,7 @@ const styles = StyleSheet.create({
   },
   stepResumeContainer: {
     paddingLeft: 8,
-    paddingBottom: 8
+    paddingVertical: 8
   },
   stepResume: {
     fontSize: 18,
@@ -542,7 +544,7 @@ const styles = StyleSheet.create({
   },
   overviewStepBackground: {
     borderTopLeftRadius: 24,
-    backgroundColor: AppColors.orange
+    backgroundColor: AppColors.primaryColor
   },
   overviewStepText: {
     fontSize: 18,
