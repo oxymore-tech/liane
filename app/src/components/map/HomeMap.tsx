@@ -13,7 +13,7 @@ import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
 import { useIsFocused } from "@react-navigation/native";
 import { getSetting } from "@/api/storage";
-import { LianeDisplayLayer, PickupDestinationsDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
+import { LianeDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
 import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
 import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer";
 import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
@@ -21,6 +21,7 @@ import { AppColors } from "@/theme/colors";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { SearchModal } from "@/screens/home/HomeHeader";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
+import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 
 export const HomeMap = ({
   onMovingStateChanged,
@@ -162,7 +163,7 @@ export const HomeMap = ({
         appMapRef.current?.setCenter({ lat: center[1], lng: center[0] }, zoom + 0.01, 50); //state.context.filter.from!.location
       });
     });
-  }, [state.context.filter.from?.id, state.context.filter.targetTime?.dateTime, isPointState]);
+  }, [state.context.filter.to?.id, state.context.filter.targetTime?.dateTime, isPointState]);
 
   const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
     if (onZoomChanged) {
@@ -236,7 +237,7 @@ export const HomeMap = ({
         {state.matches("point") && (
           <PickupDestinationsDisplayLayer
             date={state.context.filter.targetTime?.dateTime}
-            pickupPoint={state.context.filter.from!.id!}
+            deposit={state.context.filter.to!.id!}
             onSelect={rp => {
               if (rp) {
                 machine.send("SELECT", { data: rp });
@@ -277,16 +278,16 @@ export const HomeMap = ({
         {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />}
         {["point", "match"].some(state.matches) && (
           <WayPointDisplay
-            rallyingPoint={state.context.filter.from || detailStateData!.pickup}
-            type={"from"}
+            rallyingPoint={state.context.filter.to || detailStateData!.deposit}
+            type={"to"}
 
             // active={!isDetailState || !state.context.filter.from || state.context.filter.from.id === detailStateData!.pickup.id}
           />
         )}
         {["match"].some(state.matches) && (
           <WayPointDisplay
-            rallyingPoint={state.context.filter.to || detailStateData!.deposit}
-            type={"to"}
+            rallyingPoint={state.context.filter.from || detailStateData!.pickup}
+            type={"from"}
 
             //  active={!isDetailState || !state.context.filter.to || state.context.filter.to.id === detailStateData!.deposit.id}
           />

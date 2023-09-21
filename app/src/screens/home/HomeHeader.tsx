@@ -11,7 +11,7 @@ import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "reac
 
 import { SearchedLocation, Trip } from "@/api/service/location";
 import { AppText } from "@/components/base/AppText";
-import { AppPressable, AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { AppContext } from "@/components/context/ContextProvider";
 import { HomeScreenHeader } from "@/components/context/Navigation";
@@ -22,7 +22,6 @@ import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
-import { useAppNavigation } from "@/api/navigation";
 
 export const RallyingPointField = forwardRef(
   (
@@ -90,82 +89,6 @@ export const RallyingPointField = forwardRef(
   }
 );
 
-export const RallyingPointField2 = forwardRef(
-  (
-    {
-      onChange,
-      value,
-      editable = true,
-      onFocus = () => {},
-      showTrailing,
-      icon,
-      placeholder
-    }: {
-      onChange?: (v: string | undefined) => void;
-      value: string;
-      editable?: boolean;
-      onFocus?: () => void;
-      showTrailing: boolean;
-      icon: JSX.Element;
-      placeholder: string;
-    },
-    ref
-  ) => {
-    const inputRef = useRef<TextInput>(null);
-    useImperativeHandle(ref, () => inputRef.current);
-
-    const field = (
-      <View style={styles.inputContainer2} pointerEvents={editable ? undefined : "none"}>
-        <AppTextInput
-          trailing={
-            showTrailing ? (
-              <Pressable
-                style={{ marginRight: 0 }}
-                onPress={() => {
-                  if (editable) {
-                    inputRef.current?.clear();
-                  }
-                  if (onChange) {
-                    onChange(undefined);
-                  }
-                  if (editable) {
-                    inputRef.current?.focus();
-                  }
-                }}>
-                <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
-              </Pressable>
-            ) : undefined
-          }
-          ref={inputRef}
-          editable={editable}
-          selection={editable ? undefined : { start: 0 }}
-          style={[AppStyles.input, { fontSize: 16 }]}
-          leading={icon}
-          placeholder={placeholder}
-          value={value}
-          onChangeText={v => {
-            if (onChange) {
-              onChange(v);
-            }
-          }}
-          onFocus={onFocus}
-        />
-      </View>
-    );
-
-    return editable ? (
-      field
-    ) : (
-      <Pressable
-        onPress={() => {
-          onFocus();
-        }}>
-        {field}
-      </Pressable>
-    );
-  }
-);
-
 export const MapHeader = ({
   trip,
   title,
@@ -200,26 +123,6 @@ export const MapHeader = ({
           </Row>
         </View>
       </View>
-      {!to && (
-        <Animated.View
-          entering={animateEntry ? SlideInUp : undefined}
-          exiting={SlideOutUp}
-          style={[
-            {
-              backgroundColor: AppColors.white,
-              borderBottomLeftRadius: 16,
-              borderBottomRightRadius: 16,
-              paddingTop: itineraryMarginTop,
-              paddingBottom: 4
-            },
-            AppStyles.shadow
-          ]}>
-          <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
-            <AppIcon name={"info-outline"} />
-            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point d'arrivée"}</AppText>
-          </Row>
-        </Animated.View>
-      )}
       {!!to && (
         <View
           style={[
@@ -245,33 +148,6 @@ export const MapHeader = ({
           />
 
           <Column style={{ paddingRight: 8, paddingLeft: 16 }}>
-            <Row style={{ paddingTop: 8, paddingBottom: 4 }} spacing={16}>
-              <View
-                style={{
-                  backgroundColor: AppColorPalettes.gray[100],
-                  borderRadius: 32,
-                  marginTop: 4,
-                  width: 28,
-                  height: 28,
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}>
-                <AppIcon name={"pin"} color={AppColors.orange} size={24} />
-              </View>
-              <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
-                <RallyingPointItem item={to} labelSize={15} showIcon={false} />
-              </View>
-
-              {!from && (
-                <AppPressableIcon
-                  onPress={() => {
-                    updateTrip({ to: undefined });
-                  }}
-                  name={"close-outline"}
-                />
-              )}
-            </Row>
-            <View style={[{ width: "75%" }, styles.horizontalLine]} />
             {!from && (
               <View style={{ paddingVertical: 4, paddingBottom: 8 }}>
                 {hintPhrase && <AppText style={{ marginLeft: 40, fontStyle: "italic" }}>{hintPhrase}</AppText>}
@@ -286,9 +162,9 @@ export const MapHeader = ({
                         justifyContent: "center",
                         alignItems: "center"
                       }}>
-                      <AppIcon name={"flag"} color={AppColors.pink} size={24} />
+                      <AppIcon name={"pin"} color={AppColors.pink} size={24} />
                     </View>
-                    <AppText style={{ fontStyle: "italic" }}>{"Sélectionnez un point d'arrivée"}</AppText>
+                    <AppText style={{ fontStyle: "italic" }}>{"Sélectionnez un point de départ"}</AppText>
                   </Row>
                 )}
               </View>
@@ -305,7 +181,7 @@ export const MapHeader = ({
                     justifyContent: "center",
                     alignItems: "center"
                   }}>
-                  <AppIcon name={"flag"} color={AppColors.pink} size={24} />
+                  <AppIcon name={"pin"} color={AppColors.pink} size={24} />
                 </View>
                 <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
                   <RallyingPointItem item={from} labelSize={15} showIcon={false} />
@@ -319,8 +195,54 @@ export const MapHeader = ({
                 />
               </Row>
             )}
+            <Row style={{ paddingTop: 8, paddingBottom: 4 }} spacing={16}>
+              <View
+                style={{
+                  backgroundColor: AppColorPalettes.gray[100],
+                  borderRadius: 32,
+                  marginTop: 4,
+                  width: 28,
+                  height: 28,
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                <AppIcon name={"flag"} color={AppColors.orange} size={24} />
+              </View>
+              <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
+                <RallyingPointItem item={to} labelSize={15} showIcon={false} />
+              </View>
+
+              {!from && (
+                <AppPressableIcon
+                  onPress={() => {
+                    updateTrip({ to: undefined });
+                  }}
+                  name={"close-outline"}
+                />
+              )}
+            </Row>
           </Column>
         </View>
+      )}
+      {!to && (
+        <Animated.View
+          entering={animateEntry ? SlideInUp : undefined}
+          exiting={SlideOutUp}
+          style={[
+            {
+              backgroundColor: AppColors.white,
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              paddingTop: itineraryMarginTop,
+              paddingBottom: 4
+            },
+            AppStyles.shadow
+          ]}>
+          <Row style={{ paddingHorizontal: 16, paddingVertical: 2, justifyContent: "center", alignItems: "center" }} spacing={8}>
+            <AppIcon name={"info-outline"} />
+            <AppText style={{ fontStyle: "italic" }}>{hintPhrase || "Sélectionnez un point d'arrivée"}</AppText>
+          </Row>
+        </Animated.View>
       )}
       {action && (
         <Animated.View
