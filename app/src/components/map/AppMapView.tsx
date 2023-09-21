@@ -9,8 +9,6 @@ import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { DisplayBoundingBox, fromBoundingBox } from "@/util/geometry";
 import { contains } from "@/api/geo";
-import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
-import { AppStyles } from "@/theme/styles";
 import distance from "@turf/distance";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";

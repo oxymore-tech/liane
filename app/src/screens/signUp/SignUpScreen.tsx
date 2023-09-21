@@ -13,9 +13,8 @@ import { useActor, useInterpret } from "@xstate/react";
 import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateMachine";
 import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
-import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { APP_ENV, APP_VERSION } from "@env";
+import { APP_VERSION } from "@env";
 import { AppStyles } from "@/theme/styles";
 
 const t = scopedTranslate("SignUp");
@@ -81,10 +80,7 @@ const SignUpPage = () => {
         <AppText style={styles.errorText}>{error || " "}</AppText>
       </View>
       <View style={[styles.bottomContainer, { bottom: insets.bottom }]}>
-        <AppText style={styles.bottomText}>
-          Version: {APP_VERSION}
-          {APP_ENV === "production" ? "" : "(dev)"}
-        </AppText>
+        <AppText style={styles.bottomText}>Version: {APP_VERSION}</AppText>
       </View>
     </View>
   );

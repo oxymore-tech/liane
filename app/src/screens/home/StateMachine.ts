@@ -229,7 +229,7 @@ export const HomeMapMachine = (services: {
                 cond: (context, event: UpdateEvent) => {
                   const newFrom = Object.hasOwn(event.data, "from") ? event.data.from : context.filter.from;
                   const newTo = Object.hasOwn(event.data, "to") ? event.data.to : context.filter.to;
-                  console.debug(newFrom?.id, newTo?.id);
+                  console.debug("[StateMachine] from => to", newFrom?.id, newTo?.id);
                   return filterHasFullTrip({ from: newFrom, to: newTo });
                 }
               },
@@ -369,16 +369,16 @@ export const HomeMapMachine = (services: {
         resetMatchesDisplay: () => services.observables.displaySubject.next([EmptyFeatureCollection, new Set()]),
         selectRallyingPoint: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
-            return { ...context.filter, from: event.data, to: undefined };
+            return { ...context.filter, to: event.data, from: undefined };
           }
         }),
         selectRallyingPoint2: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
-            if (context.filter.from!.id === event.data.id) {
+            if (context.filter.to!.id === event.data.id) {
               // Ignore if to & from are set to same value
               return context.filter;
             }
-            return { ...context.filter, to: event.data };
+            return { ...context.filter, from: event.data };
           }
         }),
         selectMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: (context, event) => event.data }),

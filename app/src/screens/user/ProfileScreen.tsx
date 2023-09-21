@@ -3,13 +3,12 @@ import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { APP_ENV, APP_VERSION } from "@env";
+import { APP_VERSION } from "@env";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionItem } from "@/components/ActionItem";
-import { LineSeparator } from "@/components/Separator";
 import { useAppNavigation } from "@/api/navigation";
 import { User } from "@/api";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
@@ -93,10 +92,7 @@ const Actions = () => {
           text={"Se déconnecter"}
         />
       </Row>
-      <AppText style={{ marginLeft: 32, marginVertical: 8 }}>
-        Version : {APP_VERSION}
-        {APP_ENV === "production" ? "" : "(dev)"}
-      </AppText>
+      <AppText style={{ marginLeft: 32, marginVertical: 8 }}>Version : {APP_VERSION}</AppText>
     </Column>
   );
 };
