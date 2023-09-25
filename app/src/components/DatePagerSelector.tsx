@@ -1,12 +1,15 @@
 import React, { useMemo, useState } from "react";
 import { ColorValue, Platform, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+
 import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
+
 import { Center, Row } from "@/components/base/AppLayout";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
-import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+
+import { AppColors } from "@/theme/colors";
+
 import { isToday, withOffsetHours } from "@/util/datetime";
 import { capitalize } from "@/util/strings";
 
@@ -15,13 +18,15 @@ export const DatePagerSelector = ({
   onSelectDate,
   formatter,
   color = AppColors.white,
-  size = 20
+  size = 22,
+  borderBottomDisplayed = false
 }: {
   date: Date | undefined;
   onSelectDate: (d: Date) => void;
   formatter?: (d: Date) => string;
   color?: ColorValue;
   size?: number;
+  borderBottomDisplayed?: boolean;
 }) => {
   const dateIsToday = !date || isToday(date);
 
@@ -33,7 +38,7 @@ export const DatePagerSelector = ({
 
   return (
     <Center>
-      <Row spacing={8}>
+      <Row spacing={8} style={borderBottomDisplayed ? styles.containerBorderStyle : {}}>
         <AppPressableIcon
           backgroundStyle={styles.buttonBorderRadius}
           clickable={!dateIsToday}
@@ -42,13 +47,15 @@ export const DatePagerSelector = ({
           color={color}
           size={size + 26}
           opacity={dateIsToday ? 0.4 : 1}
+          borderRadius={20}
         />
 
         <Center>
           <AppPressableOverlay
             style={{ paddingVertical: 8, paddingHorizontal: 4 }}
             onPress={() => setDatePickerVisible(true)}
-            backgroundStyle={styles.buttonBorderRadius}>
+            backgroundStyle={styles.buttonBorderRadius}
+            borderRadius={20}>
             <Row spacing={6}>
               <AppText style={{ fontWeight: "bold", color, fontSize: size }}>
                 {formatter ? formatter(date || new Date()) : capitalize(toRelativeDateString(date, formatShortMonthDay))}
@@ -63,9 +70,11 @@ export const DatePagerSelector = ({
           name={"chevron-right"}
           color={color}
           size={size + 26}
+          borderRadius={20}
         />
 
         <DateTimePickerModal
+          accentColor={AppColors.primaryColor}
           isVisible={isDatePickerVisible}
           mode="date"
           minimumDate={minDate}
@@ -95,6 +104,10 @@ const previousDate = (date: Date, onSelectDate: (date: Date) => void) => {
 };
 
 const styles = StyleSheet.create({
+  containerBorderStyle: {
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.lightGrayBackground
+  },
   buttonBorderRadius: {
     borderRadius: 8
   }

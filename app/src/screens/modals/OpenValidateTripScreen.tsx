@@ -45,11 +45,11 @@ export const OpenValidateTripScreen = WithFullscreenModal(() => {
           paddingBottom: 20
         }}>
         <Column spacing={8}>
-          <AppText style={{ color: AppColors.white, fontWeight: "bold" }}>Le trajet s'est-il déroulé comme prévu ?</AppText>
+          <AppText style={{ color: AppColors.fontColor, fontWeight: "bold" }}>Le trajet s'est-il déroulé comme prévu ?</AppText>
           <AppSwitchToggle
             defaultSelectedValue={true}
             options={[true, false]}
-            selectionColor={AppColors.darkBlue}
+            selectionColor={AppColors.primaryColor}
             onSelectValue={() => setTripOk(!tripOk)}
           />
         </Column>
@@ -62,7 +62,12 @@ export const OpenValidateTripScreen = WithFullscreenModal(() => {
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
         <AppRoundedButton color={defaultTextColor(AppColors.white)} onPress={refuseRequest} backgroundColor={AppColors.white} text={"Annuler"} />
-        <AppRoundedButton color={defaultTextColor(AppColors.orange)} onPress={acceptRequest} backgroundColor={AppColors.orange} text={"Envoyer"} />
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
+          onPress={acceptRequest}
+          backgroundColor={AppColors.primaryColor}
+          text={"Envoyer"}
+        />
       </Row>
     </ScrollView>
   );

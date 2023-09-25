@@ -82,7 +82,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, de
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: ["case", ["==", ["get", "point_type"], "suggestion"], AppColors.pink, "#000"],
+          textColor: ["case", ["==", ["get", "point_type"], "suggestion"], AppColors.primaryColor, "#000"],
           textHaloColor: "#fff",
           textHaloWidth: 1.2,
           textField: ["step", ["zoom"], "", 12, ["get", "label"]],

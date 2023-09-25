@@ -30,8 +30,7 @@ export function AppButton({
   ...props
 }: AppButtonProps) {
   const { navigation } = useAppNavigation();
-  const backgroundColor = disabled ? AppColorPalettes.gray[400] : color;
-
+  const backgroundColor = disabled ? AppColorPalettes.gray[300] : color;
   const textColor = foregroundColor || (color === AppColors.white ? AppColorPalettes.gray[800] : AppColors.white);
   const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 2 : 1);
 

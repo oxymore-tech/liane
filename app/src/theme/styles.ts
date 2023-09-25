@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppDimensions } from "@/theme/dimensions";
+import { AppColors } from "@/theme/colors";
 
 const AppBorderRadius = {
   input: 24
@@ -17,8 +16,7 @@ export const AppStyles = StyleSheet.create({
     paddingRight: 12
   },
   input: {
-    fontSize: 22,
-    color: AppColors.white
+    fontSize: 18
   },
   inputContainer: {
     backgroundColor: AppColors.white,
@@ -61,10 +59,8 @@ export const AppStyles = StyleSheet.create({
 
     elevation: 4
   },
-
-  /* Test */
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold"
   },
   text: {

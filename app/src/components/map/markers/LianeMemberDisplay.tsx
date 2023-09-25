@@ -45,7 +45,7 @@ export const LianeMemberDisplay = ({
             <View
               style={[
                 styles.userPictureContainer,
-                { borderRadius: size, width: size, height: size, borderColor: active ? AppColors.orange : AppColorPalettes.gray[400] }
+                { borderRadius: size, width: size, height: size, borderColor: active ? AppColors.primaryColor : AppColorPalettes.gray[400] }
               ]}>
               <UserPicture url={user.pictureUrl} id={user.id} size={size - 8} />
             </View>
@@ -57,7 +57,7 @@ export const LianeMemberDisplay = ({
             fill-rule="evenodd"
             clip-rule="evenodd"
             d="M0.63916 0.521484L6.71387 17.1348L12.7568 0.608887C10.8748 0.866699 8.95288 1 7 1C4.83765 1 2.71362 0.836426 0.63916 0.521484Z"
-            fill={AppColors.orange}
+            fill={AppColors.primaryColor}
           />
         </Svg>
       </Animated.View>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   userPictureContainer: {
     padding: 2,
-    borderColor: AppColors.orange,
+    borderColor: AppColors.primaryColor,
     borderWidth: 2
   }
 });

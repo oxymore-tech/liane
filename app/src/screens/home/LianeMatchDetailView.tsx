@@ -93,7 +93,7 @@ export const LianeMatchDetailView = () => {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: AppColors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12 }}>
       <AppBottomSheetScrollView style={{ marginBottom: 52 }}>
         <Column style={{ paddingVertical: 8, paddingHorizontal: 24 }} spacing={6}>
           <AppText style={{ fontWeight: "bold", fontSize: 20, marginBottom: 8 }}>{formattedDepartureTime}</AppText>
@@ -107,7 +107,6 @@ export const LianeMatchDetailView = () => {
           />
         </Column>
 
-        <SectionSeparator />
         {liane.liane.driver.canDrive && step === 0 && (
           <Animated.View exiting={SlideOutLeft}>
             <DriverInfo user={driver} />
@@ -250,7 +249,7 @@ export const LianeMatchDetailView = () => {
         {!userIsMember && !isReturnStep && !isSeatsStep && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
-              color={defaultTextColor(AppColors.orange)}
+              color={defaultTextColor(AppColors.primaryColor)}
               //onPress={requestJoin}
               onPress={
                 step === 0
@@ -259,7 +258,7 @@ export const LianeMatchDetailView = () => {
                       requestJoin().catch(e => console.warn(e));
                     }
               }
-              backgroundColor={AppColors.orange}
+              backgroundColor={AppColors.primaryColor}
               text={step === 0 ? "Rejoindre cette liane" : "Réserver ce trajet"}
             />
           </Animated.View>

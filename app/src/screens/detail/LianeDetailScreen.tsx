@@ -237,15 +237,6 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
         </View>
       </View>
 
-      {liane.liane.state === "Finished" && (
-        <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: liane.liane })}>
-          <Row style={styles.validationContainer} spacing={8}>
-            <AppText style={styles.validationText}>Valider ce trajet</AppText>
-            <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />
-          </Row>
-        </Pressable>
-      )}
-
       <Row style={styles.statusRowContainer} spacing={8}>
         {["NotStarted", "Started"].includes(liane.liane.state) && (
           <Row style={{ position: "relative", left: 12 * (liane.liane.members.length - 1) }}>
@@ -261,12 +252,19 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
       </Row>
 
       <Row style={styles.statusLianeContainer}>
+        {liane.liane.state === "Finished" && (
+          <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: liane.liane })}>
+            <Row style={styles.validationContainer} spacing={8}>
+              <AppText style={styles.validationText}>Valider</AppText>
+            </Row>
+          </Pressable>
+        )}
         {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) ? (
           <LianeStatusView liane={liane.liane} />
         ) : (
           <TouchableOpacity onPress={() => {}}>
             <Row style={styles.validationContainer} spacing={8}>
-              <AppText style={styles.validationText}>Relancer la liane</AppText>
+              <AppText style={styles.validationText}>Relancer</AppText>
             </Row>
           </TouchableOpacity>
         )}
@@ -376,7 +374,7 @@ const styles = StyleSheet.create({
     right: -4
   },
   chatBadge: {
-    backgroundColor: AppColors.orange,
+    backgroundColor: AppColors.primaryColor,
     borderRadius: 16,
     padding: 6,
     top: 4,
@@ -399,7 +397,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: AppColors.primaryColor,
     padding: 4,
-    paddingLeft: 12
+    paddingHorizontal: 12,
+    marginHorizontal: 6
   },
   validationText: {
     fontWeight: "bold",

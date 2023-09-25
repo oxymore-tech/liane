@@ -18,6 +18,9 @@ import UserLocation = MapLibreGL.UserLocation;
 import { useSubject } from "@/util/hooks/subscription";
 import { SubscriptionLike } from "rxjs";
 import { displayInfo } from "@/components/base/InfoDisplayer";
+import { AppPressableIcon, AppPressableOverlay } from "../base/AppPressable";
+import { AppIcon } from "../base/AppIcon";
+import { AppStyles } from "@/theme/styles";
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -221,6 +224,11 @@ const AppMapView = forwardRef(
           {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
         <View style={styles.blackOverlay} pointerEvents="none" />
+        <View style={styles.communityOverlay}>
+          <AppPressableOverlay style={[AppStyles.center, { borderRadius: 20, height: 36 }]} borderRadius={20}>
+            <AppIcon name={"people-outline"} size={22} style={{ justifyContent: "center", alignItems: "center" }} color={AppColors.primaryColor} />
+          </AppPressableOverlay>
+        </View>
         {showGeolocation && showActions && (
           <View style={styles.mapOverlay}>
             <Column spacing={8}>
@@ -319,6 +327,21 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: -6,
     bottom: 54,
+
+    alignSelf: "center",
+    padding: 2,
+    borderRadius: 20,
+
+    width: 40,
+    height: 40
+  },
+  communityOverlay: {
+    backgroundColor: AppColors.white,
+    margin: 16,
+
+    position: "absolute",
+    right: -6,
+    bottom: 104,
 
     alignSelf: "center",
     padding: 2,

@@ -97,7 +97,13 @@ export const ShareTripLocationScreen = WithFullscreenModal(
           </View>
           <View style={{ flex: 1 }} />
           <Column spacing={8} style={{ paddingHorizontal: 24, alignItems: "center" }}>
-            <AppButton title={"Démarrer le suivi"} icon={"play-circle-outline"} color={AppColors.orange} onPress={startGeoloc} kind={"circular"} />
+            <AppButton
+              title={"Démarrer le suivi"}
+              icon={"play-circle-outline"}
+              color={AppColors.primaryColor}
+              onPress={startGeoloc}
+              kind={"circular"}
+            />
             <AppButton
               title={"Décaler le départ"}
               icon={"clock-outline"}
@@ -249,7 +255,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
       </Row>
       <AppButton
         title={"Autoriser la géolocalisation"}
-        color={AppColors.orange}
+        color={AppColors.primaryColor}
         onPress={() => requestBackgroundGeolocation().then(props.onGranted)}
       />
     </Column>

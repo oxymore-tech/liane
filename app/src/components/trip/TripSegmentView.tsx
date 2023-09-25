@@ -64,13 +64,13 @@ export const TripSegmentView = ({ from, to, departureTime, arrivalTime }: TripSe
 
 export const TripViewStyles = StyleSheet.create({
   toLabel: {
-    color: AppColorPalettes.pink[500]
+    color: AppColors.primaryColor
   },
   grayedLabel: {
     color: AppColorPalettes.gray[500]
   },
   fromLabel: {
-    color: AppColorPalettes.orange[500]
+    color: AppColors.primaryColor
   },
   mainWayPointCity: {
     fontSize: 18,
@@ -97,7 +97,7 @@ export const TripViewStyles = StyleSheet.create({
     color: AppColorPalettes.gray[700]
   },
   intermediateFromWayPointLabelColor: {
-    color: AppColorPalettes.orange[500]
+    color: AppColors.primaryColor
   },
   iconTravel: {
     paddingVertical: 6,

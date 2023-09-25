@@ -5,7 +5,7 @@ import { LatLng } from "@/api";
 
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppContext } from "@/components/context/ContextProvider";
-import { AppPressable } from "@/components/base/AppPressable";
+import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 
 import { AppColors, ContextualColors } from "@/theme/colors";
 
@@ -20,8 +20,8 @@ export const PositionButton = ({ onPosition, locationEnabled = true, onPositionE
   const [isApplyingLocation, setIsApplyingLocation] = useState(false);
 
   return (
-    <AppPressable
-      style={{ justifyContent: "center", alignItems: "center" }}
+    <AppPressableOverlay
+      style={{ justifyContent: "center", alignItems: "center", height: 36 }}
       onPress={async () => {
         try {
           const currentLocation = await services.location.currentLocation();
@@ -38,22 +38,23 @@ export const PositionButton = ({ onPosition, locationEnabled = true, onPositionE
             onPositionError(e);
           }
         }
-      }}>
+      }}
+      borderRadius={20}>
       <AppIcon
         size={22}
         name={locationEnabled ? "position-on" : "position-off"}
-        color={locationEnabled ? AppColors.secondaryColor : ContextualColors.redAlert.text}
+        color={locationEnabled ? AppColors.primaryColor : ContextualColors.redAlert.text}
       />
       <View style={styles.innerIcon} />
       {isApplyingLocation && locationEnabled && <View style={styles.innerIcon} />}
-    </AppPressable>
+    </AppPressableOverlay>
   );
 };
 
 const styles = StyleSheet.create({
   innerIcon: {
     borderWidth: 2,
-    borderColor: AppColors.secondaryColor,
+    borderColor: AppColors.primaryColor,
     padding: 1.5,
     position: "absolute",
     borderRadius: 8

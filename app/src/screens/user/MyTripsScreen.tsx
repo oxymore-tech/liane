@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
 import { Liane, Ref, UnionUtils } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
@@ -7,13 +7,14 @@ import { useAppNavigation } from "@/api/navigation";
 import { Event } from "@/api/notification";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
-import { Center, Column } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";
+import { UserPicture } from "@/components/UserPicture";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
@@ -89,7 +90,25 @@ const MyTripsScreen = () => {
   return (
     <Column style={{ backgroundColor: AppColors.lightGrayBackground }}>
       <Column style={styles.headerContainer} spacing={16}>
-        <AppButton icon="plus-outline" kind="rounded" user={user} title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
+        <Row>
+          <AppButton
+            style={{ flex: 1 }}
+            icon="plus-outline"
+            kind="rounded"
+            title="Créer une liane"
+            onPress={() => navigation.navigate("Publish", {})}
+          />
+          <View style={{ flex: 1, alignItems: "flex-end", justifyContent: "center", marginRight: 12 }}>
+            <TouchableOpacity
+              style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
+              onPress={() =>
+                // @ts-ignore
+                navigation.navigate("Profile", { user })
+              }>
+              <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
+            </TouchableOpacity>
+          </View>
+        </Row>
         <AppTabs
           items={["Lianes à venir", "Lianes passés"]}
           onSelect={setSelectedTab}

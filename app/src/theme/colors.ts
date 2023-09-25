@@ -4,19 +4,18 @@ export type AppColorSwatch = Readonly<{ [name in 500]: ColorValue }> &
   Readonly<Partial<{ [name in 100 | 200 | 300 | 400 | 600 | 700 | 800 | 900]: ColorValue }>>;
 
 export enum AppColors {
-  primaryColor = "#f67280",
-  secondaryColor = "#1d77a8",
+  primaryColor = "#F25757",
+  secondaryColor = "#3C88A6",
   backgroundColor = "#FFFFFF",
   fontColor = "#000000",
   grayBackground = "#E5E5E5",
-  lightGrayBackground = "#f7f7f7",
+  lightGrayBackground = "#EBE9E9",
 
   white = "#FFFFFF",
   black = "#000000",
   blue = "#0B79F9",
   darkBlue = "#23278A",
   yellow = "#FFB545",
-  pink = "#ff8c8c",
   orange = "#e7492e"
 }
 export const AppColorPalettes = {
@@ -33,7 +32,7 @@ export const AppColorPalettes = {
   },
   blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#9FCEFF", 100: "#CEE4FE", 700: AppColors.darkBlue, 900: "#030636" },
   pink: {
-    500: AppColors.pink,
+    500: "#ff8c8c",
     400: "#F49496",
     600: "#E7696C",
     100: "#FFD6D7"
@@ -45,7 +44,7 @@ export const AppColorPalettes = {
     200: "#FFD19E",
     100: "#FFE4C7"
   },
-  orange: { 500: AppColors.orange, 600: "#E34526", 400: "#EF6E55", 100: "#ff6a3f", 700: "#AA2900" }
+  orange: { 500: AppColors.primaryColor, 600: "#E34526", 400: "#EF6E55", 100: "#ff6a3f", 700: "#AA2900" }
 } as const;
 
 export const WithAlpha = (color: AppColors.white | AppColors.black, alpha: number) => {
@@ -56,7 +55,7 @@ export const WithAlpha = (color: AppColors.white | AppColors.black, alpha: numbe
 export const defaultTextColor = (color: ColorValue) => {
   switch (color) {
     case AppColors.blue:
-    case AppColors.orange:
+    case AppColors.primaryColor:
     case AppColors.darkBlue:
       return AppColors.white;
     default:

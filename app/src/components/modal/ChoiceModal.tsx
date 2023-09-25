@@ -1,5 +1,5 @@
 import Modal from "react-native-modal/dist/modal";
-import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -17,17 +17,18 @@ export interface ChoiceModalProps {
 
 export type Choice = {
   text: string;
-  icon: IconName;
   action: () => void;
-  color?: ColorValue;
+  danger?: boolean;
 };
-export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, choices }: ChoiceModalProps) => {
+export const ChoiceModal = ({ backgroundColor = AppColors.white, visible, setVisible, choices }: ChoiceModalProps) => {
   const [selected, setSelected] = useState<number | undefined>(undefined);
   useEffect(() => {
     if (visible) {
       setSelected(undefined);
     }
   }, [visible]);
+  console.log(choices);
+
   return (
     <Modal
       onBackButtonPress={() => setVisible(false)}
@@ -43,22 +44,36 @@ export const ChoiceModal = ({ backgroundColor = AppColors.darkBlue, visible, set
         }
       }}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
-        <View style={[styles.container, { backgroundColor }]}>
-          <Row>
-            {choices.map((c, i) => (
-              <View key={i} style={{ flex: 1 }}>
-                <ActionItem
+        <View style={styles.containerStyle}>
+          <View style={[styles.containerStyle, { backgroundColor, height: choices.filter(c => !c.danger).length * 50 }]}>
+            {choices
+              .filter(c => !c.danger)
+              .map((c, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.buttonStyle}
                   onPress={() => {
                     setSelected(i);
                     setVisible(false);
-                  }}
-                  color={c.color}
-                  iconName={c.icon}
-                  text={c.text}
-                  lines={2}></ActionItem>
+                  }}>
+                  <AppText style={styles.textStyle}>{c.text}</AppText>
+                </TouchableOpacity>
+              ))}
+          </View>
+          {choices
+            .filter(c => c.danger)
+            .map((c, i) => (
+              <View key={i} style={[styles.containerStyle, styles.containerDangerStyle]}>
+                <TouchableOpacity
+                  style={[styles.buttonStyle, styles.buttonDangerStyle]}
+                  onPress={() => {
+                    setSelected(i);
+                    setVisible(false);
+                  }}>
+                  <AppText style={[styles.textStyle, { color: AppColors.white }]}>{c.text}</AppText>
+                </TouchableOpacity>
               </View>
             ))}
-          </Row>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -69,11 +84,26 @@ const styles = StyleSheet.create({
   modal: {
     margin: 0
   },
-  container: {
-    borderWidth: 2,
-    borderColor: AppColors.primaryColor,
-    padding: 24,
-    margin: 32,
-    borderRadius: 8
+  containerStyle: {
+    display: "flex",
+    margin: 6,
+    borderRadius: 18
+  },
+  containerDangerStyle: {
+    height: 50,
+    borderRadius: 18
+  },
+  buttonStyle: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  buttonDangerStyle: {
+    backgroundColor: AppColors.primaryColor,
+    borderRadius: 18
+  },
+  textStyle: {
+    fontSize: 18,
+    fontWeight: "bold"
   }
 });

@@ -24,7 +24,7 @@ export const BadgedIcon = WithBadge(AppIcon);
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: AppColors.orange,
+    backgroundColor: AppColors.primaryColor,
     borderRadius: 16,
     paddingHorizontal: 4,
     position: "absolute",

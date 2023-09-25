@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -9,9 +9,7 @@ import Animated, {
   SlideInDown,
   SlideInLeft,
   SlideInRight,
-  SlideInUp,
   SlideOutLeft,
-  SlideOutUp,
   useAnimatedStyle,
   useSharedValue,
   withTiming
@@ -31,7 +29,6 @@ import { AppText } from "@/components/base/AppText";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { AppToggle } from "@/components/base/AppOptionToggle";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { MonkeySmilingVector } from "@/components/vectors/MonkeySmilingVector";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
@@ -46,6 +43,8 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { getFirstFutureDate } from "@/util/datetime";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
+import { FloatingBackButton } from "@/components/FloatingBackButton";
+import { UserPicture } from "@/components/UserPicture";
 
 interface StepProps<T> {
   editable: boolean;
@@ -94,9 +93,11 @@ export const PublishScreen = () => {
 };
 
 export const PublishScreenView = () => {
+  const { navigation } = useAppNavigation();
   const insets = useSafeAreaInsets();
   const machine = useContext(PublishLianeContext);
   const [state] = useActor(machine);
+  const { user } = useContext(AppContext);
 
   const isTripStep = state.matches("trip");
   const isDateStep = state.matches("date");
@@ -145,12 +146,10 @@ export const PublishScreenView = () => {
   }
 
   return (
-    <Column style={{ flex: 1 }}>
+    <Column style={{ flex: 1, backgroundColor: AppColors.white }}>
+      <FloatingBackButton onPress={navigation.goBack} />
       {(isOverviewStep || isSubmittingStep) && (
-        <Animated.View
-          exiting={SlideOutUp.duration(20)}
-          entering={SlideInUp.delay(50).duration(300).springify().damping(20)}
-          style={[styles.footerContainer, AppStyles.shadow, { marginTop: offsetsTop.returnStep, backgroundColor: AppColors.white, bottom: 0 }]}>
+        <Animated.View exiting={SlideOutLeft.duration(20)} entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}>
           {/*<AppPressableOverlay
             onPress={() => {
               machine.send("RETURN", { data: { returnTime: null } });
@@ -165,9 +164,14 @@ export const PublishScreenView = () => {
 
       {(isOverviewStep || isSubmittingStep || isReturnStep) && (
         <Animated.View
-          exiting={SlideOutUp.duration(20)}
-          entering={SlideInUp.delay(50).duration(300).springify().damping(20)}
-          style={[styles.footerContainer, AppStyles.shadow, { marginTop: offsetsTop.returnStep, backgroundColor: AppColorPalettes.blue[100] }]}>
+          exiting={SlideOutLeft.duration(20)}
+          entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+          style={[
+            styles.footerContainer,
+            { marginTop: isReturnStep ? offsetsTop.returnStep + 62 : offsetsTop.returnStep + 48 },
+            !isReturnStep ? styles.compactedStepStyle : null,
+            !isReturnStep ? AppStyles.shadow : null
+          ]}>
           <ReturnStepView
             after={state.context.request.departureTime!}
             editable={isReturnStep}
@@ -181,9 +185,14 @@ export const PublishScreenView = () => {
 
       {!isTripStep && !isDateStep && (
         <Animated.View
-          exiting={SlideOutUp.duration(20)}
-          entering={SlideInUp.delay(50).duration(300).springify().damping(20)}
-          style={[styles.footerContainer, AppStyles.shadow, { marginTop: offsetsTop.vehicleStep, backgroundColor: AppColors.blue }]}>
+          exiting={SlideOutLeft.duration(20)}
+          entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+          style={[
+            styles.footerContainer,
+            { marginTop: isVehicleStep ? offsetsTop.vehicleStep + 62 : offsetsTop.vehicleStep + 48 },
+            !isVehicleStep ? styles.compactedStepStyle : null,
+            !isVehicleStep ? AppStyles.shadow : null
+          ]}>
           <VehicleStepView
             animationType={step.value < 3 ? "firstEntrance" : "ease"}
             editable={isVehicleStep}
@@ -199,9 +208,14 @@ export const PublishScreenView = () => {
 
       {!isTripStep && (
         <Animated.View
-          exiting={SlideOutUp.duration(20)}
-          entering={SlideInUp.duration(300).springify().damping(20)}
-          style={[styles.footerContainer, AppStyles.shadow, { marginTop: offsetsTop.dateStep, backgroundColor: AppColors.lightGrayBackground }]}>
+          exiting={SlideOutLeft.duration(20)}
+          entering={SlideInLeft.duration(300).springify().damping(20)}
+          style={[
+            styles.footerContainer,
+            { marginTop: isDateStep ? offsetsTop.dateStep + 62 : offsetsTop.dateStep + 48 },
+            !isDateStep ? styles.compactedStepStyle : null,
+            !isDateStep ? AppStyles.shadow : null
+          ]}>
           <DateStepView
             animationType={step.value < 3 ? "firstEntrance" : "ease"}
             editable={isDateStep}
@@ -214,6 +228,19 @@ export const PublishScreenView = () => {
           />
         </Animated.View>
       )}
+
+      <Row style={styles.headerStyle}>
+        <AppIcon style={{ flex: 1, marginRight: 16 }} name={"bell-outline"} color={AppColors.primaryColor} size={32} />
+
+        <TouchableOpacity
+          style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
+          onPress={() =>
+            // @ts-ignore
+            navigation.navigate("Profile", { user })
+          }>
+          <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
+        </TouchableOpacity>
+      </Row>
 
       <ItinerarySearchForm
         editable={isTripStep}
@@ -233,7 +260,6 @@ export const PublishScreenView = () => {
             ]);
           }
         }}
-        title={isTripStep ? "Où allez-vous?" : undefined}
         openMap={() => machine.send("MAP", { data: state.context.request.from ? "to" : "from" })}
       />
       <Animated.View style={[styles.stepperIndicatorBaseStyle, stepperIndicatorStyle]} />
@@ -246,7 +272,7 @@ export const PublishScreenView = () => {
             style={styles.overviewStep}
             backgroundStyle={styles.overviewStepBackground}>
             <Row spacing={8}>
-              <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Publier le trajet"}</AppText>
+              <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Envoyer"}</AppText>
               {isOverviewStep && <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />}
               {isSubmittingStep && state.matches({ submitting: "pending" }) && (
                 <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.white} size="large" />
@@ -275,30 +301,24 @@ const DateStepView = ({
 
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
+      {!editable && (
+        <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
+          <Row style={styles.stepResumeContainer} spacing={8}>
+            {isRecurrent ? (
+              <AppText style={styles.stepResume}>
+                Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")} à {formatTime(date)}
+              </AppText>
+            ) : (
+              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatMonthDay)}</AppText>
+            )}
+            <AppIcon name={"edit-2"} color={AppColors.white} />
+          </Row>
+        </Animated.View>
+      )}
+
       <Column spacing={8}>
         {editable && (
-          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
-            <AppText style={[AppStyles.title, styles.stepTitle]}>Quand partez-vous ?</AppText>
-          </Animated.View>
-        )}
-
-        {!editable && (
-          <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
-            <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppIcon name={"clock-outline"} />
-              {isRecurrent ? (
-                <AppText style={styles.stepResume}>
-                  Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")} à {formatTime(date)}
-                </AppText>
-              ) : (
-                <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatMonthDay)}</AppText>
-              )}
-            </Row>
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Center>
+          <Center style={{ marginTop: 12 }}>
             <AppToggle
               defaultSelectedValue={optionsRecurrentLiane[isRecurrent ? 1 : 0]}
               options={optionsRecurrentLiane}
@@ -311,8 +331,11 @@ const DateStepView = ({
         )}
 
         {editable && !isRecurrent && (
-          <Animated.View exiting={FadeOutLeft.delay(40).duration(150)} entering={SlideInLeft.delay(550).duration(300).springify().damping(20)}>
-            <DatePagerSelector color={AppColors.fontColor} date={date} onSelectDate={setDate} />
+          <Animated.View
+            style={{ paddingTop: 10 }}
+            exiting={FadeOutLeft.delay(40).duration(150)}
+            entering={SlideInLeft.delay(550).duration(300).springify().damping(20)}>
+            <DatePagerSelector color={AppColors.fontColor} date={date} onSelectDate={setDate} borderBottomDisplayed={true} />
           </Animated.View>
         )}
 
@@ -333,6 +356,7 @@ const DateStepView = ({
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
+              borderRadius={20}
               disabled={isRecurrent && daysOfTheWeek === "0000000"}
               onPress={() => {
                 const departureTime = isRecurrent ? getFirstFutureDate(date, daysOfTheWeek) : date;
@@ -340,8 +364,7 @@ const DateStepView = ({
               }}>
               <Center>
                 <Row spacing={4}>
-                  <AppText>Valider</AppText>
-                  <AppIcon size={20} name={"checkmark-outline"} />
+                  <AppText style={styles.validateText}>Suivant</AppText>
                 </Row>
               </Center>
             </AppPressableOverlay>
@@ -356,23 +379,24 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
   const [seats, setSeats] = useState(initialValue || 1);
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
-      <Column spacing={8}>
+      <Column spacing={2}>
         {editable && (
           <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
-            <AppText style={[AppStyles.title, styles.stepTitle, { color: AppColors.white }]}>Combien de places avez-vous ?</AppText>
+            <Center>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Combien de places proposez-vous ?</AppText>
+            </Center>
           </Animated.View>
         )}
+
         {!editable && (
           <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
             <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppIcon name={seats > 0 ? "car" : "car-strike-through"} color={AppColors.white} />
-              <AppText style={[styles.stepResume, { color: AppColors.white }]}>
-                {/*Je suis {seats > 0 ? "conducteur" : "passager"}*/}
-                {seats} places disponibles
-              </AppText>
+              <AppText style={[styles.stepResume]}>{seats} places disponibles</AppText>
+              <AppIcon name={"edit-2"} color={AppColors.white} />
             </Row>
           </Animated.View>
         )}
+
         {/*editable && (
           <Animated.View entering={FadeIn.delay(1100)} style={{ alignSelf: "center" }}>
             <AppSwitchToggle
@@ -383,25 +407,27 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
             />
           </Animated.View>
         )*/}
+
         {editable && (
           <Animated.View entering={FadeInDown.delay(1100)}>
             <Column style={styles.flexStretch}>
-              <View style={[styles.flexStretch, styles.monkeySmilingVectorContainer]}>
-                <MonkeySmilingVector maxWidth={80} bodyColor={AppColorPalettes.blue[100]} />
-              </View>
               <View style={styles.vehicleStepSeatsContainer}>
                 <SeatsForm seats={seats} setSeats={setSeats} />
               </View>
             </Column>
           </Animated.View>
         )}
+
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(seats)}>
+            <AppPressableOverlay
+              backgroundStyle={styles.validateButtonBackground}
+              style={styles.validateButton}
+              borderRadius={20}
+              onPress={() => onChange(seats)}>
               <Center>
                 <Row spacing={4}>
-                  <AppText>Valider</AppText>
-                  <AppIcon size={20} name={"checkmark-outline"} />
+                  <AppText style={styles.validateText}>Suivant</AppText>
                 </Row>
               </Center>
             </AppPressableOverlay>
@@ -420,14 +446,17 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
       <Column spacing={8}>
         {editable && (
           <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
-            <AppText style={[AppStyles.title, styles.stepTitle]}>Quand repartez-vous ?</AppText>
+            <Center>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Quand repartez-vous ?</AppText>
+            </Center>
           </Animated.View>
         )}
+
         {!editable && (
           <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
             <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppIcon name={"corner-down-right-outline"} />
               <AppText style={styles.stepResume}>{date ? "Retour à " + formatTime(date) : "Pas de retour"}</AppText>
+              <AppIcon name={"edit-2"} color={AppColors.white} />
             </Row>
           </Animated.View>
         )}
@@ -441,24 +470,24 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
             <AppPressableOverlay
-              backgroundStyle={styles.validateButtonBackground}
+              backgroundStyle={styles.cancelButtonBackground}
               style={styles.validateButton}
+              borderRadius={20}
               onPress={() => onChange(date || null)}>
               <Center>
                 <Row spacing={4}>
-                  <AppText>Annuler</AppText>
-                  <AppIcon size={20} name={"close-outline"} />
+                  <AppText style={styles.cancelText}>Annuler</AppText>
                 </Row>
               </Center>
             </AppPressableOverlay>
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
+              borderRadius={20}
               onPress={() => onChange(date || null)}>
               <Center>
                 <Row spacing={4}>
-                  <AppText>Valider</AppText>
-                  <AppIcon size={20} name={"checkmark-outline"} />
+                  <AppText style={styles.validateText}>Suivant</AppText>
                 </Row>
               </Center>
             </AppPressableOverlay>
@@ -470,12 +499,14 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
 };
 
 const styles = StyleSheet.create({
+  headerStyle: {
+    position: "absolute",
+    top: 52,
+    right: 26,
+    zIndex: 10
+  },
   flexStretch: {
     alignSelf: "stretch"
-  },
-  page: {
-    flex: 1,
-    padding: 16
   },
   stepperIndicatorBaseStyle: {
     position: "absolute",
@@ -485,65 +516,68 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     backgroundColor: AppColors.primaryColor
   },
-  floatingSearchBar: {
-    paddingVertical: 24,
-    paddingHorizontal: 24,
-    position: "absolute",
-    width: "100%"
-  },
-  actionButton: {
-    padding: 12,
-    borderRadius: 52
-  },
-  smallActionButton: {
-    padding: 8,
-    borderRadius: 52
-  },
-  floatingBackButton: {
-    margin: 24,
-    position: "absolute",
-    backgroundColor: AppColors.darkBlue
-  },
-  timeSlotText: {
-    fontSize: 16,
-    fontWeight: "bold"
+  compactedStepStyle: {
+    backgroundColor: AppColors.primaryColor,
+    top: -15,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0
   },
   stepTitle: {
-    marginVertical: 8,
-    paddingLeft: 8
+    marginTop: 12
   },
   stepResumeContainer: {
-    paddingLeft: 8,
-    paddingVertical: 8
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    paddingTop: 28
   },
   stepResume: {
-    fontSize: 18,
-    paddingLeft: 8,
+    color: AppColors.white,
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingHorizontal: 12,
     alignSelf: "center",
     textAlignVertical: "center"
   },
   validateContainer: {
-    justifyContent: "flex-end",
-    paddingHorizontal: 8
+    paddingHorizontal: 8,
+    marginTop: 20
   },
   validateButtonBackground: {
-    borderRadius: 32
+    flex: 1,
+    backgroundColor: AppColors.primaryColor,
+    borderRadius: 20
+  },
+  cancelButtonBackground: {
+    flex: 1,
+    borderColor: AppColors.primaryColor,
+    borderWidth: 1,
+    borderRadius: 20
   },
   validateButton: {
-    padding: 8
+    paddingVertical: 12
+  },
+  validateText: {
+    fontSize: 18,
+    color: AppColors.white
+  },
+  cancelText: {
+    fontSize: 18,
+    color: AppColors.primaryColor
   },
   overviewStepContainer: {
     position: "absolute",
-    bottom: 0,
-    right: 0
+    bottom: 10,
+    padding: 16,
+    width: "100%"
   },
   overviewStep: {
-    paddingVertical: 16,
-    paddingLeft: 24,
-    paddingRight: 16
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16
   },
   overviewStepBackground: {
-    borderTopLeftRadius: 24,
+    borderRadius: 20,
     backgroundColor: AppColors.primaryColor
   },
   overviewStepText: {
@@ -551,18 +585,18 @@ const styles = StyleSheet.create({
     color: AppColors.white
   },
   footerContainer: {
+    borderWidth: 2,
+    borderColor: AppColors.lightGrayBackground,
+    margin: 16,
+    marginTop: 4,
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     flexShrink: 1,
     paddingBottom: 8,
-    backgroundColor: AppColors.darkBlue,
     alignSelf: "center",
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    paddingHorizontal: 8,
-    paddingTop: 40
+    borderRadius: 18
   },
   inputContainer: {
     backgroundColor: AppColorPalettes.gray[100],
@@ -578,5 +612,7 @@ const styles = StyleSheet.create({
     left: 32,
     alignItems: "stretch"
   },
-  vehicleStepSeatsContainer: { marginHorizontal: 16 }
+  vehicleStepSeatsContainer: {
+    marginHorizontal: 16
+  }
 });

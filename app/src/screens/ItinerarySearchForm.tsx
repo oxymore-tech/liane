@@ -19,9 +19,9 @@ export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<View
   return (
     <Row style={style} spacing={12}>
       <Column style={{ justifyContent: "space-between", alignSelf: "stretch", paddingVertical: 8 }}>
-        <AppIcon name={"pin"} size={24} color={AppColors.orange} />
+        <AppIcon name={"pin"} size={24} color={AppColors.primaryColor} />
         <View style={[TripViewStyles.verticalLine]} />
-        <AppIcon name={"flag"} size={24} color={AppColors.pink} />
+        <AppIcon name={"flag"} size={24} color={AppColors.primaryColor} />
       </Column>
 
       <Column spacing={8}>
@@ -66,7 +66,8 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?
             return (
               <AppPressableOverlay
                 style={[index !== recentTrips.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}]}
-                onPress={async () => props.onSelect(item)}>
+                onPress={async () => props.onSelect(item)}
+                borderRadius={16}>
                 <RecentTrip trip={item} style={{ marginHorizontal: 16, marginVertical: 12 }} />
               </AppPressableOverlay>
             );
@@ -211,7 +212,11 @@ export const CachedLocationsView = ({
           data={locationList}
           keyExtractor={r => r.id!}
           renderItem={({ item }) => (
-            <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+            <AppPressableOverlay
+              key={item.id!}
+              style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+              onPress={() => updateValue(item)}
+              borderRadius={16}>
               <RallyingPointItem item={item} />
             </AppPressableOverlay>
           )}
@@ -236,7 +241,7 @@ export const RallyingPointItem = ({
     <Row style={{ alignItems: "center", flex: 1 }} spacing={16}>
       {showIcon && <AppIcon name={"rallying-point"} size={28} color={color} />}
       <Column style={{ justifyContent: "space-evenly", flex: 1 }}>
-        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>{item.label}</AppText>
+        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize, lineHeight: labelSize }]}>{item.label}</AppText>
 
         <AppText style={{ color }} numberOfLines={1}>
           {(item.zipCode ? item.zipCode + ", " : "") + item.city}
@@ -348,7 +353,7 @@ export const RallyingPointSuggestions = (props: {
       data={locationList}
       keyExtractor={i => i.id!}
       renderItem={({ item }) => (
-        <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+        <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)} borderRadius={16}>
           <RallyingPointItem item={item} />
         </AppPressableOverlay>
       )}
@@ -463,7 +468,7 @@ export const ItinerarySearchForm = ({
 
   return (
     <Column style={{ flex: editable ? 1 : undefined }}>
-      <View style={{ height: 172 + insets.top }} />
+      <View style={{ height: 192 + insets.top }} />
       <ItineraryFormHeader
         title={title}
         editable={editable}
@@ -525,10 +530,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   },
   flatListStyle: {
-    backgroundColor: AppColors.backgroundColor,
     borderRadius: 20,
-    margin: 8,
-    paddingHorizontal: 12
+    margin: 16,
+    marginTop: 8,
+    paddingHorizontal: 8,
+    borderWidth: 2,
+    borderColor: AppColors.lightGrayBackground,
+    backgroundColor: AppColors.white,
+    height: "95%"
   },
   placeItemStyle: {
     paddingHorizontal: 16,

@@ -50,7 +50,7 @@ export const Item = ({
 
 const styles = StyleSheet.create({
   descriptionContainer: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "bold",
     flexGrow: 1,
     flexShrink: 1,
