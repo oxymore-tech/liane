@@ -45,39 +45,81 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
   const lianeHasRecurrence = !!liane.recurrence;
   const editOptions = useMemo(() => {
-    if (APP_ENV !== "dev") {
-      // TODO remove when production ready
-      return [
-        {
-          icon: "calendar-outline" as IconName,
-          text: "Supprimer la régularité",
-          color: ContextualColors.redAlert.text,
-          action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible)
-        }
-      ];
-    }
-    return [
+    const buttonList: { text: string; action: () => void; danger?: boolean }[] = [
       {
-        icon: "clock-outline" as IconName,
         text: "Modifier l'horaire",
         action: () => setTimeModalVisible(true)
-      },
-      ...(lianeHasRecurrence
-        ? [
-            {
-              icon: "calendar-outline" as IconName,
-              text: "Modifier la récurrence",
-              action: () => setRecurrenceModalVisible(true)
-            },
-            {
-              icon: "calendar-outline" as IconName,
-              text: "Supprimer la récurrence",
-              color: ContextualColors.redAlert.text,
-              action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible)
-            }
-          ]
-        : [])
+      }
     ];
+
+    if (lianeHasRecurrence) {
+      buttonList.push({
+        text: "Modifier la récurrence",
+        action: () => setRecurrenceModalVisible(true)
+      });
+    }
+
+    if (currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived")) {
+      buttonList.push({
+        text: "Relancer la liane",
+        action: () => relaunchLiane(navigation, match)
+      });
+    }
+
+    buttonList.push({
+      text: "Annuler",
+      action: () => setEditOptionsModalVisible(false)
+    });
+
+    if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1) {
+      buttonList.push({
+        text: "Annuler cette liane",
+        action: () => cancelLiane(navigation, services, queryClient, liane),
+        danger: true
+      });
+    }
+
+    if (currentUserIsMember && liane.state === "Started") {
+      buttonList.push({
+        text: "Annuler cette liane",
+        action: () => cancelStartedLiane(navigation, services, queryClient, liane),
+        danger: true
+      });
+    }
+
+    if (!currentUserIsMember && request) {
+      buttonList.push({
+        text: "Retirer la demande",
+        action: () => cancelDemand(navigation, services, queryClient, request!),
+        danger: true
+      });
+    }
+
+    if (currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner) {
+      buttonList.push({
+        text: "Quitter la liane",
+        action: () => leaveLiane(navigation, services, queryClient, liane, user),
+        danger: true
+      });
+    }
+
+    if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1) {
+      buttonList.push({
+        text: "Supprimer la liane",
+        action: () => deleteLiane(navigation, services, queryClient, liane),
+        danger: true
+      });
+    }
+
+    if (lianeHasRecurrence) {
+      buttonList.push({
+        text: "Supprimer la récurrence",
+        action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible),
+        danger: true
+      });
+    }
+
+    return buttonList;
   }, [lianeHasRecurrence]);
 
   return (
@@ -86,13 +128,9 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         <ActionItem
           disabled={!currentUserIsDriver || liane.state !== "NotStarted"}
           onPress={() => setEditOptionsModalVisible(true)}
-          iconName={"edit-outline"}
-          text={"Modifier le trajet"}
+          iconName={"edit-2"}
+          text={"Modifier la liane"}
         />
-
-        {currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived") && (
-          <ActionItem onPress={() => relaunchLiane(navigation, match)} iconName={"repeat"} text={"Relancer ce trajet"} />
-        )}
 
         {
           //currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") &&
@@ -105,51 +143,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
             text={"Assistance"}
           />
         }
-
-        {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1 && (
-          <ActionItem
-            onPress={() => cancelLiane(navigation, services, queryClient, liane)}
-            color={ContextualColors.redAlert.text}
-            iconName={"close-outline"}
-            text={"Annuler ce trajet"}
-          />
-        )}
-
-        {currentUserIsMember && liane.state === "Started" && (
-          <ActionItem
-            onPress={() => cancelStartedLiane(navigation, services, queryClient, liane)}
-            color={ContextualColors.redAlert.text}
-            iconName={"close-outline"}
-            text={"Annuler ce trajet"}
-          />
-        )}
-
-        {!currentUserIsMember && request && (
-          <ActionItem
-            onPress={() => cancelDemand(navigation, services, queryClient, request!)}
-            color={ContextualColors.redAlert.text}
-            iconName={"trash-outline"}
-            text={"Retirer la demande"}
-          />
-        )}
-
-        {currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner && (
-          <ActionItem
-            onPress={() => leaveLiane(navigation, services, queryClient, liane, user)}
-            color={ContextualColors.redAlert.text}
-            iconName={"log-out-outline"}
-            text={"Quitter la liane"}
-          />
-        )}
-
-        {currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1 && (
-          <ActionItem
-            onPress={() => deleteLiane(navigation, services, queryClient, liane)}
-            color={ContextualColors.redAlert.text}
-            iconName={"trash-outline"}
-            text={"Supprimer l'annonce"}
-          />
-        )}
       </Row>
 
       <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={liane} />

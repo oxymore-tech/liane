@@ -116,11 +116,11 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
       onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
       <View>
         <Row style={styles.driverContainer}>
-          <Row spacing={8}>
+          <Row spacing={8} style={{ flex: 4 }}>
             <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
             <AppText style={styles.driverText}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
           </Row>
-          <Row spacing={8}>
+          <Row spacing={8} style={{ flex: 3 }}>
             <AppText style={[styles.geolocText, { color: geolocalisationEnabled ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
               Géolocalisation
             </AppText>
@@ -141,55 +141,46 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 
       <Row style={styles.infoRowContainer} spacing={8}>
         <Row style={AppStyles.center}>
+          {item.state === "Finished" && (
+            <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: item })}>
+              <Row style={styles.validationContainer} spacing={8}>
+                <AppText style={styles.validationText}>Valider</AppText>
+              </Row>
+            </Pressable>
+          )}
           {!["Finished", "Archived", "Canceled"].includes(item.state) ? (
             <LianeStatusView liane={item} />
           ) : (
             <TouchableOpacity onPress={() => relaunchLiane(item, driver)}>
               <Row style={styles.validationContainer} spacing={8}>
-                <AppText style={styles.validationText}>Relancer la liane</AppText>
+                <AppText style={styles.validationText}>Relancer</AppText>
               </Row>
             </TouchableOpacity>
           )}
         </Row>
-        <Row>
-          <Row style={styles.infoContainer}>
-            <AppText style={styles.infoText}>{item.members.length}</AppText>
-            <AppIcon style={styles.infoIcon} name={"seat"} size={24} color={AppColorPalettes.gray[500]}></AppIcon>
-          </Row>
-          <Row style={styles.infoContainer}>
-            <AppText style={styles.infoText}>10€</AppText>
-          </Row>
+
+        <Row style={styles.statusRowContainer} spacing={8}>
+          {["NotStarted", "Started"].includes(item.state) && (
+            <Row style={{ position: "absolute", right: 42 }}>
+              {item.members
+                .filter(m => m.user.id !== driver.id)
+                .map((m, i) => (
+                  <View
+                    key={m.user.id}
+                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
+                    <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
+                  </View>
+                ))}
+            </Row>
+          )}
+
+          {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
+            <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
+              <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
+              {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
+            </Pressable>
+          )}
         </Row>
-      </Row>
-
-      {item.state === "Finished" && (
-        <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: item })}>
-          <Row style={styles.validationContainer} spacing={8}>
-            <AppText style={styles.validationText}>Valider ce trajet</AppText>
-            <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />
-          </Row>
-        </Pressable>
-      )}
-
-      <Row style={styles.statusRowContainer} spacing={8}>
-        {["NotStarted", "Started"].includes(item.state) && (
-          <Row style={{ position: "relative", left: 12 * (item.members.length - 1) }}>
-            {item.members
-              .filter(m => m.user.id !== driver.id)
-              .map((m, i) => (
-                <View key={m.user.id} style={{ position: "relative", left: -12 * (i + 1) }}>
-                  <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                </View>
-              ))}
-          </Row>
-        )}
-
-        {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
-          <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
-            <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
-            {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
-          </Pressable>
-        )}
       </Row>
     </Pressable>
   );
@@ -253,7 +244,8 @@ const styles = StyleSheet.create({
     borderColor: AppColorPalettes.gray[200]
   },
   header: {
-    padding: 12
+    padding: 6,
+    paddingBottom: 12
   },
   headerTitle: {
     fontSize: 17,
@@ -261,6 +253,7 @@ const styles = StyleSheet.create({
   },
   item: {
     padding: 8,
+    paddingBottom: 12,
     backgroundColor: AppColors.white,
     borderBottomWidth: 1
   },
@@ -301,7 +294,7 @@ const styles = StyleSheet.create({
     right: -4
   },
   chatBadge: {
-    backgroundColor: AppColors.orange,
+    backgroundColor: AppColors.primaryColor,
     borderRadius: 16,
     padding: 6,
     top: 4,
@@ -317,13 +310,14 @@ const styles = StyleSheet.create({
   statusRowContainer: {
     flex: 1,
     alignItems: "center",
-    marginTop: 8
+    marginVertical: 8,
+    height: 32
   },
   infoRowContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 16
+    marginTop: 2
   },
   infoContainer: {
     paddingHorizontal: 4
@@ -352,7 +346,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: AppColors.primaryColor,
     padding: 4,
-    paddingLeft: 12
+    paddingLeft: 12,
+    marginHorizontal: 4
   },
   validationText: {
     fontWeight: "bold",

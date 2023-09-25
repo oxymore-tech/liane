@@ -106,9 +106,9 @@ export const LianeDisplayLayer = ({
           textColor: [
             "case",
             ["==", ["get", "point_type"], "pickup"],
-            AppColors.orange,
+            AppColors.primaryColor,
             ["==", ["get", "point_type"], "suggestion"],
-            AppColors.orange,
+            AppColors.primaryColor,
             // "#9f4a2f",
             "#000"
           ],

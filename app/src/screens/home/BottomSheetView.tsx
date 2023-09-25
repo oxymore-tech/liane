@@ -28,7 +28,7 @@ const EmptyResultView = (props: { message: string }) => (
 const ErrorView = (props: { message: string; retry: () => void }) => (
   <Column style={{ alignItems: "center" }} spacing={8}>
     <AppText>{props.message}</AppText>
-    <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={props.retry} />
+    <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={props.retry} />
   </Column>
 );
 
@@ -214,7 +214,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
       {data.length === 0 && (
         <Center style={{ paddingVertical: 8 }}>
           <AppRoundedButton
-            backgroundColor={AppColors.orange}
+            backgroundColor={AppColors.primaryColor}
             text={"Ajouter une annonce"}
             onPress={() => {
               navigation.navigate("Publish", {

@@ -47,7 +47,7 @@ export const ItineraryForm = ({
   }, [from, to]);
 
   return (
-    <Column spacing={6}>
+    <Column spacing={6} style={styles.containerStyle}>
       <RallyingPointField
         ref={inputRefFrom}
         onChange={v => {
@@ -65,10 +65,11 @@ export const ItineraryForm = ({
           }
         }}
         editable={editable}
-        placeholder={"Départ"}
-        icon={<AppIcon name={"pin"} color={AppColors.orange} />}
+        placeholder={"Choisissez un départ..."}
+        icon={<AppIcon name={"pin"} color={AppColors.primaryColor} />}
         showTrailing={(focused === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
       />
+
       <RallyingPointField
         ref={inputRefTo}
         onChange={v => {
@@ -85,14 +86,14 @@ export const ItineraryForm = ({
           }
         }}
         editable={editable}
-        placeholder={"Arrivée"}
-        icon={<AppIcon name={"flag"} color={AppColors.pink} />}
+        placeholder={"... Et votre destination !"}
+        icon={<AppIcon name={"flag"} color={AppColors.primaryColor} />}
         showTrailing={focused === "to" && (to || (searchTo && searchTo.length > 0)) === true}
       />
 
-      <View style={{ position: "absolute", right: -12, height: "100%", justifyContent: "center" }}>
+      <View style={{ position: "absolute", right: 29, top: 9, height: "100%", justifyContent: "center" }}>
         <Pressable
-          style={[styles.smallActionButton, { backgroundColor: AppColors.darkBlue }]}
+          style={[styles.smallActionButton, { backgroundColor: AppColors.primaryColor }]}
           onPress={() => {
             if (!from) {
               setSearchTo(searchFrom);
@@ -102,7 +103,7 @@ export const ItineraryForm = ({
             }
             onValuesSwitched(from, to);
           }}>
-          <AppIcon name={"flip-outline"} color={AppColors.white} />
+          <AppIcon name={"arrow-switch"} color={AppColors.white} size={14} />
         </Pressable>
       </View>
     </Column>
@@ -110,6 +111,13 @@ export const ItineraryForm = ({
 };
 
 const styles = StyleSheet.create({
+  containerStyle: {
+    borderWidth: 2,
+    borderColor: AppColors.lightGrayBackground,
+    borderRadius: 18,
+    paddingVertical: 12,
+    backgroundColor: AppColors.white
+  },
   smallActionButton: {
     padding: 8,
     borderRadius: 52

@@ -51,8 +51,8 @@ const WelcomePage4 = (props: { next: () => void; prev: () => void }) => {
         </Column>
         <Dots count={4} selectedIndex={3} color={AppColors.darkBlue} />
         <Row spacing={8} style={{ alignSelf: "flex-end", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-          <AppRoundedButtonOutline color={AppColors.orange} text={"Précédent"} onPress={props.prev} />
-          <AppRoundedButton backgroundColor={AppColors.orange} text={"J'ai compris !"} onPress={props.next} />
+          <AppRoundedButtonOutline color={AppColors.primaryColor} text={"Précédent"} onPress={props.prev} />
+          <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"J'ai compris !"} onPress={props.next} />
         </Row>
       </Column>
     </View>
@@ -72,8 +72,8 @@ const WelcomePageRp = (props: { next: () => void; prev: () => void }) => (
       </Column>
       <Dots count={4} selectedIndex={1} color={AppColors.darkBlue} />
       <Row spacing={8} style={{ alignSelf: "flex-end", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-        <AppRoundedButtonOutline color={AppColors.orange} text={"Précédent"} onPress={props.prev} />
-        <AppRoundedButton backgroundColor={AppColors.orange} text={"Suivant"} onPress={props.next} />
+        <AppRoundedButtonOutline color={AppColors.primaryColor} text={"Précédent"} onPress={props.prev} />
+        <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Suivant"} onPress={props.next} />
       </Row>
     </Column>
   </View>
@@ -110,8 +110,8 @@ const WelcomePageMap = (props: { next: () => void; prev: () => void }) => {
         </Column>
         <Dots count={4} selectedIndex={2} color={AppColors.darkBlue} />
         <Row spacing={8} style={{ alignSelf: "flex-end", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-          <AppRoundedButtonOutline color={AppColors.orange} text={"Précédent"} onPress={props.prev} />
-          <AppRoundedButton backgroundColor={AppColors.orange} text={"Suivant"} onPress={props.next} />
+          <AppRoundedButtonOutline color={AppColors.primaryColor} text={"Précédent"} onPress={props.prev} />
+          <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Suivant"} onPress={props.next} />
         </Row>
       </Column>
     </View>
@@ -142,8 +142,8 @@ const WelcomePage1 = (props: { next: () => void; prev: () => void }) => (
     <Column style={{ height: 120, padding: 16, justifyContent: "flex-end" }} spacing={16}>
       <Dots count={4} selectedIndex={0} color={AppColors.darkBlue} />
       <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <AppRoundedButtonOutline color={AppColors.orange} text={"Passer le tutoriel"} onPress={props.prev} />
-        <AppRoundedButton backgroundColor={AppColors.orange} text={"Commencer"} onPress={props.next} />
+        <AppRoundedButtonOutline color={AppColors.primaryColor} text={"Passer le tutoriel"} onPress={props.prev} />
+        <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Commencer"} onPress={props.next} />
       </Row>
     </Column>
   </View>

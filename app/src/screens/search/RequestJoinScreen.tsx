@@ -100,9 +100,9 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
 
         <View style={{ justifyContent: "flex-end", paddingHorizontal: 24 }}>
           <AppRoundedButton
-            color={defaultTextColor(AppColors.orange)}
+            color={defaultTextColor(AppColors.primaryColor)}
             onPress={requestJoin}
-            backgroundColor={AppColors.orange}
+            backgroundColor={AppColors.primaryColor}
             text={"Envoyer la demande"}
           />
         </View>

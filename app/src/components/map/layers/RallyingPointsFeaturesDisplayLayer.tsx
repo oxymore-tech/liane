@@ -23,7 +23,7 @@ export const RallyingPointsFeaturesDisplayLayer = ({
   cluster = true,
   interactive = true,
   id,
-  color = AppColors.orange,
+  color = AppColors.primaryColor,
   minZoomLevel
 }: RallyingPointsDisplayLayerProps) => {
   const feature: FeatureCollection = useMemo(() => {

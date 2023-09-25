@@ -91,7 +91,7 @@ export const DetailedLianeMatchView = ({
       <Row spacing={10} key={wayPoint.rallyingPoint.id!} style={{ alignItems: "center" }}>
         {style !== "step" && (
           <View style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 16, padding: 4 }}>
-            <AppIcon name={style === "from" ? "pin" : "flag"} color={style === "from" ? AppColors.orange : AppColors.pink} size={20} />
+            <AppIcon name={style === "from" ? "pin" : "flag"} color={AppColors.primaryColor} size={20} />
           </View>
         )}
         {style === "step" && <View style={{ backgroundColor: AppColorPalettes.gray[400], width: 8, height: 8, borderRadius: 16, margin: 8 }} />}
@@ -197,7 +197,7 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
   const { to, from, steps } = useMemo(() => extractData(wayPoints, departureTime), [wayPoints, departureTime]);
 
   const lianeSymbolView = (index: number) =>
-    index + 1 === di ? <NewLianeSymbol key={index} color={AppColors.orange} /> : <LianeSymbol key={index} color={AppColorPalettes.gray[500]} />;
+    index + 1 === di ? <NewLianeSymbol key={index} color={AppColors.primaryColor} /> : <LianeSymbol key={index} color={AppColorPalettes.gray[500]} />;
 
   const intermediateWayPoint = (index: number) => {
     const wayPoint = steps[index];
@@ -220,8 +220,14 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
   };
 
   return (
-    <Row spacing={4}>
-      <Column style={styles.column}>
+    <Row>
+      <Column style={[styles.column, styles.iconTravel]}>
+        <AppIcon name={"pin"} color={AppColors.primaryColor} size={18} />
+        {steps.length === 0 && <View style={styles.horizontalLine} />}
+        <AppIcon name={"flag"} color={AppColors.primaryColor} size={18} />
+      </Column>
+
+      <Column style={[styles.column, { marginRight: 12 }]}>
         <TimeView style={styles.mainWayPointTime} value={from.eta} />
 
         {steps.length <= 3 && steps.map((_, i) => lianeSymbolView(i))}
@@ -232,12 +238,6 @@ export const WayPointsView = ({ wayPoints, departureTime, departureIndex, arriva
         ]}
 
         <TimeView style={styles.mainWayPointTime} value={to.eta} />
-      </Column>
-
-      <Column style={[styles.column, styles.iconTravel]}>
-        <AppIcon name={"pin"} color={AppColors.primaryColor} size={24} />
-        {steps.length === 0 && <View style={styles.horizontalLine} />}
-        <AppIcon name={"flag"} color={AppColors.primaryColor} size={24} />
       </Column>
 
       <Column style={[styles.column, styles.shrink]}>
@@ -293,7 +293,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     alignSelf: "center",
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: 6,
     color: AppColors.primaryColor
   },
   intermediateWayPointLabel: {
@@ -302,11 +303,12 @@ const styles = StyleSheet.create({
     color: AppColorPalettes.gray[700]
   },
   intermediateFromWayPointLabelColor: {
-    color: AppColorPalettes.orange[500]
+    color: AppColors.primaryColor
   },
   iconTravel: {
-    paddingVertical: 6,
-    marginHorizontal: 4
+    paddingTop: 10,
+    paddingBottom: 6,
+    marginHorizontal: 10
   },
   alignCenter: {
     alignSelf: "center",

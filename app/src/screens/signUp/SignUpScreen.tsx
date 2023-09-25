@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "64%",
-    color: AppColorPalettes.pink[500]
+    color: AppColors.primaryColor
   },
   errorText: {
     color: "red", // TODO red 600,

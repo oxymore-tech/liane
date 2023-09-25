@@ -137,7 +137,7 @@ export const HomeScreenHeader = ({ isRootHeader = false, style = [] }: HomeScree
       <AppStatusBar style="dark-content" />
       {!isRootHeader && (
         <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => navigation.goBack()}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.darkBlue} />
+          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         </Pressable>
       )}
     </Row>

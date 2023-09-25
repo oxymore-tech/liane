@@ -14,12 +14,11 @@ export const LianeStatusView = ({ liane }: { liane: Liane }) => {
   return (
     <View
       style={{
-        paddingHorizontal: 18,
+        paddingHorizontal: 6,
         paddingVertical: 6,
-        borderRadius: 10,
-        backgroundColor: color
+        borderRadius: 10
       }}>
-      <AppText style={{ color: AppColorPalettes.gray[500], fontWeight: "500" }}>{statusText}</AppText>
+      <AppText style={{ color: AppColorPalettes.gray[400], fontWeight: "500", fontStyle: "italic" }}>{statusText}</AppText>
     </View>
   );
 };

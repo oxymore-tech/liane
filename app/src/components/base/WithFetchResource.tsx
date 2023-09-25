@@ -9,6 +9,7 @@ import { AppColors } from "@/theme/colors";
 import { AppButton } from "@/components/base/AppButton";
 import { Center } from "@/components/base/AppLayout";
 import { useAppNavigation } from "@/api/navigation";
+import { AppStyles } from "@/theme/styles";
 
 export interface WithFetchResourceProps<T> {
   data: T;
@@ -70,7 +71,7 @@ export const WithFetchResource =
               {error.message}
             </AppText>
             <Center>
-              <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={onRefresh} />
+              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={onRefresh} />
             </Center>
           </View>
         );

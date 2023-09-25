@@ -261,7 +261,7 @@ export const HomeMap = ({
             cluster={false}
             interactive={false}
             id="pickups"
-            color={AppColors.orange}
+            color={AppColors.primaryColor}
           />
         )}
         {isMatchStateIdle && (
@@ -270,7 +270,7 @@ export const HomeMap = ({
             cluster={false}
             interactive={false}
             id="deposits"
-            color={AppColors.pink}
+            color={AppColors.primaryColor}
           />
         )}
 

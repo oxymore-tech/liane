@@ -49,9 +49,9 @@ export const SignUpFormScreen = () => {
 
           <View style={{ flex: 1 }} />
           <AppRoundedButton
-            color={defaultTextColor(AppColors.orange)}
+            color={defaultTextColor(AppColors.primaryColor)}
             onPress={methods.handleSubmit(onSubmit, onError)}
-            backgroundColor={AppColors.orange}
+            backgroundColor={AppColors.primaryColor}
             text={"Créer mon compte"}
           />
         </Column>

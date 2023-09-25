@@ -70,7 +70,12 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
         <AppRoundedButton color={defaultTextColor(AppColors.white)} onPress={refuseRequest} backgroundColor={AppColors.white} text={"Refuser"} />
-        <AppRoundedButton color={defaultTextColor(AppColors.orange)} onPress={acceptRequest} backgroundColor={AppColors.orange} text={"Accepter"} />
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
+          onPress={acceptRequest}
+          backgroundColor={AppColors.primaryColor}
+          text={"Accepter"}
+        />
       </Row>
     </ScrollView>
   );

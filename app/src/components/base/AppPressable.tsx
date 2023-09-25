@@ -126,7 +126,6 @@ const styles = StyleSheet.create({
     borderRadius: 50
   },
   pressableTarget: {
-    minHeight: 36,
     minWidth: 36
   }
 });

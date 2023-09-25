@@ -16,7 +16,7 @@ export const RallyingPointsDisplayLayer = ({
 }) => {
   const controller = useAppMapViewController();
   const url = TilesUrl + "/rallying_point_display";
-  const color = type ? (type === "from" ? AppColors.orange : AppColors.pink) : AppColors.black;
+  const color = type ? AppColors.primaryColor : AppColors.black;
   const image = type ? (type === "from" ? "pickup" : "deposit") : "rp";
   return (
     <MapLibreGL.VectorSource

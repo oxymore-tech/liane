@@ -16,6 +16,7 @@ import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 import Seat from "@/assets/icons/seat.svg";
 import Flag from "@/assets/icons/flag.svg";
 import Pin from "@/assets/icons/pin.svg";
+import ArrowSwitch from "@/assets/icons/arrow-switch.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes } from "@/theme/colors";
@@ -61,6 +62,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <Flag {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "pin":
       return <Pin {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "arrow-switch":
+      return <ArrowSwitch {...props} opacity={opacity} width={size} height={size} fill={color} />;
     default:
       return <Icon {...props} opacity={opacity} name={name} width={size} height={size} fill={color} />;
   }
@@ -82,7 +85,8 @@ const AppIconsNames = [
   "rallying-point",
   "seat",
   "flag",
-  "pin"
+  "pin",
+  "arrow-switch"
 ] as const;
 
 const EvaIconsNames = [

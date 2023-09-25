@@ -41,7 +41,7 @@ export const AppTabs = ({
         {items.map((item, index) => (
           <AppPressableOverlay
             key={index}
-            style={styles.pressableStyle}
+            backgroundStyle={styles.pressableStyle}
             disabled={isSelectable ? !isSelectable(index) : false}
             onLayout={event => onLayout(event, index, selectedIndex, width, offset)}
             onPress={() => onSelect(index)}
@@ -85,13 +85,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   pressableStyle: {
-    borderRadius: 12
+    borderRadius: 12,
+    paddingVertical: 6
   },
   textStyle: {
     paddingHorizontal: 22,
-    paddingVertical: 11,
     borderRadius: 18,
-    borderWidth: 0
+    borderWidth: 0,
+    paddingVertical: 2
   },
   underline: {
     borderBottomColor: AppColorPalettes.gray[200],

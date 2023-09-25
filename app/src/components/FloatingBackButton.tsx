@@ -11,7 +11,7 @@ export const FloatingBackButton = (props: { onPress: () => void; color?: ColorVa
       style={[
         styles.floatingBackButton,
         styles.actionButton,
-        { top: props.topOffset ?? 12, marginTop: 8 + insets.top },
+        { top: props.topOffset ?? -2, marginTop: 8 + insets.top },
         props.color ? { backgroundColor: props.color } : {}
       ]}
       onPress={() => props.onPress()}>
@@ -25,7 +25,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     position: "absolute",
-    backgroundColor: AppColors.backgroundColor
+    backgroundColor: AppColors.backgroundColor,
+    zIndex: 200
   },
   actionButton: {
     padding: 8,
