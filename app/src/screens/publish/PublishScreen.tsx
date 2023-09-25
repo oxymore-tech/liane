@@ -272,7 +272,7 @@ export const PublishScreenView = () => {
             style={styles.overviewStep}
             backgroundStyle={styles.overviewStepBackground}>
             <Row spacing={8}>
-              <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Publier le trajet"}</AppText>
+              <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Envoyer"}</AppText>
               {isOverviewStep && <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />}
               {isSubmittingStep && state.matches({ submitting: "pending" }) && (
                 <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.white} size="large" />
@@ -567,16 +567,17 @@ const styles = StyleSheet.create({
   },
   overviewStepContainer: {
     position: "absolute",
-    bottom: 0,
-    right: 0
+    bottom: 10,
+    padding: 16,
+    width: "100%"
   },
   overviewStep: {
-    paddingVertical: 16,
-    paddingLeft: 24,
-    paddingRight: 16
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16
   },
   overviewStepBackground: {
-    borderTopLeftRadius: 24,
+    borderRadius: 20,
     backgroundColor: AppColors.primaryColor
   },
   overviewStepText: {

@@ -63,9 +63,8 @@ export const ChoiceModal = ({ backgroundColor = AppColors.white, visible, setVis
           {choices
             .filter(c => c.danger)
             .map((c, i) => (
-              <View style={[styles.containerStyle, styles.containerDangerStyle]}>
+              <View key={i} style={[styles.containerStyle, styles.containerDangerStyle]}>
                 <TouchableOpacity
-                  key={i}
                   style={[styles.buttonStyle, styles.buttonDangerStyle]}
                   onPress={() => {
                     setSelected(i);
