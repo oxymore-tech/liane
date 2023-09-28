@@ -124,27 +124,26 @@ export const CachedPlaceLocationsView = ({
           </Row>
         </AppPressableOverlay>
       )}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
-        {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
-        <FlatList
-          style={[styles.flatListStyle, { paddingVertical: 8 }]}
-          keyboardShouldPersistTaps="always"
-          data={locationList}
-          keyExtractor={v => (isRallyingPointSearchedLocation(v) ? v.properties!.id! : v.properties!.ref)}
-          renderItem={({ item, index }) => (
-            <AppPressableOverlay
-              key={item.id!}
-              style={[
-                styles.placeItemStyle,
-                index !== locationList.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}
-              ]}
-              onPress={() => updateValue(item)}
-              borderRadius={20}>
-              <PlaceItem item={item} labelSize={18} />
-            </AppPressableOverlay>
-          )}
-        />
-      </KeyboardAvoidingView>
+
+      {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
+      <FlatList
+        style={[styles.flatListStyle, { paddingVertical: 8 }]}
+        keyboardShouldPersistTaps="always"
+        data={locationList}
+        keyExtractor={v => (isRallyingPointSearchedLocation(v) ? v.properties!.id! : v.properties!.ref)}
+        renderItem={({ item, index }) => (
+          <AppPressableOverlay
+            key={item.id!}
+            style={[
+              styles.placeItemStyle,
+              index !== locationList.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}
+            ]}
+            onPress={() => updateValue(item)}
+            borderRadius={20}>
+            <PlaceItem item={item} labelSize={18} />
+          </AppPressableOverlay>
+        )}
+      />
     </View>
   );
 };

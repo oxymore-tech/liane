@@ -130,7 +130,8 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
               thumbColor={geolocalisationEnabled ? AppColors.primaryColor : AppColors.grayBackground}
               ios_backgroundColor={AppColors.grayBackground}
               value={geolocalisationEnabled}
-              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}></Switch>
+              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}
+            />
           </Row>
         </Row>
 
@@ -245,7 +246,8 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 6,
-    paddingBottom: 12
+    paddingBottom: 12,
+    backgroundColor: AppColors.lightGrayBackground
   },
   headerTitle: {
     fontSize: 17,
@@ -274,10 +276,12 @@ const styles = StyleSheet.create({
   },
   driverText: {
     fontSize: 16,
-    fontWeight: "500"
+    fontWeight: "500",
+    alignSelf: "center"
   },
   geolocText: {
-    marginBottom: -2
+    marginBottom: -2,
+    alignSelf: "center"
   },
   geolocSwitch: {
     marginBottom: -4

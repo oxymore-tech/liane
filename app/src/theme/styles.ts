@@ -64,7 +64,7 @@ export const AppStyles = StyleSheet.create({
     fontWeight: "bold"
   },
   text: {
-    fontFamily: "SourceSans3",
+    fontFamily: "Source Sans 3",
     fontSize: 14
   }
 });

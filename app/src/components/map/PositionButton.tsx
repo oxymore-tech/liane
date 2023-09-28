@@ -5,9 +5,10 @@ import { LatLng } from "@/api";
 
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppContext } from "@/components/context/ContextProvider";
-import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
 
 import { AppColors, ContextualColors } from "@/theme/colors";
+import { AppStyles } from "@/theme/styles";
 
 export interface PositionButtonProps {
   onPosition: (position: LatLng) => Promise<void>;

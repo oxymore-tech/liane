@@ -18,7 +18,7 @@ import UserLocation = MapLibreGL.UserLocation;
 import { useSubject } from "@/util/hooks/subscription";
 import { SubscriptionLike } from "rxjs";
 import { displayInfo } from "@/components/base/InfoDisplayer";
-import { AppPressableIcon, AppPressableOverlay } from "../base/AppPressable";
+import { AppPressableOverlay } from "../base/AppPressable";
 import { AppIcon } from "../base/AppIcon";
 import { AppStyles } from "@/theme/styles";
 
@@ -73,7 +73,7 @@ const AppMapView = forwardRef(
     const mapRef = useRef<MapLibreGL.MapView>();
     const cameraRef = useRef<MapLibreGL.Camera>();
     const [animated, setAnimated] = useState(false);
-    const [showActions, setShowActions] = useState(showGeolocation);
+    //const [showActions, setShowActions] = useState(showGeolocation);
 
     const wd = useWindowDimensions();
     const scale = Platform.OS === "android" ? wd.scale : 1;
@@ -122,7 +122,7 @@ const AppMapView = forwardRef(
     const moving = useRef<boolean>(false);
 
     const [showUserLocation, setShowUserLocation] = useState(false);
-    const [flyingToLocation, setFlyingToLocation] = useState(false);
+    //const [flyingToLocation, setFlyingToLocation] = useState(false);
 
     return (
       <View style={styles.map}>
@@ -133,7 +133,7 @@ const AppMapView = forwardRef(
             if (!moving.current) {
               moving.current = true;
               if (animated) {
-                setShowActions(flyingToLocation || false);
+                // setShowActions(flyingToLocation || false);
                 if (onStartMovingRegion) {
                   onStartMovingRegion();
                 }
@@ -161,7 +161,7 @@ const AppMapView = forwardRef(
               clearTimeout(regionMoveCallbackRef.current);
               regionMoveCallbackRef.current = undefined;
             } else if (animated) {
-              setShowActions(flyingToLocation || false);
+              //  setShowActions(flyingToLocation || false);
             }
           }}
           onRegionIsChanging={feature => regionSubject.next(feature.properties)}
@@ -171,7 +171,7 @@ const AppMapView = forwardRef(
               if (onStopMovingRegion) {
                 onStopMovingRegion();
               }
-              setShowActions(true);
+              //   setShowActions(true);
               if (onRegionChanged) {
                 onRegionChanged(feature.properties);
               }
@@ -223,15 +223,21 @@ const AppMapView = forwardRef(
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
           {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
-        <View style={styles.blackOverlay} pointerEvents="none" />
-        <View style={styles.communityOverlay}>
-          <AppPressableOverlay style={[AppStyles.center, { borderRadius: 20, height: 36 }]} borderRadius={20}>
-            <AppIcon name={"people-outline"} size={22} style={{ justifyContent: "center", alignItems: "center" }} color={AppColors.primaryColor} />
-          </AppPressableOverlay>
-        </View>
-        {showGeolocation && showActions && (
-          <View style={styles.mapOverlay}>
-            <Column spacing={8}>
+        {/*<View style={styles.blackOverlay} pointerEvents="none" />*/}
+
+        {showGeolocation && (
+          <Column>
+            <View style={[styles.communityOverlay, AppStyles.shadow]}>
+              <AppPressableOverlay style={[AppStyles.center, { borderRadius: 20, height: 36 }]} borderRadius={20}>
+                <AppIcon
+                  name={"people-outline"}
+                  size={22}
+                  style={{ justifyContent: "center", alignItems: "center" }}
+                  color={AppColors.primaryColor}
+                />
+              </AppPressableOverlay>
+            </View>
+            <View style={[styles.mapOverlay, AppStyles.shadow]}>
               <PositionButton
                 //locationEnabled={showUserLocation}
                 onPosition={async currentLocation => {
@@ -243,7 +249,7 @@ const AppMapView = forwardRef(
                   const currentCenter = await mapRef.current?.getCenter()!;
                   const currentZoom = await mapRef.current?.getZoom()!;
                   const targetCoord = [currentLocation.lng, currentLocation.lat];
-                  setFlyingToLocation(true);
+                  //setFlyingToLocation(true);
                   if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
                     cameraRef.current?.setCamera({
                       centerCoordinate: targetCoord,
@@ -255,12 +261,12 @@ const AppMapView = forwardRef(
                   } else {
                     cameraRef.current?.flyTo(targetCoord);
                   }
-                  setFlyingToLocation(false);
+                  //setFlyingToLocation(false);
                 }}
                 onPositionError={() => setShowUserLocation(false)}
               />
-            </Column>
-          </View>
+            </View>
+          </Column>
         )}
         <View
           style={{

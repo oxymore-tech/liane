@@ -2,14 +2,10 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Switch, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
-import { Center, Column, Row } from "@/components/base/AppLayout";
-import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
-import { LineSeparator, SectionSeparator } from "@/components/Separator";
+import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
 import { useLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
-import { capitalize } from "@/util/strings";
-import { formatDaysOfTheWeek, formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -23,13 +19,8 @@ import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
 import { DriverLocationMarker } from "@/screens/detail/components/DriverLocationMarker";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
-import { LianeActionRow } from "@/screens/detail/components/LianeActionRow";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
-import { DriverInfo } from "@/screens/detail/components/DriverInfo";
-import { PassengerListView } from "@/screens/detail/components/PassengerListView";
-import { LianeStatusRow } from "@/screens/detail/components/LianeStatusRow";
-import { WayPointActionView } from "@/screens/detail/components/WayPointActionView";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -229,7 +220,8 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
               thumbColor={geolocalisationEnabled ? AppColors.primaryColor : AppColors.grayBackground}
               ios_backgroundColor={AppColors.grayBackground}
               value={geolocalisationEnabled}
-              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}></Switch>
+              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}
+            />
           </Row>
         </Row>
         <View style={styles.lianeContainer}>
@@ -291,7 +283,7 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
         </Column>
 
         <Column>
-          <View style={styles.verticalLine}></View>
+          <View style={styles.verticalLine} />
         </Column>
 
         <Column style={{ flex: 1 }}>
@@ -300,13 +292,13 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
             .map(member => (
               <Row key={member.user.id}>
                 <AppText style={styles.infoTravel}>{member.user.pseudo}</AppText>
-                <View style={styles.horizontalLine}></View>
+                <View style={styles.horizontalLine} />
                 <AppText style={styles.infoTravel}>10 €</AppText>
               </Row>
             ))}
           <Row style={{ marginTop: 12 }}>
             <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>Total</AppText>
-            <View style={styles.horizontalLine}></View>
+            <View style={styles.horizontalLine} />
             <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>
               {liane.liane.members.filter(member => member.user.id !== liane.liane.driver.user).length * 10} €
             </AppText>
@@ -344,10 +336,12 @@ const styles = StyleSheet.create({
   },
   driverText: {
     fontSize: 16,
-    fontWeight: "500"
+    fontWeight: "500",
+    alignSelf: "center"
   },
   geolocText: {
-    marginBottom: -2
+    marginBottom: -2,
+    alignSelf: "center"
   },
   geolocSwitch: {
     marginBottom: -4

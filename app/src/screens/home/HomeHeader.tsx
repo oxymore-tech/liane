@@ -237,7 +237,10 @@ export const MapHeader = ({
             </View>
           )}
           {!to && (
-            <Animated.View entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp} style={styles.selectArrivalContainer}>
+            <Animated.View
+              entering={animateEntry ? SlideInUp : undefined}
+              exiting={SlideOutUp}
+              style={[styles.selectArrivalContainer, AppStyles.shadow]}>
               <Row style={{ paddingHorizontal: 16, paddingVertical: 2, alignItems: "center", height: 50 }} spacing={8}>
                 <AppIcon name={"flag"} color={AppColors.primaryColor} size={16} />
                 <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{hintPhrase || "Sélectionnez votre arrivée sur la carte"}</AppText>
@@ -327,7 +330,7 @@ export const SearchModal = (props: {
     setInputText("");
   }, []);
   const { bottom } = useSafeAreaInsets();
-  useEffect(() => inputRef.current?.focus());
+  useEffect(() => inputRef.current?.focus(), [modalOpen]);
 
   return (
     <>
@@ -342,7 +345,7 @@ export const SearchModal = (props: {
       </Pressable>
 
       <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={() => setModalOpen(false)}>
-        <View style={{ height: "100%", paddingTop: top - 22 }}>
+        <View style={{ height: "100%", paddingTop: top }}>
           <Row spacing={8}>
             <View style={styles.inputContainer}>
               <AppTextInput
@@ -365,9 +368,7 @@ export const SearchModal = (props: {
               />
             </View>
           </Row>
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
-            <View style={{ height: 16 }} />
-
+          <View style={{ flex: 1, marginTop: 16 }}>
             <Column style={{ marginHorizontal: 20 }} spacing={8}>
               <AppTabs
                 items={["Lieux", "Trajets récents"]}
@@ -378,7 +379,7 @@ export const SearchModal = (props: {
               />
             </Column>
 
-            <View style={{ flex: 1 }}>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
               {selectedTab === 0 && inputText.length === 0 && (
                 <CachedPlaceLocationsView
                   showUsePosition={false}
@@ -414,11 +415,11 @@ export const SearchModal = (props: {
                   }}
                 />
               )}
-            </View>
-          </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
+          </View>
         </View>
 
-        <FloatingBackButton onPress={closeModal} topOffset={-30} />
+        <FloatingBackButton onPress={closeModal} topOffset={-6} />
       </Modal>
     </>
   );
