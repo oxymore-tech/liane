@@ -7,10 +7,11 @@ import { initializeNotification, initializePushNotification } from "@/api/servic
 import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { RootNavigation } from "@/api/navigation";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
 import Splashscreen from "../../../native-modules/splashscreen";
 import { SubscriptionLike } from "rxjs";
+import { HubState } from "@/api/service/interfaces/hub";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 interface AppContextProps {
   position?: LatLng;
@@ -18,11 +19,12 @@ interface AppContextProps {
   logout: () => void;
   login: (user: AuthUser) => void;
   services: AppServices;
-  status: "online" | "offline";
+  status: HubState;
   appState: AppStateStatus;
 }
 
 const SERVICES = CreateAppServices();
+const queryClient = new QueryClient();
 
 export const AppContext = createContext<AppContextProps>({
   logout: () => {},
@@ -89,20 +91,24 @@ interface ContextProviderProps {
 interface ContextProviderState {
   appLoaded: boolean;
   user?: FullUser;
-  status: "online" | "offline";
+  status: HubState;
   appState: AppStateStatus;
+  isJustReconnected: boolean;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
   private unsubscribeToUserInteraction: (() => void) | undefined = undefined;
   private unsubscribeToStateChange: NativeEventSubscription | undefined = undefined;
   private unsubscribeToNetworkChange: NetInfoSubscription | undefined = undefined;
+  private unsubscribeToHubState: SubscriptionLike | undefined = undefined;
   private userChangeSubscription: SubscriptionLike | undefined = undefined;
   private notificationSubscription: SubscriptionLike | undefined = undefined;
+
   constructor(props: ContextProviderProps) {
     super(props);
     this.state = {
       appLoaded: false,
+      isJustReconnected: false,
       user: undefined,
       status: "offline",
       appState: "active"
@@ -114,29 +120,28 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     return { hasError: true };
   }
 
-  private initContext() {
-    initContext(SERVICES).then(async p => {
-      this.setState(prev => ({
-        ...prev,
-        user: p.user,
-        appLoaded: true,
-        status: p.online ? "online" : "offline"
-      }));
-      if (p.online && p.user) {
-        this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
-          //console.debug("dbg ------>", this.state.appState);
-          await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
-        });
-        this.userChangeSubscription = SERVICES.auth.subscribeToUserChanges(user => {
-          this.setState(prev => ({
-            ...prev,
-            user
-          }));
-        });
-      }
+  private async initContext() {
+    const info = await initContext(SERVICES);
+    this.setState(prev => ({
+      ...prev,
+      user: info.user,
+      appLoaded: true,
+      status: info.online ? "online" : "offline"
+    }));
+    if (info.online && info.user) {
+      this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
+        //console.debug("dbg ------>", this.state.appState);
+        await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
+      });
+      this.userChangeSubscription = SERVICES.auth.subscribeToUserChanges(user => {
+        this.setState(prev => ({
+          ...prev,
+          user
+        }));
+      });
+    }
 
-      Splashscreen.hide();
-    });
+    Splashscreen.hide();
   }
 
   private handleAppStateChange = (appState: AppStateStatus) => {
@@ -148,18 +153,27 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   };
 
   componentDidMount() {
-    this.initContext();
-    this.unsubscribeToNetworkChange = NetInfo.addEventListener(state => {
+    this.initContext().then();
+
+    this.unsubscribeToHubState = SERVICES.realTimeHub.hubState.subscribe(status => {
       this.setState(prev => ({
         ...prev,
-        status: state.isConnected ? "online" : "offline"
+        status
       }));
     });
-    this.unsubscribeToUserInteraction = RootNavigation.addListener("state", _ => {
-      // Try to reload on user interaction
-      if (this.state.status === "offline") {
+
+    let reconnecting = false;
+    this.unsubscribeToNetworkChange = NetInfo.addEventListener(state => {
+      const wasOffline = this.state.status === "offline";
+      const isJustReconnected = state.isInternetReachable === true && wasOffline && !!this.state.user;
+      if (isJustReconnected && !reconnecting) {
+        reconnecting = true;
         console.debug("[INIT] Try to reload...");
-        this.initContext();
+        this.initContext()
+          .then(() => queryClient.invalidateQueries())
+          .finally(() => {
+            reconnecting = false;
+          });
       }
     });
     this.unsubscribeToStateChange = AppState.addEventListener("change", this.handleAppStateChange);
@@ -174,6 +188,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
     if (this.unsubscribeToNetworkChange) {
       this.unsubscribeToNetworkChange();
+    }
+    if (this.unsubscribeToHubState) {
+      this.unsubscribeToHubState.unsubscribe();
     }
     if (this.userChangeSubscription) {
       this.userChangeSubscription.unsubscribe();
@@ -244,17 +261,19 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
 
     return (
-      <AppContext.Provider
-        value={{
-          logout,
-          login,
-          user,
-          status,
-          appState,
-          services: SERVICES
-        }}>
-        {children}
-      </AppContext.Provider>
+      <QueryClientProvider client={queryClient}>
+        <AppContext.Provider
+          value={{
+            logout,
+            login,
+            user,
+            status,
+            appState,
+            services: SERVICES
+          }}>
+          {children}
+        </AppContext.Provider>
+      </QueryClientProvider>
     );
   }
 }

@@ -43,11 +43,10 @@ export class HubServiceClient extends AbstractHubService {
     }
     console.debug("[HUB] start");
     return new Promise<FullUser>((resolve, reject) => {
-      let alreadyClosed = false;
       this.hub.onreconnecting(() => {
         this.hubState.next("reconnecting");
       });
-      this.hub.onreconnected(() => this.hubState.next("connected"));
+      this.hub.onreconnected(() => this.hubState.next("online"));
       this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
       this.hub.on("ReceiveMessage", this.receiveMessage);
       this.hub.on("Me", async (me: FullUser) => {
@@ -62,35 +61,38 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
       this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
       this.hub.onclose(err => {
-        if (!alreadyClosed) {
-          if (__DEV__ && err) {
-            console.log("[HUB] Connection closed with error : ", err);
-          }
-          alreadyClosed = true;
-          this.hubState.next("closed");
+        if (__DEV__ && err) {
+          console.log("[HUB] Connection closed with error : ", err);
         }
+        this.isStarted = false;
+        this.hubState.next("offline");
       });
-      this.hub.start().catch(async (err: Error) => {
-        console.debug("[HUB] could not start :", err, this.hub.state);
-        // Only reject if error happens before connection is established
-        if (this.hub.state !== "Connected") {
-          // Retry if err 401
-          if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
-            try {
-              await tryRefreshToken<void>(async () => {
-                await this.hub.start().catch(e => reject(e));
-              });
-            } catch (e) {
-              reject(e);
+      this.hub
+        .start()
+        .then(() => {
+          this.hubState.next("online");
+        })
+        .catch(async (err: Error) => {
+          console.debug("[HUB] could not start :", err, this.hub.state);
+          // Only reject if error happens before connection is established
+          if (this.hub.state !== "Connected") {
+            // Retry if err 401
+            if (err.message.includes("Status code '401'") && (await getRefreshToken())) {
+              try {
+                await tryRefreshToken<void>(async () => {
+                  await this.hub.start().catch(e => reject(e));
+                });
+              } catch (e) {
+                reject(e);
+              }
+            } else if (err.message.includes("Network request failed")) {
+              // Network or server unavailable
+              reject(new NetworkUnavailable());
+            } else {
+              reject(err);
             }
-          } else if (err.message.includes("Network request failed")) {
-            // Network or server unavailable
-            reject(new NetworkUnavailable());
-          } else {
-            reject(err);
           }
-        }
-      });
+        });
     });
   };
 
