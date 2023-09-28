@@ -80,7 +80,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     return liane ?? created.First();
   }
 
-  public async Task<ImmutableList<Api.Trip.Liane>> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null)
+  public async Task<ImmutableList<Api.Trip.Liane>> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null, int daysAhead = 7)
   {
     var createdBy = owner ?? currentContext.CurrentUser().Id;
     var recurrenceResolved = await lianeRecurrenceService.Get(recurrence);
@@ -90,16 +90,16 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var existing = await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Recurrence == recurrence.Id && l.DepartureTime > now)
       .Sort(Builders<LianeDb>.Sort.Descending(m => m.DepartureTime))
-      .Limit(7)
+      .Limit(daysAhead)
       .SelectAsync(MapEntity);
 
     var entity = recurrenceResolved.GetLianeRequest();
     var createdLianes = new List<Api.Trip.Liane>();
 
-    // Only plan up to a week ahead
+    // Only plan up to given days ahead
     var fromDate = new DateTime(now.Year, now.Month, now.Day, entity.DepartureTime.Hour, entity.DepartureTime.Minute, entity.DepartureTime.Second, DateTimeKind.Utc);
     var dReturn = entity.ReturnTime is not null ? entity.ReturnTime - entity.DepartureTime : null;
-    foreach (var nextOccurence in entity.Recurrence!.Value.GetNextActiveDates(fromDate, DateTime.UtcNow.Date.AddDays(7)))
+    foreach (var nextOccurence in entity.Recurrence!.Value.GetNextActiveDates(fromDate, DateTime.UtcNow.Date.AddDays(daysAhead)))
     {
       if (existing.Find(l => l.DepartureTime.ToShortDateString() == nextOccurence.ToShortDateString()) is not null)
       {

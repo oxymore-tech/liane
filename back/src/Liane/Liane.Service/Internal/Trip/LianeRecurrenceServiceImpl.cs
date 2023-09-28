@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
@@ -78,6 +80,17 @@ public class LianeRecurrenceServiceImpl : MongoCrudEntityService<LianeRecurrence
   {
     return Mongo.GetCollection<LianeRecurrence>()
       .DeleteManyAsync(r => r.CreatedBy == id);
+  }
+
+  public async Task<IEnumerable<LianeRecurrence>> GetUpdatableRecurrences(DayOfWeek?day = null)
+  {
+    var pattern = Enumerable.Repeat('.', 7).ToArray();
+    var targetDay = day ?? DateTime.UtcNow.DayOfWeek;
+    pattern[DayOfTheWeekFlag.IndexOf(targetDay)] = '1';
+    var filter = Builders<LianeRecurrence>.Filter.Where(r => r.Active) & Builders<LianeRecurrence>.Filter.Regex(r => r.Days, new BsonRegularExpression(new string(pattern)));
+    var recurrences = await Mongo.GetCollection<LianeRecurrence>()
+      .FindAsync(filter);
+    return recurrences.ToEnumerable();
   }
 
   protected override Task<LianeRecurrence> ToDb(LianeRecurrence inputDto, string originalId, DateTime createdAt, string createdBy)
