@@ -134,7 +134,7 @@ const MyTripsScreen = () => {
           </View>
         </Row>
         <AppTabs
-          items={["Lianes à venir", "Lianes passés"]}
+          items={["Lianes à venir", "Lianes passées"]}
           onSelect={setSelectedTab}
           selectedIndex={selectedTab}
           isSelectable={() => true}
