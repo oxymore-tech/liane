@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { Answer, Notification } from "@/api/notification";
 import { LianeEvent } from "@/api/event";
 
+export type HubState = "connected" | "reconnecting" | "closed";
 export interface HubService {
   list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
@@ -24,6 +25,8 @@ export interface HubService {
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
 
   unreadNotificationCount: Observable<number>;
+
+  hubState: Observable<HubState>;
 }
 
 export type ConsumeMessage = (res: ChatMessage) => void;
@@ -44,7 +47,7 @@ export abstract class AbstractHubService implements HubService {
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
 
   unreadNotificationCount = new BehaviorSubject<number>(0);
-
+  hubState = new Subject<HubState>();
   protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.

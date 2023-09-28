@@ -44,6 +44,10 @@ export class HubServiceClient extends AbstractHubService {
     console.debug("[HUB] start");
     return new Promise<FullUser>((resolve, reject) => {
       let alreadyClosed = false;
+      this.hub.onreconnecting(() => {
+        this.hubState.next("reconnecting");
+      });
+      this.hub.onreconnected(() => this.hubState.next("connected"));
       this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
       this.hub.on("ReceiveMessage", this.receiveMessage);
       this.hub.on("Me", async (me: FullUser) => {
@@ -62,7 +66,7 @@ export class HubServiceClient extends AbstractHubService {
             console.log("[HUB] Connection closed with error : ", err);
           }
           alreadyClosed = true;
-          reject(err);
+          this.hubState.next("closed");
         }
       });
       this.hub.start().catch(async (err: Error) => {
@@ -91,8 +95,6 @@ export class HubServiceClient extends AbstractHubService {
 
   stop = async () => {
     console.log("[HUB] stop");
-    // TODO close all observables
-
     await this.hub.stop();
     this.isStarted = false;
   };
