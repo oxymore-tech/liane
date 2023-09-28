@@ -1,9 +1,19 @@
-import { ChatMessage, ConversationGroup, FullUser, PaginatedRequestParams, PaginatedResponse, Ref, TrackedMemberLocation, UTCDateTime } from "@/api";
+import {
+  ChatMessage,
+  ConversationGroup,
+  FullUser,
+  Liane,
+  PaginatedRequestParams,
+  PaginatedResponse,
+  Ref,
+  TrackedMemberLocation,
+  UTCDateTime
+} from "@/api";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { Answer, Notification } from "@/api/notification";
 import { LianeEvent } from "@/api/event";
 
-export type HubState = "connected" | "reconnecting" | "closed";
+export type HubState = "online" | "reconnecting" | "offline";
 export interface HubService {
   list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
@@ -23,8 +33,8 @@ export interface HubService {
   subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
 
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
-
   unreadNotificationCount: Observable<number>;
+  lianeUpdates: Observable<Liane>;
 
   hubState: Observable<HubState>;
 }
@@ -45,7 +55,7 @@ export abstract class AbstractHubService implements HubService {
   protected currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
-
+  lianeUpdates = new Subject<Liane>();
   unreadNotificationCount = new BehaviorSubject<number>(0);
   hubState = new Subject<HubState>();
   protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
@@ -157,6 +167,10 @@ export abstract class AbstractHubService implements HubService {
     if (this.onReceiveLocationUpdateCallback) {
       this.onReceiveLocationUpdateCallback(l);
     }
+  };
+
+  protected receiveLianeUpdate = (liane: Liane) => {
+    this.lianeUpdates.next(liane);
   };
 
   abstract readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;

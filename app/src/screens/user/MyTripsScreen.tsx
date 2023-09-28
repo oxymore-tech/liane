@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-import { Liane, Ref, UnionUtils } from "@/api";
+import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse, Ref, UnionUtils } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { Event } from "@/api/notification";
@@ -14,15 +14,17 @@ import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";
+import { useSubscription } from "@/util/hooks/subscription";
 import { UserPicture } from "@/components/UserPicture";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
+  const futureStates: LianeState[] = ["NotStarted", "Started"];
   const { services, user } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"], undefined, 25, false) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(futureStates, undefined, 25, false) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -32,12 +34,33 @@ const MyTripsScreen = () => {
 
       //  @ts-ignore
       if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
-        await queryClient.invalidateQueries(LianeQueryKey);
+        //    await queryClient.invalidateQueries(LianeQueryKey);
         await queryClient.invalidateQueries(JoinRequestsQueryKey);
       }
     });
     return () => s.unsubscribe();
   }, []);
+
+  useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
+    queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
+      if (!old) {
+        return { next: undefined, pageSize: 1, data: [liane] };
+      }
+      const found = old.data.findIndex(l => l.id === liane.id);
+      if (futureStates.includes(liane.state)) {
+        if (found >= 0) {
+          old.data[found] = liane;
+          return old;
+        } else {
+          old.data.unshift(liane);
+          return { ...old, pageSize: old.pageSize + 1 };
+        }
+      } else if (found >= 0) {
+        return { ...old, pageSize: old.pageSize - 1, data: old.data.splice(found, 1) };
+      }
+      return old;
+    });
+  });
 
   const isFetchingFutureLianes = queryClient.isFetching({
     predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
@@ -48,12 +71,12 @@ const MyTripsScreen = () => {
     }
   }, [isFetchingFutureLianes]);
 
-  const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
-  const error: any = queriesData[0].error || queriesData[1].error;
-  const isFetching = queriesData[0].isFetching || queriesData[1].isFetching;
+  const isLoading = queriesData.some(q => q.isLoading);
+  const error: any = queriesData.find(q => q.error)?.error;
+  const isFetching = queriesData.some(q => q.isFetching);
 
   // Create section list from a list of Liane objects
-  const data = useMemo(() => {
+  const data: (JoinLianeRequestDetailed | Liane)[] = useMemo(() => {
     if (queriesData[0].data && queriesData[1].data) {
       return [...queriesData[0].data!.data, ...queriesData[1].data!.data];
     }
@@ -110,7 +133,7 @@ const MyTripsScreen = () => {
           </View>
         </Row>
         <AppTabs
-          items={["Lianes à venir", "Lianes passés"]}
+          items={["Lianes à venir", "Lianes passées"]}
           onSelect={setSelectedTab}
           selectedIndex={selectedTab}
           isSelectable={() => true}
@@ -142,6 +165,7 @@ const NoRecentTrip = () => {
     </Center>
   );
 };
+
 export const LianePastQueryKey = "getPastTrips";
 
 const PastLianeListView = WithFetchPaginatedResponse<Liane>(

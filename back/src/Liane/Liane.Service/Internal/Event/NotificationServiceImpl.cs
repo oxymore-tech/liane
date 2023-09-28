@@ -38,11 +38,11 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
   );
 
-  public async Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
+  public Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
   {
     if (memoryCache.TryGetValue(reminder, out var n))
     {
-      return (n as Notification)!;
+      return Task.FromResult((n as Notification)!);
     }
 
     var notification = new Notification.Reminder(
@@ -54,7 +54,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       reminder);
    memoryCache.Set(reminder, notification, TimeSpan.FromMinutes(10));
    /*  await Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));*/
-    return notification;
+    return Task.FromResult<Notification>(notification);
   }
 
   public async Task SendReminders(DateTime now, IEnumerable<Notification.Reminder> reminders)
