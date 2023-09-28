@@ -66,11 +66,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       });
     }
 
-    buttonList.push({
-      text: "Annuler",
-      action: () => setEditOptionsModalVisible(false)
-    });
-
     if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1) {
       buttonList.push({
         text: "Annuler cette liane",
@@ -114,7 +109,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
     if (lianeHasRecurrence) {
       buttonList.push({
         text: "Supprimer la récurrence",
-        action: () => updateRecurrence(navigation, services, queryClient, liane, "0000000", setRecurrenceModalVisible),
+        action: () => deleteRecurrence(navigation, services, queryClient, liane),
         danger: true
       });
     }
@@ -223,6 +218,33 @@ const pauseLiane = (services: AppServices, queryClient: QueryClient, liane: Lian
   );
 };
 
+const deleteRecurrence = async (
+  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
+  services: AppServices,
+  queryClient: QueryClient,
+  liane: Liane
+) => {
+  Alert.alert(
+    "Supprimer la récurrence",
+    "Tous les trajets à venir sont supprimés, sauf ceux comportant des passagers qui devront être supprimés manuellement.",
+    [
+      {
+        text: "Annuler",
+        onPress: () => {},
+        style: "cancel"
+      },
+      {
+        text: "Supprimer",
+        onPress: async () => {
+          await services.liane.deleteRecurrence(liane.recurrence!.id!);
+          await queryClient.invalidateQueries(LianeQueryKey);
+          navigation.goBack();
+        },
+        style: "default"
+      }
+    ]
+  );
+};
 const updateRecurrence = async (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,

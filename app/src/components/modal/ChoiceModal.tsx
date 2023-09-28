@@ -1,12 +1,8 @@
 import Modal from "react-native-modal/dist/modal";
 import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
-import { Column, Row } from "@/components/base/AppLayout";
-import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { AppColors } from "@/theme/colors";
 import React, { useEffect, useState } from "react";
-import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
-import { ActionItem } from "../ActionItem";
 
 export interface ChoiceModalProps {
   backgroundColor?: ColorValue;
@@ -27,7 +23,7 @@ export const ChoiceModal = ({ backgroundColor = AppColors.white, visible, setVis
       setSelected(undefined);
     }
   }, [visible]);
-  console.log(choices);
+  console.log("[CHOICES]", choices);
 
   return (
     <Modal
@@ -47,30 +43,32 @@ export const ChoiceModal = ({ backgroundColor = AppColors.white, visible, setVis
         <View style={styles.containerStyle}>
           <View style={[styles.containerStyle, { backgroundColor, height: choices.filter(c => !c.danger).length * 50 }]}>
             {choices
-              .filter(c => !c.danger)
-              .map((c, i) => (
+              .map((choice, index) => ({ choice, index }))
+              .filter(c => !c.choice.danger)
+              .map(c => (
                 <TouchableOpacity
-                  key={i}
+                  key={c.index}
                   style={styles.buttonStyle}
                   onPress={() => {
-                    setSelected(i);
+                    setSelected(c.index);
                     setVisible(false);
                   }}>
-                  <AppText style={styles.textStyle}>{c.text}</AppText>
+                  <AppText style={styles.textStyle}>{c.choice.text}</AppText>
                 </TouchableOpacity>
               ))}
           </View>
           {choices
-            .filter(c => c.danger)
-            .map((c, i) => (
-              <View key={i} style={[styles.containerStyle, styles.containerDangerStyle]}>
+            .map((choice, index) => ({ choice, index }))
+            .filter(c => c.choice.danger)
+            .map(c => (
+              <View key={c.index} style={[styles.containerStyle, styles.containerDangerStyle]}>
                 <TouchableOpacity
                   style={[styles.buttonStyle, styles.buttonDangerStyle]}
                   onPress={() => {
-                    setSelected(i);
+                    setSelected(c.index);
                     setVisible(false);
                   }}>
-                  <AppText style={[styles.textStyle, { color: AppColors.white }]}>{c.text}</AppText>
+                  <AppText style={[styles.textStyle, { color: AppColors.white }]}>{c.choice.text}</AppText>
                 </TouchableOpacity>
               </View>
             ))}
