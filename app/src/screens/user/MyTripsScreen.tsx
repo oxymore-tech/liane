@@ -43,7 +43,6 @@ const MyTripsScreen = () => {
 
   useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
     queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
-      console.log(new Date(), liane);
       if (!old) {
         return { next: undefined, pageSize: 1, data: [liane] };
       }
