@@ -695,6 +695,13 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var lianeDb = await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state), new FindOneAndUpdateOptions<LianeDb>{ReturnDocument = ReturnDocument.After});
 
+    if (lianeDb.State == LianeState.Finished || lianeDb.State == LianeState.Canceled)
+    {
+      await postgisService.Clear(new []
+      {
+        liane.Id
+      });
+    }
     await PushUpdate(lianeDb);
   }
 
