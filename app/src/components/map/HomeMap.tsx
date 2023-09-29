@@ -236,7 +236,8 @@ export const HomeMap = ({
         {state.matches("point") && (
           <PickupDestinationsDisplayLayer
             date={state.context.filter.targetTime?.dateTime}
-            deposit={state.context.filter.to!.id!}
+            point={(state.context.filter.to || state.context.filter.from)!.id!}
+            type={state.context.filter.from ? "pickup" : "deposit"}
             onSelect={rp => {
               if (rp) {
                 machine.send("SELECT", { data: rp });
@@ -273,24 +274,16 @@ export const HomeMap = ({
           />
         )}
 
+        {state.matches("point") && (
+          <WayPointDisplay rallyingPoint={(state.context.filter.to || state.context.filter.from)!} type={state.context.filter.from ? "from" : "to"} />
+        )}
+
         {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />}
         {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />}
-        {["point", "match"].some(state.matches) && (
-          <WayPointDisplay
-            rallyingPoint={state.context.filter.to || detailStateData!.deposit}
-            type={"to"}
 
-            // active={!isDetailState || !state.context.filter.from || state.context.filter.from.id === detailStateData!.pickup.id}
-          />
-        )}
-        {["match"].some(state.matches) && (
-          <WayPointDisplay
-            rallyingPoint={state.context.filter.from || detailStateData!.pickup}
-            type={"from"}
+        {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.from!} type={"from"} />}
+        {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.to!} type={"to"} />}
 
-            //  active={!isDetailState || !state.context.filter.to || state.context.filter.to.id === detailStateData!.deposit.id}
-          />
-        )}
         {children}
       </AppMapView>
       {["point", "map"].some(state.matches) && (

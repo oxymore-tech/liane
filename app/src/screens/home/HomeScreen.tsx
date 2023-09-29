@@ -139,7 +139,9 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             }
             animateEntry={false}
             title={"Carte des lianes"}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
+            updateTrip={t => {
+              machine.send("UPDATE", { data: t });
+            }}
             trip={state.context.filter}
           />
         )}

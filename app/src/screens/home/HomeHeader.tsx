@@ -106,6 +106,7 @@ export const MapHeader = ({
 
   const itineraryMarginTop = 0; //24;
 
+  console.debug("HEADER", to, from);
   return (
     <View style={style}>
       {!!to && !!from && <FloatingBackButton onPress={() => updateTrip({ from: undefined })} />}
@@ -122,7 +123,7 @@ export const MapHeader = ({
                 <AppIcon style={{ flex: 1 }} name={"bell"} color={AppColors.white} size={32} />
 
                 <TouchableOpacity
-                  style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.white }]}
+                  style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
                   onPress={() =>
                     // @ts-ignore
                     navigation.navigate("Profile", { user })
@@ -133,7 +134,7 @@ export const MapHeader = ({
             </View>
           </View>
 
-          {!!to && (
+          {(!!to || !!from) && (
             <View style={styles.fromToContainer}>
               <View
                 style={{
@@ -168,6 +169,9 @@ export const MapHeader = ({
                         <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{"Sélectionnez votre départ sur la carte"}</AppText>
                         {!!to && (
                           <AppPressableIcon
+                            onPress={() => {
+                              updateTrip({ to: from, from: to });
+                            }}
                             backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, height: 36, paddingTop: 9 }}
                             name={"arrow-switch"}
                             size={18}
@@ -218,7 +222,22 @@ export const MapHeader = ({
                     <AppIcon name={"flag"} color={AppColors.primaryColor} size={18} />
                   </View>
                   <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
-                    <RallyingPointItem item={to} labelSize={15} showIcon={false} />
+                    {!!to && <RallyingPointItem item={to} labelSize={15} showIcon={false} />}
+                    {!to && (
+                      <Row style={{ alignItems: "center", flexGrow: 1 }} spacing={8}>
+                        <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>
+                          {hintPhrase || "Sélectionnez votre arrivée sur la carte"}
+                        </AppText>
+                        <AppPressableIcon
+                          onPress={() => {
+                            updateTrip({ to: from, from: to });
+                          }}
+                          backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, height: 36, paddingTop: 9 }}
+                          name={"arrow-switch"}
+                          size={18}
+                        />
+                      </Row>
+                    )}
                   </View>
 
                   {!from && (
@@ -236,7 +255,8 @@ export const MapHeader = ({
               </Column>
             </View>
           )}
-          {!to && (
+
+          {!to && !from && (
             <Animated.View
               entering={animateEntry ? SlideInUp : undefined}
               exiting={SlideOutUp}

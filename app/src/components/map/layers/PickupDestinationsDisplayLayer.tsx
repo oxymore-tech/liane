@@ -11,19 +11,20 @@ import { AppLogger } from "@/api/logger";
 export type PickupDestinationsDisplayLayerProps = {
   date?: Date;
   onSelect?: (rp: RallyingPoint) => void;
-  deposit: Ref<RallyingPoint>;
+  point: Ref<RallyingPoint>;
+  type: "pickup" | "deposit";
 };
 
-export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, deposit }: PickupDestinationsDisplayLayerProps) => {
+export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, point, type }: PickupDestinationsDisplayLayerProps) => {
   const dateArg = getDateParams(date);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
-    setSourceId("segmentsFiltered" + dateArg + deposit);
-    AppLogger.debug("MAP", "tile source", dateArg, deposit);
-  }, [dateArg, deposit]);
+    setSourceId("segmentsFiltered" + dateArg + point + type);
+    AppLogger.debug("MAP", "tile source", dateArg, type, point);
+  }, [dateArg, point, type]);
 
   const controller = useAppMapViewController();
-  const url = TilesUrl + "/liane_display_filter_test?" + dateArg + "&deposit=" + deposit;
+  const url = TilesUrl + "/liane_display_filter_test?" + dateArg + `&${type}=` + point;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (
@@ -78,7 +79,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, de
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        filter={["all", ["!=", ["get", "id"], deposit], ["!", ["has", "point_count"]]]}
+        filter={["all", ["!=", ["get", "id"], point], ["!", ["has", "point_count"]]]}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],

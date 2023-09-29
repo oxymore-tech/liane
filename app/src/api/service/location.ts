@@ -192,7 +192,7 @@ type LocationPingsSenderProps = { liane: string; trip: WayPoint[]; delay: number
 const hasPermissionIOS = async (): Promise<boolean> => {
   const openSetting = () => {
     Linking.openSettings().catch(e => {
-      AppLogger.warn("LOCATION", "Unable to open settings", e);
+      AppLogger.warn("SETTINGS", "Unable to open settings", e);
     });
   };
   const status = await Geolocation.requestAuthorization("whenInUse");

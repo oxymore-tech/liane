@@ -28,6 +28,7 @@ type Schema = {
 export type HomeMapMachineStateKeys = "map" | "form" | "point" | "match" | "detail";
 
 export const getSearchFilter = (filter: Partial<InternalLianeMatchFilter>) => {
+  console.log(filter);
   return <LianeSearchFilter>{
     availableSeats: -1, //TODO
     to: filter.to!.id!,
@@ -191,7 +192,7 @@ export const HomeMapMachine = (services: {
               },
               SELECT: {
                 target: "#homeMap.point",
-                actions: ["selectRallyingPoint", "cacheRecentPoint"]
+                actions: ["selectToRallyingPoint", "cacheRecentPoint"]
               },
               DETAIL: {
                 target: "#homeMap.detail",
@@ -260,12 +261,25 @@ export const HomeMapMachine = (services: {
                 cond: (context, event: UpdateEvent) => {
                   return !event.data.to && !event.data.from;
                 }
-              }
+              },
+              { actions: ["updateTrip"] }
             ],
-            SELECT: {
-              target: "#homeMap.match",
-              actions: ["cacheRecentPoint", "selectRallyingPoint2", "cacheRecentTrip"]
-            } /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
+            SELECT: [
+              {
+                cond: (context, event: SelectEvent) => {
+                  return !context.filter.to && !!context.filter.from && context.filter.from.id !== event.data!.id;
+                },
+                target: "#homeMap.match",
+                actions: ["cacheRecentPoint", "selectToRallyingPoint", "cacheRecentTrip"]
+              },
+              {
+                cond: (context, event: SelectEvent) => {
+                  return !context.filter.from && !!context.filter.to && context.filter.to.id !== event.data!.id;
+                },
+                target: "#homeMap.match",
+                actions: ["cacheRecentPoint", "selectFromRallyingPoint", "cacheRecentTrip"]
+              }
+            ] /*{ target: "#homeMap.point", actions: ["selectRallyingPoint"] }*/
           }
         }),
         match: createState(
@@ -360,25 +374,25 @@ export const HomeMapMachine = (services: {
     {
       actions: {
         cacheRecentTrip: (context, event: UpdateEvent) =>
-          services.services.cacheRecentTrip({ from: (event.data.from || context.filter.from)!, to: (event.data.to || context.filter.to)! }),
+          services.services.cacheRecentTrip({
+            from: (event.data.from || context.filter.from)!,
+            to: (event.data.to || context.filter.to)!
+          }),
         cacheRecentPoint: (context, event: SelectEvent) => services.services.cacheRecentPoint(event.data),
 
         resetTrip: assign({ filter: context => ({ ...context.filter, from: undefined, to: undefined }) }),
         resetMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: undefined }),
         resetMatches: assign<HomeMapContext, MatchEvent>({ matches: undefined }),
         resetMatchesDisplay: () => services.observables.displaySubject.next([EmptyFeatureCollection, new Set()]),
-        selectRallyingPoint: assign<HomeMapContext, SelectEvent>({
+
+        selectFromRallyingPoint: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
-            return { ...context.filter, to: event.data, from: undefined };
+            return { ...context.filter, from: event.data };
           }
         }),
-        selectRallyingPoint2: assign<HomeMapContext, SelectEvent>({
+        selectToRallyingPoint: assign<HomeMapContext, SelectEvent>({
           filter: (context, event) => {
-            if (context.filter.to!.id === event.data.id) {
-              // Ignore if to & from are set to same value
-              return context.filter;
-            }
-            return { ...context.filter, from: event.data };
+            return { ...context.filter, to: event.data };
           }
         }),
         selectMatch: assign<HomeMapContext, MatchEvent>({ selectedMatch: (context, event) => event.data }),
