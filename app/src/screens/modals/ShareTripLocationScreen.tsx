@@ -23,6 +23,7 @@ import BackgroundGeolocationService from "native-modules/geolocation";
 import { PERMISSIONS, request } from "react-native-permissions";
 import { useAppState } from "@react-native-community/hooks";
 import { AppStyles } from "@/theme/styles";
+import { AppLogger } from "@/api/logger";
 
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
@@ -165,7 +166,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
           const openSetting = () => {
             Linking.openSettings().catch(() => {
               if (__DEV__) {
-                console.warn("[LOCATION] Unable to open settings");
+                AppLogger.warn("SETTINGS", "Unable to open settings");
               }
             });
           };
@@ -182,7 +183,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         const status = await request(
           Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
         );
-        console.log(status);
+        //console.log(status);
         if (status === "granted") {
           return true;
         } else if (status === "denied") {
@@ -193,7 +194,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
           const openSetting = () => {
             Linking.openSettings().catch(() => {
               if (__DEV__) {
-                console.warn("[LOCATION] Unable to open settings");
+                AppLogger.warn("SETTINGS", "Unable to open settings");
               }
             });
           };

@@ -12,6 +12,7 @@ import {
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { Answer, Notification } from "@/api/notification";
 import { LianeEvent } from "@/api/event";
+import { AppLogger } from "@/api/logger";
 
 export type HubState = "online" | "reconnecting" | "offline";
 export interface HubService {
@@ -67,7 +68,7 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
-    console.debug("[HUB] received : msg", this.appStateActive, convId, message, this.currentConversationId);
+    AppLogger.info("HUB", "received : msg", this.appStateActive, convId, message, this.currentConversationId);
     if (!this.appStateActive) {
       return false;
     }
@@ -82,7 +83,7 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveUnreadOverview = async (unread: UnreadOverview) => {
     // Called when hub is started
-    console.debug("[HUB] unread", unread);
+    AppLogger.info("HUB", "unread", unread);
     this.unreadConversations.next(unread.conversations);
     this.unreadNotificationCount.next(unread.notificationsCount);
   };
@@ -90,7 +91,7 @@ export abstract class AbstractHubService implements HubService {
   protected receiveNotification = async (notification: Notification) => {
     // Called on new notification
     if (__DEV__) {
-      console.debug("[HUB] received :", this.appStateActive, notification);
+      AppLogger.info("HUB", "received :", this.appStateActive, notification);
     }
     if (this.appStateActive) {
       this.notificationSubject.next(notification);
@@ -128,7 +129,7 @@ export abstract class AbstractHubService implements HubService {
     this.onReceiveLatestMessagesCallback = onReceiveLatestMessages;
     this.onReceiveMessageCallback = onReceiveMessage;
     const conv: ConversationGroup = await this.joinGroupChat(conversationRef);
-    console.debug("[HUB] joined " + conv.id);
+    AppLogger.info("HUB", "joined " + conv.id);
     this.currentConversationId = conv.id;
     // Remove from unread conversations
     if (this.unreadConversations.getValue().includes(conversationRef)) {
@@ -142,10 +143,10 @@ export abstract class AbstractHubService implements HubService {
     if (this.currentConversationId) {
       this.onReceiveLatestMessagesCallback = null;
       this.onReceiveMessageCallback = null;
-      console.debug("[HUB] left " + this.currentConversationId);
+      AppLogger.info("HUB", "left " + this.currentConversationId);
       this.currentConversationId = undefined;
     } else if (__DEV__) {
-      console.debug("[HUB] Tried to leave an undefined conversation.");
+      AppLogger.info("HUB", "Tried to leave an undefined conversation.");
     }
   };
 
@@ -155,7 +156,7 @@ export abstract class AbstractHubService implements HubService {
         await this.sendToGroup(message);
       } catch (e) {
         if (__DEV__) {
-          console.warn(`[HUB] Could not send message : ${JSON.stringify(message)}`, e);
+          AppLogger.warn("HUB", `Could not send message : ${JSON.stringify(message)}`, e);
         }
       }
     } else {

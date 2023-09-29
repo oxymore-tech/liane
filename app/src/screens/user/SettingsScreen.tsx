@@ -31,7 +31,6 @@ const SettingCheckbox = ({ name, label }: { name: keyof AppSettings; label: stri
     getSetting(name)
       .then(setting => {
         setValue(setting);
-        console.debug(setting);
       })
       .catch(e => console.warn(e));
   }, [name]);

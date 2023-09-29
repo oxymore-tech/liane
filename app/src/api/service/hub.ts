@@ -7,6 +7,7 @@ import { AbstractHubService, OnLocationCallback } from "@/api/service/interfaces
 import { LianeEvent } from "@/api/event";
 import { Answer } from "@/api/notification";
 import { SubscriptionLike } from "rxjs";
+import { AppLogger } from "@/api/logger";
 
 function createChatConnection(): HubConnection {
   return new HubConnectionBuilder()
@@ -31,7 +32,7 @@ export class HubServiceClient extends AbstractHubService {
 
   start = () => {
     if (this.isStarted) {
-      console.debug("[HUB] already started");
+      AppLogger.info("HUB", "Already started");
       return new Promise<FullUser>(async (resolve, reject) => {
         const found = await getCurrentUser();
         if (found) {
@@ -41,7 +42,7 @@ export class HubServiceClient extends AbstractHubService {
         }
       });
     }
-    console.debug("[HUB] start");
+    AppLogger.info("HUB", "start");
     return new Promise<FullUser>((resolve, reject) => {
       this.hub.onreconnecting(() => {
         this.hubState.next("reconnecting");
@@ -51,7 +52,7 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveMessage", this.receiveMessage);
       this.hub.on("Me", async (me: FullUser) => {
         // Called when hub is started
-        console.log("[HUB] me", me);
+        AppLogger.info("HUB", "me", me);
         this.isStarted = true;
         await storeCurrentUser(me);
         resolve(me);
@@ -62,7 +63,7 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
       this.hub.onclose(err => {
         if (__DEV__ && err) {
-          console.log("[HUB] Connection closed with error : ", err);
+          AppLogger.debug("HUB", "Connection closed with error : ", err);
         }
         this.isStarted = false;
         this.hubState.next("offline");
@@ -73,7 +74,7 @@ export class HubServiceClient extends AbstractHubService {
           this.hubState.next("online");
         })
         .catch(async (err: Error) => {
-          console.debug("[HUB] could not start :", err, this.hub.state);
+          AppLogger.info("HUB", "could not start :", err, this.hub.state);
           // Only reject if error happens before connection is established
           if (this.hub.state !== "Connected") {
             // Retry if err 401
@@ -97,7 +98,7 @@ export class HubServiceClient extends AbstractHubService {
   };
 
   stop = async () => {
-    console.log("[HUB] stop");
+    AppLogger.debug("HUB", "stop");
     await this.hub.stop();
     this.isStarted = false;
   };
@@ -132,7 +133,7 @@ export class HubServiceClient extends AbstractHubService {
 
   private checkConnection = async () => {
     if (this.hub.state !== "Connected") {
-      console.debug("[HUB] Tried to join chat but state was ", this.hub.state);
+      AppLogger.info("HUB", "Tried to join chat but state was ", this.hub.state);
       await this.hub.stop();
       await this.hub.start();
     }

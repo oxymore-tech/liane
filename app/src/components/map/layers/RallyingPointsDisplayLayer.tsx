@@ -27,14 +27,12 @@ export const RallyingPointsDisplayLayer = ({
       onPress={
         onSelect
           ? async f => {
-              console.debug(JSON.stringify(f));
               // @ts-ignore
               const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
 
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1) {
                 const p = points[0];
-                console.debug("clc", p);
 
                 //@ts-ignore
                 onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });

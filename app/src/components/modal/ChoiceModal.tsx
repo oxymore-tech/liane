@@ -23,7 +23,6 @@ export const ChoiceModal = ({ backgroundColor = AppColors.white, visible, setVis
       setSelected(undefined);
     }
   }, [visible]);
-  console.log("[CHOICES]", choices);
 
   return (
     <Modal

@@ -6,6 +6,7 @@ import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
 import { getDateParams } from "@/components/map/layers/LianeDisplayLayer";
+import { AppLogger } from "@/api/logger";
 
 export type PickupDestinationsDisplayLayerProps = {
   date?: Date;
@@ -18,7 +19,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, de
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
     setSourceId("segmentsFiltered" + dateArg + deposit);
-    console.debug("[MAP]: tile source", dateArg, deposit);
+    AppLogger.debug("MAP", "tile source", dateArg, deposit);
   }, [dateArg, deposit]);
 
   const controller = useAppMapViewController();
@@ -41,7 +42,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, de
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1 && !!points[0].properties!.id) {
                 const p = points[0];
-                console.debug("[MAP] selected point", p);
+                AppLogger.info("MAP", "selected point", p);
 
                 //@ts-ignore
                 onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });

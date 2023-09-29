@@ -22,6 +22,7 @@ import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { SearchModal } from "@/screens/home/HomeHeader";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
+import { AppLogger } from "@/api/logger";
 
 export const HomeMap = ({
   onMovingStateChanged,
@@ -182,14 +183,12 @@ export const HomeMap = ({
           if (bboxesCoordinates.length > 0) {
             const mergedBbox = envelope(featureCollection(bboxesCoordinates.map(p => feature(p))));
             const bbox = getBoundingBox(mergedBbox.geometry.coordinates.flat(), 24);
-            console.debug("[MAP] moving to ", bbox, mergedBbox.bbox);
+            AppLogger.debug("MAP", "moving to ", bbox, mergedBbox.bbox);
             if (Number.isFinite(bbox.ne[0]) && Number.isFinite(bbox.ne[1]) && Number.isFinite(bbox.sw[0]) && Number.isFinite(bbox.sw[1])) {
               setGeometryBbox(bbox);
-            } else {
-              console.warn("[MAP]: cannot fit infinite bounds");
             }
           } else {
-            console.debug("[MAP] found", 0, "features");
+            AppLogger.debug("MAP", "found", 0, "features");
             //featureSubject?.next([]);
           }
         });
@@ -301,7 +300,7 @@ export const HomeMap = ({
             return true;
           }}
           onSelectFeature={placeFeature => {
-            console.log("place selected", JSON.stringify(placeFeature));
+            // console.log("place selected", JSON.stringify(placeFeature));
             if (placeFeature.bbox) {
               appMapRef.current?.fitBounds(
                 getBoundingBox(

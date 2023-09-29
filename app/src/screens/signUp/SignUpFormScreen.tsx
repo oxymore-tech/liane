@@ -10,6 +10,7 @@ import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppToggle } from "@/components/base/AppOptionToggle";
 import { AppContext } from "@/components/context/ContextProvider";
 import { SignUpLianeContext } from "@/screens/signUp/StateMachine";
+import { AppLogger } from "@/api/logger";
 
 export const SignUpFormScreen = () => {
   const { ...methods } = useForm();
@@ -31,7 +32,7 @@ export const SignUpFormScreen = () => {
   };
 
   const onError: SubmitErrorHandler<FormValues> = errors => {
-    return console.warn(errors);
+    return AppLogger.warn("LOGIN", errors);
   };
   // @ts-ignore
   return (

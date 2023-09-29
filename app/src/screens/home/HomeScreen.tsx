@@ -24,6 +24,7 @@ import { useAppNavigation } from "@/api/navigation";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { HomeMap } from "@/components/map/HomeMap";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
+import { AppLogger } from "@/api/logger";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -80,7 +81,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
-            onZoomChanged={z => console.debug("[MAP] zoom", z)}
+            onZoomChanged={z => AppLogger.info("MAP", `zoom ${z}`)}
           />
         </View>
         {state.matches("form") && (

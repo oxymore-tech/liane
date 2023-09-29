@@ -5,6 +5,7 @@ import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
 import { useAppMapViewController } from "@/components/map/AppMapView";
+import { AppLogger } from "@/api/logger";
 
 export const getDateParams = (date: Date) =>
   "offset=" +
@@ -35,7 +36,7 @@ export const LianeDisplayLayer = ({
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
     setSourceId("segments" + dateArg);
-    console.debug("[MAP]: tile source", dateArg);
+    AppLogger.debug("MAP", "tile source", dateArg);
   }, [dateArg]);
 
   const controller = useAppMapViewController();
@@ -60,7 +61,7 @@ export const LianeDisplayLayer = ({
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
               if (points.length === 1) {
                 const p = points[0];
-                console.debug("[MAP] selected point", p);
+                AppLogger.debug("MAP", "selected point", p);
 
                 //@ts-ignore
                 onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });

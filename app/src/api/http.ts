@@ -4,6 +4,7 @@ import { BadRequest, ForbiddenError, ResourceNotFoundError, UnauthorizedError, V
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { clearStorage, getAccessToken, getRefreshToken, getUserSession, processAuthResponse } from "@/api/storage";
 import { AuthResponse } from "@/api/index";
+import { AppLogger } from "@/api/logger";
 
 const domain = APP_ENV === "production" ? "liane.app" : "dev.liane.app";
 
@@ -130,7 +131,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   const formattedBody = formatBodyAsJsonIfNeeded(body);
   const formattedHeaders = await headers(body);
   if (__DEV__) {
-    console.debug(`[HTTP] Fetch API ${method} "${url}"`, formattedBody ?? "");
+    AppLogger.info("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
   }
   const response = await fetch(url, {
     headers: formattedHeaders,
@@ -156,7 +157,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
         throw new ForbiddenError();
       default:
         const message = await response.text();
-        console.warn(`[HTTP] Unexpected error on ${method} ${uri}`, response.status, message);
+        AppLogger.warn("HTTP", `Unexpected error on ${method} ${uri}`, response.status, message);
         throw new Error(message);
     }
   }
@@ -173,7 +174,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
     } else {
       return refreshTokenMutex.runExclusive(async () => {
         if (__DEV__) {
-          console.debug("[HTTP] Try refresh token...");
+          AppLogger.info("HTTP", "Try refresh token...");
         }
         // Call refresh token endpoint
         try {
@@ -185,9 +186,8 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
           // Retry
           return await retryAction();
         } catch (e) {
-          if (__DEV__) {
-            console.error("[HTTP] Error: could not refresh token: ", e);
-          }
+          AppLogger.error("HTTP", "Error: could not refresh token: ", e);
+
           // Logout if unauthorized
           if (e instanceof UnauthorizedError) {
             await clearStorage();

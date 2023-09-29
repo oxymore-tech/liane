@@ -21,6 +21,7 @@ import { displayInfo } from "@/components/base/InfoDisplayer";
 import { AppPressableOverlay } from "../base/AppPressable";
 import { AppIcon } from "../base/AppIcon";
 import { AppStyles } from "@/theme/styles";
+import { AppLogger } from "@/api/logger";
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -190,7 +191,7 @@ const AppMapView = forwardRef(
               });
             }
             setAnimated(true);
-            console.debug("[MAP] loading done");
+            AppLogger.debug("MAP", "loading done");
             if (onMapLoaded) {
               onMapLoaded();
             }

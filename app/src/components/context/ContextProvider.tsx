@@ -12,6 +12,7 @@ import Splashscreen from "../../../native-modules/splashscreen";
 import { SubscriptionLike } from "rxjs";
 import { HubState } from "@/api/service/interfaces/hub";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { AppLogger } from "@/api/logger";
 
 interface AppContextProps {
   position?: LatLng;
@@ -56,12 +57,11 @@ async function initContext(service: AppServices): Promise<{
       // Branch hub to notifications
       service.notification.initUnreadNotificationCount(service.realTimeHub.unreadNotificationCount);
     } catch (e) {
-      if (__DEV__) {
-        console.warn("[INIT] Could not start hub :", e);
-      }
+      AppLogger.warn("INIT", "Could not start hub :", e);
+
       if (e instanceof UnauthorizedError) {
       } else if (e instanceof NetworkUnavailable) {
-        console.warn("[INIT] Error : no network");
+        AppLogger.warn("INIT", "Error : no network");
         //user = cached value for an offline mode
         user = await service.auth.currentUser();
         online = false;
@@ -73,7 +73,7 @@ async function initContext(service: AppServices): Promise<{
     try {
       await initializePushNotification(user, service.auth);
     } catch (e) {
-      console.warn("[INIT] Could not init notifications :", e);
+      AppLogger.warn("INIT", "Could not init notifications :", e);
     }
   }
 
@@ -168,7 +168,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       const isJustReconnected = state.isInternetReachable === true && wasOffline && !!this.state.user;
       if (isJustReconnected && !reconnecting) {
         reconnecting = true;
-        console.debug("[INIT] Try to reload...");
+        AppLogger.debug("INIT", "Try to reload...");
         this.initContext()
           .then(() => queryClient.invalidateQueries())
           .finally(() => {
@@ -198,7 +198,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }
-    destroyContext(SERVICES).catch(err => console.debug("Error destroying context:", err));
+    destroyContext(SERVICES).catch(err => AppLogger.warn("INIT", "Error destroying context:", err));
   }
 
   componentDidCatch(error: any) {
@@ -208,14 +208,14 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         user: undefined
       }));
     } else if (error instanceof NetworkUnavailable) {
-      console.warn("[INIT] Error : no network");
+      AppLogger.warn("INIT", "Error : no network");
 
       this.setState(prev => ({
         ...prev,
         status: "offline"
       }));
     } else {
-      console.error("[INIT] Error :", error);
+      AppLogger.error("INIT", error);
     }
   }
 
@@ -225,20 +225,20 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       if (a) {
         await registerRumUser(a);
         user = await SERVICES.realTimeHub.start();
-        console.debug("[LOGIN]", JSON.stringify(user));
+        AppLogger.debug("LOGIN", user);
       }
       this.setState(prev => ({
         ...prev,
         user: user
       }));
     } catch (e) {
-      console.error("[INIT] Problem while setting auth user : ", e);
+      AppLogger.error("INIT", "Problem while setting auth user : ", e);
     }
   };
   logout = async () => {
     // do not call "logout" endpoint here as this could be used after account deletion, account switch, etc.
     await SERVICES.realTimeHub.stop();
-    console.debug("[LOGOUT] Disconnected.");
+    AppLogger.info("LOGOUT", "Disconnected.");
     await this.setAuthUser(undefined);
   };
   render() {

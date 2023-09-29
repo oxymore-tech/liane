@@ -26,15 +26,10 @@ export const PositionButton = ({ onPosition, locationEnabled = true, onPositionE
       onPress={async () => {
         try {
           const currentLocation = await services.location.currentLocation();
-          if (__DEV__) {
-            console.debug("[PositionButton]", currentLocation);
-          }
           setIsApplyingLocation(true);
           await onPosition(currentLocation);
           setIsApplyingLocation(false);
         } catch (e) {
-          console.error("[PositionButton] location error :", e);
-          // TODO show message to user
           if (onPositionError) {
             onPositionError(e);
           }

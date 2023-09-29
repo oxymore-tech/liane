@@ -12,6 +12,7 @@ import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/
 import { LianeServiceClient } from "@/api/service/liane";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { getCurrentUser } from "@/api/storage";
+import { AppLogger } from "@/api/logger";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>> {
@@ -59,7 +60,7 @@ const AndroidReminderActions: AndroidAction[] = [
 ];
 
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
-  console.log("[NOTIF] received push", JSON.stringify(message));
+  AppLogger.debug("NOTIFICATIONS", "Received push", message);
   if (!message.notification) {
     return;
   }
@@ -82,7 +83,7 @@ const pressActionMap = {
 } as const;
 const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
-  console.debug("[NOTIFEE]", JSON.stringify(detail));
+  AppLogger.debug("NOTIFICATIONS", "notifee", detail);
 
   if (type === EventType.PRESS && notification?.data?.uri) {
     await Linking.openURL(<string>notification.data.uri);
@@ -94,7 +95,7 @@ const openNotification = async ({ type, detail }: Event) => {
       await Linking.openURL(<string>notification.data.uri);
     }
   } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
-    console.warn("[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
+    AppLogger.warn("NOTIFICATIONS", "[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
   }
 };
 
@@ -173,7 +174,7 @@ export async function initializePushNotification(user: FullUser, authService: Au
   try {
     const pushToken = await PushNotifications?.getToken();
     if (pushToken && pushToken !== user.pushToken) {
-      console.debug("[NOTIF]: New push token", pushToken);
+      AppLogger.debug("NOTIFICATIONS", "New push token", pushToken);
       // Update server's token
       await authService.updatePushToken(pushToken);
     }
@@ -194,7 +195,7 @@ export const PushNotifications = (() => {
       return messaging();
     }
   } catch (e) {
-    console.error("[NOTIF] Could not init push notifications", e);
+    AppLogger.error("NOTIFICATIONS", "Could not init push notifications", e);
   }
   return undefined;
 })();
@@ -202,7 +203,7 @@ const openFirebaseNotification = (m: FirebaseMessagingTypes.RemoteMessage | null
   if (!m) {
     return;
   }
-  console.debug("[NOTIF] opened via", JSON.stringify(m));
+  AppLogger.info("NOTIFICATIONS", "opened via", m);
   if (m?.data?.uri) {
     Linking.openURL(<string>m.data.uri);
   }
@@ -213,12 +214,12 @@ PushNotifications?.onNotificationOpenedApp(openFirebaseNotification);
 export const checkInitialNotification = async (): Promise<string | undefined | null> => {
   const firebaseNotification = await PushNotifications?.getInitialNotification();
   if (firebaseNotification) {
-    console.debug("[NOTIF] opened via", JSON.stringify(firebaseNotification));
+    AppLogger.info("NOTIFICATIONS", "opened via", firebaseNotification);
     return firebaseNotification.data?.uri;
   }
   const n = await notifee.getInitialNotification();
   if (n) {
-    console.debug("[NOTIF] opened via", JSON.stringify(n));
+    AppLogger.info("NOTIFICATIONS", "opened via", n);
 
     if (n.notification.data?.uri) {
       if (n.pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
@@ -232,7 +233,7 @@ export const checkInitialNotification = async (): Promise<string | undefined | n
   }
   const url = await Linking.getInitialURL();
   if (url) {
-    console.debug("[DEEP LINK] opened with", url);
+    AppLogger.debug("DEEP_LINKING", "opened with", url);
   }
   return url;
 };

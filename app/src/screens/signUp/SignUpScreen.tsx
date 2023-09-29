@@ -16,6 +16,7 @@ import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_VERSION } from "@env";
 import { AppStyles } from "@/theme/styles";
+import { AppLogger } from "@/api/logger";
 
 const t = scopedTranslate("SignUp");
 
@@ -42,7 +43,7 @@ const SignUpPage = () => {
       await services.auth.sendSms(phone);
       machine.send("SET_PHONE", { data: { phone: phone } });
     } catch (e) {
-      console.error("Sign up error ", e);
+      AppLogger.error("LOGIN", "Sign up error ", e);
       setError("Impossible d'effectuer la demande");
     }
   };
@@ -50,7 +51,7 @@ const SignUpPage = () => {
     // try {
     const pushToken = await getPushToken();
     const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
-    console.debug("[LOGIN] as ", authUser, machine.send);
+    AppLogger.info("LOGIN", "as ", authUser, machine.send);
     machine.send("LOGIN", { data: { authUser } });
     /*  } catch (e: any) {
       if (e instanceof UnauthorizedError) {
@@ -92,7 +93,6 @@ const SignUpScreen = () => {
   const machine = useInterpret(m);
   const [state] = useActor(machine);
   machine.onDone((d: DoneEvent) => {
-    console.log(JSON.stringify(d));
     login({ ...state.context.authUser! });
   });
 

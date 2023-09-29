@@ -20,6 +20,7 @@ import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { cancelReminder, createReminder } from "@/api/service/notification";
 import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
+import { AppLogger } from "@/api/logger";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
@@ -124,7 +125,7 @@ export class LianeServiceClient implements LianeService {
       timestamp: new Date().getTime(),
       delay
     };
-    await postAs(`/event/member_ping`, { body: ping }).catch(e => console.warn(e));
+    await postAs(`/event/member_ping`, { body: ping }).catch(e => AppLogger.warn("GEOPINGS", e));
   }
 
   async pause(id: string): Promise<void> {

@@ -229,7 +229,7 @@ export const HomeMapMachine = (services: {
                 cond: (context, event: UpdateEvent) => {
                   const newFrom = Object.hasOwn(event.data, "from") ? event.data.from : context.filter.from;
                   const newTo = Object.hasOwn(event.data, "to") ? event.data.to : context.filter.to;
-                  console.debug("[StateMachine] from => to", newFrom?.id, newTo?.id);
+
                   return filterHasFullTrip({ from: newFrom, to: newTo });
                 }
               },
