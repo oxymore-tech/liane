@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse, Ref, UnionUtils } from "@/api";
+import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse, Ref } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
-import { Event } from "@/api/notification";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -28,16 +27,14 @@ const MyTripsScreen = () => {
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
-  useEffect(() => {
-    const s = services.realTimeHub.subscribeToNotifications(async n => {
-      if (UnionUtils.isInstanceOf<Event>(n, "Event")) {
-        await queryClient.invalidateQueries(JoinRequestsQueryKey);
-      }
-    });
-    return () => s.unsubscribe();
-  }, []);
-
   useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
+    queryClient.setQueryData<PaginatedResponse<JoinLianeRequestDetailed>>(JoinRequestsQueryKey, old => {
+      if (!old) {
+        return { pageSize: 0, data: [] };
+      }
+      const updatedData = old.data.filter(joinRequest => joinRequest.targetLiane.id !== liane.id);
+      return { pageSize: updatedData.length, data: updatedData };
+    });
     queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
       if (!old) {
         return { next: undefined, pageSize: 1, data: [liane] };
@@ -52,7 +49,7 @@ const MyTripsScreen = () => {
           return { ...old, pageSize: old.pageSize + 1 };
         }
       } else if (found >= 0) {
-        return { ...old, pageSize: old.pageSize - 1, data: old.data.splice(found, 1) };
+        return { ...old, pageSize: old.pageSize - 1, data: old.data.filter(l => l.id !== liane.id) };
       }
       return old;
     });
