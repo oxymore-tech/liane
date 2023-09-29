@@ -23,7 +23,7 @@ public sealed class LianeStatusUpdate : CronJobService
   private readonly ILianeUpdateObserver lianeUpdateObserver;
 
   private const int StartedDelayInMinutes = 5;
-  private const int FinishedDelayInMinutes = 60;
+  private const int FinishedDelayInMinutes = 5;
 
   public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, INotificationService notificationService,
     IPostgisService postgisService, ILianeService lianeService, ILianeUpdateObserver lianeUpdateObserver) : base(logger, "* * * * *",
