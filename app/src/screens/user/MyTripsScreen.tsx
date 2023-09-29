@@ -104,7 +104,7 @@ const MyTripsScreen = () => {
   }
 
   return (
-    <Column style={{ backgroundColor: AppColors.lightGrayBackground }}>
+    <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
       <Column style={styles.headerContainer} spacing={16}>
         <Row>
           <AppButton
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   container: {
     marginHorizontal: 16,
-    height: "100%"
+    flex: 1
   }
 });
 
