@@ -30,11 +30,7 @@ const MyTripsScreen = () => {
 
   useEffect(() => {
     const s = services.realTimeHub.subscribeToNotifications(async n => {
-      // TODO make sure "type" is serialized via Hub
-
-      //  @ts-ignore
-      if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
-        //    await queryClient.invalidateQueries(LianeQueryKey);
+      if (UnionUtils.isInstanceOf<Event>(n, "Event")) {
         await queryClient.invalidateQueries(JoinRequestsQueryKey);
       }
     });
