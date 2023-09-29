@@ -59,7 +59,10 @@ export class LianeServiceClient implements LianeService {
   ) {
     let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
     if (cursor) {
-      paramString += `&cursor=${cursor}&limit=${pageSize}`;
+      paramString += `&cursor=${cursor}`;
+    }
+    if (pageSize) {
+      paramString += `&limit=${pageSize}`;
     }
     if (asc !== undefined) {
       paramString += `&asc=${asc}`;
