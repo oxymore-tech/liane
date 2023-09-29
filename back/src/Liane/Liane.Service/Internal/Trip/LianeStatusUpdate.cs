@@ -40,13 +40,13 @@ public sealed class LianeStatusUpdate : CronJobService
 
   public async Task Update(DateTime from)
   {
-    await UpdateCanceledLianes(from);
-    await UpdateActiveLianes(from);
-    await UpdateFinishedLianes(from);
-    await UpdateActiveLianesUserState(from);
+    await CancelLianes(from);
+    await StartLianes(from);
+    await FinishLianes(from);
+    await RealtimeUpdate(from);
   }
 
-  private async Task UpdateCanceledLianes(DateTime from)
+  private async Task CancelLianes(DateTime from)
   {
     var limit = from.AddMinutes(StartedDelayInMinutes);
     var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive))
@@ -65,7 +65,7 @@ public sealed class LianeStatusUpdate : CronJobService
     await postgisService.Clear(canceled.ToImmutableList());
   }
 
-  private async Task UpdateFinishedLianes(DateTime from)
+  private async Task FinishLianes(DateTime from)
   {
     var limit = from.AddMinutes(- FinishedDelayInMinutes);
     var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted || l.State == LianeState.Started)
@@ -95,7 +95,7 @@ public sealed class LianeStatusUpdate : CronJobService
     await postgisService.Clear(finishedLianes.Select(l => l.Id).ToImmutableList());
   }
 
-  private async Task UpdateActiveLianes(DateTime from)
+  private async Task StartLianes(DateTime from)
   {
     var limit = from.AddMinutes(StartedDelayInMinutes);
     var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted)
@@ -123,7 +123,7 @@ public sealed class LianeStatusUpdate : CronJobService
     await postgisService.Clear(activeLianes.Select(l => l.Id).ToImmutableList());
   }
 
-  private async Task UpdateActiveLianesUserState(DateTime from)
+  private async Task RealtimeUpdate(DateTime from)
   {
     var limit = from.AddMinutes(StartedDelayInMinutes);
     var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started)
