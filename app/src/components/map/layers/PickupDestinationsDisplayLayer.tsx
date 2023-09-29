@@ -82,21 +82,21 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
         filter={["all", ["!=", ["get", "id"], point], ["!", ["has", "point_count"]]]}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
-          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textFont: ["Source Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: ["case", ["==", ["get", "point_type"], "suggestion"], AppColors.primaryColor, "#000"],
-          textHaloColor: "#fff",
-          textHaloWidth: 1.2,
-          textField: ["step", ["zoom"], "", 12, ["get", "label"]],
+          textColor: AppColors.black,
+          textHaloColor: AppColors.white,
+          textHaloWidth: 1.5,
+          textField: ["step", ["zoom"], "", 8, ["get", "label"]],
           textAllowOverlap: false,
           textAnchor: "bottom",
-          textOffset: [0, -3.4],
+          textOffset: [0, -3],
           textMaxWidth: 5.4,
           visibility: "visible",
           textOptional: true,
           iconImage: ["case", ["==", ["get", "point_type"], "suggestion"], "deposit", "rp"],
           iconAnchor: "bottom",
-          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+          iconSize: ["step", ["zoom"], 0.25, 8, 0.3]
         }}
       />
 

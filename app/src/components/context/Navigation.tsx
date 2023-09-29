@@ -13,7 +13,6 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { Row } from "@/components/base/AppLayout";
 import { WithBadge } from "@/components/base/WithBadge";
-import { UserPicture } from "@/components/UserPicture";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";

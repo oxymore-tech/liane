@@ -91,7 +91,7 @@ export const LianeDisplayLayer = ({
           lineCap: "round",
           lineColor: trafficAsColor
             ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.primaryColor, 5, "#8c2372"]
-            : AppColors.primaryColor,
+            : AppColors.darkBlue,
           lineWidth: trafficAsWidth ? ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5] : 3
         }}
       />
@@ -104,27 +104,19 @@ export const LianeDisplayLayer = ({
           symbolSortKey: ["case", ["==", ["get", "point_type"], "pickup"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: [
-            "case",
-            ["==", ["get", "point_type"], "pickup"],
-            AppColors.primaryColor,
-            ["==", ["get", "point_type"], "suggestion"],
-            AppColors.primaryColor,
-            // "#9f4a2f",
-            "#000"
-          ],
-          textHaloColor: "#fff",
-          textHaloWidth: 1.2,
-          textField: ["step", ["zoom"], "", 12, ["get", "label"]],
+          textColor: AppColors.black,
+          textHaloColor: AppColors.white,
+          textHaloWidth: 1.5,
+          textField: ["step", ["zoom"], "", 8, ["get", "label"]],
           textAllowOverlap: false,
           textAnchor: "bottom",
-          textOffset: [0, -3.4],
+          textOffset: [0, -3],
           textMaxWidth: 5.4,
           textOptional: true,
           visibility: "visible",
           iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", ["==", ["get", "point_type"], "suggestion"], "pickup", "rp"],
           iconAnchor: "bottom",
-          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+          iconSize: ["step", ["zoom"], 0.25, 8, 0.3]
         }}
       />
     </MapLibreGL.VectorSource>
