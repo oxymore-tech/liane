@@ -4,7 +4,6 @@ using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Hub;
 
