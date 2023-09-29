@@ -108,7 +108,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
 
-  const [geolocalisationEnabled, setGeolocalisationEnabled] = useState<boolean>(false);
+  //const [geolocalisationEnabled, setGeolocalisationEnabled] = useState<boolean>(false);
 
   return (
     <Pressable
@@ -120,7 +120,8 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
             <AppText style={styles.driverText}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
           </Row>
-          <Row spacing={8} style={{ flex: 3 }}>
+          {!["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
+          {/* <Row spacing={8} style={{ flex: 3 }}>
             <AppText style={[styles.geolocText, { color: geolocalisationEnabled ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
               Géolocalisation
             </AppText>
@@ -132,7 +133,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
               value={geolocalisationEnabled}
               onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}
             />
-          </Row>
+          </Row>*/}
         </Row>
 
         <View style={styles.lianeContainer}>
@@ -150,7 +151,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             </Pressable>
           )}
           {!["Finished", "Archived", "Canceled"].includes(item.state) ? (
-            <LianeStatusView liane={item} />
+            <View />
           ) : (
             <TouchableOpacity onPress={() => relaunchLiane(item, driver)}>
               <Row style={styles.validationContainer} spacing={8}>

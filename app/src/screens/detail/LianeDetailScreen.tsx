@@ -30,6 +30,7 @@ import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
+import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -167,7 +168,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
         {!!match?.liane.conversation && match?.liane.state !== "Archived" && match?.liane.state !== "Canceled" && (
           <Pressable
             onPress={() => navigation.navigate("Chat", { conversationId: match?.liane.conversation, liane: match?.liane })}
-            style={[styles.chatButton, styles.mapOverlay]}>
+            style={[styles.chatButton, styles.mapOverlay, AppStyles.shadow]}>
             <AppIcon name={"message-circle-outline"} size={36} color={AppColors.secondaryColor} />
             {unread?.includes(match?.liane.conversation) && <View style={styles.chatBadge} />}
           </Pressable>
@@ -210,19 +211,7 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
             <AppText style={styles.driverText}>{driver.id === liane.liane?.id ? "Moi" : driver.pseudo}</AppText>
           </Row>
 
-          <Row spacing={8}>
-            <AppText style={[styles.geolocText, { color: geolocalisationEnabled ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
-              Géolocalisation
-            </AppText>
-            <Switch
-              style={styles.geolocSwitch}
-              trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
-              thumbColor={geolocalisationEnabled ? AppColors.primaryColor : AppColors.grayBackground}
-              ios_backgroundColor={AppColors.grayBackground}
-              value={geolocalisationEnabled}
-              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}
-            />
-          </Row>
+          <GeolocationSwitch liane={liane} />
         </Row>
         <View style={styles.lianeContainer}>
           <LianeView liane={liane.liane} />
@@ -339,13 +328,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     alignSelf: "center"
   },
-  geolocText: {
-    marginBottom: -2,
-    alignSelf: "center"
-  },
-  geolocSwitch: {
-    marginBottom: -4
-  },
+
   statusContainer: {
     paddingHorizontal: 4,
     paddingVertical: 2,
