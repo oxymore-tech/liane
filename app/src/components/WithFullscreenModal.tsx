@@ -5,10 +5,12 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const WithFullscreenModal = (WrappedComponent: React.ComponentType, title: string) => (props: any) => {
+  const { top, bottom } = useSafeAreaInsets();
   return (
-    <View style={[styles.page, { backgroundColor: AppColors.darkBlue }]}>
+    <View style={[styles.page, { backgroundColor: AppColors.darkBlue, paddingTop: Math.max(top, 16), paddingBottom: Math.max(16, bottom) }]}>
       {Platform.OS === "android" && <AppStatusBar style="light-content" />}
       <Row style={{ paddingVertical: 4 }}>
         <Pressable onPress={props.navigation.goBack}>

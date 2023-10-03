@@ -14,13 +14,13 @@ import { ActivityIndicator, Alert, Linking, Platform, View } from "react-native"
 import { AppButton } from "@/components/base/AppButton";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
+import { checkLocationPingsPermissions, hasLocationPermission, sendLocationPings } from "@/api/service/location";
 import { createReminder } from "@/api/service/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
 import { getTripFromLiane } from "@/components/trip/trip";
 import BackgroundGeolocationService from "native-modules/geolocation";
-import { PERMISSIONS, request } from "react-native-permissions";
+import { check, PERMISSIONS, request } from "react-native-permissions";
 import { useAppState } from "@react-native-community/hooks";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
@@ -60,7 +60,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
 
       useEffect(() => {
         if (appState === "active") {
-          checkLocationPingsPermissions().then(setHasPingsPermissions);
+          hasLocationPermission().then(() => checkLocationPingsPermissions().then(setHasPingsPermissions));
         } else {
           setHasPingsPermissions(undefined);
         }
@@ -210,6 +210,11 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
     return false;
   };
 
+  const [permissionStatus, setPermissionStatus] = useState<string | undefined>();
+  useEffect(() => {
+    check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(setPermissionStatus);
+  });
+
   return (
     <Column style={{ alignItems: "center" }} spacing={16}>
       <AppText numberOfLines={4} style={{ color: AppColors.white, fontSize: 15 }}>
@@ -259,6 +264,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         color={AppColors.primaryColor}
         onPress={() => requestBackgroundGeolocation().then(props.onGranted)}
       />
+      <AppText style={{ color: AppColors.white, fontSize: 14 }}>{permissionStatus}</AppText>
     </Column>
   );
 };

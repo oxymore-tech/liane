@@ -22,6 +22,7 @@ import { AppPressableOverlay } from "../base/AppPressable";
 import { AppIcon } from "../base/AppIcon";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -77,6 +78,7 @@ const AppMapView = forwardRef(
     //const [showActions, setShowActions] = useState(showGeolocation);
 
     const wd = useWindowDimensions();
+    const { bottom } = useSafeAreaInsets();
     const scale = Platform.OS === "android" ? wd.scale : 1;
     const regionSubject = useSubject<RegionPayload>();
 
@@ -227,8 +229,8 @@ const AppMapView = forwardRef(
         {/*<View style={styles.blackOverlay} pointerEvents="none" />*/}
 
         {showGeolocation && (
-          <Column>
-            <View style={[styles.communityOverlay, AppStyles.shadow]}>
+          <Column style={{ position: "absolute", bottom: bottom + 72, right: 10 }} spacing={8}>
+            <View style={[styles.actionOverlay, AppStyles.shadow]}>
               <AppPressableOverlay style={[AppStyles.center, { borderRadius: 20, height: 36 }]} borderRadius={20}>
                 <AppIcon
                   name={"people-outline"}
@@ -238,7 +240,7 @@ const AppMapView = forwardRef(
                 />
               </AppPressableOverlay>
             </View>
-            <View style={[styles.mapOverlay, AppStyles.shadow]}>
+            <View style={[styles.actionOverlay, AppStyles.shadow]}>
               <PositionButton
                 //locationEnabled={showUserLocation}
                 onPosition={async currentLocation => {
@@ -327,36 +329,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0
   },
-  mapOverlay: {
+  actionOverlay: {
     backgroundColor: AppColors.white,
-    margin: 16,
-
-    position: "absolute",
-    right: -6,
-    bottom: 54,
-
     alignSelf: "center",
-    padding: 2,
+    justifyContent: "center",
     borderRadius: 20,
-
     width: 40,
     height: 40
   },
-  communityOverlay: {
-    backgroundColor: AppColors.white,
-    margin: 16,
 
-    position: "absolute",
-    right: -6,
-    bottom: 104,
-
-    alignSelf: "center",
-    padding: 2,
-    borderRadius: 20,
-
-    width: 40,
-    height: 40
-  },
   footerContainer: {
     position: "absolute",
     bottom: 80 - 26,

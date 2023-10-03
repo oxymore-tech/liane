@@ -15,6 +15,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: LianeMatch }) => {
   const setGeolocalisationEnabled = () => {
     if (geoloc === undefined) {
       //TODO
+      navigation.navigate("ShareTripLocationScreen", { liane: match.liane });
     } else if (!geoloc.isActive) {
       navigation.navigate("ShareTripLocationScreen", { liane: match.liane });
     } else {

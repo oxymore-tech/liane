@@ -15,4 +15,5 @@ declare module "@env" {
   export const TILES_URL: string | null;
   export const MAPTILER_KEY: string;
   export const DEBUG_VIEWS: boolean | null;
+  export const TEST_ACCOUNT: string;
 }

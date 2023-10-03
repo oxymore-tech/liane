@@ -14,9 +14,10 @@ import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateM
 import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { APP_VERSION } from "@env";
+import { APP_VERSION, TEST_ACCOUNT } from "@env";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
+import { PasswordInput } from "@/screens/signUp/PasswordInput";
 
 const t = scopedTranslate("SignUp");
 
@@ -75,6 +76,8 @@ const SignUpPage = () => {
         </AppText>
         {state.matches("phone") ? (
           <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={sendCode} />
+        ) : state.context.phone === TEST_ACCOUNT ? (
+          <PasswordInput code={value} onChange={setValue} onValidate={submitCode} />
         ) : (
           <CodeInput code={value} onChange={setValue} onValidate={submitCode} retry={sendCode} />
         )}

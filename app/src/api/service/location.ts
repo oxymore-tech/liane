@@ -203,7 +203,6 @@ const hasPermissionIOS = async (): Promise<boolean> => {
 
   if (status === "denied") {
     Alert.alert("Localisation désactivée", `Liane ne pourra pas accéder à votre position. Certaines fonctionnalités risquent d'être limitées'.`);
-    return await hasPermissionIOS();
   }
 
   if (status === "disabled") {

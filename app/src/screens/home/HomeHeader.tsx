@@ -106,7 +106,6 @@ export const MapHeader = ({
 
   const itineraryMarginTop = 0; //24;
 
-  console.debug("HEADER", to, from);
   return (
     <View style={style}>
       {!!to && !!from && <FloatingBackButton onPress={() => updateTrip({ from: undefined })} />}
