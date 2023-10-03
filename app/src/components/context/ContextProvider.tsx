@@ -91,9 +91,9 @@ interface ContextProviderProps {
 interface ContextProviderState {
   appLoaded: boolean;
   user?: FullUser;
-  status: HubState;
+  status: "online" | "offline";
   appState: AppStateStatus;
-  isJustReconnected: boolean;
+  hubState: HubState;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
@@ -108,10 +108,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     super(props);
     this.state = {
       appLoaded: false,
-      isJustReconnected: false,
       user: undefined,
       status: "offline",
-      appState: "active"
+      appState: "active",
+      hubState: "offline"
     };
   }
 
@@ -122,11 +122,13 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   private async initContext() {
     const info = await initContext(SERVICES);
+    const status = info.online ? "online" : "offline";
     this.setState(prev => ({
       ...prev,
       user: info.user,
       appLoaded: true,
-      status: info.online ? "online" : "offline"
+      status,
+      hubState: status
     }));
     if (info.online && info.user) {
       this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
@@ -158,7 +160,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     this.unsubscribeToHubState = SERVICES.realTimeHub.hubState.subscribe(status => {
       this.setState(prev => ({
         ...prev,
-        status
+        hubState: status
       }));
     });
 
@@ -267,7 +269,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
             logout,
             login,
             user,
-            status,
+            status: this.state.hubState,
             appState,
             services: SERVICES
           }}>
