@@ -166,10 +166,10 @@ BEGIN
                           from rallying_point
                           where z > 7
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
-       pickup_points as (select clipped_points.*,
+       deposit_points as (select clipped_points.*,
                                 string_agg(clipped_links.liane_id, ',') as liane_ids
                          from clipped_links
-                                inner join clipped_points on clipped_links.from_id = clipped_points.id
+                                inner join clipped_points on clipped_links.to_id = clipped_points.id
                          group by id, label, location, type, address, zip_code, city, place_count),
        suggestion_points as (select clipped_points.*, string_agg(clipped_links.liane_id, ',') as liane_ids
                              from clipped_links
@@ -199,7 +199,7 @@ BEGIN
                                zip_code,
                                city,
                                place_count
-                        from pickup_points
+                        from deposit_points
                         except
                         select id,
                                label,
@@ -219,10 +219,10 @@ BEGIN
                              zip_code,
                              city,
                              place_count,
-                             'pickup'  as point_type,
+                             'deposit'  as point_type,
                              liane_ids as pickups,
                              null      as suggestions
-                      from pickup_points
+                      from deposit_points
                       union
                       select id,
                              label,
