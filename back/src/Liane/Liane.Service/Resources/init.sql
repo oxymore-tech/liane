@@ -173,7 +173,7 @@ BEGIN
                          group by id, label, location, type, address, zip_code, city, place_count),
        suggestion_points as (select clipped_points.*, string_agg(clipped_links.liane_id, ',') as liane_ids
                              from clipped_links
-                                    inner join (select * from clipped_points except select id, label, location, type, address, zip_code, city, place_count from pickup_points) as clipped_points on
+                                    inner join (select * from clipped_points except select id, label, location, type, address, zip_code, city, place_count from deposit_points) as clipped_points on
                                    clipped_links.from_id != clipped_points.id and
                                    clipped_links.to_id != clipped_points.id and
                                    st_dwithin(clipped_points.location::geography, clipped_links.geom::geography,
