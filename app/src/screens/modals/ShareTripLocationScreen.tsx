@@ -39,6 +39,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
         BackgroundGeolocationService.enableLocation()
           .then(async () => {
             try {
+              await services.liane.setTracked(liane.id!, true);
               const trip = getTripFromLiane(liane, user!.id!);
               await sendLocationPings(liane.id!, trip.wayPoints);
               navigation.replace("LianeDetail", { liane });
@@ -60,9 +61,9 @@ export const ShareTripLocationScreen = WithFullscreenModal(
 
       useEffect(() => {
         if (appState === "active") {
-          hasLocationPermission().then(baseLocationGranted =>
+          hasLocationPermission().then(() =>
             checkLocationPingsPermissions().then(pingsLocationGranted => {
-              setHasPingsPermissions(pingsLocationGranted || (pingsLocationGranted === undefined && baseLocationGranted));
+              setHasPingsPermissions(pingsLocationGranted);
             })
           );
         } else {
@@ -268,6 +269,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         title={"Autoriser la géolocalisation"}
         color={AppColors.primaryColor}
         onPress={() => requestBackgroundGeolocation().then(props.onGranted)}
+        onLongPress={() => props.onGranted(true)}
       />
       <AppText style={{ color: AppColors.white, fontSize: 10 }}>{permissionStatus}</AppText>
     </Column>

@@ -11,8 +11,9 @@ import { MemberPing } from "@/api/event";
 import { sleep } from "@/util/datetime";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { distance } from "@/util/geometry";
-import { check, PERMISSIONS } from "react-native-permissions";
+import { check, PERMISSIONS, request } from "react-native-permissions";
 import { AppLogger } from "@/api/logger";
+import { Subject } from "rxjs";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -252,15 +253,19 @@ export const hasLocationPermission = async () => {
   return false;
 };
 
-export async function checkLocationPingsPermissions(): Promise<boolean | undefined> {
+export async function checkLocationPingsPermissions(): Promise<boolean> {
   if (Platform.OS === "ios") {
-    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
+    let access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
+
+    //access = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
     AppLogger.debug("GEOPINGS", access);
-    return access === "granted" ? true : access === "unavailable" ? undefined : false;
+    return access === "granted";
+    //return true;
+    // return access === "granted";
   } else if (Platform.OS === "android") {
     const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
     AppLogger.debug("GEOPINGS", access);
-    return access === "granted" ? true : access === "unavailable" ? undefined : false;
+    return access === "granted";
   }
   return true;
 }
@@ -268,6 +273,7 @@ export async function checkLocationPingsPermissions(): Promise<boolean | undefin
 export async function cancelSendLocationPings() {
   if (Platform.OS === "ios") {
     await BackgroundService.stop();
+    running.next(false);
   } else {
     await BackgroundGeolocationService.stop();
   }
@@ -307,7 +313,10 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
 
 export const isLocationServiceRunning = () =>
   Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
-export const watchLocationServiceState = (callback: (running: boolean) => void) => BackgroundGeolocationService.watch(callback); //TODO IOS
+
+const running = new Subject<boolean>();
+export const watchLocationServiceState = (callback: (running: boolean) => void) =>
+  Platform.OS === "ios" ? running.subscribe(callback) : BackgroundGeolocationService.watch(callback); //TODO IOS
 
 const nearWayPointRadius = 1000;
 const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
@@ -315,7 +324,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
   const timeout = tripDuration + 3600 * 1000;
   let preciseTrackingMode = true;
   let watchId: number = 0;
-
+  running.next(true);
   AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
   await new Promise<void>(async resolve => {
     const getDistanceFilter = () => (preciseTrackingMode ? 10 : nearWayPointRadius / 2);

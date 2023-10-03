@@ -24,7 +24,7 @@ import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
+//const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 const rp_deposit_cluster_icon = require("../../../assets/icons/rp_pink_blank.png");
@@ -216,7 +216,7 @@ const AppMapView = forwardRef(
           />
           <Images
             images={{
-              pickup: rp_pickup_icon,
+              //  pickup: rp_pickup_icon,
               rp: rp_icon,
               //    suggestion: rp_suggestion_icon,
               deposit: rp_deposit_icon,

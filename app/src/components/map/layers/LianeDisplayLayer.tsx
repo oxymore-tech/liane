@@ -101,7 +101,7 @@ export const LianeDisplayLayer = ({
         sourceLayerID={"rallying_point_display"}
         minZoomLevel={7}
         style={{
-          symbolSortKey: ["case", ["==", ["get", "point_type"], "pickup"], 0, 1],
+          symbolSortKey: ["case", ["==", ["get", "point_type"], "deposit"], 0, 1],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
           textColor: AppColors.black,
@@ -114,7 +114,7 @@ export const LianeDisplayLayer = ({
           textMaxWidth: 5.4,
           textOptional: true,
           visibility: "visible",
-          iconImage: ["case", ["==", ["get", "point_type"], "pickup"], "pickup", ["==", ["get", "point_type"], "suggestion"], "pickup", "rp"],
+          iconImage: ["case", ["==", ["get", "point_type"], "deposit"], "deposit", ["==", ["get", "point_type"], "suggestion"], "deposit", "rp"],
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.25, 8, 0.3]
         }}

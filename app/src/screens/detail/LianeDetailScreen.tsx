@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Switch, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -200,8 +200,6 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
-  const [geolocalisationEnabled, setGeolocalisationEnabled] = useState<boolean>(false);
-
   return (
     <Column style={styles.bottomContainer}>
       <View>
@@ -211,7 +209,7 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
             <AppText style={styles.driverText}>{driver.id === liane.liane?.id ? "Moi" : driver.pseudo}</AppText>
           </Row>
 
-          <GeolocationSwitch liane={liane} />
+          {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <GeolocationSwitch liane={liane.liane} />}
         </Row>
         <View style={styles.lianeContainer}>
           <LianeView liane={liane.liane} />

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Pressable,
@@ -8,7 +8,6 @@ import {
   SectionListData,
   SectionListRenderItemInfo,
   StyleSheet,
-  Switch,
   TouchableOpacity,
   View
 } from "react-native";
@@ -32,6 +31,7 @@ import { useObservable } from "@/util/hooks/subscription";
 import { capitalize } from "@/util/strings";
 import { getTripFromJoinRequest, getTripFromLiane } from "@/components/trip/trip";
 import { AppStyles } from "@/theme/styles";
+import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -151,7 +151,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
             </Pressable>
           )}
           {!["Finished", "Archived", "Canceled"].includes(item.state) ? (
-            <View />
+            <GeolocationSwitch liane={item} />
           ) : (
             <TouchableOpacity onPress={() => relaunchLiane(item, driver)}>
               <Row style={styles.validationContainer} spacing={8}>

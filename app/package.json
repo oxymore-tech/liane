@@ -18,7 +18,7 @@
   "dependencies": {
     "@datadog/mobile-react-native": "^1.8.2",
     "@datadog/mobile-react-navigation": "^1.8.2",
-    "@maplibre/maplibre-react-native": "^9.0.1",
+    "@maplibre/maplibre-react-native": "^9.1.0",
     "@microsoft/signalr": "^7.0.2",
     "@notifee/react-native": "^7.4.0",
     "@react-native-async-storage/async-storage": "^1.17.11",

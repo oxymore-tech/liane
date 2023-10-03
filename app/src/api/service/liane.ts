@@ -44,8 +44,23 @@ export interface LianeService {
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
   deleteRecurrence(id: string): Promise<void>;
+  setTracked(id: string, track: boolean): Promise<void>;
+  getTracked(): Promise<string[]>;
 }
 export class LianeServiceClient implements LianeService {
+  async setTracked(id: string, track: boolean): Promise<void> {
+    const trackedLianes = new Set(await retrieveAsync<string[]>("tracked", []));
+    if (track) {
+      trackedLianes.add(id);
+    } else {
+      trackedLianes.delete(id);
+    }
+    await storeAsync("tracked", [...trackedLianes]);
+  }
+
+  async getTracked(): Promise<string[]> {
+    return (await retrieveAsync<string[]>("tracked", []))!;
+  }
   // GET
   async get(id: string): Promise<Liane> {
     return await get<Liane>(`/liane/${id}`);
