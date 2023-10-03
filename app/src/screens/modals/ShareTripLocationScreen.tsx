@@ -60,7 +60,11 @@ export const ShareTripLocationScreen = WithFullscreenModal(
 
       useEffect(() => {
         if (appState === "active") {
-          hasLocationPermission().then(() => checkLocationPingsPermissions().then(setHasPingsPermissions));
+          hasLocationPermission().then(baseLocationGranted =>
+            checkLocationPingsPermissions().then(pingsLocationGranted => {
+              setHasPingsPermissions(pingsLocationGranted || (pingsLocationGranted === undefined && baseLocationGranted));
+            })
+          );
         } else {
           setHasPingsPermissions(undefined);
         }
@@ -210,6 +214,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
     return false;
   };
 
+  // TODO(REMOVE)
   const [permissionStatus, setPermissionStatus] = useState<string | undefined>();
   useEffect(() => {
     check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(setPermissionStatus);
@@ -264,7 +269,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         color={AppColors.primaryColor}
         onPress={() => requestBackgroundGeolocation().then(props.onGranted)}
       />
-      <AppText style={{ color: AppColors.white, fontSize: 14 }}>{permissionStatus}</AppText>
+      <AppText style={{ color: AppColors.white, fontSize: 10 }}>{permissionStatus}</AppText>
     </Column>
   );
 };

@@ -202,7 +202,14 @@ const hasPermissionIOS = async (): Promise<boolean> => {
   }
 
   if (status === "denied") {
-    Alert.alert("Localisation désactivée", `Liane ne pourra pas accéder à votre position. Certaines fonctionnalités risquent d'être limitées'.`);
+    Alert.alert(
+      "Localisation désactivée",
+      `L'accès à votre position est désactivé dans les paramètres. Certaines fonctionnalités risquent d'être limitées'.`,
+      [
+        { text: "Paramètres", onPress: openSetting },
+        { text: "Ignorer", onPress: () => {} }
+      ]
+    );
   }
 
   if (status === "disabled") {
@@ -245,15 +252,15 @@ export const hasLocationPermission = async () => {
   return false;
 };
 
-export async function checkLocationPingsPermissions(): Promise<boolean> {
+export async function checkLocationPingsPermissions(): Promise<boolean | undefined> {
   if (Platform.OS === "ios") {
     const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
     AppLogger.debug("GEOPINGS", access);
-    return access === "granted";
+    return access === "granted" ? true : access === "unavailable" ? undefined : false;
   } else if (Platform.OS === "android") {
     const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
     AppLogger.debug("GEOPINGS", access);
-    return access === "granted";
+    return access === "granted" ? true : access === "unavailable" ? undefined : false;
   }
   return true;
 }
