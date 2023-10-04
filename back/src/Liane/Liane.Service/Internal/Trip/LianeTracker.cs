@@ -196,6 +196,6 @@ public sealed class LianeTracker
   {
     currentLocationMap.TryGetValue(member.Id, out var currentLocation);
     if (currentLocation is null) return null;
-    return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.Coordinate);
+    return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.RawCoordinate);
   }
 }
