@@ -122,7 +122,7 @@ public sealed partial class PostgisServiceImpl : IPostgisService
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
-    await connection.DeleteAsync(Filter<LianeWaypointDb>.Where(l => l.liane_id, ComparisonOperator.In, lianes), tx);
+    await connection.DeleteAsync(Filter<LianeWaypointDb>.Where(l => l.liane_id, ComparisonOperator.In, lianes.Select(id => (string)id)), tx);
     await DeleteOrphanSegments(connection, tx);
     tx.Commit();
   }
