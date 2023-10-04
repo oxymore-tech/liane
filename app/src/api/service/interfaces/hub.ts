@@ -165,6 +165,7 @@ export abstract class AbstractHubService implements HubService {
   };
 
   protected receiveLocationUpdateCallback: OnLocationCallback = l => {
+    AppLogger.debug("GEOLOC", "received", l);
     if (this.onReceiveLocationUpdateCallback) {
       this.onReceiveLocationUpdateCallback(l);
     }

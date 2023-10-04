@@ -11,7 +11,7 @@ import { MemberPing } from "@/api/event";
 import { sleep } from "@/util/datetime";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { distance } from "@/util/geometry";
-import { check, PERMISSIONS, request } from "react-native-permissions";
+import { check, PERMISSIONS } from "react-native-permissions";
 import { AppLogger } from "@/api/logger";
 import { Subject } from "rxjs";
 

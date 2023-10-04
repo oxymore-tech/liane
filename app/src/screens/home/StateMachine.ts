@@ -28,7 +28,6 @@ type Schema = {
 export type HomeMapMachineStateKeys = "map" | "form" | "point" | "match" | "detail";
 
 export const getSearchFilter = (filter: Partial<InternalLianeMatchFilter>) => {
-  console.log(filter);
   return <LianeSearchFilter>{
     availableSeats: -1, //TODO
     to: filter.to!.id!,

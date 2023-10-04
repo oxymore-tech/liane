@@ -83,7 +83,7 @@ export const LianeDetailScreen = () => {
 const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; request?: JoinLianeRequestDetailed }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const ref = useRef<BottomSheetRefProps>(null);
   const { top: insetsTop } = useSafeAreaInsets();
@@ -106,12 +106,11 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
 
-  const { user } = useContext(AppContext);
   const driver = useMemo(() => match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user, [match]);
   const tripPassengers = useMemo(() => {
     return match?.liane.members
       .map(m => {
-        if (m.user.id === user!.id || m.user.id === driver?.id) {
+        if (m.user.id === driver?.id) {
           return null;
         }
         const currentRallyingPointIndex = match.liane.wayPoints.findIndex(w => w.rallyingPoint.id === m.from);
