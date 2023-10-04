@@ -343,7 +343,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .Find(l => l.Driver.User == member.Id && l.State == LianeState.NotStarted)
       .ToListAsync();
     await chatService.Clear(driverLianes.FilterSelect(l => l.Conversation?.Id));
-    await postgisService.Clear(driverLianes.Select(l => l.Id));
+    await postgisService.Clear(driverLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id));
 
     var toUpdate = await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Members.Any(m => m.User == member.Id) && l.State == LianeState.NotStarted)
@@ -699,7 +699,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     {
       await postgisService.Clear(new []
       {
-        liane.Id
+       (Ref<Api.Trip.Liane>) liane.Id
       });
     }
     await PushUpdate(lianeDb);
@@ -711,7 +711,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     Expression<Func<LianeDb, bool>> filter = l => l.Recurrence == recurrence.Id && l.Members.Count <= 1;
     var toDelete = await Mongo.GetCollection<LianeDb>()
       .Find(filter)
-      .Select(l => l.Id);
+      .Select(l => (Ref<Api.Trip.Liane>) l.Id);
     await postgisService.Clear(toDelete);
     await Mongo.GetCollection<LianeDb>().DeleteManyAsync(filter);
 

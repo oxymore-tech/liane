@@ -118,7 +118,7 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     return new BatchGeometryUpdate(segments, wayPoints);
   }
 
-  public async Task Clear(IEnumerable<string> lianes)
+  public async Task Clear(IEnumerable<Ref<Api.Trip.Liane>> lianes)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();

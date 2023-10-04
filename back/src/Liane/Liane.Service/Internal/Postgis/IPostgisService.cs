@@ -23,7 +23,7 @@ public interface IPostgisService
 {
   Task UpdateGeometry(Api.Trip.Liane liane);
   Task SyncGeometries(IEnumerable<Api.Trip.Liane> source);
-  Task Clear(IEnumerable<string> lianes);
+  Task Clear(IEnumerable<Ref<Api.Trip.Liane>> lianes);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to);
   Task<IOngoingTripSession> CreateOngoingTrip(string id, LineString route);

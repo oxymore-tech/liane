@@ -21,7 +21,7 @@ public sealed class LianeStatusUpdate : CronJobService
   private readonly IPostgisService postgisService;
   private readonly ILianeService lianeService;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
-
+  
   private const int StartedDelayInMinutes = 5;
   private const int FinishedDelayInMinutes = 5;
 
@@ -48,12 +48,12 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private async Task CancelLianes(DateTime from)
   {
-    var limit = from.AddMinutes(StartedDelayInMinutes);
+    var limit = from; //.AddMinutes(StartedDelayInMinutes);
     var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive))
                  & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta <= limit);
     var canceled = (await mongo.GetCollection<LianeDb>()
         .Find(filter)
-        .Project(l => l.Id)
+        .Project(l => (Ref<Api.Trip.Liane>)l.Id)
         .ToListAsync())
       .ToImmutableHashSet();
     
@@ -63,6 +63,7 @@ public sealed class LianeStatusUpdate : CronJobService
       await lianeService.UpdateState(id, LianeState.Canceled);
     });
     await postgisService.Clear(canceled.ToImmutableList());
+    await notificationService.CleanJoinLianeRequests(canceled);
   }
 
   private async Task FinishLianes(DateTime from)
@@ -92,7 +93,7 @@ public sealed class LianeStatusUpdate : CronJobService
       if (token.IsCancellationRequested) return;
       await lianeService.UpdateState(lianeDb.Id, LianeState.Finished);
     });
-    await postgisService.Clear(finishedLianes.Select(l => l.Id).ToImmutableList());
+    await postgisService.Clear(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
   }
 
   private async Task StartLianes(DateTime from)
@@ -120,7 +121,9 @@ public sealed class LianeStatusUpdate : CronJobService
     });
     
     // TODO create ongoing trip here ?
-    await postgisService.Clear(activeLianes.Select(l => l.Id).ToImmutableList());
+    var toClear = activeLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableHashSet();
+    await postgisService.Clear(toClear);
+    await notificationService.CleanJoinLianeRequests(toClear);
   }
 
   private async Task RealtimeUpdate(DateTime from)

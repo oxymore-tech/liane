@@ -119,7 +119,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     return await Mongo.Paginate<Notification, Cursor.Time>(pagination, r => r.CreatedAt, filter, false);
   }
 
-  public Task CleanJoinLianeRequests(ImmutableList<Ref<Api.Trip.Liane>> lianes)
+  public Task CleanJoinLianeRequests(IEnumerable<Ref<Api.Trip.Liane>> lianes)
   {
     var filter = Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, JoinLianeRequest>(n => n.Payload)
                  & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
@@ -127,7 +127,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       .DeleteManyAsync(filter);
   }
 
-  public Task CleanNotifications(ImmutableList<Ref<Api.Trip.Liane>> lianes)
+  public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Liane>> lianes)
   {
     return Mongo.GetCollection<Notification>()
       .DeleteManyAsync(Builders<Notification>.Filter.In("Payload.Liane", lianes));
