@@ -12,7 +12,7 @@ import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { useActor, useInterpret } from "@xstate/react";
 import { getSearchFilter, HomeMapContext, HomeMapMachine } from "@/screens/home/StateMachine";
 import { EmptyFeatureCollection } from "@/util/geometry";
-import Animated, { FadeInDown, FadeOutDown, SlideInDown } from "react-native-reanimated";
+import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { Observable } from "rxjs";
 import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
@@ -87,11 +87,8 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         {state.matches("form") && (
           <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={[styles.container, { backgroundColor: AppColors.white }]} />
         )}
-        {offline && (
-          <Animated.View style={{ position: "absolute", bottom: 96, left: 24, right: 24 }} entering={SlideInDown}>
-            <OfflineWarning />
-          </Animated.View>
-        )}
+
+        <OfflineWarning />
 
         {!offline && !isMapState && !isPointState && (
           <HomeBottomSheetContainer

@@ -18,6 +18,7 @@ interface AppContextProps {
   position?: LatLng;
   user?: FullUser;
   logout: () => void;
+  reconnect: () => void;
   login: (user: AuthUser) => void;
   services: AppServices;
   status: HubState;
@@ -30,6 +31,7 @@ const queryClient = new QueryClient();
 export const AppContext = createContext<AppContextProps>({
   logout: () => {},
   login: () => {},
+  reconnect: () => {},
   services: SERVICES,
   status: "offline",
   appState: "active"
@@ -154,6 +156,20 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }));
   };
 
+  private reconnecting = false;
+  private forceReconnect() {
+    if (this.reconnecting) {
+      return;
+    }
+    this.reconnecting = true;
+    AppLogger.debug("INIT", "Try to reload...");
+    this.initContext()
+      .then(() => queryClient.invalidateQueries())
+      .finally(() => {
+        this.reconnecting = false;
+      });
+  }
+
   componentDidMount() {
     this.initContext().then();
 
@@ -164,18 +180,11 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       }));
     });
 
-    let reconnecting = false;
     this.unsubscribeToNetworkChange = NetInfo.addEventListener(state => {
       const wasOffline = this.state.status === "offline";
       const isJustReconnected = state.isInternetReachable === true && wasOffline && !!this.state.user;
-      if (isJustReconnected && !reconnecting) {
-        reconnecting = true;
-        AppLogger.debug("INIT", "Try to reload...");
-        this.initContext()
-          .then(() => queryClient.invalidateQueries())
-          .finally(() => {
-            reconnecting = false;
-          });
+      if (isJustReconnected) {
+        this.forceReconnect();
       }
     });
     this.unsubscribeToStateChange = AppState.addEventListener("change", this.handleAppStateChange);
@@ -269,6 +278,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
           value={{
             logout,
             login,
+            reconnect: this.state.hubState === "offline" ? this.forceReconnect : () => {},
             user,
             status: this.state.hubState,
             appState,
