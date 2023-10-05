@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 
 namespace Liane.Test;
@@ -77,6 +78,7 @@ public sealed class LabeledPositions
   public static readonly RallyingPoint MartresTolosane = new("mairie:31324", "Mairie de Martres-Tolosane", Positions.MartresTolosane, LocationType.TownHall, "12 boulevard de la Magdeleine", "31220",
     "Martres-Tolosane", null, true);
 
+  public static readonly RallyingPoint LO = new("custom:001", "Living Objects", Positions.LO, LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
   public static readonly IImmutableSet<RallyingPoint> RallyingPoints = ImmutableHashSet.Create(
     Mende,
     Florac,
@@ -110,6 +112,7 @@ public sealed class LabeledPositions
     PointisInard,
     Tournefeuille,
     AireDesPyrénées,
-    MartresTolosane
+    MartresTolosane,
+    LO
   );
 }
