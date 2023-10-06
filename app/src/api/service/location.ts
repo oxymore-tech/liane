@@ -13,7 +13,8 @@ import BackgroundGeolocationService from "native-modules/geolocation";
 import { distance } from "@/util/geometry";
 import { check, PERMISSIONS } from "react-native-permissions";
 import { AppLogger } from "@/api/logger";
-import { Subject } from "rxjs";
+import { BehaviorSubject } from "rxjs";
+import { DdLogs, DdTrace } from "@datadog/mobile-react-native";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -263,7 +264,7 @@ export async function checkLocationPingsPermissions(): Promise<boolean> {
     //return true;
     // return access === "granted";
   } else if (Platform.OS === "android") {
-    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
+    const access = await check(Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
     AppLogger.debug("GEOPINGS", access);
     return access === "granted";
   }
@@ -273,7 +274,11 @@ export async function checkLocationPingsPermissions(): Promise<boolean> {
 export async function cancelSendLocationPings() {
   if (Platform.OS === "ios") {
     await BackgroundService.stop();
-    running.next(false);
+    const taskId = running.getValue()?.taskId;
+    if (taskId) {
+      DdTrace.finishSpan(taskId, undefined, Date.now());
+    }
+    running.next(undefined);
   } else {
     await BackgroundGeolocationService.stop();
   }
@@ -314,9 +319,9 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
 export const isLocationServiceRunning = () =>
   Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
 
-const running = new Subject<boolean>();
+const running = new BehaviorSubject<{ liane: string; taskId: string } | undefined>(undefined);
 export const watchLocationServiceState = (callback: (running: boolean) => void) =>
-  Platform.OS === "ios" ? running.subscribe(callback) : BackgroundGeolocationService.watch(callback); //TODO IOS
+  Platform.OS === "ios" ? running.subscribe(l => callback(!!l)) : BackgroundGeolocationService.watch(callback);
 
 const nearWayPointRadius = 1000;
 const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
@@ -324,7 +329,8 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
   const timeout = tripDuration + 3600 * 1000;
   let preciseTrackingMode = true;
   let watchId: number = 0;
-  running.next(true);
+  const taskId = await DdTrace.startSpan("geopings", { liane }, Date.now());
+  running.next({ liane, taskId });
   AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
   await new Promise<void>(async resolve => {
     const getDistanceFilter = () => (preciseTrackingMode ? 10 : nearWayPointRadius / 2);
@@ -332,12 +338,15 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     const switchTrackingMode = (precise: boolean) => {
       Geolocation.clearWatch(watchId);
       preciseTrackingMode = precise;
-      startTracking(precise ? "best" : "nearestTenMeters", getDistanceFilter());
+      const mode = precise ? "best" : "nearestTenMeters";
+      DdLogs.info("Switched tracking mode to:", mode);
+      startTracking(mode, getDistanceFilter());
     };
 
     const stopTracking = () => {
       Geolocation.clearWatch(watchId);
-
+      DdTrace.finishSpan(taskId, undefined, Date.now());
+      running.next(undefined);
       resolve();
     };
     const positionCallback: Geolocation.SuccessCallback = position => {

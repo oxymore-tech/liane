@@ -24,6 +24,7 @@ import { check, PERMISSIONS, request } from "react-native-permissions";
 import { useAppState } from "@react-native-community/hooks";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
+import { DdLogs } from "@datadog/mobile-react-native";
 
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
@@ -44,11 +45,11 @@ export const ShareTripLocationScreen = WithFullscreenModal(
               await sendLocationPings(liane.id!, trip.wayPoints);
               navigation.replace("LianeDetail", { liane });
             } catch (e) {
-              console.warn(e);
+              AppLogger.error("GEOLOC", e);
             }
           })
           .catch(e => {
-            console.warn(e);
+            AppLogger.error("GEOLOC", e);
             Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
           });
       };
@@ -170,9 +171,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         } else if (status === "blocked") {
           const openSetting = () => {
             Linking.openSettings().catch(() => {
-              if (__DEV__) {
-                AppLogger.warn("SETTINGS", "Unable to open settings");
-              }
+              AppLogger.warn("SETTINGS", "Unable to open settings");
             });
           };
           Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
@@ -198,9 +197,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         } else if (status === "blocked") {
           const openSetting = () => {
             Linking.openSettings().catch(() => {
-              if (__DEV__) {
-                AppLogger.warn("SETTINGS", "Unable to open settings");
-              }
+              AppLogger.warn("SETTINGS", "Unable to open settings");
             });
           };
           Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
@@ -209,17 +206,19 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
           ]);
         }
       } else {
-        await Linking.openSettings();
+        await Linking.openSettings().catch(() => {
+          AppLogger.warn("SETTINGS", "Unable to open settings");
+        });
       }
     }
     return false;
   };
 
-  // TODO(REMOVE)
-  const [permissionStatus, setPermissionStatus] = useState<string | undefined>();
   useEffect(() => {
-    check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(setPermissionStatus);
-  });
+    check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(p => {
+      DdLogs.info("Location permission status is:", p);
+    });
+  }, []);
 
   return (
     <Column style={{ alignItems: "center" }} spacing={16}>
@@ -271,7 +270,6 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         onPress={() => requestBackgroundGeolocation().then(props.onGranted)}
         onLongPress={() => props.onGranted(true)}
       />
-      <AppText style={{ color: AppColors.white, fontSize: 10 }}>{permissionStatus}</AppText>
     </Column>
   );
 };
