@@ -153,16 +153,16 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
       <Column>
         <View style={{ margin: 12 }}>
           <AppPressableOverlay
-            foregroundColor={WithAlpha(AppColors.black, 0.1)}
+            foregroundColor={WithAlpha(AppColors.black, 0.05)}
             style={styles.itemStyle}
+            backgroundStyle={styles.itemBackgroundStyle}
             onPress={() => {
               if (userIsMember) {
                 navigation.navigate("LianeDetail", { liane: item.lianeMatch.liane });
               } else {
                 machine.send("DETAIL", { data: item.lianeMatch });
               }
-            }}
-            borderRadius={20}>
+            }}>
             <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
               <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
               <AppText style={{ fontSize: 16, fontWeight: "500" }}>{driver.pseudo}</AppText>
@@ -237,9 +237,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: AppColorPalettes.gray[200]
   },
-  itemStyle: {
+  itemBackgroundStyle: {
     backgroundColor: AppColors.white,
-    borderRadius: 20,
+    borderRadius: 20
+  },
+  itemStyle: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 16

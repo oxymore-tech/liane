@@ -19,7 +19,6 @@ export interface AppPressableOverlayProps extends PressableProps, PropsWithChild
   backgroundStyle?: StyleProp<ViewStyle>;
   foregroundColor?: ColorValue;
   children: ReactNode | undefined;
-  borderRadius?: number;
   clickable?: boolean;
   style?: StyleProp<ViewStyle>;
   align?: "center" | "flex-start" | "flex-end" | undefined;
@@ -53,7 +52,6 @@ export function AppPressableOverlay({
   align,
   disabled,
   onPress,
-  borderRadius = 0,
   ...props
 }: AppPressableOverlayProps) {
   const opacitySv = useSharedValue(0);
@@ -106,7 +104,7 @@ export function AppPressableOverlay({
       }}>
       <View style={[styles.pressableTarget, { alignItems: align, justifyContent: align }]}>
         {contentView}
-        {clickable && !disabled && <Animated.View style={[overlayColor, foreground, styles.pressedFixed, opacityStyle, { borderRadius }]} />}
+        {clickable && !disabled && <Animated.View style={[overlayColor, foreground, styles.pressedFixed, opacityStyle]} />}
       </View>
     </Pressable>
   );
@@ -122,10 +120,10 @@ const styles = StyleSheet.create({
     right: 0,
     left: 0,
     top: 0,
-    bottom: 0,
-    borderRadius: 50
+    bottom: 0
   },
   pressableTarget: {
+    minHeight: 24,
     minWidth: 36
   }
 });

@@ -1,6 +1,6 @@
 import React from "react";
-import { ColorValue, LayoutChangeEvent, StyleSheet, View } from "react-native";
-import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { ColorValue, LayoutChangeEvent, StyleSheet } from "react-native";
+import { Easing, SharedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -30,29 +30,24 @@ export const AppTabs = ({
   const offset = useSharedValue(0);
   const width = useSharedValue(0);
 
-  const translateStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offset.value }],
-    width: width.value
-  }));
-
   return (
     <Column style={styles.mainContainer}>
-      <Row style={styles.rowContainer}>
+      <Row style={styles.rowContainer} spacing={4}>
         {items.map((item, index) => (
           <AppPressableOverlay
             key={index}
-            backgroundStyle={styles.pressableStyle}
+            backgroundStyle={[
+              styles.pressableStyle,
+              selectedIndex === index ? { backgroundColor: selectedColor } : { borderWidth: 1, borderColor: AppColors.fontColor }
+            ]}
             disabled={isSelectable ? !isSelectable(index) : false}
             onLayout={event => onLayout(event, index, selectedIndex, width, offset)}
-            onPress={() => onSelect(index)}
-            borderRadius={18}>
+            onPress={() => onSelect(index)}>
             <AppText
               style={[
                 styles.textStyle,
-                selectedIndex === index ? styles.selected : styles.unselected,
                 { fontSize: fontSize },
-                { backgroundColor: selectedIndex === index ? selectedColor : AppColors.white },
-                { color: selectedIndex === index ? AppColors.backgroundColor : AppColors.fontColor }
+                selectedIndex === index ? { color: AppColors.backgroundColor, fontWeight: "bold" } : { color: AppColors.fontColor }
               ]}>
               {item}
             </AppText>
@@ -85,14 +80,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   pressableStyle: {
-    borderRadius: 12,
-    paddingVertical: 6
+    borderRadius: 18
   },
   textStyle: {
     paddingHorizontal: 22,
-    borderRadius: 18,
-    borderWidth: 0,
-    paddingVertical: 2
+    paddingVertical: 6
   },
   underline: {
     borderBottomColor: AppColorPalettes.gray[200],
