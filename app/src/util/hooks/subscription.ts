@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
+import { BehaviorSubject, Observable, Subject, Subscribable, SubscriptionLike } from "rxjs";
 
-export const useSubscription = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike) => {
+export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T) => void) => {
+  useEffect(() => {
+    const sub = observable.subscribe({ next: callback });
+    return () => {
+      sub.unsubscribe();
+    };
+  }, []);
+};
+
+export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike) => {
   const [value, setValue] = useState<T>();
   useEffect(() => {
     const sub = subscribe(v => setValue(v));

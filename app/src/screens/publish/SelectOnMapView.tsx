@@ -41,7 +41,7 @@ export const SelectOnMapView = ({ onSelect, title, type = "from" }: SelectOnMapV
             <View style={{ flex: 1 }} />
           </Row>
           <Row style={{ justifyContent: "center" }}>
-            <AppRoundedButton backgroundColor={AppColors.orange} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />
+            <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />
           </Row>
         </Column>
       )}

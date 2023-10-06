@@ -1,19 +1,15 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
-import { Center, Column, Row } from "@/components/base/AppLayout";
-import { DetailedLianeMatchView } from "@/components/trip/WayPointsView";
-import { LineSeparator, SectionSeparator } from "@/components/Separator";
+import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
 import { useLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
-import { capitalize } from "@/util/strings";
-import { formatDaysOfTheWeek, formatMonthDay } from "@/api/i18n";
 import { formatDuration } from "@/util/datetime";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, TouchableOpacity } from "react-native-gesture-handler";
 import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,15 +19,18 @@ import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
 import { DriverLocationMarker } from "@/screens/detail/components/DriverLocationMarker";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
-import { LianeActionRow } from "@/screens/detail/components/LianeActionRow";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
-import { DriverInfo } from "@/screens/detail/components/DriverInfo";
-import { PassengerListView } from "@/screens/detail/components/PassengerListView";
-import { LianeStatusRow } from "@/screens/detail/components/LianeStatusRow";
-import { WayPointActionView } from "@/screens/detail/components/WayPointActionView";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
+import { AppIcon } from "@/components/base/AppIcon";
+import { LianeView } from "@/components/trip/LianeView";
+import { UserPicture } from "@/components/UserPicture";
+import { LianeStatusView } from "@/components/trip/LianeStatusView";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { useObservable } from "@/util/hooks/subscription";
+import { AppStyles } from "@/theme/styles";
+import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -84,9 +83,13 @@ export const LianeDetailScreen = () => {
 const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; request?: JoinLianeRequestDetailed }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
+  const { services, user } = useContext(AppContext);
+  const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const ref = useRef<BottomSheetRefProps>(null);
   const { top: insetsTop } = useSafeAreaInsets();
+
   const [bSheetTop, setBSheetTop] = useState<number>(0.7 * height);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const tripMatch = useMemo(() => (match ? getTripFromMatch(match) : undefined), [match]);
 
@@ -103,12 +106,11 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     return bbox;
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
 
-  const { user } = useContext(AppContext);
   const driver = useMemo(() => match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user, [match]);
   const tripPassengers = useMemo(() => {
     return match?.liane.members
       .map(m => {
-        if (m.user.id === user!.id || m.user.id === driver?.id) {
+        if (m.user.id === driver?.id) {
           return null;
         }
         const currentRallyingPointIndex = match.liane.wayPoints.findIndex(w => w.rallyingPoint.id === m.from);
@@ -127,47 +129,54 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
         <AppMapView bounds={mapBounds} showGeolocation={false}>
           {match && <LianeMatchUserRouteLayer match={match} />}
 
-          {tripPassengers &&
-            tripPassengers.map(p => {
-              return <PassengerLocationMarker key={p.user.id!} user={p.user} defaultLocation={p.departurePoint.location} />;
-            })}
-          {tripMatch &&
-            tripMatch.wayPoints.map((w, i) => {
-              let type: "to" | "from" | "step";
-              if (i === 0) {
-                type = "from";
-              } else if (i === tripMatch!.wayPoints.length - 1) {
-                type = "to";
-              } else {
-                type = "step";
-              }
-              return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
-            })}
+          {tripPassengers?.map(p => (
+            <PassengerLocationMarker key={p.user.id} user={p.user} defaultLocation={p.departurePoint.location} />
+          ))}
 
-          {driver && tripMatch && <DriverLocationMarker user={driver!} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
+          {tripMatch?.wayPoints.map((w, i) => {
+            let type: "to" | "from" | "step";
+            if (i === 0) {
+              type = "from";
+            } else if (i === tripMatch.wayPoints.length - 1) {
+              type = "to";
+            } else {
+              type = "step";
+            }
+            return <WayPointDisplay key={w.rallyingPoint.id} rallyingPoint={w.rallyingPoint} type={type} />;
+          })}
+
+          {driver && tripMatch && <DriverLocationMarker user={driver} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
         </AppMapView>
+
         <AppBottomSheet
-          onScrolled={v => {
-            setBSheetTop(v);
-          }}
+          onScrolled={v => setBSheetTop(v)}
           ref={ref}
-          stops={[AppBottomSheetHandleHeight + 96, 0.7, 1]}
-          padding={{ top: 72 }}
-          initialStop={1}>
+          stops={[AppBottomSheetHandleHeight + 96, 0.5, 1]}
+          padding={{ top: 80 }}
+          initialStop={1}
+          backgroundStyle={{
+            backgroundColor: AppColors.lightGrayBackground,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24
+          }}
+          onExpand={setIsExpanded}>
           {match && (
-            <AppBottomSheetScrollView>
-              <LianeDetailView liane={match} isRequest={!!request} />
-              <LianeActionsView match={match} request={request?.id} />
+            <AppBottomSheetScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
+              <LianeDetailView liane={match} request={request?.id} isExpanded={isExpanded} />
             </AppBottomSheetScrollView>
           )}
 
-          {!match && (
-            <Center>
-              <ActivityIndicator />
-            </Center>
-          )}
+          {!match && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
         </AppBottomSheet>
 
+        {!!match?.liane.conversation && match?.liane.state !== "Archived" && match?.liane.state !== "Canceled" && (
+          <Pressable
+            onPress={() => navigation.navigate("Chat", { conversationId: match?.liane.conversation, liane: match?.liane })}
+            style={[styles.chatButton, styles.mapOverlay, AppStyles.shadow]}>
+            <AppIcon name={"message-circle-outline"} size={36} color={AppColors.secondaryColor} />
+            {unread?.includes(match?.liane.conversation) && <View style={styles.chatBadge} />}
+          </Pressable>
+        )}
         <FloatingBackButton onPress={navigation.goBack} />
       </View>
     </GestureHandlerRootView>
@@ -187,52 +196,108 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
   };
 };
 
-const LianeDetailView = ({ liane, isRequest = false }: { liane: LianeMatch; isRequest?: boolean }) => {
+const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: LianeMatch; isExpanded: boolean; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
-
-  const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
-
-  // const passengers = liane.liane.members.filter(m => m.user !== liane.liane.driver.user);
+  const { navigation } = useAppNavigation();
   const tripDuration = formatDuration(getTotalDuration(currentTrip));
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
   return (
-    <Column>
-      <AppText style={{ fontWeight: "bold", fontSize: 20, marginBottom: 8, marginHorizontal: 16 }}>{formattedDepartureTime}</AppText>
+    <Column style={styles.bottomContainer}>
+      <View>
+        <Row style={styles.driverContainer}>
+          <Row style={{ marginLeft: isExpanded ? 42 : 0 }} spacing={8}>
+            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
+            <AppText style={styles.driverText}>{driver.id === liane.liane?.id ? "Moi" : driver.pseudo}</AppText>
+          </Row>
 
-      <Row>
-        <LianeStatusRow liane={liane} />
-        <View style={{ flex: 1 }} />
-        <LianeActionRow liane={liane} />
+          {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <GeolocationSwitch liane={liane.liane} />}
+        </Row>
+        <View style={styles.lianeContainer}>
+          <LianeView liane={liane.liane} />
+        </View>
+      </View>
+
+      <Row style={styles.statusRowContainer} spacing={8}>
+        {["NotStarted", "Started"].includes(liane.liane.state) && (
+          <Row style={{ position: "relative", left: 12 * (liane.liane.members.length - 1) }}>
+            {liane.liane.members
+              .filter(m => m.user.id !== driver.id)
+              .map((m, i) => (
+                <View key={m.user.id} style={{ position: "relative", left: -12 * (i + 1) }}>
+                  <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
+                </View>
+              ))}
+          </Row>
+        )}
       </Row>
 
-      <Column style={styles.section}>
-        <DetailedLianeMatchView
-          departureTime={liane.liane.departureTime}
-          wayPoints={currentTrip}
-          renderWayPointAction={wayPoint => (isRequest ? undefined : <WayPointActionView wayPoint={wayPoint} liane={liane.liane} />)}
-        />
-      </Column>
-      <SectionSeparator />
-
-      <Column style={styles.section} spacing={4}>
-        {/*!!liane.liane.returnTime && <InfoItem icon={"corner-down-right-outline"} value={"Retour à " + formattedReturnTime!} />*/}
-        <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
-        <InfoItem icon={"twisting-arrow"} value={tripDistance} />
-        {liane.liane.recurrence?.id && (
-          <InfoItem icon={"sync-outline"} value={`Trajet régulier (${formatDaysOfTheWeek(liane.liane.recurrence?.days!)})`} />
+      <Row style={styles.statusLianeContainer}>
+        {liane.liane.state === "Finished" && (
+          <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: liane.liane })}>
+            <Row style={styles.validationContainer} spacing={8}>
+              <AppText style={styles.validationText}>Valider</AppText>
+            </Row>
+          </Pressable>
         )}
-      </Column>
+        {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) ? (
+          <LianeStatusView liane={liane.liane} />
+        ) : (
+          <TouchableOpacity onPress={() => {}}>
+            <Row style={styles.validationContainer} spacing={8}>
+              <AppText style={styles.validationText}>Relancer</AppText>
+            </Row>
+          </TouchableOpacity>
+        )}
+      </Row>
 
-      <LineSeparator />
+      <Row style={styles.resumeContainer} spacing={4}>
+        <Column style={{ flex: 1 }} spacing={4}>
+          <Row>
+            {liane.liane.recurrence?.id ? (
+              <InfoItem icon={"sync-outline"} value={"Trajet régulier"} />
+            ) : (
+              <Row style={AppStyles.center}>
+                <AppIcon name={"arrow-forward-outline"} size={12} color={AppColorPalettes.gray[500]} />
+                <AppText style={styles.infoTravel}>Aller simple</AppText>
+              </Row>
+            )}
+          </Row>
+          <Row>
+            <InfoItem icon={"twisting-arrow"} value={tripDistance} />
+          </Row>
+          <Row>
+            <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
+          </Row>
+        </Column>
 
-      {liane.liane.driver.canDrive && <DriverInfo user={driver} />}
-      <SectionSeparator />
-      {liane.liane.members.length > 1 && <PassengerListView members={liane.liane.members.filter(m => m.user.id !== liane.liane.driver.user)} />}
+        <Column>
+          <View style={styles.verticalLine} />
+        </Column>
 
-      {liane.liane.members.length > 1 && <SectionSeparator />}
+        <Column style={{ flex: 1 }}>
+          {liane.liane.members
+            .filter(member => member.user.id !== liane.liane.driver.user)
+            .map(member => (
+              <Row key={member.user.id}>
+                <AppText style={styles.infoTravel}>{member.user.pseudo}</AppText>
+                <View style={styles.horizontalLine} />
+                <AppText style={styles.infoTravel}>10 €</AppText>
+              </Row>
+            ))}
+          <Row style={{ marginTop: 12 }}>
+            <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>Total</AppText>
+            <View style={styles.horizontalLine} />
+            <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>
+              {liane.liane.members.filter(member => member.user.id !== liane.liane.driver.user).length * 10} €
+            </AppText>
+          </Row>
+        </Column>
+      </Row>
+
+      <LianeActionsView match={liane} request={request} />
     </Column>
   );
 };
@@ -243,5 +308,126 @@ const styles = StyleSheet.create({
     height: "100%",
     width: "100%"
   },
-  section: { paddingVertical: 16, marginHorizontal: 24 }
+  section: {
+    paddingVertical: 16,
+    marginHorizontal: 24
+  },
+  bottomContainer: {
+    borderWidth: 2,
+    borderColor: AppColors.primaryColor,
+    borderRadius: 20,
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: AppColors.backgroundColor
+  },
+  driverContainer: {
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8
+  },
+  driverText: {
+    fontSize: 16,
+    fontWeight: "500",
+    alignSelf: "center"
+  },
+
+  statusContainer: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignItems: "center",
+    backgroundColor: AppColorPalettes.gray[100]
+  },
+  statusLianeContainer: {
+    paddingVertical: 8
+  },
+  lianeContainer: {
+    flexGrow: 1,
+    marginRight: 40
+  },
+  chatButton: {
+    alignItems: "flex-end",
+    position: "absolute",
+    padding: 4,
+    top: -8,
+    right: -4
+  },
+  chatBadge: {
+    backgroundColor: AppColors.primaryColor,
+    borderRadius: 16,
+    padding: 6,
+    top: 4,
+    right: 4,
+    position: "absolute"
+  },
+  statusRowContainer: {
+    flex: 1,
+    alignItems: "center",
+    marginTop: 8
+  },
+  infoRowContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8
+  },
+  validationContainer: {
+    alignItems: "center",
+    borderRadius: 16,
+    backgroundColor: AppColors.primaryColor,
+    padding: 4,
+    paddingHorizontal: 12,
+    marginHorizontal: 6
+  },
+  validationText: {
+    fontWeight: "bold",
+    color: AppColors.white
+  },
+  infoContainer: {
+    paddingHorizontal: 4
+  },
+  infoTravel: {
+    fontSize: 14,
+    marginLeft: 6,
+    color: AppColorPalettes.gray[500]
+  },
+  infoText: {
+    fontSize: 14,
+    color: AppColorPalettes.gray[600]
+  },
+  infoIcon: {
+    marginTop: 2
+  },
+  mapOverlay: {
+    backgroundColor: AppColors.white,
+    margin: 16,
+    position: "relative",
+    top: 0,
+    right: "-40%",
+    alignSelf: "center",
+    padding: 6,
+    borderRadius: 25,
+    width: 50,
+    height: 50
+  },
+  resumeContainer: {
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 12
+  },
+  verticalLine: {
+    borderColor: AppColorPalettes.gray[100],
+    borderLeftWidth: 1,
+    flexGrow: 1,
+    flexShrink: 2,
+    alignSelf: "center"
+  },
+  horizontalLine: {
+    borderColor: AppColorPalettes.gray[300],
+    borderBottomWidth: 1,
+    flexGrow: 1,
+    flexShrink: 2,
+    alignSelf: "center",
+    marginHorizontal: 8
+  }
 });

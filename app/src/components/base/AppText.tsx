@@ -12,7 +12,7 @@ export function AppText({ style, children, numberOfLines = 1, ...props }: AppTex
   const internalNumberOfLines = numberOfLines < 0 ? undefined : numberOfLines;
 
   return (
-    <Text style={[styles.text, style]} numberOfLines={internalNumberOfLines} {...props}>
+    <Text style={[styles.text, style]} ellipsizeMode={"tail"} numberOfLines={internalNumberOfLines} {...props}>
       {children}
     </Text>
   );
@@ -20,7 +20,7 @@ export function AppText({ style, children, numberOfLines = 1, ...props }: AppTex
 
 const styles = StyleSheet.create({
   text: {
-    ...AppStyles.body,
+    ...AppStyles.text,
     flexWrap: "wrap",
     flexShrink: 1,
     textAlignVertical: "center",

@@ -10,6 +10,8 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import React from "react";
+import { FloatingBackButton } from "../FloatingBackButton";
+import { useAppNavigation } from "@/api/navigation";
 
 export interface ItineraryFormHeaderProps {
   editable?: boolean;
@@ -36,13 +38,9 @@ export const ItineraryFormHeader = ({
 
   const { to, from } = trip;
   const { goBack } = useAppBackController();
-  //
 
   return (
-    <Animated.View
-      style={[styles.headerContainer, AppStyles.shadow, { paddingTop: insets.top + 4 }]}
-      entering={enters ? SlideInUp : undefined}
-      exiting={SlideOutUp}>
+    <Animated.View style={[styles.headerContainer, { marginTop: insets.top }]} entering={enters ? SlideInUp : undefined} exiting={SlideOutUp}>
       <Column spacing={8}>
         <Row style={{ alignItems: "center", marginBottom: title ? 4 : 0 }} spacing={16}>
           <Pressable
@@ -86,31 +84,16 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 52
   },
-  floatingBackButton: {
-    marginHorizontal: 24,
-    marginVertical: 8,
-    position: "absolute",
-    backgroundColor: AppColors.darkBlue
-  },
   headerContainer: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     flexShrink: 1,
-    paddingBottom: 16,
-    backgroundColor: AppColors.darkBlue,
+    padding: 16,
+    paddingBottom: 0,
     alignSelf: "center",
     borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    paddingHorizontal: 16
-  },
-  inputContainer: {
-    backgroundColor: AppColorPalettes.gray[100],
-    borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8
+    borderBottomRightRadius: 16
   }
 });

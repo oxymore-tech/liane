@@ -9,6 +9,7 @@ import { AppColors } from "@/theme/colors";
 import { AppButton } from "@/components/base/AppButton";
 import { Center } from "@/components/base/AppLayout";
 import { useAppNavigation } from "@/api/navigation";
+import { AppStyles } from "@/theme/styles";
 
 export interface WithFetchResourceProps<T> {
   data: T;
@@ -54,11 +55,7 @@ export const WithFetchResource =
     };
 
     if (isLoading) {
-      return (
-        <View style={styles.container}>
-          <ActivityIndicator size="large" />
-        </View>
-      );
+      return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
     }
     if (error) {
       // Show content depending on the error or propagate it
@@ -74,7 +71,7 @@ export const WithFetchResource =
               {error.message}
             </AppText>
             <Center>
-              <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={onRefresh} />
+              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={onRefresh} />
             </Center>
           </View>
         );

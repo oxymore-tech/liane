@@ -94,7 +94,7 @@ export const getTripMatch = (to: RallyingPoint, from: RallyingPoint, originalTri
 export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
 
 const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
-  if (liane.state === "NotStarted" || liane.state === "Started") {
+  if (liane.state === "NotStarted") {
     const [_, delta] = getTimeForUser(liane, user, "from");
 
     if (delta > 0 && delta <= 5 * 60) {

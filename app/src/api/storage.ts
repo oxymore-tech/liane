@@ -1,6 +1,7 @@
 import EncryptedStorage from "react-native-encrypted-storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthResponse, AuthUser, FullUser } from "@/api/index";
+import { AppLogger } from "@/api/logger";
 
 export async function storeAsync<T>(key: string, value: T | undefined) {
   try {
@@ -10,7 +11,7 @@ export async function storeAsync<T>(key: string, value: T | undefined) {
       await AsyncStorage.removeItem(key);
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to store ", key);
+    AppLogger.warn("STORAGE", "Unable to store ", key);
   }
 }
 
@@ -21,7 +22,7 @@ export async function retrieveAsync<T>(key: string, defaultValue?: T): Promise<T
       return stored ? JSON.parse(stored) : defaultValue;
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to get ", key);
+    AppLogger.warn("STORAGE", "Unable to get ", key);
   }
   return defaultValue;
 }
@@ -34,7 +35,7 @@ export async function storeCurrentUser(user?: FullUser) {
       await storeEncryptedString("user");
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to store user", e);
+    AppLogger.warn("STORAGE", "Unable to store user", e);
   }
 }
 
@@ -45,7 +46,7 @@ export async function getCurrentUser(): Promise<FullUser | undefined> {
       return stored ? JSON.parse(stored) : undefined;
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to get user", e);
+    AppLogger.warn("STORAGE", "Unable to get user", e);
   }
   return undefined;
 }
@@ -58,7 +59,7 @@ export async function storeUserSession(authUser?: AuthUser) {
       await storeEncryptedString("user_session");
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to store user_session", e);
+    AppLogger.warn("STORAGE", "Unable to store user_session", e);
   }
 }
 
@@ -69,15 +70,14 @@ export async function getUserSession(): Promise<AuthUser | undefined> {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to get user_session", e);
+    AppLogger.warn("STORAGE", "Unable to get user_session", e);
   }
   return undefined;
 }
 
 async function storeEncryptedString(key: string, value?: string | undefined) {
-  if (__DEV__) {
-    console.debug("[STORAGE] Store encrypted string", key, value);
-  }
+  AppLogger.debug("STORAGE", "Store encrypted string", key, value);
+
   try {
     if (value) {
       await EncryptedStorage.setItem(key, value);
@@ -85,7 +85,7 @@ async function storeEncryptedString(key: string, value?: string | undefined) {
       await EncryptedStorage.removeItem(key);
     }
   } catch (e) {
-    console.warn("[STORAGE] Unable to store encrypted string", key, e);
+    AppLogger.warn("STORAGE", "Unable to store encrypted string", key, e);
   }
 }
 

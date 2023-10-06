@@ -1,10 +1,14 @@
 import React, { useContext, useState } from "react";
-import { AppIcon } from "@/components/base/AppIcon";
-import { AppColors, ContextualColors } from "@/theme/colors";
-import { AppContext } from "@/components/context/ContextProvider";
+import { StyleSheet, View } from "react-native";
+
 import { LatLng } from "@/api";
-import { AppPressable } from "@/components/base/AppPressable";
-import { View } from "react-native";
+
+import { AppIcon } from "@/components/base/AppIcon";
+import { AppContext } from "@/components/context/ContextProvider";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
+
+import { AppColors, ContextualColors } from "@/theme/colors";
+import { AppStyles } from "@/theme/styles";
 
 export interface PositionButtonProps {
   onPosition: (position: LatLng) => Promise<void>;
@@ -17,29 +21,38 @@ export const PositionButton = ({ onPosition, locationEnabled = true, onPositionE
   const [isApplyingLocation, setIsApplyingLocation] = useState(false);
 
   return (
-    <AppPressable
-      style={{ justifyContent: "center", alignItems: "center" }}
+    <AppPressableOverlay
+      style={{ justifyContent: "center", alignItems: "center", height: 36 }}
       onPress={async () => {
         try {
           const currentLocation = await services.location.currentLocation();
-          if (__DEV__) {
-            console.debug(currentLocation);
-          }
           setIsApplyingLocation(true);
           await onPosition(currentLocation);
           setIsApplyingLocation(false);
         } catch (e) {
-          console.error("location error :", e);
-          // TODO show message to user
           if (onPositionError) {
             onPositionError(e);
           }
         }
-      }}>
-      <AppIcon name={locationEnabled ? "position-on" : "position-off"} color={locationEnabled ? AppColors.blue : ContextualColors.redAlert.text} />
-      {isApplyingLocation && locationEnabled && (
-        <View style={{ backgroundColor: AppColors.blue, padding: 6, position: "absolute", borderRadius: 8 }} />
-      )}
-    </AppPressable>
+      }}
+      borderRadius={20}>
+      <AppIcon
+        size={22}
+        name={locationEnabled ? "position-on" : "position-off"}
+        color={locationEnabled ? AppColors.primaryColor : ContextualColors.redAlert.text}
+      />
+      <View style={styles.innerIcon} />
+      {isApplyingLocation && locationEnabled && <View style={styles.innerIcon} />}
+    </AppPressableOverlay>
   );
 };
+
+const styles = StyleSheet.create({
+  innerIcon: {
+    borderWidth: 2,
+    borderColor: AppColors.primaryColor,
+    padding: 1.5,
+    position: "absolute",
+    borderRadius: 8
+  }
+});

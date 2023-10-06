@@ -7,7 +7,8 @@ module.exports = {
   darkMode: "media",
   theme: {
     fontFamily: {
-      "sans": ["Inter"]
+      "sans": ["Inter"],
+      "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
     },
     colors: {
       orange: {

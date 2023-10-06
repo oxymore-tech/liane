@@ -1,5 +1,6 @@
 import { ControllerFieldState, useController } from "react-hook-form";
 import React from "react";
+import { AppLogger } from "@/api/logger";
 
 export interface FormProps<T> {
   name: string;
@@ -23,14 +24,14 @@ export const WithFormController =
     if (rulesWithDefaults.required === undefined) {
       rulesWithDefaults.required = true;
     }
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+
     const { field, fieldState } = useController({
       name,
       defaultValue,
       rules: rulesWithDefaults
     });
     if (fieldState.invalid) {
-      console.log("INVALID", field.name, fieldState.error);
+      AppLogger.debug("LOGIN", "invalid field:", field.name, fieldState.error);
     }
     return <WrappedForm value={field.value} onChange={field.onChange} fieldState={fieldState} {...props} />;
   };

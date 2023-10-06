@@ -32,8 +32,6 @@ function token {
   
   if [[ "${environment}" = "local" ]]; then
     baseUrl="http://localhost:5000"
-    phone=0000111111
-    code=333333
   elif [[ "${environment}" = "dev" ]]; then
     baseUrl="https://dev.liane.app"
   elif [[ "${environment}" = "prod" ]]; then

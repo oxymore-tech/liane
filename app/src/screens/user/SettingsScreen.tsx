@@ -4,19 +4,23 @@ import { HomeScreenHeader } from "@/components/context/Navigation";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 import { AppSettings, getSetting, saveSetting } from "@/api/storage";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { FloatingBackButton } from "@/components/FloatingBackButton";
+import { useAppNavigation } from "@/api/navigation";
 
 export const SettingsScreen = () => {
+  const { navigation } = useAppNavigation();
   return (
     <View style={styles.container}>
-      <HomeScreenHeader label={"Paramètres"} />
       <View
         style={{
           marginHorizontal: 24,
+          marginTop: 100,
           flex: 1
         }}>
         <SettingCheckbox name={"map.lianeTrafficAsWidth"} label={"Epaisseur des lianes selon le trafic"} />
         <SettingCheckbox name={"map.lianeTrafficAsColor"} label={"Couleur des lianes selon le trafic"} />
       </View>
+      <FloatingBackButton onPress={navigation.goBack} />
     </View>
   );
 };
@@ -27,7 +31,6 @@ const SettingCheckbox = ({ name, label }: { name: keyof AppSettings; label: stri
     getSetting(name)
       .then(setting => {
         setValue(setting);
-        console.debug(setting);
       })
       .catch(e => console.warn(e));
   }, [name]);
@@ -38,7 +41,7 @@ const SettingCheckbox = ({ name, label }: { name: keyof AppSettings; label: stri
           key={name}
           isChecked={value}
           text={label}
-          fillColor={AppColors.orange}
+          fillColor={AppColors.primaryColor}
           textStyle={{ textDecorationLine: undefined, color: AppColorPalettes.gray[800] }}
           onPress={(checked: boolean) => {
             saveSetting(name, checked)
@@ -52,7 +55,6 @@ const SettingCheckbox = ({ name, label }: { name: keyof AppSettings; label: stri
 };
 const styles = StyleSheet.create({
   container: {
-    height: "100%",
     flex: 1
   }
 });

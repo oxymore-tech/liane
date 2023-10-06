@@ -30,7 +30,8 @@ public struct DayOfTheWeekFlag
   public IEnumerable<DateTime> GetNextActiveDates(DateTime fromDate, DateTime maxDate)
   {
     var start = fromDate.DayOfWeek;
-    for (var day = 1; day <= 7; day++)
+    var dayCount = (maxDate - fromDate).Days + 1;
+    for (var day = 1; day <= dayCount; day++)
     {
       if (fromDate.Date.AddDays(day) > maxDate.Date)
       {
@@ -57,5 +58,10 @@ public struct DayOfTheWeekFlag
 
   private static int Mod(int x, int m) {
     return (x%m + m)%m;
+  }
+
+  public static int IndexOf(DayOfWeek day)
+  {
+    return Mod((int)day - 1, 7);
   }
 }

@@ -118,11 +118,11 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     return new BatchGeometryUpdate(segments, wayPoints);
   }
 
-  public async Task Clear(IEnumerable<string> lianes)
+  public async Task Clear(IEnumerable<Ref<Api.Trip.Liane>> lianes)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
-    await connection.DeleteAsync(Filter<LianeWaypointDb>.Where(l => l.liane_id, ComparisonOperator.In, lianes), tx);
+    await connection.DeleteAsync(Filter<LianeWaypointDb>.Where(l => l.liane_id, ComparisonOperator.In, lianes.Select(id => (string)id)), tx);
     await DeleteOrphanSegments(connection, tx);
     tx.Commit();
   }

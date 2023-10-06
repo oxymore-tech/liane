@@ -1,6 +1,6 @@
 import React from "react";
-import { ColorValue, LayoutChangeEvent, StyleSheet, View } from "react-native";
-import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { ColorValue, LayoutChangeEvent, StyleSheet } from "react-native";
+import { Easing, SharedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -24,25 +24,22 @@ export const AppTabs = ({
   isSelectable,
   onSelect,
   selectedIndex = 0,
-  selectedColor = AppColors.orange,
-  unselectedTextColor = AppColorPalettes.gray[800],
-  selectedTextColor = AppColorPalettes.gray[800],
+  selectedColor = AppColors.primaryColor,
   fontSize = 14
 }: AppTabsProps) => {
   const offset = useSharedValue(0);
   const width = useSharedValue(0);
 
-  const translateStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offset.value }],
-    width: width.value
-  }));
-
   return (
-    <Column>
-      <Row>
+    <Column style={styles.mainContainer}>
+      <Row style={styles.rowContainer} spacing={4}>
         {items.map((item, index) => (
           <AppPressableOverlay
             key={index}
+            backgroundStyle={[
+              styles.pressableStyle,
+              selectedIndex === index ? { backgroundColor: selectedColor } : { borderWidth: 1, borderColor: AppColors.fontColor }
+            ]}
             disabled={isSelectable ? !isSelectable(index) : false}
             onLayout={event => onLayout(event, index, selectedIndex, width, offset)}
             onPress={() => onSelect(index)}>
@@ -50,16 +47,13 @@ export const AppTabs = ({
               style={[
                 styles.textStyle,
                 { fontSize: fontSize },
-                { fontWeight: selectedIndex === index ? "bold" : undefined },
-                { color: selectedIndex === index ? selectedTextColor : unselectedTextColor }
+                selectedIndex === index ? { color: AppColors.backgroundColor, fontWeight: "bold" } : { color: AppColors.fontColor }
               ]}>
               {item}
             </AppText>
           </AppPressableOverlay>
         ))}
       </Row>
-      <View style={styles.underline} />
-      <Animated.View style={[styles.animatedView, translateStyle, { backgroundColor: selectedColor }]} />
     </Column>
   );
 };
@@ -78,9 +72,19 @@ const onLayout = (event: LayoutChangeEvent, index: number, selectedIndex: number
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    marginHorizontal: 18
+  },
+  rowContainer: {
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  pressableStyle: {
+    borderRadius: 18
+  },
   textStyle: {
-    paddingHorizontal: 24,
-    paddingVertical: 16
+    paddingHorizontal: 22,
+    paddingVertical: 6
   },
   underline: {
     borderBottomColor: AppColorPalettes.gray[200],
@@ -91,5 +95,13 @@ const styles = StyleSheet.create({
     height: 4,
     position: "relative",
     top: -3
+  },
+  selected: {
+    fontWeight: "bold",
+    color: AppColors.white
+  },
+  unselected: {
+    borderWidth: 1,
+    borderColor: AppColors.fontColor
   }
 });

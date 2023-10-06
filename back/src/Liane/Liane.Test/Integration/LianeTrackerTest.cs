@@ -10,11 +10,15 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -61,7 +65,7 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!);
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!, Moq.Mock.Of<ILogger<LianeTracker>>());
  
     var pings = geojsonPings.Features.Select(f =>
     {
@@ -82,8 +86,41 @@ public class LianeTrackerTest: BaseIntegrationTest
 
   }
 
+  [Test]
+  public async Task ShouldNotFinishTrip()
+  {
+    var finished = false;
+    var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-case-1.json"));
+    var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
+    var userIds = lianeDb.Members.Select((m, i) => (m,i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
+    lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
+    await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
+    var liane = await lianeService.Get(lianeDb.Id);
+    var tracker = await new LianeTracker.Builder(liane)
+      .SetTripArrivedDestinationCallback(() =>
+      {
+        finished = true;
+      })
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, Db, Moq.Mock.Of<ILogger<LianeTracker>>());
+
+    var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with{User = userIds[p.User]}).ToImmutableList();
+    foreach (var p in pings)
+    {
+      if (finished) break;
+      await tracker.Push(p);
+    }
+   
+    var lastLocation = tracker.GetCurrentMemberLocation(pings.Last().User);
+    Assert.AreEqual(liane.WayPoints.Last().RallyingPoint.Id, lastLocation!.NextPoint.Id); 
+    
+    Assert.False(finished);
+  }
+
+  private IMongoDatabase Db = null!;
+  private ILianeService lianeService = null!;
   protected override void Setup(IMongoDatabase db)
   {
-    
+    Db = db;
+    lianeService = ServiceProvider.GetRequiredService<ILianeService>();
   }
 }

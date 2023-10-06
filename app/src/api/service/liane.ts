@@ -20,6 +20,7 @@ import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { cancelReminder, createReminder } from "@/api/service/notification";
 import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
+import { AppLogger } from "@/api/logger";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
@@ -43,8 +44,23 @@ export interface LianeService {
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
   deleteRecurrence(id: string): Promise<void>;
+  setTracked(id: string, track: boolean): Promise<void>;
+  getTracked(): Promise<string[]>;
 }
 export class LianeServiceClient implements LianeService {
+  async setTracked(id: string, track: boolean): Promise<void> {
+    const trackedLianes = new Set(await retrieveAsync<string[]>("tracked", []));
+    if (track) {
+      trackedLianes.add(id);
+    } else {
+      trackedLianes.delete(id);
+    }
+    await storeAsync("tracked", [...trackedLianes]);
+  }
+
+  async getTracked(): Promise<string[]> {
+    return (await retrieveAsync<string[]>("tracked", []))!;
+  }
   // GET
   async get(id: string): Promise<Liane> {
     return await get<Liane>(`/liane/${id}`);
@@ -58,7 +74,10 @@ export class LianeServiceClient implements LianeService {
   ) {
     let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
     if (cursor) {
-      paramString += `&cursor=${cursor}&limit=${pageSize}`;
+      paramString += `&cursor=${cursor}`;
+    }
+    if (pageSize) {
+      paramString += `&limit=${pageSize}`;
     }
     if (asc !== undefined) {
       paramString += `&asc=${asc}`;
@@ -124,7 +143,7 @@ export class LianeServiceClient implements LianeService {
       timestamp: new Date().getTime(),
       delay
     };
-    await postAs(`/event/member_ping`, { body: ping }).catch(e => console.warn(e));
+    await postAs(`/event/member_ping`, { body: ping }).catch(e => AppLogger.warn("GEOPINGS", e));
   }
 
   async pause(id: string): Promise<void> {

@@ -36,7 +36,6 @@ export abstract class AbstractNotificationService implements NotificationService
 
   protected decrementCounter = async (_: Ref<Notification>) => {
     if (this.unreadNotificationCount.getValue() - 1 < 0) {
-      console.warn("Read count < 0");
       return;
     }
     this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);

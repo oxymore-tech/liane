@@ -18,6 +18,7 @@ import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
+import { AppStyles } from "@/theme/styles";
 const MessageBubble = ({
   message,
   sender,
@@ -189,11 +190,7 @@ export const ChatScreen = () => {
           onEndReached={() => fetchNextPage()}
         />
       )}
-      {!conversation && (
-        <Center style={{ flex: 1 }}>
-          <ActivityIndicator />
-        </Center>
-      )}
+      {!conversation && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
       {error && (
         <Center style={{ flex: 1 }}>
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
@@ -252,7 +249,13 @@ export const ChatScreen = () => {
 
             <AppExpandingTextInput
               multiline={true}
-              trailing={!isSending ? sendButton : <ActivityIndicator />}
+              trailing={
+                !isSending ? (
+                  sendButton
+                ) : (
+                  <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
+                )
+              }
               onChangeText={setInputValue}
               value={inputValue}
               clearButtonMode="always"

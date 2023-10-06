@@ -13,9 +13,11 @@ import { useActor, useInterpret } from "@xstate/react";
 import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateMachine";
 import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
-import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { APP_VERSION } from "@env";
+import { APP_VERSION, TEST_ACCOUNT } from "@env";
+import { AppStyles } from "@/theme/styles";
+import { AppLogger } from "@/api/logger";
+import { PasswordInput } from "@/screens/signUp/PasswordInput";
 
 const t = scopedTranslate("SignUp");
 
@@ -42,7 +44,7 @@ const SignUpPage = () => {
       await services.auth.sendSms(phone);
       machine.send("SET_PHONE", { data: { phone: phone } });
     } catch (e) {
-      console.error("Sign up error ", e);
+      AppLogger.error("LOGIN", "Sign up error ", e);
       setError("Impossible d'effectuer la demande");
     }
   };
@@ -50,7 +52,7 @@ const SignUpPage = () => {
     // try {
     const pushToken = await getPushToken();
     const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
-    console.debug("[LOGIN] as ", authUser, machine.send);
+    AppLogger.info("LOGIN", "as ", authUser, machine.send);
     machine.send("LOGIN", { data: { authUser } });
     /*  } catch (e: any) {
       if (e instanceof UnauthorizedError) {
@@ -74,6 +76,8 @@ const SignUpPage = () => {
         </AppText>
         {state.matches("phone") ? (
           <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={sendCode} />
+        ) : state.context.phone === TEST_ACCOUNT ? (
+          <PasswordInput code={value} onChange={setValue} onValidate={submitCode} />
         ) : (
           <CodeInput code={value} onChange={setValue} onValidate={submitCode} retry={sendCode} />
         )}
@@ -92,7 +96,6 @@ const SignUpScreen = () => {
   const machine = useInterpret(m);
   const [state] = useActor(machine);
   machine.onDone((d: DoneEvent) => {
-    console.log(JSON.stringify(d));
     login({ ...state.context.authUser! });
   });
 
@@ -103,9 +106,7 @@ const SignUpScreen = () => {
       {["code", "phone"].some(state.matches) && <SignUpPage />}
       {state.matches("form") && <SignUpFormScreen />}
       {!["code", "phone", "form"].some(state.matches) && (
-        <Center style={styles.container}>
-          <ActivityIndicator />
-        </Center>
+        <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
       )}
     </SignUpLianeContext.Provider>
   );
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "64%",
-    color: AppColorPalettes.pink[500]
+    color: AppColors.primaryColor
   },
   errorText: {
     color: "red", // TODO red 600,

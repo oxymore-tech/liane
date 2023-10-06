@@ -18,7 +18,7 @@ const EstimatedDelayDisplay = ({ locationUpdate, initialTime }: { locationUpdate
   const [delay, setDelay] = useState(new Date().getTime() / 1000 - initialTimeMillis / 1000 + locationUpdate.delay);
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("update delay", new Date().getTime() / 1000 - initialTimeMillis / 1000);
+      //console.log("update delay", new Date().getTime() / 1000 - initialTimeMillis / 1000);
       setDelay(new Date().getTime() / 1000 - initialTimeMillis / 1000 + locationUpdate.delay);
     }, 30000);
     return () => clearInterval(interval);

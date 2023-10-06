@@ -106,7 +106,7 @@ export const TimeWheelPicker = ({
           visibleRest={1}
         />
 
-        <AppText>:</AppText>
+        <AppText style={styles.hourStyle}>heure</AppText>
 
         <WheelPicker
           selectedIndex={minute / minuteStep}
@@ -124,6 +124,10 @@ export const TimeWheelPicker = ({
 };
 
 const styles = StyleSheet.create({
+  hourStyle: {
+    fontWeight: "bold",
+    fontSize: 16
+  },
   itemTextStyle: {
     fontWeight: "bold",
     fontSize: 16

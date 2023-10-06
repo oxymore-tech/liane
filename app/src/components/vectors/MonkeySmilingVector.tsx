@@ -9,7 +9,7 @@ export type MonkeySmilingVectorProps = {
   bodyColor?: ColorValue;
 };
 export const MonkeySmilingVector = WithDynamicSize<MonkeySmilingVectorProps>(
-  ({ headColor = AppColors.orange, bodyColor = AppColors.white, width, height }) => {
+  ({ headColor = AppColors.primaryColor, bodyColor = AppColors.white, width, height }) => {
     return (
       <Svg width={width} height={height} viewBox="0 0 100 96" fill="none">
         <Path

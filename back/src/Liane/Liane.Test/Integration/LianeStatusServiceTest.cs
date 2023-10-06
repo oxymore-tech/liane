@@ -49,7 +49,7 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     liane3 = await lianeService.Get(liane3.Id);
 
     Assert.AreEqual(LianeState.Finished, liane1.State);
-    Assert.AreEqual(LianeState.NotStarted, liane2.State);
+    Assert.AreEqual(LianeState.Finished, liane2.State);
     Assert.AreEqual(LianeState.Canceled, liane3.State);
   }
 

@@ -11,6 +11,7 @@ using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
@@ -67,7 +68,7 @@ public sealed class LianeTracker
       return this;
     }
 
-    public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService, IMongoDatabase mongo)
+    public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService, IMongoDatabase mongo, ILogger<LianeTracker> logger)
     {
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location));
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
@@ -77,7 +78,15 @@ public sealed class LianeTracker
         SetAutoDisposeTimeout(() => Task.CompletedTask, 3600 * 1000);
       }
 
-      await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(liane, ImmutableList<MemberLocationSample>.Empty, DateTime.UtcNow));
+      var previousReport = (await mongo.GetCollection<LianeTrackReport>().FindAsync(r => r.Id == liane.Id)).FirstOrDefault();
+      if (previousReport is not null)
+      {
+        logger.LogInformation($"Using previously created report : {liane.Id}");
+      }
+      else
+      {
+        await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(liane, ImmutableList<MemberLocationSample>.Empty, DateTime.UtcNow));
+      }
       return new LianeTracker(osrmService, mongo, liane, onTripArrivedDestination ?? delegate {  }, tripSession);
     }
   }
@@ -196,6 +205,6 @@ public sealed class LianeTracker
   {
     currentLocationMap.TryGetValue(member.Id, out var currentLocation);
     if (currentLocation is null) return null;
-    return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.Coordinate);
+    return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.RawCoordinate);
   }
 }

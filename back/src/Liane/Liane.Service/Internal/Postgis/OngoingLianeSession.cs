@@ -32,7 +32,7 @@ public sealed partial class PostgisServiceImpl
       using var connection = postgis.NewConnection();
       var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint)>(
         "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point from (select ST_LineLocatePoint(geometry, @point::geometry(Point, 4326)) as fraction, geometry from ongoing_trip where id = @id) as trip",
-        new { id, point = new Point(new Position(coordinate.Lng, coordinate.Lat)) }
+        new { id, point = coordinate }
       );
       return result;
     }

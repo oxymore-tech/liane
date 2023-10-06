@@ -14,14 +14,17 @@ import { ActivityIndicator, Alert, Linking, Platform, View } from "react-native"
 import { AppButton } from "@/components/base/AppButton";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
+import { checkLocationPingsPermissions, hasLocationPermission, sendLocationPings } from "@/api/service/location";
 import { createReminder } from "@/api/service/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
 import { getTripFromLiane } from "@/components/trip/trip";
 import BackgroundGeolocationService from "native-modules/geolocation";
-import { PERMISSIONS, request } from "react-native-permissions";
+import { check, PERMISSIONS, request } from "react-native-permissions";
 import { useAppState } from "@react-native-community/hooks";
+import { AppStyles } from "@/theme/styles";
+import { AppLogger } from "@/api/logger";
+import { DdLogs } from "@datadog/mobile-react-native";
 
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
@@ -37,15 +40,17 @@ export const ShareTripLocationScreen = WithFullscreenModal(
         BackgroundGeolocationService.enableLocation()
           .then(async () => {
             try {
+              await services.liane.setTracked(liane.id!, true);
               const trip = getTripFromLiane(liane, user!.id!);
               await sendLocationPings(liane.id!, trip.wayPoints);
               navigation.replace("LianeDetail", { liane });
             } catch (e) {
-              console.warn(e);
+              AppLogger.error("GEOLOC", e);
+              Alert.alert("Erreur", JSON.stringify(e)); //TODO remove when datadog logs are set up
             }
           })
           .catch(e => {
-            console.warn(e);
+            AppLogger.error("GEOLOC", e);
             Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
           });
       };
@@ -58,7 +63,11 @@ export const ShareTripLocationScreen = WithFullscreenModal(
 
       useEffect(() => {
         if (appState === "active") {
-          checkLocationPingsPermissions().then(setHasPingsPermissions);
+          hasLocationPermission().then(() =>
+            checkLocationPingsPermissions().then(pingsLocationGranted => {
+              setHasPingsPermissions(pingsLocationGranted);
+            })
+          );
         } else {
           setHasPingsPermissions(undefined);
         }
@@ -71,7 +80,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
         return null;
       }
       if (!liane) {
-        return <ActivityIndicator />;
+        return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
       }
 
       const tripContent = <LianeView liane={liane} />;
@@ -96,7 +105,13 @@ export const ShareTripLocationScreen = WithFullscreenModal(
           </View>
           <View style={{ flex: 1 }} />
           <Column spacing={8} style={{ paddingHorizontal: 24, alignItems: "center" }}>
-            <AppButton title={"Démarrer le suivi"} icon={"play-circle-outline"} color={AppColors.orange} onPress={startGeoloc} kind={"circular"} />
+            <AppButton
+              title={"Démarrer le suivi"}
+              icon={"play-circle-outline"}
+              color={AppColors.primaryColor}
+              onPress={startGeoloc}
+              kind={"circular"}
+            />
             <AppButton
               title={"Décaler le départ"}
               icon={"clock-outline"}
@@ -157,9 +172,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         } else if (status === "blocked") {
           const openSetting = () => {
             Linking.openSettings().catch(() => {
-              if (__DEV__) {
-                console.warn("[LOCATION] Unable to open settings");
-              }
+              AppLogger.warn("SETTINGS", "Unable to open settings");
             });
           };
           Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
@@ -175,7 +188,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         const status = await request(
           Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
         );
-        console.log(status);
+        //console.log(status);
         if (status === "granted") {
           return true;
         } else if (status === "denied") {
@@ -185,9 +198,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
         } else if (status === "blocked") {
           const openSetting = () => {
             Linking.openSettings().catch(() => {
-              if (__DEV__) {
-                console.warn("[LOCATION] Unable to open settings");
-              }
+              AppLogger.warn("SETTINGS", "Unable to open settings");
             });
           };
           Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
@@ -196,11 +207,19 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
           ]);
         }
       } else {
-        await Linking.openSettings();
+        await Linking.openSettings().catch(() => {
+          AppLogger.warn("SETTINGS", "Unable to open settings");
+        });
       }
     }
     return false;
   };
+
+  useEffect(() => {
+    check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(p => {
+      DdLogs.info("Location permission status is:", p);
+    });
+  }, []);
 
   return (
     <Column style={{ alignItems: "center" }} spacing={16}>
@@ -242,14 +261,15 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
             1. Appuyez sur "Autoriser la géolocalisation"{"\n"}
             2. Allez dans "Permissions"{"\n"}
             3. Sélectionnez "Position"{"\n"}
-            2. Sélectionnez "Toujours autoriser" dans la liste des autorisations
+            4. Sélectionnez "Toujours autoriser" dans la liste des autorisations
           </AppText>
         )}
       </Row>
       <AppButton
         title={"Autoriser la géolocalisation"}
-        color={AppColors.orange}
+        color={AppColors.primaryColor}
         onPress={() => requestBackgroundGeolocation().then(props.onGranted)}
+        onLongPress={() => props.onGranted(true)}
       />
     </Column>
   );

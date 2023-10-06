@@ -9,8 +9,6 @@ import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { DisplayBoundingBox, fromBoundingBox } from "@/util/geometry";
 import { contains } from "@/api/geo";
-import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
-import { AppStyles } from "@/theme/styles";
 import distance from "@turf/distance";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -20,8 +18,13 @@ import UserLocation = MapLibreGL.UserLocation;
 import { useSubject } from "@/util/hooks/subscription";
 import { SubscriptionLike } from "rxjs";
 import { displayInfo } from "@/components/base/InfoDisplayer";
+import { AppPressableOverlay } from "../base/AppPressable";
+import { AppIcon } from "../base/AppIcon";
+import { AppStyles } from "@/theme/styles";
+import { AppLogger } from "@/api/logger";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
+//const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 const rp_deposit_cluster_icon = require("../../../assets/icons/rp_pink_blank.png");
@@ -72,9 +75,10 @@ const AppMapView = forwardRef(
     const mapRef = useRef<MapLibreGL.MapView>();
     const cameraRef = useRef<MapLibreGL.Camera>();
     const [animated, setAnimated] = useState(false);
-    const [showActions, setShowActions] = useState(showGeolocation);
+    //const [showActions, setShowActions] = useState(showGeolocation);
 
     const wd = useWindowDimensions();
+    const { bottom } = useSafeAreaInsets();
     const scale = Platform.OS === "android" ? wd.scale : 1;
     const regionSubject = useSubject<RegionPayload>();
 
@@ -121,7 +125,7 @@ const AppMapView = forwardRef(
     const moving = useRef<boolean>(false);
 
     const [showUserLocation, setShowUserLocation] = useState(false);
-    const [flyingToLocation, setFlyingToLocation] = useState(false);
+    //const [flyingToLocation, setFlyingToLocation] = useState(false);
 
     return (
       <View style={styles.map}>
@@ -132,7 +136,7 @@ const AppMapView = forwardRef(
             if (!moving.current) {
               moving.current = true;
               if (animated) {
-                setShowActions(flyingToLocation || false);
+                // setShowActions(flyingToLocation || false);
                 if (onStartMovingRegion) {
                   onStartMovingRegion();
                 }
@@ -160,7 +164,7 @@ const AppMapView = forwardRef(
               clearTimeout(regionMoveCallbackRef.current);
               regionMoveCallbackRef.current = undefined;
             } else if (animated) {
-              setShowActions(flyingToLocation || false);
+              //  setShowActions(flyingToLocation || false);
             }
           }}
           onRegionIsChanging={feature => regionSubject.next(feature.properties)}
@@ -170,7 +174,7 @@ const AppMapView = forwardRef(
               if (onStopMovingRegion) {
                 onStopMovingRegion();
               }
-              setShowActions(true);
+              //   setShowActions(true);
               if (onRegionChanged) {
                 onRegionChanged(feature.properties);
               }
@@ -189,7 +193,7 @@ const AppMapView = forwardRef(
               });
             }
             setAnimated(true);
-            console.debug("[MAP] loading done");
+            AppLogger.debug("MAP", "loading done");
             if (onMapLoaded) {
               onMapLoaded();
             }
@@ -212,7 +216,7 @@ const AppMapView = forwardRef(
           />
           <Images
             images={{
-              pickup: rp_pickup_icon,
+              //  pickup: rp_pickup_icon,
               rp: rp_icon,
               //    suggestion: rp_suggestion_icon,
               deposit: rp_deposit_icon,
@@ -222,9 +226,21 @@ const AppMapView = forwardRef(
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
           {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
-        {showGeolocation && showActions && (
-          <Animated.View entering={SlideInLeft.delay(200)} exiting={SlideOutLeft} style={[styles.mapOverlay, AppStyles.shadow]}>
-            <Column spacing={8}>
+        {/*<View style={styles.blackOverlay} pointerEvents="none" />*/}
+
+        {showGeolocation && (
+          <Column style={{ position: "absolute", bottom: bottom + 72, right: 10 }} spacing={8}>
+            <View style={[styles.actionOverlay, AppStyles.shadow]}>
+              <AppPressableOverlay style={[AppStyles.center, { borderRadius: 20, height: 36 }]} borderRadius={20}>
+                <AppIcon
+                  name={"people-outline"}
+                  size={22}
+                  style={{ justifyContent: "center", alignItems: "center" }}
+                  color={AppColors.primaryColor}
+                />
+              </AppPressableOverlay>
+            </View>
+            <View style={[styles.actionOverlay, AppStyles.shadow]}>
               <PositionButton
                 //locationEnabled={showUserLocation}
                 onPosition={async currentLocation => {
@@ -236,7 +252,7 @@ const AppMapView = forwardRef(
                   const currentCenter = await mapRef.current?.getCenter()!;
                   const currentZoom = await mapRef.current?.getZoom()!;
                   const targetCoord = [currentLocation.lng, currentLocation.lat];
-                  setFlyingToLocation(true);
+                  //setFlyingToLocation(true);
                   if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
                     cameraRef.current?.setCamera({
                       centerCoordinate: targetCoord,
@@ -248,12 +264,12 @@ const AppMapView = forwardRef(
                   } else {
                     cameraRef.current?.flyTo(targetCoord);
                   }
-                  setFlyingToLocation(false);
+                  //setFlyingToLocation(false);
                 }}
                 onPositionError={() => setShowUserLocation(false)}
               />
-            </Column>
-          </Animated.View>
+            </View>
+          </Column>
         )}
         <View
           style={{
@@ -287,7 +303,6 @@ const AppMapView = forwardRef(
 );
 
 export default AppMapView;
-
 export const MarkerView: ComponentType<MarkerViewProps & PropsWithChildren> = MapLibreGL.MarkerView;
 
 const styles = StyleSheet.create({
@@ -307,28 +322,22 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     borderRadius: 24
   },
-  shadow: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-
-    elevation: 4
-  },
-  mapOverlay: {
-    backgroundColor: AppColors.white,
-    margin: 16,
-
-    paddingVertical: 6,
+  blackOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    width: "100%",
+    height: "100%",
     position: "absolute",
-    left: 0,
-
-    alignSelf: "center",
-    borderRadius: 16
+    top: 0
   },
+  actionOverlay: {
+    backgroundColor: AppColors.white,
+    alignSelf: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    width: 40,
+    height: 40
+  },
+
   footerContainer: {
     position: "absolute",
     bottom: 80 - 26,

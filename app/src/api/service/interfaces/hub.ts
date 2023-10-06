@@ -1,8 +1,21 @@
-import { ChatMessage, ConversationGroup, FullUser, PaginatedRequestParams, PaginatedResponse, Ref, TrackedMemberLocation, UTCDateTime } from "@/api";
+import {
+  ChatMessage,
+  ConversationGroup,
+  FullUser,
+  Liane,
+  PaginatedRequestParams,
+  PaginatedResponse,
+  Ref,
+  TrackedMemberLocation,
+  User,
+  UTCDateTime
+} from "@/api";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { Answer, Notification } from "@/api/notification";
 import { LianeEvent } from "@/api/event";
+import { AppLogger } from "@/api/logger";
 
+export type HubState = "online" | "reconnecting" | "offline";
 export interface HubService {
   list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
   send(message: ChatMessage): Promise<void>;
@@ -22,8 +35,10 @@ export interface HubService {
   subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
 
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
-
   unreadNotificationCount: Observable<number>;
+  lianeUpdates: Observable<Liane>;
+
+  hubState: Observable<HubState>;
 }
 
 export type ConsumeMessage = (res: ChatMessage) => void;
@@ -42,19 +57,19 @@ export abstract class AbstractHubService implements HubService {
   protected currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
-
+  lianeUpdates = new Subject<Liane>();
   unreadNotificationCount = new BehaviorSubject<number>(0);
-
+  hubState = new Subject<HubState>();
   protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage | null = null;
-  protected onReceiveLocationUpdateCallback: OnLocationCallback | null = null;
+  protected onReceiveLocationUpdateCallback: { [n: Ref<User>]: OnLocationCallback | undefined } = {};
   protected appStateActive: boolean = true;
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
-    console.debug("[HUB] received : msg", this.appStateActive, convId, message, this.currentConversationId);
+    AppLogger.info("HUB", "received : msg", this.appStateActive, convId, message, this.currentConversationId);
     if (!this.appStateActive) {
       return false;
     }
@@ -69,7 +84,7 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveUnreadOverview = async (unread: UnreadOverview) => {
     // Called when hub is started
-    console.debug("[HUB] unread", unread);
+    AppLogger.info("HUB", "unread", unread);
     this.unreadConversations.next(unread.conversations);
     this.unreadNotificationCount.next(unread.notificationsCount);
   };
@@ -77,7 +92,7 @@ export abstract class AbstractHubService implements HubService {
   protected receiveNotification = async (notification: Notification) => {
     // Called on new notification
     if (__DEV__) {
-      console.debug("[HUB] received :", this.appStateActive, notification);
+      AppLogger.info("HUB", "received :", this.appStateActive, notification);
     }
     if (this.appStateActive) {
       this.notificationSubject.next(notification);
@@ -115,7 +130,7 @@ export abstract class AbstractHubService implements HubService {
     this.onReceiveLatestMessagesCallback = onReceiveLatestMessages;
     this.onReceiveMessageCallback = onReceiveMessage;
     const conv: ConversationGroup = await this.joinGroupChat(conversationRef);
-    console.debug("[HUB] joined " + conv.id);
+    AppLogger.info("HUB", "joined " + conv.id);
     this.currentConversationId = conv.id;
     // Remove from unread conversations
     if (this.unreadConversations.getValue().includes(conversationRef)) {
@@ -129,10 +144,10 @@ export abstract class AbstractHubService implements HubService {
     if (this.currentConversationId) {
       this.onReceiveLatestMessagesCallback = null;
       this.onReceiveMessageCallback = null;
-      console.debug("[HUB] left " + this.currentConversationId);
+      AppLogger.info("HUB", "left " + this.currentConversationId);
       this.currentConversationId = undefined;
     } else if (__DEV__) {
-      console.debug("[HUB] Tried to leave an undefined conversation.");
+      AppLogger.info("HUB", "Tried to leave an undefined conversation.");
     }
   };
 
@@ -142,7 +157,7 @@ export abstract class AbstractHubService implements HubService {
         await this.sendToGroup(message);
       } catch (e) {
         if (__DEV__) {
-          console.warn(`[HUB] Could not send message : ${JSON.stringify(message)}`, e);
+          AppLogger.warn("HUB", `Could not send message : ${JSON.stringify(message)}`, e);
         }
       }
     } else {
@@ -151,9 +166,15 @@ export abstract class AbstractHubService implements HubService {
   };
 
   protected receiveLocationUpdateCallback: OnLocationCallback = l => {
-    if (this.onReceiveLocationUpdateCallback) {
-      this.onReceiveLocationUpdateCallback(l);
+    AppLogger.debug("GEOLOC", "received", l);
+    const callback = this.onReceiveLocationUpdateCallback[l.member];
+    if (callback) {
+      callback(l);
     }
+  };
+
+  protected receiveLianeUpdate = (liane: Liane) => {
+    this.lianeUpdates.next(liane);
   };
 
   abstract readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;

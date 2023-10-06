@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppDimensions } from "@/theme/dimensions";
+import { AppColors } from "@/theme/colors";
 
 const AppBorderRadius = {
   input: 24
@@ -17,8 +16,7 @@ export const AppStyles = StyleSheet.create({
     paddingRight: 12
   },
   input: {
-    fontSize: 18,
-    color: AppColorPalettes.gray[800]
+    fontSize: 18
   },
   inputContainer: {
     backgroundColor: AppColors.white,
@@ -36,6 +34,20 @@ export const AppStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center"
   },
+  noData: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: AppColors.primaryColor,
+    paddingTop: 16
+  },
+  errorData: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: AppColors.primaryColor
+  },
+  fullHeight: {
+    height: "100%"
+  },
   shadow: {
     shadowColor: "#000",
     shadowOffset: {
@@ -47,14 +59,12 @@ export const AppStyles = StyleSheet.create({
 
     elevation: 4
   },
-
-  /* Test */
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold"
   },
-  body: {
-    fontFamily: "Inter",
+  text: {
+    fontFamily: "Source Sans 3",
     fontSize: 14
   }
 });

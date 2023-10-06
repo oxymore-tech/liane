@@ -319,7 +319,7 @@ const WheelPickerItem: React.FC<ItemProps> = React.memo(
 
     return (
       <Animated.View style={[styles.option, style, { height, opacity, transform: [{ translateY }, { rotateX }, { scale }] }]}>
-        <AppText style={textStyle}>{option}</AppText>
+        <AppText style={[textStyle, { fontSize: 20 }]}>{option}</AppText>
       </Animated.View>
     );
   },

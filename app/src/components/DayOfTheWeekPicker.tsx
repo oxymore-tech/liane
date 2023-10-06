@@ -6,7 +6,7 @@ import { daysList } from "@/api/i18n";
 
 import { Row } from "@/components/base/AppLayout";
 
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 export const DayOfTheWeekPicker = ({
   selectedDays,
@@ -29,14 +29,14 @@ export const DayOfTheWeekPicker = ({
             style={[
               styles.dayContainer,
               selectedDaysString?.charAt(index) === "1" ? styles.daySelectedContainer : null,
-              { width: daysSize ?? 50, height: daysSize ?? 50, borderRadius: daysSize ? daysSize / 2 : 25 }
+              { width: daysSize ?? 35, height: daysSize ?? 35, borderRadius: daysSize ? daysSize / 2 : 25 }
             ]}>
             <TouchableWithoutFeedback onPress={() => selectDate(index, onChangeDays, selectedDaysString)}>
               <Text
                 style={[
                   styles.textContainer,
                   selectedDaysString?.charAt(index) === "1" ? styles.textSelectedContainer : null,
-                  { fontSize: fontSize ?? 18 }
+                  { fontSize: fontSize ?? 16 }
                 ]}>
                 {day.substring(0, 2)}
               </Text>
@@ -67,25 +67,25 @@ const replaceSelectedDay = (selectedDay: string) => {
 
 const styles = StyleSheet.create({
   rowContainer: {
-    padding: 2,
+    padding: 12,
     textAlign: "center",
     justifyContent: "center",
     flexWrap: "wrap"
   },
   dayContainer: {
-    marginHorizontal: 2,
+    marginHorizontal: 6,
     textAlign: "center",
     justifyContent: "center",
-    borderColor: AppColors.black,
-    borderWidth: 1,
+    borderColor: AppColorPalettes.gray[600],
+    borderWidth: 2,
     borderRadius: 20
   },
   daySelectedContainer: {
-    backgroundColor: AppColors.black,
-    borderColor: AppColors.yellow
+    borderWidth: 0,
+    backgroundColor: AppColors.primaryColor
   },
   textContainer: {
-    color: AppColors.black,
+    color: AppColorPalettes.gray[600],
     textAlign: "center"
   },
   textSelectedContainer: {

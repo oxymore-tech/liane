@@ -20,5 +20,7 @@ public interface IHubClient
   Task Me(FullUser user);
   
   Task ReceiveLianeMemberLocationUpdate(TrackedMemberLocation update);
+  
+  Task ReceiveLianeUpdate(Trip.Liane liane);
 
 }

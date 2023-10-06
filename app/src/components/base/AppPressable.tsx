@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     bottom: 0
   },
   pressableTarget: {
-    minHeight: 36,
+    minHeight: 24,
     minWidth: 36
   }
 });

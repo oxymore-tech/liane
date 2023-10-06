@@ -38,4 +38,5 @@ public sealed class Positions
     public static readonly LatLng Tournefeuille = new (43.5831985474, 1.34571003914);
     public static readonly LatLng AireDesPyrénées = new (43.18791, 0.98503);
     public static readonly LatLng MartresTolosane = new (43.1984357, 1.01088619999996);
+    public static readonly LatLng LO = new(43.567936, 1.390924);
 }

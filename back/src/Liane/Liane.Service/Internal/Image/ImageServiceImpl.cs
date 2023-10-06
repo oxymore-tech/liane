@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -84,7 +85,8 @@ public sealed class ImageServiceImpl : IImageService
     }
   }
 
-  private string GetPicturelUrl(string imageId, Variant variant) => $"https://imagedelivery.net/{cloudflareSettings.AccountHash}/{imageId}/{variant.ToString().ToLowerInvariant()}";
+  private string GetPicturelUrl(string imageId, Variant variant) =>
+    $"https://imagedelivery.net/{cloudflareSettings.AccountHash}/{imageId}/{variant.ToString().ToLowerInvariant()}?rnd={DateTimeOffset.Now.ToUnixTimeMilliseconds()}";
 
   private string GetApiUri(string? imageId = null)
   {

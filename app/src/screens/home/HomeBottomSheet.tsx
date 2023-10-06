@@ -5,11 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 import { AppDimensions } from "@/theme/dimensions";
-import { Row } from "@/components/base/AppLayout";
-import { AppColorPalettes } from "@/theme/colors";
-import { AppText } from "@/components/base/AppText";
+import { AppColors } from "@/theme/colors";
 
 export const HomeBottomSheetContainer = (
   props: {
@@ -55,7 +53,7 @@ export const HomeBottomSheetContainer = (
     return <View />;
   }
 
-  const bottomSpace = insets.bottom + AppDimensions.bottomBar.marginVertical + h / 2;
+  const bottomSpace = insets.bottom + AppDimensions.bottomBar.margin + h / 2;
 
   let stops: number[];
   let paddingTop: number;
@@ -86,28 +84,14 @@ export const HomeBottomSheetContainer = (
       }}
       canScroll={props.canScroll}
       padding={{ top: paddingTop + insets.top }}
+      backgroundStyle={{
+        backgroundColor: isMatchState ? AppColors.lightGrayBackground : AppColors.white,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24
+      }}
       margins={{ right: isMapState ? 24 : 0, left: isMapState ? 24 : 0, bottom: isMapState ? bottomSpace : 0 }}>
       {props.children}
       {/*<View style={{ height: h / 2 }} />*/}
     </AppBottomSheet>
-  );
-};
-
-export const TopRow = ({ loading = false, title }: { loading?: boolean; title: string }) => {
-  return (
-    <Row
-      style={{
-        borderBottomWidth: 1,
-        borderColor: AppColorPalettes.gray[200],
-        marginBottom: 16,
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        justifyContent: "space-between"
-      }}>
-      <AppText numberOfLines={2} style={{ fontWeight: "bold", alignSelf: "center", color: AppColorPalettes.gray[600] }}>
-        {title}
-      </AppText>
-      {loading && <ActivityIndicator size={12} color={"red"} />}
-    </Row>
   );
 };

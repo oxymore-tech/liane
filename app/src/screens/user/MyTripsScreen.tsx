@@ -1,41 +1,59 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-import { Liane, Ref, UnionUtils } from "@/api";
+import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse, Ref } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
-import { Event } from "@/api/notification";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
-import { Center, Column } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
+import { AppStyles } from "@/theme/styles";
+import { useSubscription } from "@/util/hooks/subscription";
+import { UserPicture } from "@/components/UserPicture";
 
 const MyTripsScreen = () => {
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
-  const { services } = useContext(AppContext);
+  const futureStates: LianeState[] = ["NotStarted", "Started"];
+  const { services, user } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(["NotStarted", "Started"], undefined, 25, false) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(futureStates, undefined, 25, false) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
-  useEffect(() => {
-    const s = services.realTimeHub.subscribeToNotifications(async n => {
-      // TODO make sure "type" is serialized via Hub
-
-      //  @ts-ignore
-      if (UnionUtils.isInstanceOf<Event>(n, "Event") || (!n.type && !!n.payload)) {
-        await queryClient.invalidateQueries(LianeQueryKey);
-        await queryClient.invalidateQueries(JoinRequestsQueryKey);
+  useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
+    queryClient.setQueryData<PaginatedResponse<JoinLianeRequestDetailed>>(JoinRequestsQueryKey, old => {
+      if (!old) {
+        return { pageSize: 0, data: [] };
       }
+      const updatedData = old.data.filter(joinRequest => joinRequest.targetLiane.id !== liane.id);
+      return { pageSize: updatedData.length, data: updatedData };
     });
-    return () => s.unsubscribe();
-  }, []);
+    queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
+      if (!old) {
+        return { next: undefined, pageSize: 1, data: [liane] };
+      }
+      const found = old.data.findIndex(l => l.id === liane.id);
+      if (futureStates.includes(liane.state)) {
+        if (found >= 0) {
+          old.data[found] = liane;
+          return old;
+        } else {
+          old.data.unshift(liane);
+          return { ...old, pageSize: old.pageSize + 1 };
+        }
+      } else if (found >= 0) {
+        return { ...old, pageSize: old.pageSize - 1, data: old.data.filter(l => l.id !== liane.id) };
+      }
+      return old;
+    });
+  });
 
   const isFetchingFutureLianes = queryClient.isFetching({
     predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
@@ -46,12 +64,12 @@ const MyTripsScreen = () => {
     }
   }, [isFetchingFutureLianes]);
 
-  const isLoading = queriesData[0].isLoading || queriesData[1].isLoading;
-  const error: any = queriesData[0].error || queriesData[1].error;
-  const isFetching = queriesData[0].isFetching || queriesData[1].isFetching;
+  const isLoading = queriesData.some(q => q.isLoading);
+  const error: any = queriesData.find(q => q.error)?.error;
+  const isFetching = queriesData.some(q => q.isFetching);
 
   // Create section list from a list of Liane objects
-  const data = useMemo(() => {
+  const data: (JoinLianeRequestDetailed | Liane)[] = useMemo(() => {
     if (queriesData[0].data && queriesData[1].data) {
       return [...queriesData[0].data!.data, ...queriesData[1].data!.data];
     }
@@ -61,7 +79,7 @@ const MyTripsScreen = () => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
       </View>
     );
   }
@@ -73,34 +91,55 @@ const MyTripsScreen = () => {
     } else {
       return (
         <View style={styles.container}>
-          <AppText style={{ textAlign: "center" }}>
-            Error:
-            {error.message}
-          </AppText>
-          <Center>
-            <AppButton color={AppColors.orange} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
-          </Center>
+          <Column style={[AppStyles.center, AppStyles.fullHeight]}>
+            <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
+            <AppText style={AppStyles.errorData}>Message: {error.message}</AppText>
+            <View style={{ marginTop: 12 }}>
+              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
+            </View>
+          </Column>
         </View>
       );
     }
   }
 
   return (
-    <Column spacing={16} style={styles.container}>
-      <AppButton icon="plus-outline" title="Publier une liane" onPress={() => navigation.navigate("Publish", {})} />
-      <AppTabs
-        items={["A venir", "Passés"]}
-        onSelect={setSelectedTab}
-        selectedIndex={selectedTab}
-        isSelectable={() => true}
-        selectedColor={AppColors.darkBlue}
-        fontSize={18}
-      />
-      {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
-      {selectedTab === 0 && data.length > 0 && (
-        <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
-      )}
-      {selectedTab === 1 && <PastLianeListView />}
+    <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
+      <Column style={styles.headerContainer} spacing={16}>
+        <Row>
+          <AppButton
+            style={{ flex: 1 }}
+            icon="plus-outline"
+            kind="rounded"
+            title="Créer une liane"
+            onPress={() => navigation.navigate("Publish", {})}
+          />
+          <View style={{ flex: 1, alignItems: "flex-end", justifyContent: "center", marginRight: 12 }}>
+            <TouchableOpacity
+              style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
+              onPress={() =>
+                // @ts-ignore
+                navigation.navigate("Profile", { user })
+              }>
+              <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
+            </TouchableOpacity>
+          </View>
+        </Row>
+        <AppTabs
+          items={["Lianes à venir", "Lianes passées"]}
+          onSelect={setSelectedTab}
+          selectedIndex={selectedTab}
+          isSelectable={() => true}
+          fontSize={16}
+        />
+      </Column>
+      <Column spacing={16} style={styles.container}>
+        {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
+        {selectedTab === 0 && data.length > 0 && (
+          <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
+        )}
+        {selectedTab === 1 && <PastLianeListView />}
+      </Column>
     </Column>
   );
 };
@@ -108,17 +147,18 @@ const MyTripsScreen = () => {
 const NoFutureTrip = () => {
   return (
     <Center>
-      <AppText>Vous n'avez aucun trajet à venir.</AppText>
+      <AppText style={AppStyles.noData}>Vous n'avez aucun trajet à venir.</AppText>
     </Center>
   );
 };
 const NoRecentTrip = () => {
   return (
     <Center>
-      <AppText>Vous n'avez pas encore effectué de trajets.</AppText>
+      <AppText style={AppStyles.noData}>Vous n'avez pas encore effectué de trajets.</AppText>
     </Center>
   );
 };
+
 export const LianePastQueryKey = "getPastTrips";
 
 const PastLianeListView = WithFetchPaginatedResponse<Liane>(
@@ -128,7 +168,7 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
         <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
         {isFetchingNextPage && (
           <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
-            <ActivityIndicator />
+            <ActivityIndicator style={AppStyles.center} color={AppColors.primaryColor} size="large" />
           </View>
         )}
       </>
@@ -149,9 +189,15 @@ const refetch = (queriesData: UseQueryResult[]) => {
 };
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    padding: 12,
+    backgroundColor: AppColors.backgroundColor,
+    borderBottomRightRadius: 24,
+    borderBottomLeftRadius: 24
+  },
   container: {
     marginHorizontal: 16,
-    height: "100%"
+    flex: 1
   }
 });
 

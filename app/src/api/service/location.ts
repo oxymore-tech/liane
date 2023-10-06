@@ -12,6 +12,9 @@ import { sleep } from "@/util/datetime";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { distance } from "@/util/geometry";
 import { check, PERMISSIONS } from "react-native-permissions";
+import { AppLogger } from "@/api/logger";
+import { BehaviorSubject } from "rxjs";
+import { DdLogs, DdTrace } from "@datadog/mobile-react-native";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -190,10 +193,8 @@ type LocationPingsSenderProps = { liane: string; trip: WayPoint[]; delay: number
 
 const hasPermissionIOS = async (): Promise<boolean> => {
   const openSetting = () => {
-    Linking.openSettings().catch(() => {
-      if (__DEV__) {
-        console.warn("[LOCATION] Unable to open settings");
-      }
+    Linking.openSettings().catch(e => {
+      AppLogger.warn("SETTINGS", "Unable to open settings", e);
     });
   };
   const status = await Geolocation.requestAuthorization("whenInUse");
@@ -203,8 +204,14 @@ const hasPermissionIOS = async (): Promise<boolean> => {
   }
 
   if (status === "denied") {
-    Alert.alert("Localisation désactivée", `Liane ne pourra pas accéder à votre position. Certaines fonctionnalités risquent d'être limitées'.`);
-    return await hasPermissionIOS();
+    Alert.alert(
+      "Localisation désactivée",
+      `L'accès à votre position est désactivé dans les paramètres. Certaines fonctionnalités risquent d'être limitées'.`,
+      [
+        { text: "Paramètres", onPress: openSetting },
+        { text: "Ignorer", onPress: () => {} }
+      ]
+    );
   }
 
   if (status === "disabled") {
@@ -239,13 +246,9 @@ export const hasLocationPermission = async () => {
   }
 
   if (status === PermissionsAndroid.RESULTS.DENIED) {
-    if (__DEV__) {
-      console.log("[LOCATION] Location permission denied by user");
-    }
+    AppLogger.debug("SETTINGS", "Location permission denied by user");
   } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-    if (__DEV__) {
-      console.log("[LOCATION] Location permission revoked by user");
-    }
+    AppLogger.debug("SETTINGS", "Location permission revoked by user");
   }
 
   return false;
@@ -253,12 +256,16 @@ export const hasLocationPermission = async () => {
 
 export async function checkLocationPingsPermissions(): Promise<boolean> {
   if (Platform.OS === "ios") {
-    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
-    console.debug("[GEOPINGS]", access);
+    let access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
+
+    //access = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
+    AppLogger.debug("GEOPINGS", access);
     return access === "granted";
+    //return true;
+    // return access === "granted";
   } else if (Platform.OS === "android") {
-    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
-    console.debug("[GEOPINGS]", access);
+    const access = await check(Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+    AppLogger.debug("GEOPINGS", access);
     return access === "granted";
   }
   return true;
@@ -267,14 +274,19 @@ export async function checkLocationPingsPermissions(): Promise<boolean> {
 export async function cancelSendLocationPings() {
   if (Platform.OS === "ios") {
     await BackgroundService.stop();
+    const taskId = running.getValue()?.taskId;
+    if (taskId) {
+      DdTrace.finishSpan(taskId, undefined, Date.now());
+    }
+    running.next(undefined);
   } else {
     await BackgroundGeolocationService.stop();
   }
 }
 export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], delay: number = 0): Promise<void> {
-  console.debug("[GEOPINGS]", "start...");
-  console.debug(
-    "[GEOPINGS]",
+  AppLogger.debug("GEOPINGS", "start...");
+  AppLogger.debug(
+    "GEOPINGS",
     lianeId,
     wayPoints.map(w => w.rallyingPoint.label)
   );
@@ -306,7 +318,10 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
 
 export const isLocationServiceRunning = () =>
   Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
-export const watchLocationServiceState = (callback: (running: boolean) => void) => BackgroundGeolocationService.watch(callback); //TODO IOS
+
+const running = new BehaviorSubject<{ liane: string; taskId: string } | undefined>(undefined);
+export const watchLocationServiceState = (callback: (running: boolean) => void) =>
+  Platform.OS === "ios" ? running.subscribe(l => callback(!!l)) : BackgroundGeolocationService.watch(callback);
 
 const nearWayPointRadius = 1000;
 const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
@@ -314,25 +329,29 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
   const timeout = tripDuration + 3600 * 1000;
   let preciseTrackingMode = true;
   let watchId: number = 0;
-
-  console.debug("[GEOPINGS]", `tracking timeout = ${timeout} ms`);
+  const taskId = await DdTrace.startSpan("geopings", { liane }, Date.now());
+  running.next({ liane, taskId });
+  AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
   await new Promise<void>(async resolve => {
     const getDistanceFilter = () => (preciseTrackingMode ? 10 : nearWayPointRadius / 2);
 
     const switchTrackingMode = (precise: boolean) => {
       Geolocation.clearWatch(watchId);
       preciseTrackingMode = precise;
-      startTracking(precise ? "best" : "nearestTenMeters", getDistanceFilter());
+      const mode = precise ? "best" : "nearestTenMeters";
+      DdLogs.info("Switched tracking mode to:", mode);
+      startTracking(mode, getDistanceFilter());
     };
 
     const stopTracking = () => {
       Geolocation.clearWatch(watchId);
-
+      DdTrace.finishSpan(taskId, undefined, Date.now());
+      running.next(undefined);
       resolve();
     };
     const positionCallback: Geolocation.SuccessCallback = position => {
       // Send position ping
-      console.debug("[GEOPINGS]", position);
+      AppLogger.debug("GEOPINGS", position);
       const coordinate = { lat: position.coords.latitude, lng: position.coords.longitude };
       const ping: MemberPing = {
         ...{
@@ -343,16 +362,16 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
         },
         ...(delay > 0 ? { delay } : {})
       };
-      postAs(`/event/member_ping`, { body: ping }).catch(err => console.warn("[GEOPINGS]", "Could not send ping", err));
+      postAs(`/event/member_ping`, { body: ping }).catch(err => AppLogger.warn("GEOPINGS", "Could not send ping", err));
       const nearWayPointIndex = trip.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= nearWayPointRadius);
       if (nearWayPointIndex > -1) {
         if (!preciseTrackingMode) {
           // Enable precise tracking
           switchTrackingMode(true);
         } else if (nearWayPointIndex === trip.length - 1) {
-          console.debug("[GEOPINGS] Reached destination. Tracking will stop in 5 minutes.");
+          AppLogger.info("GEOPINGS", "Reached destination. Tracking will stop in 5 minutes.");
           sleep(5 * 60 * 1000).then(() => {
-            console.debug("[GEOPINGS] Done!");
+            AppLogger.info("GEOPINGS", "Done!");
             stopTracking();
           });
         }
@@ -366,7 +385,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
       watchId = Geolocation.watchPosition(
         positionCallback,
         err => {
-          console.warn("[GEOPINGS]", err);
+          AppLogger.warn("GEOPINGS", err);
         },
         {
           distanceFilter: distanceFilter,
@@ -378,10 +397,19 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     };
 
     // Start tracking
+    Geolocation.getCurrentPosition(
+      positionCallback,
+      err => {
+        AppLogger.warn("GEOPINGS", err);
+      },
+      {
+        accuracy: { ios: "best" }
+      }
+    );
     startTracking("best", getDistanceFilter());
     await sleep(timeout);
     // Clean up
-    console.debug("[GEOPINGS] Service timed out");
+    AppLogger.info("GEOPINGS", "Service timed out");
     stopTracking();
   });
 };

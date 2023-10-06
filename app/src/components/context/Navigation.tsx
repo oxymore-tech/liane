@@ -3,86 +3,66 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "react-query";
+
+import { useAppNavigation } from "@/api/navigation";
+import { Notification } from "@/api/notification";
+
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import NotificationScreen, { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppDimensions } from "@/theme/dimensions";
 import { AppText } from "@/components/base/AppText";
-import MyTripsScreen from "@/screens/user/MyTripsScreen";
-import LianeIcon from "@/assets/icon.svg";
-import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { Row } from "@/components/base/AppLayout";
+import { WithBadge } from "@/components/base/WithBadge";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
+
+import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
+import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
+import { SettingsScreen } from "@/screens/user/SettingsScreen";
+import { ShareTripLocationScreen } from "@/screens/modals/ShareTripLocationScreen";
+import { AccountScreen } from "@/screens/user/AccountScreen";
+import { PublishScreen } from "@/screens/publish/PublishScreen";
+import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
+import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
 import HomeScreen from "@/screens/home/HomeScreen";
-import { WithBadge } from "@/components/base/WithBadge";
-import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
+import MyTripsScreen from "@/screens/user/MyTripsScreen";
+import SignUpScreen from "@/screens/signUp/SignUpScreen";
+import NotificationScreen, { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
+
+import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppDimensions } from "@/theme/dimensions";
+
 import { useObservable } from "@/util/hooks/subscription";
-import { useAppNavigation } from "@/api/navigation";
-import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
-import { useQueryClient } from "react-query";
-import { PublishScreen } from "@/screens/publish/PublishScreen";
-import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
-import { Notification } from "@/api/notification";
-import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
-import { UserPicture } from "@/components/UserPicture";
-import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
-import { AppStatusBar } from "@/components/base/AppStatusBar";
-import { SettingsScreen } from "@/screens/user/SettingsScreen";
-import { ShareTripLocationScreen } from "@/screens/modals/ShareTripLocationScreen";
-import { AccountScreen } from "@/screens/user/AccountScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-/*
-function AppTabBar(props: BottomTabBarProps) {
-  // const [show, setShow] = useState(true);
-  const style = props.descriptors[props.state.routes[props.state.index].key].options.tabBarStyle;
-  const display = !style || StyleSheet.flatten(style).display !== "none";
-  if (StyleSheet.flatten(style).display === "none") {
-    props.descriptors[props.state.routes[props.state.index].key].options.tabBarStyle = {
-      ...StyleSheet.flatten(style),
-      display: undefined
-    };
-  }
-  return (
-    display && (
-      <Animated.View exiting={SlideOutDown}>
-        <BottomTabBar {...props} />
-      </Animated.View>
-    )
-  );
-}
-*/
 function Home() {
   const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
   const iconSize = 24;
   return (
     <Tab.Navigator
-      // TODO tabBar={AppTabBar}
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true
       }}>
       {makeTab(
-        "Carte",
+        "Explorer",
         ({ focused }) => (
           <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
         ),
         HomeScreen,
-        {
-          headerShown: false
-        }
+        { headerShown: false }
       )}
       {makeTab(
         "Mes trajets",
         ({ focused }) => (
-          <TabIcon iconName={LianeIcon} focused={focused} size={(iconSize * 4) / 3} />
+          <TabIcon iconName={"calendar"} focused={focused} size={iconSize} />
         ),
         MyTripsScreen
       )}
@@ -124,7 +104,6 @@ function Navigation() {
       </Stack.Navigator>
     );
   }
-
   return (
     <Stack.Navigator>
       <Stack.Screen name="SignUp" component={SignUpScreen} options={{ headerShown: false }} />
@@ -137,13 +116,9 @@ type HomeScreenHeaderProp = {
   isRootHeader?: boolean;
   style?: StyleProp<ViewStyle>;
 };
-
-const PageTitle = ({ title }: { title: string }) => <AppText style={{ fontSize: 22, fontWeight: "500", color: AppColors.darkBlue }}>{title}</AppText>;
-
-export const HomeScreenHeader = ({ label, isRootHeader = false, style = [] }: HomeScreenHeaderProp) => {
+export const HomeScreenHeader = ({ isRootHeader = false, style = [] }: HomeScreenHeaderProp) => {
   const insets = useSafeAreaInsets();
   const { navigation } = useAppNavigation();
-  const { user } = useContext(AppContext);
   return (
     <Row
       style={[
@@ -160,22 +135,8 @@ export const HomeScreenHeader = ({ label, isRootHeader = false, style = [] }: Ho
       ]}>
       <AppStatusBar style="dark-content" />
       {!isRootHeader && (
-        <Pressable
-          style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-          onPress={() => {
-            navigation.goBack();
-          }}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.darkBlue} />
-        </Pressable>
-      )}
-      <PageTitle title={label} />
-      {isRootHeader && (
-        <Pressable
-          onPress={() => {
-            // @ts-ignore
-            navigation.navigate("Profile", { user });
-          }}>
-          <UserPicture size={36} url={user?.pictureUrl} id={user?.id} />
+        <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => navigation.goBack()}>
+          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         </Pressable>
       )}
     </Row>
@@ -188,12 +149,11 @@ interface TabIconProps {
   focused: boolean;
   size: number;
 }
-
 const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
   return (
     <View style={{ paddingHorizontal: 8 }}>
       {typeof iconName === "string" ? (
-        <AppIcon size={size} name={iconName} color={focused ? AppColors.white : AppColorPalettes.blue[400]} />
+        <AppIcon size={size} name={iconName} color={focused ? AppColors.white : AppColors.secondaryColor} />
       ) : (
         iconName({
           color: focused ? AppColors.white : AppColorPalettes.blue[400],
@@ -206,7 +166,6 @@ const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
 };
 
 const BadgeTabIcon = WithBadge(TabIcon);
-
 const makeTab = (label: string, icon: (props: { focused: boolean }) => React.ReactNode, screen: any, { headerShown = true } = {}) => {
   return (
     <Tab.Screen
@@ -215,46 +174,45 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       options={({ navigation }) => ({
         headerShown,
         /*  @ts-ignore */
-        header: () => <HomeScreenHeader label={label} navigation={navigation} isRootHeader={true} />,
+        header: () => <View style={{ height: 28 }} />,
         tabBarLabel: ({ focused }) => (
-          <AppText style={[styles.tabLabel, { color: focused ? AppColors.white : AppColorPalettes.blue[400] }]}>{label}</AppText>
+          <AppText
+            style={[styles.tabLabel, { color: focused ? AppColors.white : AppColors.secondaryColor, fontWeight: focused ? "bold" : "normal" }]}>
+            {label}
+          </AppText>
         ),
-        tabBarIcon: icon
+        tabBarIcon: icon,
+        tabBarActiveBackgroundColor: AppColors.secondaryColor,
+        tabBarItemStyle: { margin: 5, borderRadius: 18 }
       })}
     />
   );
 };
 
-const BottomBarStyle = {
-  backgroundColor: AppColorPalettes.blue[700],
-  position: "absolute",
-  overflow: "hidden",
-  alignItems: "stretch",
-  height: AppDimensions.bottomBar.height,
-  marginHorizontal: AppDimensions.bottomBar.marginHorizontal,
-  borderRadius: AppDimensions.bottomBar.borderRadius,
-  paddingBottom: 0 // ios layout
-} as const;
+const styles = StyleSheet.create({
+  bottomBar: {
+    ...AppDimensions.bottomBar,
+    backgroundColor: AppColors.white,
+    position: "absolute",
+    overflow: "hidden",
+    alignItems: "stretch",
+    paddingBottom: 0 // ios layout
+  },
+  tabLabel: {
+    fontSize: 12,
+    position: "relative",
+    bottom: 2
+  }
+});
 
 export const useBottomBarStyle = () => {
   const insets = useSafeAreaInsets();
   return [
     styles.bottomBar,
     {
-      marginBottom: insets.bottom + AppDimensions.bottomBar.marginVertical
+      marginBottom: insets.bottom + AppDimensions.bottomBar.margin
     }
   ];
 };
-
-const styles = StyleSheet.create({
-  bottomBar: BottomBarStyle,
-  tabLabel: {
-    fontSize: AppDimensions.textSize.small,
-    fontWeight: "400",
-    position: "relative",
-    bottom: 12
-    // marginBottom: 8
-  }
-});
 
 export default Navigation;
