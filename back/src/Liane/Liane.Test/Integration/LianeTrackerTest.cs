@@ -16,6 +16,7 @@ using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -64,7 +65,7 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!);
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!, Moq.Mock.Of<ILogger<LianeTracker>>());
  
     var pings = geojsonPings.Features.Select(f =>
     {
@@ -100,7 +101,7 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, Db);
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, Db, Moq.Mock.Of<ILogger<LianeTracker>>());
 
     var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with{User = userIds[p.User]}).ToImmutableList();
     foreach (var p in pings)

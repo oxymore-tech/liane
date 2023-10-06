@@ -8,7 +8,9 @@ using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using ILogger = Amazon.Runtime.Internal.Util.ILogger;
 
 namespace Liane.Service.Internal.Trip.Event;
 
@@ -21,7 +23,8 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
   private readonly ICurrentContext currentContext;
   private readonly IOsrmService osrmService;
   private readonly IPostgisService postgisService;
-  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService, IPostgisService postgisService)
+  private readonly ILogger<LianeTracker> logger;
+  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService, IPostgisService postgisService, ILogger<LianeTracker> logger)
   {
     mongo = db;
     this.lianeMemberTracker = lianeMemberTracker;
@@ -29,6 +32,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     this.currentContext = currentContext;
     this.osrmService = osrmService;
     this.postgisService = postgisService;
+    this.logger = logger;
   }
 
   private async Task EndTrip(Ref<Api.Trip.Liane> liane)
@@ -79,7 +83,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
         })
         .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
         , 3600 * 1000)
-        .Build(osrmService, postgisService, mongo);
+        .Build(osrmService, postgisService, mongo, logger);
     });
     
     await tracker.Push(ping);
