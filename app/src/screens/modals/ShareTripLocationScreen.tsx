@@ -261,7 +261,7 @@ const PermissionsWizard = (props: { onGranted: (granted: boolean) => void }) => 
             1. Appuyez sur "Autoriser la géolocalisation"{"\n"}
             2. Allez dans "Permissions"{"\n"}
             3. Sélectionnez "Position"{"\n"}
-            2. Sélectionnez "Toujours autoriser" dans la liste des autorisations
+            4. Sélectionnez "Toujours autoriser" dans la liste des autorisations
           </AppText>
         )}
       </Row>
