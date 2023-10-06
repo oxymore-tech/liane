@@ -292,7 +292,7 @@ const DateStepView = ({
   onRequestEdit
 }: StepProps<{ date: Date | undefined; recurrence: DayOfTheWeekFlag | null | undefined }>) => {
   const optionsRecurrentLiane = ["Date unique", "Trajet régulier"];
-  const initialMinDate = new Date(new Date().getTime());
+  const initialMinDate = new Date(new Date().getTime() + 4 * 60000);
 
   const [date, setDate] = useState(initialMinDate);
   const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);
