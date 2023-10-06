@@ -140,18 +140,14 @@ export class HubServiceClient extends AbstractHubService {
   };
   async subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike> {
     await this.checkConnection();
-    if (this.onReceiveLocationUpdateCallback) {
-      await this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId);
-    }
     const lastUpdate: TrackedMemberLocation | null = await this.hub.invoke("SubscribeToLocationsUpdates", lianeId, memberId);
     if (lastUpdate) {
       callback(lastUpdate);
     }
-    this.onReceiveLocationUpdateCallback = callback;
+    this.onReceiveLocationUpdateCallback[memberId] = callback;
     return {
-      closed: this.onReceiveLocationUpdateCallback !== callback,
+      closed: this.onReceiveLocationUpdateCallback[memberId] !== callback,
       unsubscribe: () => {
-        this.onReceiveLocationUpdateCallback = null;
         this.checkConnection().then(() => this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId));
       }
     };

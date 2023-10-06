@@ -45,6 +45,7 @@ import { getFirstFutureDate } from "@/util/datetime";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { UserPicture } from "@/components/UserPicture";
+import { APP_ENV } from "@env";
 
 interface StepProps<T> {
   editable: boolean;
@@ -292,7 +293,7 @@ const DateStepView = ({
   onRequestEdit
 }: StepProps<{ date: Date | undefined; recurrence: DayOfTheWeekFlag | null | undefined }>) => {
   const optionsRecurrentLiane = ["Date unique", "Trajet régulier"];
-  const initialMinDate = new Date(new Date().getTime() + 10 * 60000);
+  const initialMinDate = new Date(new Date().getTime() + (APP_ENV === "dev" ? 4 : 10) * 60000);
 
   const [date, setDate] = useState(initialMinDate);
   const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);

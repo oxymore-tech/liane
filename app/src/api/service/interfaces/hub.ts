@@ -7,6 +7,7 @@ import {
   PaginatedResponse,
   Ref,
   TrackedMemberLocation,
+  User,
   UTCDateTime
 } from "@/api";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
@@ -63,7 +64,7 @@ export abstract class AbstractHubService implements HubService {
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage | null = null;
-  protected onReceiveLocationUpdateCallback: OnLocationCallback | null = null;
+  protected onReceiveLocationUpdateCallback: { [n: Ref<User>]: OnLocationCallback | undefined } = {};
   protected appStateActive: boolean = true;
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
@@ -166,8 +167,9 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveLocationUpdateCallback: OnLocationCallback = l => {
     AppLogger.debug("GEOLOC", "received", l);
-    if (this.onReceiveLocationUpdateCallback) {
-      this.onReceiveLocationUpdateCallback(l);
+    const callback = this.onReceiveLocationUpdateCallback[l.member];
+    if (callback) {
+      callback(l);
     }
   };
 

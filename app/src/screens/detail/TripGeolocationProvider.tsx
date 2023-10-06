@@ -12,7 +12,7 @@ export interface TripGeolocation {
   subscribeToUpdates: (memberId: Ref<User>, callback: (l: TrackedMemberLocation | null) => void) => SubscriptionLike | undefined;
 }
 // @ts-ignore
-const TripGeolocationContext = createContext<AppBackController>();
+const TripGeolocationContext = createContext<TripGeolocation | undefined>();
 export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & PropsWithChildren) => {
   const [geolocRunning, setGeolocRunning] = useState<boolean | undefined>(undefined);
   const { services } = useContext(AppContext);
@@ -62,7 +62,6 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
       return observables[memberId]?.subscribe(callback);
     }
   };
-
   return <TripGeolocationContext.Provider value={value}>{children}</TripGeolocationContext.Provider>;
 };
 

@@ -388,6 +388,15 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     };
 
     // Start tracking
+    Geolocation.getCurrentPosition(
+      positionCallback,
+      err => {
+        AppLogger.warn("GEOPINGS", err);
+      },
+      {
+        accuracy: { ios: "best" }
+      }
+    );
     startTracking("best", getDistanceFilter());
     await sleep(timeout);
     // Clean up

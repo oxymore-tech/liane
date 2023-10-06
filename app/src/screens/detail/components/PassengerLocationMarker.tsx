@@ -13,8 +13,7 @@ export const PassengerLocationMarker = (props: { user: User; defaultLocation: La
   }
 
   if (!lastLocUpdate || !lastLocUpdate.location) {
-    // Hide passengers icon if geolocation is active and they're not sharing location
-    return null;
+    return <LianeMemberDisplay location={props.defaultLocation} size={40} user={props.user} minZoom={6} active={false} showLocationPin={false} />;
   }
   return <LianeMemberDisplay location={lastLocUpdate.location} size={40} user={props.user} />;
 };
