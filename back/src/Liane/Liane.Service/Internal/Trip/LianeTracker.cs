@@ -78,7 +78,7 @@ public sealed class LianeTracker
         SetAutoDisposeTimeout(() => Task.CompletedTask, 3600 * 1000);
       }
 
-      var previousReport = (await mongo.GetCollection<LianeTrackReport>().FindAsync(r => r.Id == liane.Id)).First();
+      var previousReport = (await mongo.GetCollection<LianeTrackReport>().FindAsync(r => r.Id == liane.Id)).FirstOrDefault();
       if (previousReport is not null)
       {
         logger.LogInformation($"Using previously created report : {liane.Id}");
