@@ -16,7 +16,7 @@ import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { Observable } from "rxjs";
 import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
-import { HomeBottomSheetContainer, TopRow } from "@/screens/home/HomeBottomSheet";
+import { HomeBottomSheetContainer } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
 import { useBottomBarStyle } from "@/components/context/Navigation";
@@ -81,7 +81,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
-            onZoomChanged={z => AppLogger.info("MAP", `zoom ${z}`)}
+            onZoomChanged={z => AppLogger.debug("MAP", `zoom ${z}`)}
           />
         </View>
         {state.matches("form") && (
@@ -95,14 +95,11 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             onScrolled={(v, expanded) => bottomSheetScroll.next({ expanded, top: v })}
             display={bottomSheetDisplay}
             canScroll={loadingDisplay && !movingDisplay}>
-            {isPointState && <TopRow loading={loadingList && !movingDisplay} title={"Prochains départs de " + state.context.filter.from!.label} />}
-
             {isMatchState && <LianeMatchListView loading={loadingList} />}
             {!loadingList && isDetailState && <LianeMatchDetailView />}
           </HomeBottomSheetContainer>
         )}
 
-        {/*state.matches("map") && <HomeHeader bottomSheetObservable={bottomSheetScroll} onPress={() => machine.send("FORM")} />*/}
         {state.matches("form") && (
           <ItinerarySearchForm
             // updateField={(field, value) => machine.send("UPDATE", { data: { [field]: value } })}

@@ -4,7 +4,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { Exact, getPoint, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { TripSegmentView, TripViewStyles } from "@/components/trip/TripSegmentView";
+import { TripSegmentView } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
@@ -15,7 +15,6 @@ import { useAppNavigation } from "@/api/navigation";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { AppTabs } from "@/components/base/AppTabs";
-import { SectionSeparator } from "@/components/Separator";
 import { UserPicture } from "@/components/UserPicture";
 import { formatDuration } from "@/util/datetime";
 import { AppButton } from "@/components/base/AppButton";
@@ -32,19 +31,6 @@ const ErrorView = (props: { message: string; retry: () => void }) => (
   </Column>
 );
 
-const formatSeatCount = (seatCount: number) => {
-  let count = seatCount;
-  let words: string[];
-  if (seatCount > 0) {
-    // offered seats
-    words = ["place", "disponible"];
-  } else {
-    // passengers
-    count = -seatCount;
-    words = ["passager"];
-  }
-  return `${count} ${words.map(word => word + (count > 1 ? "s" : "")).join(" ")}`;
-};
 export const LianeMatchItemView = ({
   from,
   to,
@@ -151,6 +137,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
       />
     );
   }
+
   if (loading || (state.matches("match") && !state.context.matches)) {
     return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
   }
@@ -231,7 +218,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
         onScrollEndDrag={event => {
           console.debug(JSON.stringify(event.nativeEvent));
         }}*/
-        style={styles.listStyle}
+
         data={data}
         keyExtractor={i => i.lianeMatch.liane.id!}
         renderItem={renderItem}
@@ -249,9 +236,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderBottomWidth: 1,
     borderBottomColor: AppColorPalettes.gray[200]
-  },
-  listStyle: {
-    backgroundColor: AppColors.lightGrayBackground
   },
   itemStyle: {
     backgroundColor: AppColors.white,

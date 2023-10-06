@@ -152,8 +152,13 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           onScrolled={v => setBSheetTop(v)}
           ref={ref}
           stops={[AppBottomSheetHandleHeight + 96, 0.5, 1]}
-          padding={{ top: 50 }}
+          padding={{ top: 80 }}
           initialStop={1}
+          backgroundStyle={{
+            backgroundColor: AppColors.lightGrayBackground,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24
+          }}
           onExpand={setIsExpanded}>
           {match && (
             <AppBottomSheetScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>

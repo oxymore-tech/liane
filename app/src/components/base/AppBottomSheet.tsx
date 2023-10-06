@@ -1,5 +1,5 @@
-import { FlatListProps, ScrollViewProps, StyleSheet } from "react-native";
-import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { FlatListProps, ScrollViewProps, StyleProp, StyleSheet } from "react-native";
+import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { FlatList, Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -17,7 +17,8 @@ export interface BottomSheetProps extends PropsWithChildren {
   padding?: { top?: number };
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
-  onExpand?: (isExpanded: boolean) => void;
+  backgroundStyle?: StyleProp<any>;
+  onExpand?: (isExpanded: boolean) => void; //TODO why?
 }
 
 export type BottomSheetRefProps = {
@@ -26,6 +27,7 @@ export type BottomSheetRefProps = {
 };
 
 export interface BottomSheetObservableMessage {
+  //TODO why?
   expanded: boolean;
   top: number;
 }
@@ -41,7 +43,7 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, canScroll, stops, margins, padding, initialStop = 0, onExpand = () => {} }, ref) => {
+  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0, onExpand = () => {} }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
@@ -69,7 +71,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
 
     const notifyExpanded = (v: boolean) => {
       expanded.next(v);
-      onExpand(isExpanded());
+      onExpand(isExpanded()); //TODO why?
     };
 
     const updateCurrentStop = (index: number) => {
@@ -135,11 +137,15 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       })
       .enabled(canScroll || true);
 
+    const bgColor = useMemo(() => {
+      return StyleSheet.flatten(backgroundStyle).backgroundColor || AppColors.white;
+    }, [backgroundStyle]);
+
     const bSheetBgStyle = useAnimatedStyle(() => {
       const backgroundColor = interpolateColor(
         h.value,
         [0, height - fillLimit - 8, height - fillLimit, height],
-        ["rgba(255,255,255,0)", "rgba(255,255,255,0)", AppColors.white, AppColors.white]
+        ["rgba(255,255,255,0)", "rgba(255,255,255,0)", bgColor, bgColor]
       );
 
       const bSheetIsExpanded = isExpanded();
@@ -194,6 +200,8 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
           ]}>
           <Animated.View
             style={[
+              styles.bottomSheetContainerDefaults,
+              backgroundStyle,
               styles.bottomSheetContainer,
               AppStyles.shadow,
               marginBottom > 0
@@ -204,6 +212,8 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 : {},
               bSheetStyle
             ]}>
+            <Animated.View style={[styles.handler, handleStyle]} />
+
             <BottomSheetContext.Provider
               value={{
                 expanded,
@@ -332,11 +342,24 @@ export const AppBottomSheetScrollView = WithBottomSheetContext(
 );
 
 const styles = StyleSheet.create({
+  bottomSheetContainerDefaults: {
+    backgroundColor: AppColors.white,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12
+  },
   bottomSheetContainer: {
     overflow: "hidden",
     flex: 1,
     width: "100%",
     zIndex: 100,
     alignSelf: "center"
+  },
+  handler: {
+    width: 52,
+    height: 4,
+    backgroundColor: AppColorPalettes.gray[400],
+    alignSelf: "center",
+    marginVertical: 10,
+    borderRadius: 2
   }
 });
