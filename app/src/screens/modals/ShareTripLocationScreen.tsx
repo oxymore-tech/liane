@@ -46,6 +46,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
               navigation.replace("LianeDetail", { liane });
             } catch (e) {
               AppLogger.error("GEOLOC", e);
+              Alert.alert("Erreur", JSON.stringify(e)); //TODO remove when datadog logs are set up
             }
           })
           .catch(e => {
