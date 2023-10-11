@@ -29,9 +29,9 @@ import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import NotificationScreen, { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppDimensions } from "@/theme/dimensions";
 
 import { useObservable } from "@/util/hooks/subscription";
+import { AppStyles } from "@/theme/styles";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -156,9 +156,9 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
 
 const styles = StyleSheet.create({
   bottomBar: {
-    ...AppDimensions.bottomBar,
+    itemSpacing: 16,
+    margin: 0,
     backgroundColor: AppColors.white,
-    position: "absolute",
     overflow: "hidden",
     alignItems: "stretch",
     paddingBottom: 0 // ios layout
@@ -187,8 +187,10 @@ export const useBottomBarStyle = () => {
   const insets = useSafeAreaInsets();
   return [
     styles.bottomBar,
+    AppStyles.shadow,
     {
-      marginBottom: insets.bottom + AppDimensions.bottomBar.margin
+      paddingBottom: insets.bottom,
+      minHeight: insets.bottom + 54
     }
   ];
 };

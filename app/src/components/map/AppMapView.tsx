@@ -78,7 +78,6 @@ const AppMapView = forwardRef(
     //const [showActions, setShowActions] = useState(showGeolocation);
 
     const wd = useWindowDimensions();
-    const { bottom } = useSafeAreaInsets();
     const scale = Platform.OS === "android" ? wd.scale : 1;
     const regionSubject = useSubject<RegionPayload>();
 
@@ -228,7 +227,7 @@ const AppMapView = forwardRef(
         </MapLibreGL.MapView>
 
         {showGeolocation && (
-          <Column style={{ position: "absolute", bottom: bottom + 72, right: 10 }} spacing={8}>
+          <Column style={{ position: "absolute", bottom: 24, right: 10 }} spacing={8}>
             <AppPressableOverlay
               backgroundStyle={[{ borderRadius: 20, backgroundColor: AppColors.white }, AppStyles.shadow]}
               style={{ justifyContent: "center", alignItems: "center", height: 40, width: 40 }}>

@@ -46,7 +46,8 @@ export interface TripListViewProps {
 }
 
 export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: TripListViewProps) => {
-  const insets = useSafeAreaInsets();
+  //const insets = useSafeAreaInsets();
+  const bottom = 32; //96 + insets.bottom;
   const { user } = useContext(AppContext);
   const userId = user!.id!;
   const sections = useMemo(() => {
@@ -63,7 +64,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
       renderSectionHeader={renderSectionHeader}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
-      renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 + insets.bottom : 24 }} />}
+      renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? bottom : 24 }} />}
     />
   );
 };
