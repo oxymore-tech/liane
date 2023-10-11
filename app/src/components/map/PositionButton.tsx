@@ -22,7 +22,8 @@ export const PositionButton = ({ onPosition, locationEnabled = true, onPositionE
 
   return (
     <AppPressableOverlay
-      style={{ justifyContent: "center", alignItems: "center", height: 36 }}
+      backgroundStyle={[{ borderRadius: 20, backgroundColor: AppColors.white }, AppStyles.shadow]}
+      style={{ justifyContent: "center", alignItems: "center", width: 40, height: 40 }}
       onPress={async () => {
         try {
           const currentLocation = await services.location.currentLocation();
@@ -34,8 +35,7 @@ export const PositionButton = ({ onPosition, locationEnabled = true, onPositionE
             onPositionError(e);
           }
         }
-      }}
-      borderRadius={20}>
+      }}>
       <AppIcon
         size={22}
         name={locationEnabled ? "position-on" : "position-off"}

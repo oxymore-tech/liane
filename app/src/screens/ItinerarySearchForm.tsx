@@ -289,7 +289,9 @@ export const PlaceItem = ({
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
       {iconName === "rallying-point" ? (
-        <AppIcon style={styles.rallyingPointStyle} name={iconName} size={24} color={AppColors.white} />
+        <View style={styles.rallyingPointStyle}>
+          <AppIcon name={iconName} size={24} color={AppColors.white} />
+        </View>
       ) : (
         <AppIcon name={iconName} size={28} color={AppColors.primaryColor} />
       )}
@@ -546,7 +548,8 @@ const styles = StyleSheet.create({
   },
   rallyingPointStyle: {
     backgroundColor: AppColors.primaryColor,
-    borderRadius: 14,
+    borderRadius: 24,
+    padding: 1,
     marginLeft: 2
   },
   cityNameStyle: {

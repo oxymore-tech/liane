@@ -15,12 +15,34 @@ import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginated
 import { AppStyles } from "@/theme/styles";
 import { useSubscription } from "@/util/hooks/subscription";
 import { UserPicture } from "@/components/UserPicture";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 
-const MyTripsScreen = () => {
+const Header = () => {
   const { navigation } = useAppNavigation();
+  const { user } = useContext(AppContext);
+  return (
+    <Row style={{ alignItems: "center" }} spacing={16}>
+      <AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
+      <View style={{ flex: 1 }} />
+
+      <AppPressableIcon name={"bell-outline"} color={AppColors.primaryColor} size={32} />
+      <TouchableOpacity
+        style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
+        onPress={() =>
+          // @ts-ignore
+          navigation.navigate("Profile", { user })
+        }>
+        <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
+      </TouchableOpacity>
+    </Row>
+  );
+};
+const MyTripsScreen = () => {
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const futureStates: LianeState[] = ["NotStarted", "Started"];
-  const { services, user } = useContext(AppContext);
+  const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
     { queryKey: LianeQueryKey, queryFn: () => services.liane.list(futureStates, undefined, 25, false) }
@@ -105,26 +127,8 @@ const MyTripsScreen = () => {
 
   return (
     <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
-      <Column style={styles.headerContainer} spacing={16}>
-        <Row>
-          <AppButton
-            style={{ flex: 1 }}
-            icon="plus-outline"
-            kind="rounded"
-            title="Créer une liane"
-            onPress={() => navigation.navigate("Publish", {})}
-          />
-          <View style={{ flex: 1, alignItems: "flex-end", justifyContent: "center", marginRight: 12 }}>
-            <TouchableOpacity
-              style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
-              onPress={() =>
-                // @ts-ignore
-                navigation.navigate("Profile", { user })
-              }>
-              <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-            </TouchableOpacity>
-          </View>
-        </Row>
+      <Column style={[styles.headerContainer, { paddingTop: insets.top }]} spacing={16}>
+        <Header />
         <AppTabs
           items={["Lianes à venir", "Lianes passées"]}
           onSelect={setSelectedTab}

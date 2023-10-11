@@ -87,7 +87,7 @@ export const PublishScreen = () => {
     /*  @ts-ignore */
     <PublishLianeContext.Provider value={machine}>
       <PublishScreenView />
-      <AppStatusBar style="light-content" />
+      <AppStatusBar style="dark-content" />
     </PublishLianeContext.Provider>
   );
 };
@@ -97,7 +97,6 @@ export const PublishScreenView = () => {
   const insets = useSafeAreaInsets();
   const machine = useContext(PublishLianeContext);
   const [state] = useActor(machine);
-  const { user } = useContext(AppContext);
 
   const isTripStep = state.matches("trip");
   const isDateStep = state.matches("date");
@@ -160,6 +159,10 @@ export const PublishScreenView = () => {
           </AppPressableOverlay>*/}
         </Animated.View>
       )}
+
+      <Row style={{ position: "absolute", left: 72, top: insets.top + 16 }}>
+        <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>Créer une Liane</AppText>
+      </Row>
 
       {(isOverviewStep || isSubmittingStep || isReturnStep) && (
         <Animated.View
@@ -227,19 +230,6 @@ export const PublishScreenView = () => {
           />
         </Animated.View>
       )}
-
-      <Row style={styles.headerStyle}>
-        <AppIcon style={{ flex: 1, marginRight: 16 }} name={"bell-outline"} color={AppColors.primaryColor} size={32} />
-
-        <TouchableOpacity
-          style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
-          onPress={() =>
-            // @ts-ignore
-            navigation.navigate("Profile", { user })
-          }>
-          <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-        </TouchableOpacity>
-      </Row>
 
       <ItinerarySearchForm
         editable={isTripStep}
@@ -355,7 +345,6 @@ const DateStepView = ({
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
-              borderRadius={20}
               disabled={isRecurrent && daysOfTheWeek === "0000000"}
               onPress={() => {
                 const departureTime = isRecurrent ? getFirstFutureDate(date, daysOfTheWeek) : date;
@@ -419,11 +408,7 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
 
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay
-              backgroundStyle={styles.validateButtonBackground}
-              style={styles.validateButton}
-              borderRadius={20}
-              onPress={() => onChange(seats)}>
+            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(seats)}>
               <Center>
                 <Row spacing={4}>
                   <AppText style={styles.validateText}>Suivant</AppText>
@@ -482,7 +467,6 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
-              borderRadius={20}
               onPress={() => onChange(date || null)}>
               <Center>
                 <Row spacing={4}>
@@ -498,12 +482,6 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
 };
 
 const styles = StyleSheet.create({
-  headerStyle: {
-    position: "absolute",
-    top: 52,
-    right: 26,
-    zIndex: 10
-  },
   flexStretch: {
     alignSelf: "stretch"
   },

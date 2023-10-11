@@ -1,19 +1,15 @@
 import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "react-query";
-
-import { useAppNavigation } from "@/api/navigation";
 import { Notification } from "@/api/notification";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { Row } from "@/components/base/AppLayout";
 import { WithBadge } from "@/components/base/WithBadge";
-import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
@@ -64,7 +60,8 @@ function Home() {
         ({ focused }) => (
           <TabIcon iconName={"calendar"} focused={focused} size={iconSize} />
         ),
-        MyTripsScreen
+        MyTripsScreen,
+        { headerShown: false } //TODO generic header ?
       )}
       {makeTab(
         "Notifications",
@@ -110,38 +107,6 @@ function Navigation() {
     </Stack.Navigator>
   );
 }
-
-type HomeScreenHeaderProp = {
-  label: string;
-  isRootHeader?: boolean;
-  style?: StyleProp<ViewStyle>;
-};
-export const HomeScreenHeader = ({ isRootHeader = false, style = [] }: HomeScreenHeaderProp) => {
-  const insets = useSafeAreaInsets();
-  const { navigation } = useAppNavigation();
-  return (
-    <Row
-      style={[
-        {
-          justifyContent: isRootHeader ? "space-between" : "flex-start",
-          alignItems: "center",
-          paddingHorizontal: isRootHeader ? 24 : 0,
-          paddingTop: isRootHeader ? 12 : 0,
-          paddingBottom: 32,
-          minHeight: 60,
-          marginTop: insets.top
-        },
-        style
-      ]}>
-      <AppStatusBar style="dark-content" />
-      {!isRootHeader && (
-        <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => navigation.goBack()}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
-        </Pressable>
-      )}
-    </Row>
-  );
-};
 
 interface TabIconProps {
   // String or svg component
@@ -202,6 +167,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     position: "relative",
     bottom: 2
+  },
+  headerContainer: {
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginLeft: 8,
+    marginRight: 16
+  },
+  filterContainer: {
+    height: 50,
+    backgroundColor: AppColors.primaryColor,
+    borderRadius: 18,
+    paddingVertical: 4,
+    paddingLeft: 4
   }
 });
 

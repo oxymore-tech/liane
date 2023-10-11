@@ -1,4 +1,4 @@
-import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View, StyleProp, ViewStyle } from "react-native";
+import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -14,7 +14,6 @@ import { AppText } from "@/components/base/AppText";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { AppContext } from "@/components/context/ContextProvider";
-import { HomeScreenHeader } from "@/components/context/Navigation";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useSelector } from "@xstate/react";
 import { capitalize } from "@/util/strings";
@@ -25,6 +24,7 @@ import { AppTabs } from "@/components/base/AppTabs";
 import { UserPicture } from "@/components/UserPicture";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useAppNavigation } from "@/api/navigation";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const RallyingPointField = forwardRef(
   (
@@ -83,56 +83,93 @@ export const RallyingPointField = forwardRef(
   }
 );
 
+type HomeScreenHeaderProp = {
+  isRootHeader?: boolean;
+  updateTrip: (trip: Partial<Trip>) => void;
+  trip: Partial<Trip>;
+};
+const HomeScreenHeader = ({ isRootHeader = false, updateTrip, trip }: HomeScreenHeaderProp) => {
+  const insets = useSafeAreaInsets();
+  const { navigation } = useAppNavigation();
+  const { user } = useContext(AppContext);
+  return (
+    <>
+      <AppStatusBar style="dark-content" />
+      {isRootHeader && (
+        <View style={{ paddingTop: 8, marginTop: insets.top }}>
+          <Row style={styles.headerContainer}>
+            <View style={styles.filterContainer}>
+              <FilterSelector color={AppColors.white} shortFormat={true} />
+            </View>
+
+            <TouchableOpacity
+              style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
+              onPress={() =>
+                // @ts-ignore
+                navigation.navigate("Profile", { user })
+              }>
+              <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
+            </TouchableOpacity>
+          </Row>
+        </View>
+      )}
+      {!isRootHeader && (
+        <Column spacing={8}>
+          <View>
+            <FloatingBackButton onPress={() => updateTrip({ from: undefined })} />
+
+            <View style={[styles.filterContainer, { alignSelf: "flex-start", marginTop: insets.top + 5, marginLeft: 72, marginRight: 8 }]}>
+              <FilterSelector color={AppColors.white} shortFormat={true} />
+            </View>
+          </View>
+          <Row
+            style={[styles.filterContainer, { backgroundColor: AppColors.white, alignItems: "center", marginHorizontal: 16, paddingHorizontal: 16 }]}
+            spacing={8}>
+            <AppText style={{ flexGrow: 1, flexShrink: 1, fontWeight: "bold" }}>{trip.from?.label}</AppText>
+            <AppIcon name={"arrow-forward"} size={16} />
+            <AppText style={{ flexGrow: 1, flexShrink: 1, fontWeight: "bold" }}>{trip.to?.label}</AppText>
+            <View style={{ flex: 1, flexShrink: 1 }} />
+            <AppPressableIcon
+              onPress={() => {
+                updateTrip({ to: trip.from, from: trip.to });
+              }}
+              backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20 }}
+              style={{ paddingVertical: 9 }}
+              name={"arrow-switch"}
+              size={18}
+            />
+          </Row>
+        </Column>
+      )}
+    </>
+  );
+};
 export const MapHeader = ({
   trip,
-  title,
   updateTrip,
   animateEntry = false,
   hintPhrase = null,
   action = null,
-  style = {}
+  searchPlace
 }: {
   updateTrip: (trip: Partial<Trip>) => void;
-  title: string;
   trip: Partial<Trip>;
   animateEntry?: boolean;
   hintPhrase?: string | null;
   action?: { title: string; icon: IconName; onPress: () => void } | null;
-  style?: StyleProp<ViewStyle>;
+  searchPlace?: () => void;
 }) => {
   const { to, from } = trip;
-  const { user } = useContext(AppContext);
-  const { navigation } = useAppNavigation();
 
   const itineraryMarginTop = 0; //24;
 
   return (
-    <View style={style}>
-      {!!to && !!from && <FloatingBackButton onPress={() => updateTrip({ from: undefined })} />}
-
+    <>
+      <View style={{ zIndex: 5 }}>
+        <HomeScreenHeader trip={trip} isRootHeader={!to || !from} updateTrip={updateTrip} />
+      </View>
       {(!to || !from) && (
         <View>
-          <View style={{ zIndex: 5 }}>
-            <HomeScreenHeader label={title} isRootHeader={true} style={{ paddingBottom: 0, minHeight: 0 }} />
-            <View style={{ paddingTop: 4 }}>
-              <Row style={styles.headerContainer}>
-                <View style={styles.filterContainer}>
-                  <FilterSelector color={AppColors.white} shortFormat={true} />
-                </View>
-                <AppIcon style={{ flex: 1 }} name={"bell"} color={AppColors.white} size={32} />
-
-                <TouchableOpacity
-                  style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
-                  onPress={() =>
-                    // @ts-ignore
-                    navigation.navigate("Profile", { user })
-                  }>
-                  <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-                </TouchableOpacity>
-              </Row>
-            </View>
-          </View>
-
           {(!!to || !!from) && (
             <View style={styles.fromToContainer}>
               <View
@@ -165,13 +202,16 @@ export const MapHeader = ({
                           }}>
                           <AppIcon name={"pin"} color={AppColors.primaryColor} size={18} />
                         </View>
-                        <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{"Sélectionnez votre départ sur la carte"}</AppText>
+                        <Pressable onPress={searchPlace}>
+                          <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{"Sélectionnez votre départ sur la carte"}</AppText>
+                        </Pressable>
                         {!!to && (
                           <AppPressableIcon
                             onPress={() => {
                               updateTrip({ to: from, from: to });
                             }}
-                            backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, height: 36, paddingTop: 9 }}
+                            backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20 }}
+                            style={{ paddingVertical: 9 }}
                             name={"arrow-switch"}
                             size={18}
                           />
@@ -204,7 +244,6 @@ export const MapHeader = ({
                       }}
                       name={"close-outline"}
                       size={32}
-                      borderRadius={8}
                     />
                   </Row>
                 )}
@@ -224,14 +263,17 @@ export const MapHeader = ({
                     {!!to && <RallyingPointItem item={to} labelSize={15} showIcon={false} />}
                     {!to && (
                       <Row style={{ alignItems: "center", flexGrow: 1 }} spacing={8}>
-                        <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>
-                          {hintPhrase || "Sélectionnez votre arrivée sur la carte"}
-                        </AppText>
+                        <Pressable onPress={searchPlace}>
+                          <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>
+                            {hintPhrase || "Sélectionnez votre arrivée sur la carte"}
+                          </AppText>
+                        </Pressable>
                         <AppPressableIcon
                           onPress={() => {
                             updateTrip({ to: from, from: to });
                           }}
-                          backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, height: 36, paddingTop: 9 }}
+                          backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20 }}
+                          style={{ paddingVertical: 9 }}
                           name={"arrow-switch"}
                           size={18}
                         />
@@ -247,7 +289,6 @@ export const MapHeader = ({
                       }}
                       name={"close-outline"}
                       size={32}
-                      borderRadius={8}
                     />
                   )}
                 </Row>
@@ -262,7 +303,9 @@ export const MapHeader = ({
               style={[styles.selectArrivalContainer, AppStyles.shadow]}>
               <Row style={{ paddingHorizontal: 16, paddingVertical: 2, alignItems: "center", height: 50 }} spacing={8}>
                 <AppIcon name={"flag"} color={AppColors.primaryColor} size={16} />
-                <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{hintPhrase || "Sélectionnez votre arrivée sur la carte"}</AppText>
+                <Pressable onPress={searchPlace}>
+                  <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{hintPhrase || "Sélectionnez votre arrivée sur la carte"}</AppText>
+                </Pressable>
               </Row>
             </Animated.View>
           )}
@@ -293,7 +336,7 @@ export const MapHeader = ({
           )}
         </View>
       )}
-    </View>
+    </>
   );
 };
 
@@ -336,8 +379,9 @@ export const SearchModal = (props: {
   onSelectTrip: (trip: Trip) => boolean;
   onSelectFeature: (feature: SearchedLocation) => boolean;
   title?: string;
+  isOpened: boolean;
+  close: () => void;
 }) => {
-  const [modalOpen, setModalOpen] = useState(false);
   const [inputText, setInputText] = useState("");
   const [selectedTab, setSelectedTab] = useState(0);
   const { top } = useSafeAreaInsets();
@@ -345,102 +389,89 @@ export const SearchModal = (props: {
 
   const inputRef = useRef<TextInput>();
   const closeModal = useCallback(() => {
-    setModalOpen(false);
+    props.close();
     setInputText("");
   }, []);
-  const { bottom } = useSafeAreaInsets();
-  useEffect(() => inputRef.current?.focus(), [modalOpen]);
+  useEffect(() => inputRef.current?.focus(), [props.isOpened]);
 
   return (
-    <>
-      <Pressable
-        style={[
-          styles.smallActionButton,
-          { backgroundColor: AppColors.primaryColor, position: "absolute", bottom: 90 + bottom, left: 16 },
-          AppStyles.shadow
-        ]}
-        onPress={() => setModalOpen(true)}>
-        <AppIcon name={"search-outline"} color={AppColors.white} />
-      </Pressable>
-
-      <Modal propagateSwipe isVisible={modalOpen} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={() => setModalOpen(false)}>
-        <View style={{ height: "100%", paddingTop: top }}>
-          <Row spacing={8}>
-            <View style={styles.inputContainer}>
-              <AppTextInput
-                // @ts-ignore
-                ref={inputRef}
-                trailing={
-                  inputText.length > 0 ? (
-                    <Pressable onPress={() => setInputText("")}>
-                      <AppIcon name={"close-outline"} color={AppColors.white} />
-                    </Pressable>
-                  ) : undefined
-                }
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder={"Adresse, point de ralliement..."}
-                placeholderTextColor={AppColors.white}
-                textColor={AppColors.white}
-                style={AppStyles.input}
-                leading={<AppIcon name={"search-outline"} color={AppColors.white} />}
-              />
-            </View>
-          </Row>
-          <View style={{ flex: 1, marginTop: 16 }}>
-            <Column style={{ marginHorizontal: 20 }} spacing={8}>
-              <AppTabs
-                items={["Lieux", "Trajets récents"]}
-                onSelect={setSelectedTab}
-                selectedIndex={selectedTab}
-                isSelectable={() => true}
-                fontSize={16}
-              />
-            </Column>
-
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
-              {selectedTab === 0 && inputText.length === 0 && (
-                <CachedPlaceLocationsView
-                  showUsePosition={false}
-                  onSelect={async f => {
-                    const close = props.onSelectFeature(f);
-                    if (close) {
-                      closeModal();
-                    }
-                  }}
-                />
-              )}
-              {selectedTab === 1 && (
-                <CachedTripsView
-                  filter={inputText.length > 0 ? inputText : undefined}
-                  onSelect={t => {
-                    const close = props.onSelectTrip(t);
-                    if (close) {
-                      closeModal();
-                    }
-                  }}
-                />
-              )}
-              {selectedTab === 0 && inputText.length > 0 && (
-                <PlaceSuggestions
-                  currentSearch={inputText}
-                  onSelect={f => {
-                    const close = props.onSelectFeature(f);
-                    if (close) {
-                      closeModal();
-                    }
-                    // Cache location
-                    services.location.cacheRecentPlaceLocation(f).catch(e => console.warn(e));
-                  }}
-                />
-              )}
-            </KeyboardAvoidingView>
+    <Modal propagateSwipe isVisible={props.isOpened} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={props.close}>
+      <View style={{ height: "100%", paddingTop: top }}>
+        <Row spacing={8}>
+          <View style={styles.inputContainer}>
+            <AppTextInput
+              // @ts-ignore
+              ref={inputRef}
+              trailing={
+                inputText.length > 0 ? (
+                  <Pressable onPress={() => setInputText("")}>
+                    <AppIcon name={"close-outline"} color={AppColors.white} />
+                  </Pressable>
+                ) : undefined
+              }
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder={"Adresse, point de ralliement..."}
+              placeholderTextColor={AppColors.white}
+              textColor={AppColors.white}
+              style={AppStyles.input}
+              leading={<AppIcon name={"search-outline"} color={AppColors.white} />}
+            />
           </View>
-        </View>
+        </Row>
+        <View style={{ flex: 1, marginTop: 16 }}>
+          <Column style={{ marginHorizontal: 20 }} spacing={8}>
+            <AppTabs
+              items={["Lieux", "Trajets récents"]}
+              onSelect={setSelectedTab}
+              selectedIndex={selectedTab}
+              isSelectable={() => true}
+              fontSize={16}
+            />
+          </Column>
 
-        <FloatingBackButton onPress={closeModal} topOffset={-6} />
-      </Modal>
-    </>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "height" : undefined}>
+            {selectedTab === 0 && inputText.length === 0 && (
+              <CachedPlaceLocationsView
+                showUsePosition={false}
+                onSelect={async f => {
+                  const close = props.onSelectFeature(f);
+                  if (close) {
+                    closeModal();
+                  }
+                }}
+              />
+            )}
+            {selectedTab === 1 && (
+              <CachedTripsView
+                filter={inputText.length > 0 ? inputText : undefined}
+                onSelect={t => {
+                  const close = props.onSelectTrip(t);
+                  if (close) {
+                    closeModal();
+                  }
+                }}
+              />
+            )}
+            {selectedTab === 0 && inputText.length > 0 && (
+              <PlaceSuggestions
+                currentSearch={inputText}
+                onSelect={f => {
+                  const close = props.onSelectFeature(f);
+                  if (close) {
+                    closeModal();
+                  }
+                  // Cache location
+                  services.location.cacheRecentPlaceLocation(f).catch(e => console.warn(e));
+                }}
+              />
+            )}
+          </KeyboardAvoidingView>
+        </View>
+      </View>
+
+      <FloatingBackButton onPress={closeModal} topOffset={-6} />
+    </Modal>
   );
 };
 
@@ -467,10 +498,6 @@ const styles = StyleSheet.create({
     ...AppStyles.title,
     paddingVertical: 4
   },
-  smallActionButton: {
-    padding: 16,
-    borderRadius: 52
-  },
   modal: {
     justifyContent: "flex-end",
     margin: 0,
@@ -486,8 +513,7 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: AppColors.primaryColor,
     borderRadius: 18,
-    paddingVertical: 4,
-    paddingLeft: 4
+    paddingVertical: 4
   },
   selectArrivalContainer: {
     marginTop: 8,

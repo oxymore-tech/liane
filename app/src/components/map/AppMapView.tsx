@@ -226,49 +226,42 @@ const AppMapView = forwardRef(
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
           {showUserLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
-        {/*<View style={styles.blackOverlay} pointerEvents="none" />*/}
 
         {showGeolocation && (
           <Column style={{ position: "absolute", bottom: bottom + 72, right: 10 }} spacing={8}>
-            <View style={[styles.actionOverlay, AppStyles.shadow]}>
-              <AppPressableOverlay style={[AppStyles.center, { borderRadius: 20, height: 36 }]} borderRadius={20}>
-                <AppIcon
-                  name={"people-outline"}
-                  size={22}
-                  style={{ justifyContent: "center", alignItems: "center" }}
-                  color={AppColors.primaryColor}
-                />
-              </AppPressableOverlay>
-            </View>
-            <View style={[styles.actionOverlay, AppStyles.shadow]}>
-              <PositionButton
-                //locationEnabled={showUserLocation}
-                onPosition={async currentLocation => {
-                  if (!contains(FR_BBOX, currentLocation)) {
-                    displayInfo("Désolé, Liane n'est pas disponible sur votre territoire.");
-                    return;
-                  }
-                  setShowUserLocation(true);
-                  const currentCenter = await mapRef.current?.getCenter()!;
-                  const currentZoom = await mapRef.current?.getZoom()!;
-                  const targetCoord = [currentLocation.lng, currentLocation.lat];
-                  //setFlyingToLocation(true);
-                  if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
-                    cameraRef.current?.setCamera({
-                      centerCoordinate: targetCoord,
-                      zoomLevel: 12,
-                      animationMode: "flyTo",
-                      animationDuration: 1000
-                    });
-                    await new Promise(resolve => setTimeout(resolve, 1250));
-                  } else {
-                    cameraRef.current?.flyTo(targetCoord);
-                  }
-                  //setFlyingToLocation(false);
-                }}
-                onPositionError={() => setShowUserLocation(false)}
-              />
-            </View>
+            <AppPressableOverlay
+              backgroundStyle={[{ borderRadius: 20, backgroundColor: AppColors.white }, AppStyles.shadow]}
+              style={{ justifyContent: "center", alignItems: "center", height: 40, width: 40 }}>
+              <AppIcon name={"people-outline"} size={22} style={{ justifyContent: "center", alignItems: "center" }} color={AppColors.primaryColor} />
+            </AppPressableOverlay>
+
+            <PositionButton
+              //locationEnabled={showUserLocation}
+              onPosition={async currentLocation => {
+                if (!contains(FR_BBOX, currentLocation)) {
+                  displayInfo("Désolé, Liane n'est pas disponible sur votre territoire.");
+                  return;
+                }
+                setShowUserLocation(true);
+                const currentCenter = await mapRef.current?.getCenter()!;
+                const currentZoom = await mapRef.current?.getZoom()!;
+                const targetCoord = [currentLocation.lng, currentLocation.lat];
+                //setFlyingToLocation(true);
+                if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
+                  cameraRef.current?.setCamera({
+                    centerCoordinate: targetCoord,
+                    zoomLevel: 12,
+                    animationMode: "flyTo",
+                    animationDuration: 1000
+                  });
+                  await new Promise(resolve => setTimeout(resolve, 1250));
+                } else {
+                  cameraRef.current?.flyTo(targetCoord);
+                }
+                //setFlyingToLocation(false);
+              }}
+              onPositionError={() => setShowUserLocation(false)}
+            />
           </Column>
         )}
         <View
@@ -329,15 +322,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0
   },
-  actionOverlay: {
-    backgroundColor: AppColors.white,
-    alignSelf: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    width: 40,
-    height: 40
-  },
-
   footerContainer: {
     position: "absolute",
     bottom: 80 - 26,

@@ -1,17 +1,17 @@
 import { StyleSheet, View } from "react-native";
-import React, { useContext, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Liane, Ref } from "@/api";
 import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection } from "geojson";
-import { AnimatedFloatingBackButton, MapHeader } from "@/screens/home/HomeHeader";
+import { AnimatedFloatingBackButton, MapHeader, SearchModal } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { useActor, useInterpret } from "@xstate/react";
 import { getSearchFilter, HomeMapContext, HomeMapMachine } from "@/screens/home/StateMachine";
-import { EmptyFeatureCollection } from "@/util/geometry";
+import { EmptyFeatureCollection, getBoundingBox } from "@/util/geometry";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { Observable } from "rxjs";
 import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
@@ -25,6 +25,7 @@ import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { HomeMap } from "@/components/map/HomeMap";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { AppLogger } from "@/api/logger";
+import { AppMapViewController } from "@/components/map/AppMapView";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
@@ -72,17 +73,62 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   const features = useObservable(mapFeatureSubject, undefined);
   const hasFeatures = !!features;
 
+  const appMapRef = useRef<AppMapViewController>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  //const { bottom } = useSafeAreaInsets();
+
   return (
     <AppBackContextProvider backHandler={backHandler}>
       <View style={styles.page}>
         <View style={styles.container}>
           <HomeMap
+            ref={appMapRef}
             featureSubject={mapFeatureSubject}
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMovingStateChanged={setMovingDisplay}
             onZoomChanged={z => AppLogger.debug("MAP", `zoom ${z}`)}
           />
+          {["point", "map"].some(state.matches) && (
+            <>
+              <SearchModal
+                isOpened={modalOpen}
+                close={() => setModalOpen(false)}
+                onSelectTrip={trip => {
+                  machine.send("UPDATE", { data: trip });
+                  return true;
+                }}
+                onSelectFeature={placeFeature => {
+                  // console.log("place selected", JSON.stringify(placeFeature));
+                  if (placeFeature.bbox) {
+                    appMapRef.current?.fitBounds(
+                      getBoundingBox(
+                        [
+                          [placeFeature.bbox[0], placeFeature.bbox[1]],
+                          [placeFeature.bbox[2], placeFeature.bbox[3]]
+                        ],
+                        8
+                      ),
+                      1000
+                    );
+                  } else if (placeFeature.geometry.type === "Point") {
+                    appMapRef.current?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000);
+                  }
+                  return true;
+                }}
+              />
+              {/*<Pressable
+                style={[
+                  styles.smallActionButton,
+                  { backgroundColor: AppColors.primaryColor, position: "absolute", bottom: 90 + bottom, left: 16 },
+                  AppStyles.shadow
+                ]}
+                onPress={() => setModalOpen(true)}>
+                <AppIcon name={"search-outline"} color={AppColors.white} />
+              </Pressable>*/}
+            </>
+          )}
         </View>
         {state.matches("form") && (
           <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={[styles.container, { backgroundColor: AppColors.white }]} />
@@ -114,13 +160,14 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         {isMapState && (
           <MapHeader
             hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
-            title={"Carte des lianes"}
             updateTrip={t => machine.send("UPDATE", { data: t })}
             trip={state.context.filter}
+            searchPlace={() => setModalOpen(true)}
           />
         )}
         {isPointState && (
           <MapHeader
+            searchPlace={() => setModalOpen(true)}
             hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
             action={
               isPointState && !hasFeatures
@@ -132,21 +179,13 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                 : null
             }
             animateEntry={false}
-            title={"Carte des lianes"}
             updateTrip={t => {
               machine.send("UPDATE", { data: t });
             }}
             trip={state.context.filter}
           />
         )}
-        {isMatchState && (
-          <MapHeader
-            animateEntry={false}
-            title={"Carte des lianes"}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
-            trip={state.context.filter}
-          />
-        )}
+        {isMatchState && <MapHeader animateEntry={false} updateTrip={t => machine.send("UPDATE", { data: t })} trip={state.context.filter} />}
       </View>
     </AppBackContextProvider>
   );
@@ -202,5 +241,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     position: "absolute",
     width: "100%"
+  },
+  smallActionButton: {
+    padding: 16,
+    borderRadius: 52
   }
 });
