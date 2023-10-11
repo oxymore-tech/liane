@@ -147,9 +147,10 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length)                                                               as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 (array_agg(s.to_id order by s.eta desc))[1]                               as destination
+                                 (array_agg(s.to_id order by s.eta desc))[1]                               as to_id
                           from (select liane_id,
                                        to_id,
+                                       from_id,
                                        st_length(st_boundingdiagonal(geometry)::geography)      as length,
                                        geometry,
                                        eta,
@@ -158,7 +159,7 @@ BEGIN
                           group by liane_id
                           having bool_or(intersects)),
        lianes_parts as (select liane_id,
-                               destination,
+                               to_id,
                                ST_Envelope(geometry) as bbox,
                                st_simplify(ST_Intersection(
                                              geometry,
@@ -178,15 +179,14 @@ BEGIN
                           from rallying_point
                           where z > 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
-
-       suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids
+       suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids, bool_or(lianes_parts.to_id = clipped_points.id) as is_deposit
                              from lianes_parts
                                     inner join clipped_points on
                                case
                                  when z > 7 then
                                    st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
                                               500)
-                                 else clipped_points.id = lianes_parts.destination end
+                                 else clipped_points.id = lianes_parts.to_id end
                              group by id, label, location, type, address, zip_code, city, place_count),
 
        -- Create clusters along segments
@@ -194,22 +194,23 @@ BEGIN
        -- (2) : join subdivided lines and its suggestion points
        -- (3) : remove duplicated points occurrences then make clusters
        -- (4) : remove clustered points from suggestions
-       subdivided as (select liane_id, destination, geometry as geom, (points_cluster_distance * i / len) as l_start, (points_cluster_distance * (i + 1) / len) as l_end, len, i
+       subdivided as (select liane_id, to_id, geometry as geom, (points_cluster_distance * i / len) as l_start, (points_cluster_distance * (i + 1) / len) as l_end, len, i
                       from (select *, st_length(geometry::geography) as len from longest_lianes where points_cluster_distance is not null and z > 7) as measured
                              cross join lateral (select i from generate_series(0, floor(len / points_cluster_distance)::integer - 1) as t(i)) as iterator),
        subdivided_suggestions as (select *, row_number() over (partition by id) as point_occurence
                                   from (select subdivided.liane_id,
-                                               destination,
+                                               to_id,
+                                               geom,
                                                i,
                                                st_lineinterpolatepoint(geom, (l_start + l_end) / 2) as middle,
                                                suggestion_points.*
                                         from subdivided
                                                inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
                                   where st_distancesphere(middle, location) < points_cluster_distance / 2),
-       clustered_points as (select middle as location, array_agg(id) as ids, count(id) as point_count
+       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(st_collect(location)))) as location, array_agg(id) as ids, count(id) as point_count
                             from subdivided_suggestions
-                            where point_occurence = 1 and id != destination
-                            group by middle
+                            where point_occurence = 1 and id != to_id
+                            group by middle, geom
                             having count(id) > 1),
        solo_points as (select suggestion_points.*
                        from suggestion_points
@@ -236,24 +237,31 @@ BEGIN
                                city,
                                place_count
                         from suggestion_points),
-       all_points as (select *, 'suggestion' as point_type, null::integer as point_count
-                      from solo_points
-                      union
-                      select *, null as liane_ids, 'active' as point_type, null::integer as point_count
-                      from other_points
-                      union
-                      select null         as id,
-                             null         as label,
-                             location,
-                             null         as type,
-                             null         as address,
-                             null         as zip_code,
-                             null         as city,
-                             null         as place_count,
-                             null         as liane_ids,
-                             'suggestion' as point_type,
-                             point_count::integer
-                      from clustered_points),
+       all_points as (
+         select id, label, location, type, address, zip_code, city, place_count,
+                liane_ids,
+                case when is_deposit then 'deposit' else 'suggestion' end as point_type,
+                null::integer as point_count
+         from solo_points
+         union
+         select  id, label, location, type, address, zip_code, city, place_count,
+                 null as liane_ids,
+                 'active' as point_type,
+                 null::integer as point_count
+         from other_points
+         union
+         select null         as id,
+                null         as label,
+                location,
+                null         as type,
+                null         as address,
+                null         as zip_code,
+                null         as city,
+                null         as place_count,
+                null         as liane_ids,
+                'suggestion' as point_type,
+                point_count::integer
+         from clustered_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
                                      st_transform(geom, 3857),
@@ -470,9 +478,11 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length)                                                               as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 (array_agg(s.to_id order by s.eta desc))[1]                               as destination
+                                 case when filter_type = 'pickup' then (array_agg(s.to_id order by s.eta desc))[1] 
+                                   else (array_agg(s.from_id order by s.eta asc))[1]  end as extremity_point_id
                           from (select liane_id,
                                        to_id,
+                                       from_id,
                                        st_length(st_boundingdiagonal(geometry)::geography)      as length,
                                        geometry,
                                        eta,
@@ -481,7 +491,7 @@ BEGIN
                           group by liane_id
                           having bool_or(intersects)),
        lianes_parts as (select liane_id,
-                               destination,
+                               extremity_point_id,
                                ST_Envelope(geom) as bbox,
                                ST_Intersection(
                                  geom,
@@ -490,7 +500,7 @@ BEGIN
                                -- ST_Intersection(geometry,     ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)) as geom
                         from (select
                                 liane_id,
-                                destination,
+                                extremity_point_id,
                                 case when filter_type = 'pickup' then
                                        st_linesubstring(geometry, st_linelocatepoint(geometry, origin_point_location), 1)
                                      else  st_linesubstring(geometry, 0, st_linelocatepoint(geometry, origin_point_location))  end as geom
@@ -518,7 +528,7 @@ BEGIN
                                  when z > 7 then
                                    st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
                                               500)
-                                 else clipped_points.id = lianes_parts.destination end
+                                 else clipped_points.id = lianes_parts.extremity_point_id end
                              group by id, label, location, type, address, zip_code, city, place_count),
 
        -- Create clusters along segments
@@ -526,22 +536,23 @@ BEGIN
        -- (2) : join subdivided lines and its suggestion points
        -- (3) : remove duplicated points occurrences then make clusters
        -- (4) : remove clustered points from suggestions
-       subdivided as (select liane_id, destination, geometry as geom, (points_cluster_distance * i / len) as l_start, (points_cluster_distance * (i + 1) / len) as l_end, len, i
+       subdivided as (select liane_id, extremity_point_id, geometry as geom, (points_cluster_distance * i / len) as l_start, (points_cluster_distance * (i + 1) / len) as l_end, len, i
                       from (select *, st_length(geometry::geography) as len from longest_lianes where points_cluster_distance is not null and z > 7) as measured
                              cross join lateral (select i from generate_series(0, floor(len / points_cluster_distance)::integer - 1) as t(i)) as iterator),
        subdivided_suggestions as (select *, row_number() over (partition by id) as point_occurence
                                   from (select subdivided.liane_id,
-                                               destination,
+                                               extremity_point_id,
                                                i,
+                                               geom,
                                                st_lineinterpolatepoint(geom, (l_start + l_end) / 2) as middle,
                                                suggestion_points.*
                                         from subdivided
                                                inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
                                   where st_distancesphere(middle, location) < points_cluster_distance / 2),
-       clustered_points as (select middle as location, array_agg(id) as ids, count(id) as point_count
+       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(st_collect(location)))) as location, array_agg(id) as ids, count(id) as point_count
                             from subdivided_suggestions
-                            where point_occurence = 1 and id != destination
-                            group by middle
+                            where point_occurence = 1 and id != extremity_point_id
+                            group by middle, geom
                             having count(id) > 1),
        solo_points as (select suggestion_points.*
                        from suggestion_points
