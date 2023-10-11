@@ -173,8 +173,8 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
               isPointState && !hasFeatures
                 ? {
                     icon: "play-circle-outline",
-                    title: "Proposer un trajet depuis ce point",
-                    onPress: () => navigation.navigate("Publish", { initialValue: { from: state.context.filter!.from } })
+                    title: "Proposer un trajet vers ce point",
+                    onPress: () => navigation.navigate("Publish", { initialValue: { to: state.context.filter!.to } })
                   }
                 : null
             }
