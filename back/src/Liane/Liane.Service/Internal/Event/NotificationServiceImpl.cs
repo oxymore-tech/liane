@@ -37,42 +37,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     new Notification.Event(
       null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
   );
-
-  public Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<Api.User.User>> to, Reminder reminder)
-  {
-    if (memoryCache.TryGetValue(reminder, out var n))
-    {
-      return Task.FromResult((n as Notification)!);
-    }
-
-    var notification = new Notification.Reminder(
-      null, null, DateTime.UtcNow,
-      to.Select(t => new Recipient(t, null)).ToImmutableList(),
-      ImmutableHashSet<Answer>.Empty,
-      title,
-      message,
-      reminder);
-   memoryCache.Set(reminder, notification, TimeSpan.FromMinutes(10));
-   /*  await Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));*/
-    return Task.FromResult<Notification>(notification);
-  }
-
-  public async Task SendReminders(DateTime now, IEnumerable<Notification.Reminder> reminders)
-  {
-    await Task.WhenAll(reminders.Select(notification =>
-    {
-      if (memoryCache.TryGetValue(notification.Payload, out var n))
-      {
-        return Task.CompletedTask;
-      }
-
-      memoryCache.Set(notification.Payload, notification, TimeSpan.FromMinutes(10));
-     // return Task.WhenAll(notification.Recipients.Select(r => pushService.SendNotification(r.User, notification)));
-     return Task.CompletedTask;
-    }));
-    
-  }
-
+  
   public new async Task<Notification> Create(Notification obj)
   {
     if (obj.Recipients.IsEmpty)
