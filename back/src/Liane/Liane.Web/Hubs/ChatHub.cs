@@ -93,8 +93,8 @@ public sealed class ChatHub : Hub<IHubClient>
     await Clients.Caller.Me(user);
     // Send latest unread notifications count and conversations 
     var unreadConversationsIds = await chatService.GetUnreadConversationsIds(userId);
-    var unreadNotificationsCount = await notificationService.GetUnreadCount(userId);
-    await Clients.Caller.ReceiveUnreadOverview(new UnreadOverview(unreadNotificationsCount, unreadConversationsIds));
+    var unreadNotificationsIds = await notificationService.GetUnread(userId);
+    await Clients.Caller.ReceiveUnreadOverview(new UnreadOverview(unreadNotificationsIds, unreadConversationsIds));
   }
 
   public override async Task OnDisconnectedAsync(Exception? exception)

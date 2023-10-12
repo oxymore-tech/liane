@@ -95,7 +95,8 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     if (notificationFilter.Recipient is not null)
     {
       filter &= 
-        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.SeenAt == null)
+        // Filter unseen notifications or those just seen today
+        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && (r.SeenAt == null || r.SeenAt > DateTime.UtcNow.Date))
         | (
           Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.Answer == null)
           & Builders<Notification>.Filter.SizeGt(r => r.Answers, 0)
@@ -165,14 +166,18 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       );
   }
 
-  public async Task<int> GetUnreadCount(Ref<Api.User.User> userId)
+  public async Task MarkAsRead(IEnumerable<Ref<Notification>> ids)
+  {
+    await Parallel.ForEachAsync(ids, async (@ref, _) => await MarkAsRead(@ref));
+  }
+  public async Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Api.User.User> userId)
   {
     var filter = Builders<Notification>.Filter.ElemMatch(n => n.Recipients, r => r.User == userId && r.SeenAt == null);
-    var unreadCount = await Mongo.GetCollection<Notification>()
+    var unread = await Mongo.GetCollection<Notification>()
       .Find(filter)
       .Limit(100)
-      .CountDocumentsAsync();
-    return (int)unreadCount;
+      .ToListAsync();
+    return unread.Select(n => (Ref<Notification>)n.Id!).ToImmutableList();
   }
 
   private static FilterDefinition<Notification> BuildLianeEventTypeFilter(PayloadType.Event @event)

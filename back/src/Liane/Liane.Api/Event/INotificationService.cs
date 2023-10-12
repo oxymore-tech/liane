@@ -24,7 +24,9 @@ public interface INotificationService : ICrudService<Notification>
 
   Task MarkAsRead(Ref<Notification> id);
 
-  Task<int> GetUnreadCount(Ref<User.User> userId);
+  Task MarkAsRead(IEnumerable<Ref<Notification>> ids);
+
+  Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<User.User> userId);
 
   Task CleanJoinLianeRequests(IEnumerable<Ref<Trip.Liane>> lianes);
   
