@@ -259,13 +259,13 @@ export async function checkLocationPingsPermissions(): Promise<boolean> {
     let access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
 
     //access = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
-    AppLogger.debug("GEOPINGS", access);
+    AppLogger.info("GEOPINGS", access);
     return access === "granted";
     //return true;
     // return access === "granted";
   } else if (Platform.OS === "android") {
     const access = await check(Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    AppLogger.debug("GEOPINGS", access);
+    AppLogger.info("GEOPINGS", access);
     return access === "granted";
   }
   return true;
@@ -298,7 +298,7 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
       taskDesc: "Liane partage votre position sur le trajet à destination de " + wayPoints[wayPoints.length - 1].rallyingPoint.label,
       taskIcon: { name: "ic_launcher", type: "mipmap" },
       parameters: { liane: lianeId, trip: wayPoints, delay }
-    }).catch(err => console.warn(err));
+    }).catch(err => AppLogger.warn("GEOPINGS", "Unable to setup geoping background task on IOS", err));
   } else if (Platform.OS === "android") {
     const user = await getCurrentUser();
     // Refresh token here to avoid issues
@@ -312,7 +312,7 @@ export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], 
       pingConfig: { lianeId, userId: user!.id!, token: token!, url: BaseUrl },
       timeout,
       wayPoints: wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat])
-    });
+    }).catch(err => AppLogger.warn("GEOPINGS", "Unable to setup geoping background task on android", err));
   }
 }
 
@@ -351,7 +351,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     };
     const positionCallback: Geolocation.SuccessCallback = position => {
       // Send position ping
-      AppLogger.debug("GEOPINGS", position);
+      AppLogger.info("GEOPINGS", position);
       const coordinate = { lat: position.coords.latitude, lng: position.coords.longitude };
       const ping: MemberPing = {
         ...{
