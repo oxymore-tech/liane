@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
@@ -6,6 +8,7 @@ using Liane.Api.Hub;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
@@ -116,5 +119,10 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     var userId = currentContext.CurrentUser().Id;
     await lianeMemberTracker.Unsubscribe(userId, lianeId, memberId);
+  }
+
+  public async Task ReadNotifications(IEnumerable<Ref<Notification>> notifications)
+  {
+    await notificationService.MarkAsRead(notifications);
   }
 }

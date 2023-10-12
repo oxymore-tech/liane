@@ -57,9 +57,8 @@ public sealed class LianeStatusUpdate : CronJobService
         .ToListAsync())
       .ToImmutableHashSet();
     
-    await Parallel.ForEachAsync(canceled, async (id, token) =>
+    await Parallel.ForEachAsync(canceled, async (id, _) =>
     {
-      if (token.IsCancellationRequested) return;
       await lianeService.UpdateState(id, LianeState.Canceled);
     });
     await postgisService.Clear(canceled.ToImmutableList());

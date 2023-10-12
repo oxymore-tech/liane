@@ -30,8 +30,8 @@ public sealed class LianeMemberHasLeftHandler : IEventListener<LianeEvent.Member
     if (liane is not null)
     {
       var destination = liane.WayPoints.Last().RallyingPoint.Label;
-      await notificationService.SendEvent(user.Pseudo + " a quitté la liane",
-        user.Pseudo + " a quitté la liane à destination de " + destination,
+      await notificationService.SendEvent($"{user.Pseudo} a quitté la liane",
+        $"{user.Pseudo} a quitté la liane à destination de {destination}.",
         sender ?? currentContext.CurrentUser().Id,
         liane.Driver.User, e);
     }

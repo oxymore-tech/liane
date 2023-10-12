@@ -9,6 +9,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Event;
@@ -19,12 +20,14 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
   private readonly IPushService pushService;
   private readonly EventDispatcher eventDispatcher;
   private readonly MemoryCache memoryCache;
+  private readonly ILogger<NotificationServiceImpl> logger;
 
-  public NotificationServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IPushService pushService, EventDispatcher eventDispatcher) : base(mongo)
+  public NotificationServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IPushService pushService, EventDispatcher eventDispatcher, ILogger<NotificationServiceImpl> logger) : base(mongo)
   {
     this.currentContext = currentContext;
     this.pushService = pushService;
     this.eventDispatcher = eventDispatcher;
+    this.logger = logger;
     this.memoryCache = new MemoryCache(new MemoryCacheOptions());
   }
 
@@ -85,12 +88,13 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     return await Mongo.Paginate<Notification, Cursor.Time>(pagination, r => r.CreatedAt, filter, false);
   }
 
-  public Task CleanJoinLianeRequests(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+  public async Task CleanJoinLianeRequests(IEnumerable<Ref<Api.Trip.Liane>> lianes)
   {
     var filter = Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, JoinLianeRequest>(n => n.Payload)
                  & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
-    return Mongo.GetCollection<Notification.Event>()
+    var result = await Mongo.GetCollection<Notification.Event>()
       .DeleteManyAsync(filter);
+    logger.LogInformation($"Deleted {result.DeletedCount} join requests.");
   }
 
   public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Liane>> lianes)
