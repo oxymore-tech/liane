@@ -385,7 +385,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
       watchId = Geolocation.watchPosition(
         positionCallback,
         err => {
-          AppLogger.warn("GEOPINGS", err);
+          AppLogger.warn("GEOPINGS", "Error during IOS position tracking", err);
         },
         {
           distanceFilter: distanceFilter,

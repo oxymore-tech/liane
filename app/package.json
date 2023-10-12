@@ -16,8 +16,8 @@
     "url": "git+https://github.com/oxymore-tech/liane.git"
   },
   "dependencies": {
-    "@datadog/mobile-react-native": "^1.8.2",
-    "@datadog/mobile-react-navigation": "^1.8.2",
+    "@datadog/mobile-react-native": "^1.8.5",
+    "@datadog/mobile-react-navigation": "^1.8.5",
     "@maplibre/maplibre-react-native": "^9.1.0",
     "@microsoft/signalr": "^7.0.2",
     "@notifee/react-native": "^7.4.0",

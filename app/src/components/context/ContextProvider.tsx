@@ -45,9 +45,7 @@ async function initContext(service: AppServices): Promise<{
   let user;
   let online = true;
 
-  if (!__DEV__) {
-    await initializeRum();
-  }
+  await initializeRum();
 
   if (authUser) {
     await initializeNotification();

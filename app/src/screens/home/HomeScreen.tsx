@@ -30,8 +30,8 @@ import { AppMapViewController } from "@/components/map/AppMapView";
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
   // const [isLoadingDisplay, setLoadingDisplay] = useState<boolean>(false);
-
   const machine = useContext(HomeMapContext);
+
   const [state] = useActor(machine);
   const { status } = useContext(AppContext);
 

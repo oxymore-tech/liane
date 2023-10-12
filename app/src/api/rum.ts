@@ -9,7 +9,6 @@ export async function initializeRum() {
     config.site = "EU1";
     config.nativeCrashReportEnabled = true;
     config.version = APP_VERSION;
-
     await DdSdkReactNative.initialize(config);
   }
 }
