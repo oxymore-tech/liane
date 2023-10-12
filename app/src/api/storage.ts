@@ -45,9 +45,7 @@ export async function getCurrentUser(): Promise<FullUser | undefined> {
     if (stored) {
       return stored ? JSON.parse(stored) : undefined;
     }
-  } catch (e) {
-    AppLogger.warn("STORAGE", "Unable to get user", e);
-  }
+  } catch (_) {}
   return undefined;
 }
 

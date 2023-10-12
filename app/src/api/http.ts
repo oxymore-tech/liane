@@ -131,7 +131,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   const formattedBody = formatBodyAsJsonIfNeeded(body);
   const formattedHeaders = await headers(body);
   if (__DEV__) {
-    AppLogger.info("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
+    AppLogger.debug("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
   }
   const response = await fetch(url, {
     headers: formattedHeaders,
@@ -174,7 +174,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
     } else {
       return refreshTokenMutex.runExclusive(async () => {
         if (__DEV__) {
-          AppLogger.info("HTTP", "Try refresh token...");
+          AppLogger.debug("HTTP", "Try refresh token...");
         }
         // Call refresh token endpoint
         try {

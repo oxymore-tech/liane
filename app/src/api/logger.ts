@@ -1,6 +1,5 @@
-import { logger } from "react-native-logs";
-import { DdLogs } from "@datadog/mobile-react-native";
-import { LogArguments, LogWithErrorArguments } from "@datadog/mobile-react-native/lib/typescript/logs/types";
+import { consoleTransport, logger } from "react-native-logs";
+import { datadogTransport } from "@/api/dd-logger";
 
 const LoggerNamespaces = [
   "INIT",
@@ -20,6 +19,7 @@ const LoggerNamespaces = [
 const config = {
   severity: __DEV__ ? "debug" : "info",
   dateFormat: "iso",
+  transport: [consoleTransport, datadogTransport],
   transportOptions: {
     colors: {
       info: "blueBright",
@@ -30,10 +30,11 @@ const config = {
   enabledExtensions: [...LoggerNamespaces]
 };
 
+const rootLogger = logger.createLogger(config);
+
 export type LoggerNamespace = (typeof config.enabledExtensions)[number];
 export type LoggerAction = (tag: LoggerNamespace, ...args: any[]) => void;
 const namespaceLoggers = (() => {
-  const rootLogger = logger.createLogger(config);
   return Object.fromEntries(LoggerNamespaces.map(n => [n, rootLogger.extend(n)]));
 })();
 
@@ -44,89 +45,21 @@ export interface ILogger {
   error: LoggerAction;
 }
 
-function formatArgs(args: any[]) {
-  if (!args.length) {
-    return "";
-  }
-  if (args.length === 1) {
-    return " (1 arg)";
-  }
-  return ` (${args.length} args)`;
-}
-
-function formatLogWithErrorArguments(
-  tag: LoggerNamespace,
-  message: string | null,
-  error: Error | null,
-  args: any[]
-): LogArguments | LogWithErrorArguments {
-  if (!error) {
-    if (!message) {
-      return [`[${tag}]${formatArgs(args)}`, { tag, args }];
-    }
-    return [`[${tag}] ${message}${formatArgs(args)}`, { tag, args }];
-  }
-
-  if (!message) {
-    return [`[${tag}] ${error.message}${formatArgs(args)}`, error.name, error.cause?.toString(), error.stack, { tag, error: message, args }];
-  }
-
-  return [
-    `[${tag}] ${message}${formatArgs(args)} : ${error.message}`,
-    error.name,
-    error.cause?.toString(),
-    error.stack,
-    { tag, error: message, args }
-  ];
-}
-
-function formatLogArguments(tag: LoggerNamespace, args: any[]): LogArguments | LogWithErrorArguments {
-  if (!args.length) {
-    return formatLogWithErrorArguments(tag, null, null, args);
-  }
-  const [first, ...tail1] = args;
-
-  if (typeof first === "string") {
-    if (!tail1.length) {
-      return formatLogWithErrorArguments(tag, first, null, tail1);
-    }
-    const [second, ...tail2] = tail1;
-    if (second instanceof Error) {
-      return formatLogWithErrorArguments(tag, first, second, tail2);
-    }
-    return formatLogWithErrorArguments(tag, first, null, tail1);
-  }
-
-  if (first instanceof Error) {
-    return formatLogWithErrorArguments(tag, null, first, tail1);
-  }
-
-  return formatLogWithErrorArguments(tag, null, null, args);
-}
-
 export class AppLoggerImpl implements ILogger {
   debug(tag: LoggerNamespace, ...args: any[]): void {
-    const a = formatLogArguments(tag, args);
-    namespaceLoggers[tag].debug(...a);
-    DdLogs.debug(...a);
+    namespaceLoggers[tag].debug(...args);
   }
 
   info(tag: LoggerNamespace, ...args: any[]): void {
-    const a = formatLogArguments(tag, args);
-    namespaceLoggers[tag].info(...a);
-    DdLogs.info(...a);
+    namespaceLoggers[tag].info(...args);
   }
 
   warn(tag: LoggerNamespace, ...args: any[]): void {
-    const a = formatLogArguments(tag, args);
-    namespaceLoggers[tag].warn(...a);
-    DdLogs.warn(...a);
+    namespaceLoggers[tag].warn(...args);
   }
 
   error(tag: LoggerNamespace, ...args: any[]): void {
-    const a = formatLogArguments(tag, args);
-    namespaceLoggers[tag].error(...a);
-    DdLogs.error(...a);
+    namespaceLoggers[tag].error(...args);
   }
 }
 
