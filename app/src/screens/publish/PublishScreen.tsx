@@ -45,6 +45,7 @@ import { getFirstFutureDate } from "@/util/datetime";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { UserPicture } from "@/components/UserPicture";
+import { PageHeader } from "@/components/context/Navigation";
 
 interface StepProps<T> {
   editable: boolean;
@@ -121,9 +122,9 @@ export const PublishScreenView = () => {
   };
 
   const offsetsTop = {
-    dateStep: insets.top + 160 - 24,
-    vehicleStep: insets.top + 160 - 24 * 2 + 80,
-    returnStep: insets.top + 160 - 24 * 3 + 80 * 2
+    dateStep: insets.top + 172 - 24,
+    vehicleStep: insets.top + 172 - 24 * 2 + 80,
+    returnStep: insets.top + 172 - 24 * 3 + 80 * 2
   };
 
   if (state.matches("map")) {
@@ -144,8 +145,8 @@ export const PublishScreenView = () => {
   }
 
   return (
-    <Column style={{ flex: 1, backgroundColor: AppColors.white }}>
-      <FloatingBackButton onPress={navigation.goBack} />
+    <Column style={{ flex: 1, backgroundColor: AppColors.white, paddingBottom: insets.bottom }}>
+      <PageHeader title={"Créer une Liane"} />
       {(isOverviewStep || isSubmittingStep) && (
         <Animated.View exiting={SlideOutLeft.duration(20)} entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}>
           {/*<AppPressableOverlay
@@ -159,10 +160,6 @@ export const PublishScreenView = () => {
           </AppPressableOverlay>*/}
         </Animated.View>
       )}
-
-      <Row style={{ position: "absolute", left: 72, top: insets.top + 16 }}>
-        <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>Créer une Liane</AppText>
-      </Row>
 
       {(isOverviewStep || isSubmittingStep || isReturnStep) && (
         <Animated.View
@@ -453,11 +450,7 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
 
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay
-              backgroundStyle={styles.cancelButtonBackground}
-              style={styles.validateButton}
-              borderRadius={20}
-              onPress={() => onChange(date || null)}>
+            <AppPressableOverlay backgroundStyle={styles.cancelButtonBackground} style={styles.validateButton} onPress={() => onChange(date || null)}>
               <Center>
                 <Row spacing={4}>
                   <AppText style={styles.cancelText}>Annuler</AppText>

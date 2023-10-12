@@ -5,6 +5,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import { RallyingPointField } from "@/screens/home/HomeHeader";
 import { RallyingPoint } from "@/api";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 
 export interface ItineraryFormProps {
   editable?: boolean;
@@ -91,21 +92,32 @@ export const ItineraryForm = ({
         showTrailing={focused === "to" && (to || (searchTo && searchTo.length > 0)) === true}
       />
 
-      <View style={{ position: "absolute", right: 29, top: 9, height: "100%", justifyContent: "center" }}>
-        <Pressable
-          style={[styles.smallActionButton, { backgroundColor: AppColors.primaryColor }]}
-          onPress={() => {
-            if (!from) {
-              setSearchTo(searchFrom);
-            }
-            if (!to) {
-              setSearchFrom(searchTo);
-            }
-            onValuesSwitched(from, to);
-          }}>
-          <AppIcon name={"arrow-switch"} color={AppColors.white} size={14} />
-        </Pressable>
-      </View>
+      {(to || from) && (
+        <View style={{ position: "absolute", right: 0, top: 8, height: "100%", justifyContent: "center" }}>
+          <AppPressableIcon
+            name={"arrow-switch"}
+            style={{ width: 40, height: 40, justifyContent: "center", alignItems: "center" }}
+            backgroundStyle={{
+              backgroundColor: AppColors.primaryColor,
+              borderTopLeftRadius: 20,
+              borderBottomLeftRadius: 20,
+              borderTopRightRadius: 2,
+              borderBottomRightRadius: 2
+            }}
+            color={AppColors.white}
+            size={16}
+            onPress={() => {
+              if (!from) {
+                setSearchTo(searchFrom);
+              }
+              if (!to) {
+                setSearchFrom(searchTo);
+              }
+              onValuesSwitched(from, to);
+            }}
+          />
+        </View>
+      )}
     </Column>
   );
 };
@@ -116,10 +128,7 @@ const styles = StyleSheet.create({
     borderColor: AppColors.lightGrayBackground,
     borderRadius: 18,
     paddingVertical: 12,
-    backgroundColor: AppColors.white
-  },
-  smallActionButton: {
-    padding: 8,
-    borderRadius: 52
+    backgroundColor: AppColors.white,
+    flex: 1
   }
 });

@@ -32,6 +32,9 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
+import { Row } from "@/components/base/AppLayout";
+import { useAppNavigation } from "@/api/navigation";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -85,8 +88,12 @@ function Navigation() {
     return (
       <Stack.Navigator initialRouteName={"Home"}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
-        <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="ArchivedTrips"
+          component={ArchivedTripsScreen}
+          options={{ header: () => <PageHeader title={"Historique des trajets"} /> }}
+        />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ header: () => <PageHeader title={"Paramètres"} /> }} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
@@ -151,6 +158,17 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
         tabBarItemStyle: { margin: 5, borderRadius: 18 }
       })}
     />
+  );
+};
+
+export const PageHeader = (props: { title: string }) => {
+  const { navigation } = useAppNavigation();
+  const insets = useSafeAreaInsets();
+  return (
+    <Row style={{ paddingTop: insets.top + 16, padding: 16, backgroundColor: AppColors.white }} spacing={24}>
+      <AppPressableIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} onPress={() => navigation.goBack()} />
+      <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title}</AppText>
+    </Row>
   );
 };
 

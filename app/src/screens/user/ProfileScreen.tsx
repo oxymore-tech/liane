@@ -8,7 +8,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ActionItem } from "@/components/ActionItem";
+import { ActionItem, ActionListItem } from "@/components/ActionItem";
 import { useAppNavigation } from "@/api/navigation";
 import { User } from "@/api";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
@@ -16,6 +16,7 @@ import { formatMonthYear } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { LineSeparator } from "@/components/Separator";
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
@@ -69,29 +70,27 @@ const Actions = () => {
   const { logout, services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   return (
-    <Column style={{ alignItems: "center" }}>
-      <Row>
-        <ActionItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
-        <ActionItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
-        <ActionItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
-      </Row>
-      {/*<Row>
-        <ActionItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
-        <ActionItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
-      </Row>*/}
-      <Row>
-        <ActionItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
-        <ActionItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
-        <ActionItem
-          onPress={async () => {
-            await services.auth.logout();
-            logout();
-          }}
-          color={ContextualColors.redAlert.text}
-          iconName={"log-out-outline"}
-          text={"Se déconnecter"}
-        />
-      </Row>
+    <Column>
+      <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
+      <ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
+      <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
+      <ActionListItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
+      {/*<LineSeparator />
+      <ActionListItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
+      <ActionListItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
+*/}
+      <LineSeparator />
+      <ActionListItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
+      <ActionListItem
+        onPress={async () => {
+          await services.auth.logout();
+          logout();
+        }}
+        color={ContextualColors.redAlert.text}
+        iconName={"log-out-outline"}
+        text={"Se déconnecter"}
+      />
+      <LineSeparator />
       <AppText style={{ marginLeft: 32, marginVertical: 8 }}>Version : {APP_VERSION}</AppText>
     </Column>
   );

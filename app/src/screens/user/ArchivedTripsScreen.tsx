@@ -7,8 +7,6 @@ import { TripListView } from "@/screens/user/TripListView";
 import { Liane } from "@/api";
 import { AppStyles } from "@/theme/styles";
 import { AppColors } from "@/theme/colors";
-import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { useAppNavigation } from "@/api/navigation";
 
 export const ArchivedTripsScreen = () => {
   return (
@@ -29,7 +27,6 @@ export const LianeHistoryQueryKey = "getLianeHistory";
 
 const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
   ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
-    const { navigation } = useAppNavigation();
     return (
       <>
         <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
@@ -38,7 +35,6 @@ const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
             <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
           </View>
         )}
-        <FloatingBackButton onPress={navigation.goBack} />
       </>
     );
   },

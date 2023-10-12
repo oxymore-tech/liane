@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { AppStyles } from "@/theme/styles";
+import { ItineraryForm } from "@/components/forms/ItineraryForm";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
@@ -469,7 +470,6 @@ export const ItinerarySearchForm = ({
 
   return (
     <Column style={{ flex: editable ? 1 : undefined }}>
-      <View style={{ height: 192 + insets.top }} />
       <ItineraryFormHeader
         title={title}
         editable={editable}
