@@ -147,7 +147,8 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length)                                                               as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 (array_agg(s.to_id order by s.eta desc))[1]                               as to_id
+                                 (array_agg(s.to_id order by s.eta desc))[1]                               as to_id,
+                                 (array_agg(s.from_id order by s.eta asc))[1]                               as from_id
                           from (select liane_id,
                                        to_id,
                                        from_id,
@@ -160,6 +161,7 @@ BEGIN
                           having bool_or(intersects)),
        lianes_parts as (select liane_id,
                                to_id,
+                               from_id,
                                ST_Envelope(geometry) as bbox,
                                st_simplify(ST_Intersection(
                                              geometry,
@@ -182,11 +184,12 @@ BEGIN
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids, bool_or(lianes_parts.to_id = clipped_points.id) as is_deposit
                              from lianes_parts
                                     inner join clipped_points on
-                               case
-                                 when z > 7 then
-                                   st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
-                                              500)
-                                 else clipped_points.id = lianes_parts.to_id end
+                                   clipped_points.id != lianes_parts.from_id  and
+                                   case
+                                     when z > 7 then
+                                       st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                                  500)
+                                     else clipped_points.id = lianes_parts.to_id end
                              group by id, label, location, type, address, zip_code, city, place_count),
 
        -- Create clusters along segments
