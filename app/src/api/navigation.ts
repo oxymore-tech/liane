@@ -30,6 +30,15 @@ export type NavigationParamList = {
   Settings: undefined;
   OpenValidateTrip: { liane: Liane };
   ShareTripLocationScreen: { liane: Liane | string };
+  Notifications: undefined;
+};
+
+export const NavigationScreenTitles = {
+  Publish: "Créer une Liane",
+  Account: "Mon compte",
+  ArchivedTrips: "Historique des trajets",
+  Settings: "Paramètres",
+  Notifications: "Notifications"
 };
 
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {

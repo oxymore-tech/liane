@@ -12,7 +12,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { capitalize } from "@/util/strings";
 import { LineSeparator } from "@/components/Separator";
-import { ActionItem } from "@/components/ActionItem";
+import { ActionListItem } from "@/components/ActionItem";
 
 export const AccountScreen = () => {
   const { navigation } = useAppNavigation();
@@ -36,7 +36,7 @@ export const AccountScreen = () => {
 
         <LineSeparator />
 
-        <ActionItem
+        <ActionListItem
           onPress={() => {
             Alert.alert("Supprimer définitivement ce compte ?", "Toutes les données liées seront supprimées.", [
               {

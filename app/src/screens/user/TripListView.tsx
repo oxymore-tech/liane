@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import {
   Pressable,
   RefreshControl,
@@ -202,22 +202,28 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
   return (
     <Pressable
       onPress={() => navigation.navigate({ name: "LianeJoinRequestDetail", params: { request: item } })}
-      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+      style={[
+        styles.item,
+        styles.grayBorder,
+        index === section.data.length - 1 ? styles.itemLast : {},
+        index === 0 ? styles.itemFirst : {},
+        { opacity: 0.9 }
+      ]}>
       <View>
-        <Row style={styles.driverContainer} spacing={8}>
-          <UserPicture url={driver?.pictureUrl} size={24} id={driver.id} />
-          <AppText style={styles.driverText}>{driver.pseudo}</AppText>
+        <Row style={styles.driverContainer}>
+          <Row spacing={8} style={{ flex: 4 }}>
+            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
+            <AppText style={styles.driverText}>{driver.pseudo}</AppText>
+          </Row>
+          <AppText style={{ color: AppColorPalettes.gray[500], fontWeight: "500", fontStyle: "italic", paddingHorizontal: 6, paddingVertical: 6 }}>
+            En attente de validation
+          </AppText>
         </Row>
         <View style={styles.lianeContainer}>
           <JoinRequestSegmentOverview request={item} />
         </View>
       </View>
-
-      <Row style={styles.statusRowContainer} spacing={8}>
-        <Row style={styles.statusContainer}>
-          <AppText>En attente de validation</AppText>
-        </Row>
-      </Row>
+      <View style={{ height: 24 }} />
     </Pressable>
   );
 };

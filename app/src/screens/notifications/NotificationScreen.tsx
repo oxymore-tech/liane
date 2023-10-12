@@ -1,15 +1,16 @@
-import React, { useContext } from "react";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import React, { useContext, useEffect } from "react";
+import { AppColors } from "@/theme/colors";
 import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppText } from "@/components/base/AppText";
 import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppNavigation, getNotificationNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Notification } from "@/api/notification";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";
 import { AppStyles } from "@/theme/styles";
+import { useQueryUpdater } from "@/components/context/QueryUpdateProvider";
 
 export const NotificationQueryKey = "notification";
 
@@ -27,11 +28,30 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const { navigation } = useAppNavigation();
     const { services, user } = useContext(AppContext);
 
+    const queryUpdater = useQueryUpdater();
+    services.realTimeHub.subscribeToNotifications(async (_: Notification) => {
+      refresh();
+    });
+    useEffect(() => {
+      const unsubscribe = navigation.addListener("beforeRemove", () => {
+        if (data.length === 0) {
+          return;
+        }
+        services.realTimeHub
+          .readNotifications()
+          .then(() => {
+            // Update local seen state
+            queryUpdater.readNotifications(user!.id!);
+          })
+          .catch(e => console.error("NOTIFICATIONS", "Cannot read notifications", e));
+      });
+      return () => unsubscribe();
+    }, [services, navigation, queryUpdater, user?.id, data.length, user]);
+
     const renderItem = ({ item }: { item: Notification }) => (
       <NotificationItem
         key={item.id!}
         notification={item}
-        navigate={() => getNotificationNavigation(item)?.(navigation)}
         read={async () => {
           await services.notification.markAsRead(item.id!);
           if (item.answers && item.answers.length > 0) {
@@ -54,14 +74,16 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
         onEndReached={fetchNextPage}
         ListFooterComponent={
           isFetchingNextPage ? (
-            <View style={{ alignItems: "center" }}>
+            <View style={{ alignItems: "center", marginBottom: insets.bottom }}>
               <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
             </View>
-          ) : undefined
+          ) : (
+            <View style={{ height: insets.bottom + 8 }} />
+          )
         }
-        ItemSeparatorComponent={() => <View style={{ borderBottomWidth: 1, borderBottomColor: AppColorPalettes.gray[200], marginHorizontal: 24 }} />}
+        //ItemSeparatorComponent={() => <View style={{ borderBottomWidth: 1, borderBottomColor: AppColorPalettes.gray[200], marginHorizontal: 24 }} />}
         contentContainerStyle={{ flexGrow: 1 }}
-        style={{ marginBottom: 80 + insets.bottom }}
+        style={{ paddingTop: 8 }}
       />
     );
   },

@@ -10,7 +10,6 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useDebounceValue } from "@/util/hooks/debounce";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { AppStyles } from "@/theme/styles";
@@ -67,8 +66,7 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?
             return (
               <AppPressableOverlay
                 style={[index !== recentTrips.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}]}
-                onPress={async () => props.onSelect(item)}
-                borderRadius={16}>
+                onPress={async () => props.onSelect(item)}>
                 <RecentTrip trip={item} style={{ marginHorizontal: 16, marginVertical: 12 }} />
               </AppPressableOverlay>
             );
@@ -139,8 +137,7 @@ export const CachedPlaceLocationsView = ({
               styles.placeItemStyle,
               index !== locationList.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}
             ]}
-            onPress={() => updateValue(item)}
-            borderRadius={20}>
+            onPress={() => updateValue(item)}>
             <PlaceItem item={item} labelSize={18} />
           </AppPressableOverlay>
         )}
@@ -212,11 +209,7 @@ export const CachedLocationsView = ({
           data={locationList}
           keyExtractor={r => r.id!}
           renderItem={({ item }) => (
-            <AppPressableOverlay
-              key={item.id!}
-              style={{ paddingHorizontal: 16, paddingVertical: 8 }}
-              onPress={() => updateValue(item)}
-              borderRadius={16}>
+            <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
               <RallyingPointItem item={item} />
             </AppPressableOverlay>
           )}
@@ -355,7 +348,7 @@ export const RallyingPointSuggestions = (props: {
       data={locationList}
       keyExtractor={i => i.id!}
       renderItem={({ item }) => (
-        <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)} borderRadius={16}>
+        <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
           <RallyingPointItem item={item} />
         </AppPressableOverlay>
       )}
@@ -431,8 +424,7 @@ export const PlaceSuggestions = (props: {
         <AppPressableOverlay
           key={(isRallyingPointSearchedLocation(item) ? item.properties!.id! : item.properties!.ref) + index}
           style={[styles.placeItemStyle, index !== results.length - 1 ? { borderBottomWidth: 1, borderColor: AppColorPalettes.gray[200] } : {}]}
-          onPress={() => updateValue(item)}
-          borderRadius={20}>
+          onPress={() => updateValue(item)}>
           <PlaceItem item={item} labelSize={18} />
         </AppPressableOverlay>
       )}
@@ -460,13 +452,8 @@ export const ItinerarySearchForm = ({
 }: ItinerarySearchFormProps) => {
   const [currentPoint, setCurrentPoint] = useState<"from" | "to" | undefined>();
   const [currentSearch, setCurrentSearch] = useState<string | undefined>();
-  const insets = useSafeAreaInsets();
-  // const machine = useContext(HomeMapContext);
-  // const [state] = useActor(machine);
-  // const currentTrip = state.context.filter;
+
   const otherValue = currentPoint ? currentTrip[currentPoint === "to" ? "from" : "to"] : undefined;
-  const { status } = useContext(AppContext);
-  const offline = status === "offline";
 
   return (
     <Column style={{ flex: editable ? 1 : undefined }}>
@@ -491,14 +478,14 @@ export const ItinerarySearchForm = ({
         trip={currentTrip}
         updateTrip={updateTrip}
       />
-      {!offline && editable && !currentTrip.to && !currentTrip.from && currentPoint === undefined && (
+      {editable && !currentTrip.to && !currentTrip.from && currentPoint === undefined && (
         <CachedTripsView
           onSelect={trip => {
             onSelectTrip(trip);
           }}
         />
       )}
-      {!offline && editable && currentPoint !== undefined && (currentSearch === undefined || currentSearch.trim().length === 0) && (
+      {editable && currentPoint !== undefined && (currentSearch === undefined || currentSearch.trim().length === 0) && (
         <CachedLocationsView
           exceptValues={[currentTrip.to?.id, currentTrip.from?.id].filter(i => i !== undefined) as string[]}
           onSelect={async rp => {
@@ -508,7 +495,7 @@ export const ItinerarySearchForm = ({
         />
       )}
 
-      {!offline && editable && currentPoint !== undefined && (currentSearch?.trim()?.length ?? 0) > 0 && (
+      {editable && currentPoint !== undefined && (currentSearch?.trim()?.length ?? 0) > 0 && (
         <RallyingPointSuggestions
           currentSearch={currentSearch}
           exceptValues={otherValue ? [otherValue.id!] : undefined}

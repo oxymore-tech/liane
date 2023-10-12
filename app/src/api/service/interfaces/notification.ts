@@ -1,5 +1,5 @@
 import { PaginatedResponse, Ref } from "@/api";
-import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
+import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
 import { Notification } from "@/api/notification";
 
 export interface NotificationService {
@@ -9,36 +9,33 @@ export interface NotificationService {
 
   markAsRead(notification: Ref<Notification>): Promise<void>;
 
-  initUnreadNotificationCount(initialCount: Observable<number>): void;
+  initUnreadNotifications(initialCount: Observable<Ref<Notification>[]>): void;
 
   unreadNotificationCount: Observable<number>;
 }
 
 export abstract class AbstractNotificationService implements NotificationService {
-  readonly unreadNotificationCount: BehaviorSubject<number> = new BehaviorSubject<number>(0);
-
+  protected unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
+  readonly unreadNotificationCount = this.unreadNotifications.pipe(map(ids => ids.length));
   protected _sub?: SubscriptionLike;
 
-  initUnreadNotificationCount = (initialCount: Observable<number>) => {
+  initUnreadNotifications = (initialCount: Observable<Ref<Notification>[]>) => {
     if (this._sub) {
       this._sub.unsubscribe();
     }
-    this._sub = initialCount.subscribe(count => {
-      this.unreadNotificationCount.next(count);
+    this._sub = initialCount.subscribe(ids => {
+      this.unreadNotifications.next(ids);
     });
   };
 
-  protected incrementCounter = async (_: Ref<Notification>) => {
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() + 1);
+  protected incrementCounter = async (id: Ref<Notification>) => {
+    this.unreadNotifications.next([...this.unreadNotifications.getValue(), id]);
   };
 
   abstract list(): Promise<PaginatedResponse<Notification>>;
 
-  protected decrementCounter = async (_: Ref<Notification>) => {
-    if (this.unreadNotificationCount.getValue() - 1 < 0) {
-      return;
-    }
-    this.unreadNotificationCount.next(this.unreadNotificationCount.getValue() - 1);
+  protected decrementCounter = async (id: Ref<Notification>) => {
+    this.unreadNotifications.next(this.unreadNotifications.getValue().filter(n => n !== id));
   };
 
   markAsRead = this.decrementCounter;

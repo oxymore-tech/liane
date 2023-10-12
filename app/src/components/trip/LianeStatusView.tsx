@@ -2,7 +2,7 @@ import { Liane } from "@/api";
 import { useLianeStatus, LianeStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
-import { ColorValue, View } from "react-native";
+import { ColorValue } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 export const LianeStatusView = ({ liane }: { liane: Liane }) => {
@@ -12,14 +12,16 @@ export const LianeStatusView = ({ liane }: { liane: Liane }) => {
     return null;
   }
   return (
-    <View
+    <AppText
       style={{
         paddingHorizontal: 6,
         paddingVertical: 6,
-        borderRadius: 10
+        color: AppColorPalettes.gray[400],
+        fontWeight: "500",
+        fontStyle: "italic"
       }}>
-      <AppText style={{ color: AppColorPalettes.gray[400], fontWeight: "500", fontStyle: "italic" }}>{statusText}</AppText>
-    </View>
+      {statusText}
+    </AppText>
   );
 };
 

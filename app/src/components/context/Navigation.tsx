@@ -1,10 +1,8 @@
 import React, { useContext } from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useQueryClient } from "react-query";
-import { Notification } from "@/api/notification";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -26,15 +24,16 @@ import { ChatScreen } from "@/screens/ChatScreen";
 import HomeScreen from "@/screens/home/HomeScreen";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
-import NotificationScreen, { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { Row } from "@/components/base/AppLayout";
-import { useAppNavigation } from "@/api/navigation";
+import { NavigationScreenTitles } from "@/api/navigation";
 import { AppPressableIcon } from "@/components/base/AppPressable";
+import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
+import NotificationScreen from "@/screens/notifications/NotificationScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -60,22 +59,18 @@ function Home() {
       )}
       {makeTab(
         "Mes trajets",
-        ({ focused }) => (
-          <TabIcon iconName={"calendar"} focused={focused} size={iconSize} />
-        ),
+        ({ focused }) => {
+          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={notificationCount} />;
+        },
         MyTripsScreen,
         { headerShown: false } //TODO generic header ?
       )}
       {makeTab(
-        "Notifications",
+        "Communautés",
         ({ focused }) => {
-          const queryClient = useQueryClient();
-          services.realTimeHub.subscribeToNotifications(async (_: Notification) => {
-            await queryClient.invalidateQueries(NotificationQueryKey); //TODO just add received notification
-          });
-          return <BadgeTabIcon iconName={"bell-outline"} focused={focused} size={iconSize} value={notificationCount} />;
+          return <TabIcon iconName={"people-outline"} focused={focused} size={iconSize} />;
         },
-        NotificationScreen
+        CommunitiesScreen
       )}
     </Tab.Navigator>
   );
@@ -86,14 +81,12 @@ function Navigation() {
 
   if (user) {
     return (
-      <Stack.Navigator initialRouteName={"Home"}>
+      <Stack.Navigator
+        initialRouteName={"Home"}
+        screenOptions={{ header: PageHeader, contentStyle: { backgroundColor: AppColors.lightGrayBackground } }}>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
-        <Stack.Screen
-          name="ArchivedTrips"
-          component={ArchivedTripsScreen}
-          options={{ header: () => <PageHeader title={"Historique des trajets"} /> }}
-        />
-        <Stack.Screen name="Settings" component={SettingsScreen} options={{ header: () => <PageHeader title={"Paramètres"} /> }} />
+        <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
@@ -105,6 +98,7 @@ function Navigation() {
         <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Notifications" component={NotificationScreen} />
       </Stack.Navigator>
     );
   }
@@ -143,7 +137,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
     <Tab.Screen
       name={label}
       component={screen}
-      options={({ navigation }) => ({
+      options={() => ({
         headerShown,
         /*  @ts-ignore */
         header: () => <View style={{ height: 28 }} />,
@@ -161,13 +155,14 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
   );
 };
 
-export const PageHeader = (props: { title: string }) => {
-  const { navigation } = useAppNavigation();
+export const PageHeader = (props: { title?: string | undefined } & Partial<NativeStackHeaderProps>) => {
   const insets = useSafeAreaInsets();
+  // @ts-ignore
+  const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
   return (
     <Row style={{ paddingTop: insets.top + 16, padding: 16, backgroundColor: AppColors.white }} spacing={24}>
-      <AppPressableIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} onPress={() => navigation.goBack()} />
-      <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title}</AppText>
+      <AppPressableIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} onPress={() => props.navigation?.goBack()} />
+      <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title || defaultName}</AppText>
     </Row>
   );
 };
