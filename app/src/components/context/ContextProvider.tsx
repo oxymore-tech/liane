@@ -54,6 +54,7 @@ async function initContext(service: AppServices): Promise<{
   if (authUser?.isSignedUp) {
     try {
       user = await service.realTimeHub.start();
+      await registerRumUser({ ...authUser, pseudo: user.pseudo });
       // Branch hub to notifications
       service.notification.initUnreadNotificationCount(service.realTimeHub.unreadNotificationCount);
     } catch (e) {
@@ -232,9 +233,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     try {
       let user: FullUser;
       if (a) {
-        await registerRumUser(a);
         user = await SERVICES.realTimeHub.start();
-        AppLogger.debug("LOGIN", user);
+        await registerRumUser({ ...a, pseudo: user.pseudo });
+        AppLogger.debug("LOGIN", "Login successfully");
       }
       this.setState(prev => ({
         ...prev,

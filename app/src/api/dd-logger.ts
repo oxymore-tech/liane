@@ -2,7 +2,6 @@ import { LogArguments, LogWithErrorArguments } from "@datadog/mobile-react-nativ
 import { LoggerNamespace } from "@/api/logger";
 import { DD_CLIENT_TOKEN } from "@env";
 import { DdLogs } from "@datadog/mobile-react-native";
-import { getCurrentUser } from "@/api/storage";
 
 export function datadogTransport(props: {
   msg: any;
@@ -22,16 +21,16 @@ export function datadogTransport(props: {
   }
 }
 
-async function log(level: number, tag: LoggerNamespace, args: any[]) {
-  const formatted = await formatLogArguments(tag, args);
+function log(level: number, tag: LoggerNamespace, args: any[]) {
+  const formatted = formatLogArguments(tag, args);
   switch (level) {
     case 0:
       return DdLogs.debug(...formatted);
 
-    case 3:
+    case 2:
       return DdLogs.warn(...formatted);
 
-    case 4:
+    case 3:
       return DdLogs.error(...formatted);
 
     case 1:
@@ -50,30 +49,21 @@ function formatArgs(args: any[]) {
   return ` (${args.length} args)`;
 }
 
-async function getUserInfo() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return undefined;
-  }
-  return { pseudo: user.pseudo, id: user.id };
-}
-
-async function formatLogWithErrorArguments(
+function formatLogWithErrorArguments(
   tag: LoggerNamespace,
   message: string | null,
   error: Error | null,
   args: any[]
-): Promise<LogArguments | LogWithErrorArguments> {
-  const user = await getUserInfo();
+): LogArguments | LogWithErrorArguments {
   if (!error) {
     if (!message) {
-      return [`[${tag}]${formatArgs(args)}`, { tag, user, args }];
+      return [`[${tag}]${formatArgs(args)}`, { tag, args }];
     }
-    return [`[${tag}] ${message}${formatArgs(args)}`, { tag, user, args }];
+    return [`[${tag}] ${message}${formatArgs(args)}`, { tag, args }];
   }
 
   if (!message) {
-    return [`[${tag}] ${error.message}${formatArgs(args)}`, error.name, error.cause?.toString(), error.stack, { tag, user, error: message, args }];
+    return [`[${tag}] ${error.message}${formatArgs(args)}`, error.name, error.cause?.toString(), error.stack, { tag, error: message, args }];
   }
 
   return [
@@ -81,11 +71,11 @@ async function formatLogWithErrorArguments(
     error.name,
     error.cause?.toString(),
     error.stack,
-    { tag, user, error: message, args }
+    { tag, error: message, args }
   ];
 }
 
-function formatLogArguments(tag: LoggerNamespace, args: any[]): Promise<LogArguments | LogWithErrorArguments> {
+function formatLogArguments(tag: LoggerNamespace, args: any[]): LogArguments | LogWithErrorArguments {
   if (!args.length) {
     return formatLogWithErrorArguments(tag, null, null, args);
   }
