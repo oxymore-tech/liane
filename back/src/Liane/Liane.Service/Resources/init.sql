@@ -210,7 +210,7 @@ BEGIN
                                         from subdivided
                                                inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
                                   where st_distancesphere(middle, location) < points_cluster_distance / 2),
-       pre_clustered_points as (select st_centroid(st_collect(location)) as points,
+       pre_clustered_points as (select st_collect(location) as points,
                                        array_agg(id) as ids,
                                        count(id) as point_count,
                                        geom
@@ -219,7 +219,7 @@ BEGIN
                                 group by geom
                                 having count(id) > 1
        ),
-       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, points)) as location,
+       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(points))) as location,
                                    ST_Envelope(points) as bbox,
                                    ids,
                                    point_count
@@ -564,7 +564,7 @@ BEGIN
                                         from subdivided
                                                inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
                                   where st_distancesphere(middle, location) < points_cluster_distance / 2),
-       pre_clustered_points as (select st_centroid(st_collect(location)) as points,
+       pre_clustered_points as (select st_collect(location) as points,
                                        array_agg(id) as ids,
                                        count(id) as point_count,
                                        geom
@@ -573,7 +573,7 @@ BEGIN
                                 group by geom
                                 having count(id) > 1
        ),
-       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, points)) as location,
+       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(points))) as location,
                                    ST_Envelope(points) as bbox,
                                    ids,
                                    point_count
