@@ -13,11 +13,11 @@ import { formatMonthDay, formatTime } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
-import { Exact, UnionUtils } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
 import { JoinRequest } from "@/api/event";
+import { Exact, UnionUtils } from "@liane/common";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"RequestJoin">();

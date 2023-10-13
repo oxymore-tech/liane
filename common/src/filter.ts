@@ -15,7 +15,7 @@ export type RootQuerySelector<T> = {
     $diacriticSensitive?: boolean;
   };
   /** @see https://docs.mongodb.com/manual/reference/operator/query/where/#op._S_where */
-  $where?: string | Function;
+  $where?: string | ((arg0: any) => boolean);
   /** @see https://docs.mongodb.com/manual/reference/operator/query/comment/#op._S_comment */
   $comment?: string;
   // we could not find a proper TypeScript generic to support nested queries e.g. 'user.friends.name'

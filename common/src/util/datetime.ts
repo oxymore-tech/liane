@@ -1,4 +1,5 @@
 import { DayOfTheWeekFlag, UTCDateTime } from "../api";
+
 export type TimeInSeconds = number;
 export const toTimeInSeconds = (datetime: Date) => {
   return (datetime.getHours() * 60 + datetime.getMinutes()) * 60 + datetime.getSeconds();
@@ -9,20 +10,20 @@ export const createDatetimeCursor = (datetime: Date, id?: string) => {
 };
 
 export const formatDuration = (duration: TimeInSeconds) => {
+  if (duration < 60) {
+    return "1 min";
+  }
   return duration >= 3600
     ? Math.floor(duration / 3600) +
         "h" +
         Math.floor((duration % 3600) / 60)
           .toString()
           .padStart(2, "0")
-    : Math.floor(duration / 60)
-        .toString()
-        .padStart(2, "0") + " min";
+    : Math.floor(duration / 60).toString() + " min";
 };
 
 export const addSeconds = (date: Date, seconds: number) => {
-  new Date(date).setSeconds(seconds + date.getUTCSeconds());
-  return new Date(date);
+  return new Date(date.getTime() + seconds * 1000);
 };
 
 export const extractDatePart = (isoDatetime: UTCDateTime) => {

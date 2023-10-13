@@ -7,7 +7,7 @@ import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
-import { Notification } from "@/api/notification";
+import { Notification } from "@liane/common";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";
 import { AppStyles } from "@/theme/styles";
 import { useQueryUpdater } from "@/components/context/QueryUpdateProvider";

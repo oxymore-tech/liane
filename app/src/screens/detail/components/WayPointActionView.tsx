@@ -1,4 +1,4 @@
-import { Liane, TrackedMemberLocation, WayPoint } from "@/api";
+import { addSeconds, Liane, TrackedMemberLocation, WayPoint } from "@liane/common";
 import { useLianeStatus } from "@/components/trip/trip";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -10,7 +10,6 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { formatTime } from "@/api/i18n";
-import { addSeconds } from "@/util/datetime";
 import { UserPicture } from "@/components/UserPicture";
 
 const EstimatedDelayDisplay = ({ locationUpdate, initialTime }: { locationUpdate: TrackedMemberLocation; initialTime: Date }) => {

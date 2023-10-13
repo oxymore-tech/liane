@@ -1,39 +1,30 @@
-import {Mutex} from "async-mutex";
-import {ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError} from "./exception";
-import {FilterQuery, SortOptions} from "./filter";
-import {AuthResponse} from "./api";
-import {AppEnv} from "./env";
-import {AppLogger} from "./logger";
-import {AppStorage} from "./storage";
-
-type HttpClientProps = {
-  env: AppEnv;
-  logger: AppLogger;
-  storage: AppStorage;
-}
+import { Mutex } from "async-mutex";
+import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "./exception";
+import { FilterQuery, SortOptions } from "./filter";
+import { AuthResponse } from "./api";
+import { AppEnv } from "./env";
+import { AppLogger } from "./logger";
+import { AppStorage } from "./storage";
 
 export class HttpClient {
-
   private readonly refreshTokenMutex = new Mutex();
-  private readonly baseUrl: string;
 
-  constructor(private props: HttpClientProps) {
+  constructor(
+    private env: AppEnv,
+    private logger: AppLogger,
+    private storage: AppStorage
+  ) {}
 
-    const host = props.env.APP_ENV === "production" ? "liane.app" : "dev.liane.app";
-
-    this.baseUrl = `${props.env.API_URL || `https://${host}`}/api`;
-  }
-
-  async get<T>(uri: string, options: QueryAsOptions<T> = {}): Promise<T> {
+  get<T>(uri: string, options: QueryAsOptions<T> = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("GET", uri, options);
   }
 
   async getAsString(uri: string, options: QueryAsOptions<any> = {}): Promise<string> {
     const response = await this.fetchAndCheck("GET", uri, options);
-    return response.text();
+    return await response.text();
   }
 
-  async postAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  postAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("POST", uri, options);
   }
 
@@ -42,7 +33,7 @@ export class HttpClient {
     return await response.text();
   }
 
-  async del(uri: string, options: QueryPostOptions<any> = {}) {
+  del(uri: string, options: QueryPostOptions<any> = {}) {
     return this.fetchAndCheck("DELETE", uri, options);
   }
 
@@ -54,7 +45,7 @@ export class HttpClient {
     return this.fetchAndCheck("PATCH", uri, options);
   }
 
-  async patchAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  patchAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("PATCH", uri, options);
   }
 
@@ -62,14 +53,13 @@ export class HttpClient {
     const response = await this.fetchAndCheck(method, uri, options);
     if (response.status === 204) {
       // Do not try parsing body
-      // @ts-ignore
       return undefined as any;
     }
     try {
       const res = await response.text();
       return res ? JSON.parse(res) : undefined;
     } catch (e) {
-      this.props.logger.error("HTTP", e);
+      this.logger.error("HTTP", e);
     }
     return undefined as any;
   }
@@ -86,12 +76,12 @@ export class HttpClient {
   }
 
   private async fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}): Promise<Response> {
-    const {body} = options;
+    const { body } = options;
     const url = this.formatUrl(uri, options);
     const formattedBody = this.formatBodyAsJsonIfNeeded(body);
     const formattedHeaders = await this.headers(body);
-    if (this.props.env.isDev) {
-      this.props.logger.debug("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
+    if (this.env.isDev) {
+      this.logger.debug("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
     }
     const response = await fetch(url, {
       headers: formattedHeaders,
@@ -115,7 +105,7 @@ export class HttpClient {
 
         case 401:
           return this.tryRefreshToken(async () => {
-            return await this.fetchAndCheck(method, uri, options);
+            return this.fetchAndCheck(method, uri, options);
           });
 
         case 403:
@@ -123,40 +113,40 @@ export class HttpClient {
 
         default:
           const message = await response.text();
-          this.props.logger.error("HTTP", `Unexpected error on ${method} ${uri}`, response.status, message);
+          this.logger.error("HTTP", `Unexpected error on ${method} ${uri}`, response.status, message);
           throw new Error(message);
       }
     }
     return response;
   }
 
-  private async tryRefreshToken<TResult>(retryAction: () => Promise<TResult>): Promise<TResult> {
-    const refreshToken = await this.props.storage.getRefreshToken();
-    const user = await this.props.storage.getUserSession();
+  public async tryRefreshToken<TResult>(retryAction: () => Promise<TResult>): Promise<TResult> {
+    const refreshToken = await this.storage.getRefreshToken();
+    const user = await this.storage.getUser();
     if (refreshToken && user) {
       if (this.refreshTokenMutex.isLocked()) {
         // Ignore if concurrent refresh
         await this.refreshTokenMutex.waitForUnlock();
       } else {
         return this.refreshTokenMutex.runExclusive(async () => {
-          if (this.props.env.isDev) {
-            this.props.logger.debug("HTTP", "Try refresh token...");
+          if (this.env.isDev) {
+            this.logger.debug("HTTP", "Try refresh token...");
           }
           // Call refresh token endpoint
           try {
             const res = await Promise.race([
               new Promise<AuthResponse>((_, reject) => setTimeout(reject, 10000)),
-              this.postAs<AuthResponse>("/auth/token", {body: {userId: user.id, refreshToken}})
+              this.postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } })
             ]);
-            await this.props.storage.processAuthResponse(res);
+            await this.storage.processAuthResponse(res);
             // Retry
             return await retryAction();
           } catch (e) {
-            this.props.logger.error("HTTP", "Error: could not refresh token: ", e);
+            this.logger.error("HTTP", "Error: could not refresh token: ", e);
 
             // Logout if unauthorized
             if (e instanceof UnauthorizedError) {
-              await this.props.storage.clearStorage();
+              await this.storage.clearStorage();
             }
             throw new UnauthorizedError();
           }
@@ -168,7 +158,7 @@ export class HttpClient {
 
   private async headers(body?: any) {
     const h = new Headers();
-    const token = await this.props.storage.getAccessToken();
+    const token = await this.storage.getAccessToken();
     if (token) {
       h.append("Authorization", `Bearer ${token}`);
     }
@@ -180,10 +170,10 @@ export class HttpClient {
     return h;
   }
 
-  private formatUrl<T>(uri: string, {listOptions, params}: QueryAsOptions<T>) {
-    const url = new URL(uri, this.baseUrl);
+  private formatUrl<T>(uri: string, { listOptions, params }: QueryAsOptions<T>) {
+    const url = new URL(uri, this.env.baseUrl);
     if (listOptions) {
-      const {filter, skip, limit, sort, search} = listOptions;
+      const { filter, skip, limit, sort, search } = listOptions;
       if (filter) {
         url.searchParams.append("filter", JSON.stringify(filter));
       }
@@ -209,7 +199,6 @@ export class HttpClient {
     }
     return url.toString();
   }
-
 }
 
 export interface ListOptions<T> {

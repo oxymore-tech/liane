@@ -1,7 +1,7 @@
 import React from "react";
 import { AppText, AppTextProps } from "@/components/base/AppText";
 import { locale } from "@/api/i18n";
-import { UTCDateTime } from "@/api";
+import { UTCDateTime } from "@liane/common";
 
 export interface TimeViewProps extends AppTextProps {
   value: UTCDateTime;

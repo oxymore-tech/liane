@@ -3,7 +3,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import React from "react";
-import { RallyingPoint, UTCDateTime } from "@/api";
+import { RallyingPoint, UTCDateTime } from "@liane/common";
 import { ColorValue, StyleSheet } from "react-native";
 import { formatDateTime } from "@/api/i18n";
 

@@ -1,6 +1,6 @@
-import { LatLng } from "@/api/index";
-import { MAPTILER_KEY } from "@env";
+import { LatLng } from "@liane/common";
 import { BoundingBox } from "@/api/geo";
+import { AppEnv } from "@/api/env";
 
 export const DEFAULT_TLS = {
   lat: 43.602173,
@@ -12,7 +12,7 @@ export const FR_BBOX: BoundingBox = {
   to: { lat: 51.577228, lng: 10.331117 }
 };
 
-const MapStyleUrl = "https://api.maptiler.com/maps/streets-v2/style.json?key=" + MAPTILER_KEY;
+const MapStyleUrl = "https://api.maptiler.com/maps/streets-v2/style.json?key=" + AppEnv.raw.MAPTILER_KEY;
 const MapStyle = JSON.stringify({
   version: 8,
   sources: {
@@ -32,7 +32,7 @@ const MapStyle = JSON.stringify({
     }
   ]
 });
-export const MapStyleProps = MAPTILER_KEY ? { styleURL: MapStyleUrl } : { styleJSON: MapStyle };
+export const MapStyleProps = AppEnv.raw.MAPTILER_KEY ? { styleURL: MapStyleUrl } : { styleJSON: MapStyle };
 
 export async function getLastKnownLocation(): Promise<LatLng> {
   /* try {

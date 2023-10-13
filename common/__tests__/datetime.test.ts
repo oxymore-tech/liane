@@ -1,5 +1,5 @@
-import { DayOfTheWeekFlag } from "../api";
-import { getFirstFutureDate } from "../util/datetime";
+import { DayOfTheWeekFlag } from "../src";
+import { getFirstFutureDate } from "../src/util/datetime";
 
 describe("recurrence", () => {
   test("should get next day", () => {

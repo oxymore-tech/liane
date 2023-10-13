@@ -1,37 +1,15 @@
-import notifee, { AndroidAction, AndroidImportance, Event, EventType, TriggerType } from "@notifee/react-native";
-import { FullUser, PaginatedResponse, RallyingPoint, Ref } from "@/api";
-import { get, patch } from "@/api/http";
+import notifee, { Event, EventType } from "@notifee/react-native";
+import { AuthService, FullUser, HttpClient, LianeServiceClient, Notification } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
-import { AuthService } from "@/api/service/auth";
 import { Linking, Platform } from "react-native";
-import { AbstractNotificationService } from "@/api/service/interfaces/notification";
-import { Notification } from "@/api/notification";
-import { formatTime } from "@/api/i18n";
-import { LianeServiceClient } from "@/api/service/liane";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
+import { AppEnv } from "@/api/env";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-
-export class NotificationServiceClient extends AbstractNotificationService {
-  async list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>> {
-    const paramString = cursor ? `?cursor=${cursor}` : "";
-    return await get("/notification" + paramString);
-  }
-  override markAsRead = async (notification: Ref<Notification>) => {
-    await patch(`/notification/${notification}`);
-    await this.decrementCounter(notification);
-  };
-
-  override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
-    await this.incrementCounter(notification.id!);
-    if (display) {
-      await displayNotifeeNotification(notification);
-    }
-  };
-}
 
 const DefaultChannelId = "liane_default";
 
-const DefaultAndroidSettings = {
+export const DefaultAndroidSettings = {
   channelId: DefaultChannelId,
   pressAction: {
     id: "default"
@@ -39,22 +17,6 @@ const DefaultAndroidSettings = {
   smallIcon: "ic_notification",
   largeIcon: "ic_launcher"
 };
-
-const AndroidReminderActions: AndroidAction[] = [
-  {
-    title: "Démarrer le trajet",
-    pressAction: {
-      id: "loc"
-    }
-  }
-  /*{
-    title: "J'ai du retard",
-    pressAction: {
-      id: "delay",
-      launchActivity: "default"
-    }
-  }*/
-];
 
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
   AppLogger.debug("NOTIFICATIONS", "Received push", message);
@@ -72,11 +34,14 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 
 const pressActionMap = {
   loc: async (lianeId: string) => {
-    const lianeService = new LianeServiceClient();
+    const logger = AppLogger as any;
+    const http = new HttpClient(AppEnv, logger, AppStorage);
+    const lianeService = new LianeServiceClient(http);
     const liane = await lianeService.get(lianeId);
     await lianeService.start(liane.id!).then(() => startGeolocationService(liane));
   }
 } as const;
+
 const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
   AppLogger.debug("NOTIFICATIONS", "notifee", detail);
@@ -106,32 +71,6 @@ export async function displayNotifeeNotification(notification: Notification) {
     body: notification.message,
     data: notification
   });
-}
-
-export async function cancelReminder(lianeId: string) {
-  await notifee.cancelTriggerNotification(lianeId);
-}
-export async function createReminder(lianeId: string, departureLocation: RallyingPoint, departureTime: Date) {
-  await notifee.createTriggerNotification(
-    {
-      id: lianeId,
-      ios: {
-        categoryId: "reminder",
-        interruptionLevel: "timeSensitive"
-      },
-      android: {
-        ...DefaultAndroidSettings,
-        lightUpScreen: true,
-        importance: AndroidImportance.HIGH,
-        tag: "reminder",
-        actions: AndroidReminderActions
-      },
-      title: "Départ imminent",
-      body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
-      data: { uri: `liane://liane/${lianeId}`, liane: lianeId }
-    },
-    { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000), type: TriggerType.TIMESTAMP, alarmManager: true }
-  );
 }
 
 export async function initializeNotification() {

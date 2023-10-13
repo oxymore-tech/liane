@@ -1,8 +1,6 @@
-import { DayOfTheWeekFlag, Liane, RallyingPoint } from "@/api";
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
-
-import { createStateSequence, CreateSubmittingState, SubmittingEvents } from "@/util/xstateHelpers";
 import React from "react";
+import { createStateSequence, DayOfTheWeekFlag, Liane, RallyingPoint, SubmittingEvents } from "@liane/common";
 
 export const PublishStateSequence = ["trip", "date", "vehicle"] as const;
 

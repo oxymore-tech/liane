@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { RallyingPoint } from "@/api";
+import { RallyingPoint } from "@liane/common";
 import { useAppBackController } from "@/components/AppBackContextProvider";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";

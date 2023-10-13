@@ -1,4 +1,4 @@
-import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@/api";
+import { capitalize, ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -12,12 +12,12 @@ import { toRelativeTimeString } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
-import { capitalize } from "@/util/strings";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
 import { AppStyles } from "@/theme/styles";
+
 const MessageBubble = ({
   message,
   sender,

@@ -1,11 +1,11 @@
 import React from "react";
-import { ColorValue, Pressable, PressableProps, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ColorValue, PressableProps, StyleSheet, TouchableOpacity, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { User } from "@/api";
+import { User } from "@liane/common";
 import { UserPicture } from "../UserPicture";
 import { Row } from "./AppLayout";
 import { useAppNavigation } from "@/api/navigation";

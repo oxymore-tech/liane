@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { DayOfTheWeekFlag } from "@/api";
+import { DayOfTheWeekFlag } from "@liane/common";
 import { daysList } from "@/api/i18n";
 
 import { Row } from "@/components/base/AppLayout";

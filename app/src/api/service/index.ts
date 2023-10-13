@@ -1,30 +1,58 @@
-import { AuthService, AuthServiceClient } from "@/api/service/auth";
-import { LianeService, LianeServiceClient } from "@/api/service/liane";
-import { RallyingPointClient, RallyingPointService } from "@/api/service/rallyingPoints";
-import { HubServiceClient } from "@/api/service/hub";
-import { LocationService, LocationServiceClient } from "@/api/service/location";
-import { NotificationServiceClient } from "@/api/service/notification";
-import { RoutingService, RoutingServiceClient } from "@/api/service/routing";
-import { HubService } from "@/api/service/interfaces/hub";
-import { NotificationService } from "@/api/service/interfaces/notification";
+import {
+  AppLogger,
+  AppStorage,
+  AuthService,
+  AuthServiceClient,
+  HttpClient,
+  HubService,
+  LianeService,
+  LianeServiceClient,
+  NotificationService,
+  NotificationServiceClient,
+  RallyingPointClient,
+  RallyingPointService,
+  RoutingService,
+  RoutingServiceClient,
+  HubServiceClient,
+  LocationService
+} from "@liane/common";
+import { AppEnv } from "@/api/env";
+import { ReactNativeStorage } from "@/api/storage";
+import { ReactNativeLogger } from "@/api/logger";
+import { ReminderService } from "@/api/service/reminder";
+import { ReactNativeLocationService } from "@/api/service/location";
+import { DEFAULT_TLS } from "@/api/location";
 
 export type AppServices = {
-  readonly auth: AuthService;
-  readonly liane: LianeService;
-  readonly rallyingPoint: RallyingPointService;
-  readonly realTimeHub: HubService;
-  readonly location: LocationService;
+  logger: ReactNativeLogger;
 
-  readonly routing: RoutingService;
-  readonly notification: NotificationService;
+  storage: AppStorage;
+  auth: AuthService;
+  liane: LianeService;
+  rallyingPoint: RallyingPointService;
+  realTimeHub: HubService;
+  location: LocationService;
+
+  routing: RoutingService;
+  notification: NotificationService;
+  reminder: ReminderService;
 };
 
+const storage = new ReactNativeStorage();
+const logger = new ReactNativeLogger();
+const genericLogger = logger as AppLogger;
+
+const http = new HttpClient(AppEnv, genericLogger, storage);
+
 export const CreateAppServices = (): AppServices => ({
-  auth: new AuthServiceClient(),
-  liane: new LianeServiceClient(),
-  rallyingPoint: new RallyingPointClient(),
-  realTimeHub: new HubServiceClient(),
-  location: new LocationServiceClient(),
-  routing: new RoutingServiceClient(),
-  notification: new NotificationServiceClient()
+  storage,
+  logger,
+  auth: new AuthServiceClient(http),
+  liane: new LianeServiceClient(http, genericLogger),
+  reminder: new ReminderService(storage),
+  rallyingPoint: new RallyingPointClient(http),
+  realTimeHub: new HubServiceClient(AppEnv, genericLogger, storage, http),
+  location: new ReactNativeLocationService(AppEnv, storage, DEFAULT_TLS),
+  routing: new RoutingServiceClient(http),
+  notification: new NotificationServiceClient(http)
 });

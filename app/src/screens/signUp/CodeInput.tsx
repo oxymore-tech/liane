@@ -6,7 +6,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
-import { sleep } from "@/util/datetime";
+import { sleep } from "@liane/common";
 
 type CodeInputProps = {
   onValidate: () => Promise<void>;

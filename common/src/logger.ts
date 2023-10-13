@@ -1,9 +1,8 @@
-export type LoggerAction = (tag: string, ...args: any[]) => void;
+export type LoggerAction<Tag> = (tag: Tag, ...args: any[]) => void;
 
-export interface AppLogger {
-  debug: LoggerAction;
-  info: LoggerAction;
-  warn: LoggerAction;
-  error: LoggerAction;
+export interface AppLogger<Tag extends string = string> {
+  debug: LoggerAction<Tag>;
+  info: LoggerAction<Tag>;
+  warn: LoggerAction<Tag>;
+  error: LoggerAction<Tag>;
 }
-

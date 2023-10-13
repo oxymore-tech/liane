@@ -1,5 +1,4 @@
-import { Event, Notification } from "@/api/notification";
-import { capitalize } from "@/util/strings";
+import { capitalize, Event, Notification, UnionUtils } from "@liane/common";
 import { toRelativeTimeString } from "@/api/i18n";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -8,7 +7,6 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { UnionUtils } from "@/api";
 import { getNotificationNavigation, useAppNavigation } from "@/api/navigation";
 
 export const NotificationItem = ({ notification: item, read }: { notification: Notification; read: () => void }) => {

@@ -17,7 +17,6 @@ import { APP_VERSION, TEST_ACCOUNT } from "@env";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import { PasswordInput } from "@/screens/signUp/PasswordInput";
-import { storeUserSession } from "@/api/storage";
 
 const t = scopedTranslate("SignUp");
 
@@ -52,6 +51,7 @@ const SignUpPage = () => {
     // try {
     const pushToken = await getPushToken();
     const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
+    await services.storage.processAuthResponse(authUser);
     AppLogger.info("LOGIN", "as ", authUser, machine.send);
     machine.send("LOGIN", { data: { authUser } });
     /*  } catch (e: any) {
@@ -104,8 +104,7 @@ const SignUpScreen = () => {
     if (!state.done) {
       return;
     }
-    await storeUserSession(state.context.authUser);
-    login({ ...state.context.authUser! });
+    login(state.context.authUser);
   });
 
   return (

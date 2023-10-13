@@ -4,7 +4,7 @@ import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginated
 import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { TripListView } from "@/screens/user/TripListView";
-import { Liane } from "@/api";
+import { Liane } from "@liane/common";
 import { AppStyles } from "@/theme/styles";
 import { AppColors } from "@/theme/colors";
 

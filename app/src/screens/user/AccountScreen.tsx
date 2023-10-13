@@ -10,7 +10,7 @@ import { AppText } from "@/components/base/AppText";
 import { Center, Column } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
-import { capitalize } from "@/util/strings";
+import { capitalize } from "@liane/common";
 import { LineSeparator } from "@/components/Separator";
 import { ActionListItem } from "@/components/ActionItem";
 

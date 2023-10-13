@@ -18,10 +18,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "react-query";
 import { useActor, useInterpret } from "@xstate/react";
 
-import { DayOfTheWeekFlag } from "@/api";
-import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
-import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
-
 import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -41,11 +37,13 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { getFirstFutureDate } from "@/util/datetime";
+import { DayOfTheWeekFlag, getFirstFutureDate } from "@liane/common";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
-import { getSetting } from "@/api/storage";
+import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { AppStorage } from "@/api/storage";
+import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 
 interface StepProps<T> {
   editable: boolean;
@@ -63,7 +61,7 @@ export const PublishScreen = () => {
 
   const [m] = useState(() =>
     CreatePublishLianeMachine(async ctx => {
-      const geolocationLevel = await getSetting("geolocation");
+      const geolocationLevel = await AppStorage.getSetting("geolocation");
       const liane = await services.liane.post({
         to: ctx.request.to!.id!,
         from: ctx.request.from!.id!,

@@ -3,7 +3,7 @@ import { NativeModules, Platform } from "react-native";
 import { NavigationParamList } from "./navigation";
 import en from "../../assets/translations/en.json";
 import fr from "../../assets/translations/fr.json";
-import { DayOfTheWeekFlag } from ".";
+import { DayOfTheWeekFlag } from "@liane/common";
 
 type SupportedLanguages = "fr" | "en";
 

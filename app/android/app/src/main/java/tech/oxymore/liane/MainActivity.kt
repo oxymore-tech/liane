@@ -9,7 +9,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.bridge.Promise
-import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.concurrentReactEnabled
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.google.android.gms.common.api.ApiException
@@ -55,9 +54,7 @@ class MainActivity : SplashScreenActivity(), LocationRequestHandler {
         return DefaultReactActivityDelegate(
             this,
             mainComponentName,  // If you opted-in for the New Architecture, we enable the Fabric Renderer.
-            fabricEnabled,  // fabricEnabled
-            // If you opted-in for the New Architecture, we enable Concurrent React (i.e. React 18).
-            concurrentReactEnabled // concurrentRootEnabled
+            fabricEnabled  // fabricEnabled
         )
     }
 

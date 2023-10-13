@@ -22,7 +22,8 @@ import HomeScreen from "@/screens/home/HomeScreen";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { useObservable } from "@/util/hooks/subscription";
+
+import { useObservable } from "@liane/common";
 import { AppStyles } from "@/theme/styles";
 import { Row } from "@/components/base/AppLayout";
 import { NavigationScreenTitles, useAppNavigation } from "@/api/navigation";

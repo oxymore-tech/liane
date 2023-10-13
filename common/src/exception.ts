@@ -1,4 +1,8 @@
-export class ResourceNotFoundError extends Error {}
+export class ResourceNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
 
 export type ValidationCode = "required" | "wrong_format" | "unknown_value" | "too_short" | "already_member" | "liane_state_invalid" | string;
 
@@ -55,3 +59,15 @@ export class ForbiddenError extends Error {
     super("Forbidden");
   }
 }
+
+export const isResourceNotFound = (e: Error): e is ResourceNotFoundError => {
+  return e.message === "Not found";
+};
+
+export const isValidationError = (e: Error): e is ValidationError => {
+  return Object.hasOwn(e, "errors") && Object.hasOwn(e, "validationMessage");
+};
+
+export const isUnauthorizedError = (e: Error): e is UnauthorizedError => {
+  return e.message === "Unauthorized";
+};

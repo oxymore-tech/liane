@@ -1,7 +1,8 @@
 import { consoleTransport, logger } from "react-native-logs";
 import { datadogTransport } from "@/api/dd-logger";
+import { AppLogger as CommonAppLogger } from "@liane/common";
 
-const LoggerNamespaces = [
+export const LoggerNamespaces = [
   "INIT",
   "HOME",
   "HUB",
@@ -16,6 +17,9 @@ const LoggerNamespaces = [
   "GEOLOC",
   "DEEP_LINKING"
 ] as const;
+
+export type LoggerNamespace = (typeof LoggerNamespaces)[number];
+
 const config = {
   severity: __DEV__ ? "debug" : "info",
   dateFormat: "iso",
@@ -32,20 +36,11 @@ const config = {
 
 const rootLogger = logger.createLogger(config);
 
-export type LoggerNamespace = (typeof config.enabledExtensions)[number];
-export type LoggerAction = (tag: LoggerNamespace, ...args: any[]) => void;
 const namespaceLoggers = (() => {
   return Object.fromEntries(LoggerNamespaces.map(n => [n, rootLogger.extend(n)]));
 })();
 
-export interface ILogger {
-  debug: LoggerAction;
-  info: LoggerAction;
-  warn: LoggerAction;
-  error: LoggerAction;
-}
-
-export class AppLoggerImpl implements ILogger {
+export class ReactNativeLogger implements CommonAppLogger<LoggerNamespace> {
   debug(tag: LoggerNamespace, ...args: any[]): void {
     namespaceLoggers[tag].debug(...args);
   }
@@ -63,4 +58,4 @@ export class AppLoggerImpl implements ILogger {
   }
 }
 
-export const AppLogger = new AppLoggerImpl();
+export const AppLogger = new ReactNativeLogger();

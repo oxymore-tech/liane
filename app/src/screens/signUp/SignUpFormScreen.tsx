@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { FieldValue, FieldValues, FormProvider, SubmitErrorHandler, SubmitHandler, useController, useForm } from "react-hook-form";
+import { FieldValues, FormProvider, SubmitErrorHandler, SubmitHandler, useController, useForm } from "react-hook-form";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppToggle } from "@/components/base/AppOptionToggle";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -17,7 +17,8 @@ export const SignUpFormScreen = () => {
 
   const machine = useContext(SignUpLianeContext);
 
-  const { services } = useContext(AppContext);
+  const { services, refreshUser } = useContext(AppContext);
+
   const onSubmit: SubmitHandler<FieldValues> = data => {
     services.auth
       .updateUserInfo({
@@ -25,8 +26,9 @@ export const SignUpFormScreen = () => {
         lastName: data.name,
         gender: data.name === "M." ? "Man" : data.name === "Mme" ? "Woman" : "Unspecified"
       })
-      .catch(e => console.error(e))
-      .then(() => {
+      .catch(e => AppLogger.error("LOGIN", e))
+      .then(async () => {
+        await refreshUser();
         machine.send("NEXT");
       });
   };
@@ -34,7 +36,7 @@ export const SignUpFormScreen = () => {
   const onError: SubmitErrorHandler<FormValues> = errors => {
     return AppLogger.warn("LOGIN", errors);
   };
-  // @ts-ignore
+
   return (
     <Column style={styles.container} spacing={24}>
       <AppText style={styles.title}>Bienvenue sur Liane !</AppText>

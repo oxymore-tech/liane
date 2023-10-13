@@ -1,11 +1,11 @@
-import { RallyingPoint } from "@/api";
+import { RallyingPoint } from "@liane/common";
 import React, { useEffect, useState } from "react";
-import { TilesUrl } from "@/api/http";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 import { AppLogger } from "@/api/logger";
+import { AppEnv } from "@/api/env";
 
 export const getDateParams = (date: Date) =>
   "offset=" +
@@ -36,7 +36,7 @@ export const LianeDisplayLayer = ({
   }, [dateArg]);
 
   const controller = useAppMapViewController();
-  const url = TilesUrl + "/liane_display?" + dateArg;
+  const url = AppEnv.tilesUrl + "/liane_display?" + dateArg;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
 

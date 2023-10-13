@@ -1,7 +1,6 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, FullUser, LatLng } from "@/api";
 import { AppServices, CreateAppServices } from "@/api/service";
-import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
+import { AuthUser, FullUser, HubState, LatLng, NetworkUnavailable, UnauthorizedError } from "@liane/common";
 import { initializeRum, registerRumUser } from "@/api/rum";
 import { initializeNotification, initializePushNotification } from "@/api/service/notification";
 import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
@@ -9,18 +8,18 @@ import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
 import Splashscreen from "../../../native-modules/splashscreen";
-import { merge, SubscriptionLike } from "rxjs";
-import { HubState } from "@/api/service/interfaces/hub";
+import { SubscriptionLike } from "rxjs";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { AppLogger } from "@/api/logger";
 import { QueryUpdateProvider } from "@/components/context/QueryUpdateProvider";
+import { AppLogger } from "@/api/logger";
 
 interface AppContextProps {
   position?: LatLng;
   user?: FullUser;
   logout: () => void;
   reconnect: () => void;
-  login: (user: AuthUser) => void;
+  login: (user?: AuthUser) => void;
+  refreshUser: () => Promise<void>;
   services: AppServices;
   status: HubState;
   appState: AppStateStatus;
@@ -32,6 +31,7 @@ const queryClient = new QueryClient();
 export const AppContext = createContext<AppContextProps>({
   logout: () => {},
   login: () => {},
+  refreshUser: () => Promise.resolve(),
   reconnect: () => {},
   services: SERVICES,
   status: "offline",
@@ -42,7 +42,7 @@ async function initContext(service: AppServices): Promise<{
   user: FullUser | undefined;
   online: boolean;
 }> {
-  let authUser = await service.auth.authUser();
+  let authUser = await service.auth.me();
   let user;
   let online = true;
 
@@ -61,11 +61,14 @@ async function initContext(service: AppServices): Promise<{
       } else if (e instanceof NetworkUnavailable) {
         AppLogger.warn("INIT", "Error : no network");
         //user = cached value for an offline mode
-        user = await service.auth.currentUser();
+        user = await service.storage.getUser();
         online = false;
       }
     }
+  } else if (authUser && !authUser.isSignedUp) {
+      await registerRumUser({ ...authUser });
   }
+
   if (user) {
     await initializeNotification();
   }
@@ -139,7 +142,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         await SERVICES.notification.receiveNotification(n, true); // does nothing if this.state.appState !== "active");
         // TODO disconnect from hub when app is not active
       });
-      this.userChangeSubscription = merge(SERVICES.realTimeHub.userUpdates, SERVICES.auth.userChanges).subscribe(user => {
+      this.userChangeSubscription = SERVICES.realTimeHub.userUpdates.subscribe(user => {
         this.setState(prev => ({
           ...prev,
           user
@@ -205,9 +208,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     if (this.unsubscribeToHubState) {
       this.unsubscribeToHubState.unsubscribe();
     }
-    if (this.userChangeSubscription) {
-      this.userChangeSubscription.unsubscribe();
-    }
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }
@@ -232,13 +232,23 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
   }
 
+  refreshUser = async () => {
+    try {
+      const user = await SERVICES.auth.me();
+      await SERVICES.storage.storeUser(user);
+    } catch (_) {}
+  };
+
   setAuthUser = async (a?: AuthUser) => {
     try {
       let user: FullUser;
       if (a) {
         user = await SERVICES.realTimeHub.start();
+        await SERVICES.storage.storeUser(user);
         await registerRumUser({ ...a, pseudo: user.pseudo });
         AppLogger.debug("LOGIN", "Login successfully");
+      } else {
+        await SERVICES.storage.storeUser(undefined);
       }
       this.setState(prev => ({
         ...prev,
@@ -248,6 +258,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       AppLogger.error("INIT", "Problem while setting auth user : ", e);
     }
   };
+
   logout = async () => {
     // do not call "logout" endpoint here as this could be used after account deletion, account switch, etc.
     await SERVICES.realTimeHub.stop();
@@ -260,7 +271,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   render() {
     const { children } = this.props;
     const { appLoaded, user, status, appState } = this.state;
-    const { setAuthUser: login, logout, forceReconnect } = this;
+    const { setAuthUser: login, logout, refreshUser, forceReconnect } = this;
 
     if (!appLoaded) {
       return (
@@ -283,6 +294,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
             value={{
               logout,
               login,
+              refreshUser,
               reconnect: this.state.hubState === "offline" ? forceReconnect : () => {},
               user,
               status: this.state.hubState,

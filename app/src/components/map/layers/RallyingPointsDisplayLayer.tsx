@@ -1,14 +1,14 @@
-import { RallyingPoint, Ref } from "@/api";
+import { RallyingPoint, Ref } from "@liane/common";
 import React from "react";
-import { TilesUrl } from "@/api/http";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors, AppColorPalettes } from "@/theme/colors";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { useAppMapViewController } from "@/components/map/AppMapView";
+import { AppEnv } from "@/api/env";
 
 export const RallyingPointsDisplayLayer = ({ onSelect }: { onSelect?: (rp: RallyingPoint) => void; selected?: Ref<RallyingPoint> | undefined }) => {
   const controller = useAppMapViewController();
-  const url = TilesUrl + "/rallying_point_display";
+  const url = AppEnv.tilesUrl + "/rallying_point_display";
   return (
     <MapLibreGL.VectorSource
       id={"all_rallying_points"}

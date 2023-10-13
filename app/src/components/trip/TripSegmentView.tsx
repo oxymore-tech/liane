@@ -1,13 +1,11 @@
-import { RallyingPoint, UTCDateTime } from "@/api";
+import { RallyingPoint, UTCDateTime } from "@liane/common";
 import { StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { TimeInSeconds } from "@/util/datetime";
 import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import React from "react";
 import { AppText } from "@/components/base/AppText";
 import { AppIcon } from "@/components/base/AppIcon";
-import { RecentTrip } from "@/screens/ItinerarySearchForm";
 
 export interface TripSegmentViewProps {
   from: RallyingPoint;

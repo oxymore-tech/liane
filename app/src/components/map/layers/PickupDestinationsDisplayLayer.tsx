@@ -1,12 +1,12 @@
-import { RallyingPoint, Ref } from "@/api";
+import { RallyingPoint, Ref } from "@liane/common";
 import React, { useEffect, useState } from "react";
 import { useAppMapViewController } from "@/components/map/AppMapView";
-import { TilesUrl } from "@/api/http";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
 import { getDateParams } from "@/components/map/layers/LianeDisplayLayer";
 import { AppLogger } from "@/api/logger";
+import { AppEnv } from "@/api/env";
 
 export type PickupDestinationsDisplayLayerProps = {
   date?: Date;
@@ -24,7 +24,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
   }, [dateArg, point, type]);
 
   const controller = useAppMapViewController();
-  const url = TilesUrl + "/liane_display_filter_test?" + dateArg + `&${type}=` + point;
+  const url = AppEnv.tilesUrl + "/liane_display_filter_test?" + dateArg + `&${type}=` + point;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (

@@ -7,7 +7,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, UnionUtils, User } from "./index";
+import { JoinLianeRequestDetailed, Liane, UnionUtils, User } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { Event, NewMessage, Notification } from "@/api/notification";

@@ -1,11 +1,10 @@
 import React, { useContext, useState } from "react";
 import { WithFetchResourceErrorComponentProps, WithFetchResourceParams, WithFetchResourceProps } from "@/components/base/WithFetchResource";
 import { AppServices } from "@/api/service";
-import { PaginatedResponse } from "@/api";
+import { PaginatedResponse, UnauthorizedError } from "@liane/common";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useInfiniteQuery } from "react-query";
-import { UnauthorizedError } from "@/api/exception";
 import { AppText } from "@/components/base/AppText";
 import { Center } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";

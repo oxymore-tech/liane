@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: '@react-native-community',
+  extends: "@react-native",
   rules: {
     quotes: "off",
     "comma-dangle": "off",
@@ -9,5 +9,5 @@ module.exports = {
     "react-native/no-inline-styles": "off",
     "react-hooks/rules-of-hooks": "off"
   },
-  plugins: ['prettier']
+  plugins: ["prettier"]
 };

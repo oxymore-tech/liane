@@ -1,7 +1,7 @@
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 
 import React from "react";
-import { AuthUser } from "@/api";
+import { AuthUser } from "@liane/common";
 
 type StateKeys = "phone" | "code" | "form" | "done";
 

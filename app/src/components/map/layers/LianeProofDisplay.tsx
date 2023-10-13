@@ -1,4 +1,4 @@
-import { Liane, Ref } from "@/api";
+import { Liane, Ref } from "@liane/common";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQuery } from "react-query";

@@ -1,7 +1,9 @@
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "@datadog/mobile-react-native";
-import { APP_ENV, APP_VERSION, DD_APP_ID, DD_CLIENT_TOKEN } from "@env";
+import { AppEnv } from "@/api/env";
 
 export async function initializeRum() {
+  const { DD_CLIENT_TOKEN, DD_APP_ID, APP_ENV, APP_VERSION } = AppEnv.raw;
+
   if (DD_CLIENT_TOKEN && DD_APP_ID) {
     const config = new DdSdkReactNativeConfiguration(DD_CLIENT_TOKEN, APP_ENV, DD_APP_ID, true, true, true);
 
@@ -12,6 +14,6 @@ export async function initializeRum() {
   }
 }
 
-export async function registerRumUser(user: { id: string; pseudo: string; isAdmin: boolean }) {
+export async function registerRumUser(user: { id?: string; pseudo: string; isAdmin: boolean }) {
   await DdSdkReactNative.setUser(user);
 }
