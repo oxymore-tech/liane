@@ -14,7 +14,7 @@ import { ActivityIndicator, Alert, Linking, Platform, View } from "react-native"
 import { AppButton } from "@/components/base/AppButton";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { checkLocationPingsPermissions, hasLocationPermission, sendLocationPings } from "@/api/service/location";
+import { checkLocationPingsPermissions, hasLocationPermission, startPositionTracking } from "@/api/service/location";
 import { createReminder } from "@/api/service/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/api/navigation";
@@ -42,7 +42,7 @@ export const ShareTripLocationScreen = WithFullscreenModal(
             try {
               await services.liane.setTracked(liane.id!, true);
               const trip = getTripFromLiane(liane, user!.id!);
-              await sendLocationPings(liane.id!, trip.wayPoints);
+              await startPositionTracking(liane.id!, trip.wayPoints);
               navigation.replace("LianeDetail", { liane });
             } catch (e) {
               AppLogger.error("GEOLOC", e);

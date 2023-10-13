@@ -14,7 +14,6 @@ import { distance } from "@/util/geometry";
 import { check, PERMISSIONS } from "react-native-permissions";
 import { AppLogger } from "@/api/logger";
 import { BehaviorSubject } from "rxjs";
-import { DdLogs, DdTrace } from "@datadog/mobile-react-native";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -255,71 +254,76 @@ export const hasLocationPermission = async () => {
 };
 
 export async function checkLocationPingsPermissions(): Promise<boolean> {
-  if (Platform.OS === "ios") {
-    let access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
-
-    //access = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
-    AppLogger.info("GEOPINGS", access);
-    return access === "granted";
-    //return true;
-    // return access === "granted";
-  } else if (Platform.OS === "android") {
-    const access = await check(Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    AppLogger.info("GEOPINGS", access);
-    return access === "granted";
-  }
-  return true;
+  const access =
+    Platform.OS === "ios"
+      ? await check(PERMISSIONS.IOS.LOCATION_ALWAYS)
+      : await check(Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+  AppLogger.info("GEOPINGS", `Location ping permission ${access}`);
+  return access === "granted";
 }
 
 export async function cancelSendLocationPings() {
-  if (Platform.OS === "ios") {
-    await BackgroundService.stop();
-    const taskId = running.getValue()?.taskId;
-    if (taskId) {
-      DdTrace.finishSpan(taskId, undefined, Date.now());
+  try {
+    if (Platform.OS === "ios") {
+      await BackgroundService.stop();
+      const value = running.getValue();
+      if (!value) {
+        return;
+      }
+      Geolocation.clearWatch(value.watchId);
+      running.next(undefined);
+    } else {
+      await BackgroundGeolocationService.stop();
     }
-    running.next(undefined);
-  } else {
-    await BackgroundGeolocationService.stop();
+    AppLogger.info("GEOPINGS", "Tracking canceled");
+  } catch (e) {
+    AppLogger.error("GEOPINGS", "Unable to cancel tracking", e);
   }
 }
-export async function sendLocationPings(lianeId: string, wayPoints: WayPoint[], delay: number = 0): Promise<void> {
+
+export async function startPositionTracking(lianeId: string, wayPoints: WayPoint[], delay: number = 0): Promise<void> {
   AppLogger.debug("GEOPINGS", "start...");
   AppLogger.debug(
     "GEOPINGS",
     lianeId,
     wayPoints.map(w => w.rallyingPoint.label)
   );
-  if (Platform.OS === "ios") {
-    //@ts-ignore
-    return BackgroundService.start<LocationPingsSenderProps>(shareLocationTask, {
-      taskTitle: "Géolocalisation en cours",
-      taskName: "geolocation_" + lianeId,
-      taskDesc: "Liane partage votre position sur le trajet à destination de " + wayPoints[wayPoints.length - 1].rallyingPoint.label,
-      taskIcon: { name: "ic_launcher", type: "mipmap" },
-      parameters: { liane: lianeId, trip: wayPoints, delay }
-    }).catch(err => AppLogger.warn("GEOPINGS", "Unable to setup geoping background task on IOS", err));
-  } else if (Platform.OS === "android") {
-    const user = await getCurrentUser();
-    // Refresh token here to avoid issues
-    await tryRefreshToken(() => Promise.resolve());
-    const token = await getAccessToken();
+  try {
+    if (Platform.OS === "ios") {
+      //@ts-ignore
+      await BackgroundService.start<LocationPingsSenderProps>(shareLocationTask, {
+        taskTitle: "Géolocalisation en cours",
+        taskName: "geolocation_" + lianeId,
+        taskDesc: "Liane partage votre position sur le trajet à destination de " + wayPoints[wayPoints.length - 1].rallyingPoint.label,
+        taskIcon: { name: "ic_launcher", type: "mipmap" },
+        parameters: { liane: lianeId, trip: wayPoints, delay }
+      });
+    } else if (Platform.OS === "android") {
+      const user = await getCurrentUser();
+      // Refresh token here to avoid issues
+      await tryRefreshToken(() => Promise.resolve());
+      const token = await getAccessToken();
 
-    const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
-    const timeout = tripDuration + 3600 * 1000;
-    await BackgroundGeolocationService.start({
-      delay,
-      pingConfig: { lianeId, userId: user!.id!, token: token!, url: BaseUrl },
-      timeout,
-      wayPoints: wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat])
-    }).catch(err => AppLogger.warn("GEOPINGS", "Unable to setup geoping background task on android", err));
+      const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
+      const timeout = tripDuration + 3600 * 1000;
+
+      await BackgroundGeolocationService.start({
+        delay,
+        pingConfig: { lianeId, userId: user!.id!, token: token!, url: BaseUrl },
+        timeout,
+        wayPoints: wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat])
+      });
+    }
+    AppLogger.info("GEOPINGS", "Tracking background task started", lianeId);
+  } catch (e) {
+    AppLogger.error("GEOPINGS", "Unable to start tracking background task", e);
   }
 }
 
 export const isLocationServiceRunning = () =>
   Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
 
-const running = new BehaviorSubject<{ liane: string; taskId: string } | undefined>(undefined);
+const running = new BehaviorSubject<{ liane: string; watchId: number } | undefined>(undefined);
 export const watchLocationServiceState = (callback: (running: boolean) => void) =>
   Platform.OS === "ios" ? running.subscribe(l => callback(!!l)) : BackgroundGeolocationService.watch(callback);
 
@@ -328,30 +332,34 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
   const tripDuration = new Date(trip[trip.length - 1].eta).getTime() - new Date().getTime();
   const timeout = tripDuration + 3600 * 1000;
   let preciseTrackingMode = true;
-  let watchId: number = 0;
-  const taskId = await DdTrace.startSpan("geopings", { liane }, Date.now());
-  running.next({ liane, taskId });
   AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
   await new Promise<void>(async resolve => {
     const getDistanceFilter = () => (preciseTrackingMode ? 10 : nearWayPointRadius / 2);
 
     const switchTrackingMode = (precise: boolean) => {
-      Geolocation.clearWatch(watchId);
+      const watchId = running.getValue()?.watchId;
+      if (watchId) {
+        Geolocation.clearWatch(watchId);
+      }
       preciseTrackingMode = precise;
       const mode = precise ? "best" : "nearestTenMeters";
-      DdLogs.info("Switched tracking mode to:", mode);
+      AppLogger.info("GEOPINGS", "Switched tracking mode to:", mode);
       startTracking(mode, getDistanceFilter());
     };
 
     const stopTracking = () => {
-      Geolocation.clearWatch(watchId);
-      DdTrace.finishSpan(taskId, undefined, Date.now());
+      const watchId = running.getValue()?.watchId;
+      if (watchId) {
+        Geolocation.clearWatch(watchId);
+      }
+      AppLogger.info("GEOPINGS", "Tracking stopped", liane);
       running.next(undefined);
       resolve();
     };
+
     const positionCallback: Geolocation.SuccessCallback = position => {
       // Send position ping
-      AppLogger.info("GEOPINGS", position);
+      AppLogger.debug("GEOPINGS", "Position tracked", position);
       const coordinate = { lat: position.coords.latitude, lng: position.coords.longitude };
       const ping: MemberPing = {
         ...{
@@ -382,7 +390,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
     };
 
     const startTracking = (accuracy: Geolocation.AccuracyIOS, distanceFilter: number) => {
-      watchId = Geolocation.watchPosition(
+      const watchId = Geolocation.watchPosition(
         positionCallback,
         err => {
           AppLogger.warn("GEOPINGS", "Error during IOS position tracking", err);
@@ -394,6 +402,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
           showLocationDialog: true
         }
       );
+      running.next({ liane, watchId });
     };
 
     // Start tracking

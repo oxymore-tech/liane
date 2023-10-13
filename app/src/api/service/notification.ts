@@ -8,7 +8,7 @@ import { AbstractNotificationService } from "@/api/service/interfaces/notificati
 import { Notification } from "@/api/notification";
 import { formatTime } from "@/api/i18n";
 import DeviceInfo from "react-native-device-info";
-import { checkLocationPingsPermissions, sendLocationPings } from "@/api/service/location";
+import { checkLocationPingsPermissions, startPositionTracking } from "@/api/service/location";
 import { LianeServiceClient } from "@/api/service/liane";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { getCurrentUser } from "@/api/storage";
@@ -78,7 +78,7 @@ const pressActionMap = {
     const liane = await new LianeServiceClient().get(lianeId);
     const user = await getCurrentUser();
     const trip = getTripFromLiane(liane, user!);
-    await sendLocationPings(liane.id!, trip.wayPoints);
+    await startPositionTracking(liane.id!, trip.wayPoints);
   }
 } as const;
 const openNotification = async ({ type, detail }: Event) => {
