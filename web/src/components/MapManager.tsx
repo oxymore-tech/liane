@@ -14,9 +14,7 @@ function MapManager({ className, defaultCenter }: MapManagerProps) {
   const [rallyingPoints, setRallyingPoints] = useState<RallyingPoint[]>([]);
   
   const handleCenter = (c: LatLng) => {
-    RallyingPointService.list(c.lat, c.lng).then((r) => {
-      setRallyingPoints(r);
-    });
+    RallyingPointService.list(c.lat, c.lng);
   };
   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
