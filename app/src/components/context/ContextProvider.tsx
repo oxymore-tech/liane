@@ -253,10 +253,13 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     queryClient.clear();
     await this.setAuthUser(undefined);
   };
+
+  reconnect = this.forceReconnect;
+  
   render() {
     const { children } = this.props;
     const { appLoaded, user, status, appState } = this.state;
-    const { setAuthUser: login, logout } = this;
+    const { setAuthUser: login, logout, reconnect } = this;
 
     if (!appLoaded) {
       return (
@@ -279,7 +282,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
             value={{
               logout,
               login,
-              reconnect: this.state.hubState === "offline" ? this.forceReconnect : () => {},
+              reconnect: this.state.hubState === "offline" ? reconnect : () => {},
               user,
               status: this.state.hubState,
               appState,
