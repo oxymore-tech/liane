@@ -541,7 +541,6 @@ const styles = StyleSheet.create({
   },
   inputRallyingPointContainer: {
     borderRadius: 18,
-    flex: 1,
     marginHorizontal: 8,
     paddingHorizontal: 12,
     height: 42,

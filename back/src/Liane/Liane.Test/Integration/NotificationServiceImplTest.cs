@@ -1,16 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.User;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
-using Liane.Test.Mock;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -56,32 +51,4 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
     CollectionAssert.AreEquivalent(actual.Members.Select(m => m.User.Id), ImmutableList.Create(userA.Id, userB.Id));
   }
 
-  [Test]
-  [Ignore("Disabled")]
-  public async Task ShouldNotSendSameReminderTwice()
-  {
-    var userA = Fakers.FakeDbUsers[0];
-    var userB = Fakers.FakeDbUsers[1];
-    var liane = await lianeService.Create(new LianeRequest(null, DateTime.Now, null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
-
-    CurrentContext.SetCurrentUser(userB);
-    var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
-    await eventDispatcher.Dispatch(joinRequest);
-
-    var now = DateTime.UtcNow;
-
-    var trip1 = new List<WayPoint> { new WayPoint(LabeledPositions.BlajouxParking, 0, 0, DateTime.Now), new WayPoint(LabeledPositions.QuezacParking, 6000, 8000, DateTime.Now.AddMinutes(10)) }.ToImmutableList();
-    var trip2 = new List<WayPoint> { new WayPoint(LabeledPositions.BlajouxParking, 0, 0, DateTime.Now), new WayPoint(LabeledPositions.QuezacParking, 6000, 8000, DateTime.Now.AddMinutes(10)) }.ToImmutableList();
-    var notification1 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, trip1, true));
-    var notification2 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, trip2, true));
-    var notification3 = await notificationService.SendReminder("Hello", "Message", ImmutableList.Create<Ref<User>>(userA.Id, userB.Id), new Reminder(liane.Id, trip1, true));
-
-    
-    var mockPushService = ServiceProvider.GetRequiredService<MockPushServiceImpl>();
-    var actualA = mockPushService.GetSentNotifications(userA.Id).Where(n => n is Notification.Reminder);
-    var actualB = mockPushService.GetSentNotifications(userB.Id).Where(n => n is Notification.Reminder);
-
-    Assert.AreEqual(2, actualA.Count());
-    Assert.AreEqual(2, actualB.Count());
-  }
 }

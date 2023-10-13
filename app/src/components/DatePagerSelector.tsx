@@ -47,15 +47,13 @@ export const DatePagerSelector = ({
           color={color}
           size={size + 26}
           opacity={dateIsToday ? 0.4 : 1}
-          borderRadius={20}
         />
 
         <Center>
           <AppPressableOverlay
             style={{ paddingVertical: 8, paddingHorizontal: 4 }}
             onPress={() => setDatePickerVisible(true)}
-            backgroundStyle={styles.buttonBorderRadius}
-            borderRadius={20}>
+            backgroundStyle={styles.buttonBorderRadius}>
             <Row spacing={6}>
               <AppText style={{ fontWeight: "bold", color, fontSize: size }}>
                 {formatter ? formatter(date || new Date()) : capitalize(toRelativeDateString(date, formatShortMonthDay))}
@@ -70,7 +68,6 @@ export const DatePagerSelector = ({
           name={"chevron-right"}
           color={color}
           size={size + 26}
-          borderRadius={20}
         />
 
         <DateTimePickerModal

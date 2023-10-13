@@ -96,7 +96,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       .Where(c =>
       {
         var lastReadAt = c.Members.First(m => m.User.Id == user.Id).LastReadAt;
-        return lastReadAt is null || lastReadAt.Value < c.LastMessageAt;
+        return (lastReadAt is null && c.LastMessageAt is not null) || (lastReadAt is not null && c.LastMessageAt is not null && lastReadAt.Value < c.LastMessageAt);
       })
       .Select(c => (Ref<ConversationGroup>)c.Id!).ToImmutableList();
   }

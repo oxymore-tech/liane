@@ -13,6 +13,7 @@ import { SubscriptionLike } from "rxjs";
 import { HubState } from "@/api/service/interfaces/hub";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { AppLogger } from "@/api/logger";
+import { QueryUpdateProvider } from "@/components/context/QueryUpdateProvider";
 
 interface AppContextProps {
   position?: LatLng;
@@ -56,7 +57,7 @@ async function initContext(service: AppServices): Promise<{
       user = await service.realTimeHub.start();
       await registerRumUser({ ...authUser, pseudo: user.pseudo });
       // Branch hub to notifications
-      service.notification.initUnreadNotificationCount(service.realTimeHub.unreadNotificationCount);
+      service.notification.initUnreadNotifications(service.realTimeHub.unreadNotifications);
     } catch (e) {
       AppLogger.warn("INIT", "Could not start hub :", e);
 
@@ -273,18 +274,20 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
     return (
       <QueryClientProvider client={queryClient}>
-        <AppContext.Provider
-          value={{
-            logout,
-            login,
-            reconnect: this.state.hubState === "offline" ? this.forceReconnect : () => {},
-            user,
-            status: this.state.hubState,
-            appState,
-            services: SERVICES
-          }}>
-          {children}
-        </AppContext.Provider>
+        <QueryUpdateProvider>
+          <AppContext.Provider
+            value={{
+              logout,
+              login,
+              reconnect: this.state.hubState === "offline" ? this.forceReconnect : () => {},
+              user,
+              status: this.state.hubState,
+              appState,
+              services: SERVICES
+            }}>
+            {children}
+          </AppContext.Provider>
+        </QueryUpdateProvider>
       </QueryClientProvider>
     );
   }

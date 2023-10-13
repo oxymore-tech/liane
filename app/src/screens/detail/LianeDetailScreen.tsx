@@ -31,6 +31,8 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
+import { formatDate, formatDateTime, formatMonthDay } from "@/api/i18n";
+import { capitalize } from "@/util/strings";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -196,6 +198,18 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
   };
 };
 
+export const LianeWithDateView = (props: { liane: Liane }) => {
+  const date = capitalize(formatMonthDay(new Date(props.liane.departureTime)));
+  return (
+    <Column spacing={4}>
+      <AppText style={styles.date}>{date}</AppText>
+      <View style={styles.lianeContainer}>
+        <LianeView liane={props.liane} />
+      </View>
+    </Column>
+  );
+};
+
 const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: LianeMatch; isExpanded: boolean; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const { navigation } = useAppNavigation();
@@ -215,9 +229,7 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
 
           {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <GeolocationSwitch liane={liane.liane} />}
         </Row>
-        <View style={styles.lianeContainer}>
-          <LianeView liane={liane.liane} />
-        </View>
+        <LianeWithDateView liane={liane.liane} />
       </View>
 
       <Row style={styles.statusRowContainer} spacing={8}>
@@ -429,5 +441,10 @@ const styles = StyleSheet.create({
     flexShrink: 2,
     alignSelf: "center",
     marginHorizontal: 8
+  },
+  date: {
+    fontWeight: "bold",
+    fontSize: 18,
+    paddingHorizontal: 8
   }
 });

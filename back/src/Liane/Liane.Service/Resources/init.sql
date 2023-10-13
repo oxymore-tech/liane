@@ -147,7 +147,8 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length)                                                               as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 (array_agg(s.to_id order by s.eta desc))[1]                               as to_id
+                                 (array_agg(s.to_id order by s.eta desc))[1]                               as to_id,
+                                 (array_agg(s.from_id order by s.eta asc))[1]                               as from_id
                           from (select liane_id,
                                        to_id,
                                        from_id,
@@ -160,6 +161,7 @@ BEGIN
                           having bool_or(intersects)),
        lianes_parts as (select liane_id,
                                to_id,
+                               from_id,
                                ST_Envelope(geometry) as bbox,
                                st_simplify(ST_Intersection(
                                              geometry,
@@ -182,11 +184,12 @@ BEGIN
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids, bool_or(lianes_parts.to_id = clipped_points.id) as is_deposit
                              from lianes_parts
                                     inner join clipped_points on
-                               case
-                                 when z > 7 then
-                                   st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
-                                              500)
-                                 else clipped_points.id = lianes_parts.to_id end
+                                   clipped_points.id != lianes_parts.from_id  and
+                                   case
+                                     when z > 7 then
+                                       st_dwithin(clipped_points.location::geography, lianes_parts.geom::geography,
+                                                  500)
+                                     else clipped_points.id = lianes_parts.to_id end
                              group by id, label, location, type, address, zip_code, city, place_count),
 
        -- Create clusters along segments
@@ -207,11 +210,20 @@ BEGIN
                                         from subdivided
                                                inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
                                   where st_distancesphere(middle, location) < points_cluster_distance / 2),
-       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(st_collect(location)))) as location, array_agg(id) as ids, count(id) as point_count
-                            from subdivided_suggestions
-                            where point_occurence = 1 and id != to_id
-                            group by middle, geom
-                            having count(id) > 1),
+       pre_clustered_points as (select st_centroid(st_collect(location)) as points,
+                                       array_agg(id) as ids,
+                                       count(id) as point_count,
+                                       geom
+                                from subdivided_suggestions
+                                where point_occurence = 1 and id != to_id
+                                group by geom
+                                having count(id) > 1
+       ),
+       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, points)) as location,
+                                   ST_Envelope(points) as bbox,
+                                   ids,
+                                   point_count
+                            from pre_clustered_points),
        solo_points as (select suggestion_points.*
                        from suggestion_points
                               left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id
@@ -241,13 +253,15 @@ BEGIN
          select id, label, location, type, address, zip_code, city, place_count,
                 liane_ids,
                 case when is_deposit then 'deposit' else 'suggestion' end as point_type,
-                null::integer as point_count
+                null::integer as point_count,
+                null as bbox
          from solo_points
          union
          select  id, label, location, type, address, zip_code, city, place_count,
                  null as liane_ids,
                  'active' as point_type,
-                 null::integer as point_count
+                 null::integer as point_count,
+                 null as bbox
          from other_points
          union
          select null         as id,
@@ -260,7 +274,8 @@ BEGIN
                 null         as place_count,
                 null         as liane_ids,
                 'suggestion' as point_type,
-                point_count::integer
+                point_count::integer,
+                st_asgeojson(bbox) as bbox
          from clustered_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
@@ -285,7 +300,8 @@ BEGIN
                                     place_count,
                                     liane_ids         as lianes,
                                     point_type,
-                                    point_count
+                                    point_count,
+                                    bbox
                              from all_points) as x
                        where location is not null)
   SELECT INTO mvt points_tile.tile || liane_tile.tile
@@ -295,7 +311,6 @@ BEGIN
   RETURN mvt;
 END
 $$;
-
 
 
 
@@ -549,11 +564,20 @@ BEGIN
                                         from subdivided
                                                inner join suggestion_points on subdivided.liane_id = any (suggestion_points.liane_ids)) as x
                                   where st_distancesphere(middle, location) < points_cluster_distance / 2),
-       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(st_collect(location)))) as location, array_agg(id) as ids, count(id) as point_count
-                            from subdivided_suggestions
-                            where point_occurence = 1 and id != extremity_point_id
-                            group by middle, geom
-                            having count(id) > 1),
+       pre_clustered_points as (select st_centroid(st_collect(location)) as points,
+                                       array_agg(id) as ids,
+                                       count(id) as point_count,
+                                       geom
+                                from subdivided_suggestions
+                                where point_occurence = 1 and id != extremity_point_id
+                                group by geom
+                                having count(id) > 1
+       ),
+       clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, points)) as location,
+                                   ST_Envelope(points) as bbox,
+                                   ids,
+                                   point_count
+                            from pre_clustered_points),
        solo_points as (select suggestion_points.*
                        from suggestion_points
                               left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id
@@ -579,10 +603,10 @@ BEGIN
                                city,
                                place_count
                         from suggestion_points),
-       all_points as (select *, 'suggestion' as point_type, null::integer as point_count
+       all_points as (select *, 'suggestion' as point_type, null::integer as point_count, null as bbox
                       from solo_points
                       union
-                      select *, null as liane_ids, 'active' as point_type, null::integer as point_count
+                      select *, null as liane_ids, 'active' as point_type, null::integer as point_count, null as bbox
                       from other_points
                       union
                       select null         as id,
@@ -595,7 +619,8 @@ BEGIN
                              null         as place_count,
                              null         as liane_ids,
                              'suggestion' as point_type,
-                             point_count::integer
+                             point_count::integer,
+                             st_asgeojson(bbox) as bbox
                       from clustered_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
@@ -620,7 +645,8 @@ BEGIN
                                     place_count,
                                     liane_ids         as lianes,
                                     point_type,
-                                    point_count
+                                    point_count,
+                                    bbox
                              from all_points) as x
                        where location is not null)
   SELECT INTO mvt points_tile.tile || liane_tile.tile

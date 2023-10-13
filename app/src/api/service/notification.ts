@@ -77,7 +77,7 @@ const pressActionMap = {
   loc: async (lianeId: string) => {
     const liane = await new LianeServiceClient().get(lianeId);
     const user = await getCurrentUser();
-    const trip = getTripFromLiane(liane, user!);
+    const trip = getTripFromLiane(liane, user!.id!);
     await startPositionTracking(liane.id!, trip.wayPoints);
   }
 } as const;

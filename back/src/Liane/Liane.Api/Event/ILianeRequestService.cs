@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -9,6 +10,8 @@ public interface ILianeRequestService : IEventListener<LianeEvent.JoinRequest>
   Task<PaginatedResponse<JoinLianeRequest>> List(Pagination pagination);
 
   Task<JoinLianeRequest> Get(Ref<Notification> id);
+  
+  Task RejectJoinLianeRequests(IEnumerable<Ref<Trip.Liane>> lianes);
 
   Task Delete(Ref<Notification> id);
 }
