@@ -19,7 +19,7 @@ services:
       com.datadoghq.ad.logs: '[{"source":"postgresql","service":"postgis"}]'
     volumes:
       - "/data/${PROJECT}/postgis:/var/lib/postgresql/data"
-      - "postgresql.conf:/etc/postgresql/postgresql.conf"
+      - "./pg/postgresql.conf:/etc/postgresql/postgresql.conf"
     ports:
       - "${POSTGIS_HOST_PORT}:5432"
     environment:
