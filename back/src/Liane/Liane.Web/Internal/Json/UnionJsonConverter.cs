@@ -71,7 +71,7 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
       }).ToArray();
     if (!missing.IsNullOrEmpty())
     {
-      throw new ValidationException(missing.ToImmutableDictionary(v => v, _ => ValidationMessage.IsRequired));
+      throw new ValidationException(missing.ToImmutableDictionary(v => v, _ => ValidationMessage.Required));
     }
 
     return (TRoot)constructorInfo.Invoke(parameters);

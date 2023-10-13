@@ -7,7 +7,6 @@ using Liane.Api.Util.Http;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.AccessLevel;
 
@@ -19,10 +18,9 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
   private readonly ResourceAccessLevel accessLevel;
   private readonly string resourceIdentifier;
   private readonly ICurrentContext currentContext;
-  private readonly ILogger<ResourceAccessLevel> logger;
 
   public RequiresAccessLevelFilter(IServiceProvider serviceProvider, ICurrentContext currentContext, IAccessLevelContextFactory accessorProvider, ResourceAccessLevel accessLevel, Type resourceType,
-    string resourceIdentifier, ILogger<ResourceAccessLevel> logger)
+    string resourceIdentifier)
   {
     this.serviceProvider = serviceProvider;
     this.accessorProvider = accessorProvider;
@@ -30,7 +28,6 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     this.resourceType = resourceType;
     this.accessLevel = accessLevel;
     this.currentContext = currentContext;
-    this.logger = logger;
   }
 
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -85,13 +82,7 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     }
     catch (System.Exception e)
     {
-      var actionResult = HttpExceptionMapping.Map(e, context.ModelState, logger: logger);
-      if (actionResult == null)
-      {
-        throw; //TODO send code 500
-      }
-
-      context.Result = actionResult;
+      context.Result = HttpExceptionMapping.Map(e, context.ModelState);
     }
   }
 }

@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.Extensions.Logging;
 
 namespace Liane.Api.Util.Exception;
 
@@ -13,35 +12,36 @@ public static class HttpExceptionMapping
 {
   public static System.Exception Map(HttpStatusCode? code, string responseContent)
   {
-    switch (code)
+    return code switch
     {
-      case HttpStatusCode.NotFound:
-        return new ResourceNotFoundException(responseContent);
-      case HttpStatusCode.Unauthorized:
-        return new UnauthorizedAccessException(responseContent);
-      case HttpStatusCode.Forbidden:
-        return new ForbiddenException();
-      case HttpStatusCode.ExpectationFailed:
-        return new ExpectationFailedException(responseContent);
-    }
-
-    return new HttpRequestException($"{code} : {responseContent}");
+      HttpStatusCode.NotFound => new ResourceNotFoundException(responseContent),
+      HttpStatusCode.Unauthorized => new UnauthorizedAccessException(responseContent),
+      HttpStatusCode.Forbidden => new ForbiddenException(),
+      HttpStatusCode.ExpectationFailed => new ExpectationFailedException(responseContent),
+      _ => new HttpRequestException($"{code} : {responseContent}")
+    };
   }
 
-  public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null, ILogger? logger = null)
+  public static IActionResult Map(System.Exception exception, ModelStateDictionary? modelState = null)
   {
     switch (exception)
     {
       case TaskCanceledException:
-        logger?.LogInformation("Request canceled");
-        return new BadRequestObjectResult("Request canceled");
+      case ArgumentException:
+      {
+        var validationErrorResponse = new Dictionary<string, object> { ["title"] = exception.Message };
+        return new BadRequestObjectResult(validationErrorResponse);
+      }
 
       case ValidationException e:
       {
         var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
-        foreach (var (field, message) in e.Errors) errors.AddModelError(field, message);
+        foreach (var (field, message) in e.Errors)
+        {
+          errors.AddModelError(field, message);
+        }
 
-        var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred." };
+        var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = exception.Message };
         return new BadRequestObjectResult(validationErrorResponse);
       }
 
@@ -56,9 +56,10 @@ public static class HttpExceptionMapping
 
       case ExpectationFailedException e:
         return Result(e.Message, HttpStatusCode.ExpectationFailed);
-    }
 
-    return null;
+      default:
+        return Result(exception.Message, HttpStatusCode.InternalServerError);
+    }
   }
 
   private static ObjectResult Result(string message, HttpStatusCode code)

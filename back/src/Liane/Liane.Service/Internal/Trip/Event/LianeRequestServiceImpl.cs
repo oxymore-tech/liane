@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.User;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
@@ -76,6 +77,12 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
   {
+    var liane = await lianeService.Get(joinRequest.Liane);
+    if (liane.State is not (LianeState.Started or LianeState.NotStarted))
+    {
+      throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
+    }
+
     LianeEvent lianeEvent = answer switch
     {
       Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),

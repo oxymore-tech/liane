@@ -1,12 +1,26 @@
 using System.Collections.Immutable;
-using System.Linq;
+using Liane.Api.Trip;
 
 namespace Liane.Api.Util.Exception;
 
 public sealed class ValidationException : System.Exception
 {
-  public ValidationException(string field, ValidationMessage message) : this(Format(field, message))
+  public ValidationException(ValidationMessage message) : this(message.Value, ImmutableDictionary<string, ValidationMessage>.Empty)
   {
+  }
+
+  public ValidationException(string field, ValidationMessage message) : this($"{message.Value} field:{field}", Format(field, message))
+  {
+  }
+
+  public ValidationException(IImmutableDictionary<string, ValidationMessage> errors) : this(null, errors)
+  {
+  }
+
+  private ValidationException(string? message, IImmutableDictionary<string, ValidationMessage> errors)
+  {
+    Errors = errors.ToImmutableDictionary(e => e.Key.Uncapitalize(), e => e.Value.Value);
+    Message = message ?? "One or more validation errors occurred.";
   }
 
   private static ImmutableDictionary<string, ValidationMessage> Format(string field, ValidationMessage message)
@@ -14,12 +28,6 @@ public sealed class ValidationException : System.Exception
     var builder = ImmutableDictionary.CreateBuilder<string, ValidationMessage>();
     builder.Add(field, message);
     return builder.ToImmutable();
-  }
-
-  public ValidationException(IImmutableDictionary<string, ValidationMessage> errors)
-  {
-    Errors = errors.ToImmutableDictionary(e => e.Key.Uncapitalize(), e => e.Value.Value);
-    Message = string.Join(", ", errors.Select(e => $"{e.Key}: {e.Value}"));
   }
 
   public IImmutableDictionary<string, string> Errors { get; }
@@ -36,7 +44,13 @@ public sealed class ValidationMessage
     Value = value;
   }
 
-  public static ValidationMessage IsRequired => new("validation.required");
-  public static ValidationMessage HasWrongFormat => new("validation.wrong-format");
-  public static ValidationMessage TooShort(int minLength) => new($"validation.too-short minLength:{minLength}");
+  public static ValidationMessage Required => new("required");
+  public static ValidationMessage WrongFormat => new("wrong_format");
+  public static ValidationMessage UnknownValue => new("unknown_value");
+
+  public static ValidationMessage TooShort(int min) => new($"too_short min:{min}");
+
+  public static ValidationMessage AlreadyMember => new("already_member");
+
+  public static ValidationMessage LianeStateInvalid(LianeState state) => new($"liane_state_invalid state:{state}");
 }

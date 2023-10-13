@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
@@ -10,7 +11,6 @@ using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using ILogger = Amazon.Runtime.Internal.Util.ILogger;
 
 namespace Liane.Service.Internal.Trip.Event;
 
@@ -24,7 +24,9 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
   private readonly IOsrmService osrmService;
   private readonly IPostgisService postgisService;
   private readonly ILogger<LianeTracker> logger;
-  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService, IPostgisService postgisService, ILogger<LianeTracker> logger)
+
+  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService,
+    IPostgisService postgisService, ILogger<LianeTracker> logger)
   {
     mongo = db;
     this.lianeMemberTracker = lianeMemberTracker;
@@ -48,8 +50,8 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     var ping = new UserPing(memberId, at, e.Delay ?? TimeSpan.Zero, e.Coordinate);
     var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Liane)
                  & Builders<LianeDb>.Filter.Or(Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, DateTime.UtcNow + TimeSpan.FromMinutes(15)),
-                       Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started))
-                    & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == memberId);
+                   Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started))
+                 & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == memberId);
 
     var liane = await mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync(filter,
@@ -59,7 +61,12 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
 
     if (liane is null)
     {
-      return;
+      throw ResourceNotFoundException.For(e.Liane);
+    }
+
+    if (liane.State is not (LianeState.Started or LianeState.NotStarted))
+    {
+      throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }
 
     if (liane.State == LianeState.NotStarted && e.Coordinate is not null)
@@ -82,22 +89,22 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
             .Start();
         })
         .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
-        , 3600 * 1000)
+          , 3600 * 1000)
         .Build(osrmService, postgisService, mongo, logger);
     });
-    
+
     await tracker.Push(ping);
 
     // For now we only share position of the driver, and passengers close to the next pickup point
-    if (memberId  == liane.Driver.User.Id)
+    if (memberId == liane.Driver.User.Id)
     {
       var currentLocation = tracker.GetCurrentMemberLocation(memberId);
       if (currentLocation is not null) await lianeMemberTracker.Push(currentLocation);
-    } else // disable for now : if (tracker.IsCloseToPickup(memberId))
+    }
+    else // disable for now : if (tracker.IsCloseToPickup(memberId))
     {
       var currentLocation = tracker.GetCurrentMemberLocation(memberId);
       if (currentLocation is not null) await lianeMemberTracker.Push(currentLocation);
     }
   }
-
 }

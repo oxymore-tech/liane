@@ -1,5 +1,6 @@
 using System;
 using Liane.Api.Util;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
@@ -25,7 +26,7 @@ public abstract record PayloadType
     var lianeEventType = type.MatchSubType<LianeEvent>();
     if (lianeEventType is null)
     {
-      throw new ArgumentException($"Unknown type {type}", nameof(type));
+      throw new ValidationException(nameof(type), ValidationMessage.UnknownValue);
     }
 
     var makeGenericType = typeof(Event<>).MakeGenericType(lianeEventType);
