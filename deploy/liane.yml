@@ -14,12 +14,10 @@ services:
 
   postgis:
     image: "postgis/postgis:15-3.3"
-    command: [ "-c", "config_file=/etc/postgresql/postgresql.conf" ]
     labels:
-      com.datadoghq.ad.logs: '[{"source":"postgresql","service":"postgis"}]'
+      com.datadoghq.ad.logs: '[{"source":"postgresql","service":"postgresql"}]'
     volumes:
       - "/data/${PROJECT}/postgis:/var/lib/postgresql/data"
-      - "./pg/postgresql.conf:/etc/postgresql/postgresql.conf"
     ports:
       - "${POSTGIS_HOST_PORT}:5432"
     environment:
