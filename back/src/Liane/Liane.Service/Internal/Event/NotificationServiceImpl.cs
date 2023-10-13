@@ -19,7 +19,6 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
   private readonly ICurrentContext currentContext;
   private readonly IPushService pushService;
   private readonly EventDispatcher eventDispatcher;
-  private readonly MemoryCache memoryCache;
   private readonly ILogger<NotificationServiceImpl> logger;
 
   public NotificationServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IPushService pushService, EventDispatcher eventDispatcher, ILogger<NotificationServiceImpl> logger) : base(mongo)
@@ -28,7 +27,6 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     this.pushService = pushService;
     this.eventDispatcher = eventDispatcher;
     this.logger = logger;
-    this.memoryCache = new MemoryCache(new MemoryCacheOptions());
   }
 
   public Task<Notification> SendInfo(string title, string message, Ref<Api.User.User> to) => Create(
@@ -63,12 +61,14 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     if (notificationFilter.Recipient is not null)
     {
       filter &= 
-        // Filter unseen notifications or those just seen today
-        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && (r.SeenAt == null || r.SeenAt > DateTime.UtcNow.Date))
+        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient) &
+        // Filter unseen notifications or those just sent today
+        (Builders<Notification>.Filter.Where(n => n.CreatedAt > DateTime.UtcNow.Date) |
+        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.SeenAt == null)
         | (
-          Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient && r.Answer == null)
+          Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.Answer == null)
           & Builders<Notification>.Filter.SizeGt(r => r.Answers, 0)
-        );
+        ));
     }
     if (notificationFilter.Sender is not null)
     {
@@ -86,15 +86,6 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     }
 
     return await Mongo.Paginate<Notification, Cursor.Time>(pagination, r => r.CreatedAt, filter, false);
-  }
-
-  public async Task CleanJoinLianeRequests(IEnumerable<Ref<Api.Trip.Liane>> lianes)
-  {
-    var filter = Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, JoinLianeRequest>(n => n.Payload)
-                 & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
-    var result = await Mongo.GetCollection<Notification.Event>()
-      .DeleteManyAsync(filter);
-    logger.LogInformation($"Deleted {result.DeletedCount} join requests.");
   }
 
   public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Liane>> lianes)

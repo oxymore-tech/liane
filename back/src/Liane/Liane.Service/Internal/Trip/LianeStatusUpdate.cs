@@ -21,12 +21,13 @@ public sealed class LianeStatusUpdate : CronJobService
   private readonly IPostgisService postgisService;
   private readonly ILianeService lianeService;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
+  private readonly ILianeRequestService lianeRequestService;
   
   private const int StartedDelayInMinutes = 5;
   private const int FinishedDelayInMinutes = 5;
 
   public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, INotificationService notificationService,
-    IPostgisService postgisService, ILianeService lianeService, ILianeUpdateObserver lianeUpdateObserver) : base(logger, "* * * * *",
+    IPostgisService postgisService, ILianeService lianeService, ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
     false)
   {
     this.mongo = mongo;
@@ -34,6 +35,7 @@ public sealed class LianeStatusUpdate : CronJobService
     this.postgisService = postgisService;
     this.lianeService = lianeService;
     this.lianeUpdateObserver = lianeUpdateObserver;
+    this.lianeRequestService = lianeRequestService;
   }
 
   protected override Task DoWork(CancellationToken cancellationToken) => Update(DateTime.UtcNow);
@@ -62,7 +64,7 @@ public sealed class LianeStatusUpdate : CronJobService
       await lianeService.UpdateState(id, LianeState.Canceled);
     });
     await postgisService.Clear(canceled.ToImmutableList());
-    await notificationService.CleanJoinLianeRequests(canceled);
+    await lianeRequestService.RejectJoinLianeRequests(canceled);
   }
 
   private async Task FinishLianes(DateTime from)
@@ -122,7 +124,7 @@ public sealed class LianeStatusUpdate : CronJobService
     // TODO create ongoing trip here ?
     var toClear = activeLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableHashSet();
     await postgisService.Clear(toClear);
-    await notificationService.CleanJoinLianeRequests(toClear);
+    await lianeRequestService.RejectJoinLianeRequests(toClear);
   }
 
   private async Task RealtimeUpdate(DateTime from)
