@@ -52,7 +52,7 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveMessage", this.receiveMessage);
       this.hub.on("Me", async (me: FullUser) => {
         // Called when hub is started
-        AppLogger.info("HUB", "me", me);
+        AppLogger.debug("HUB", "me", me);
         this.isStarted = true;
         await storeCurrentUser(me);
         resolve(me);

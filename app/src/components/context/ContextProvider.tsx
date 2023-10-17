@@ -115,6 +115,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       appState: "active",
       hubState: "offline"
     };
+    // https://stackoverflow.com/questions/33973648/react-this-is-undefined-inside-a-component-function
+    this.initContext = this.initContext.bind(this);
+    this.forceReconnect = this.forceReconnect.bind(this);
   }
 
   static getDerivedStateFromError() {
@@ -254,12 +257,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     await this.setAuthUser(undefined);
   };
 
-  reconnect = this.forceReconnect;
-  
   render() {
     const { children } = this.props;
     const { appLoaded, user, status, appState } = this.state;
-    const { setAuthUser: login, logout, reconnect } = this;
+    const { setAuthUser: login, logout, forceReconnect } = this;
 
     if (!appLoaded) {
       return (
@@ -282,7 +283,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
             value={{
               logout,
               login,
-              reconnect: this.state.hubState === "offline" ? reconnect : () => {},
+              reconnect: this.state.hubState === "offline" ? forceReconnect : () => {},
               user,
               status: this.state.hubState,
               appState,

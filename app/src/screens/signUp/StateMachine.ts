@@ -64,6 +64,7 @@ export const CreateSignUpMachine = (initialValue: SignUpContext = {}): SignUpSta
         form: {
           on: {
             NEXT: {
+              actions: ["setSignedUp"],
               target: "done"
             }
           }
@@ -75,6 +76,9 @@ export const CreateSignUpMachine = (initialValue: SignUpContext = {}): SignUpSta
       actions: {
         set: assign<SignUpContext, LoginEvent>({
           authUser: (context, event) => event.data.authUser
+        }),
+        setSignedUp: assign<SignUpContext, NextEvent>({
+          authUser: context => ({ ...context.authUser!, isSignedUp: true })
         })
       }
     }

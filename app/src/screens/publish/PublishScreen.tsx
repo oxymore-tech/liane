@@ -76,7 +76,12 @@ export const PublishScreen = () => {
     }, route.params?.initialValue)
   );
   const machine = useInterpret(m);
+  const [state] = useActor(machine);
   machine.onDone(() => {
+    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
+    if (!state.done) {
+      return;
+    }
     navigation.popToTop();
     //@ts-ignore
     navigation.navigate("Mes trajets");

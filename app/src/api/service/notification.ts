@@ -203,7 +203,7 @@ const openFirebaseNotification = (m: FirebaseMessagingTypes.RemoteMessage | null
   if (!m) {
     return;
   }
-  AppLogger.info("NOTIFICATIONS", "opened via", m);
+  AppLogger.info("NOTIFICATIONS", "opened firebase notification", m);
   if (m?.data?.uri) {
     Linking.openURL(<string>m.data.uri);
   }
@@ -214,12 +214,12 @@ PushNotifications?.onNotificationOpenedApp(openFirebaseNotification);
 export const checkInitialNotification = async (): Promise<string | undefined | null> => {
   const firebaseNotification = await PushNotifications?.getInitialNotification();
   if (firebaseNotification) {
-    AppLogger.info("NOTIFICATIONS", "opened via", firebaseNotification);
+    AppLogger.info("NOTIFICATIONS", "opened firebase notification", firebaseNotification);
     return firebaseNotification.data?.uri;
   }
   const n = await notifee.getInitialNotification();
   if (n) {
-    AppLogger.info("NOTIFICATIONS", "opened via", n);
+    AppLogger.info("NOTIFICATIONS", "opened local notification", n);
 
     if (n.notification.data?.uri) {
       if (n.pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
