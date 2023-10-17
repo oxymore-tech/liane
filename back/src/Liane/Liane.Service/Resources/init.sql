@@ -83,7 +83,12 @@ CREATE OR REPLACE AGGREGATE eta_flag_agg (timestamp, integer)
   initcond = '000000000000000000000000'
   );
 
+CREATE OR REPLACE FUNCTION box2d_to_json(box2d)
+  RETURNS json AS
+$$
+select json_build_array(st_xmin($1), st_ymin($1), st_xmax($1), st_ymax($1))
 
+$$ LANGUAGE 'sql' STRICT;
 
 create or replace function liane_display(z integer, x integer, y integer, query_params json) returns bytea
   immutable
@@ -162,14 +167,15 @@ BEGIN
        lianes_parts as (select liane_id,
                                to_id,
                                from_id,
-                               ST_Envelope(geometry) as bbox,
+                               st_extent(geometry) as bbox,
                                st_simplify(ST_Intersection(
                                              geometry,
                                              ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)
                                              )    , simplify_factor)           as geom
 
                         from longest_lianes
-                        where  length > min_length),
+                        where  length > min_length
+                        group by liane_id, to_id, from_id, geometry),
        clipped_points as (select id,
                                  label,
                                  location,
@@ -220,10 +226,10 @@ BEGIN
                                 having count(id) > 1
        ),
        clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(points))) as location,
-                                   ST_Envelope(points) as bbox,
+                                   st_extent(points) as bbox,
                                    ids,
                                    point_count
-                            from pre_clustered_points),
+                            from pre_clustered_points group by geom, points, ids, point_count),
        solo_points as (select suggestion_points.*
                        from suggestion_points
                               left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id
@@ -275,7 +281,7 @@ BEGIN
                 null         as liane_ids,
                 'suggestion' as point_type,
                 point_count::integer,
-                st_asgeojson(bbox) as bbox
+                box2d_to_json(bbox)::text as bbox
          from clustered_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
@@ -283,7 +289,7 @@ BEGIN
                                      ST_TileEnvelope(z, x, y),
                                      4096, 64, true)  AS geom,
                                    liane_id           as id,
-                                   st_asgeojson(bbox) as bbox
+                                   box2d_to_json(bbox)::text as bbox
                             FROM lianes_parts) as x
                       where geom is not null),
        points_tile as (select ST_AsMVT(x.*, 'rallying_point_display', 4096, 'location') as tile
@@ -507,7 +513,7 @@ BEGIN
                           having bool_or(intersects)),
        lianes_parts as (select liane_id,
                                extremity_point_id,
-                               ST_Envelope(geom) as bbox,
+                               st_extent(geom) as bbox,
                                ST_Intersection(
                                  geom,
                                  ST_Transform(ST_TileEnvelope(z, x, y, margin := 0.03125), 4326)
@@ -522,7 +528,8 @@ BEGIN
                               from longest_lianes
                               where st_dwithin(geometry::geography, origin_point_location::geography, 500)
                                 and length > min_length) as sub
-                        where st_length(geom::geography) > 500),
+                        where st_length(geom::geography) > 500
+                        group by geom, liane_id, extremity_point_id),
        clipped_points as (select id,
                                  label,
                                  location,
@@ -574,10 +581,11 @@ BEGIN
                                 having count(id) > 1
        ),
        clustered_points as (select st_lineinterpolatepoint(geom, st_linelocatepoint(geom, st_centroid(points))) as location,
-                                   ST_Envelope(points) as bbox,
+                                   st_extent(points) as bbox,
                                    ids,
                                    point_count
-                            from pre_clustered_points),
+                            from pre_clustered_points
+                            group by geom, point_count, points, ids),
        solo_points as (select suggestion_points.*
                        from suggestion_points
                               left join (select distinct unnest(ids) as id from clustered_points) as c on suggestion_points.id = c.id
@@ -620,7 +628,7 @@ BEGIN
                              null         as liane_ids,
                              'suggestion' as point_type,
                              point_count::integer,
-                             st_asgeojson(bbox) as bbox
+                             box2d_to_json(bbox)::text as bbox
                       from clustered_points),
        liane_tile as (select ST_AsMVT(x.*, 'liane_display', 4096, 'geom') as tile
                       from (SELECT ST_AsMVTGeom(
@@ -628,7 +636,7 @@ BEGIN
                                      ST_TileEnvelope(z, x, y),
                                      4096, 64, true)  AS geom,
                                    liane_id           as id,
-                                   st_asgeojson(bbox) as bbox
+                                   box2d_to_json(bbox)::text as bbox
                             FROM lianes_parts) as x
                       where geom is not null),
        points_tile as (select ST_AsMVT(x.*, 'rallying_point_display', 4096, 'location') as tile
