@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { PropsWithChildren, useCallback, useContext, useEffect, useState } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
 import { Exact, getPoint, UnionUtils } from "@/api";
@@ -7,7 +7,7 @@ import { capitalize } from "@/util/strings";
 import { formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
-import { LineSeparator, SectionSeparator } from "@/components/Separator";
+import { LineSeparator } from "@/components/Separator";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
@@ -20,13 +20,94 @@ import { JoinRequest } from "@/api/event";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppStyles } from "@/theme/styles";
-import { AppIcon } from "@/components/base/AppIcon";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { LianeMatchItemView } from "@/screens/home/BottomSheetView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideInLeft, SlideInRight, SlideOutDown, SlideOutLeft } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  FadeOut,
+  SlideInDown,
+  SlideInLeft,
+  SlideInRight,
+  SlideOutDown,
+  SlideOutLeft
+} from "react-native-reanimated";
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DriverInfo } from "@/screens/detail/components/DriverInfo";
+import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 
+const StepView = ({
+  displayFull,
+  onValidate,
+  onCancel,
+  animateSummary = true,
+  onEdit,
+  summary,
+  icon,
+  children
+}: {
+  displayFull?: boolean | null | undefined;
+  onValidate: () => void;
+  onCancel?: () => void | undefined;
+  animateSummary?: boolean;
+  onEdit?: () => void | undefined;
+  summary: string;
+  icon: IconName;
+} & PropsWithChildren) => {
+  return (
+    <Animated.View
+      entering={SlideInRight}
+      style={{ borderColor: AppColors.primaryColor, borderRadius: 8, borderWidth: 2, marginVertical: 2, marginHorizontal: 8 }}>
+      {displayFull === true && (
+        <Column style={{ paddingHorizontal: 12, paddingVertical: 12 }}>
+          {children}
+
+          <Row style={{ justifyContent: "flex-end", marginTop: 8 }} spacing={16}>
+            {onCancel && (
+              <AppPressableOverlay backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={onCancel}>
+                <Row spacing={4} style={{ alignItems: "center" }}>
+                  <AppText>Non</AppText>
+                  <AppIcon size={20} name={"close-outline"} />
+                </Row>
+              </AppPressableOverlay>
+            )}
+            {!onCancel && <View style={{ flex: 1 }} />}
+            <AppPressableOverlay backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={onValidate}>
+              <Row spacing={4} style={{ alignItems: "center" }}>
+                <AppText>{onCancel ? "Oui" : "Valider"}</AppText>
+                <AppIcon size={20} name={"checkmark-outline"} />
+              </Row>
+            </AppPressableOverlay>
+          </Row>
+        </Column>
+      )}
+      {displayFull === false && (
+        <Animated.View exiting={animateSummary ? undefined : FadeOut} entering={FadeIn}>
+          <AppPressable onPress={onEdit}>
+            <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
+              <AppIcon name={icon} />
+              <AppText
+                style={{
+                  fontSize: 16,
+                  paddingLeft: 4,
+                  alignSelf: "center",
+                  textAlignVertical: "center"
+                }}>
+                {summary}
+              </AppText>
+              <View style={{ flex: 1 }} />
+              {onEdit && <AppIcon name={"edit-2-outline"} />}
+            </Row>
+          </AppPressable>
+        </Animated.View>
+      )}
+    </Animated.View>
+  );
+};
+
+const spaceRegExp = /\s+/g;
 export const LianeMatchDetailView = () => {
   const machine = useContext(HomeMapContext);
   const [state] = useActor(machine);
@@ -77,6 +158,7 @@ export const LianeMatchDetailView = () => {
   };
   const isReturnStep = step === 2 && !!liane.returnTime;
   const isSeatsStep = step === 1 && liane.freeSeatsCount > 1;
+  const isMessageStep = step === 4;
   const nextStep = useCallback(() => {
     setStep(firstEdit ? step + 1 : 3);
   }, [firstEdit, step]);
@@ -114,115 +196,86 @@ export const LianeMatchDetailView = () => {
         )}
 
         {(step >= 1 || !firstEdit) && (
-          <Animated.View entering={SlideInRight} style={{ backgroundColor: isSeatsStep ? AppColorPalettes.blue[100] : undefined }}>
-            {isSeatsStep && (
-              <Column style={{ paddingHorizontal: 12, paddingVertical: 12 }}>
-                <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
-                  <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Combien de places réservez vous ?</AppText>
-                </Animated.View>
-                <Animated.View entering={firstEdit ? undefined : FadeInDown}>
-                  <SeatsForm seats={seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
-                </Animated.View>
-                <Row style={{ justifyContent: "flex-end", marginTop: 8 }}>
-                  <AppPressableOverlay backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={nextStep}>
-                    <Row spacing={4} style={{ alignItems: "center" }}>
-                      <AppText>Valider</AppText>
-                      <AppIcon size={20} name={"checkmark-outline"} />
-                    </Row>
-                  </AppPressableOverlay>
-                </Row>
-              </Column>
-            )}
-            {(step > 1 || !firstEdit) && !isSeatsStep && (
-              <Animated.View exiting={firstEdit ? undefined : FadeOut} entering={FadeIn}>
-                <AppPressable onPress={() => setStep(liane.freeSeatsCount > 1 ? 1 : step)}>
-                  <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
-                    <AppIcon name={"people-outline"} />
-                    <AppText
-                      style={{
-                        fontSize: 16,
-                        paddingLeft: 4,
-                        alignSelf: "center",
-                        textAlignVertical: "center"
-                      }}>
-                      {Math.abs(seats) + " passager" + (Math.abs(seats) > 1 ? "s" : "")}
-                    </AppText>
-                  </Row>
-                </AppPressable>
-              </Animated.View>
-            )}
-          </Animated.View>
+          <StepView
+            displayFull={isSeatsStep || (step > 1 || !firstEdit ? false : null)}
+            onValidate={nextStep}
+            animateSummary={firstEdit}
+            onEdit={liane.freeSeatsCount > 1 ? () => setStep(1) : undefined}
+            summary={Math.abs(seats) + " passager" + (Math.abs(seats) > 1 ? "s" : "")}
+            icon={"people-outline"}>
+            <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
+              <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Combien de places réservez vous ?</AppText>
+            </Animated.View>
+            <Animated.View entering={firstEdit ? undefined : FadeInDown}>
+              <SeatsForm seats={seats} setSeats={setSeats} maxSeats={liane.freeSeatsCount} />
+            </Animated.View>
+          </StepView>
         )}
-        {(step > 1 || !firstEdit) && (
+
+        {/*(step > 1 || !firstEdit) && (
           <Animated.View entering={FadeIn}>
             <LineSeparator />
           </Animated.View>
-        )}
+        )*/}
 
         {(step >= 2 || !firstEdit) && !!liane.returnTime && (
-          <Animated.View entering={SlideInRight} style={{ backgroundColor: isReturnStep ? AppColorPalettes.blue[100] : undefined }}>
-            {isReturnStep && (
-              <Column style={{ paddingHorizontal: 12, paddingVertical: 12 }}>
-                <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
-                  <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }} numberOfLines={2}>
-                    Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.returnTime), formatTime)}?
-                  </AppText>
-                </Animated.View>
-
-                <Row style={{ justifyContent: "flex-end", marginTop: 8 }} spacing={16}>
-                  <AppPressableOverlay
-                    backgroundStyle={{ borderRadius: 32 }}
-                    style={{ padding: 8 }}
-                    onPress={() => {
-                      setTakeReturnTrip(false);
-                      nextStep();
-                    }}>
-                    <Row spacing={4} style={{ alignItems: "center" }}>
-                      <AppText>Non</AppText>
-                      <AppIcon size={20} name={"close-outline"} />
-                    </Row>
-                  </AppPressableOverlay>
-                  <AppPressableOverlay
-                    backgroundStyle={{ borderRadius: 32 }}
-                    style={{ padding: 8 }}
-                    onPress={() => {
-                      setTakeReturnTrip(true);
-                      nextStep();
-                    }}>
-                    <Row spacing={4} style={{ alignItems: "center" }}>
-                      <AppText>Oui</AppText>
-                      <AppIcon size={20} name={"checkmark-outline"} />
-                    </Row>
-                  </AppPressableOverlay>
-                </Row>
-              </Column>
-            )}
-            {(step > 2 || !firstEdit) && !isReturnStep && (
-              <Animated.View exiting={firstEdit ? undefined : FadeOut} entering={FadeIn}>
-                <AppPressable onPress={() => setStep(liane.returnTime ? 2 : step)}>
-                  <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
-                    <AppIcon name={"corner-down-right-outline"} />
-                    <AppText
-                      style={{
-                        fontSize: 16,
-                        paddingLeft: 4,
-                        alignSelf: "center",
-                        textAlignVertical: "center"
-                      }}>
-                      {takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.returnTime), formatTime) : "Aller simple"}
-                    </AppText>
-                  </Row>
-                </AppPressable>
-              </Animated.View>
-            )}
-          </Animated.View>
+          <StepView
+            displayFull={isReturnStep || (step > 2 || !firstEdit ? false : null)}
+            onValidate={() => {
+              setTakeReturnTrip(true);
+              nextStep();
+            }}
+            onCancel={() => {
+              setTakeReturnTrip(false);
+              nextStep();
+            }}
+            animateSummary={firstEdit}
+            onEdit={liane.returnTime ? () => setStep(2) : undefined}
+            summary={takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.returnTime), formatTime) : "Aller simple"}
+            icon={"corner-down-right-outline"}>
+            <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
+              <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }} numberOfLines={2}>
+                Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.returnTime), formatTime)}?
+              </AppText>
+            </Animated.View>
+          </StepView>
         )}
-        {(step > 2 || !firstEdit) && !!liane.returnTime && (
+
+        {(step >= 3 || !firstEdit) && (
+          <StepView
+            displayFull={isMessageStep || (step >= 3 || !firstEdit ? false : null)}
+            onValidate={() => {
+              nextStep();
+            }}
+            animateSummary={firstEdit}
+            onEdit={() => setStep(4)}
+            summary={message.length > 0 ? message.replaceAll(spaceRegExp, " ") : "Ajouter un message..."}
+            icon={message.length > 0 ? "message-square" : "message-square-outline"}>
+            <Animated.View entering={firstEdit ? undefined : FadeInUp}>
+              <AppExpandingTextInput
+                backgroundStyle={{
+                  backgroundColor: AppColorPalettes.gray[100],
+                  marginHorizontal: 4,
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4
+                }}
+                value={message}
+                onChangeText={setMessage}
+                placeholder={"Ajouter un message..."}
+                style={{
+                  fontSize: 16
+                }}
+              />
+            </Animated.View>
+          </StepView>
+        )}
+        {step === 3 && (
           <Animated.View entering={FadeIn}>
             <LineSeparator />
           </Animated.View>
         )}
-        {(step > 2 || !firstEdit) && (
+        {step === 3 && (
           <Animated.View entering={SlideInRight}>
             <Row style={{ paddingHorizontal: 24, paddingVertical: 16 }} spacing={8}>
               <AppText
@@ -246,7 +299,7 @@ export const LianeMatchDetailView = () => {
         entering={SlideInDown}
         exiting={SlideOutDown}
         style={{ paddingHorizontal: 24, position: "absolute", bottom: 4 + insets.bottom, left: 0, right: 0 }}>
-        {!userIsMember && !isReturnStep && !isSeatsStep && (
+        {!userIsMember && !isReturnStep && !isSeatsStep && !isMessageStep && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
               color={defaultTextColor(AppColors.primaryColor)}
@@ -263,7 +316,7 @@ export const LianeMatchDetailView = () => {
             />
           </Animated.View>
         )}
-        {!userIsMember && (isReturnStep || isSeatsStep) && (
+        {!userIsMember && (isReturnStep || isSeatsStep || isMessageStep) && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
               color={"black"}

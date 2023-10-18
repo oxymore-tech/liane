@@ -249,6 +249,7 @@ export const ChatScreen = () => {
 
             <AppExpandingTextInput
               multiline={true}
+              backgroundStyle={{ backgroundColor: AppColors.white, borderRadius: 16, padding: 16 }}
               trailing={
                 !isSending ? (
                   sendButton

@@ -32,8 +32,8 @@ const ListItem = ({
   descriptionComponent,
   onPress
 }: {
-  leadingComponent: JSX.Element;
-  descriptionComponent: JSX.Element;
+  leadingComponent: React.ReactElement;
+  descriptionComponent: React.ReactElement;
   onPress: () => void;
 }) => {
   return (
@@ -66,8 +66,8 @@ export const Item = ({
   onPress,
   disabled
 }: {
-  leadingComponent: JSX.Element;
-  descriptionComponent: JSX.Element;
+  leadingComponent: React.ReactElement;
+  descriptionComponent: React.ReactElement;
   onPress: () => void;
   disabled: boolean;
 }) => {

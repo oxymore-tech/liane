@@ -9,11 +9,11 @@ export const PassengerLocationMarker = (props: { user: User; defaultLocation: La
   AppLogger.debug("GEOLOC", `${props.user.pseudo}:`, lastLocUpdate);
   const geoloc = useTripGeolocation();
   if (!geoloc) {
-    return <LianeMemberDisplay location={props.defaultLocation} size={40} user={props.user} minZoom={6} showLocationPin={false} />;
+    return null; //<LianeMemberDisplay location={props.defaultLocation} size={40} user={props.user} minZoom={6} showLocationPin={false} />;
   }
 
   if (!lastLocUpdate || !lastLocUpdate.location) {
-    return <LianeMemberDisplay location={props.defaultLocation} size={40} user={props.user} minZoom={6} active={false} showLocationPin={false} />;
+    return null; //<LianeMemberDisplay location={props.defaultLocation} size={40} user={props.user} minZoom={6} active={false} showLocationPin={false} />;
   }
-  return <LianeMemberDisplay location={lastLocUpdate.location} size={40} user={props.user} />;
+  return <LianeMemberDisplay location={lastLocUpdate.location} size={32} user={props.user} />;
 };

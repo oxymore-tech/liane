@@ -5,8 +5,8 @@ import { Row } from "@/components/base/AppLayout";
 import { AppStyles } from "@/theme/styles";
 
 export interface AppTextInputProps extends TextInputProps {
-  leading?: JSX.Element;
-  trailing?: JSX.Element;
+  leading?: React.ReactElement;
+  trailing?: React.ReactElement;
   placeholder?: string;
   textColor?: string;
   placeholderTextColor?: string;

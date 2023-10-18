@@ -158,7 +158,7 @@ export const WheelPicker: React.FC<Props> = ({
     }
   }, [selectedIndex]);
 
-  const renderItem = useCallback<({ item, index }: { item: any; index: any }) => JSX.Element>(
+  const renderItem = useCallback<({ item, index }: { item: any; index: any }) => React.ReactElement>(
     ({ item: option, index }) => (
       <WheelPickerItem
         key={`option-${index}`}

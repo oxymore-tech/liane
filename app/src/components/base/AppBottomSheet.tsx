@@ -18,7 +18,6 @@ export interface BottomSheetProps extends PropsWithChildren {
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
   backgroundStyle?: StyleProp<any>;
-  onExpand?: (isExpanded: boolean) => void; //TODO why?
 }
 
 export type BottomSheetRefProps = {
@@ -43,7 +42,7 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0, onExpand = () => {} }, ref) => {
+  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
@@ -71,7 +70,6 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
 
     const notifyExpanded = (v: boolean) => {
       expanded.next(v);
-      onExpand(isExpanded()); //TODO why?
     };
 
     const updateCurrentStop = (index: number) => {

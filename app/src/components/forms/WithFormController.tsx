@@ -14,8 +14,8 @@ export interface BaseFormComponentProps<T> {
   fieldState: ControllerFieldState;
 }
 
-export type FormComponent<T, TProps> = (props: TProps & FormProps<T>) => JSX.Element;
-export type BaseFormComponent<T, TProps> = (props: TProps & BaseFormComponentProps<T>) => JSX.Element;
+export type FormComponent<T, TProps> = (props: TProps & FormProps<T>) => React.ReactElement;
+export type BaseFormComponent<T, TProps> = (props: TProps & BaseFormComponentProps<T>) => React.ReactElement;
 
 export const WithFormController =
   <T extends unknown>(WrappedForm: BaseFormComponent<T, unknown>): FormComponent<T, unknown> =>

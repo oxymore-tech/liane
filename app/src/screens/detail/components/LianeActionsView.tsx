@@ -1,6 +1,6 @@
 import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
-import { Alert, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { DayOfTheWeekFlag, FullUser, getPoint, Liane, LianeMatch } from "@/api";
 import { NavigationParamList, useAppNavigation } from "@/api/navigation";
@@ -16,13 +16,16 @@ import { ActionItem } from "@/components/ActionItem";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
-import { AppColors, ContextualColors } from "@/theme/colors";
+import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
 import { IconName } from "@/components/base/AppIcon";
 import { APP_ENV } from "@env";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
+import { AppRoundedButton } from "@/components/base/AppRoundedButton";
+import { LianeStatusView } from "@/components/trip/LianeStatusView";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
@@ -118,27 +121,35 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   }, [lianeHasRecurrence]);
 
   return (
-    <Column>
-      <Row style={{ justifyContent: "space-between" }}>
-        <ActionItem
-          disabled={!currentUserIsDriver || liane.state !== "NotStarted"}
+    <Column style={{ marginTop: 16 }}>
+      {!(!currentUserIsDriver || liane.state !== "NotStarted") && (
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => setEditOptionsModalVisible(true)}
-          iconName={"edit-2"}
+          backgroundColor={AppColors.primaryColor}
           text={"Modifier la liane"}
         />
-
-        {
-          //currentUserIsMember && (liane.state === "Finished" || liane.state === "Started") &&
-          <ActionItem
-            onPress={() => {
-              // TODO
-            }}
-            disabled={true}
-            iconName={"alert-circle-outline"}
-            text={"Assistance"}
-          />
-        }
-      </Row>
+      )}
+      {(liane.state === "Started" || (liane.state === "NotStarted" && !currentUserIsDriver)) && (
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
+          onPress={() => {
+            //TODO
+          }}
+          backgroundColor={ContextualColors.redAlert.bg}
+          text={"Annuler ce trajet"}
+        />
+      )}
+      {["Finished", "Archived", "Canceled"].includes(liane.state) && (
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
+          onPress={() => {
+            //TODO
+          }}
+          backgroundColor={AppColors.primaryColor}
+          text={"Relancer la liane"}
+        />
+      )}
 
       <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={liane} />
 

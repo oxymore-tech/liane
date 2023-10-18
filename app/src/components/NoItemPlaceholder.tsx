@@ -7,7 +7,7 @@ import { StyleSheet } from "react-native";
 import { AppColorPalettes } from "@/theme/colors";
 
 export interface NoItemPlaceholderProps {
-  action: JSX.Element;
+  action: React.ReactElement;
 }
 export const NoItemPlaceholder = ({ action }: NoItemPlaceholderProps) => {
   return (

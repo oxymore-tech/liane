@@ -142,49 +142,34 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         </View>
       </View>
 
-      <Row style={styles.infoRowContainer} spacing={8}>
-        <Row style={AppStyles.center}>
-          {item.state === "Finished" && (
-            <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: item })}>
-              <Row style={styles.validationContainer} spacing={8}>
-                <AppText style={styles.validationText}>Valider</AppText>
-              </Row>
-            </Pressable>
-          )}
-          {!["Finished", "Archived", "Canceled"].includes(item.state) ? (
-            <GeolocationSwitch liane={item} />
-          ) : (
-            <TouchableOpacity onPress={() => relaunchLiane(item, driver)}>
-              <Row style={styles.validationContainer} spacing={8}>
-                <AppText style={styles.validationText}>Relancer</AppText>
-              </Row>
-            </TouchableOpacity>
-          )}
-        </Row>
+      {!["Finished", "Archived", "Canceled"].includes(item.state) && (
+        <Row style={styles.infoRowContainer} spacing={8}>
+          <AppText>TODO Geoloc status</AppText>
 
-        <Row style={styles.statusRowContainer} spacing={8}>
-          {["NotStarted", "Started"].includes(item.state) && (
-            <Row style={{ position: "absolute", right: 42 }}>
-              {item.members
-                .filter(m => m.user.id !== driver.id)
-                .map((m, i) => (
-                  <View
-                    key={m.user.id}
-                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
-                    <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                  </View>
-                ))}
-            </Row>
-          )}
+          <Row style={styles.statusRowContainer} spacing={8}>
+            {["NotStarted", "Started"].includes(item.state) && (
+              <Row style={{ position: "absolute", right: 42 }}>
+                {item.members
+                  .filter(m => m.user.id !== driver.id)
+                  .map((m, i) => (
+                    <View
+                      key={m.user.id}
+                      style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
+                      <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
+                    </View>
+                  ))}
+              </Row>
+            )}
 
-          {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
-            <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
-              <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
-              {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
-            </Pressable>
-          )}
+            {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
+              <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
+                <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
+                {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
+              </Pressable>
+            )}
+          </Row>
         </Row>
-      </Row>
+      )}
     </Pressable>
   );
 };

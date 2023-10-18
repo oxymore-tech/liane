@@ -5,8 +5,7 @@ import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, B
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
-import { useLianeStatus, getTotalDistance, getTotalDuration, getTripFromMatch } from "@/components/trip/trip";
-import { formatDuration } from "@/util/datetime";
+import { useLianeStatus, getTotalDistance, getTripFromMatch, getTripFromLiane } from "@/components/trip/trip";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, TouchableOpacity } from "react-native-gesture-handler";
@@ -24,15 +23,15 @@ import { InfoItem } from "@/screens/detail/components/InfoItem";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
 import { AppIcon } from "@/components/base/AppIcon";
-import { LianeView } from "@/components/trip/LianeView";
 import { UserPicture } from "@/components/UserPicture";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
-import { formatDate, formatDateTime, formatMonthDay } from "@/api/i18n";
+import { formatMonthDay } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
+import { WayPointsView } from "@/components/trip/WayPointsView";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -91,7 +90,6 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   const { top: insetsTop } = useSafeAreaInsets();
 
   const [bSheetTop, setBSheetTop] = useState<number>(0.7 * height);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const tripMatch = useMemo(() => (match ? getTripFromMatch(match) : undefined), [match]);
 
@@ -160,11 +158,10 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             backgroundColor: AppColors.lightGrayBackground,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24
-          }}
-          onExpand={setIsExpanded}>
+          }}>
           {match && (
             <AppBottomSheetScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
-              <LianeDetailView liane={match} request={request?.id} isExpanded={isExpanded} />
+              <LianeDetailView liane={match} request={request?.id} />
             </AppBottomSheetScrollView>
           )}
 
@@ -200,20 +197,53 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
 
 export const LianeWithDateView = (props: { liane: Liane }) => {
   const date = capitalize(formatMonthDay(new Date(props.liane.departureTime)));
+  const { user } = useContext(AppContext);
+  const trip = useMemo(() => getTripFromLiane(props.liane, user!.id!), [props.liane, user]);
+  const passengers = useMemo(
+    () => props.liane.members.filter(m => m.user.id !== props.liane.driver.user && user?.id !== m.user.id),
+    [props.liane, user?.id]
+  );
+
   return (
-    <Column spacing={4}>
+    <Column spacing={4} style={styles.flex}>
       <AppText style={styles.date}>{date}</AppText>
-      <View style={styles.lianeContainer}>
-        <LianeView liane={props.liane} />
-      </View>
+      <Row spacing={8} style={styles.flex}>
+        <WayPointsView {...trip} />
+        <View style={{ flexGrow: 1, flexShrink: 1 }} />
+        <Column style={{ justifyContent: "space-evenly", flexShrink: 0 }}>
+          {trip.wayPoints.map(w => (
+            <Row key={w.rallyingPoint.id} style={{ minHeight: 32, alignItems: "center" }}>
+              {passengers
+                .filter(m => m.user.id !== props.liane.driver.user && m.from === w.rallyingPoint.id)
+                .map(m => (
+                  <View key={m.user.id}>
+                    <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
+                    <View style={{ position: "absolute", bottom: -2, left: -2, backgroundColor: AppColorPalettes.gray[200], borderRadius: 20 }}>
+                      <AppIcon name={"arrow-upward"} color={AppColors.primaryColor} size={18} />
+                    </View>
+                  </View>
+                ))}
+              {passengers
+                .filter(m => m.user.id !== props.liane.driver.user && m.to === w.rallyingPoint.id)
+                .map(m => (
+                  <View key={m.user.id}>
+                    <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
+                    <View style={{ position: "absolute", bottom: -2, left: -2, backgroundColor: AppColorPalettes.gray[200], borderRadius: 20 }}>
+                      <AppIcon name={"arrow-downward"} color={AppColorPalettes.gray[800]} size={18} />
+                    </View>
+                  </View>
+                ))}
+            </Row>
+          ))}
+        </Column>
+      </Row>
     </Column>
   );
 };
 
-const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: LianeMatch; isExpanded: boolean; request?: string | undefined }) => {
+const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
-  const { navigation } = useAppNavigation();
-  const tripDuration = formatDuration(getTotalDuration(currentTrip));
+
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
@@ -222,47 +252,16 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
     <Column style={styles.bottomContainer}>
       <View>
         <Row style={styles.driverContainer}>
-          <Row style={{ marginLeft: isExpanded ? 42 : 0 }} spacing={8}>
+          <Row spacing={8}>
             <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
             <AppText style={styles.driverText}>{driver.id === liane.liane?.id ? "Moi" : driver.pseudo}</AppText>
           </Row>
-
-          {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <GeolocationSwitch liane={liane.liane} />}
         </Row>
         <LianeWithDateView liane={liane.liane} />
       </View>
 
-      <Row style={styles.statusRowContainer} spacing={8}>
-        {["NotStarted", "Started"].includes(liane.liane.state) && (
-          <Row style={{ position: "relative", left: 12 * (liane.liane.members.length - 1) }}>
-            {liane.liane.members
-              .filter(m => m.user.id !== driver.id)
-              .map((m, i) => (
-                <View key={m.user.id} style={{ position: "relative", left: -12 * (i + 1) }}>
-                  <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                </View>
-              ))}
-          </Row>
-        )}
-      </Row>
-
       <Row style={styles.statusLianeContainer}>
-        {liane.liane.state === "Finished" && (
-          <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: liane.liane })}>
-            <Row style={styles.validationContainer} spacing={8}>
-              <AppText style={styles.validationText}>Valider</AppText>
-            </Row>
-          </Pressable>
-        )}
-        {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) ? (
-          <LianeStatusView liane={liane.liane} />
-        ) : (
-          <TouchableOpacity onPress={() => {}}>
-            <Row style={styles.validationContainer} spacing={8}>
-              <AppText style={styles.validationText}>Relancer</AppText>
-            </Row>
-          </TouchableOpacity>
-        )}
+        {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <LianeStatusView liane={liane.liane} />}
       </Row>
 
       <Row style={styles.resumeContainer} spacing={4}>
@@ -281,7 +280,7 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
             <InfoItem icon={"twisting-arrow"} value={tripDistance} />
           </Row>
           <Row>
-            <InfoItem icon={"clock-outline"} value={tripDuration + " (Estimée)"} />
+            <InfoItem icon={"seat"} value={"Reste " + liane.freeSeatsCount + " place" + (liane.freeSeatsCount > 1 ? "s" : "")} />
           </Row>
         </Column>
 
@@ -308,7 +307,7 @@ const LianeDetailView = ({ liane, isExpanded, request = undefined }: { liane: Li
           </Row>
         </Column>
       </Row>
-
+      {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <GeolocationSwitch liane={liane.liane} />}
       <LianeActionsView match={liane} request={request} />
     </Column>
   );
@@ -353,9 +352,8 @@ const styles = StyleSheet.create({
   statusLianeContainer: {
     paddingVertical: 8
   },
-  lianeContainer: {
-    flexGrow: 1,
-    marginRight: 40
+  flex: {
+    flex: 1
   },
   chatButton: {
     alignItems: "flex-end",

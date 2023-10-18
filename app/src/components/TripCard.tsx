@@ -4,9 +4,9 @@ import React from "react";
 import { Row } from "@/components/base/AppLayout";
 
 export interface TripCardProps {
-  header: JSX.Element;
+  header: React.ReactElement;
 
-  content: JSX.Element;
+  content: React.ReactElement;
 
   border?: boolean;
 }

@@ -42,7 +42,7 @@ export const RallyingPointField = forwardRef(
       editable?: boolean;
       onFocus?: () => void;
       showTrailing: boolean;
-      icon: JSX.Element;
+      icon: React.ReactElement;
       placeholder: string;
     },
     ref
