@@ -34,7 +34,7 @@ public sealed record LianeMember(
   Ref<RallyingPoint> To,
   int SeatCount = -1, // Defaults to a passenger seat
   Feedback? Feedback = null,
-  GeolocationLevel? GeolocationLevel = GeolocationLevel.None
+  GeolocationLevel GeolocationLevel = GeolocationLevel.None
 ) : IResourceMember;
 
 public sealed record Driver
