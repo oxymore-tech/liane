@@ -27,8 +27,7 @@
       "feedback": {
         "canceled": false,
         "comment": null
-      },
-      "takesReturnTrip": null
+      }
     },
     {
       "user": {
@@ -37,8 +36,7 @@
       "from": "custom:001",
       "to": "mairie:31324",
       "seatCount": -1,
-      "feedback": null,
-      "takesReturnTrip": null
+      "feedback": null
     }
   ],
   "driver": {
