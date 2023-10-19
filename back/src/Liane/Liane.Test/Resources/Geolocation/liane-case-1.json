@@ -24,7 +24,6 @@
       "from": "custom:001",
       "to": "mairie:31427",
       "seatCount": 3,
-      "delay": null,
       "feedback": {
         "canceled": false,
         "comment": null
@@ -38,7 +37,6 @@
       "from": "custom:001",
       "to": "mairie:31324",
       "seatCount": -1,
-      "delay": null,
       "feedback": null,
       "takesReturnTrip": null
     }
