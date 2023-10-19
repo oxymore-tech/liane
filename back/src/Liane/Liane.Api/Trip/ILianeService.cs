@@ -26,5 +26,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<ImmutableList<Liane>> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Api.User.User>? owner = null, int daysAhead = 7);
   Task<Liane> GetForCurrentUser(Ref<Liane> l, Ref<Api.User.User>? user = null);
   Task<FeatureCollection> GetGeolocationPings(Ref<Liane> liane);
+  Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Liane> liane);
   Task ForceSyncDatabase();
 }

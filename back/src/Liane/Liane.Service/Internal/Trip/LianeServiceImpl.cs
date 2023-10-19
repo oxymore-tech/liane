@@ -736,6 +736,14 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     return new FeatureCollection(features);
   }
 
+  public async Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Api.Trip.Liane> liane)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    var features = await GetGeolocationPings(liane);
+    var userFeatures = features.Features.Where(f => (string)f.Properties["user"] == userId);
+    return new FeatureCollection(userFeatures.ToList());
+  }
+  
   public async Task ForceSyncDatabase()
   {
     var results = await Mongo.GetCollection<LianeDb>()

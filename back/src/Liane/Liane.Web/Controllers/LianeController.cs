@@ -94,10 +94,9 @@ public sealed class LianeController : ControllerBase
 
   
   [HttpGet("{id}/geolocation")]
-  [RequiresAdminAuth]
   public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id)
   {
-    return lianeService.GetGeolocationPings(id);
+    return currentContext.CurrentUser().IsAdmin ? lianeService.GetGeolocationPings(id) : lianeService.GetGeolocationPingsForCurrentUser(id);
   }
   
   [HttpPost("sync")]
