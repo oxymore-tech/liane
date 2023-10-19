@@ -99,6 +99,13 @@ public sealed class LianeController : ControllerBase
     return currentContext.CurrentUser().IsAdmin ? lianeService.GetGeolocationPings(id) : lianeService.GetGeolocationPingsForCurrentUser(id);
   }
   
+  [HttpPatch("{id}/geolocation")]
+  public async Task<IActionResult> UpdateGeolocationSetting([FromRoute] string id, [FromBody] GeolocationLevel level)
+  {
+    await lianeService.UpdateGeolocationSetting(id, level);
+    return NoContent();
+  }
+  
   [HttpPost("sync")]
   [RequiresAdminAuth]
   public Task ForceSyncDatabase()

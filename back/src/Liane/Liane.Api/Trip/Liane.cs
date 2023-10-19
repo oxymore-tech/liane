@@ -16,6 +16,12 @@ public enum LianeState
   Canceled
 }
 
+public enum GeolocationLevel
+{
+  None,
+  Hidden,
+  Shared
+}
 public sealed record Feedback(
   bool Canceled = false,
   string? Comment = null
@@ -27,9 +33,8 @@ public sealed record LianeMember(
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   int SeatCount = -1, // Defaults to a passenger seat
-  int? Delay = null, // TODO remove unused
   Feedback? Feedback = null,
-  bool? TakesReturnTrip = null  //TODO remove when migration ok
+  GeolocationLevel? GeolocationLevel = GeolocationLevel.None
 ) : IResourceMember;
 
 public sealed record Driver

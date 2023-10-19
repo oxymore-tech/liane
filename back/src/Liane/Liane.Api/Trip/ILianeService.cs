@@ -28,4 +28,5 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<FeatureCollection> GetGeolocationPings(Ref<Liane> liane);
   Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Liane> liane);
   Task ForceSyncDatabase();
+  Task UpdateGeolocationSetting(Ref<Liane> liane, GeolocationLevel level);
 }

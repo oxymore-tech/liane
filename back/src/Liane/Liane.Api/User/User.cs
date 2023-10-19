@@ -18,7 +18,8 @@ public record User(
   DateTime? CreatedAt,
   string Pseudo,
   Gender Gender,
-  string? PictureUrl
+  string? PictureUrl,
+  int TripsCount
 ) : IIdentity;
 
 public sealed record FullUser(
@@ -28,9 +29,10 @@ public sealed record FullUser(
   string FirstName,
   string LastName,
   Gender Gender,
+  int TripsCount = 0,
   string? PictureUrl = null,
   string? PushToken = null
-) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl)
+) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl, TripsCount)
 {
   public static string GetPseudo(string? firstName, string? lastName)
   {

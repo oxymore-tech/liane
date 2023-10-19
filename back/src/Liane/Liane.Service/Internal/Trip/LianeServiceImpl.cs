@@ -751,4 +751,19 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .SelectAsync(MapEntity);
     await postgisService.SyncGeometries(results);
   }
+
+  public async Task UpdateGeolocationSetting(Ref<Api.Trip.Liane> liane, GeolocationLevel level)
+  {
+    var resolved = await Get(liane);
+    var sender =
+      currentContext.CurrentUser().Id;
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(
+        l => l.Id == liane,
+        Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == sender ? m with { GeolocationLevel = level } : m)),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
+
+    await PushUpdate(updated);
+  }
 }
