@@ -8,14 +8,14 @@ import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from
 import { useLianeStatus, getTotalDistance, getTripFromMatch, getTripFromLiane } from "@/components/trip/trip";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
-import { GestureHandlerRootView, TouchableOpacity } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
 import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
-import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
+import { TripGeolocationProvider, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { DriverLocationMarker } from "@/screens/detail/components/DriverLocationMarker";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
@@ -32,6 +32,7 @@ import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch
 import { formatMonthDay } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { WayPointsView } from "@/components/trip/WayPointsView";
+import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -146,6 +147,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           })}
 
           {driver && tripMatch && <DriverLocationMarker user={driver} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
+          {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
         </AppMapView>
 
         <AppBottomSheet
@@ -198,20 +200,21 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
 export const LianeWithDateView = (props: { liane: Liane }) => {
   const date = capitalize(formatMonthDay(new Date(props.liane.departureTime)));
   const { user } = useContext(AppContext);
-  const trip = useMemo(() => getTripFromLiane(props.liane, user!.id!), [props.liane, user]);
+  const { wayPoints } = useMemo(() => getTripFromLiane(props.liane, user!.id!), [props.liane, user]);
   const passengers = useMemo(
     () => props.liane.members.filter(m => m.user.id !== props.liane.driver.user && user?.id !== m.user.id),
     [props.liane, user?.id]
   );
-
+  const lastDriverLocUpdate = useMemberTripGeolocation(props.liane.driver.user);
+  const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
   return (
     <Column spacing={4} style={styles.flex}>
       <AppText style={styles.date}>{date}</AppText>
       <Row spacing={8} style={styles.flex}>
-        <WayPointsView {...trip} />
+        <WayPointsView wayPoints={wayPoints} nextWayPoint={nextWayPoint} />
         <View style={{ flexGrow: 1, flexShrink: 1 }} />
         <Column style={{ justifyContent: "space-evenly", flexShrink: 0 }}>
-          {trip.wayPoints.map(w => (
+          {wayPoints.map(w => (
             <Row key={w.rallyingPoint.id} style={{ minHeight: 32, alignItems: "center" }}>
               {passengers
                 .filter(m => m.user.id !== props.liane.driver.user && m.from === w.rallyingPoint.id)

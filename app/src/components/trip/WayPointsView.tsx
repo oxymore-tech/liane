@@ -4,15 +4,18 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { UTCDateTime, WayPoint } from "@/api";
+import { RallyingPoint, Ref, WayPoint } from "@/api";
 import { AppIcon } from "@/components/base/AppIcon";
+import { addSeconds } from "@/util/datetime";
 
 export interface WayPointsViewProps {
-  departureTime: UTCDateTime;
   wayPoints: WayPoint[];
-  departureIndex?: number;
-  arrivalIndex?: number;
-  showSegmentOnly?: boolean;
+  nextWayPoint?:
+    | Readonly<{
+        id: Ref<RallyingPoint>;
+        delay: number;
+      }>
+    | undefined;
 }
 
 // TODO share state with detail view
@@ -29,11 +32,52 @@ const extractData = (wayPoints: WayPoint[]) => {
   };
 };
 
-export const WayPointsView = ({ wayPoints, departureIndex, arrivalIndex, showSegmentOnly = false }: WayPointsViewProps) => {
-  if (showSegmentOnly) {
-    wayPoints = wayPoints.slice(departureIndex ?? 0, arrivalIndex ?? wayPoints.length);
-  }
+const WayPointView = ({
+  wayPoint,
+  type,
+  isPast = false,
+  delay
+}: {
+  wayPoint: WayPoint;
+  type: "pickup" | "deposit" | "step";
+  isPast?: boolean;
+  delay?: number | undefined;
+}) => {
+  return (
+    <Row style={{ alignItems: "center" }} spacing={8}>
+      {type === "step" && (
+        <View style={{ backgroundColor: isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
+      )}
+      {type !== "step" && (
+        <AppIcon
+          name={type === "pickup" ? "pin" : "flag"}
+          color={isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor}
+          size={18}
+          style={{ width: 18 }}
+        />
+      )}
+      {(!delay || isPast) && (
+        <TimeView style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]} value={wayPoint.eta} />
+      )}
+      {!!delay && !isPast && (
+        <Column>
+          <TimeView
+            style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
+            value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
+          />
+          <View style={{ height: 8 }} />
+          <TimeView style={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }} value={wayPoint.eta} />
+        </Column>
+      )}
+      <View style={{ flexGrow: 1, flexShrink: 1 }}>
+        <AppText style={[styles.mainWayPointCity]}>{wayPoint.rallyingPoint.city}</AppText>
+        <AppText style={[styles.mainWayPointLabel]}>{wayPoint.rallyingPoint.label}</AppText>
+      </View>
+    </Row>
+  );
+};
 
+export const WayPointsView = ({ wayPoints, nextWayPoint }: WayPointsViewProps) => {
   const { to, from, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
   /* Open in map app
  () => showLocation({
@@ -47,36 +91,20 @@ export const WayPointsView = ({ wayPoints, departureIndex, arrivalIndex, showSeg
               directionsMode: "walk"
             })
  */
+  const nextWayPointIndex = nextWayPoint ? wayPoints.findIndex(w => w.rallyingPoint.id === nextWayPoint.id) : undefined;
   return (
     <Column style={{ flexGrow: 1, flexShrink: 1 }}>
-      <Row style={{ alignItems: "center" }} spacing={8}>
-        <AppIcon name={"pin"} color={AppColors.primaryColor} size={18} style={{ width: 18 }} />
-
-        <TimeView style={styles.mainWayPointTime} value={from.eta} />
-        <View style={{ flexGrow: 1, flexShrink: 1 }}>
-          <AppText style={[styles.mainWayPointCity]}>{from.rallyingPoint.city}</AppText>
-          <AppText style={[styles.mainWayPointLabel]}>{from.rallyingPoint.label}</AppText>
-        </View>
-      </Row>
-      {steps.map(s => (
-        <Row key={s.rallyingPoint.id} style={{ alignItems: "center" }} spacing={8}>
-          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
-
-          <TimeView style={styles.mainWayPointTime} value={s.eta} />
-          <View style={{ flexGrow: 1, flexShrink: 1 }}>
-            <AppText style={[styles.mainWayPointCity]}>{s.rallyingPoint.city}</AppText>
-            <AppText style={[styles.mainWayPointLabel]}>{s.rallyingPoint.label}</AppText>
-          </View>
-        </Row>
+      <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={nextWayPoint?.delay} />
+      {steps.map((s, i) => (
+        <WayPointView
+          wayPoint={s}
+          type={"step"}
+          key={s.rallyingPoint.id}
+          delay={nextWayPoint?.delay}
+          isPast={!!nextWayPointIndex && nextWayPointIndex > i + 1}
+        />
       ))}
-      <Row style={{ alignItems: "center" }} spacing={8}>
-        <AppIcon name={"flag"} color={AppColors.primaryColor} size={18} style={{ width: 18 }} />
-        <TimeView style={styles.mainWayPointTime} value={to.eta} />
-        <View style={{ flexGrow: 1, flexShrink: 1 }}>
-          <AppText style={[styles.mainWayPointCity]}>{to.rallyingPoint.city}</AppText>
-          <AppText style={[styles.mainWayPointLabel]}>{to.rallyingPoint.label}</AppText>
-        </View>
-      </Row>
+      <WayPointView wayPoint={to} type={"deposit"} delay={nextWayPoint?.delay} />
     </Column>
   );
 };

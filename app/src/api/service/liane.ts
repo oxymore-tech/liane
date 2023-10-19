@@ -11,7 +11,8 @@ import {
   LianeUpdate,
   DayOfTheWeekFlag,
   LianeRecurrence,
-  LianeState
+  LianeState,
+  GeolocationLevel
 } from "@/api";
 import { get, postAs, del, patch, patchAs } from "@/api/http";
 import { JoinRequest, MemberPing } from "@/api/event";
@@ -21,6 +22,7 @@ import { cancelReminder, createReminder } from "@/api/service/notification";
 import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
+import { FeatureCollection } from "geojson";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
@@ -45,27 +47,22 @@ export interface LianeService {
   deleteJoinRequest(id: string): Promise<void>;
   deleteRecurrence(id: string): Promise<void>;
   setTracked(id: string, track: boolean): Promise<void>;
-  getTracked(): Promise<string[]>;
+  getProof(id: string): Promise<FeatureCollection>;
 }
 export class LianeServiceClient implements LianeService {
   async setTracked(id: string, track: boolean): Promise<void> {
-    const trackedLianes = new Set(await retrieveAsync<string[]>("tracked", []));
-    if (track) {
-      trackedLianes.add(id);
-    } else {
-      trackedLianes.delete(id);
-    }
-    await storeAsync("tracked", [...trackedLianes]);
+    const level: GeolocationLevel = track ? "Shared" : "None";
+    await patch(`/liane/${id}/geolocation`, { body: level });
   }
 
-  async getTracked(): Promise<string[]> {
-    return (await retrieveAsync<string[]>("tracked", []))!;
-  }
   // GET
   async get(id: string): Promise<Liane> {
     return await get<Liane>(`/liane/${id}`);
   }
 
+  async getProof(id: string): Promise<FeatureCollection> {
+    return await get<FeatureCollection>(`/liane/${id}/geolocation`);
+  }
   async list(
     states: LianeState[] = ["NotStarted", "Started"],
     cursor: string | undefined = undefined,
@@ -180,7 +177,10 @@ export class LianeServiceClient implements LianeService {
     const user = await getCurrentUser();
     local = local.filter(l => new Date(l.departureTime).getTime() > now);
     const online = lianes
-      .map(l => ({ ...l, departureTime: getTripFromLiane(l, user!.id!).departureTime }))
+      .map(l => {
+        const trip = getTripFromLiane(l, user!.id!);
+        return { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
+      })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
 
     const { added, removed, stored } = sync(

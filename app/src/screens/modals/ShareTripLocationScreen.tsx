@@ -12,7 +12,7 @@ import { AppText } from "@/components/base/AppText";
 import { formatMonthDay, formatTime } from "@/api/i18n";
 import { ActivityIndicator, Alert, Linking, Platform, View } from "react-native";
 import { AppButton } from "@/components/base/AppButton";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { checkLocationPingsPermissions, hasLocationPermission, startPositionTracking } from "@/api/service/location";
 import { createReminder } from "@/api/service/notification";
@@ -110,14 +110,6 @@ export const ShareTripLocationScreen = WithFullscreenModal(
               icon={"play-circle-outline"}
               color={AppColors.primaryColor}
               onPress={startGeoloc}
-              kind={"circular"}
-            />
-            <AppButton
-              title={"Décaler le départ"}
-              icon={"clock-outline"}
-              color={AppColorPalettes.gray[300]}
-              foregroundColor={defaultTextColor(AppColors.white)}
-              onPress={() => setTimePickerVisible(true)}
               kind={"circular"}
             />
           </Column>

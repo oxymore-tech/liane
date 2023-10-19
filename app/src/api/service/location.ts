@@ -377,8 +377,8 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
           // Enable precise tracking
           switchTrackingMode(true);
         } else if (nearWayPointIndex === trip.length - 1) {
-          AppLogger.info("GEOPINGS", "Reached destination. Tracking will stop in 5 minutes.");
-          sleep(5 * 60 * 1000).then(() => {
+          AppLogger.info("GEOPINGS", "Reached destination. Tracking will stop in 1 minute.");
+          sleep(60 * 1000).then(() => {
             AppLogger.info("GEOPINGS", "Done!");
             stopTracking();
           });

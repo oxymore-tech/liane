@@ -7,6 +7,6 @@ export interface JoinRequestSegmentOverviewProps {
 }
 
 export const JoinRequestSegmentOverview = (props: JoinRequestSegmentOverviewProps) => {
-  const { wayPoints, departureTime } = getTripFromJoinRequest(props.request);
-  return <WayPointsView wayPoints={wayPoints} departureTime={departureTime} />;
+  const { wayPoints } = getTripFromJoinRequest(props.request);
+  return <WayPointsView wayPoints={wayPoints} />;
 };

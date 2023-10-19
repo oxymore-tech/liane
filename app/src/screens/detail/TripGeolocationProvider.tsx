@@ -15,7 +15,7 @@ export interface TripGeolocation {
 const TripGeolocationContext = createContext<TripGeolocation | undefined>();
 export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & PropsWithChildren) => {
   const [geolocRunning, setGeolocRunning] = useState<boolean | undefined>(undefined);
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const [observables, setObservables] = useState<{ [k: string]: Observable<TrackedMemberLocation | null> }>({});
   const isFocused = useIsFocused();
   const lianeStatus = useLianeStatus(liane);
@@ -33,13 +33,18 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   }, []);
 
   useEffect(() => {
-    const subjects: { [k: string]: Subject<TrackedMemberLocation | null> } = {};
-    for (let m of liane.members) {
-      subjects[m.user.id!] = new BehaviorSubject<TrackedMemberLocation | null>(null);
+    if (!geolocRunning) {
+      setObservables({});
+      return;
     }
-    const subscriptions = liane.members.map(member =>
-      services.realTimeHub.subscribeToPosition(liane.id!, member.user.id!, l => {
-        subjects[member.user.id!].next(l);
+    const members = liane.driver.user === user!.id ? liane.members.map(m => m.user.id!) : [liane.driver.user];
+    const subjects: { [k: string]: Subject<TrackedMemberLocation | null> } = {};
+    for (let m of members) {
+      subjects[m] = new BehaviorSubject<TrackedMemberLocation | null>(null);
+    }
+    const subscriptions = members.map(member =>
+      services.realTimeHub.subscribeToPosition(liane.id!, member, l => {
+        subjects[member].next(l);
       })
     );
     setObservables(subjects);
@@ -50,7 +55,7 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
         })
       );
     };
-  }, [liane, services.realTimeHub]);
+  }, [user?.id, liane, services.realTimeHub, geolocRunning, user]);
 
   if (geolocRunning === undefined) {
     return null;

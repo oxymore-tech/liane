@@ -106,13 +106,13 @@ class LocationService : Service() {
             if (!preciseTrackingMode) startTracking(true)
             else if (closeToWayPointIndex == wayPoints.lastIndex) {
               // Stop tracking
-              Log.d(LogTag, "Reached destination. Service will stop in 5 minutes.")
+              Log.d(LogTag, "Reached destination. Service will stop in 1 minute.")
               Timer().schedule(object : TimerTask() {
                 override fun run() {
                   stopSelf()
                   Log.w(LogTag, "Service stopped.")
                 }
-              }, 5*60*100)
+              }, 60*1000)
               stopSelf()
             }
           } else if (preciseTrackingMode) {

@@ -15,7 +15,7 @@ export const OfflineWarning = () => {
   }
   const isReconnecting = status === "reconnecting";
   return (
-    <Animated.View style={{ position: "absolute", bottom: 96, left: 24, right: 24 }} entering={SlideInDown}>
+    <Animated.View style={{ position: "absolute", bottom: 60, left: 24, right: 24 }} entering={SlideInDown}>
       <Row spacing={16} style={{ borderRadius: 8, backgroundColor: ContextualColors.redAlert.bg, padding: 16, alignItems: "center" }}>
         <AppIcon name={"wifi-off-outline"} color={AppColors.white} />
         <AppText style={{ fontWeight: "bold", color: AppColors.white }}>{isReconnecting ? "Reconnexion..." : "Réseau indisponible"}</AppText>

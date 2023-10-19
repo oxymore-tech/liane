@@ -45,18 +45,18 @@ const DefaultAndroidSettings = {
 
 const AndroidReminderActions: AndroidAction[] = [
   {
-    title: "Démarrer",
+    title: "Démarrer le trajet",
     pressAction: {
       id: "loc"
     }
-  },
-  {
+  }
+  /*{
     title: "J'ai du retard",
     pressAction: {
       id: "delay",
       launchActivity: "default"
     }
-  }
+  }*/
 ];
 
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
@@ -157,14 +157,14 @@ export async function initializeNotification() {
       id: "reminder",
       actions: [
         {
-          title: "Partager ma position",
+          title: "Démarrer le trajet",
           id: "loc"
-        },
-        {
+        }
+        /*{
           title: "J'ai du retard",
           foreground: true,
           id: "delay"
-        }
+        }*/
       ]
     }
   ]);
@@ -215,7 +215,7 @@ export const checkInitialNotification = async (): Promise<string | undefined | n
   const firebaseNotification = await PushNotifications?.getInitialNotification();
   if (firebaseNotification) {
     AppLogger.info("NOTIFICATIONS", "opened firebase notification", firebaseNotification);
-    return firebaseNotification.data?.uri;
+    return <string | undefined>firebaseNotification.data?.uri;
   }
   const n = await notifee.getInitialNotification();
   if (n) {

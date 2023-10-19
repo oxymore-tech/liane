@@ -1,37 +1,23 @@
 import React, { useContext, useMemo } from "react";
 
-import {
-  Pressable,
-  RefreshControl,
-  SectionBase,
-  SectionList,
-  SectionListData,
-  SectionListRenderItemInfo,
-  StyleSheet,
-  TouchableOpacity,
-  View
-} from "react-native";
-
-import { JoinLianeRequestDetailed, Liane, UTCDateTime, User, Ref } from "@/api";
+import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import { JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@/api";
 import { formatMonthDay } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
-
 import { AppContext } from "@/components/context/ContextProvider";
-import { LianeView } from "@/components/trip/LianeView";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { UserPicture } from "@/components/UserPicture";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
-
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { extractDatePart } from "@/util/datetime";
 import { useObservable } from "@/util/hooks/subscription";
 import { capitalize } from "@/util/strings";
 import { getTripFromJoinRequest, getTripFromLiane } from "@/components/trip/trip";
-import { AppStyles } from "@/theme/styles";
-import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
+import { WayPointsView } from "@/components/trip/WayPointsView";
+import { TripGeolocationProvider, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -102,19 +88,19 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], membe
     )
     .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
 
-const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+const LianeItem = ({ item }: { item: Liane }) => {
   const { navigation } = useAppNavigation();
   const { services, user } = useContext(AppContext);
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
-
-  //const [geolocalisationEnabled, setGeolocalisationEnabled] = useState<boolean>(false);
-
+  const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
+  const lastDriverLocUpdate = useMemberTripGeolocation(item.driver.user);
+  const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
+  const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
+  const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
   return (
-    <Pressable
-      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}, index === 0 ? styles.itemFirst : {}]}
-      onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
+    <View>
       <View>
         <Row style={styles.driverContainer}>
           <Row spacing={8} style={{ flex: 4 }}>
@@ -138,13 +124,18 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         </Row>
 
         <View style={styles.lianeContainer}>
-          <LianeView liane={item} />
+          <WayPointsView wayPoints={wayPoints} nextWayPoint={nextWayPoint} />
         </View>
       </View>
 
       {!["Finished", "Archived", "Canceled"].includes(item.state) && (
         <Row style={styles.infoRowContainer} spacing={8}>
-          <AppText>TODO Geoloc status</AppText>
+          <Row style={{ alignItems: "center" }}>
+            <AppIcon name={"navigation-2-outline"} color={geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor} size={16} />
+            <AppText style={{ color: geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor }}>
+              Géolocalisation {geolocationDisabled ? "désactivée" : "activée"}
+            </AppText>
+          </Row>
 
           <Row style={styles.statusRowContainer} spacing={8}>
             {["NotStarted", "Started"].includes(item.state) && (
@@ -170,6 +161,25 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
           </Row>
         </Row>
       )}
+    </View>
+  );
+};
+const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+  const { navigation } = useAppNavigation();
+
+  return (
+    <Pressable
+      style={[
+        styles.item,
+        styles.grayBorder,
+        item.members.length > 1 ? {} : styles.disabledItem,
+        index === section.data.length - 1 ? styles.itemLast : {},
+        index === 0 ? styles.itemFirst : {}
+      ]}
+      onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
+      <TripGeolocationProvider liane={item}>
+        <LianeItem item={item} />
+      </TripGeolocationProvider>
     </Pressable>
   );
 };
@@ -192,7 +202,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
         styles.grayBorder,
         index === section.data.length - 1 ? styles.itemLast : {},
         index === 0 ? styles.itemFirst : {},
-        { opacity: 0.9 }
+        styles.disabledItem
       ]}>
       <View>
         <Row style={styles.driverContainer}>
@@ -246,8 +256,10 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "bold"
   },
+  disabledItem: { backgroundColor: WithAlpha(AppColors.white, 0.7) },
   item: {
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: AppColors.white,
     borderBottomWidth: 1
