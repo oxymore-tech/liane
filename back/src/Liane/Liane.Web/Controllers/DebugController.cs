@@ -1,6 +1,3 @@
-using System;
-using Liane.Api.Util.Exception;
-using Liane.Service.Internal.Image;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -36,10 +33,10 @@ public sealed class DebugController : ControllerBase
   //     new Notification.Reminder("test", "test", DateTime.UtcNow, ImmutableList.Create(new Recipient(augustin)), ImmutableHashSet<Answer>.Empty, "Bravo " + i, "Bravo2 " + i, null));
   // }
 
-  [HttpGet("test")]
-  public string Test([FromQuery] int nb)
-  {
-    //throw new ArgumentException("Membre déjà actif");
-    throw new ValidationException("Route", ValidationMessage.Required);
-  }
+  // [HttpGet("test")]
+  // public string Test([FromQuery] int nb)
+  // {
+  //   //throw new ArgumentException("Membre déjà actif");
+  //   throw new ValidationException("Route", ValidationMessage.Required);
+  // }
 }
