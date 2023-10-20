@@ -89,7 +89,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   private static FullUser MapUser(DbUser dbUser)
   {
     var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.TripsCount ?? 0, info.PictureUrl, dbUser.PushToken);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.IsAdmin, dbUser.TripsCount ?? 0, info.PictureUrl, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)

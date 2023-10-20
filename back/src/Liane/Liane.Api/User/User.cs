@@ -29,6 +29,7 @@ public sealed record FullUser(
   string FirstName,
   string LastName,
   Gender Gender,
+  bool IsAdmin,
   int TripsCount = 0,
   string? PictureUrl = null,
   string? PushToken = null
@@ -55,7 +56,8 @@ public sealed record FullUser(
     DateTime.UtcNow,
     "Utilisateur inconnu",
     "",
-    Gender.Unspecified
+    Gender.Unspecified,
+    false
   );
 }
 
