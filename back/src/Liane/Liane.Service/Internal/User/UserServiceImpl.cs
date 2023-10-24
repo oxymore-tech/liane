@@ -77,25 +77,34 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
       .DeleteOneAsync(u => u.Id == id);
   }
 
-  public async Task IncrementTripCount(string userId)
+  public async Task IncrementTotalTrips(string userId, int totalSavedEmissions)
   {
     await Mongo.GetCollection<DbUser>()
       .UpdateOneAsync(
         u => u.Id == userId,
-        Builders<DbUser>.Update.Inc(u => u.TripsCount, 1)
+        Builders<DbUser>.Update.Inc(u => u.Stats.TotalTrips, 1)
+      );
+  }
+  
+  public async Task IncrementTotalCreatedTrips(string userId)
+  {
+    await Mongo.GetCollection<DbUser>()
+      .UpdateOneAsync(
+        u => u.Id == userId,
+        Builders<DbUser>.Update.Inc(u => u.Stats.TotalCreatedTrips, 1)
       );
   }
 
   private static FullUser MapUser(DbUser dbUser)
   {
-    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.IsAdmin, dbUser.TripsCount ?? 0, info.PictureUrl, dbUser.PushToken);
+    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", "", null, Gender.Unspecified);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats,info.PictureUrl, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)
   {
     return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt, FullUser.GetPseudo(dbUser.UserInfo?.FirstName, dbUser.UserInfo?.LastName), dbUser.UserInfo?.Gender ?? Gender.Unspecified,
-      dbUser.UserInfo?.PictureUrl, dbUser.TripsCount ?? 0));
+      dbUser.UserInfo?.PictureUrl, dbUser.Stats));
   }
 
   private async Task UpdateField<T>(string userId, Expression<Func<DbUser, T>> field, T value)

@@ -13,6 +13,6 @@ public sealed record DbUser(
   string? PushToken,
   DateTime? CreatedAt,
   DateTime? LastConnection,
-  UserInfo? UserInfo = null,
-  int? TripsCount = 0
+  UserStats Stats,
+  UserInfo? UserInfo = null
 ) : IIdentity;

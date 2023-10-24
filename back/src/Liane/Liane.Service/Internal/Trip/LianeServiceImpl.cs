@@ -154,6 +154,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       await postgisService.UpdateGeometry(liane);
     }
 
+    await userService.IncrementTotalCreatedTrips(createdBy);
     return await Get(created.Id);
   }
 
@@ -696,14 +697,22 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var lianeDb = await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state), new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
 
-    if (lianeDb.State == LianeState.Finished || lianeDb.State == LianeState.Canceled)
+    if (lianeDb.State != LianeState.NotStarted)
     {
+      // Remove liane from potential search results 
       await postgisService.Clear(new[]
       {
         (Ref<Api.Trip.Liane>)liane.Id
       });
     }
 
+    if (lianeDb.State == LianeState.Archived)
+    {
+      // Count one more done trip
+      // TODO count avoided carbon emissions
+      await userService.IncrementTotalTrips(lianeDb.CreatedBy!, 0);
+    }
+    
     await PushUpdate(lianeDb);
   }
 

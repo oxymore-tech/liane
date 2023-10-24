@@ -19,7 +19,7 @@ public record User(
   string Pseudo,
   Gender Gender,
   string? PictureUrl,
-  int TripsCount
+  UserStats Stats
 ) : IIdentity;
 
 public sealed record FullUser(
@@ -29,11 +29,10 @@ public sealed record FullUser(
   string FirstName,
   string LastName,
   Gender Gender,
-  bool IsAdmin,
-  int TripsCount = 0,
+  UserStats Stats,
   string? PictureUrl = null,
   string? PushToken = null
-) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl, TripsCount)
+) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl, Stats)
 {
   public static string GetPseudo(string? firstName, string? lastName)
   {
@@ -57,7 +56,7 @@ public sealed record FullUser(
     "Utilisateur inconnu",
     "",
     Gender.Unspecified,
-    false
+    new UserStats()
   );
 }
 
@@ -68,4 +67,4 @@ public sealed record UserInfo(
   Gender Gender
 );
 
-public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0);
+public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0, int TotalCreatedTrips = 0);

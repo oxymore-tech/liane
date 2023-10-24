@@ -12,7 +12,7 @@ public sealed record LianeRecurrence(string? Id,
 {
   public static LianeRecurrence FromLianeRequest(LianeRequest request)
   {
-    return new LianeRecurrence(null, null, null, request.Recurrence!.Value, new BaseLianeRequest(request.DepartureTime, request.ReturnTime, request.AvailableSeats, request.From, request.To));
+    return new LianeRecurrence(null, null, null, request.Recurrence!.Value, new BaseLianeRequest(request.DepartureTime, request.ReturnTime, request.AvailableSeats, request.From, request.To, request.GeolocationLevel));
   }
 
   public LianeRequest GetLianeRequest()
