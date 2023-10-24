@@ -166,4 +166,14 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
       await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
     }
   }
+  
+  public async Task PushUserUpdate(FullUser user)
+  {
+    var connectionId = GetConnectionId(user.Id!);
+    if (connectionId is not null)
+    {
+      logger.LogInformation("Pushing update to {user}", user.Id!);
+      await hubContext.Clients.Client(connectionId).Me(user);
+    }
+  }
 }

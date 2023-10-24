@@ -77,24 +77,6 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
       .DeleteOneAsync(u => u.Id == id);
   }
 
-  public async Task IncrementTotalTrips(string userId, int totalSavedEmissions)
-  {
-    await Mongo.GetCollection<DbUser>()
-      .UpdateOneAsync(
-        u => u.Id == userId,
-        Builders<DbUser>.Update.Inc(u => u.Stats.TotalTrips, 1)
-      );
-  }
-  
-  public async Task IncrementTotalCreatedTrips(string userId)
-  {
-    await Mongo.GetCollection<DbUser>()
-      .UpdateOneAsync(
-        u => u.Id == userId,
-        Builders<DbUser>.Update.Inc(u => u.Stats.TotalCreatedTrips, 1)
-      );
-  }
-
   private static FullUser MapUser(DbUser dbUser)
   {
     var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", "", null, Gender.Unspecified);

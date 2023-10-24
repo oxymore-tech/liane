@@ -43,6 +43,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly ILianeRecurrenceService lianeRecurrenceService;
   private readonly ILogger<LianeServiceImpl> logger;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
+  private readonly IUserStatService userStatService;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -50,7 +51,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver) : base(mongo)
+    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver, IUserStatService userStatService) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -61,6 +62,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     this.postgisService = postgisService;
     this.lianeRecurrenceService = lianeRecurrenceService;
     this.lianeUpdateObserver = lianeUpdateObserver;
+    this.userStatService = userStatService;
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
@@ -154,7 +156,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       await postgisService.UpdateGeometry(liane);
     }
 
-    await userService.IncrementTotalCreatedTrips(createdBy);
+    await userStatService.IncrementTotalCreatedTrips(createdBy);
     return await Get(created.Id);
   }
 
@@ -710,7 +712,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     {
       // Count one more done trip
       // TODO count avoided carbon emissions
-      await userService.IncrementTotalTrips(lianeDb.CreatedBy!, 0);
+      await userStatService.IncrementTotalTrips(lianeDb.CreatedBy!, 0);
     }
     
     await PushUpdate(lianeDb);

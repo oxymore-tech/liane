@@ -13,6 +13,4 @@ public interface IUserService : IResourceResolverService<User>
   Task<FullUser> GetByPhone(string phone);
   Task<FullUser> GetFullUser(string userId);
   Task Delete(string id);
-  Task IncrementTotalTrips(string userId, int totalSavedEmissions);
-  Task IncrementTotalCreatedTrips(string userId);
 }
