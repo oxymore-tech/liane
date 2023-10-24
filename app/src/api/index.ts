@@ -50,7 +50,7 @@ export type User = Readonly<
     pseudo: string;
     pictureUrl: string | undefined | null;
     gender: "Man" | "Woman" | "Unspecified";
-    tripsCount: number;
+    stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number };
   } & Entity
 >;
 
