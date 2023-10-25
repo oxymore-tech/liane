@@ -777,4 +777,41 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     await PushUpdate(updated);
   }
+
+  public async Task CancelLiane(Ref<Api.Trip.Liane> lianeRef)
+  {
+    var liane = await Get(lianeRef);
+    var sender = currentContext.CurrentUser().Id;
+    var now = DateTime.UtcNow;
+    if (sender == liane.Driver.User)
+    {
+      // Cancel trip
+      await UpdateState(liane, LianeState.Canceled);
+    }
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(
+        l => l.Id == lianeRef.Id,
+        Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
+    await PushUpdate(updated);
+  }
+
+  public async Task StartLiane(Ref<Api.Trip.Liane> lianeRef)
+  {
+    var liane = await Get(lianeRef);
+    if (liane.State == LianeState.NotStarted)
+    {
+      await UpdateState(liane, LianeState.Started);
+    }
+    var sender = currentContext.CurrentUser().Id;
+    var now = DateTime.UtcNow;
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(
+        l => l.Id == lianeRef.Id,
+        Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
+    await PushUpdate(updated);
+  }
 }

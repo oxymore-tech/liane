@@ -40,9 +40,9 @@ public sealed class LianeStatusUpdate : CronJobService
   public async Task Update(DateTime from)
   {
     await CancelLianes(from);
-    await StartLianes(from);
+    //await StartLianes(from);
     await FinishLianes(from);
-    await RealtimeUpdate(from);
+    //await RealtimeUpdate(from);
   }
 
   private async Task CancelLianes(DateTime from)
@@ -146,16 +146,20 @@ public sealed class LianeStatusUpdate : CronJobService
   
   public static LianeState GetUserState(Api.Trip.Liane liane, LianeMember member)
   {
+    if (member.Cancellation is not null) return LianeState.Canceled;
+    
     var current = liane.State;
     if (current == LianeState.Started)
     {
+     /* // User state depending on time
       var pickupPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id! == member.From);
-      if (pickupPoint!.Eta > DateTime.UtcNow.AddMinutes(StartedDelayInMinutes)) return LianeState.NotStarted;
-      // TODO get finished state from pings ?
-      /*
-       var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.To);
-       if (depositPoint!.Eta < DateTime.UtcNow) return LianeState.Finished;
-      */
+      if (pickupPoint!.Eta > DateTime.UtcNow.AddMinutes(StartedDelayInMinutes)) return LianeState.NotStarted;*/
+     if (member.Departure is null) return LianeState.NotStarted;
+     // TODO get finished state from pings ?
+     /*
+      var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.To);
+      if (depositPoint!.Eta < DateTime.UtcNow) return LianeState.Finished;
+     */
     }
      
     // Final states
