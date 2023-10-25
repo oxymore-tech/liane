@@ -56,7 +56,7 @@ public abstract record LianeEvent
     Ref<Trip.Liane> Liane,
     long Timestamp,
     TimeSpan? Delay,
-    LatLng? Coordinate
+    LatLng? Coordinate = null
   ) : LianeEvent;
   
   public sealed record MemberHasCanceled(

@@ -39,4 +39,15 @@ public class UserStatServiceImpl : IUserStatService
       );
     await hubService.PushUserUpdate(await userService.GetFullUser(userId));
   }
+  
+  public async Task IncrementTotalJoinedTrips(string userId)
+  {
+    await mongo.GetCollection<DbUser>()
+      .UpdateOneAsync(
+        u => u.Id == userId,
+        Builders<DbUser>.Update.Inc(u => u.Stats.TotalJoinedTrips, 1)
+      );
+    await hubService.PushUserUpdate(await userService.GetFullUser(userId));
+  }
+
 }

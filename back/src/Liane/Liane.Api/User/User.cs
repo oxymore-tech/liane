@@ -67,4 +67,4 @@ public sealed record UserInfo(
   Gender Gender
 );
 
-public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0, int TotalCreatedTrips = 0);
+public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0, int TotalCreatedTrips = 0, int TotalJoinedTrips =0);
