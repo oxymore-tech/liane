@@ -69,10 +69,10 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }
 
-    if (liane.State == LianeState.NotStarted && e.Coordinate is not null)
+    if (liane.State == LianeState.NotStarted)
     {
       // First location ping -> go to started state
-      // TODO -> or start ony at first driver's ping ?
+      // TODO -> or start only at first driver's ping ?
       await lianeService.UpdateState(e.Liane, LianeState.Started);
       liane = liane with { State = LianeState.Started };
     }

@@ -68,6 +68,16 @@ public sealed class LianeController : ControllerBase
   {
     await eventDispatcher.Dispatch(new LianeEvent.MemberHasCanceled(id, currentContext.CurrentUser().Id));
   }
+  
+  [HttpPost("{id}/start")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task StartLiane([FromRoute] string id)
+  {
+    var liane = await lianeService.Get(id);
+    var now = DateTime.UtcNow;
+    var delay = currentContext.CurrentUser().Id == liane.Driver.User.Id ? now - liane.DepartureTime : TimeSpan.Zero;
+    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(id, ((DateTimeOffset)now).ToUnixTimeMilliseconds(), delay));
+  }
 
   [HttpDelete("{id}/members/{memberId}")]
   public async Task Delete([FromRoute] string id, [FromRoute] string memberId)
