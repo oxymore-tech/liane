@@ -68,16 +68,17 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
   {
     var createdBy = owner ?? currentContext.CurrentUser().Id;
+    var createdAt = DateTime.UtcNow;
     if (entity.Recurrence is null)
     {
-      return await CreateWithReturn(entity, createdBy, null);
+      return await CreateWithReturn(entity, createdBy, createdAt, null);
     }
 
     var recurrence = await lianeRecurrenceService.Create(LianeRecurrence.FromLianeRequest(entity), owner);
     Api.Trip.Liane? liane = null;
     if (currentContext.AllowPastResourceCreation() || entity.DepartureTime > DateTime.UtcNow)
     {
-      liane = await CreateWithReturn(entity, createdBy, recurrence);
+      liane = await CreateWithReturn(entity, createdBy, createdAt, recurrence);
     }
 
     var created = await CreateFromRecurrence(recurrence, createdBy);
@@ -111,16 +112,15 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       }
 
       var returnTime = entity.ReturnTime is not null ? nextOccurence + dReturn : null;
-      var created = await CreateWithReturn(entity with { DepartureTime = nextOccurence, ReturnTime = returnTime }, createdBy, recurrence);
+      var created = await CreateWithReturn(entity with { DepartureTime = nextOccurence, ReturnTime = returnTime }, createdBy, recurrenceResolved.CreatedAt!.Value, recurrence);
       createdLianes.Add(created);
     }
 
     return createdLianes.ToImmutableList();
   }
 
-  private async Task<Api.Trip.Liane> CreateWithReturn(LianeRequest entity, Ref<Api.User.User> createdBy, Ref<LianeRecurrence>? recurrence)
+  private async Task<Api.Trip.Liane> CreateWithReturn(LianeRequest entity, Ref<Api.User.User> createdBy, DateTime createdAt, Ref<LianeRecurrence>? recurrence)
   {
-    var createdAt = DateTime.UtcNow;
 
     var toCreate = new List<LianeDb>();
     // Handle return here
