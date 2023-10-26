@@ -98,6 +98,7 @@ public abstract class BaseIntegrationTest
     services.AddService(Moq.Mock.Of<ILianeMemberTracker>());
     services.AddService<LianeServiceImpl>();
     services.AddService<UserServiceImpl>();
+    services.AddService<UserStatServiceImpl>();
     services.AddService<PushServiceImpl>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
