@@ -16,20 +16,18 @@ namespace Liane.Service.Internal.Trip;
 public sealed class LianeStatusUpdate : CronJobService
 {
   private readonly IMongoDatabase mongo;
-  private readonly INotificationService notificationService;
   private readonly ILianeService lianeService;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
   private readonly ILianeRequestService lianeRequestService;
   
   private const int StartedDelayInMinutes = 5;
-  private const int FinishedDelayInMinutes = 5;
+  public const int FinishedDelayInMinutes = 5;
 
-  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, INotificationService notificationService,
-    ILianeService lianeService, ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
+  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ILianeService lianeService, 
+    ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
     false)
   {
     this.mongo = mongo;
-    this.notificationService = notificationService;
     this.lianeService = lianeService;
     this.lianeUpdateObserver = lianeUpdateObserver;
     this.lianeRequestService = lianeRequestService;
@@ -66,8 +64,9 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private async Task FinishLianes(DateTime from)
   {
+    // Pass NotStarted lianes to Finish. Started lianes are handled in LianeService.
     var limit = from.AddMinutes(- FinishedDelayInMinutes);
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted || l.State == LianeState.Started)
+    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted)
                  & Builders<LianeDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
                  & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta < limit);
     var lianes = await mongo.GetCollection<LianeDb>()
@@ -83,14 +82,13 @@ public sealed class LianeStatusUpdate : CronJobService
       return;
     }
 
-    // TODO remove ?
-    await notificationService.CleanNotifications(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
+    //await notificationService.CleanNotifications(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
     
     await Parallel.ForEachAsync(finishedLianes, async (lianeDb, token) =>
     {
       if (token.IsCancellationRequested) return;
       // TODO go to Finished when validation procedure is decided
-      await lianeService.UpdateState(lianeDb.Id, LianeState.Archived);
+      await lianeService.UpdateState(lianeDb.Id, LianeState.Finished);
     });
     //await postgisService.Clear(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
   }
@@ -144,34 +142,4 @@ public sealed class LianeStatusUpdate : CronJobService
     });
   }
   
-  public static LianeState GetUserState(Api.Trip.Liane liane, LianeMember member)
-  {
-    if (member.Cancellation is not null) return LianeState.Canceled;
-    
-    var current = liane.State;
-    if (current == LianeState.Started)
-    {
-     /* // User state depending on time
-      var pickupPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id! == member.From);
-      if (pickupPoint!.Eta > DateTime.UtcNow.AddMinutes(StartedDelayInMinutes)) return LianeState.NotStarted;*/
-     if (member.Departure is null) return LianeState.NotStarted;
-  
-     // TODO get finished state from pings ?
-     /*
-     else if (member.Departure + (liane.WayPoints.Last().Eta - liane.WayPoints.First().Eta) < DateTime.UtcNow.AddMinutes(FinishedDelayInMinutes))
-     {
-       return LianeState.Finished;
-     }
-     */
-    }
-     
-    // Final states
-    if (current == LianeState.Finished && member.Feedback is not null)
-    {
-      return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;
-    }
-
-    return current;
-  }
-
 }

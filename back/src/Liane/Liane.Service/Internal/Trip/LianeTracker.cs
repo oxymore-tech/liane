@@ -207,4 +207,24 @@ public sealed class LianeTracker
     if (currentLocation is null) return null;
     return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.RawCoordinate);
   }
+
+  public bool? MemberHasArrived(Ref<Api.User.User> member)
+  {
+    currentLocationMap.TryGetValue(member.Id, out var currentLocation);
+    var memberArrivalIndex = liane.WayPoints.FindIndex(w => w.RallyingPoint.Id == liane.Members.Find(m => m.User.Id == member.Id)!.To.Id);
+    if (currentLocation is null)
+    {
+      if (liane.Driver.User.Id != member.Id)
+      {
+        currentLocationMap.TryGetValue(member.Id, out var driverCurrentLocation);
+        if (driverCurrentLocation is not null)
+        {
+          return memberArrivalIndex > driverCurrentLocation.NextPointIndex;
+        }
+
+      }
+      return null;
+    }
+    return memberArrivalIndex > currentLocation.NextPointIndex;
+  }
 }

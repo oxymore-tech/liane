@@ -63,4 +63,9 @@ public abstract record LianeEvent
     Ref<Trip.Liane> Liane,
     Ref<User.User> Member
   ) : LianeEvent;
+  
+  public sealed record MemberHasStarted(
+    Ref<Trip.Liane> Liane,
+    Ref<User.User> Member
+  ) : LianeEvent;
 }
