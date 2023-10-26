@@ -23,11 +23,10 @@ import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { FeatureCollection } from "geojson";
-import { startGeoloc } from "@/screens/modals/ShareTripLocationScreen";
-import { useMemo } from "react";
 import BackgroundGeolocationService from "../../../native-modules/geolocation";
 import { startPositionTracking } from "@/api/service/location";
 import { Alert } from "react-native";
+import DeviceInfo from "react-native-device-info";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
@@ -178,6 +177,11 @@ export class LianeServiceClient implements LianeService {
     const user = await getCurrentUser();
     const me = liane.members.find(l => l.user.id === user!.id)!;
     if (me.geolocationLevel && me.geolocationLevel !== "None") {
+      if (!(await DeviceInfo.isLocationEnabled())) {
+        //TODO activate your gps
+        Alert.alert("Localisation requise", "Le suivi de votre position n'est pas lancé car votre GPS est désactivé.");
+        return;
+      }
       BackgroundGeolocationService.enableLocation()
         .then(async () => {
           try {
@@ -185,7 +189,6 @@ export class LianeServiceClient implements LianeService {
             await startPositionTracking(liane.id!, trip.wayPoints);
           } catch (e) {
             AppLogger.error("GEOLOC", e);
-            Alert.alert("Erreur", JSON.stringify(e)); //TODO remove when datadog logs are set up
           }
         })
         .catch(e => {
