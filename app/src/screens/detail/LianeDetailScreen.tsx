@@ -279,13 +279,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
             left: -8,
             borderTopRightRadius: 16
           }}
-          onPress={() => {
-            services.liane.start(liane.liane.id!).then(() => {
-              if (me.geolocationLevel && me.geolocationLevel !== "None") {
-                startGeoloc(navigation, services, user!, liane.liane);
-              }
-            });
-          }}>
+          onPress={() => services.liane.start(liane.liane)}>
           <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
             <AppIcon name={"play-circle"} color={AppColors.white} />
             <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>

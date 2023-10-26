@@ -23,6 +23,11 @@ import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { FeatureCollection } from "geojson";
+import { startGeoloc } from "@/screens/modals/ShareTripLocationScreen";
+import { useMemo } from "react";
+import BackgroundGeolocationService from "../../../native-modules/geolocation";
+import { startPositionTracking } from "@/api/service/location";
+import { Alert } from "react-native";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
@@ -42,7 +47,7 @@ export interface LianeService {
   pause(id: string): Promise<void>;
   unpause(id: string): Promise<void>;
   cancel(id: string): Promise<void>;
-  start(id: string): Promise<void>;
+  start(liane: Liane): Promise<void>;
   leave(id: string): Promise<void>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
@@ -168,8 +173,26 @@ export class LianeServiceClient implements LianeService {
     await postAs(`/liane/${lianeId}/cancel`);
   }
 
-  async start(lianeId: string): Promise<void> {
-    await postAs(`/liane/${lianeId}/start`);
+  async start(liane: Liane): Promise<void> {
+    await postAs(`/liane/${liane.id}/start`);
+    const user = await getCurrentUser();
+    const me = liane.members.find(l => l.user.id === user!.id)!;
+    if (me.geolocationLevel && me.geolocationLevel !== "None") {
+      BackgroundGeolocationService.enableLocation()
+        .then(async () => {
+          try {
+            const trip = getTripFromLiane(liane, user!.id!);
+            await startPositionTracking(liane.id!, trip.wayPoints);
+          } catch (e) {
+            AppLogger.error("GEOLOC", e);
+            Alert.alert("Erreur", JSON.stringify(e)); //TODO remove when datadog logs are set up
+          }
+        })
+        .catch(e => {
+          AppLogger.error("GEOLOC", e);
+          Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
+        });
+    }
   }
   async deleteRecurrence(id: string): Promise<void> {
     await del(`/liane/recurrence/${id}`);

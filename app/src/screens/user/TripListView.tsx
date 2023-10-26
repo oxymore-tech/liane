@@ -176,13 +176,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
             borderBottomRightRadius: 16,
             borderBottomLeftRadius: 16
           }}
-          onPress={() => {
-            services.liane.start(item.id!).then(() => {
-              if (me.geolocationLevel && me.geolocationLevel !== "None") {
-                startGeoloc(navigation, services, user!, item);
-              }
-            });
-          }}>
+          onPress={() => services.liane.start(item)}>
           <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
             <AppIcon name={"play-circle"} color={AppColors.white} />
             <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>

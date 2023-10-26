@@ -134,7 +134,7 @@ export type LianeMember = Readonly<{
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seatCount: number;
-  geolocationLevel: GeolocationLevel | undefined | null;
+  geolocationLevel: GeolocationLevel;
   cancellation: UTCDateTime | undefined | null;
   departure: UTCDateTime | undefined | null;
 }>;
