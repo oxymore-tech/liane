@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { AppText, AppTextProps } from "@/components/base/AppText";
 import { locale } from "@/api/i18n";
 import { UTCDateTime } from "@/api";
@@ -12,5 +12,6 @@ const time24hFormatter = new Intl.DateTimeFormat(locale, {
   hour12: false
 });
 export function TimeView({ value, ...props }: TimeViewProps) {
-  return <AppText {...props}>{value ? time24hFormatter.format(new Date(value)) : "--:--"}</AppText>;
+  const time = useMemo(() => (value ? time24hFormatter.format(new Date(value)) : "--:--"), [value]);
+  return <AppText {...props}>{time}</AppText>;
 }
