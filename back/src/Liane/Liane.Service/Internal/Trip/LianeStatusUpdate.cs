@@ -155,10 +155,13 @@ public sealed class LianeStatusUpdate : CronJobService
       var pickupPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id! == member.From);
       if (pickupPoint!.Eta > DateTime.UtcNow.AddMinutes(StartedDelayInMinutes)) return LianeState.NotStarted;*/
      if (member.Departure is null) return LianeState.NotStarted;
+  
      // TODO get finished state from pings ?
      /*
-      var depositPoint = liane.WayPoints.Find(w => w.RallyingPoint.Id == member.To);
-      if (depositPoint!.Eta < DateTime.UtcNow) return LianeState.Finished;
+     else if (member.Departure + (liane.WayPoints.Last().Eta - liane.WayPoints.First().Eta) < DateTime.UtcNow.AddMinutes(FinishedDelayInMinutes))
+     {
+       return LianeState.Finished;
+     }
      */
     }
      

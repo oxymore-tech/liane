@@ -124,13 +124,18 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
       return set;
     });
     var lastValue = lastValueCache.Get((liane.Id, member.Id));
-    return Task.FromResult(lastValue is not TrackedMemberLocation update ? null : update);
+    return Task.FromResult(lastValue as TrackedMemberLocation);
   }
 
   public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    var set = locationTrackers[(liane.Id, member.Id)];
-    set.Remove(user);
+    var found = locationTrackers.TryGetValue((liane.Id, member.Id), out var set);
+    if (!found)
+    {
+      logger.LogWarning($"{user.Id} failed to unsubscribe from ({liane.Id}{member.Id})");
+      return Task.CompletedTask;
+    }
+    set!.Remove(user);
     if (set.Count == 0) locationTrackers.Remove((liane.Id, member.Id), out _);
     return Task.CompletedTask;
   }
