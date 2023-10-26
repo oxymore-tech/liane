@@ -42,7 +42,8 @@ export interface LianeService {
   pause(id: string): Promise<void>;
   unpause(id: string): Promise<void>;
   cancel(id: string): Promise<void>;
-  leave(id: string, userId: string): Promise<void>;
+  start(id: string): Promise<void>;
+  leave(id: string): Promise<void>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
   deleteRecurrence(id: string): Promise<void>;
@@ -155,8 +156,8 @@ export class LianeServiceClient implements LianeService {
     await del(`/liane/${lianeId}`);
   }
 
-  async leave(id: string, userId: string) {
-    await del(`/liane/${id}/members/${userId}`);
+  async leave(id: string) {
+    await postAs(`/liane/${id}/leave`);
   }
 
   async deleteJoinRequest(id: string): Promise<void> {
@@ -167,6 +168,9 @@ export class LianeServiceClient implements LianeService {
     await postAs(`/liane/${lianeId}/cancel`);
   }
 
+  async start(lianeId: string): Promise<void> {
+    await postAs(`/liane/${lianeId}/start`);
+  }
   async deleteRecurrence(id: string): Promise<void> {
     await del(`/liane/recurrence/${id}`);
   }

@@ -20,12 +20,14 @@ export const WelcomeWizardModal = () => {
     setShow(false);
     hideTutorial("welcome");
   };
+  const next = () => setPage(page + 1);
+  const prev = () => setPage(page - 1);
   return (
     <Modal useNativeDriverForBackdrop={true} isVisible={show} style={{ margin: 0 }}>
-      {page === 0 && <WelcomePage1 prev={() => endTutorial()} next={() => setPage(page + 1)} />}
-      {page === 1 && <WelcomePageRp prev={() => setPage(page - 1)} next={() => setPage(page + 1)} />}
-      {page === 2 && <WelcomePageMap prev={() => setPage(page - 1)} next={() => setPage(page + 1)} />}
-      {page === 3 && <WelcomePage4 prev={() => setPage(page - 1)} next={() => endTutorial()} />}
+      {page === 0 && <WelcomePage1 prev={endTutorial} next={next} />}
+      {page === 1 && <WelcomePageRp prev={prev} next={next} />}
+      {page === 2 && <WelcomePageMap prev={prev} next={next} />}
+      {page === 3 && <WelcomePage4 prev={prev} next={endTutorial} />}
     </Modal>
   );
 };

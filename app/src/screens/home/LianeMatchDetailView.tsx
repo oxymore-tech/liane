@@ -6,7 +6,7 @@ import { getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { capitalize } from "@/util/strings";
 import { formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column, Row, Space } from "@/components/base/AppLayout";
 import { LineSeparator } from "@/components/Separator";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
@@ -73,7 +73,7 @@ const StepView = ({
                 </Row>
               </AppPressableOverlay>
             )}
-            {!onCancel && <View style={{ flex: 1 }} />}
+            {!onCancel && <Space />}
             <AppPressableOverlay backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={onValidate}>
               <Row spacing={4} style={{ alignItems: "center" }}>
                 <AppText>{onCancel ? "Oui" : "Valider"}</AppText>
@@ -97,7 +97,7 @@ const StepView = ({
                 }}>
                 {summary}
               </AppText>
-              <View style={{ flex: 1 }} />
+              <Space />
               {onEdit && <AppIcon name={"edit-2-outline"} />}
             </Row>
           </AppPressable>

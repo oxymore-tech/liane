@@ -3,7 +3,7 @@ import { useLianeStatus } from "@/components/trip/trip";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column, Row, Space } from "@/components/base/AppLayout";
 import { Pressable, View } from "react-native";
 import { showLocation } from "react-native-map-link";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -101,7 +101,7 @@ export const WayPointActionView = ({ wayPoint, liane }: { wayPoint: WayPoint; li
           </Pressable>
         )}
       <Row style={{ justifyContent: "space-between" }}>
-        {!showEstimate && <View style={{ flex: 1 }} />}
+        {!showEstimate && <Space />}
         {showEstimate && <EstimatedDelayDisplay locationUpdate={lastLocUpdate} initialTime={new Date(wayPoint.eta)} />}
         <Row style={{ position: "relative", left: 12 * (liane.members.length - 1), justifyContent: "flex-end" }}>
           {liane.members

@@ -38,7 +38,7 @@ export interface HubService {
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
   unreadNotifications: Observable<Ref<Notification>[]>;
   lianeUpdates: Observable<Liane>;
-
+  userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
 }
 
@@ -59,6 +59,7 @@ export abstract class AbstractHubService implements HubService {
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
   lianeUpdates = new Subject<Liane>();
+  userUpdates = new Subject<FullUser>();
   unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
   hubState = new Subject<HubState>();
   protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
@@ -177,6 +178,10 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveLianeUpdate = (liane: Liane) => {
     this.lianeUpdates.next(liane);
+  };
+
+  protected receiveUserUpdate = (user: FullUser) => {
+    this.userUpdates.next(user);
   };
 
   abstract readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;

@@ -15,9 +15,11 @@ import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { extractDatePart } from "@/util/datetime";
 import { useObservable } from "@/util/hooks/subscription";
 import { capitalize } from "@/util/strings";
-import { getTripFromJoinRequest, getTripFromLiane } from "@/components/trip/trip";
+import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { TripGeolocationProvider, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { startGeoloc } from "@/screens/modals/ShareTripLocationScreen";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -99,6 +101,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
+  const status = useLianeStatus(item);
   return (
     <View>
       <View>
@@ -160,6 +163,31 @@ const LianeItem = ({ item }: { item: Liane }) => {
             )}
           </Row>
         </Row>
+      )}
+      {status === "StartingSoon" && <View style={{ height: 44 }} />}
+      {status === "StartingSoon" && (
+        <AppPressableOverlay
+          backgroundStyle={{
+            position: "absolute",
+            bottom: 0,
+            left: -16,
+            right: -16,
+            backgroundColor: AppColors.primaryColor,
+            borderBottomRightRadius: 16,
+            borderBottomLeftRadius: 16
+          }}
+          onPress={() => {
+            services.liane.start(item.id!).then(() => {
+              if (me.geolocationLevel && me.geolocationLevel !== "None") {
+                startGeoloc(navigation, services, user!, item);
+              }
+            });
+          }}>
+          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+            <AppIcon name={"play-circle"} color={AppColors.white} />
+            <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+          </Row>
+        </AppPressableOverlay>
       )}
     </View>
   );

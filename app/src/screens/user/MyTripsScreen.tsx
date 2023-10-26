@@ -6,7 +6,7 @@ import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { useObservable } from "@/util/hooks/subscription";
+import { hideTutorial, shouldShowTutorial } from "@/api/storage";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -26,7 +27,7 @@ const Header = () => {
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
       <AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
-      <View style={{ flex: 1 }} />
+      <Space />
       <View>
         <AppPressableIcon
           name={"bell-outline"}
@@ -54,6 +55,7 @@ const Header = () => {
 const MyTripsScreen = () => {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { navigation } = useAppNavigation();
 
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
@@ -70,6 +72,23 @@ const MyTripsScreen = () => {
       setSelectedTab(0);
     }
   }, [isFetchingFutureLianes]);
+
+  useEffect(() => {
+    shouldShowTutorial("geolocation").then(show => {
+      if (!show) {
+        return;
+      }
+      const sub = services.realTimeHub.userUpdates.subscribe(user => {
+        if (user.stats.totalCreatedTrips > 0 || user.stats.totalJoinedTrips > 0) {
+          navigation.navigate("FirstTripWizard", {
+            showAs: user.stats.totalCreatedTrips === 1 ? "driver" : user.stats.totalJoinedTrips === 1 ? "passenger" : null
+          });
+          hideTutorial("geolocation");
+        }
+      });
+      return () => sub.unsubscribe();
+    });
+  }, [navigation, services.realTimeHub.userUpdates]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;

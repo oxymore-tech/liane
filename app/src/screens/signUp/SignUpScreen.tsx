@@ -71,7 +71,11 @@ const SignUpPage = () => {
       </View>
       <View>
         <AppText numberOfLines={-1} style={styles.helperText}>
-          {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+          {state.matches("phone")
+            ? t("Veuillez entrer votre numéro de téléphone")
+            : state.context.phone === TEST_ACCOUNT
+            ? t("Entrez votre mot de passe")
+            : t("Entrez le code reçu par SMS")}
         </AppText>
         {state.matches("phone") ? (
           <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={sendCode} />

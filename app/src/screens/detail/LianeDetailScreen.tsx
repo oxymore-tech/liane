@@ -16,12 +16,10 @@ import { useQuery } from "react-query";
 import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
-import { DriverLocationMarker } from "@/screens/detail/components/DriverLocationMarker";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
@@ -33,6 +31,9 @@ import { formatMonthDay } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { startGeoloc } from "@/screens/modals/ShareTripLocationScreen";
+import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -131,7 +132,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           {match && <LianeMatchUserRouteLayer match={match} />}
 
           {tripPassengers?.map(p => (
-            <PassengerLocationMarker key={p.user.id} user={p.user} defaultLocation={p.departurePoint.location} />
+            <LocationMarker key={p.user.id} user={p.user} defaultLocation={p.departurePoint.location} />
           ))}
 
           {tripMatch?.wayPoints.map((w, i) => {
@@ -146,7 +147,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             return <WayPointDisplay key={w.rallyingPoint.id} rallyingPoint={w.rallyingPoint} type={type} />;
           })}
 
-          {driver && tripMatch && <DriverLocationMarker user={driver} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
+          {driver && tripMatch && <LocationMarker user={driver} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
           {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
         </AppMapView>
 
@@ -250,7 +251,11 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
+  const status = useLianeStatus(liane.liane);
+  const { navigation } = useAppNavigation();
+  const { services, user } = useContext(AppContext);
 
+  const me = useMemo(() => liane.liane.members.find(l => l.user.id === user!.id)!, [liane.liane.members, user]);
   return (
     <Column style={styles.bottomContainer}>
       <View>
@@ -266,6 +271,27 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
       <Row style={styles.statusLianeContainer}>
         {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <LianeStatusView liane={liane.liane} />}
       </Row>
+      {status === "StartingSoon" && (
+        <AppPressableOverlay
+          backgroundStyle={{
+            backgroundColor: AppColors.primaryColor,
+            position: "relative",
+            left: -8,
+            borderTopRightRadius: 16
+          }}
+          onPress={() => {
+            services.liane.start(liane.liane.id!).then(() => {
+              if (me.geolocationLevel && me.geolocationLevel !== "None") {
+                startGeoloc(navigation, services, user!, liane.liane);
+              }
+            });
+          }}>
+          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+            <AppIcon name={"play-circle"} color={AppColors.white} />
+            <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>

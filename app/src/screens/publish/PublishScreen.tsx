@@ -19,8 +19,8 @@ import { useQueryClient } from "react-query";
 import { useActor, useInterpret } from "@xstate/react";
 
 import { DayOfTheWeekFlag } from "@/api";
-import { useAppNavigation } from "@/api/navigation";
-import { formatDaysOfTheWeek, formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
+import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -59,21 +59,25 @@ export const PublishScreen = () => {
   const { navigation, route } = useAppNavigation<"Publish">();
 
   const [m] = useState(() =>
-    CreatePublishLianeMachine(async ctx => {
-      const liane = await services.liane.post({
-        to: ctx.request.to!.id!,
-        from: ctx.request.from!.id!,
-        departureTime: ctx.request.departureTime!.toISOString(),
-        availableSeats: ctx.request.availableSeats!,
-        returnTime: ctx.request.returnTime?.toISOString(),
-        recurrence: ctx.request.recurrence || null
-      });
+    CreatePublishLianeMachine(
+      async ctx => {
+        const liane = await services.liane.post({
+          to: ctx.request.to!.id!,
+          from: ctx.request.from!.id!,
+          departureTime: ctx.request.departureTime!.toISOString(),
+          availableSeats: ctx.request.availableSeats!,
+          returnTime: ctx.request.returnTime?.toISOString(),
+          recurrence: ctx.request.recurrence || null
+        });
 
-      if (liane) {
-        await queryClient.invalidateQueries(LianeQueryKey);
-        await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
-      }
-    }, route.params?.initialValue)
+        if (liane) {
+          await queryClient.invalidateQueries(LianeQueryKey);
+          await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
+        }
+      },
+
+      route.params?.initialValue
+    )
   );
   const machine = useInterpret(m);
   const [state] = useActor(machine);
@@ -83,8 +87,7 @@ export const PublishScreen = () => {
       return;
     }
     navigation.popToTop();
-    //@ts-ignore
-    navigation.navigate("Mes trajets");
+    navigation.navigate(HOME_TRIPS);
   });
 
   return (
@@ -230,7 +233,10 @@ export const PublishScreenView = () => {
           if (isTripStep) {
             machine.send("UPDATE", { data: t });
           } else {
-            machine.send([{ type: "UPDATE", data: t }]);
+            machine.send([
+              { type: "EDIT", data: "trip" },
+              { type: "UPDATE", data: t }
+            ]);
           }
         }}
         openMap={() => machine.send("MAP", { data: state.context.request.from ? "to" : "from" })}
@@ -286,7 +292,7 @@ const DateStepView = ({
                 <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {formatTime(date)}</AppText>
               </Row>
             ) : (
-              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatMonthDay)}</AppText>
+              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatShortMonthDay)}</AppText>
             )}
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>

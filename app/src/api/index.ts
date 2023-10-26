@@ -50,7 +50,7 @@ export type User = Readonly<
     pseudo: string;
     pictureUrl: string | undefined | null;
     gender: "Man" | "Woman" | "Unspecified";
-    stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number };
+    stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number; totalJoinedTrips: number };
   } & Entity
 >;
 
@@ -135,6 +135,8 @@ export type LianeMember = Readonly<{
   to: Ref<RallyingPoint>;
   seatCount: number;
   geolocationLevel: GeolocationLevel | undefined | null;
+  cancellation: UTCDateTime | undefined | null;
+  departure: UTCDateTime | undefined | null;
 }>;
 
 export type LianeRecurrence = {

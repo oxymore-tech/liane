@@ -7,6 +7,8 @@ export type LinearLayoutProps = {
 
 export type LayoutComponentProps = {} & ViewProps;
 
+export const Space = () => <View style={{ flex: 1 }} />;
+
 export const Center = ({ style, children, ...props }: LayoutComponentProps) => (
   <View {...props} style={[{ alignItems: "center", justifyContent: "center" }, style]}>
     {children}

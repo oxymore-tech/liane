@@ -2,10 +2,10 @@ import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripCard } from "@/components/TripCard";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column, Row, Space } from "@/components/base/AppLayout";
 import { LianeView } from "@/components/trip/LianeView";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Liane } from "@/api";
+import { FullUser, Liane } from "@/api";
 import { LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
@@ -17,7 +17,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { checkLocationPingsPermissions, hasLocationPermission, startPositionTracking } from "@/api/service/location";
 import { createReminder } from "@/api/service/notification";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppNavigation } from "@/api/navigation";
+import { NavigationParamList, useAppNavigation } from "@/api/navigation";
 import { getTripFromLiane } from "@/components/trip/trip";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { check, PERMISSIONS, request } from "react-native-permissions";
@@ -25,7 +25,32 @@ import { useAppState } from "@react-native-community/hooks";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import { DdLogs } from "@datadog/mobile-react-native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AppServices } from "@/api/service";
 
+export const startGeoloc = (
+  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
+  services: AppServices,
+  user: FullUser,
+  liane: Liane
+) => {
+  BackgroundGeolocationService.enableLocation()
+    .then(async () => {
+      try {
+        await services.liane.setTracked(liane.id!, true);
+        const trip = getTripFromLiane(liane, user!.id!);
+        await startPositionTracking(liane.id!, trip.wayPoints);
+        navigation.replace("LianeDetail", { liane });
+      } catch (e) {
+        AppLogger.error("GEOLOC", e);
+        Alert.alert("Erreur", JSON.stringify(e)); //TODO remove when datadog logs are set up
+      }
+    })
+    .catch(e => {
+      AppLogger.error("GEOLOC", e);
+      Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
+    });
+};
 export const ShareTripLocationScreen = WithFullscreenModal(
   WithFetchResource<Liane>(
     ({ data: liane }) => {
@@ -36,24 +61,6 @@ export const ShareTripLocationScreen = WithFullscreenModal(
       const [hasPingsPermissions, setHasPingsPermissions] = useState<boolean | undefined>(undefined);
       const now = new Date();
 
-      const startGeoloc = () => {
-        BackgroundGeolocationService.enableLocation()
-          .then(async () => {
-            try {
-              await services.liane.setTracked(liane.id!, true);
-              const trip = getTripFromLiane(liane, user!.id!);
-              await startPositionTracking(liane.id!, trip.wayPoints);
-              navigation.replace("LianeDetail", { liane });
-            } catch (e) {
-              AppLogger.error("GEOLOC", e);
-              Alert.alert("Erreur", JSON.stringify(e)); //TODO remove when datadog logs are set up
-            }
-          })
-          .catch(e => {
-            AppLogger.error("GEOLOC", e);
-            Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
-          });
-      };
       const delay = async (d: Date) => {
         await services.liane.warnDelay(liane.id!, (d.getTime() - now.getTime()) / 1000);
         await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, d);
@@ -103,13 +110,13 @@ export const ShareTripLocationScreen = WithFullscreenModal(
               Démarrez le suivi de votre position pour permettre à Liane de valider votre trajet.
             </AppText>
           </View>
-          <View style={{ flex: 1 }} />
+          <Space />
           <Column spacing={8} style={{ paddingHorizontal: 24, alignItems: "center" }}>
             <AppButton
               title={"Démarrer le suivi"}
               icon={"play-circle-outline"}
               color={AppColors.primaryColor}
-              onPress={startGeoloc}
+              onPress={() => startGeoloc(navigation, services, user!, liane)}
               kind={"circular"}
             />
           </Column>

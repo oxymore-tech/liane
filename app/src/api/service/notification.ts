@@ -132,7 +132,7 @@ export async function createReminder(lianeId: string, departureLocation: Rallyin
       },
       title: "Départ imminent",
       body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
-      data: { uri: `liane://liane/${lianeId}/start`, liane: lianeId }
+      data: { uri: `liane://liane/${lianeId}`, liane: lianeId }
     },
     { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000), type: TriggerType.TIMESTAMP, alarmManager: true }
   );

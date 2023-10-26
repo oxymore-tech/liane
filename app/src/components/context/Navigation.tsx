@@ -34,6 +34,7 @@ import { NavigationScreenTitles } from "@/api/navigation";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
 import NotificationScreen from "@/screens/notifications/NotificationScreen";
+import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -96,6 +97,7 @@ function Navigation() {
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
+        <Stack.Screen name="FirstTripWizard" component={TripGeolocationWizard} options={{ headerShown: false, animation: "slide_from_bottom" }} />
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Notifications" component={NotificationScreen} />

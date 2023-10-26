@@ -14,6 +14,7 @@ import { distance } from "@/util/geometry";
 import { check, PERMISSIONS } from "react-native-permissions";
 import { AppLogger } from "@/api/logger";
 import { BehaviorSubject } from "rxjs";
+import { isResourceNotFound, isValidationError } from "@/api/exception";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -370,7 +371,13 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
         },
         ...(delay > 0 ? { delay } : {})
       };
-      postAs(`/event/member_ping`, { body: ping }).catch(err => AppLogger.warn("GEOPINGS", "Could not send ping", err));
+      postAs(`/event/member_ping`, { body: ping }).catch(err => {
+        AppLogger.warn("GEOPINGS", "Could not send ping", err);
+        if (isResourceNotFound(err) || isValidationError(err)) {
+          AppLogger.info("GEOPINGS", "Stopping service :", err);
+          stopTracking();
+        }
+      });
       const nearWayPointIndex = trip.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= nearWayPointRadius);
       if (nearWayPointIndex > -1) {
         if (!preciseTrackingMode) {
@@ -379,7 +386,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
         } else if (nearWayPointIndex === trip.length - 1) {
           AppLogger.info("GEOPINGS", "Reached destination. Tracking will stop in 1 minute.");
           sleep(60 * 1000).then(() => {
-            AppLogger.info("GEOPINGS", "Done!");
+            AppLogger.info("GEOPINGS", "Stopping service : done");
             stopTracking();
           });
         }

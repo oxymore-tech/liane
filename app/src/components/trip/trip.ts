@@ -97,7 +97,7 @@ const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; n
   if (liane.state === "NotStarted") {
     const [_, delta] = getTimeForUser(liane, user, "from");
 
-    if (delta > 0 && delta <= 30 * 60) {
+    if (delta > 0 && delta <= 120 * 60) {
       if (liane.members.length > 1) {
         return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
       }
