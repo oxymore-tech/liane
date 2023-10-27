@@ -69,7 +69,12 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
       </Column>
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
-        <AppRoundedButton color={defaultTextColor(AppColors.white)} onPress={refuseRequest} backgroundColor={AppColors.white} text={"Refuser"} />
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.white)}
+          onPress={refuseRequest}
+          backgroundColor={AppColorPalettes.gray[400]}
+          text={"Refuser"}
+        />
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={acceptRequest}
@@ -105,7 +110,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
     );
     return (
       <Column spacing={24}>
-        <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 18 }}>
+        <AppText numberOfLines={2} style={{ fontSize: 18 }}>
           {userName} souhaite rejoindre votre Liane en tant que {role} :
         </AppText>
         <TripCard header={headerDate} content={tripContent} />
@@ -121,8 +126,8 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           </Row>
         )}
         <Row spacing={16} style={{ alignItems: "center" }}>
-          <AppIcon name={reqIsExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} color={AppColors.white} />
-          <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
+          <AppIcon name={reqIsExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} />
+          <AppText numberOfLines={2} style={{ fontSize: 14 }}>
             {reqIsExactMatch || (data.match as Compatible).delta.totalInSeconds <= 60
               ? "Votre trajet reste inchangé"
               : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).delta.totalInSeconds)}
@@ -130,8 +135,8 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
         </Row>
         {data.seats > 0 && !data.targetLiane.driver.canDrive && (
           <Row spacing={16} style={{ alignItems: "center" }}>
-            <AppIcon name={"car-check-mark"} color={AppColors.white} />
-            <AppText numberOfLines={2} style={{ color: AppColors.white, fontSize: 14 }}>
+            <AppIcon name={"car-check-mark"} />
+            <AppText numberOfLines={2} style={{ fontSize: 14 }}>
               Avec un conducteur, vous serez fin prêt pour le départ !
             </AppText>
           </Row>

@@ -19,8 +19,8 @@ import { useQueryClient } from "react-query";
 import { useActor, useInterpret } from "@xstate/react";
 
 import { DayOfTheWeekFlag } from "@/api";
-import { useAppNavigation } from "@/api/navigation";
-import { formatDaysOfTheWeek, formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
+import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -44,6 +44,8 @@ import { AppStyles } from "@/theme/styles";
 import { getFirstFutureDate } from "@/util/datetime";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { PageHeader } from "@/components/context/Navigation";
+import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
+import { getSetting } from "@/api/storage";
 
 interface StepProps<T> {
   editable: boolean;
@@ -57,22 +59,24 @@ export const PublishScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
   const { navigation, route } = useAppNavigation<"Publish">();
+  const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
 
   const [m] = useState(() =>
     CreatePublishLianeMachine(async ctx => {
+      const geolocationLevel = await getSetting("geolocation");
       const liane = await services.liane.post({
         to: ctx.request.to!.id!,
         from: ctx.request.from!.id!,
         departureTime: ctx.request.departureTime!.toISOString(),
         availableSeats: ctx.request.availableSeats!,
         returnTime: ctx.request.returnTime?.toISOString(),
-        recurrence: ctx.request.recurrence || null
+        recurrence: ctx.request.recurrence || null,
+        geolocationLevel: geolocationLevel || "None"
       });
 
-      if (liane) {
-        await queryClient.invalidateQueries(LianeQueryKey);
-        await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
-      }
+      await queryClient.invalidateQueries(LianeQueryKey);
+      await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
+      return liane;
     }, route.params?.initialValue)
   );
   const machine = useInterpret(m);
@@ -83,8 +87,11 @@ export const PublishScreen = () => {
       return;
     }
     navigation.popToTop();
-    //@ts-ignore
-    navigation.navigate("Mes trajets");
+    if (shouldShow) {
+      showTutorial("driver", state.context.created!.id);
+    } else {
+      navigation.navigate(HOME_TRIPS);
+    }
   });
 
   return (
@@ -230,7 +237,10 @@ export const PublishScreenView = () => {
           if (isTripStep) {
             machine.send("UPDATE", { data: t });
           } else {
-            machine.send([{ type: "UPDATE", data: t }]);
+            machine.send([
+              { type: "EDIT", data: "trip" },
+              { type: "UPDATE", data: t }
+            ]);
           }
         }}
         openMap={() => machine.send("MAP", { data: state.context.request.from ? "to" : "from" })}
@@ -240,12 +250,16 @@ export const PublishScreenView = () => {
       {(isOverviewStep || isSubmittingStep) && (
         <Animated.View entering={SlideInDown.springify().damping(20)} style={styles.overviewStepContainer}>
           <AppPressableOverlay
-            disabled={isSubmittingStep}
-            onPress={() => machine.send("PUBLISH")}
+            disabled={!state.matches({ submitting: "failure" }) && !isOverviewStep}
+            onPress={() => {
+              machine.send(isOverviewStep ? "PUBLISH" : "RETRY");
+            }}
             style={styles.overviewStep}
             backgroundStyle={styles.overviewStepBackground}>
             <Row spacing={8} style={{ alignItems: "center" }}>
-              <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Envoyer"}</AppText>
+              <AppText style={styles.overviewStepText}>
+                {isOverviewStep ? "Envoyer" : state.matches({ submitting: "failure" }) ? "Rééssayer" : "Publication"}
+              </AppText>
               {isOverviewStep && <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />}
               {isSubmittingStep && state.matches({ submitting: "pending" }) && (
                 <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.white} size="large" />
@@ -280,13 +294,13 @@ const DateStepView = ({
           <Row style={styles.stepResumeContainer} spacing={8}>
             {isRecurrent ? (
               <Row style={{ flexShrink: 1, flexGrow: 1 }}>
-                <AppText style={[styles.stepResume, { flexShrink: 1, flexGrow: 1, paddingRight: 0 }]}>
+                <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>
                   Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
                 </AppText>
                 <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {formatTime(date)}</AppText>
               </Row>
             ) : (
-              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatMonthDay)}</AppText>
+              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatShortMonthDay)}</AppText>
             )}
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
 import { Column } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
@@ -59,7 +59,6 @@ export const ItineraryForm = ({
         onFocus={() => {
           setFocused("from");
           if (!editable) {
-            //onRequestFocus("from");
             onChangeFrom(undefined);
           } else {
             onChangeFrom(searchFrom);

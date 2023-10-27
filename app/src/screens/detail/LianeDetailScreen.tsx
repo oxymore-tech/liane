@@ -15,24 +15,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
 import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
-import { TripGeolocationProvider, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
-import { DriverLocationMarker } from "@/screens/detail/components/DriverLocationMarker";
+import { TripGeolocationProvider, useMemberRealTimeDelay } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import { PassengerLocationMarker } from "@/screens/detail/components/PassengerLocationMarker";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
-import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
+import { GeolocationSwitch, startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 import { formatMonthDay } from "@/api/i18n";
 import { capitalize } from "@/util/strings";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -131,7 +131,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           {match && <LianeMatchUserRouteLayer match={match} />}
 
           {tripPassengers?.map(p => (
-            <PassengerLocationMarker key={p.user.id} user={p.user} defaultLocation={p.departurePoint.location} />
+            <LocationMarker key={p.user.id} user={p.user} />
           ))}
 
           {tripMatch?.wayPoints.map((w, i) => {
@@ -146,7 +146,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             return <WayPointDisplay key={w.rallyingPoint.id} rallyingPoint={w.rallyingPoint} type={type} />;
           })}
 
-          {driver && tripMatch && <DriverLocationMarker user={driver} defaultLocation={tripMatch.wayPoints[0].rallyingPoint.location} />}
+          {driver && tripMatch && <LocationMarker user={driver} />}
           {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
         </AppMapView>
 
@@ -205,13 +205,16 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
     () => props.liane.members.filter(m => m.user.id !== props.liane.driver.user && user?.id !== m.user.id),
     [props.liane, user?.id]
   );
-  const lastDriverLocUpdate = useMemberTripGeolocation(props.liane.driver.user);
-  const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
+  const lastDriverLocUpdate = useMemberRealTimeDelay(props.liane.driver.user);
+
   return (
     <Column spacing={4} style={styles.flex}>
       <AppText style={styles.date}>{date}</AppText>
       <Row spacing={8} style={styles.flex}>
-        <WayPointsView wayPoints={wayPoints} nextWayPoint={nextWayPoint} />
+        <WayPointsView
+          wayPoints={wayPoints}
+          nextWayPoint={lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined}
+        />
         <View style={{ flexGrow: 1, flexShrink: 1 }} />
         <Column style={{ justifyContent: "space-evenly", flexShrink: 0 }}>
           {wayPoints.map(w => (
@@ -250,6 +253,8 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
+  const status = useLianeStatus(liane.liane);
+  const { services, user } = useContext(AppContext);
 
   return (
     <Column style={styles.bottomContainer}>
@@ -257,7 +262,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
         <Row style={styles.driverContainer}>
           <Row spacing={8}>
             <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
-            <AppText style={styles.driverText}>{driver.id === liane.liane?.id ? "Moi" : driver.pseudo}</AppText>
+            <AppText style={styles.driverText}>{driver.id === user!.id! ? "Moi" : driver.pseudo}</AppText>
           </Row>
         </Row>
         <LianeWithDateView liane={liane.liane} />
@@ -266,6 +271,21 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
       <Row style={styles.statusLianeContainer}>
         {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <LianeStatusView liane={liane.liane} />}
       </Row>
+      {status === "StartingSoon" && (
+        <AppPressableOverlay
+          backgroundStyle={{
+            backgroundColor: AppColors.primaryColor,
+            position: "relative",
+            left: -8,
+            borderTopRightRadius: 16
+          }}
+          onPress={() => services.liane.start(liane.liane.id!).then(() => startGeolocationService(liane.liane))}>
+          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+            <AppIcon name={"play-circle"} color={AppColors.white} />
+            <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>

@@ -1,6 +1,6 @@
 import EncryptedStorage from "react-native-encrypted-storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AuthResponse, AuthUser, FullUser } from "@/api/index";
+import { AuthResponse, AuthUser, FullUser, GeolocationLevel } from "@/api/index";
 import { AppLogger } from "@/api/logger";
 
 export async function storeAsync<T>(key: string, value: T | undefined) {
@@ -136,19 +136,20 @@ export async function hideTutorial(name: string) {
 export type AppSettings = Readonly<{
   "map.lianeTrafficAsWidth": boolean;
   "map.lianeTrafficAsColor": boolean;
+  geolocation: GeolocationLevel | null;
 }>;
 export function getSettings() {
-  return retrieveAsync<AppSettings>("settings", { "map.lianeTrafficAsWidth": false, "map.lianeTrafficAsColor": false });
+  return retrieveAsync<AppSettings>("settings", { "map.lianeTrafficAsWidth": false, "map.lianeTrafficAsColor": false, geolocation: null });
 }
 
-export async function getSetting(name: keyof AppSettings) {
+export async function getSetting<T extends keyof AppSettings>(name: T): Promise<AppSettings[T]> {
   const setting = (await getSettings())?.[name];
   if (setting === undefined) {
     throw new Error("Setting not found: " + name);
   }
   return setting;
 }
-export async function saveSetting(name: keyof AppSettings, value: any) {
+export async function saveSetting<T extends keyof AppSettings>(name: T, value: AppSettings[T]) {
   const stored = await getSettings();
 
   await storeAsync("settings", { ...stored, [name]: value });

@@ -1,4 +1,4 @@
-import { LatLng, RallyingPoint, WayPoint } from "@/api";
+import { LatLng, Liane, RallyingPoint, WayPoint } from "@/api";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation, { GeoOptions, GeoPosition } from "react-native-geolocation-service";
 import { getAccessToken, getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
@@ -11,9 +11,10 @@ import { MemberPing } from "@/api/event";
 import { sleep } from "@/util/datetime";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import { distance } from "@/util/geometry";
-import { check, PERMISSIONS } from "react-native-permissions";
+import { check, PERMISSIONS, request } from "react-native-permissions";
 import { AppLogger } from "@/api/logger";
 import { BehaviorSubject } from "rxjs";
+import { isResourceNotFound, isValidationError } from "@/api/exception";
 
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
@@ -188,7 +189,7 @@ export async function getCurrentLocation(options?: GeoOptions) {
   });
 }
 
-type LocationPingsSenderProps = { liane: string; trip: WayPoint[]; delay: number };
+type LocationPingsSenderProps = { liane: string; trip: WayPoint[] };
 
 const hasPermissionIOS = async (): Promise<boolean> => {
   const openSetting = () => {
@@ -248,6 +249,118 @@ export const hasLocationPermission = async () => {
     AppLogger.debug("SETTINGS", "Location permission denied by user");
   } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
     AppLogger.debug("SETTINGS", "Location permission revoked by user");
+  }
+
+  return false;
+};
+export async function requestEnableGPS() {
+  if (Platform.OS === "android") {
+    try {
+      await BackgroundGeolocationService.enableLocation();
+      return true;
+    } catch (error: unknown) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export const requestBackgroundGeolocation = async () => {
+  if (Platform.OS === "ios") {
+    if (parseInt(Platform.Version, 10) < 13) {
+      const status = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
+      if (status === "granted") {
+        return true;
+      } else if (status === "denied") {
+        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+      } else if (status === "unavailable") {
+        Alert.alert(`Erreur: géolocalisation indisponible.`);
+      } else if (status === "blocked") {
+        const openSetting = () => {
+          Linking.openSettings().catch(() => {
+            AppLogger.warn("SETTINGS", "Unable to open settings");
+          });
+        };
+        Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
+          { text: "Modifier les paramètres", onPress: openSetting },
+          { text: "Ignorer", onPress: () => {} }
+        ]);
+      }
+    } else {
+      await Linking.openSettings();
+    }
+  } else if (Platform.OS === "android") {
+    if (Platform.Version <= 29) {
+      const status = await request(
+        Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+      );
+      //console.log(status);
+      if (status === "granted") {
+        return true;
+      } else if (status === "denied") {
+        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+      } else if (status === "unavailable") {
+        Alert.alert(`Erreur: géolocalisation indisponible.`);
+      } else if (status === "blocked") {
+        const openSetting = () => {
+          Linking.openSettings().catch(() => {
+            AppLogger.warn("SETTINGS", "Unable to open settings");
+          });
+        };
+        Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
+          { text: "Modifier les paramètres", onPress: openSetting },
+          { text: "Ignorer", onPress: () => {} }
+        ]);
+      }
+    } else {
+      await Linking.openSettings().catch(() => {
+        AppLogger.warn("SETTINGS", "Unable to open settings");
+      });
+    }
+  }
+  return false;
+};
+
+export const requestGeolocation = async () => {
+  if (Platform.OS === "ios") {
+    const status = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    if (status === "granted") {
+      return true;
+    } else if (status === "denied") {
+      Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+    } else if (status === "unavailable") {
+      Alert.alert(`Erreur: géolocalisation indisponible.`);
+    } else if (status === "blocked") {
+      const openSetting = () => {
+        Linking.openSettings().catch(() => {
+          AppLogger.warn("SETTINGS", "Unable to open settings");
+        });
+      };
+      Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
+        { text: "Modifier les paramètres", onPress: openSetting },
+        { text: "Ignorer", onPress: () => {} }
+      ]);
+    }
+  } else if (Platform.OS === "android") {
+    const status = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+    //console.log(status);
+    if (status === "granted") {
+      return true;
+    } else if (status === "denied") {
+      Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
+    } else if (status === "unavailable") {
+      Alert.alert(`Erreur: géolocalisation indisponible.`);
+    } else if (status === "blocked") {
+      const openSetting = () => {
+        Linking.openSettings().catch(() => {
+          AppLogger.warn("SETTINGS", "Unable to open settings");
+        });
+      };
+      Alert.alert("Localisation requise", `Pour continuer, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
+        { text: "Modifier les paramètres", onPress: openSetting },
+        { text: "Ignorer", onPress: () => {} }
+      ]);
+    }
   }
 
   return false;
@@ -320,15 +433,16 @@ export async function startPositionTracking(lianeId: string, wayPoints: WayPoint
   }
 }
 
-export const isLocationServiceRunning = () =>
-  Platform.OS === "ios" ? Promise.resolve(BackgroundService.isRunning()) : BackgroundGeolocationService.isRunning();
+// Check if geolocation service is running
+export const isLocationServiceRunning = (lianeId: string) =>
+  Platform.OS === "ios" ? Promise.resolve(running.getValue()?.liane === lianeId) : BackgroundGeolocationService.isRunning(lianeId);
 
 const running = new BehaviorSubject<{ liane: string; watchId: number } | undefined>(undefined);
-export const watchLocationServiceState = (callback: (running: boolean) => void) =>
-  Platform.OS === "ios" ? running.subscribe(l => callback(!!l)) : BackgroundGeolocationService.watch(callback);
+export const watchLocationServiceState = (callback: (running: string | undefined) => void) =>
+  Platform.OS === "ios" ? running.subscribe(l => callback(l?.liane)) : BackgroundGeolocationService.watch(callback);
 
 const nearWayPointRadius = 1000;
-const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProps) => {
+const shareLocationTask = async ({ liane, trip }: LocationPingsSenderProps) => {
   const tripDuration = new Date(trip[trip.length - 1].eta).getTime() - new Date().getTime();
   const timeout = tripDuration + 3600 * 1000;
   let preciseTrackingMode = true;
@@ -362,15 +476,18 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
       AppLogger.debug("GEOPINGS", "Position tracked", position);
       const coordinate = { lat: position.coords.latitude, lng: position.coords.longitude };
       const ping: MemberPing = {
-        ...{
-          type: "MemberPing",
-          liane: liane,
-          coordinate,
-          timestamp: Math.trunc(position.timestamp)
-        },
-        ...(delay > 0 ? { delay } : {})
+        type: "MemberPing",
+        liane: liane,
+        coordinate,
+        timestamp: Math.trunc(position.timestamp)
       };
-      postAs(`/event/member_ping`, { body: ping }).catch(err => AppLogger.warn("GEOPINGS", "Could not send ping", err));
+      postAs(`/event/member_ping`, { body: ping }).catch(err => {
+        AppLogger.warn("GEOPINGS", "Could not send ping", err);
+        if (isResourceNotFound(err) || isValidationError(err)) {
+          AppLogger.info("GEOPINGS", "Stopping service :", err);
+          stopTracking();
+        }
+      });
       const nearWayPointIndex = trip.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= nearWayPointRadius);
       if (nearWayPointIndex > -1) {
         if (!preciseTrackingMode) {
@@ -379,7 +496,7 @@ const shareLocationTask = async ({ liane, trip, delay }: LocationPingsSenderProp
         } else if (nearWayPointIndex === trip.length - 1) {
           AppLogger.info("GEOPINGS", "Reached destination. Tracking will stop in 1 minute.");
           sleep(60 * 1000).then(() => {
-            AppLogger.info("GEOPINGS", "Done!");
+            AppLogger.info("GEOPINGS", "Stopping service : done");
             stopTracking();
           });
         }

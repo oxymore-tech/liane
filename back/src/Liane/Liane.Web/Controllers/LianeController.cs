@@ -7,7 +7,6 @@ using GeoJSON.Text.Feature;
 using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Mock;
@@ -30,14 +29,16 @@ public sealed class LianeController : ControllerBase
   private readonly IMockService mockService;
   private readonly EventDispatcher eventDispatcher;
   private readonly ILianeRecurrenceService lianeRecurrenceService;
+  private readonly ILianeRequestService lianeRequestService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService, ILianeRequestService lianeRequestService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
     this.eventDispatcher = eventDispatcher;
     this.lianeRecurrenceService = lianeRecurrenceService;
+    this.lianeRequestService = lianeRequestService;
   }
 
   [HttpGet("{id}")]
@@ -64,19 +65,33 @@ public sealed class LianeController : ControllerBase
   
   [HttpPost("{id}/cancel")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task CancelLiane([FromRoute] string id)
+  public async Task<IActionResult> CancelLiane([FromRoute] string id)
   {
+    await lianeService.CancelLiane(id);
     await eventDispatcher.Dispatch(new LianeEvent.MemberHasCanceled(id, currentContext.CurrentUser().Id));
+    return NoContent();
   }
-
-  [HttpDelete("{id}/members/{memberId}")]
-  public async Task Delete([FromRoute] string id, [FromRoute] string memberId)
+  
+  [HttpPost("{id}/start")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task<IActionResult> StartLiane([FromRoute] string id)
   {
-    // For now only allow user himself
-    if (currentContext.CurrentUser().Id != memberId) throw new ForbiddenException();
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
+    await lianeService.StartLiane(id);
+    await eventDispatcher.Dispatch(new LianeEvent.MemberHasStarted(id, currentContext.CurrentUser().Id));
+    return NoContent();
   }
 
+   
+  [HttpPost("{id}/leave")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
+  public async Task<IActionResult> LeaveLiane([FromRoute] string id)
+  {
+    var memberId = currentContext.CurrentUser().Id;
+    await lianeService.RemoveMember(id, memberId);
+    await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
+    return NoContent();
+  }
+  
   [HttpGet("{id}/members/{memberId}/contact")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)

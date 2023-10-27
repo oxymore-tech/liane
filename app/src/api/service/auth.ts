@@ -1,7 +1,7 @@
 import { del, patch, patchAs, post, postAs, postAsString } from "@/api/http";
 import { AuthRequest, AuthResponse, AuthUser, FullUser, UserInfo } from "@/api";
 import { clearStorage, getCurrentUser, getUserSession, processAuthResponse, storeCurrentUser } from "@/api/storage";
-import { Subject, SubscriptionLike } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 export interface AuthService {
   login(request: AuthRequest): Promise<AuthUser>;
@@ -12,12 +12,12 @@ export interface AuthService {
   updateUserInfo(info: UserInfo): Promise<FullUser>;
   currentUser(): Promise<FullUser | undefined>;
   uploadProfileImage(data: FormData): Promise<string>;
-  subscribeToUserChanges(callback: (user: FullUser) => void): SubscriptionLike;
+  userChanges: Observable<FullUser>;
   deleteAccount(): Promise<void>;
 }
 
 export class AuthServiceClient implements AuthService {
-  private userSubject = new Subject<FullUser>();
+  userChanges = new Subject<FullUser>();
   async authUser(): Promise<AuthUser | undefined> {
     return getUserSession();
   }
@@ -53,7 +53,7 @@ export class AuthServiceClient implements AuthService {
   updateUserInfo = async (info: UserInfo) => {
     const user = await patchAs<FullUser>("/user", { body: info });
     await storeCurrentUser(user);
-    this.userSubject.next(user);
+    this.userChanges.next(user);
     return user;
   };
 
@@ -62,11 +62,7 @@ export class AuthServiceClient implements AuthService {
     const currentUser = await getCurrentUser();
     const updatedUserData = { ...currentUser!, pictureUrl };
     await storeCurrentUser(updatedUserData);
-    this.userSubject.next(updatedUserData);
+    this.userChanges.next(updatedUserData);
     return pictureUrl;
-  };
-
-  subscribeToUserChanges = (callback: (user: FullUser) => void) => {
-    return this.userSubject.subscribe(callback);
   };
 }

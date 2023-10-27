@@ -1,12 +1,11 @@
 import { ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@/api";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { toRelativeTimeString } from "@/api/i18n";
@@ -51,7 +50,7 @@ const MessageBubble = ({
         )}
         <Column
           style={{
-            backgroundColor: isSender ? AppColorPalettes.gray[100] : AppColorPalettes.blue[100],
+            backgroundColor: isSender ? AppColors.white : AppColorPalettes.orange[100],
             alignSelf: isSender ? "flex-end" : "flex-start",
             paddingVertical: 8,
             paddingHorizontal: 12,
@@ -154,24 +153,25 @@ export const ChatScreen = () => {
   }, [route.params.conversationId, services.realTimeHub]);
 
   const sendButton = (
-    <AppPressableIcon
-      style={{ alignSelf: "flex-end" }}
-      onPress={async () => {
-        if (inputValue && inputValue.length > 0) {
-          setIsSending(true);
-          await services.realTimeHub.send({ text: inputValue });
-          setIsSending(false);
-        }
-      }}
-      iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
-      name={"navigation-outline"}
-      color={AppColors.blue}
-    />
+    <View style={{ maxWidth: 45 }}>
+      <AppPressableIcon
+        style={{ alignSelf: "flex-end" }}
+        onPress={async () => {
+          if (inputValue && inputValue.length > 0) {
+            setIsSending(true);
+            await services.realTimeHub.send({ text: inputValue });
+            setIsSending(false);
+          }
+        }}
+        iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
+        name={"navigation-outline"}
+      />
+    </View>
   );
 
   //console.debug(JSON.stringify(messages), conversation?.members);
   return (
-    <View style={{ backgroundColor: AppColors.white, justifyContent: "flex-end", flex: 1 }}>
+    <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (
         <FlatList
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
@@ -198,25 +198,23 @@ export const ChatScreen = () => {
       )}
       <View
         style={{
-          backgroundColor: AppColors.darkBlue,
+          backgroundColor: AppColors.white,
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           paddingTop: 16 + insets.top,
-          paddingBottom: 8,
-          paddingHorizontal: 8
+          padding: 16
         }}>
         <Row spacing={8}>
-          <Pressable style={{ padding: 8 }} onPress={() => navigation.goBack()}>
-            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
-          </Pressable>
+          <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
+
           {conversation && (
             <View
               style={{
                 justifyContent: "center"
               }}>
-              <AppText style={{ color: AppColors.white, fontSize: 16, fontWeight: "bold" }}>{membersNames}</AppText>
+              <AppText style={{ color: AppColors.primaryColor, fontSize: 18, fontWeight: "bold" }}>{membersNames}</AppText>
             </View>
           )}
         </Row>
@@ -224,11 +222,7 @@ export const ChatScreen = () => {
         {conversation && <DebugIdView object={conversation} />}
       </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "android" ? "height" : "padding"}
-        style={{
-          backgroundColor: AppColors.darkBlue
-        }}>
+      <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"} style={{}}>
         <View
           style={{
             paddingHorizontal: 16,
@@ -236,8 +230,8 @@ export const ChatScreen = () => {
             paddingTop: 12,
             marginTop: 8
           }}>
-          <Row style={{ alignItems: "flex-end" }} spacing={16}>
-            <AppButton
+          <Row spacing={16}>
+            {/*} <AppButton
               onPress={() => {
                 setShowMoreModal(true);
               }}
@@ -245,11 +239,11 @@ export const ChatScreen = () => {
               color={AppColors.white}
               kind="circular"
               foregroundColor={AppColors.blue}
-            />
+            />*/}
 
             <AppExpandingTextInput
               multiline={true}
-              backgroundStyle={{ backgroundColor: AppColors.white, borderRadius: 16, padding: 16 }}
+              backgroundStyle={{ backgroundColor: AppColors.white, borderRadius: 16, padding: 16, flex: 1 }}
               trailing={
                 !isSending ? (
                   sendButton

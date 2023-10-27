@@ -17,7 +17,8 @@ export const LianeMemberDisplay = ({
   size = 32,
   showLocationPin = true,
   minZoom,
-  delay
+  delay,
+  isMoving
 }: // showIcon = true
 {
   location: LatLng;
@@ -27,12 +28,13 @@ export const LianeMemberDisplay = ({
   showLocationPin?: boolean;
   minZoom?: number | undefined;
   delay?: number | undefined;
+  isMoving: boolean;
 }) => {
   const controller = useAppMapViewController();
   const region = useSubscriptionValue(controller.subscribeToRegionChanges);
   const zoom = region?.zoomLevel || 10;
   const formattedDelay = delay ? formatDuration(delay) : undefined;
-
+  const description = isMoving ? (formattedDelay ? " arrive dans " + formattedDelay : "") : "est à l'arrêt";
   if (minZoom && zoom <= minZoom) {
     return null;
   }
@@ -43,7 +45,7 @@ export const LianeMemberDisplay = ({
           <View style={styles.wayPointContainer}>
             {zoom > 7.5 && (
               <Animated.View style={styles.userNameContainer} entering={ZoomIn}>
-                <Text style={styles.userNameText}>{user.pseudo + (formattedDelay ? " arrive dans " + formattedDelay : "")}</Text>
+                <Text style={styles.userNameText}>{user.pseudo + description}</Text>
               </Animated.View>
             )}
             <View

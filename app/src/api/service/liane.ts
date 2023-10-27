@@ -7,7 +7,6 @@ import {
   UTCDateTime,
   LianeMatchDisplay,
   Feedback,
-  Ref,
   LianeUpdate,
   DayOfTheWeekFlag,
   LianeRecurrence,
@@ -15,13 +14,11 @@ import {
   GeolocationLevel
 } from "@/api";
 import { get, postAs, del, patch, patchAs } from "@/api/http";
-import { JoinRequest, MemberPing } from "@/api/event";
-import { TimeInSeconds } from "@/util/datetime";
+import { JoinRequest } from "@/api/event";
 import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { cancelReminder, createReminder } from "@/api/service/notification";
 import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
-import { AppLogger } from "@/api/logger";
 import { FeatureCollection } from "geojson";
 
 export interface LianeService {
@@ -38,20 +35,19 @@ export interface LianeService {
   updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
   updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
-  warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
   pause(id: string): Promise<void>;
   unpause(id: string): Promise<void>;
   cancel(id: string): Promise<void>;
-  leave(id: string, userId: string): Promise<void>;
+  start(lianeId: string): Promise<void>;
+  leave(id: string): Promise<void>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
   deleteRecurrence(id: string): Promise<void>;
-  setTracked(id: string, track: boolean): Promise<void>;
+  setTracked(id: string, level: GeolocationLevel): Promise<void>;
   getProof(id: string): Promise<FeatureCollection>;
 }
 export class LianeServiceClient implements LianeService {
-  async setTracked(id: string, track: boolean): Promise<void> {
-    const level: GeolocationLevel = track ? "Shared" : "None";
+  async setTracked(id: string, level: GeolocationLevel): Promise<void> {
     await patch(`/liane/${id}/geolocation`, { body: level });
   }
 
@@ -133,16 +129,6 @@ export class LianeServiceClient implements LianeService {
     await postAs(`/liane/${id}/feedback`, { body: feedback });
   }
 
-  async warnDelay(id: string, delay: number): Promise<void> {
-    const ping: MemberPing = {
-      type: "MemberPing",
-      liane: id,
-      timestamp: new Date().getTime(),
-      delay
-    };
-    await postAs(`/event/member_ping`, { body: ping }).catch(e => AppLogger.warn("GEOPINGS", e));
-  }
-
   async pause(id: string): Promise<void> {
     console.log("TODO: PAUSE LIANE ROUTE", id);
   }
@@ -155,8 +141,8 @@ export class LianeServiceClient implements LianeService {
     await del(`/liane/${lianeId}`);
   }
 
-  async leave(id: string, userId: string) {
-    await del(`/liane/${id}/members/${userId}`);
+  async leave(id: string) {
+    await postAs(`/liane/${id}/leave`);
   }
 
   async deleteJoinRequest(id: string): Promise<void> {
@@ -167,6 +153,9 @@ export class LianeServiceClient implements LianeService {
     await postAs(`/liane/${lianeId}/cancel`);
   }
 
+  async start(lianeId: string): Promise<void> {
+    await postAs(`/liane/${lianeId}/start`);
+  }
   async deleteRecurrence(id: string): Promise<void> {
     await del(`/liane/recurrence/${id}`);
   }
@@ -179,7 +168,9 @@ export class LianeServiceClient implements LianeService {
     const online = lianes
       .map(l => {
         const trip = getTripFromLiane(l, user!.id!);
-        return { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
+        const tripLiane = { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
+        //console.log("reminder online", user!.id!, x.departureTime, x.wayPoints[0].rallyingPoint.label);
+        return tripLiane;
       })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
 
@@ -195,6 +186,7 @@ export class LianeServiceClient implements LianeService {
       await cancelReminder(r.lianeId);
     }
     for (let liane of added) {
+      //console.log("reminder", user!.id!, liane.departureTime, liane.wayPoints[0].rallyingPoint.label);
       await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
     }
 

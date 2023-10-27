@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -18,29 +15,17 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
 {
   private readonly IMongoDatabase mongo;
   private readonly ILianeMemberTracker lianeMemberTracker;
-  private readonly ConcurrentDictionary<string, Task<LianeTracker>> trackers = new();
-  private readonly ILianeService lianeService;
+  private readonly ILianeTrackerCache lianeTrackerCache;
   private readonly ICurrentContext currentContext;
-  private readonly IOsrmService osrmService;
-  private readonly IPostgisService postgisService;
-  private readonly ILogger<LianeTracker> logger;
+  private readonly ILogger<LianeMemberPingHandler> logger;
 
-  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ILianeService lianeService, ICurrentContext currentContext, IOsrmService osrmService,
-    IPostgisService postgisService, ILogger<LianeTracker> logger)
+  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ICurrentContext currentContext, ILogger<LianeMemberPingHandler> logger, ILianeTrackerCache lianeTrackerCache)
   {
     mongo = db;
     this.lianeMemberTracker = lianeMemberTracker;
-    this.lianeService = lianeService;
     this.currentContext = currentContext;
-    this.osrmService = osrmService;
-    this.postgisService = postgisService;
     this.logger = logger;
-  }
-
-  private async Task EndTrip(Ref<Api.Trip.Liane> liane)
-  {
-    await lianeService.UpdateState(liane.Id, LianeState.Finished);
-    trackers.TryRemove(liane.Id, out _);
+    this.lianeTrackerCache = lianeTrackerCache;
   }
 
   public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.User.User>? sender = null)
@@ -64,35 +49,17 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
       throw ResourceNotFoundException.For(e.Liane);
     }
 
-    if (liane.State is not (LianeState.Started or LianeState.NotStarted))
+    if (liane.State is not LianeState.Started)
     {
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }
-
-    if (liane.State == LianeState.NotStarted && e.Coordinate is not null)
+    
+    lianeTrackerCache.Trackers.TryGetValue(liane.Id, out var tracker);
+    if (tracker is null)
     {
-      // First location ping -> go to started state
-      // TODO -> or start ony at first driver's ping ?
-      await lianeService.UpdateState(e.Liane, LianeState.Started);
-      liane = liane with { State = LianeState.Started };
+      logger.LogWarning($"No tracker found for liane {liane.Id}");
+      return;
     }
-
-    var tracker = await trackers.GetOrAdd(liane.Id, async _ =>
-    {
-      var l = await lianeService.Get(liane.Id);
-      return await new LianeTracker.Builder(l)
-        .SetTripArrivedDestinationCallback(() =>
-        {
-          // Wait 5 minutes then go to "finished" state 
-          Task.Delay(5 * 60 * 1000)
-            .ContinueWith(_ => EndTrip(liane.Id))
-            .Start();
-        })
-        .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
-          , 3600 * 1000)
-        .Build(osrmService, postgisService, mongo, logger);
-    });
-
     await tracker.Push(ping);
 
     // For now we only share position of the driver, and passengers close to the next pickup point

@@ -9,7 +9,7 @@ import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
 import Splashscreen from "../../../native-modules/splashscreen";
-import { SubscriptionLike } from "rxjs";
+import { merge, SubscriptionLike } from "rxjs";
 import { HubState } from "@/api/service/interfaces/hub";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { AppLogger } from "@/api/logger";
@@ -26,7 +26,7 @@ interface AppContextProps {
   appState: AppStateStatus;
 }
 
-const SERVICES = CreateAppServices();
+let SERVICES = CreateAppServices();
 const queryClient = new QueryClient();
 
 export const AppContext = createContext<AppContextProps>({
@@ -140,7 +140,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
         //console.debug("dbg ------>", this.state.appState);
         await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
       });
-      this.userChangeSubscription = SERVICES.auth.subscribeToUserChanges(user => {
+      this.userChangeSubscription = merge(SERVICES.realTimeHub.userUpdates, SERVICES.auth.userChanges).subscribe(user => {
         this.setState(prev => ({
           ...prev,
           user
@@ -254,6 +254,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     await SERVICES.realTimeHub.stop();
     AppLogger.info("LOGOUT", "Disconnected.");
     queryClient.clear();
+    SERVICES = CreateAppServices();
     await this.setAuthUser(undefined);
   };
 

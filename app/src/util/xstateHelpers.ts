@@ -15,15 +15,17 @@ export const createStateSequence = <T, TKey extends string>(
   return <{ [name in TKey]: {} }>Object.fromEntries(seq);
 };
 
-export const CreateSubmittingState = <K>(machineId: string, cancelTargetState?: K) => ({
+export const CreateSubmittingState = <K>(machineId: string, cancelTargetState?: K, onSuccess?: string) => ({
   initial: "pending",
   on: {
     CANCEL: { target: cancelTargetState || "#" + machineId + ".overview" }
   },
   invoke: {
+    id: "submit",
     src: "submit",
     onDone: {
-      target: ".success"
+      target: ".success",
+      actions: onSuccess
     },
     onError: {
       target: ".failure"

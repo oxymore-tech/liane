@@ -80,6 +80,7 @@ public static class Startup
     services.AddSettings<AuthSettings>(context);
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
+    services.AddService<UserStatServiceImpl>();
     services.AddService<HubServiceImpl>();
     services.AddService<DeleteAccountServiceImpl>();
 

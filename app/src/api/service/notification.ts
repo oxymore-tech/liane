@@ -7,12 +7,9 @@ import { Linking, Platform } from "react-native";
 import { AbstractNotificationService } from "@/api/service/interfaces/notification";
 import { Notification } from "@/api/notification";
 import { formatTime } from "@/api/i18n";
-import DeviceInfo from "react-native-device-info";
-import { checkLocationPingsPermissions, startPositionTracking } from "@/api/service/location";
 import { LianeServiceClient } from "@/api/service/liane";
-import { getTripFromLiane } from "@/components/trip/trip";
-import { getCurrentUser } from "@/api/storage";
 import { AppLogger } from "@/api/logger";
+import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>> {
@@ -75,10 +72,9 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 
 const pressActionMap = {
   loc: async (lianeId: string) => {
-    const liane = await new LianeServiceClient().get(lianeId);
-    const user = await getCurrentUser();
-    const trip = getTripFromLiane(liane, user!.id!);
-    await startPositionTracking(liane.id!, trip.wayPoints);
+    const lianeService = new LianeServiceClient();
+    const liane = await lianeService.get(lianeId);
+    await lianeService.start(liane.id!).then(() => startGeolocationService(liane));
   }
 } as const;
 const openNotification = async ({ type, detail }: Event) => {
@@ -88,7 +84,7 @@ const openNotification = async ({ type, detail }: Event) => {
   if (type === EventType.PRESS && notification?.data?.uri) {
     await Linking.openURL(<string>notification.data.uri);
   } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
-    if (pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
+    if (pressAction.id === "loc") {
       // start sending pings
       await pressActionMap.loc(notification.data.liane as string);
     } else {
@@ -132,7 +128,7 @@ export async function createReminder(lianeId: string, departureLocation: Rallyin
       },
       title: "Départ imminent",
       body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
-      data: { uri: `liane://liane/${lianeId}/start`, liane: lianeId }
+      data: { uri: `liane://liane/${lianeId}`, liane: lianeId }
     },
     { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000), type: TriggerType.TIMESTAMP, alarmManager: true }
   );
@@ -222,7 +218,7 @@ export const checkInitialNotification = async (): Promise<string | undefined | n
     AppLogger.info("NOTIFICATIONS", "opened local notification", n);
 
     if (n.notification.data?.uri) {
-      if (n.pressAction.id === "loc" && (await checkLocationPingsPermissions()) && (await DeviceInfo.isLocationEnabled())) {
+      if (n.pressAction.id === "loc") {
         // start sending pings
         await pressActionMap.loc(n.notification.data.liane as string);
         return undefined;

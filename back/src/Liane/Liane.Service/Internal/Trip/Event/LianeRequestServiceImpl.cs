@@ -52,9 +52,9 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   private readonly ILogger<LianeRequestServiceImpl> logger;
   private readonly IAutomaticAnswerService automaticAnswerService;
   private readonly IMongoDatabase mongoDatabase;
-
+  private readonly IUserStatService userStatService;
   public LianeRequestServiceImpl(INotificationService notificationService, IRallyingPointService rallyingPointService, ILianeService lianeService, IUserService userService,
-    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService, IMongoDatabase mongoDatabase)
+    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService, IMongoDatabase mongoDatabase, IUserStatService userStatService)
   {
     this.notificationService = notificationService;
     this.rallyingPointService = rallyingPointService;
@@ -65,6 +65,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     this.logger = logger;
     this.automaticAnswerService = automaticAnswerService;
     this.mongoDatabase = mongoDatabase;
+    this.userStatService = userStatService;
   }
 
   public async Task OnEvent(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User>? sender = null)
@@ -81,6 +82,19 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
+  private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Liane> lianeRef, Ref<Api.User.User> memberRef, LianeEvent.JoinRequest joinRequest)
+  {
+    var member = new LianeMember(memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, GeolocationLevel: joinRequest.GeolocationLevel);
+    var liane = await lianeService.AddMember(lianeRef, member);
+    await userStatService.IncrementTotalJoinedTrips(memberRef);
+    if (joinRequest.TakeReturnTrip)
+    {
+      await lianeService.AddMember(liane.Return!, member with { From = joinRequest.To, To = joinRequest.From });
+      await userStatService.IncrementTotalJoinedTrips(memberRef);
+    }
+
+    return new LianeEvent.MemberAccepted(joinRequest.Liane, memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip);
+  }
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
   {
     var liane = await lianeService.Get(joinRequest.Liane);
@@ -91,7 +105,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
     LianeEvent lianeEvent = answer switch
     {
-      Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
+      Answer.Accept => await AcceptMember(liane, e.CreatedBy!, joinRequest),
       Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
       _ => throw new ArgumentOutOfRangeException(nameof(answer), answer, null)
     };

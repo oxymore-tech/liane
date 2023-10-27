@@ -1,6 +1,8 @@
 {
   "SignUp": {
     "Veuillez entrer votre numéro de téléphone": "Please enter your phone number",
+    "Entrez le code reçu par SMS": "Enter the code you just received",
+    "Entrez votre mot de passe": "Enter your password",
     "Impossible d'effectuer la demande": "Signup failed"
   },
   "Home": {

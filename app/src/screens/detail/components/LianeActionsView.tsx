@@ -1,18 +1,14 @@
 import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
-import { Alert, Pressable, View } from "react-native";
+import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { DayOfTheWeekFlag, FullUser, getPoint, Liane, LianeMatch } from "@/api";
+import { DayOfTheWeekFlag, getPoint, Liane, LianeMatch } from "@/api";
 import { NavigationParamList, useAppNavigation } from "@/api/navigation";
-import { formatDate } from "@/api/i18n";
-import { cancelSendLocationPings } from "@/api/service/location";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { DebugIdView } from "@/components/base/DebugIdView";
-import { LineSeparator } from "@/components/Separator";
-import { ActionItem } from "@/components/ActionItem";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
@@ -20,17 +16,13 @@ import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
-import { IconName } from "@/components/base/AppIcon";
-import { APP_ENV } from "@env";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
-import { LianeStatusView } from "@/components/trip/LianeStatusView";
-import { TouchableOpacity } from "react-native-gesture-handler";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
   const liane = match.liane;
   const { user, services } = useContext(AppContext);
-  const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
+  //const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
   const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
   const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
   const currentUserIsDriver = currentUserIsMember && liane.driver.user === user!.id;
@@ -77,14 +69,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       });
     }
 
-    if (currentUserIsMember && liane.state === "Started") {
-      buttonList.push({
-        text: "Annuler cette liane",
-        action: () => cancelStartedLiane(navigation, services, queryClient, liane),
-        danger: true
-      });
-    }
-
     if (!currentUserIsMember && request) {
       buttonList.push({
         text: "Retirer la demande",
@@ -96,7 +80,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
     if (currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner) {
       buttonList.push({
         text: "Quitter la liane",
-        action: () => leaveLiane(navigation, services, queryClient, liane, user),
+        action: () => leaveLiane(navigation, services, queryClient, liane),
         danger: true
       });
     }
@@ -130,11 +114,21 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           text={"Modifier la liane"}
         />
       )}
-      {(liane.state === "Started" || (liane.state === "NotStarted" && !currentUserIsDriver)) && (
+      {liane.state === "NotStarted" && !currentUserIsDriver && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
-            //TODO
+            leaveLiane(navigation, services, queryClient, liane);
+          }}
+          backgroundColor={ContextualColors.redAlert.bg}
+          text={"Quitter la liane"}
+        />
+      )}
+      {liane.state === "Started" && (
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
+          onPress={() => {
+            cancelLiane(navigation, services, queryClient, liane);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text={"Annuler ce trajet"}
@@ -144,7 +138,11 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
-            //TODO
+            if (currentUserIsDriver) {
+              relaunchLiane(navigation, match);
+            } else {
+              //TODO
+            }
           }}
           backgroundColor={AppColors.primaryColor}
           text={"Relancer la liane"}
@@ -278,7 +276,8 @@ const updateRecurrence = async (
 const relaunchLiane = (navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>, match: LianeMatch) => {
   const fromPoint = getPoint(match, "pickup");
   const toPoint = getPoint(match, "deposit");
-  navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint } });
+  const availableSeats = match.liane.members.find(m => m.user.id === match.liane.driver.user)!.seatCount;
+  navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint, recurrence: match.liane.recurrence?.days, availableSeats } });
 };
 
 const deleteLiane = (
@@ -322,7 +321,7 @@ const cancelLiane = (
       onPress: async () => {
         await services.liane.cancel(liane.id!);
         navigation.goBack();
-        await queryClient.invalidateQueries(LianeQueryKey);
+        //  await queryClient.invalidateQueries(LianeQueryKey);
       },
       style: "default"
     }
@@ -357,8 +356,7 @@ const leaveLiane = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,
-  liane: Liane,
-  user: FullUser | undefined
+  liane: Liane
 ) => {
   Alert.alert("Quitter la liane", "Voulez-vous vraiment quitter cette liane ?", [
     {
@@ -369,36 +367,9 @@ const leaveLiane = (
     {
       text: "Quitter",
       onPress: async () => {
-        await services.liane.leave(liane.id!, user!.id!);
+        await services.liane.leave(liane.id!);
         await queryClient.invalidateQueries(LianeQueryKey);
         navigation.goBack();
-      },
-      style: "default"
-    }
-  ]);
-};
-
-const cancelStartedLiane = (
-  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
-  services: AppServices,
-  queryClient: QueryClient,
-  liane: Liane
-) => {
-  Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
-    {
-      text: "Fermer",
-      onPress: () => {},
-      style: "cancel"
-    },
-    {
-      text: "Confirmer",
-      onPress: async () => {
-        // Cancel ongoing geolocation
-        await cancelSendLocationPings();
-        // TODO probably fill in some form
-        await services.liane.cancel(liane.id!);
-        navigation.goBack();
-        await queryClient.invalidateQueries(LianeQueryKey);
       },
       style: "default"
     }

@@ -43,6 +43,12 @@ const WayPointView = ({
   isPast?: boolean;
   delay?: number | undefined;
 }) => {
+  /* console.log(
+    wayPoint.rallyingPoint.label,
+    delay,
+    new Date(wayPoint.eta),
+    delay ? new Date(addSeconds(new Date(wayPoint.eta), Math.floor(delay))) : null
+  );*/
   return (
     <Row style={{ alignItems: "center" }} spacing={8}>
       {type === "step" && (

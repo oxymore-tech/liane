@@ -14,8 +14,10 @@ import { Event, NewMessage, Notification } from "@/api/notification";
 import { JoinRequest, MemberAccepted } from "@/api/event";
 import { checkInitialNotification } from "@/api/service/notification";
 
+export const HOME_TRIPS = "Mes trajets";
 export type NavigationParamList = {
   Home: undefined;
+  [HOME_TRIPS]: undefined;
   Publish: { initialValue?: Partial<InternalLianeRequest> };
   SignUp: undefined;
   RequestJoin: { request: JoinLianeRequestDetailed };
@@ -26,10 +28,10 @@ export type NavigationParamList = {
   ProfileEdit: undefined;
   Account: undefined;
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
+  TripGeolocationWizard: { showAs: "driver" | "passenger" | undefined | null; lianeId: string | undefined } | undefined;
   ArchivedTrips: undefined;
   Settings: undefined;
-  OpenValidateTrip: { liane: Liane };
-  ShareTripLocationScreen: { liane: Liane | string };
+  //OpenValidateTrip: { liane: Liane };
   Notifications: undefined;
 };
 
@@ -57,9 +59,9 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
       LianeDetail: {
         path: "liane/:liane"
       },
-      ShareTripLocationScreen: {
+      /*ShareTripLocationScreen: {
         path: "liane/:liane/start"
-      },
+      },*/
       Chat: {
         path: "chat/:conversationId"
       },

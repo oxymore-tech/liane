@@ -45,7 +45,6 @@ const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 100,
     paddingHorizontal: 16,
     height: "100%",
     flex: 1

@@ -6,7 +6,7 @@ import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
@@ -18,6 +18,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { useObservable } from "@/util/hooks/subscription";
+import { useIsFocused } from "@react-navigation/native";
+import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -26,7 +28,7 @@ const Header = () => {
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
       <AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
-      <View style={{ flex: 1 }} />
+      <Space />
       <View>
         <AppPressableIcon
           name={"bell-outline"}
@@ -70,6 +72,15 @@ const MyTripsScreen = () => {
       setSelectedTab(0);
     }
   }, [isFetchingFutureLianes]);
+  const { shouldShow, showTutorial } = useContext(AppModalNavigationContext);
+  const focused = useIsFocused();
+
+  useEffect(() => {
+    if (shouldShow === "passenger" && focused) {
+      showTutorial("passenger");
+    }
+    // do not add function 'showTutorial' to dependencies
+  }, [focused, shouldShow]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;

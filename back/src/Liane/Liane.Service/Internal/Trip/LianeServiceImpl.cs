@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -18,7 +19,9 @@ using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -28,7 +31,7 @@ namespace Liane.Service.Internal.Trip;
 
 using LngLatTuple = Tuple<double, double>;
 
-public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Liane>, ILianeService
+public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Liane>, ILianeService, ILianeTrackerCache
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
   private const int MaxDepositDeltaInMeters = 2000;
@@ -43,6 +46,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly ILianeRecurrenceService lianeRecurrenceService;
   private readonly ILogger<LianeServiceImpl> logger;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
+  private readonly IUserStatService userStatService;
+  private readonly IOsrmService osrmService;
+  private readonly ILogger<LianeTracker> trackerLogger;
+
+  public ConcurrentDictionary<string, LianeTracker> Trackers { get; } = new ();
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -50,7 +58,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver) : base(mongo)
+    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver, IUserStatService userStatService, IOsrmService osrmService) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -61,6 +69,8 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     this.postgisService = postgisService;
     this.lianeRecurrenceService = lianeRecurrenceService;
     this.lianeUpdateObserver = lianeUpdateObserver;
+    this.userStatService = userStatService;
+    this.osrmService = osrmService;
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
@@ -125,7 +135,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     if (entity.ReturnTime is not null)
     {
       var createdReturn = await ToDb(
-        new LianeRequest(null, entity.ReturnTime.Value, null, entity.AvailableSeats, entity.To, entity.From),
+        entity with {DepartureTime =  entity.ReturnTime.Value, From = entity.To, To = entity.From, ReturnTime = null},
         ObjectId.GenerateNewId().ToString()!,
         createdAt,
         createdBy,
@@ -154,6 +164,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       await postgisService.UpdateGeometry(liane);
     }
 
+    await userStatService.IncrementTotalCreatedTrips(createdBy);
     return await Get(created.Id);
   }
 
@@ -164,7 +175,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       throw new ValidationException("To", ValidationMessage.WrongFormat);
     }
 
-    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats) };
+    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats, GeolocationLevel:lianeRequest.GeolocationLevel) };
     var driverData = new Driver(createdBy, lianeRequest.AvailableSeats > 0);
     var wayPoints = await GetWayPoints(lianeRequest.DepartureTime, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
@@ -177,7 +188,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var target = user ?? currentContext.CurrentUser().Id;
     var liane = await Get(l);
     var member = liane.Members.Find(m => m.User.Id == target)!;
-    return liane with { State = LianeStatusUpdate.GetUserState(liane, member) };
+    return liane with { State = GetUserState(liane, member) };
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
@@ -262,7 +273,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     {
       // Return with user's version of liane state
       var result = await paginatedLianes.SelectAsync(async l =>
-        l with { State = LianeStatusUpdate.GetUserState(await MapEntity(l), l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
+        l with { State = GetUserState(await MapEntity(l), l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
       paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
     }
 
@@ -696,14 +707,22 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var lianeDb = await Mongo.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync<LianeDb>(l => l.Id == liane.Id, Builders<LianeDb>.Update.Set(l => l.State, state), new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After });
 
-    if (lianeDb.State == LianeState.Finished || lianeDb.State == LianeState.Canceled)
+    if (lianeDb.State != LianeState.NotStarted)
     {
+      // Remove liane from potential search results 
       await postgisService.Clear(new[]
       {
         (Ref<Api.Trip.Liane>)liane.Id
       });
     }
 
+    if (lianeDb.State == LianeState.Archived)
+    {
+      // Count one more done trip
+      // TODO count avoided carbon emissions
+      await userStatService.IncrementTotalTrips(lianeDb.CreatedBy!, 0);
+    }
+    
     await PushUpdate(lianeDb);
   }
 
@@ -766,4 +785,96 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     await PushUpdate(updated);
   }
+
+  public async Task CancelLiane(Ref<Api.Trip.Liane> lianeRef)
+  {
+    var liane = await Get(lianeRef);
+    var sender = currentContext.CurrentUser().Id;
+    var now = DateTime.UtcNow;
+    if (sender == liane.Driver.User)
+    {
+      // Cancel trip
+      await UpdateState(liane, LianeState.Canceled);
+    }
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(
+        l => l.Id == lianeRef.Id,
+        Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
+    await PushUpdate(updated);
+  }
+
+  private async Task EndTrip(Ref<Api.Trip.Liane> liane)
+  {
+    await UpdateState(liane.Id, LianeState.Finished);
+    Trackers.TryRemove(liane.Id, out _);
+  }
+  public async Task StartLiane(Ref<Api.Trip.Liane> lianeRef)
+  {
+    var liane = await Get(lianeRef);
+    var sender = currentContext.CurrentUser().Id;
+    var now = DateTime.UtcNow;
+    if (liane.State == LianeState.NotStarted)
+    {
+      await UpdateState(liane, LianeState.Started);
+
+      // Create liane tracker 
+      var tracker = await new LianeTracker.Builder(liane)
+        .SetTripArrivedDestinationCallback(() =>
+        {
+          // Wait 5 minutes then go to "finished" state 
+          Task.Delay(LianeStatusUpdate.FinishedDelayInMinutes * 60 * 1000)
+            .ContinueWith(_ => EndTrip(liane.Id))
+            .Start();
+        })
+        .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
+          , liane.WayPoints.TotalDuration() * 2 * 1000)
+        .Build(osrmService, postgisService, Mongo, trackerLogger);
+      
+      Trackers.TryAdd(liane.Id, tracker);
+      
+    }
+
+    var updated = await Mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync<LianeDb>(
+        l => l.Id == lianeRef.Id,
+        Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
+    
+    await PushUpdate(updated);
+  }
+  
+  
+  
+  LianeState GetUserState(Api.Trip.Liane liane, LianeMember member)
+  {
+    if (member.Cancellation is not null) return LianeState.Canceled;
+    
+    var current = liane.State;
+    if (current == LianeState.Started)
+    {
+      // Return NotStarted while user has not confirmed 
+      if (member.Departure is null) return LianeState.NotStarted;
+      else
+      {
+        var arrived = Trackers[liane.Id].MemberHasArrived(member.User);
+        if (arrived is not null && arrived.Value)
+        {
+          return LianeState.Finished;
+        }
+        
+      }
+    }
+     
+    // Final states
+    if (current == LianeState.Finished && member.Feedback is not null)
+    {
+      return member.Feedback.Canceled ? LianeState.Canceled : LianeState.Archived;
+    }
+
+    return current;
+  }
+
 }

@@ -50,7 +50,7 @@ export type User = Readonly<
     pseudo: string;
     pictureUrl: string | undefined | null;
     gender: "Man" | "Woman" | "Unspecified";
-    tripsCount: number;
+    stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number; totalJoinedTrips: number } | null;
   } & Entity
 >;
 
@@ -102,6 +102,7 @@ export type LianeRequest = Identity &
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     recurrence: DayOfTheWeekFlag | null;
+    geolocationLevel: GeolocationLevel;
     // shareWith: Ref<User>[];
   }>;
 
@@ -134,7 +135,9 @@ export type LianeMember = Readonly<{
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seatCount: number;
-  geolocationLevel: GeolocationLevel | undefined | null;
+  geolocationLevel: GeolocationLevel;
+  cancellation: UTCDateTime | undefined | null;
+  departure: UTCDateTime | undefined | null;
 }>;
 
 export type LianeRecurrence = {
