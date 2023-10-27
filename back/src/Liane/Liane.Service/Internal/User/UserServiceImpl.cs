@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;
 
@@ -12,6 +13,18 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 {
   public UserServiceImpl(IMongoDatabase mongo) : base(mongo)
   {
+  }
+
+  public override async Task<Api.User.User> Get(Ref<Api.User.User> reference)
+  {
+    try
+    {
+      return await base.Get(reference);
+    }
+    catch (ResourceNotFoundException _)
+    {
+      return FullUser.Unknown(reference);
+    }
   }
 
   public async Task UpdateAvatar(string id, string picturelUrl)
