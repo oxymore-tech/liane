@@ -5,7 +5,8 @@
       "System": "Warning",
       "Microsoft": "Error",
       "Liane.Web.Internal.Debug": "Debug",
-      "Liane.Service.Internal": "Debug"
+      "Liane.Service.Internal": "Debug",
+      "Microsoft.AspNetCore.Hosting.Diagnostics": "Information"
     }
   },
   "Database": {

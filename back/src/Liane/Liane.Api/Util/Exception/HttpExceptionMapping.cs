@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Logging;
 
 namespace Liane.Api.Util.Exception;
 
@@ -22,14 +23,23 @@ public static class HttpExceptionMapping
     };
   }
 
-  public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null)
+  public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null, ILogger? logger = null)
   {
     switch (exception)
     {
-      case TaskCanceledException:
-      case ArgumentException:
+      case TaskCanceledException e:
       {
         var validationErrorResponse = new Dictionary<string, object> { ["title"] = exception.Message };
+
+        logger?.LogWarning(e.Message);
+        return new BadRequestObjectResult(validationErrorResponse);
+      }
+
+      case ArgumentException e:
+      {
+        var validationErrorResponse = new Dictionary<string, object> { ["title"] = exception.Message };
+
+        logger?.LogWarning(e.Message, e);
         return new BadRequestObjectResult(validationErrorResponse);
       }
 
@@ -42,10 +52,13 @@ public static class HttpExceptionMapping
         }
 
         var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = exception.Message };
+
+        logger?.LogWarning(e.Message, e);
         return new BadRequestObjectResult(validationErrorResponse);
       }
 
       case ResourceNotFoundException e:
+        logger?.LogWarning(e.Message, e);
         return new NotFoundObjectResult(e.Message);
 
       case UnauthorizedAccessException _:
@@ -54,8 +67,12 @@ public static class HttpExceptionMapping
       case ForbiddenException e:
         return Result(e.Message, HttpStatusCode.Forbidden);
 
-      case ExpectationFailedException e:
+      case ExpectationFailedException e: 
+      {
+        logger?.LogWarning(e.Message, e);
         return Result(e.Message, HttpStatusCode.ExpectationFailed);
+      }
+        
     }
 
     return null;

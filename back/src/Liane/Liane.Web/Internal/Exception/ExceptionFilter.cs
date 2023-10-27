@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Liane.Api.Util.Exception;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Liane.Web.Internal.Exception;
@@ -11,6 +12,7 @@ public sealed class ExceptionFilter : IAsyncExceptionFilter, IOrderedFilter
     var objectResult = HttpExceptionMapping.Map(context.Exception, context.ModelState);
     if (objectResult == null)
     {
+      context.Result = new ObjectResult(context.Exception) { StatusCode = 500 };
       return Task.CompletedTask;
     }
 
@@ -19,5 +21,5 @@ public sealed class ExceptionFilter : IAsyncExceptionFilter, IOrderedFilter
     return Task.CompletedTask;
   }
 
-  public int Order => 1;
+  public int Order => -6;
 }
