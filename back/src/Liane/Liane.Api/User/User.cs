@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.User;
@@ -41,7 +42,7 @@ public sealed record FullUser(
       return "Utilisateur inconnu";
     }
 
-    if (lastName is null)
+    if (lastName is null || lastName.Length == 0)
     {
       return firstName;
     }
