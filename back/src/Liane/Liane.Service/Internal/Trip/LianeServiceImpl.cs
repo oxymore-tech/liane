@@ -26,6 +26,8 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using NodaTime;
+using NodaTime.Text;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -76,16 +78,17 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
   {
     var createdBy = owner ?? currentContext.CurrentUser().Id;
+    var createdAt = DateTime.UtcNow;
     if (entity.Recurrence is null)
     {
-      return await CreateWithReturn(entity, createdBy, null);
+      return await CreateWithReturn(entity, createdBy, createdAt, null);
     }
 
     var recurrence = await lianeRecurrenceService.Create(LianeRecurrence.FromLianeRequest(entity), owner);
     Api.Trip.Liane? liane = null;
     if (currentContext.AllowPastResourceCreation() || entity.DepartureTime > DateTime.UtcNow)
     {
-      liane = await CreateWithReturn(entity, createdBy, recurrence);
+      liane = await CreateWithReturn(entity, createdBy, createdAt, recurrence);
     }
 
     var created = await CreateFromRecurrence(recurrence, createdBy);
@@ -119,16 +122,15 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       }
 
       var returnTime = entity.ReturnTime is not null ? nextOccurence + dReturn : null;
-      var created = await CreateWithReturn(entity with { DepartureTime = nextOccurence, ReturnTime = returnTime }, createdBy, recurrence);
+      var created = await CreateWithReturn(entity with { DepartureTime = nextOccurence, ReturnTime = returnTime }, createdBy, recurrenceResolved.CreatedAt!.Value, recurrence);
       createdLianes.Add(created);
     }
 
     return createdLianes.ToImmutableList();
   }
 
-  private async Task<Api.Trip.Liane> CreateWithReturn(LianeRequest entity, Ref<Api.User.User> createdBy, Ref<LianeRecurrence>? recurrence)
+  private async Task<Api.Trip.Liane> CreateWithReturn(LianeRequest entity, Ref<Api.User.User> createdBy, DateTime createdAt, Ref<LianeRecurrence>? recurrence)
   {
-    var createdAt = DateTime.UtcNow;
 
     var toCreate = new List<LianeDb>();
     // Handle return here
@@ -168,18 +170,19 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     return await Get(created.Id);
   }
 
+  
   private async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy, Ref<LianeRecurrence>? recurrence)
   {
     if (lianeRequest.From == lianeRequest.To)
     {
       throw new ValidationException("To", ValidationMessage.WrongFormat);
     }
-
+    var departureTime = DateUtils.HandleDaylightSavingsTime(createdAt, lianeRequest.DepartureTime);
     var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats, GeolocationLevel:lianeRequest.GeolocationLevel) };
     var driverData = new Driver(createdBy, lianeRequest.AvailableSeats > 0);
-    var wayPoints = await GetWayPoints(lianeRequest.DepartureTime, driverData.User, members);
+    var wayPoints = await GetWayPoints(departureTime, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
-    return new LianeDb(originalId, createdBy, createdAt, lianeRequest.DepartureTime, null, members.ToImmutableList(), driverData,
+    return new LianeDb(originalId, createdBy, createdAt, departureTime, null, members.ToImmutableList(), driverData,
       LianeState.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, null, recurrence);
   }
 
