@@ -19,7 +19,7 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed class LianeTracker
 {
-  private const double NearPointDistanceInMeters = 500;
+  private const double NearPointDistanceInMeters = 100;
   private const double NearPointTimeSpanInMinutes = 5 ;
   private readonly Api.Trip.Liane liane;
   private readonly ConcurrentDictionary<string, MemberLocationSample?> currentLocationMap = new();
@@ -28,6 +28,7 @@ public sealed class LianeTracker
   private readonly IMongoDatabase mongo;
   private readonly IOngoingTripSession ongoingTripSession;
   private readonly double[] wayPointFractions;
+  private bool finished = false;
   private LianeTracker(IOsrmService osrmService, IMongoDatabase mongo, Api.Trip.Liane liane, Action onTripArrivedDestination, IOngoingTripSession ongoingTripSession)
   {
     this.liane = liane;
@@ -119,47 +120,64 @@ public sealed class LianeTracker
  
     // Snap coordinate to nearest road segment
     var locationOnRoute = await ongoingTripSession.LocateOnRoute(ping.Coordinate.Value);
-    var nextPoint = liane.WayPoints[nextPointIndex].RallyingPoint;
-    var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
-    var wayPointInRange = nextPointDistance <= NearPointDistanceInMeters;
-    var pingNextPointIndex = nextPointIndex;
-    if (wayPointInRange)
+    // If too far away from route, skip
+    if (locationOnRoute.distance > NearPointDistanceInMeters)
     {
-      // Send raw coordinate
-      if (nextPointIndex == liane.WayPoints.Count - 1 && ping.User == liane.Driver.User)
-      {
-        // Driver arrived near destination point
-        await mongo.GetCollection<LianeTrackReport>()
-          .FindOneAndUpdateAsync(r => r.Id == liane.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
-        onTripArrivedDestination();
-      }
-      await InsertMemberLocation(ping.User.Id,  new (pingTime, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value,nextPointDistance, ping.User));
-      return;
-    }
-    else if (currentLocation is not null && currentLocation.PointDistance <= NearPointDistanceInMeters)
-    {
-      // Getting out of a way point zone
-      pingNextPointIndex++;
+      var nextPoint = liane.WayPoints[nextPointIndex].RallyingPoint;
+      var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
+      var computedLocation =  await osrmService.Nearest(ping.Coordinate.Value) ?? ping.Coordinate.Value;
+      var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
+      var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
+      var delay = estimatedDuration + ping.Delay;
+      await InsertMemberLocation(ping.User.Id,  new (pingTime,  nextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
+      
     }
     else
     {
-      // check point fraction 
-      var nextPointFraction = await GetWayPointFraction(nextPointIndex);
-     
-      if (nextPointFraction < locationOnRoute.fraction)
+      var nextPoint = liane.WayPoints[nextPointIndex].RallyingPoint;
+      var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
+      var wayPointInRange = nextPointDistance <= NearPointDistanceInMeters;
+      var pingNextPointIndex = nextPointIndex;
+      if (wayPointInRange)
       {
-        // One or more waypoints were missed 
-        pingNextPointIndex = await FindNextWayPointIndex(nextPointIndex + 1, locationOnRoute.fraction);
-        
-      }
-    }
+        // Send raw coordinate
+        if (nextPointIndex == liane.WayPoints.Count - 1 && ping.User == liane.Driver.User)
+        {
+          // Driver arrived near destination point
+          await mongo.GetCollection<LianeTrackReport>()
+            .FindOneAndUpdateAsync(r => r.Id == liane.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
+          finished = true;
+          onTripArrivedDestination();
+        }
 
-    var table = await osrmService.Table(new List<LatLng> { locationOnRoute.nearestPoint, nextPoint.Location });
-    var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-    var delay = estimatedDuration + ping.Delay;
-    
-    await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, delay, locationOnRoute.nearestPoint, ping.Coordinate.Value, nextPointDistance, ping.User));
-    
+        await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User));
+        return;
+      }
+      else if (currentLocation is not null && currentLocation.PointDistance <= NearPointDistanceInMeters)
+      {
+        // Getting out of a way point zone
+        pingNextPointIndex++;
+      }
+      else
+      {
+        // check point fraction 
+        var nextPointFraction = await GetWayPointFraction(nextPointIndex);
+
+        if (nextPointFraction < locationOnRoute.fraction)
+        {
+          // One or more waypoints were missed 
+          pingNextPointIndex = await FindNextWayPointIndex(nextPointIndex + 1, locationOnRoute.fraction);
+
+        }
+      }
+
+      var computedLocation = locationOnRoute.nearestPoint;
+      var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
+      var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
+      var delay = estimatedDuration + ping.Delay;
+
+      await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
+    }
   }
 
   private async Task<double> GetWayPointFraction(int index)
@@ -167,8 +185,12 @@ public sealed class LianeTracker
     var nextPointFraction = wayPointFractions[index];
     if (nextPointFraction < 0)
     {
-      nextPointFraction = (await ongoingTripSession.LocateOnRoute(liane.WayPoints[index].RallyingPoint.Location)).fraction;
-      wayPointFractions[index] = nextPointFraction;
+      var locationOnRoute = await ongoingTripSession.LocateOnRoute(liane.WayPoints[index].RallyingPoint.Location);
+      if (locationOnRoute.distance < NearPointDistanceInMeters)
+      {
+        nextPointFraction = locationOnRoute.fraction;
+        wayPointFractions[index] = nextPointFraction;
+      }
     }
 
     return nextPointFraction;
@@ -208,6 +230,21 @@ public sealed class LianeTracker
     return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.RawCoordinate);
   }
 
+  private int? GetDriverNextIndex()
+  {
+    currentLocationMap.TryGetValue(liane.Driver.User.Id, out var driverCurrentLocation);
+    if (driverCurrentLocation is not null)
+    {
+      return driverCurrentLocation.NextPointIndex;
+    }
+
+    return null;
+  }
+  /// <summary>
+  /// Check if given member, or else the driver has arrived
+  /// </summary>
+  /// <param name="member"></param>
+  /// <returns>null if current member does not share its position, a boolean otherwise</returns>
   public bool? MemberHasArrived(Ref<Api.User.User> member)
   {
     currentLocationMap.TryGetValue(member.Id, out var currentLocation);
@@ -216,15 +253,21 @@ public sealed class LianeTracker
     {
       if (liane.Driver.User.Id != member.Id)
       {
-        currentLocationMap.TryGetValue(member.Id, out var driverCurrentLocation);
-        if (driverCurrentLocation is not null)
-        {
-          return memberArrivalIndex > driverCurrentLocation.NextPointIndex;
-        }
-
+        var driverNextIndex = GetDriverNextIndex();
+        return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || finished;
       }
+
       return null;
     }
-    return memberArrivalIndex > currentLocation.NextPointIndex;
+
+    var arrived = memberArrivalIndex < currentLocation.NextPointIndex || finished;
+    if (arrived) return true;
+    if (liane.Driver.User.Id != member.Id)
+    {
+      var driverNextIndex = GetDriverNextIndex();
+      return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || finished;
+    }
+
+    return false;
   }
 }

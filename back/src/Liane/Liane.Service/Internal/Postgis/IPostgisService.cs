@@ -15,7 +15,7 @@ public sealed record BatchGeometryUpdate(List<SegmentDb> Segments, List<LianeWay
 
 public interface IOngoingTripSession
 {
-  public Task<(double fraction, LatLng nearestPoint)> LocateOnRoute(LatLng coordinate);
+  public Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate);
   public Task Dispose();
 }
 

@@ -13,26 +13,17 @@ public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.Membe
   private readonly ILianeService lianeService; 
   private readonly INotificationService notificationService;
   private readonly ICurrentContext currentContext;
-  private readonly IUserStatService userStatService;
 
-  public LianeMemberAcceptedHandler(ILianeService lianeService, INotificationService notificationService, ICurrentContext currentContext, IUserStatService userStatService)
+  public LianeMemberAcceptedHandler(ILianeService lianeService, INotificationService notificationService, ICurrentContext currentContext)
   {
     this.lianeService = lianeService;
     this.notificationService = notificationService;
     this.currentContext = currentContext;
-    this.userStatService = userStatService;
   }
 
   public async Task OnEvent(LianeEvent.MemberAccepted e, Ref<Api.User.User>? sender = null)
   {
-    var member = new LianeMember(e.Member, e.From, e.To, e.Seats);
-    var liane = await lianeService.AddMember(e.Liane, member);
-    await userStatService.IncrementTotalJoinedTrips(e.Member);
-    if (e.TakeReturnTrip)
-    {
-      await lianeService.AddMember(liane.Return!, member with {From = e.To, To = e.From});
-      await userStatService.IncrementTotalJoinedTrips(e.Member);
-    }
+    var liane = await lianeService.Get(e.Liane);
     var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
     await notificationService.SendEvent("Demande acceptée", 
       "Vous avez rejoint la liane à destination de "+destination+".", 

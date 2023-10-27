@@ -20,7 +20,8 @@ public abstract record LianeEvent
     Ref<RallyingPoint> To,
     int Seats,
     bool TakeReturnTrip,
-    string Message
+    string Message,
+    GeolocationLevel GeolocationLevel = GeolocationLevel.None
   ) : LianeEvent;
   
   public sealed record ChangeDepartureTimeRequest(
