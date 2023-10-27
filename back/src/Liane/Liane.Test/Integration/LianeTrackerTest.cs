@@ -109,16 +109,27 @@ public class LianeTrackerTest: BaseIntegrationTest
       var time = f.Properties["timestamp"].ToString()!;
       var u = f.Properties["user"].ToString()!;
       return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user: u);
-    }).ToImmutableList();
-    foreach (var p in pings.OrderBy(p => p.timestamp))
+    }).OrderBy(p => p.timestamp).ToImmutableList();
+    foreach (var p in pings.Take(pings.Count/2))
+    {
+      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+    }
+    var lastLocation = tracker.GetCurrentMemberLocation(userId);
+    var driverHasFinished = tracker.MemberHasArrived(userId);
+    var passengerHasFinished = tracker.MemberHasArrived(passenger);
+    Assert.AreEqual(LabeledPositions.AireDesPyrénées.Id, lastLocation!.NextPoint.Id);
+    Assert.False(driverHasFinished);
+    Assert.False(passengerHasFinished);
+    
+    foreach (var p in pings.Skip(pings.Count/2))
     {
       await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
       if (p.coordinate.Distance(Positions.PointisInard) < 4000) break;
     }
 
-    var lastLocation = tracker.GetCurrentMemberLocation(userId);
-    var driverHasFinished = tracker.MemberHasArrived(userId);
-    var passengerHasFinished = tracker.MemberHasArrived(passenger);
+     lastLocation = tracker.GetCurrentMemberLocation(userId);
+     driverHasFinished = tracker.MemberHasArrived(userId);
+     passengerHasFinished = tracker.MemberHasArrived(passenger);
     Assert.AreEqual(LabeledPositions.PointisInard.Id, lastLocation!.NextPoint.Id);
     Assert.False(driverHasFinished);
     Assert.True(passengerHasFinished);

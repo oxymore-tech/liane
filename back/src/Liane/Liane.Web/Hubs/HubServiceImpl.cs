@@ -142,7 +142,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   public async Task Push(TrackedMemberLocation update)
   {
-    lastValueCache.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(10));
+    lastValueCache.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
     var contained = locationTrackers.TryGetValue((update.Liane, update.Member), out var list);
     if (!contained)
     {
