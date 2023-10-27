@@ -21,13 +21,10 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
-using Liane.Service.Internal.Trip.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using NodaTime;
-using NodaTime.Text;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -352,22 +349,32 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     return updatedLiane;
   }
 
-  public async Task RemoveMember(Ref<Api.User.User> member)
+  public async Task CancelAllTrips(Ref<Api.User.User> member)
   {
-    var driverLianes = await Mongo.GetCollection<LianeDb>()
+    // Delete unstarted lianes
+    await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Driver.User == member.Id && l.State == LianeState.NotStarted)
-      .ToListAsync();
-    await chatService.Clear(driverLianes.FilterSelect(l => l.Conversation?.Id));
-    await postgisService.Clear(driverLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id));
+      .ForEachAsync(async (l) => await Delete(l.Id));
+  
+    // Cancel ongoing trips where user is driver
+    await Mongo.GetCollection<LianeDb>()
+      .Find(l => l.Driver.User == member.Id && l.State == LianeState.Started)
+      .ForEachAsync(async (l) => await CancelLiane(l.Id));
+    
+    // Leave liane not yet started and joined as members
+    await Mongo.GetCollection<LianeDb>()
+      .Find(
+        Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
+        Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.NotStarted))
+          .ForEachAsync(async (l) => await RemoveMember(l.Id, member.Id));
 
-    var toUpdate = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Members.Any(m => m.User == member.Id) && l.State == LianeState.NotStarted)
-      .ToListAsync();
+    // Cancel participation to ongoing trips joined as members 
+    await Mongo.GetCollection<LianeDb>()
+      .Find(
+        Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
+        Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.Started))
+      .ForEachAsync(async (l) => await CancelLiane(l.Id));
 
-    foreach (var liane in toUpdate)
-    {
-      await RemoveMember(liane.Id, member);
-    }
   }
 
   public async Task<Api.Trip.Liane?> RemoveMember(Ref<Api.Trip.Liane> liane, Ref<Api.User.User> member)

@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Address;
+using Liane.Api.Image;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -96,6 +97,7 @@ public abstract class BaseIntegrationTest
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService(Moq.Mock.Of<ILianeUpdateObserver>());
     services.AddService(Moq.Mock.Of<ILianeMemberTracker>());
+    services.AddService(Moq.Mock.Of<IImageService>());
     services.AddService<LianeServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<UserStatServiceImpl>();
@@ -104,6 +106,7 @@ public abstract class BaseIntegrationTest
     services.AddService<LianeStatusUpdate>();
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();
+    services.AddService<DeleteAccountServiceImpl>();
     services.AddEventListeners();
 
     var databaseSettings = GetDatabaseSettings();
