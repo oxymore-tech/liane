@@ -18,8 +18,8 @@ public static class DateUtils
   public static DateTime HandleDaylightSavingsTime(DateTime createdAt, DateTime target, string zone = "Europe/Paris")
   {
     var parisTz = DateTimeZoneProviders.Tzdb[zone];
-    var localCreatedAt = InstantPattern.ExtendedIso.Parse(createdAt.ToString("o")).Value.InZone(parisTz);
-    var localTarget = InstantPattern.ExtendedIso.Parse(target.ToString("o")).Value.InZone(parisTz);
+    var localCreatedAt = InstantPattern.ExtendedIso.Parse(createdAt.ToUniversalTime().ToString("o")).Value.InZone(parisTz);
+    var localTarget = InstantPattern.ExtendedIso.Parse(target.ToUniversalTime().ToString("o")).Value.InZone(parisTz);
 
     if (localCreatedAt.IsDaylightSavingTime() && !localTarget.IsDaylightSavingTime())
     {
