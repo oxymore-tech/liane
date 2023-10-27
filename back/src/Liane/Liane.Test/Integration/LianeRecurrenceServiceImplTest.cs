@@ -10,6 +10,7 @@ using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;
+using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
@@ -68,7 +69,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
       return t == TimeSpan.FromHours(3);
     })).All(result => result));
 
-    var dates = recurrence.GetNextActiveDates(departureTime, DateTime.UtcNow.AddDays(7)).Concat(new[] { departureTime }).Select(d => d.ToShortDateString() + d.ToShortTimeString()).ToList();
+    var dates = recurrence.GetNextActiveDates(departureTime, DateTime.UtcNow.AddDays(7)).Concat(new[] { departureTime }).Select(d => DateUtils.HandleDaylightSavingsTime(now, d)).Select(d => d.ToShortDateString() + d.ToShortTimeString()).ToList();
     var lianeDates = forthTrips.Select(l => l.DepartureTime.ToShortDateString() + l.DepartureTime.ToShortTimeString());
     CollectionAssert.AreEquivalent(dates, lianeDates);
 
@@ -231,6 +232,12 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(trips.Count / 2, trips.Count(t => t.WayPoints.First() == LabeledPositions.PointisInard.Id));
     Assert.AreEqual(trips.Count / 2, trips.Count(t => t.WayPoints.First() == LabeledPositions.Tournefeuille.Id));
     Assert.True(trips.All(t => recurrenceDays.Contains(t.DepartureTime.DayOfWeek)));
-    Assert.True(trips.All(t => t.DepartureTime.ToShortTimeString() == (t.WayPoints.First() == LabeledPositions.PointisInard.Id ? departureTime : returnTime).ToShortTimeString()));
+    var targetTimes = trips.Select(t =>
+      t.WayPoints.First() == LabeledPositions.PointisInard.Id
+        ? DateUtils.HandleDaylightSavingsTime(now, departureTime.AddDays(( t.DepartureTime-departureTime).Days))
+        : DateUtils.HandleDaylightSavingsTime(now, returnTime.AddDays((t.DepartureTime-returnTime).Days))
+        ).ToImmutableArray();
+    var comparison = trips.Select((t, i) => t.DepartureTime.ToShortTimeString() == targetTimes[i].ToShortTimeString());
+    Assert.True(comparison.All(c => true));
   }
 }
