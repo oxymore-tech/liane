@@ -135,7 +135,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     if (entity.ReturnTime is not null)
     {
       var createdReturn = await ToDb(
-        new LianeRequest(null, entity.ReturnTime.Value, null, entity.AvailableSeats, entity.To, entity.From),
+        entity with {DepartureTime =  entity.ReturnTime.Value, From = entity.To, To = entity.From, ReturnTime = null},
         ObjectId.GenerateNewId().ToString()!,
         createdAt,
         createdBy,
@@ -175,7 +175,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       throw new ValidationException("To", ValidationMessage.WrongFormat);
     }
 
-    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats) };
+    var members = new List<LianeMember> { new(createdBy, lianeRequest.From, lianeRequest.To, lianeRequest.AvailableSeats, GeolocationLevel:lianeRequest.GeolocationLevel) };
     var driverData = new Driver(createdBy, lianeRequest.AvailableSeats > 0);
     var wayPoints = await GetWayPoints(lianeRequest.DepartureTime, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
