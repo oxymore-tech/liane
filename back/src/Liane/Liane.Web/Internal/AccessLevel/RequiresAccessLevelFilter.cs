@@ -7,6 +7,7 @@ using Liane.Api.Util.Http;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.AccessLevel;
 
@@ -36,7 +37,6 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     {
       // Get Resolver service for given public resource type 
       var resolver = serviceProvider.GetService(typeof(IResourceResolverService<>).MakeGenericType(resourceType))!;
-
 
       // Get corresponding internal resource type 
 
@@ -82,7 +82,8 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     }
     catch (System.Exception e)
     {
-      context.Result = HttpExceptionMapping.Map(e, context.ModelState);
+      var logger = (ILogger?)serviceProvider.GetService(typeof(ILogger<RequiresAccessLevelFilter>).MakeGenericType(resourceType))!;
+      context.Result = HttpExceptionMapping.Map(e, context.ModelState, logger);
     }
   }
 }
