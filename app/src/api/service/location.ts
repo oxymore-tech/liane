@@ -263,6 +263,13 @@ export async function requestEnableGPS() {
   return true;
 }
 
+export const BackgroundGeolocationPermissionToAsk =
+  Platform.OS === "android"
+    ? Platform.Version >= 29
+      ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION
+      : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+    : PERMISSIONS.IOS.LOCATION_ALWAYS;
+
 export const requestBackgroundGeolocation = async () => {
   if (Platform.OS === "ios") {
     if (parseInt(Platform.Version, 10) < 13) {

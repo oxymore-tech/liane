@@ -3,14 +3,14 @@ import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useState } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { check, PERMISSIONS } from "react-native-permissions";
+import { check } from "react-native-permissions";
 import { DdLogs } from "@datadog/mobile-react-native";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { getSetting, saveSetting } from "@/api/storage";
-import { hasLocationPermission, requestBackgroundGeolocation } from "@/api/service/location";
+import { BackgroundGeolocationPermissionToAsk, hasLocationPermission, requestBackgroundGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GeolocationLevel } from "@/api";
@@ -27,7 +27,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
       if (appState !== "active") {
         return;
       }
-      check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(p => {
+      check(BackgroundGeolocationPermissionToAsk).then(p => {
         const allowed = p === "granted";
         DdLogs.info(`Location permission status is now: ${p}`);
         getSetting("geolocation")
@@ -112,7 +112,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
     );
 
   const authorize = async () => {
-    if ((await check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION)) === "granted") {
+    if ((await check(BackgroundGeolocationPermissionToAsk)) === "granted") {
       props.next(true);
       AppLogger.info("GEOLOC", "already authorized");
       return;
