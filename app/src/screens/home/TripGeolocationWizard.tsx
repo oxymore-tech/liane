@@ -10,7 +10,7 @@ import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { getSetting, saveSetting } from "@/api/storage";
-import { requestBackgroundGeolocation, requestGeolocation } from "@/api/service/location";
+import { hasLocationPermission, requestBackgroundGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GeolocationLevel } from "@/api";
@@ -117,7 +117,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
       AppLogger.info("GEOLOC", "already authorized");
       return;
     }
-    if (!(await requestGeolocation())) {
+    if (!(await hasLocationPermission())) {
       AppLogger.info("GEOLOC", "Base geolocation permission needed");
       return;
     }

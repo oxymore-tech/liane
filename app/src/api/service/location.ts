@@ -1,6 +1,6 @@
-import { LatLng, Liane, RallyingPoint, WayPoint } from "@/api";
+import { LatLng, RallyingPoint, WayPoint } from "@/api";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
-import Geolocation, { GeoOptions, GeoPosition } from "react-native-geolocation-service";
+import Geolocation from "react-native-geolocation-service";
 import { getAccessToken, getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { DEFAULT_TLS } from "@/api/location";
 import { MAPTILER_KEY } from "@env";
@@ -174,21 +174,6 @@ export class LocationServiceClient implements LocationService {
   }
 }
 
-export async function getCurrentLocation(options?: GeoOptions) {
-  //TODO no export
-  return new Promise<GeoPosition>(async (resolve, reject) => {
-    Geolocation.getCurrentPosition(
-      position => {
-        resolve(position);
-      },
-      error => {
-        reject(error);
-      },
-      options || { enableHighAccuracy: true, timeout: 5000, maximumAge: 5000 }
-    );
-  });
-}
-
 type LocationPingsSenderProps = { liane: string; trip: WayPoint[] };
 
 const hasPermissionIOS = async (): Promise<boolean> => {
@@ -224,6 +209,17 @@ const hasPermissionIOS = async (): Promise<boolean> => {
   return false;
 };
 
+const inviteToOpenSettings = () => {
+  const openSetting = () => {
+    Linking.openSettings().catch(() => {
+      AppLogger.warn("SETTINGS", "Unable to open settings");
+    });
+  };
+  Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
+    { text: "Modifier les paramètres", onPress: openSetting },
+    { text: "Ignorer", onPress: () => {} }
+  ]);
+};
 export const hasLocationPermission = async () => {
   if (Platform.OS === "ios") {
     return await hasPermissionIOS();
@@ -247,8 +243,10 @@ export const hasLocationPermission = async () => {
 
   if (status === PermissionsAndroid.RESULTS.DENIED) {
     AppLogger.debug("SETTINGS", "Location permission denied by user");
+    inviteToOpenSettings();
   } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
     AppLogger.debug("SETTINGS", "Location permission revoked by user");
+    inviteToOpenSettings();
   }
 
   return false;
@@ -271,20 +269,8 @@ export const requestBackgroundGeolocation = async () => {
       const status = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
       if (status === "granted") {
         return true;
-      } else if (status === "denied") {
-        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-      } else if (status === "unavailable") {
-        Alert.alert(`Erreur: géolocalisation indisponible.`);
-      } else if (status === "blocked") {
-        const openSetting = () => {
-          Linking.openSettings().catch(() => {
-            AppLogger.warn("SETTINGS", "Unable to open settings");
-          });
-        };
-        Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
-          { text: "Modifier les paramètres", onPress: openSetting },
-          { text: "Ignorer", onPress: () => {} }
-        ]);
+      } else {
+        inviteToOpenSettings();
       }
     } else {
       await Linking.openSettings();
@@ -297,20 +283,8 @@ export const requestBackgroundGeolocation = async () => {
       //console.log(status);
       if (status === "granted") {
         return true;
-      } else if (status === "denied") {
-        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-      } else if (status === "unavailable") {
-        Alert.alert(`Erreur: géolocalisation indisponible.`);
-      } else if (status === "blocked") {
-        const openSetting = () => {
-          Linking.openSettings().catch(() => {
-            AppLogger.warn("SETTINGS", "Unable to open settings");
-          });
-        };
-        Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
-          { text: "Modifier les paramètres", onPress: openSetting },
-          { text: "Ignorer", onPress: () => {} }
-        ]);
+      } else {
+        inviteToOpenSettings();
       }
     } else {
       await Linking.openSettings().catch(() => {
@@ -318,51 +292,6 @@ export const requestBackgroundGeolocation = async () => {
       });
     }
   }
-  return false;
-};
-
-export const requestGeolocation = async () => {
-  if (Platform.OS === "ios") {
-    const status = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    if (status === "granted") {
-      return true;
-    } else if (status === "denied") {
-      Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-    } else if (status === "unavailable") {
-      Alert.alert(`Erreur: géolocalisation indisponible.`);
-    } else if (status === "blocked") {
-      const openSetting = () => {
-        Linking.openSettings().catch(() => {
-          AppLogger.warn("SETTINGS", "Unable to open settings");
-        });
-      };
-      Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
-        { text: "Modifier les paramètres", onPress: openSetting },
-        { text: "Ignorer", onPress: () => {} }
-      ]);
-    }
-  } else if (Platform.OS === "android") {
-    const status = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    //console.log(status);
-    if (status === "granted") {
-      return true;
-    } else if (status === "denied") {
-      Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-    } else if (status === "unavailable") {
-      Alert.alert(`Erreur: géolocalisation indisponible.`);
-    } else if (status === "blocked") {
-      const openSetting = () => {
-        Linking.openSettings().catch(() => {
-          AppLogger.warn("SETTINGS", "Unable to open settings");
-        });
-      };
-      Alert.alert("Localisation requise", `Pour continuer, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
-        { text: "Modifier les paramètres", onPress: openSetting },
-        { text: "Ignorer", onPress: () => {} }
-      ]);
-    }
-  }
-
   return false;
 };
 
