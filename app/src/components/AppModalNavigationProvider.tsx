@@ -1,12 +1,10 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 
-import { getSetting } from "@/api/storage";
 import { LianeGeolocation } from "@/api/service/location";
 import { RootNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
-import { UnionUtils } from "@/api";
-import { MemberAccepted } from "@/api/event";
-import { Event } from "@/api/notification";
+import { AppStorage } from "@/api/storage";
+import { Event, MemberAccepted, UnionUtils } from "@liane/common";
 
 export interface IAppModalNavigation {
   showTutorial: (as: "passenger" | "driver", lianeId?: string) => void;
@@ -22,9 +20,10 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
     if (!u) {
       return;
     }
-    getSetting("geolocation").then(async setting => {
-      const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkBackgroundGeolocationPermission());
-      if (mismatchedPermissions) {
+    AppStorage.getSetting("geolocation").then(async setting => {
+
+        const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkBackgroundGeolocationPermission());
+        if (mismatchedPermissions) {
         // Permissions don't match saved settings, so show again
 
         RootNavigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined });
