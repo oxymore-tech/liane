@@ -18,7 +18,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { useObservable } from "@/util/hooks/subscription";
-import { hideTutorial, shouldShowTutorial } from "@/api/storage";
+import { useIsFocused } from "@react-navigation/native";
+import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -55,7 +56,6 @@ const Header = () => {
 const MyTripsScreen = () => {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const { navigation } = useAppNavigation();
 
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
@@ -72,23 +72,15 @@ const MyTripsScreen = () => {
       setSelectedTab(0);
     }
   }, [isFetchingFutureLianes]);
+  const { shouldShow, showTutorial } = useContext(AppModalNavigationContext);
+  const focused = useIsFocused();
 
   useEffect(() => {
-    shouldShowTutorial("geolocation").then(show => {
-      if (!show) {
-        return;
-      }
-      const sub = services.realTimeHub.userUpdates.subscribe(user => {
-        if (user.stats.totalCreatedTrips > 0 || user.stats.totalJoinedTrips > 0) {
-          navigation.navigate("FirstTripWizard", {
-            showAs: user.stats.totalCreatedTrips === 1 ? "driver" : user.stats.totalJoinedTrips === 1 ? "passenger" : null
-          });
-          hideTutorial("geolocation");
-        }
-      });
-      return () => sub.unsubscribe();
-    });
-  }, [navigation, services.realTimeHub.userUpdates]);
+    if (shouldShow === "passenger" && focused) {
+      showTutorial("passenger");
+    }
+    // do not add function 'showTutorial' to dependencies
+  }, [focused, shouldShow]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;

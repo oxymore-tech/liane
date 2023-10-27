@@ -1,46 +1,104 @@
-import { Alert, ColorValue, Linking, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, ColorValue, Platform, StyleSheet, Switch, View } from "react-native";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { check, PERMISSIONS, request } from "react-native-permissions";
-import { AppLogger } from "@/api/logger";
+import { check, PERMISSIONS } from "react-native-permissions";
 import { DdLogs } from "@datadog/mobile-react-native";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
-import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/api/navigation";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { getSetting, saveSetting } from "@/api/storage";
+import { requestBackgroundGeolocation, requestGeolocation } from "@/api/service/location";
+import { useAppState } from "@react-native-community/hooks";
+import { AppContext } from "@/components/context/ContextProvider";
+import { GeolocationLevel } from "@/api";
+import { AppLogger } from "@/api/logger";
 
 export const TripGeolocationWizard = WithFullscreenModal(
   () => {
-    const { route, navigation } = useAppNavigation<"FirstTripWizard">();
+    const { route, navigation } = useAppNavigation<"TripGeolocationWizard">();
+    const [page, setPage] = useState<undefined | number>(undefined);
+    const [showIntroductionPage, setShowIntroductionPage] = useState(!!route.params?.showAs);
+    const appState = useAppState();
 
-    const [page, setPage] = useState(route.params?.showAs ? 1 : 0);
+    useEffect(() => {
+      if (appState !== "active") {
+        return;
+      }
+      check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(p => {
+        const allowed = p === "granted";
+        DdLogs.info(`Location permission status is now: ${p}`);
+        getSetting("geolocation")
+          .then(setting => {
+            console.log("setting", setting);
+            if (setting) {
+              const settingAllowed = setting !== "None";
+              setPage(!allowed && settingAllowed ? 1 : 2);
+            } else {
+              setPage(showIntroductionPage ? 0 : 1);
+            }
+          })
 
+          .catch(e => {
+            AppLogger.error("GEOLOC", e);
+            setPage(showIntroductionPage ? 0 : 1);
+          });
+      });
+    }, [appState, route.params?.showAs, showIntroductionPage]);
+
+    if (page === undefined) {
+      return (
+        <Center>
+          <ActivityIndicator color={AppColors.primaryColor} />
+        </Center>
+      );
+    }
     const endTutorial = () => {
-      navigation.popToTop();
-      navigation.navigate(HOME_TRIPS);
+      navigation.goBack();
     };
     const next = () => setPage(page + 1);
     const prev = () => setPage(page - 1);
     return (
       <View style={{ flex: 1 }}>
-        {page === 0 && <Page1 next={next} showAs={route.params!.showAs!} />}
-        {page === 1 && <Page2 next={next} />}
-        {page === 2 && <Page3 next={endTutorial} prev={prev} />}
+        {page === 0 && (
+          <Page1
+            next={() => {
+              next();
+              setShowIntroductionPage(false);
+            }}
+            showAs={route.params!.showAs!}
+          />
+        )}
+        {page === 1 && (
+          <Page2
+            next={(authorize: boolean) => {
+              saveSetting("geolocation", authorize ? "Shared" : "None").then(next);
+            }}
+          />
+        )}
+        {page === 2 && (
+          <Page3
+            next={endTutorial}
+            prev={() => {
+              saveSetting("geolocation", null).then(prev);
+            }}
+          />
+        )}
       </View>
     );
   },
   "",
   false
 );
-const Page2 = (props: { next: () => void }) => {
+const Page2 = (props: { next: (authorize: boolean) => void }) => {
   const items: { icon: IconName; text: string }[] = [
-    { icon: "navigation-2-outline", text: "Le suivi de votre position nous permet de certifier que vos trajet ont bien été effectués." },
+    { icon: "navigation-2-outline", text: "Le suivi de votre position nous permet de certifier que vos trajets ont bien été effectués." },
     { icon: "people-outline", text: "Conducteur et passagers peuvent voir leur position sur la carte. Se retrouver devient un jeu d'enfant !" },
     {
       icon: "play-circle-outline",
-      text: "Vos données vous appartiennent. Le partage de votre position ne commence que quand vous confirmez avoir démarré le trajet."
+      text: "Vos données vous appartiennent. Le partage de votre position commence quand vous confirmez avoir démarré."
     }
   ];
   const alertLocation = () =>
@@ -48,74 +106,22 @@ const Page2 = (props: { next: () => void }) => {
       "Voulez vous vraiment passer cette étape ?",
       "Aucun trajet ne pourra être certifié par Liane et certaines fonctionnalités seront désactivées.",
       [
-        { text: "Ne pas autoriser", onPress: props.next, style: "default" },
+        { text: "Ne pas autoriser", onPress: () => props.next(false), style: "default" },
         { text: "Annuler", onPress: () => {}, style: "cancel" }
       ]
     );
 
-  const requestBackgroundGeolocation = async () => {
-    if (Platform.OS === "ios") {
-      if (parseInt(Platform.Version, 10) < 13) {
-        const status = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
-        if (status === "granted") {
-          return true;
-        } else if (status === "denied") {
-          Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-        } else if (status === "unavailable") {
-          Alert.alert(`Erreur: géolocalisation indisponible.`);
-        } else if (status === "blocked") {
-          const openSetting = () => {
-            Linking.openSettings().catch(() => {
-              AppLogger.warn("SETTINGS", "Unable to open settings");
-            });
-          };
-          Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
-            { text: "Modifier les paramètres", onPress: openSetting },
-            { text: "Ignorer", onPress: () => {} }
-          ]);
-        }
-      } else {
-        await Linking.openSettings();
-      }
-    } else if (Platform.OS === "android") {
-      if (Platform.Version <= 29) {
-        const status = await request(
-          Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
-        );
-        //console.log(status);
-        if (status === "granted") {
-          return true;
-        } else if (status === "denied") {
-          Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-        } else if (status === "unavailable") {
-          Alert.alert(`Erreur: géolocalisation indisponible.`);
-        } else if (status === "blocked") {
-          const openSetting = () => {
-            Linking.openSettings().catch(() => {
-              AppLogger.warn("SETTINGS", "Unable to open settings");
-            });
-          };
-          Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
-            { text: "Modifier les paramètres", onPress: openSetting },
-            { text: "Ignorer", onPress: () => {} }
-          ]);
-        }
-      } else {
-        await Linking.openSettings().catch(() => {
-          AppLogger.warn("SETTINGS", "Unable to open settings");
-        });
-      }
+  const authorize = async () => {
+    if ((await check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION)) === "granted") {
+      props.next(true);
+      AppLogger.info("GEOLOC", "already authorized");
+      return;
     }
-    return false;
-  };
+    if (!(await requestGeolocation())) {
+      AppLogger.info("GEOLOC", "Base geolocation permission needed");
+      return;
+    }
 
-  useEffect(() => {
-    check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(p => {
-      DdLogs.info(`Location permission status is: ${p}`);
-    });
-  }, []);
-
-  const authorize = () => {
     let text;
     if (Platform.OS === "ios" && parseInt(Platform.Version, 10) >= 13) {
       text = ['Appuyez sur "Continuer"', 'Allez dans "Position"', 'Sélectionnez "Toujours" dans la liste des autorisations"'];
@@ -132,11 +138,11 @@ const Page2 = (props: { next: () => void }) => {
       ];
     }
     if (text) {
-      Alert.alert("Autoriser la géolocalisation dans les paramètres", text.map((item, i) => i + 1 + ". " + item).join("\n"), [
+      Alert.alert("Autoriser la géolocalisation en arrière-plan", text.map((item, i) => i + 1 + ". " + item).join("\n"), [
         {
           text: "Continuer",
           onPress: () => {
-            requestBackgroundGeolocation().then(props.next);
+            requestBackgroundGeolocation().then(() => props.next(true));
           },
           style: "default"
         }
@@ -178,7 +184,7 @@ const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
     <AppText style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>Félicitations !</AppText>
 
     <AppText numberOfLines={5} style={{ alignSelf: "center", textAlign: "center", fontSize: 18 }}>
-      {(props.showAs === "driver" ? "Votre Liane est en ligne !" : "Vous avez rejoins une Liane !") +
+      {(props.showAs === "driver" ? "Votre Liane est en ligne !" : "Vous avez rejoint une Liane !") +
         "\n\nDécouvrez comment améliorer votre expérience pendant le trajet."}
     </AppText>
     <Space />
@@ -191,42 +197,69 @@ const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
 );
 
 const Page3 = (props: { next: () => void; prev: () => void }) => {
-  const [permission, setPermission] = useState<boolean | undefined>(undefined);
-
+  const { route } = useAppNavigation<"TripGeolocationWizard">();
+  const { services } = useContext(AppContext);
+  const [loading, setLoading] = useState(false);
+  const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel | null>(null);
   useEffect(() => {
-    check(Platform.OS === "ios" ? PERMISSIONS.IOS.LOCATION_ALWAYS : PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(p => {
-      DdLogs.info(`Location permission status is now: ${p}`);
-      setPermission(p === "granted");
-    });
+    getSetting("geolocation").then(setTrackedLevel);
   }, []);
-  if (permission === undefined) {
-    return null;
+  if (!trackedLevel) {
+    return <ActivityIndicator />;
   }
-  console.log(permission);
+  const confirm = async () => {
+    if (route.params?.lianeId) {
+      setLoading(true);
+      await services.liane.setTracked(route.params.lianeId, trackedLevel);
+    }
+    props.next();
+    setLoading(false);
+  };
+
   return (
     <View style={{ alignItems: "center", flex: 1 }}>
       <AppText numberOfLines={3} style={{ fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>
-        {permission ? "L'accès à votre position est autorisé" : "Votre position ne sera pas utilisée par Liane"}
+        {trackedLevel !== "None" ? "La géolocalisation des trajets est activée" : "Votre position ne sera pas utilisée par Liane"}
       </AppText>
-      {permission && (
-        <AppText numberOfLines={4}>
-          Avant de partir pour votre trajet, confirmez votre départ dans l'application pour activer le suivi de votre position.
+      <AppIcon name={trackedLevel !== "None" ? "checkmark-circle-2" : "close-circle"} color={AppColors.primaryColor} size={120} />
+      {trackedLevel !== "None" && (
+        <AppText numberOfLines={6} style={{ padding: 12 }}>
+          {
+            "Vos prochains trajets seront géolocalisés par défaut.\n\nVous pouvez changer ce réglage de façon globale dans les paramètres de l'application ou individuellement pour chaque trajet."
+          }
         </AppText>
       )}
-      {!permission && (
-        <AppText numberOfLines={4}>
-          Votre position ne sera pas partagée quand vous démarrerez votre trajet. Vous pouvez changer ce réglage à tout moment dans les paramètres de
-          l'application.
+      {trackedLevel !== "None" && (
+        <Row style={{ alignItems: "center", paddingHorizontal: 16 }} spacing={16}>
+          <Switch
+            style={{ marginBottom: -4 }}
+            trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
+            thumbColor={trackedLevel === "Shared" ? AppColors.white : AppColors.grayBackground}
+            ios_backgroundColor={AppColors.grayBackground}
+            value={trackedLevel === "Shared"}
+            onValueChange={enabled => setTrackedLevel(enabled ? "Shared" : "Hidden")}
+          />
+          <AppText style={{ fontWeight: "bold" }} numberOfLines={2}>
+            Autoriser les autres membres de mes trajets à voir ma position
+          </AppText>
+        </Row>
+      )}
+      {trackedLevel === "None" && (
+        <AppText numberOfLines={6} style={{ padding: 12 }}>
+          {
+            "Votre position ne sera pas partagée quand vous démarrerez votre trajet.\n\nVous pouvez changer ce réglage à tout moment dans les paramètres de l'application."
+          }
         </AppText>
       )}
       <Space />
       <Column style={{ alignItems: "center" }}>
         <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
-          <Button text={"J'ai compris !"} onPress={props.next} />
+          <Button text={"J'ai compris !"} onPress={confirm} />
         </Row>
-        {!permission && (
+        {trackedLevel === "None" && (
           <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <Button text={"Précédent"} onPress={props.prev} color={AppColorPalettes.gray[400]} />
+            {!loading && <Button text={"Précédent"} onPress={props.prev} color={AppColorPalettes.gray[400]} />}
+            {loading && <ActivityIndicator color={AppColors.primaryColor} size={"small"} />}
           </Row>
         )}
       </Column>

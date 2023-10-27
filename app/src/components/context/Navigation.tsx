@@ -3,16 +3,13 @@ import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navig
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { WithBadge } from "@/components/base/WithBadge";
-
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
-import { ShareTripLocationScreen } from "@/screens/modals/ShareTripLocationScreen";
 import { AccountScreen } from "@/screens/user/AccountScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
@@ -24,9 +21,7 @@ import { ChatScreen } from "@/screens/ChatScreen";
 import HomeScreen from "@/screens/home/HomeScreen";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
-
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { Row } from "@/components/base/AppLayout";
@@ -93,11 +88,14 @@ function Navigation() {
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="ShareTripLocationScreen" component={ShareTripLocationScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
-        <Stack.Screen name="FirstTripWizard" component={TripGeolocationWizard} options={{ headerShown: false, animation: "slide_from_bottom" }} />
+        <Stack.Screen
+          name="TripGeolocationWizard"
+          component={TripGeolocationWizard}
+          options={{ headerShown: false, animation: "slide_from_bottom" }}
+        />
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Notifications" component={NotificationScreen} />

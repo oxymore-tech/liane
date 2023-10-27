@@ -26,7 +26,7 @@ interface AppContextProps {
   appState: AppStateStatus;
 }
 
-const SERVICES = CreateAppServices();
+let SERVICES = CreateAppServices();
 const queryClient = new QueryClient();
 
 export const AppContext = createContext<AppContextProps>({
@@ -254,6 +254,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     await SERVICES.realTimeHub.stop();
     AppLogger.info("LOGOUT", "Disconnected.");
     queryClient.clear();
+    SERVICES = CreateAppServices();
     await this.setAuthUser(undefined);
   };
 

@@ -1,27 +1,58 @@
 import { Liane } from "@/api";
-import { useAppNavigation } from "@/api/navigation";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
-import { Alert, StyleSheet, Switch } from "react-native";
-import { cancelSendLocationPings } from "@/api/service/location";
+import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
+import { cancelSendLocationPings, requestEnableGPS, startPositionTracking } from "@/api/service/location";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext, useMemo, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
+import { getCurrentUser } from "@/api/storage";
+import { getTripFromLiane } from "@/components/trip/trip";
+import { AppLogger } from "@/api/logger";
 
+export const startGeolocationService = async (liane: Liane, force: boolean = false) => {
+  const user = await getCurrentUser();
+  const me = liane.members.find(l => l.user.id === user!.id)!;
+  if (force || (me.geolocationLevel && me.geolocationLevel !== "None")) {
+    requestEnableGPS()
+      .then(async () => {
+        try {
+          const trip = getTripFromLiane(liane, user!.id!);
+          await startPositionTracking(liane.id!, trip.wayPoints);
+        } catch (e) {
+          AppLogger.error("GEOLOC", e);
+        }
+      })
+      .catch(e => {
+        AppLogger.error("GEOLOC", e);
+        Alert.alert("Localisation requise", "Liane a besoin de suivre votre position pour pouvoir valider votre trajet.");
+      });
+  }
+};
 export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
-  const { navigation } = useAppNavigation();
   const { user } = useContext(AppContext);
   const geoloc = useTripGeolocation();
   const { services } = useContext(AppContext);
   const me = useMemo(() => match.members.find(l => l.user.id === user!.id)!, [match.members, user]);
-  const [isTracked, setTracked] = useState(me.geolocationLevel === "Hidden" || me.geolocationLevel === "Shared");
+  const [isTracked, setTracked] = useState<boolean | undefined>(me.geolocationLevel === "Hidden" || me.geolocationLevel === "Shared");
 
-  const setGeolocalisationEnabled = (enabled: boolean) => {
-    if (geoloc === undefined) {
-      services.liane.setTracked(match.id!, enabled).then(() => setTracked(enabled));
+  const setGeolocalisationEnabled = async (enabled: boolean) => {
+    const oldValue = isTracked;
+    setTracked(undefined);
+    if (geoloc === undefined || geoloc.liane.id !== match.id) {
+      services.liane
+        .setTracked(match.id!, enabled ? "Shared" : "None")
+        .then(() => setTracked(enabled))
+        .catch(() => setTracked(oldValue));
     } else if (!geoloc.isActive) {
-      navigation.replace("ShareTripLocationScreen", { liane: match });
+      services.liane
+        .setTracked(match.id!, enabled ? "Shared" : "None")
+        .then(() => {
+          setTracked(enabled);
+          startGeolocationService(match, true);
+        })
+        .catch(() => setTracked(oldValue));
     } else {
       Alert.alert("Arrêter la géolocalisation ?", "Vous pourrez relancer le partage en réappuyant sur ce bouton.", [
         {
@@ -34,7 +65,10 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
           onPress: async () => {
             // Cancel ongoing geolocation
             await cancelSendLocationPings();
-            services.liane.setTracked(match.id!, enabled).then(() => setTracked(enabled));
+            services.liane
+              .setTracked(match.id!, enabled ? "Shared" : "None")
+              .then(() => setTracked(enabled))
+              .catch(() => setTracked(oldValue));
           },
           style: "default"
         }
@@ -44,14 +78,17 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
 
   return (
     <Row spacing={8}>
-      <Switch
-        style={styles.geolocSwitch}
-        trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
-        thumbColor={geoloc?.isActive ? AppColors.white : AppColors.grayBackground}
-        ios_backgroundColor={AppColors.grayBackground}
-        value={isTracked && (geoloc === undefined || geoloc.isActive)}
-        onValueChange={setGeolocalisationEnabled}
-      />
+      {isTracked !== undefined && (
+        <Switch
+          style={styles.geolocSwitch}
+          trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
+          thumbColor={geoloc?.isActive ? AppColors.white : AppColors.grayBackground}
+          ios_backgroundColor={AppColors.grayBackground}
+          value={isTracked && (geoloc === undefined || geoloc.isActive)}
+          onValueChange={setGeolocalisationEnabled}
+        />
+      )}
+      {isTracked === undefined && <ActivityIndicator color={AppColors.primaryColor} size={"small"} />}
       <AppText style={[styles.geolocText, { color: geoloc?.isActive ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
         Géolocalisation
       </AppText>

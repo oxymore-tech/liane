@@ -2,7 +2,7 @@ import React, { PropsWithChildren, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useSubscription } from "@/util/hooks/subscription";
 import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse } from "@/api";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { InfiniteData, useQueryClient } from "react-query";
 import { Notification } from "@/api/notification";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
@@ -85,6 +85,7 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
       }
       return updateLianeList(old, liane);
     });
+    queryClient.setQueryData<Liane>(LianeDetailQueryKey(liane.id!), _ => liane);
   });
 
   // Update notifications local cache

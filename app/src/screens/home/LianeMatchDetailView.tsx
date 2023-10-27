@@ -37,6 +37,7 @@ import Animated, {
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DriverInfo } from "@/screens/detail/components/DriverInfo";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
+import { getSetting } from "@/api/storage";
 
 const StepView = ({
   displayFull,
@@ -138,6 +139,7 @@ export const LianeMatchDetailView = () => {
 
   const userIsMember = liane.liane.members.findIndex(m => m.user.id === user!.id) >= 0;
   const requestJoin = async () => {
+    const geolocationLevel = await getSetting("geolocation");
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
       from: fromPoint.id!,
@@ -145,7 +147,8 @@ export const LianeMatchDetailView = () => {
       seats: seats,
       liane: liane.liane.id!,
       takeReturnTrip,
-      to: toPoint.id!
+      to: toPoint.id!,
+      geolocationLevel: geolocationLevel || "None"
     };
 
     const r = { ...unresolvedRequest, message: message };
@@ -171,7 +174,7 @@ export const LianeMatchDetailView = () => {
     } else if (step === 3 && firstEdit) {
       setFirstEdit(false);
     }
-  }, [firstEdit, isReturnStep, isSeatsStep, nextStep, requestJoin, step]);
+  }, [firstEdit, isReturnStep, isSeatsStep, nextStep, step]);
   const insets = useSafeAreaInsets();
 
   return (

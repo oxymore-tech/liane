@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";
 import { isLocationServiceRunning, watchLocationServiceState } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
+import { addSeconds } from "@/util/datetime";
 
 export interface TripGeolocation {
   liane: Liane;
@@ -19,21 +20,22 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   const [observables, setObservables] = useState<{ [k: string]: Observable<TrackedMemberLocation | null> }>({});
   const isFocused = useIsFocused();
   const lianeStatus = useLianeStatus(liane);
+  const shouldBeActive = isFocused && (lianeStatus === "Started" || lianeStatus === "StartingSoon");
+
+  // Check if service is running locally
   useEffect(() => {
-    if (isFocused && (lianeStatus === "Started" || lianeStatus === "StartingSoon")) {
-      isLocationServiceRunning().then(setGeolocRunning);
+    if (shouldBeActive) {
+      isLocationServiceRunning(liane.id!).then(setGeolocRunning);
     } else {
       setGeolocRunning(false);
     }
-  }, [isFocused, liane.id, lianeStatus]);
-
-  useEffect(() => {
-    const sub = watchLocationServiceState(setGeolocRunning);
+    const sub = watchLocationServiceState(l => setGeolocRunning(l === liane.id!));
     return () => sub.unsubscribe();
-  }, []);
+  }, [shouldBeActive, liane.id]);
 
+  // Observe shared position by other members
   useEffect(() => {
-    if (!geolocRunning) {
+    if (!shouldBeActive) {
       setObservables({});
       return;
     }
@@ -55,9 +57,10 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
         })
       );
     };
-  }, [user?.id, liane, services.realTimeHub, geolocRunning, user]);
+  }, [user?.id, liane, services.realTimeHub, shouldBeActive, user]);
 
   if (geolocRunning === undefined) {
+    // Return null while fetching informations
     return null;
   }
   const value: TripGeolocation = {
@@ -82,4 +85,47 @@ export const useMemberTripGeolocation = (memberId: string) => {
     return () => s?.unsubscribe();
   }, [geoloc, memberId]);
   return lastLocUpdate;
+};
+
+const StalePingDelay = 180; // 3 minutes
+export const useMemberIsMoving = (memberId: string) => {
+  const lastLocUpdate = useMemberTripGeolocation(memberId);
+  const [moving, setMoving] = useState(!!lastLocUpdate && addSeconds(new Date(lastLocUpdate.at), 120).getTime() >= new Date().getTime());
+
+  useEffect(() => {
+    if (!lastLocUpdate) {
+      return;
+    } else {
+      const timeout = setInterval(() => {
+        const d = (new Date().getTime() - new Date(lastLocUpdate.at).getTime()) / 1000;
+        setMoving(d < StalePingDelay);
+      }, 10 * 1000);
+      return () => clearInterval(timeout);
+    }
+  }, [lastLocUpdate]);
+
+  return { ...lastLocUpdate, moving };
+};
+export const useMemberRealTimeDelay = (memberId: string) => {
+  const lastDriverLocUpdate = useMemberTripGeolocation(memberId);
+  const { user } = useContext(AppContext);
+  const [delay, setDelay] = useState<number>(lastDriverLocUpdate ? (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000 : 0);
+
+  useEffect(() => {
+    if (!lastDriverLocUpdate) {
+      return;
+    } else {
+      const timeout = setInterval(() => {
+        const d = (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000;
+        if (d < StalePingDelay) {
+          setDelay(d);
+        } else {
+          setDelay(lastDriverLocUpdate.delay);
+        }
+      }, 10 * 1000);
+      return () => clearInterval(timeout);
+    }
+  }, [lastDriverLocUpdate]);
+  console.log(user?.phone, lastDriverLocUpdate?.member, lastDriverLocUpdate?.at, lastDriverLocUpdate?.delay, delay);
+  return lastDriverLocUpdate ? { ...lastDriverLocUpdate, delay } : null;
 };

@@ -56,6 +56,7 @@ export class HubServiceClient extends AbstractHubService {
         this.isStarted = true;
         await storeCurrentUser(me);
         resolve(me);
+        this.hub.off("Me");
         this.hub.on("Me", async (next: FullUser) => {
           await storeCurrentUser(next);
           this.receiveUserUpdate(next);

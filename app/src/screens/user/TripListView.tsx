@@ -17,9 +17,9 @@ import { useObservable } from "@/util/hooks/subscription";
 import { capitalize } from "@/util/strings";
 import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
 import { WayPointsView } from "@/components/trip/WayPointsView";
-import { TripGeolocationProvider, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
+import { TripGeolocationProvider, useMemberRealTimeDelay, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { startGeoloc } from "@/screens/modals/ShareTripLocationScreen";
+import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -97,7 +97,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
-  const lastDriverLocUpdate = useMemberTripGeolocation(item.driver.user);
+  const lastDriverLocUpdate = useMemberRealTimeDelay(item.driver.user);
   const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
@@ -176,7 +176,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
             borderBottomRightRadius: 16,
             borderBottomLeftRadius: 16
           }}
-          onPress={() => services.liane.start(item)}>
+          onPress={() => services.liane.start(item.id!).then(() => startGeolocationService(item))}>
           <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
             <AppIcon name={"play-circle"} color={AppColors.white} />
             <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>

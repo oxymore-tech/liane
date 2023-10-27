@@ -9,6 +9,7 @@ import { Notification } from "@/api/notification";
 import { formatTime } from "@/api/i18n";
 import { LianeServiceClient } from "@/api/service/liane";
 import { AppLogger } from "@/api/logger";
+import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 
 export class NotificationServiceClient extends AbstractNotificationService {
   async list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>> {
@@ -73,7 +74,7 @@ const pressActionMap = {
   loc: async (lianeId: string) => {
     const lianeService = new LianeServiceClient();
     const liane = await lianeService.get(lianeId);
-    await lianeService.start(liane);
+    await lianeService.start(liane.id!).then(() => startGeolocationService(liane));
   }
 } as const;
 const openNotification = async ({ type, detail }: Event) => {

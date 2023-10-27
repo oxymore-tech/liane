@@ -1,4 +1,4 @@
-import { DayOfTheWeekFlag, RallyingPoint } from "@/api";
+import { DayOfTheWeekFlag, Liane, RallyingPoint } from "@/api";
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 
 import { createStateSequence, CreateSubmittingState, SubmittingEvents } from "@/util/xstateHelpers";
@@ -27,6 +27,7 @@ export type InternalLianeRequest = {
 
 export type PublishContext = {
   request: Partial<InternalLianeRequest>;
+  created?: Liane | undefined;
 };
 
 type NextEvent = { type: "NEXT"; data: Partial<InternalLianeRequest> };
@@ -107,7 +108,7 @@ const createState = <T>(nextTarget: string, nextCondition?: (context: T) => bool
 };
 
 export const CreatePublishLianeMachine = (
-  submit: (formData: PublishContext) => Promise<void>,
+  submit: (formData: PublishContext) => Promise<Liane>,
   initialValue?: Partial<InternalLianeRequest> | undefined
 ): PublishStateMachine => {
   const states = createStateSequence<PublishContext, PublishStepsKeys>(
@@ -192,7 +193,7 @@ export const CreatePublishLianeMachine = (
           }
         },
         // @ts-ignore
-        submitting: { ...CreateSubmittingState("publish") },
+        submitting: { ...CreateSubmittingState("publish", undefined, "saveCreated") },
         done: { type: "final" }
       }
     },
@@ -201,6 +202,7 @@ export const CreatePublishLianeMachine = (
         submit: (context, _) => submit(context)
       },
       actions: {
+        saveCreated: assign<PublishContext, { data: Liane; type: "done.invoke.submit" }>({ created: (ctx, event) => event.data }),
         set: assign<PublishContext, NextEvent>({
           request: (context, event) => {
             return {

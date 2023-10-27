@@ -28,7 +28,7 @@ export type NavigationParamList = {
   ProfileEdit: undefined;
   Account: undefined;
   OpenJoinLianeRequest: { request: Event<JoinRequest> };
-  FirstTripWizard: { showAs: "driver" | "passenger" | undefined | null } | undefined;
+  TripGeolocationWizard: { showAs: "driver" | "passenger" | undefined | null; lianeId: string | undefined } | undefined;
   ArchivedTrips: undefined;
   Settings: undefined;
   //OpenValidateTrip: { liane: Liane };

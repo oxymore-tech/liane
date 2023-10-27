@@ -1,4 +1,4 @@
-import { LatLng, Liane, RallyingPoint, Ref, User } from "@/api/index";
+import { GeolocationLevel, LatLng, Liane, RallyingPoint, Ref, User } from "@/api/index";
 import { TimeInSeconds } from "@/util/datetime";
 
 export type LianeEvent = JoinRequest | MemberAccepted | MemberRejected | MemberHasLeft | MemberPing;
@@ -11,6 +11,7 @@ export type JoinRequest = Readonly<{
   seats: number;
   takeReturnTrip: boolean;
   message: string;
+  geolocationLevel: GeolocationLevel;
 }>;
 
 export type MemberAccepted = Readonly<{
