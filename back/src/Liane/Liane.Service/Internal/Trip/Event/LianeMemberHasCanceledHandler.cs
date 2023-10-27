@@ -31,15 +31,14 @@ public class LianeMemberHasCanceledHandler : IEventListener<LianeEvent.MemberHas
     if (liane.Driver.User == e.Member.Id)
     {
       // Driver canceled 
-     await Parallel.ForEachAsync(liane.Members.Where(m => m.Cancellation is null && m.User != liane.Driver.User), async (member, _) =>
+      await Parallel.ForEachAsync(liane.Members.Where(m => m.Cancellation is null && m.User != liane.Driver.User), async (member, _) =>
       {
-        var destination = liane.WayPoints.Find(w => w.RallyingPoint.Id! == member.To)!;
+        var destination = liane.WayPoints.Find(w => w.RallyingPoint.Id! == member.To)!.RallyingPoint.Label;
         await notificationService.SendEvent($"{user.Pseudo} a quitté la liane",
-          $"{user.Pseudo} a annulé la liane à destination de {destination}."  ,
+          $"{user.Pseudo} a annulé la liane à destination de {destination}.",
           sender ?? currentContext.CurrentUser().Id,
-          liane.Driver.User, e);
+          member.User, e);
       });
-      
     }
     else
     {
