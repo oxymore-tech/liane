@@ -8,7 +8,13 @@ public sealed class ExceptionFilter : IAsyncExceptionFilter, IOrderedFilter
 {
   public Task OnExceptionAsync(ExceptionContext context)
   {
-    context.Result = HttpExceptionMapping.Map(context.Exception, context.ModelState);
+    var objectResult = HttpExceptionMapping.Map(context.Exception, context.ModelState);
+    if (objectResult == null)
+    {
+      return Task.CompletedTask;
+    }
+
+    context.Result = objectResult;
     context.ExceptionHandled = true;
     return Task.CompletedTask;
   }

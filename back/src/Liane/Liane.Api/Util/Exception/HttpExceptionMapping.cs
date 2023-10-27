@@ -22,7 +22,7 @@ public static class HttpExceptionMapping
     };
   }
 
-  public static IActionResult Map(System.Exception exception, ModelStateDictionary? modelState = null)
+  public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null)
   {
     switch (exception)
     {
@@ -56,10 +56,9 @@ public static class HttpExceptionMapping
 
       case ExpectationFailedException e:
         return Result(e.Message, HttpStatusCode.ExpectationFailed);
-
-      default:
-        return Result(exception.Message, HttpStatusCode.InternalServerError);
     }
+
+    return null;
   }
 
   private static ObjectResult Result(string message, HttpStatusCode code)
