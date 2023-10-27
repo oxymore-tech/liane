@@ -18,6 +18,7 @@
         <PackageReference Include="GeoJSON.Text" Version="1.0.1" />
         <PackageReference Include="MongoDB.Bson" Version="2.19.2" />
         <PackageReference Include="MongoDB.Driver" Version="2.19.2" />
+        <PackageReference Include="NodaTime" Version="3.1.9" />
         <PackageReference Include="Npgsql" Version="7.0.4" />
         <PackageReference Include="Npgsql.GeoJSON" Version="7.0.4" />
         <PackageReference Include="Twilio" Version="6.2.4" />

@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import React, { useContext } from "react";
-import { Column } from "@/components/base/AppLayout";
+import { Column, Space } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
@@ -48,7 +48,7 @@ export const SignUpFormScreen = () => {
           <TextField name={"name"} />
           <TextField name={"firstname"} />
 
-          <View style={{ flex: 1 }} />
+          <Space />
           <AppRoundedButton
             color={defaultTextColor(AppColors.primaryColor)}
             onPress={methods.handleSubmit(onSubmit, onError)}

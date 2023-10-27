@@ -1,59 +1,68 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { UseQueryResult, useQueries, useQueryClient } from "react-query";
-import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse, Ref } from "@/api";
+import { JoinLianeRequestDetailed, Liane, Ref } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";
-import { useSubscription } from "@/util/hooks/subscription";
 import { UserPicture } from "@/components/UserPicture";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppPressableIcon } from "@/components/base/AppPressable";
+import { FutureStates } from "@/components/context/QueryUpdateProvider";
+import { useObservable } from "@/util/hooks/subscription";
+import { useIsFocused } from "@react-navigation/native";
+import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 
-const MyTripsScreen = () => {
+const Header = () => {
   const { navigation } = useAppNavigation();
+  const { user, services } = useContext(AppContext);
+  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  return (
+    <Row style={{ alignItems: "center" }} spacing={16}>
+      <AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
+      <Space />
+      <View>
+        <AppPressableIcon
+          name={"bell-outline"}
+          color={AppColors.primaryColor}
+          size={32}
+          onPress={() => {
+            navigation.navigate("Notifications");
+          }}
+        />
+        {notificationCount > 0 && (
+          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 8, height: 12, width: 12, position: "absolute", right: 3, top: 0 }} />
+        )}
+      </View>
+      <TouchableOpacity
+        style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
+        onPress={() =>
+          // @ts-ignore
+          navigation.navigate("Profile", { user })
+        }>
+        <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
+      </TouchableOpacity>
+    </Row>
+  );
+};
+const MyTripsScreen = () => {
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const futureStates: LianeState[] = ["NotStarted", "Started"];
-  const { services, user } = useContext(AppContext);
+
+  const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(futureStates, undefined, 25, false) }
+    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(FutureStates, undefined, 25, false) }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
-
-  useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
-    queryClient.setQueryData<PaginatedResponse<JoinLianeRequestDetailed>>(JoinRequestsQueryKey, old => {
-      if (!old) {
-        return { pageSize: 0, data: [] };
-      }
-      const updatedData = old.data.filter(joinRequest => joinRequest.targetLiane.id !== liane.id);
-      return { pageSize: updatedData.length, data: updatedData };
-    });
-    queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
-      if (!old) {
-        return { next: undefined, pageSize: 1, data: [liane] };
-      }
-      const found = old.data.findIndex(l => l.id === liane.id);
-      if (futureStates.includes(liane.state)) {
-        if (found >= 0) {
-          old.data[found] = liane;
-          return old;
-        } else {
-          old.data.unshift(liane);
-          return { ...old, pageSize: old.pageSize + 1 };
-        }
-      } else if (found >= 0) {
-        return { ...old, pageSize: old.pageSize - 1, data: old.data.filter(l => l.id !== liane.id) };
-      }
-      return old;
-    });
-  });
 
   const isFetchingFutureLianes = queryClient.isFetching({
     predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
@@ -63,6 +72,15 @@ const MyTripsScreen = () => {
       setSelectedTab(0);
     }
   }, [isFetchingFutureLianes]);
+  const { shouldShow, showTutorial } = useContext(AppModalNavigationContext);
+  const focused = useIsFocused();
+
+  useEffect(() => {
+    if (shouldShow === "passenger" && focused) {
+      showTutorial("passenger");
+    }
+    // do not add function 'showTutorial' to dependencies
+  }, [focused, shouldShow]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;
@@ -105,26 +123,8 @@ const MyTripsScreen = () => {
 
   return (
     <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
-      <Column style={styles.headerContainer} spacing={16}>
-        <Row>
-          <AppButton
-            style={{ flex: 1 }}
-            icon="plus-outline"
-            kind="rounded"
-            title="Créer une liane"
-            onPress={() => navigation.navigate("Publish", {})}
-          />
-          <View style={{ flex: 1, alignItems: "flex-end", justifyContent: "center", marginRight: 12 }}>
-            <TouchableOpacity
-              style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
-              onPress={() =>
-                // @ts-ignore
-                navigation.navigate("Profile", { user })
-              }>
-              <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-            </TouchableOpacity>
-          </View>
-        </Row>
+      <Column style={[styles.headerContainer, { paddingTop: insets.top }]} spacing={16}>
+        <Header />
         <AppTabs
           items={["Lianes à venir", "Lianes passées"]}
           onSelect={setSelectedTab}

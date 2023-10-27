@@ -29,9 +29,10 @@ public sealed class DeleteAccountServiceImpl : IDeleteAccountService
   public async Task DeleteCurrent()
   {
     var id = currentContext.CurrentUser().Id;
+    // Clear lianes
+    await lianeService.CancelAllTrips(id);
+    await lianeRecurrenceService.ClearForMember(id);
     await imageService.DeleteProfile(id);
     await userService.Delete(id);
-    await lianeService.RemoveMember(id);
-    await lianeRecurrenceService.ClearForMember(id);
   }
 }

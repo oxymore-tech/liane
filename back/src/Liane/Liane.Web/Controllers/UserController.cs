@@ -22,6 +22,12 @@ public sealed class UserController : ControllerBase
     this.deleteAccountService = deleteAccountService;
   }
 
+  [HttpGet]
+  public Task<FullUser> Me()
+  {
+    return userService.GetFullUser(currentContext.CurrentUser().Id);
+  }
+
   [HttpPatch("push_token")]
   public Task UpdatePushToken([FromBody] string pushToken)
   {

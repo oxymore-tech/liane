@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -19,8 +19,8 @@ import { useQueryClient } from "react-query";
 import { useActor, useInterpret } from "@xstate/react";
 
 import { DayOfTheWeekFlag } from "@/api";
-import { useAppNavigation } from "@/api/navigation";
-import { formatDaysOfTheWeek, formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
+import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -43,8 +43,9 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { getFirstFutureDate } from "@/util/datetime";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
-import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { UserPicture } from "@/components/UserPicture";
+import { PageHeader } from "@/components/context/Navigation";
+import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
+import { getSetting } from "@/api/storage";
 
 interface StepProps<T> {
   editable: boolean;
@@ -58,36 +59,46 @@ export const PublishScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
   const { navigation, route } = useAppNavigation<"Publish">();
+  const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
 
   const [m] = useState(() =>
     CreatePublishLianeMachine(async ctx => {
+      const geolocationLevel = await getSetting("geolocation");
       const liane = await services.liane.post({
         to: ctx.request.to!.id!,
         from: ctx.request.from!.id!,
         departureTime: ctx.request.departureTime!.toISOString(),
         availableSeats: ctx.request.availableSeats!,
         returnTime: ctx.request.returnTime?.toISOString(),
-        recurrence: ctx.request.recurrence || null
+        recurrence: ctx.request.recurrence || null,
+        geolocationLevel: geolocationLevel || "None"
       });
 
-      if (liane) {
-        await queryClient.invalidateQueries(LianeQueryKey);
-        await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
-      }
+      await queryClient.invalidateQueries(LianeQueryKey);
+      await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
+      return liane;
     }, route.params?.initialValue)
   );
   const machine = useInterpret(m);
+  const [state] = useActor(machine);
   machine.onDone(() => {
+    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
+    if (!state.done) {
+      return;
+    }
     navigation.popToTop();
-    //@ts-ignore
-    navigation.navigate("Mes trajets");
+    if (shouldShow) {
+      showTutorial("driver", state.context.created!.id);
+    } else {
+      navigation.navigate(HOME_TRIPS);
+    }
   });
 
   return (
     /*  @ts-ignore */
     <PublishLianeContext.Provider value={machine}>
       <PublishScreenView />
-      <AppStatusBar style="light-content" />
+      <AppStatusBar style="dark-content" />
     </PublishLianeContext.Provider>
   );
 };
@@ -97,7 +108,6 @@ export const PublishScreenView = () => {
   const insets = useSafeAreaInsets();
   const machine = useContext(PublishLianeContext);
   const [state] = useActor(machine);
-  const { user } = useContext(AppContext);
 
   const isTripStep = state.matches("trip");
   const isDateStep = state.matches("date");
@@ -122,9 +132,9 @@ export const PublishScreenView = () => {
   };
 
   const offsetsTop = {
-    dateStep: insets.top + 160 - 24,
-    vehicleStep: insets.top + 160 - 24 * 2 + 80,
-    returnStep: insets.top + 160 - 24 * 3 + 80 * 2
+    dateStep: insets.top + 172 - 24,
+    vehicleStep: insets.top + 172 - 24 * 2 + 80,
+    returnStep: insets.top + 172 - 24 * 3 + 80 * 2
   };
 
   if (state.matches("map")) {
@@ -145,21 +155,8 @@ export const PublishScreenView = () => {
   }
 
   return (
-    <Column style={{ flex: 1, backgroundColor: AppColors.white }}>
-      <FloatingBackButton onPress={navigation.goBack} />
-      {(isOverviewStep || isSubmittingStep) && (
-        <Animated.View exiting={SlideOutLeft.duration(20)} entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}>
-          {/*<AppPressableOverlay
-            onPress={() => {
-              machine.send("RETURN", { data: { returnTime: null } });
-            }}>
-            <Row style={{ paddingHorizontal: 16, alignItems: "center" }}>
-              <AppIcon name={"plus-circle-outline"} />
-              <AppText style={{ paddingHorizontal: 16 }}>Ajouter un retour</AppText>
-            </Row>
-          </AppPressableOverlay>*/}
-        </Animated.View>
-      )}
+    <Column style={{ flex: 1, backgroundColor: AppColors.white, paddingBottom: insets.bottom }}>
+      <PageHeader title={"Créer une Liane"} navigation={navigation} />
 
       {(isOverviewStep || isSubmittingStep || isReturnStep) && (
         <Animated.View
@@ -228,19 +225,6 @@ export const PublishScreenView = () => {
         </Animated.View>
       )}
 
-      <Row style={styles.headerStyle}>
-        <AppIcon style={{ flex: 1, marginRight: 16 }} name={"bell-outline"} color={AppColors.primaryColor} size={32} />
-
-        <TouchableOpacity
-          style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
-          onPress={() =>
-            // @ts-ignore
-            navigation.navigate("Profile", { user })
-          }>
-          <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-        </TouchableOpacity>
-      </Row>
-
       <ItinerarySearchForm
         editable={isTripStep}
         animateEntry={Platform.OS === "ios"} // TODO : investigate android issue where animation does not start
@@ -266,12 +250,16 @@ export const PublishScreenView = () => {
       {(isOverviewStep || isSubmittingStep) && (
         <Animated.View entering={SlideInDown.springify().damping(20)} style={styles.overviewStepContainer}>
           <AppPressableOverlay
-            disabled={isSubmittingStep}
-            onPress={() => machine.send("PUBLISH")}
+            disabled={!state.matches({ submitting: "failure" }) && !isOverviewStep}
+            onPress={() => {
+              machine.send(isOverviewStep ? "PUBLISH" : "RETRY");
+            }}
             style={styles.overviewStep}
             backgroundStyle={styles.overviewStepBackground}>
-            <Row spacing={8}>
-              <AppText style={styles.overviewStepText}>{isSubmittingStep ? "Publication" : "Envoyer"}</AppText>
+            <Row spacing={8} style={{ alignItems: "center" }}>
+              <AppText style={styles.overviewStepText}>
+                {isOverviewStep ? "Envoyer" : state.matches({ submitting: "failure" }) ? "Rééssayer" : "Publication"}
+              </AppText>
               {isOverviewStep && <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />}
               {isSubmittingStep && state.matches({ submitting: "pending" }) && (
                 <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.white} size="large" />
@@ -298,17 +286,21 @@ const DateStepView = ({
   const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);
   const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfTheWeekFlag>(initialValue?.recurrence ?? "0000000");
 
+  const cannotValidate = isRecurrent && daysOfTheWeek === "0000000";
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       {!editable && (
         <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
           <Row style={styles.stepResumeContainer} spacing={8}>
             {isRecurrent ? (
-              <AppText style={styles.stepResume}>
-                Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")} à {formatTime(date)}
-              </AppText>
+              <Row style={{ flexShrink: 1, flexGrow: 1 }}>
+                <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>
+                  Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
+                </AppText>
+                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {formatTime(date)}</AppText>
+              </Row>
             ) : (
-              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatMonthDay)}</AppText>
+              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatShortMonthDay)}</AppText>
             )}
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>
@@ -339,8 +331,11 @@ const DateStepView = ({
         )}
 
         {editable && isRecurrent && (
-          <Animated.View exiting={FadeOutRight.delay(40).duration(150)} entering={SlideInRight.delay(550).duration(300).springify().damping(20)}>
-            <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
+          <Animated.View
+            style={{ alignItems: "center" }}
+            exiting={FadeOutRight.delay(40).duration(150)}
+            entering={SlideInRight.delay(550).duration(300).springify().damping(20)}>
+            <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
           </Animated.View>
         )}
 
@@ -353,10 +348,12 @@ const DateStepView = ({
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
             <AppPressableOverlay
-              backgroundStyle={styles.validateButtonBackground}
+              backgroundStyle={[
+                styles.validateButtonBackground,
+                { backgroundColor: cannotValidate ? AppColorPalettes.gray[300] : AppColors.primaryColor }
+              ]}
               style={styles.validateButton}
-              borderRadius={20}
-              disabled={isRecurrent && daysOfTheWeek === "0000000"}
+              disabled={cannotValidate}
               onPress={() => {
                 const departureTime = isRecurrent ? getFirstFutureDate(date, daysOfTheWeek) : date;
                 onChange({ date: departureTime!, recurrence: isRecurrent ? daysOfTheWeek : null });
@@ -396,17 +393,6 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
           </Animated.View>
         )}
 
-        {/*editable && (
-          <Animated.View entering={FadeIn.delay(1100)} style={{ alignSelf: "center" }}>
-            <AppSwitchToggle
-              defaultSelectedValue={seats > 0}
-              options={[true, false]}
-              selectionColor={AppColors.blue}
-              onSelectValue={() => setSeats(-seats)}
-            />
-          </Animated.View>
-        )*/}
-
         {editable && (
           <Animated.View entering={FadeInDown.delay(1100)}>
             <Column style={styles.flexStretch}>
@@ -419,11 +405,7 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
 
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay
-              backgroundStyle={styles.validateButtonBackground}
-              style={styles.validateButton}
-              borderRadius={20}
-              onPress={() => onChange(seats)}>
+            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(seats)}>
               <Center>
                 <Row spacing={4}>
                   <AppText style={styles.validateText}>Suivant</AppText>
@@ -468,11 +450,7 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
 
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay
-              backgroundStyle={styles.cancelButtonBackground}
-              style={styles.validateButton}
-              borderRadius={20}
-              onPress={() => onChange(date || null)}>
+            <AppPressableOverlay backgroundStyle={styles.cancelButtonBackground} style={styles.validateButton} onPress={() => onChange(date || null)}>
               <Center>
                 <Row spacing={4}>
                   <AppText style={styles.cancelText}>Annuler</AppText>
@@ -482,7 +460,6 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
             <AppPressableOverlay
               backgroundStyle={styles.validateButtonBackground}
               style={styles.validateButton}
-              borderRadius={20}
               onPress={() => onChange(date || null)}>
               <Center>
                 <Row spacing={4}>
@@ -498,12 +475,6 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
 };
 
 const styles = StyleSheet.create({
-  headerStyle: {
-    position: "absolute",
-    top: 52,
-    right: 26,
-    zIndex: 10
-  },
   flexStretch: {
     alignSelf: "stretch"
   },

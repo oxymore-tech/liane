@@ -20,7 +20,8 @@ public abstract record LianeEvent
     Ref<RallyingPoint> To,
     int Seats,
     bool TakeReturnTrip,
-    string Message
+    string Message,
+    GeolocationLevel GeolocationLevel = GeolocationLevel.None
   ) : LianeEvent;
   
   public sealed record ChangeDepartureTimeRequest(
@@ -56,10 +57,15 @@ public abstract record LianeEvent
     Ref<Trip.Liane> Liane,
     long Timestamp,
     TimeSpan? Delay,
-    LatLng? Coordinate
+    LatLng? Coordinate = null
   ) : LianeEvent;
   
   public sealed record MemberHasCanceled(
+    Ref<Trip.Liane> Liane,
+    Ref<User.User> Member
+  ) : LianeEvent;
+  
+  public sealed record MemberHasStarted(
     Ref<Trip.Liane> Liane,
     Ref<User.User> Member
   ) : LianeEvent;

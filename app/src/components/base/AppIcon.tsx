@@ -14,8 +14,6 @@ import PositionOn from "@/assets/icons/position-on.svg";
 import PositionOff from "@/assets/icons/position-off.svg";
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 import Seat from "@/assets/icons/seat.svg";
-import Flag from "@/assets/icons/flag.svg";
-import Pin from "@/assets/icons/pin.svg";
 import ArrowSwitch from "@/assets/icons/arrow-switch.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
@@ -58,10 +56,6 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <RallyingPoint {...props} />;
     case "seat":
       return <Seat {...props} />;
-    case "flag":
-      return <Flag {...props} opacity={opacity} width={size} height={size} fill={color} />;
-    case "pin":
-      return <Pin {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "arrow-switch":
       return <ArrowSwitch {...props} opacity={opacity} width={size} height={size} fill={color} />;
     default:
@@ -84,8 +78,6 @@ const AppIconsNames = [
   "directions-walk",
   "rallying-point",
   "seat",
-  "flag",
-  "pin",
   "arrow-switch"
 ] as const;
 
@@ -194,6 +186,7 @@ const EvaIconsNames = [
   "file-remove",
   "file-text",
   "film",
+  "flag",
   "flash-off",
   "flash",
   "flip-2",
@@ -266,6 +259,7 @@ const EvaIconsNames = [
   "phone-off",
   "phone",
   "pie-chart",
+  "pin",
   "play-circle",
   "plus-circle",
   "plus",

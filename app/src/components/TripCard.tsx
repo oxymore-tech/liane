@@ -4,9 +4,9 @@ import React from "react";
 import { Row } from "@/components/base/AppLayout";
 
 export interface TripCardProps {
-  header: JSX.Element;
+  header: React.ReactElement;
 
-  content: JSX.Element;
+  content: React.ReactElement;
 
   border?: boolean;
 }
@@ -14,8 +14,8 @@ export interface TripCardProps {
 export const TripCard = ({ header, content, border = false }: TripCardProps) => {
   const borderStyle = border ? styles.grayBorder : { borderWidth: 0, borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 0 };
   return (
-    <View>
-      <Row style={[styles.header, borderStyle, { backgroundColor: AppColorPalettes.yellow[500] }]}>{header}</Row>
+    <View style={{ borderWidth: 2, borderColor: AppColors.primaryColor, borderRadius: 20 }}>
+      <Row style={[styles.header, borderStyle, { backgroundColor: AppColors.primaryColor }]}>{header}</Row>
       <View style={[styles.item, styles.itemLast, borderStyle]}>{content}</View>
     </View>
   );

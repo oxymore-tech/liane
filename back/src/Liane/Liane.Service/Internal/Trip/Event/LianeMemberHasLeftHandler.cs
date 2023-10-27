@@ -26,14 +26,13 @@ public sealed class LianeMemberHasLeftHandler : IEventListener<LianeEvent.Member
   public async Task OnEvent(LianeEvent.MemberHasLeft e, Ref<Api.User.User>? sender = null)
   {
     var user = await userService.Get(e.Member);
-    var liane = await lianeService.RemoveMember(e.Liane, e.Member);
-    if (liane is not null)
-    {
+    var liane = await lianeService.Get(e.Liane);
+   
       var destination = liane.WayPoints.Last().RallyingPoint.Label;
-      await notificationService.SendEvent(user.Pseudo + " a quitté la liane",
-        user.Pseudo + " a quitté la liane à destination de " + destination,
+      await notificationService.SendEvent($"{user.Pseudo} a quitté la liane",
+        $"{user.Pseudo} a quitté la liane à destination de {destination}.",
         sender ?? currentContext.CurrentUser().Id,
         liane.Driver.User, e);
-    }
+    
   }
 }

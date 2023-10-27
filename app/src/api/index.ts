@@ -50,6 +50,7 @@ export type User = Readonly<
     pseudo: string;
     pictureUrl: string | undefined | null;
     gender: "Man" | "Woman" | "Unspecified";
+    stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number; totalJoinedTrips: number } | null;
   } & Entity
 >;
 
@@ -67,12 +68,6 @@ export type LatLng = Readonly<{
   lat: number;
   lng: number;
 }>;
-
-export enum LocationPermissionLevel {
-  NEVER = "never",
-  ACTIVE = "active",
-  ALWAYS = "always"
-}
 
 export enum LocationType {
   Parking = "Parking",
@@ -107,6 +102,7 @@ export type LianeRequest = Identity &
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     recurrence: DayOfTheWeekFlag | null;
+    geolocationLevel: GeolocationLevel;
     // shareWith: Ref<User>[];
   }>;
 
@@ -126,7 +122,7 @@ export type Liane = Entity &
   }>;
 
 export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
-
+export type GeolocationLevel = "None" | "Hidden" | "Shared";
 export type WayPoint = Readonly<{
   rallyingPoint: RallyingPoint;
   duration: TimeInSeconds;
@@ -139,7 +135,9 @@ export type LianeMember = Readonly<{
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
   seatCount: number;
-  delay?: TimeInSeconds;
+  geolocationLevel: GeolocationLevel;
+  cancellation: UTCDateTime | undefined | null;
+  departure: UTCDateTime | undefined | null;
 }>;
 
 export type LianeRecurrence = {
@@ -159,11 +157,6 @@ export type LianeRecurrence = {
 
 // A date time in ISO 8601 format
 export type UTCDateTime = string;
-
-export type PointDisplay = Readonly<{
-  rallyingPoint: RallyingPoint;
-  lianes: Liane[];
-}>;
 
 export type Feedback = Readonly<{
   comment: string | null;
@@ -280,9 +273,6 @@ export type JoinLianeRequestDetailed = Readonly<
     createdAt?: UTCDateTime;
   } & Identity
 >;
-
-export type RallyingPointLink = { deposit: RallyingPoint; hours: UTCDateTime[] };
-export type NearestLinks = { pickup: RallyingPoint; destinations: RallyingPointLink[] }[];
 
 export type TrackedMemberLocation = {
   member: Ref<User>;

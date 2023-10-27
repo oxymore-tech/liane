@@ -5,8 +5,8 @@ import { Row } from "@/components/base/AppLayout";
 import { AppStyles } from "@/theme/styles";
 
 export interface AppTextInputProps extends TextInputProps {
-  leading?: JSX.Element;
-  trailing?: JSX.Element;
+  leading?: React.ReactElement;
+  trailing?: React.ReactElement;
   placeholder?: string;
   textColor?: string;
   placeholderTextColor?: string;
@@ -19,9 +19,9 @@ export const AppTextInput = forwardRef(
         {leading}
         <TextInput
           placeholder={placeholder}
-          placeholderTextColor={placeholderTextColor ?? AppColors.fontColor}
+          placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[700]}
           ref={ref}
-          style={[AppStyles.input, styles.input, style, { color: textColor ?? AppColors.fontColor }]}
+          style={[AppStyles.text, AppStyles.input, styles.input, style, { color: textColor ?? AppColors.fontColor }]}
           {...props}
         />
         {trailing}

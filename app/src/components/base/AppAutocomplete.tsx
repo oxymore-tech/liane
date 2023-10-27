@@ -12,9 +12,9 @@ export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppT
   items: T[];
   onSearch?: (text: string) => void;
   onChange?: (value?: T) => void;
-  renderItem: (item: T) => JSX.Element;
+  renderItem: (item: T) => React.ReactElement;
 
-  trailing?: JSX.Element;
+  trailing?: React.ReactElement;
 }
 
 export type BasicItem = Readonly<{ id?: string; label: string }>;
@@ -116,7 +116,7 @@ type ItemListProps<T extends Identity> = Readonly<{
   items: T[];
   loading?: boolean;
   onSelect: (value: T) => void;
-  renderItem: (item: T) => JSX.Element;
+  renderItem: (item: T) => React.ReactElement;
 }>;
 
 function ItemList<T extends BasicItem>({ items, loading, onSelect, renderItem }: ItemListProps<T>) {
@@ -139,7 +139,7 @@ function ItemList<T extends BasicItem>({ items, loading, onSelect, renderItem }:
 }
 
 type AutocompleteItemProps = Readonly<{
-  itemView: JSX.Element;
+  itemView: React.ReactElement;
   onPress?: () => void;
 }>;
 

@@ -218,7 +218,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     return await testedService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
   }
 
-  private static LianeRequest[] CreateBaseLianeRequests()
+  public static LianeRequest[] CreateBaseLianeRequests()
   {
     var tomorrow = DateTime.Now.AddDays(1);
     // Create fake Liane in database

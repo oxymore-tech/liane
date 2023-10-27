@@ -22,11 +22,11 @@ import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvide
 
 export interface LianeCardProps extends PressableProps {
   label?: string;
-  value: string | JSX.Element;
+  value: string | React.ReactElement;
   onCancel?: () => void;
   color: ColorValue;
   textColor?: ColorValue;
-  extendedView?: JSX.Element;
+  extendedView?: React.ReactElement;
   useOkButton?: boolean;
   onCloseExtendedView?: (isOk: boolean) => void;
   showPopup?: boolean;

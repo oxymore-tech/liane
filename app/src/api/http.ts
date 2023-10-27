@@ -1,6 +1,6 @@
 import { API_URL, APP_ENV, TILES_URL } from "@env";
 import { Mutex } from "async-mutex";
-import { BadRequest, ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
+import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "@/api/exception";
 import { FilterQuery, SortOptions } from "@/api/filter";
 import { clearStorage, getAccessToken, getRefreshToken, getUserSession, processAuthResponse } from "@/api/storage";
 import { AuthResponse } from "@/api/index";
@@ -131,7 +131,7 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   const formattedBody = formatBodyAsJsonIfNeeded(body);
   const formattedHeaders = await headers(body);
   if (__DEV__) {
-    AppLogger.info("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
+    AppLogger.debug("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
   }
   const response = await fetch(url, {
     headers: formattedHeaders,
@@ -140,24 +140,30 @@ async function fetchAndCheck(method: MethodType, uri: string, options: QueryPost
   });
   if (response.status !== 200 && response.status !== 201 && response.status !== 204) {
     switch (response.status) {
-      case 400:
-        if (response.headers.get("content-type") === "application/json" || response.headers.get("content-type") === "application/problem+json") {
+      case 400: {
+        const content = response.headers.get("content-type") ?? "";
+        if (content.indexOf("json") !== -1) {
           const json = await response.json();
-          throw new ValidationError(json?.errors);
+          throw new ValidationError(json.message ?? json.title, json.errors);
         }
         const text = await response.text();
-        throw new BadRequest(text);
+        throw new ValidationError(text);
+      }
+
       case 404:
         throw new ResourceNotFoundError(await response.text());
+
       case 401:
         return tryRefreshToken(async () => {
           return await fetchAndCheck(method, uri, options);
         });
+
       case 403:
         throw new ForbiddenError();
+
       default:
         const message = await response.text();
-        AppLogger.warn("HTTP", `Unexpected error on ${method} ${uri}`, response.status, message);
+        AppLogger.error("HTTP", `Unexpected error on ${method} ${uri}`, response.status, message);
         throw new Error(message);
     }
   }
@@ -174,7 +180,7 @@ export async function tryRefreshToken<TResult>(retryAction: () => Promise<TResul
     } else {
       return refreshTokenMutex.runExclusive(async () => {
         if (__DEV__) {
-          AppLogger.info("HTTP", "Try refresh token...");
+          AppLogger.debug("HTTP", "Try refresh token...");
         }
         // Call refresh token endpoint
         try {

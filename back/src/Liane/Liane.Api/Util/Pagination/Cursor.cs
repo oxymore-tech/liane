@@ -11,9 +11,8 @@ public abstract record Cursor
   {
   }
 
-  public static Cursor From<TCursor, T>(T e, Expression<Func<T, object?>> paginationField) where T : IIdentity where TCursor: Cursor
+  public static Cursor From<TCursor, T>(T e, Expression<Func<T, object?>> paginationField) where T : IIdentity where TCursor : Cursor
   {
-    
     switch (typeof(TCursor))
     {
       case { } t when t == typeof(Natural):
@@ -24,6 +23,7 @@ public abstract record Cursor
         throw new ArgumentException("Bad cursor type : " + typeof(TCursor).Name);
     }
   }
+
   private static readonly Regex TimestampPattern = new(@"\d+");
 
   public static Time Now() => new(DateTime.UtcNow, null);
@@ -53,7 +53,7 @@ public abstract record Cursor
     return new Natural(items[0]);
   }
 
-  public static implicit operator string(Cursor cursor) => cursor.ToString();
+  public static implicit operator string(Cursor cursor) => cursor.ToString()!;
 
   public static implicit operator Cursor(string raw) => Parse(raw);
 
@@ -61,7 +61,6 @@ public abstract record Cursor
 
   public sealed record Natural(string Id) : Cursor
   {
-
     public override Expression<Func<T, bool>> ToFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField)
     {
       var paramExpr = Expression.Parameter(typeof(T), "e");
@@ -79,7 +78,6 @@ public abstract record Cursor
 
   public sealed record Time(DateTime Timestamp, string? Id) : Cursor
   {
-
     public override Expression<Func<T, bool>> ToFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField)
     {
       var paramExpr = Expression.Parameter(typeof(T), "e");

@@ -89,6 +89,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
           textHaloWidth: 1.5,
           textField: ["step", ["zoom"], "", 8, ["get", "label"]],
           textAllowOverlap: false,
+          iconAllowOverlap: true,
           textAnchor: "bottom",
           textOffset: [0, -3],
           textMaxWidth: 5.4,
@@ -117,6 +118,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
           textMaxWidth: 5.4,
           visibility: "visible",
           textOptional: false,
+          iconAllowOverlap: true,
           iconImage: "deposit_cluster",
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.32, 12, 0.4]

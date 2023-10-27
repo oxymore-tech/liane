@@ -1,4 +1,5 @@
-import { logger } from "react-native-logs";
+import { consoleTransport, logger } from "react-native-logs";
+import { datadogTransport } from "@/api/dd-logger";
 
 const LoggerNamespaces = [
   "INIT",
@@ -16,8 +17,9 @@ const LoggerNamespaces = [
   "DEEP_LINKING"
 ] as const;
 const config = {
-  severity: __DEV__ ? "debug" : "warn",
+  severity: __DEV__ ? "debug" : "info",
   dateFormat: "iso",
+  transport: [consoleTransport, datadogTransport],
   transportOptions: {
     colors: {
       info: "blueBright",
@@ -28,10 +30,11 @@ const config = {
   enabledExtensions: [...LoggerNamespaces]
 };
 
+const rootLogger = logger.createLogger(config);
+
 export type LoggerNamespace = (typeof config.enabledExtensions)[number];
 export type LoggerAction = (tag: LoggerNamespace, ...args: any[]) => void;
 const namespaceLoggers = (() => {
-  const rootLogger = logger.createLogger(config);
   return Object.fromEntries(LoggerNamespaces.map(n => [n, rootLogger.extend(n)]));
 })();
 
@@ -42,17 +45,22 @@ export interface ILogger {
   error: LoggerAction;
 }
 
-export const AppLogger: ILogger = {
-  debug: (tag, ...args) => {
-    namespaceLoggers[tag].debug(args);
-  },
-  info: (tag, ...args) => {
-    namespaceLoggers[tag].info(args);
-  },
-  warn: (tag, ...args) => {
-    namespaceLoggers[tag].warn(args);
-  },
-  error: (tag, ...args) => {
-    namespaceLoggers[tag].error(args);
+export class AppLoggerImpl implements ILogger {
+  debug(tag: LoggerNamespace, ...args: any[]): void {
+    namespaceLoggers[tag].debug(...args);
   }
-};
+
+  info(tag: LoggerNamespace, ...args: any[]): void {
+    namespaceLoggers[tag].info(...args);
+  }
+
+  warn(tag: LoggerNamespace, ...args: any[]): void {
+    namespaceLoggers[tag].warn(...args);
+  }
+
+  error(tag: LoggerNamespace, ...args: any[]): void {
+    namespaceLoggers[tag].error(...args);
+  }
+}
+
+export const AppLogger = new AppLoggerImpl();

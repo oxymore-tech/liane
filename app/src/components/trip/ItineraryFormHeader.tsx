@@ -28,42 +28,27 @@ export interface ItineraryFormHeaderProps {
 export const ItineraryFormHeader = ({
   trip,
   updateTrip,
-  title,
+
   onChangeField,
   onRequestFocus,
   animateEntry: enters = true,
   editable = true
 }: ItineraryFormHeaderProps) => {
-  const insets = useSafeAreaInsets();
-
   const { to, from } = trip;
-  const { goBack } = useAppBackController();
 
   return (
-    <Animated.View style={[styles.headerContainer, { marginTop: insets.top }]} entering={enters ? SlideInUp : undefined} exiting={SlideOutUp}>
-      <Column spacing={8}>
-        <Row style={{ alignItems: "center", marginBottom: title ? 4 : 0 }} spacing={16}>
-          <Pressable
-            style={{ paddingVertical: 8 }}
-            onPress={() => {
-              goBack();
-            }}>
-            <AppIcon name={"arrow-ios-back-outline"} size={24} color={AppColors.white} />
-          </Pressable>
-          {title && <AppText style={styles.title}>{title}</AppText>}
-        </Row>
-        <ItineraryForm
-          from={from}
-          to={to}
-          onChangeFrom={onChangeField ? v => onChangeField("from", v) : undefined}
-          onChangeTo={onChangeField ? v => onChangeField("to", v) : undefined}
-          onValuesSwitched={(oldFrom, oldTo) => {
-            updateTrip({ from: oldTo, to: oldFrom });
-          }}
-          editable={editable}
-          onRequestFocus={onRequestFocus}
-        />
-      </Column>
+    <Animated.View style={[styles.headerContainer]} entering={enters ? SlideInUp : undefined} exiting={SlideOutUp}>
+      <ItineraryForm
+        from={from}
+        to={to}
+        onChangeFrom={onChangeField ? v => onChangeField("from", v) : undefined}
+        onChangeTo={onChangeField ? v => onChangeField("to", v) : undefined}
+        onValuesSwitched={(oldFrom, oldTo) => {
+          updateTrip({ from: oldTo, to: oldFrom });
+        }}
+        editable={editable}
+        onRequestFocus={onRequestFocus}
+      />
     </Animated.View>
   );
 };
@@ -85,13 +70,10 @@ const styles = StyleSheet.create({
     borderRadius: 52
   },
   headerContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexShrink: 1,
-    padding: 16,
-    paddingBottom: 0,
+    width: "100%",
+    height: 140,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     alignSelf: "center",
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16

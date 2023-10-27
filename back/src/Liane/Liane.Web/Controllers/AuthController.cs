@@ -19,7 +19,7 @@ public sealed class AuthController : ControllerBase
     this.authService = authService;
     this.currentContext = currentContext;
   }
-
+  
   [HttpPost("sms")]
   [DisableAuth]
   public Task SendSms([FromQuery] string phone)

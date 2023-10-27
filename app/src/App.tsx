@@ -8,6 +8,7 @@ import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import Navigation from "@/components/context/Navigation";
 import { AppLinking, RootNavigation } from "@/api/navigation";
 import { NavigationContainer } from "@react-navigation/native";
+import { AppModalNavigationProvider } from "@/components/AppModalNavigationProvider";
 
 MapLibreGL.setAccessToken(null);
 
@@ -17,17 +18,19 @@ const App = () => (
     <AppWindowsSizeProvider>
       <ContextProvider>
         <AppBackContextProvider backHandler={() => false}>
-          <NavigationContainer
-            linking={AppLinking}
-            ref={RootNavigation}
-            // onReady={() => {
-            //   DdRumReactNavigationTracking.startTrackingViews(
-            //     RootNavigation.current
-            //   );
-            // }}
-          >
-            <Navigation />
-          </NavigationContainer>
+          <AppModalNavigationProvider>
+            <NavigationContainer
+              linking={AppLinking}
+              ref={RootNavigation}
+              // onReady={() => {
+              //   DdRumReactNavigationTracking.startTrackingViews(
+              //     RootNavigation.current
+              //   );
+              // }}
+            >
+              <Navigation />
+            </NavigationContainer>
+          </AppModalNavigationProvider>
         </AppBackContextProvider>
       </ContextProvider>
     </AppWindowsSizeProvider>

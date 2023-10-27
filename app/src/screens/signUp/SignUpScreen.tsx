@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
@@ -11,13 +11,13 @@ import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
 import { useActor, useInterpret } from "@xstate/react";
 import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateMachine";
-import { DoneEvent } from "xstate";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_VERSION, TEST_ACCOUNT } from "@env";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import { PasswordInput } from "@/screens/signUp/PasswordInput";
+import { storeUserSession } from "@/api/storage";
 
 const t = scopedTranslate("SignUp");
 
@@ -65,14 +65,17 @@ const SignUpPage = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.imageContainer}>
+    <KeyboardAvoidingView style={[styles.container, { flex: 1, flexShrink: 1 }]} behavior={Platform.OS === "android" ? undefined : "height"}>
+      <View style={[styles.imageContainer, { flexShrink: 1 }]}>
         <LianeLogo style={styles.image} width="75%" />
       </View>
-
       <View>
         <AppText numberOfLines={-1} style={styles.helperText}>
-          {state.matches("phone") ? t("Veuillez entrer votre numéro de téléphone") : t("Entrez le code reçu par SMS")}
+          {state.matches("phone")
+            ? t("Veuillez entrer votre numéro de téléphone")
+            : state.context.phone === TEST_ACCOUNT
+            ? t("Entrez votre mot de passe")
+            : t("Entrez le code reçu par SMS")}
         </AppText>
         {state.matches("phone") ? (
           <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={sendCode} />
@@ -83,10 +86,11 @@ const SignUpPage = () => {
         )}
         <AppText style={styles.errorText}>{error || " "}</AppText>
       </View>
-      <View style={[styles.bottomContainer, { bottom: insets.bottom }]}>
+      <View style={{ flex: 1, flexShrink: 1 }} />
+      <View style={[{ marginBottom: insets.bottom, paddingBottom: 16 }]}>
         <AppText style={styles.bottomText}>Version: {APP_VERSION}</AppText>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -95,7 +99,12 @@ const SignUpScreen = () => {
   const [m] = useState(() => CreateSignUpMachine());
   const machine = useInterpret(m);
   const [state] = useActor(machine);
-  machine.onDone((d: DoneEvent) => {
+  machine.onDone(async _ => {
+    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
+    if (!state.done) {
+      return;
+    }
+    await storeUserSession(state.context.authUser);
     login({ ...state.context.authUser! });
   });
 
@@ -137,12 +146,6 @@ const styles = StyleSheet.create({
     color: "red", // TODO red 600,
     textAlign: "center",
     margin: 4
-  },
-  bottomContainer: {
-    position: "absolute",
-    marginBottom: 16,
-    left: 0,
-    right: 0
   },
   bottomText: {
     color: AppColorPalettes.gray[100],

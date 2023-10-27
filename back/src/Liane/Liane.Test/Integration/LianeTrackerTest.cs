@@ -45,7 +45,7 @@ public class LianeTrackerTest: BaseIntegrationTest
       new List<LianeMember>
       {
         new (userId, LabeledPositions.Tournefeuille, LabeledPositions.PointisInard, 3),
-        new ("userB", LabeledPositions.Tournefeuille, LabeledPositions.AireDesPyrénées)
+        new ("63f7a5c90f65806b1adb3081", LabeledPositions.Tournefeuille, LabeledPositions.AireDesPyrénées)
       }.ToImmutableList(),
       new Driver(userId),
       LianeState.NotStarted,
@@ -58,7 +58,8 @@ public class LianeTrackerTest: BaseIntegrationTest
   public async Task ShouldFinishTrip()
   {
     var finished = false;
-    var userId = "6410edc1e02078e7108a5897";
+    var userId = "6410edc1e02078e7108a5897"; // driver
+    var passenger = "63f7a5c90f65806b1adb3081";
     var (liane, geojsonPings) = PrepareTestData(userId);
     var tracker = await new LianeTracker.Builder(liane)
       .SetTripArrivedDestinationCallback(() =>
@@ -71,19 +72,77 @@ public class LianeTrackerTest: BaseIntegrationTest
     {
       var point = (f.Geometry as Point)!;
       var time = f.Properties["timestamp"].ToString()!;
-      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude));
+      var user = f.Properties["user"].ToString()!;
+      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user: user);
     });
     foreach (var p in pings.OrderBy(p => p.timestamp))
     {
       if (finished) break;
-      await tracker.Push(new UserPing(liane.CreatedBy, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
     }
    
     var lastLocation = tracker.GetCurrentMemberLocation(userId);
+    var driverHasFinished = tracker.MemberHasArrived(userId);
+    var passengerHasFinished = tracker.MemberHasArrived(passenger);
     Assert.AreEqual(liane.WayPoints.Last().RallyingPoint.Id, lastLocation!.NextPoint.Id); 
     
     Assert.True(finished);
+    Assert.True(driverHasFinished);
+    Assert.True(passengerHasFinished);
 
+  }
+
+  [Test]
+  public async Task MemberShouldNotFinishTrip()
+  {
+
+    var userId = "6410edc1e02078e7108a5897"; //driver
+    var passenger = "63f7a5c90f65806b1adb3081";
+    var (liane, geojsonPings) = PrepareTestData(userId);
+    var tracker = await new LianeTracker.Builder(liane)
+    
+      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!, Moq.Mock.Of<ILogger<LianeTracker>>());
+ 
+    var pings = geojsonPings.Features.Select(f =>
+    {
+      var point = (f.Geometry as Point)!;
+      var time = f.Properties["timestamp"].ToString()!;
+      var u = f.Properties["user"].ToString()!;
+      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user: u);
+    }).OrderBy(p => p.timestamp).ToImmutableList();
+    foreach (var p in pings.Take(pings.Count/2))
+    {
+      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+    }
+    var lastLocation = tracker.GetCurrentMemberLocation(userId);
+    var driverHasFinished = tracker.MemberHasArrived(userId);
+    var passengerHasFinished = tracker.MemberHasArrived(passenger);
+    Assert.AreEqual(LabeledPositions.AireDesPyrénées.Id, lastLocation!.NextPoint.Id);
+    Assert.False(driverHasFinished);
+    Assert.False(passengerHasFinished);
+    
+    foreach (var p in pings.Skip(pings.Count/2))
+    {
+      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      if (p.coordinate.Distance(Positions.PointisInard) < 4000) break;
+    }
+
+     lastLocation = tracker.GetCurrentMemberLocation(userId);
+     driverHasFinished = tracker.MemberHasArrived(userId);
+     passengerHasFinished = tracker.MemberHasArrived(passenger);
+    Assert.AreEqual(LabeledPositions.PointisInard.Id, lastLocation!.NextPoint.Id);
+    Assert.False(driverHasFinished);
+    Assert.True(passengerHasFinished);
+   
+    // Check that a ping far away from the initial track does not finish the trip
+    var southWest = new LatLng(Positions.PointisInard.Lat - 0.08, Positions.PointisInard.Lng + 0.3);
+    await tracker.Push(new UserPing(userId, pings.Last().timestamp, TimeSpan.Zero, southWest));
+    
+    lastLocation = tracker.GetCurrentMemberLocation(userId);
+    driverHasFinished = tracker.MemberHasArrived(userId);
+    
+    Assert.AreEqual(LabeledPositions.PointisInard.Id, lastLocation!.NextPoint.Id);
+    Assert.False(driverHasFinished);
   }
 
   [Test]

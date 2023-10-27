@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
@@ -6,6 +7,7 @@ using Liane.Api.Hub;
 using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
@@ -93,8 +95,8 @@ public sealed class ChatHub : Hub<IHubClient>
     await Clients.Caller.Me(user);
     // Send latest unread notifications count and conversations 
     var unreadConversationsIds = await chatService.GetUnreadConversationsIds(userId);
-    var unreadNotificationsCount = await notificationService.GetUnreadCount(userId);
-    await Clients.Caller.ReceiveUnreadOverview(new UnreadOverview(unreadNotificationsCount, unreadConversationsIds));
+    var unreadNotificationsIds = await notificationService.GetUnread(userId);
+    await Clients.Caller.ReceiveUnreadOverview(new UnreadOverview(unreadNotificationsIds, unreadConversationsIds));
   }
 
   public override async Task OnDisconnectedAsync(Exception? exception)
@@ -116,5 +118,10 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     var userId = currentContext.CurrentUser().Id;
     await lianeMemberTracker.Unsubscribe(userId, lianeId, memberId);
+  }
+
+  public async Task ReadNotifications(IEnumerable<Ref<Notification>> notifications)
+  {
+    await notificationService.MarkAsRead(notifications);
   }
 }

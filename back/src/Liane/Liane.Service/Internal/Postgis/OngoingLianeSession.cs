@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Dapper;
 using GeoJSON.Text.Geometry;
@@ -27,14 +28,16 @@ public sealed partial class PostgisServiceImpl
       this.postgis = postgis;
     }
 
-    public async Task<(double fraction, LatLng nearestPoint)> LocateOnRoute(LatLng coordinate)
+    public async Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate)
     {
-      using var connection = postgis.NewConnection();
-      var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint)>(
-        "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point from (select ST_LineLocatePoint(geometry, @point::geometry(Point, 4326)) as fraction, geometry from ongoing_trip where id = @id) as trip",
-        new { id, point = coordinate }
-      );
-      return result;
+     
+        using var connection = postgis.NewConnection();
+        var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint, double distance)>(
+          "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point, ST_DistanceSphere(@point::geometry(Point, 4326), geometry) as distance from (select ST_LineLocatePoint(geometry, @point::geometry(Point, 4326)) as fraction, geometry from ongoing_trip where id = @id) as trip",
+          new { id, point = coordinate }
+        );
+        return result;
+    
     }
 
     public async Task Dispose()

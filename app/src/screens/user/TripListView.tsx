@@ -1,37 +1,25 @@
 import React, { useContext, useMemo } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  Pressable,
-  RefreshControl,
-  SectionBase,
-  SectionList,
-  SectionListData,
-  SectionListRenderItemInfo,
-  StyleSheet,
-  TouchableOpacity,
-  View
-} from "react-native";
 
-import { JoinLianeRequestDetailed, Liane, UTCDateTime, User, Ref } from "@/api";
+import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import { JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@/api";
 import { formatMonthDay } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
-
 import { AppContext } from "@/components/context/ContextProvider";
-import { LianeView } from "@/components/trip/LianeView";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { UserPicture } from "@/components/UserPicture";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
-
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { extractDatePart } from "@/util/datetime";
 import { useObservable } from "@/util/hooks/subscription";
 import { capitalize } from "@/util/strings";
-import { getTripFromJoinRequest, getTripFromLiane } from "@/components/trip/trip";
-import { AppStyles } from "@/theme/styles";
-import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
+import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
+import { WayPointsView } from "@/components/trip/WayPointsView";
+import { TripGeolocationProvider, useMemberRealTimeDelay, useMemberTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
+import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -46,7 +34,8 @@ export interface TripListViewProps {
 }
 
 export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: TripListViewProps) => {
-  const insets = useSafeAreaInsets();
+  //const insets = useSafeAreaInsets();
+  const bottom = 32; //96 + insets.bottom;
   const { user } = useContext(AppContext);
   const userId = user!.id!;
   const sections = useMemo(() => {
@@ -63,7 +52,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
       renderSectionHeader={renderSectionHeader}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
-      renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? 96 + insets.bottom : 24 }} />}
+      renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? bottom : 24 }} />}
     />
   );
 };
@@ -101,19 +90,20 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], membe
     )
     .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
 
-const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+const LianeItem = ({ item }: { item: Liane }) => {
   const { navigation } = useAppNavigation();
   const { services, user } = useContext(AppContext);
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
-
-  //const [geolocalisationEnabled, setGeolocalisationEnabled] = useState<boolean>(false);
-
+  const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
+  const lastDriverLocUpdate = useMemberRealTimeDelay(item.driver.user);
+  const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
+  const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
+  const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
+  const status = useLianeStatus(item);
   return (
-    <Pressable
-      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}, index === 0 ? styles.itemFirst : {}]}
-      onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
+    <View>
       <View>
         <Row style={styles.driverContainer}>
           <Row spacing={8} style={{ flex: 4 }}>
@@ -137,53 +127,81 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         </Row>
 
         <View style={styles.lianeContainer}>
-          <LianeView liane={item} />
+          <WayPointsView wayPoints={wayPoints} nextWayPoint={nextWayPoint} />
         </View>
       </View>
 
-      <Row style={styles.infoRowContainer} spacing={8}>
-        <Row style={AppStyles.center}>
-          {item.state === "Finished" && (
-            <Pressable onPress={() => navigation.navigate("OpenValidateTrip", { liane: item })}>
-              <Row style={styles.validationContainer} spacing={8}>
-                <AppText style={styles.validationText}>Valider</AppText>
-              </Row>
-            </Pressable>
-          )}
-          {!["Finished", "Archived", "Canceled"].includes(item.state) ? (
-            <GeolocationSwitch liane={item} />
-          ) : (
-            <TouchableOpacity onPress={() => relaunchLiane(item, driver)}>
-              <Row style={styles.validationContainer} spacing={8}>
-                <AppText style={styles.validationText}>Relancer</AppText>
-              </Row>
-            </TouchableOpacity>
-          )}
-        </Row>
+      {!["Finished", "Archived", "Canceled"].includes(item.state) && (
+        <Row style={styles.infoRowContainer} spacing={8}>
+          <Row style={{ alignItems: "center" }}>
+            <AppIcon name={"navigation-2-outline"} color={geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor} size={16} />
+            <AppText style={{ color: geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor }}>
+              Géolocalisation {geolocationDisabled ? "désactivée" : "activée"}
+            </AppText>
+          </Row>
 
-        <Row style={styles.statusRowContainer} spacing={8}>
-          {["NotStarted", "Started"].includes(item.state) && (
-            <Row style={{ position: "absolute", right: 42 }}>
-              {item.members
-                .filter(m => m.user.id !== driver.id)
-                .map((m, i) => (
-                  <View
-                    key={m.user.id}
-                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
-                    <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                  </View>
-                ))}
-            </Row>
-          )}
+          <Row style={styles.statusRowContainer} spacing={8}>
+            {["NotStarted", "Started"].includes(item.state) && (
+              <Row style={{ position: "absolute", right: 42 }}>
+                {item.members
+                  .filter(m => m.user.id !== driver.id)
+                  .map((m, i) => (
+                    <View
+                      key={m.user.id}
+                      style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
+                      <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
+                    </View>
+                  ))}
+              </Row>
+            )}
 
-          {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
-            <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
-              <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
-              {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
-            </Pressable>
-          )}
+            {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
+              <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
+                <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
+                {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
+              </Pressable>
+            )}
+          </Row>
         </Row>
-      </Row>
+      )}
+      {status === "StartingSoon" && <View style={{ height: 44 }} />}
+      {status === "StartingSoon" && (
+        <AppPressableOverlay
+          backgroundStyle={{
+            position: "absolute",
+            bottom: 0,
+            left: -16,
+            right: -16,
+            backgroundColor: AppColors.primaryColor,
+            borderBottomRightRadius: 16,
+            borderBottomLeftRadius: 16
+          }}
+          onPress={() => services.liane.start(item.id!).then(() => startGeolocationService(item))}>
+          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+            <AppIcon name={"play-circle"} color={AppColors.white} />
+            <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+          </Row>
+        </AppPressableOverlay>
+      )}
+    </View>
+  );
+};
+const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+  const { navigation } = useAppNavigation();
+
+  return (
+    <Pressable
+      style={[
+        styles.item,
+        styles.grayBorder,
+        item.members.length > 1 ? {} : styles.disabledItem,
+        index === section.data.length - 1 ? styles.itemLast : {},
+        index === 0 ? styles.itemFirst : {}
+      ]}
+      onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
+      <TripGeolocationProvider liane={item}>
+        <LianeItem item={item} />
+      </TripGeolocationProvider>
     </Pressable>
   );
 };
@@ -201,22 +219,28 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
   return (
     <Pressable
       onPress={() => navigation.navigate({ name: "LianeJoinRequestDetail", params: { request: item } })}
-      style={[styles.item, styles.grayBorder, index === section.data.length - 1 ? styles.itemLast : {}]}>
+      style={[
+        styles.item,
+        styles.grayBorder,
+        index === section.data.length - 1 ? styles.itemLast : {},
+        index === 0 ? styles.itemFirst : {},
+        styles.disabledItem
+      ]}>
       <View>
-        <Row style={styles.driverContainer} spacing={8}>
-          <UserPicture url={driver?.pictureUrl} size={24} id={driver.id} />
-          <AppText style={styles.driverText}>{driver.pseudo}</AppText>
+        <Row style={styles.driverContainer}>
+          <Row spacing={8} style={{ flex: 4 }}>
+            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
+            <AppText style={styles.driverText}>{driver.pseudo}</AppText>
+          </Row>
+          <AppText style={{ color: AppColorPalettes.gray[500], fontWeight: "500", fontStyle: "italic", paddingHorizontal: 6, paddingVertical: 6 }}>
+            En attente de validation
+          </AppText>
         </Row>
         <View style={styles.lianeContainer}>
           <JoinRequestSegmentOverview request={item} />
         </View>
       </View>
-
-      <Row style={styles.statusRowContainer} spacing={8}>
-        <Row style={styles.statusContainer}>
-          <AppText>En attente de validation</AppText>
-        </Row>
-      </Row>
+      <View style={{ height: 24 }} />
     </Pressable>
   );
 };
@@ -254,8 +278,10 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "bold"
   },
+  disabledItem: { backgroundColor: WithAlpha(AppColors.white, 0.7) },
   item: {
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: AppColors.white,
     borderBottomWidth: 1

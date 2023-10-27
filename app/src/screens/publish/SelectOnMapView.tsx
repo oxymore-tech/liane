@@ -6,7 +6,7 @@ import { useAppBackController } from "@/components/AppBackContextProvider";
 import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column, Row, Space } from "@/components/base/AppLayout";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
 import AppMapView from "@/components/map/AppMapView";
@@ -38,7 +38,7 @@ export const SelectOnMapView = ({ onSelect, title, type = "from" }: SelectOnMapV
             <View style={{ flexShrink: 1 }}>
               <RallyingPointItem item={selectedRP} color={AppColors.white} labelSize={18} showIcon={false} />
             </View>
-            <View style={{ flex: 1 }} />
+            <Space />
           </Row>
           <Row style={{ justifyContent: "center" }}>
             <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />
@@ -81,7 +81,7 @@ const Header = ({
             />
           )}
           {title && <AppText style={styles.title}>{title}</AppText>}
-          <View style={{ flex: 1 }} />
+          <Space />
         </Row>
       </Column>
     </Animated.View>

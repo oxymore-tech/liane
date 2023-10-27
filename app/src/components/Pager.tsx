@@ -13,7 +13,7 @@ export interface WizardPagerProps {
   color: AppColors;
   onPageChange: (next: number | null) => void;
   currentPage: number;
-  children: (index: number) => JSX.Element;
+  children: (index: number) => React.ReactElement;
   pageCount: number;
   previousPageOnGoBack?: boolean;
 }

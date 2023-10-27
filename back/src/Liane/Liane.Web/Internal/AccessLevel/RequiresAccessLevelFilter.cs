@@ -19,10 +19,9 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
   private readonly ResourceAccessLevel accessLevel;
   private readonly string resourceIdentifier;
   private readonly ICurrentContext currentContext;
-  private readonly ILogger<ResourceAccessLevel> logger;
 
   public RequiresAccessLevelFilter(IServiceProvider serviceProvider, ICurrentContext currentContext, IAccessLevelContextFactory accessorProvider, ResourceAccessLevel accessLevel, Type resourceType,
-    string resourceIdentifier, ILogger<ResourceAccessLevel> logger)
+    string resourceIdentifier)
   {
     this.serviceProvider = serviceProvider;
     this.accessorProvider = accessorProvider;
@@ -30,7 +29,6 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     this.resourceType = resourceType;
     this.accessLevel = accessLevel;
     this.currentContext = currentContext;
-    this.logger = logger;
   }
 
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -39,7 +37,6 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     {
       // Get Resolver service for given public resource type 
       var resolver = serviceProvider.GetService(typeof(IResourceResolverService<>).MakeGenericType(resourceType))!;
-
 
       // Get corresponding internal resource type 
 
@@ -85,13 +82,8 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
     }
     catch (System.Exception e)
     {
-      var actionResult = HttpExceptionMapping.Map(e, context.ModelState, logger: logger);
-      if (actionResult == null)
-      {
-        throw; //TODO send code 500
-      }
-
-      context.Result = actionResult;
+      var logger = (ILogger?)serviceProvider.GetService(typeof(ILogger<RequiresAccessLevelFilter>).MakeGenericType(resourceType))!;
+      context.Result = HttpExceptionMapping.Map(e, context.ModelState, logger);
     }
   }
 }

@@ -8,14 +8,17 @@ import { AppStyles } from "@/theme/styles";
 import { useSubscriptionValue } from "@/util/hooks/subscription";
 import Svg, { Path } from "react-native-svg";
 import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
+import { formatDuration } from "@/util/datetime";
 
 export const LianeMemberDisplay = ({
   location,
   user,
   active = true,
-  size = 56,
+  size = 32,
   showLocationPin = true,
-  minZoom
+  minZoom,
+  delay,
+  isMoving
 }: // showIcon = true
 {
   location: LatLng;
@@ -24,11 +27,14 @@ export const LianeMemberDisplay = ({
   size?: number;
   showLocationPin?: boolean;
   minZoom?: number | undefined;
+  delay?: number | undefined;
+  isMoving: boolean;
 }) => {
   const controller = useAppMapViewController();
   const region = useSubscriptionValue(controller.subscribeToRegionChanges);
   const zoom = region?.zoomLevel || 10;
-
+  const formattedDelay = delay ? formatDuration(delay) : undefined;
+  const description = isMoving ? (formattedDelay ? " arrive dans " + formattedDelay : "") : "est à l'arrêt";
   if (minZoom && zoom <= minZoom) {
     return null;
   }
@@ -39,7 +45,7 @@ export const LianeMemberDisplay = ({
           <View style={styles.wayPointContainer}>
             {zoom > 7.5 && (
               <Animated.View style={styles.userNameContainer} entering={ZoomIn}>
-                <Text style={styles.userNameText}>{user.pseudo}</Text>
+                <Text style={styles.userNameText}>{user.pseudo + description}</Text>
               </Animated.View>
             )}
             <View

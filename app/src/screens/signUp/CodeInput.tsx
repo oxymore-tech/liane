@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import { Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -9,7 +9,7 @@ import { AppText } from "@/components/base/AppText";
 import { sleep } from "@/util/datetime";
 
 type CodeInputProps = {
-  onValidate: () => void;
+  onValidate: () => Promise<void>;
   retry: () => void;
   code: string;
   onChange: (code: string) => void;
@@ -52,10 +52,14 @@ const Retry = (props: { retry: () => void }) => {
 };
 
 export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps) => {
-  const disabled = code.length < 6;
-
+  const [validating, setValidating] = useState(false);
+  const disabled = code.length < 6 || validating;
   const buttonColor = {
     backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
+  };
+  const validate = () => {
+    setValidating(true);
+    onValidate().finally(() => setValidating(false));
   };
 
   return (
@@ -69,7 +73,7 @@ export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps)
             returnKeyLabel={"next"}
             onChangeText={onChange}
             keyboardType={"numeric"}
-            onSubmitEditing={onValidate}
+            onSubmitEditing={validate}
             maxLength={6}
           />
           <Row style={{ position: "absolute", bottom: 8 }} spacing={4}>
@@ -80,8 +84,9 @@ export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps)
             ))}
           </Row>
         </Column>
-        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={onValidate}>
-          <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
+        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={validate}>
+          {!validating && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
+          {validating && <ActivityIndicator color={AppColors.white} size={"small"} />}
         </Pressable>
       </View>
       <Retry retry={retry} />

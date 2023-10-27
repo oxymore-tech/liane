@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Liane.Api.User;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;
 
@@ -12,6 +13,18 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 {
   public UserServiceImpl(IMongoDatabase mongo) : base(mongo)
   {
+  }
+
+  public override async Task<Api.User.User> Get(Ref<Api.User.User> reference)
+  {
+    try
+    {
+      return await base.Get(reference);
+    }
+    catch (ResourceNotFoundException _)
+    {
+      return FullUser.Unknown(reference);
+    }
   }
 
   public async Task UpdateAvatar(string id, string picturelUrl)
@@ -79,14 +92,14 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
   private static FullUser MapUser(DbUser dbUser)
   {
-    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", " ", null, Gender.Unspecified);
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, info.PictureUrl, dbUser.PushToken);
+    var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", "", null, Gender.Unspecified);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats,info.PictureUrl, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)
   {
     return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt, FullUser.GetPseudo(dbUser.UserInfo?.FirstName, dbUser.UserInfo?.LastName), dbUser.UserInfo?.Gender ?? Gender.Unspecified,
-      dbUser.UserInfo?.PictureUrl));
+      dbUser.UserInfo?.PictureUrl, dbUser.Stats));
   }
 
   private async Task UpdateField<T>(string userId, Expression<Func<DbUser, T>> field, T value)

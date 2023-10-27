@@ -1,23 +1,39 @@
 import { AppTextInput, AppTextInputProps } from "@/components/base/AppTextInput";
-import { useState } from "react";
-import { AppColors } from "@/theme/colors";
-import { View } from "react-native";
+import { useMemo, useState } from "react";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
-const margin = 16;
-export const AppExpandingTextInput = ({ style, ...props }: AppTextInputProps) => {
+export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppTextInputProps & { backgroundStyle?: StyleProp<ViewStyle> }) => {
   const [contentHeight, setContentHeight] = useState(40);
   const { height } = useAppWindowsDimensions();
+  const padding = useMemo(() => {
+    if (backgroundStyle) {
+      // Get border radius from background shape
+      const styles = StyleSheet.flatten(backgroundStyle);
+
+      const obj = Object.fromEntries(
+        ["padding", "paddingTop", "paddingBottom", "paddingVertical"].map(k => {
+          //@ts-ignore
+          return [k, styles[k]];
+        })
+      );
+      return {
+        paddingTop: obj.paddingTop || obj.paddingVertical || obj.padding || 0,
+        paddingBottom: obj.paddingBottom || obj.paddingVertical || obj.padding || 0
+      };
+    }
+    return {};
+  }, [backgroundStyle]);
   return (
     <View
-      style={{
-        backgroundColor: AppColors.white,
-        borderRadius: margin,
-        padding: margin,
-        flexGrow: 1,
-        height: contentHeight + margin * 2,
-        maxHeight: height / 3 + margin * 2
-      }}>
+      style={[
+        backgroundStyle,
+        {
+          flexGrow: 1,
+          height: contentHeight + padding.paddingBottom + padding.paddingTop,
+          maxHeight: height / 3
+        }
+      ]}>
       <AppTextInput
         {...props}
         multiline={true}

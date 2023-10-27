@@ -59,7 +59,7 @@ export const LianeDisplayLayer = ({
               const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
 
               const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
-              if (points.length === 1) {
+              if (points.length === 1 && !points[0].properties!.hasOwnProperty("point_count")) {
                 const p = points[0];
                 AppLogger.debug("MAP", "selected point", p);
 
@@ -89,19 +89,33 @@ export const LianeDisplayLayer = ({
           //@ts-ignore
           lineSortKey: ["get", "count"],
           lineCap: "round",
-          lineColor: trafficAsColor
-            ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.primaryColor, 5, "#8c2372"]
-            : AppColors.darkBlue,
-          lineWidth: trafficAsWidth ? ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5] : 3
+          lineColor: AppColors.darkBlue,
+          lineWidth: 3
         }}
       />
 
+      {/*TODO separate component with own source (trafficAsColor || trafficAsWidth) && (
+        <MapLibreGL.LineLayer
+          aboveLayerID="Highway"
+          id="lianeTrafficLayer"
+          sourceLayerID="liane_display_traffic"
+          style={{
+            //@ts-ignore
+            lineSortKey: ["get", "count"],
+            lineCap: "round",
+            lineColor: trafficAsColor
+              ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.primaryColor, 5, "#8c2372"]
+              : AppColors.darkBlue,
+            lineWidth: trafficAsWidth ? ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5] : 3
+          }}
+        />
+      )*/}
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
         minZoomLevel={7}
         style={{
-          symbolSortKey: ["case", ["==", ["get", "point_type"], "deposit"], 0, 1],
+          symbolSortKey: ["case", ["==", ["get", "point_type"], "deposit"], 0, ["==", ["get", "point_type"], "suggestion"], 1, 2],
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
           textColor: AppColors.black,
@@ -109,14 +123,40 @@ export const LianeDisplayLayer = ({
           textHaloWidth: 1.5,
           textField: ["step", ["zoom"], "", 8, ["get", "label"]],
           textAllowOverlap: false,
+          iconAllowOverlap: true,
           textAnchor: "bottom",
           textOffset: [0, -3],
           textMaxWidth: 5.4,
           textOptional: true,
+          iconOptional: false,
           visibility: "visible",
           iconImage: ["case", ["==", ["get", "point_type"], "deposit"], "deposit", ["==", ["get", "point_type"], "suggestion"], "deposit", "rp"],
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.25, 8, 0.3]
+        }}
+      />
+      <MapLibreGL.SymbolLayer
+        id="rp_symbols_clustered"
+        sourceLayerID={"rallying_point_display"}
+        filter={["has", "point_count"]}
+        style={{
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 14,
+          textColor: "#fff",
+          textHaloColor: "#fff",
+          textHaloBlur: 0,
+          textHaloWidth: 0.4,
+          iconAllowOverlap: true,
+          textField: ["get", "point_count"],
+          textAnchor: "bottom",
+          textOffset: [0, -0.75],
+          textMaxWidth: 5.4,
+          visibility: "visible",
+          textOptional: false,
+          iconOptional: false,
+          iconImage: "deposit_cluster",
+          iconAnchor: "bottom",
+          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
         }}
       />
     </MapLibreGL.VectorSource>

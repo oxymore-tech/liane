@@ -5,7 +5,7 @@ import { getAccessToken, getCurrentUser, getRefreshToken, storeCurrentUser } fro
 import { NetworkUnavailable } from "@/api/exception";
 import { AbstractHubService, OnLocationCallback } from "@/api/service/interfaces/hub";
 import { LianeEvent } from "@/api/event";
-import { Answer } from "@/api/notification";
+import { Answer, Notification } from "@/api/notification";
 import { SubscriptionLike } from "rxjs";
 import { AppLogger } from "@/api/logger";
 
@@ -52,10 +52,15 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveMessage", this.receiveMessage);
       this.hub.on("Me", async (me: FullUser) => {
         // Called when hub is started
-        AppLogger.info("HUB", "me", me);
+        AppLogger.debug("HUB", "me", me);
         this.isStarted = true;
         await storeCurrentUser(me);
         resolve(me);
+        this.hub.off("Me");
+        this.hub.on("Me", async (next: FullUser) => {
+          await storeCurrentUser(next);
+          this.receiveUserUpdate(next);
+        });
       });
       this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
       this.hub.on("ReceiveNotification", this.receiveNotification);
@@ -67,6 +72,7 @@ export class HubServiceClient extends AbstractHubService {
         }
         this.isStarted = false;
         this.hubState.next("offline");
+        reject(err);
       });
       this.hub
         .start()
@@ -107,6 +113,11 @@ export class HubServiceClient extends AbstractHubService {
     return get<PaginatedResponse<ChatMessage>>(`/conversation/${id}/message`, { params });
   }
 
+  async readNotifications(ids?: Ref<Notification>[]) {
+    await this.checkConnection();
+    await this.hub.invoke("ReadNotifications", ids ?? this.unreadNotifications.getValue());
+    this.unreadNotifications.next([]);
+  }
   async readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime) {
     await this.checkConnection();
     await this.hub.invoke("ReadConversation", conversation, timestamp);

@@ -124,20 +124,25 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
       return set;
     });
     var lastValue = lastValueCache.Get((liane.Id, member.Id));
-    return Task.FromResult(lastValue is not TrackedMemberLocation update ? null : update);
+    return Task.FromResult(lastValue as TrackedMemberLocation);
   }
 
   public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    var set = locationTrackers[(liane.Id, member.Id)];
-    set.Remove(user);
+    var found = locationTrackers.TryGetValue((liane.Id, member.Id), out var set);
+    if (!found)
+    {
+      logger.LogWarning($"{user.Id} failed to unsubscribe from ({liane.Id}{member.Id})");
+      return Task.CompletedTask;
+    }
+    set!.Remove(user);
     if (set.Count == 0) locationTrackers.Remove((liane.Id, member.Id), out _);
     return Task.CompletedTask;
   }
 
   public async Task Push(TrackedMemberLocation update)
   {
-    lastValueCache.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(10));
+    lastValueCache.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
     var contained = locationTrackers.TryGetValue((update.Liane, update.Member), out var list);
     if (!contained)
     {
@@ -164,6 +169,16 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
     {
       logger.LogInformation("Pushing liane update to {user} : {update}", recipient, liane);
       await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
+    }
+  }
+  
+  public async Task PushUserUpdate(FullUser user)
+  {
+    var connectionId = GetConnectionId(user.Id!);
+    if (connectionId is not null)
+    {
+      logger.LogInformation("Pushing update to {user}", user.Id!);
+      await hubContext.Clients.Client(connectionId).Me(user);
     }
   }
 }

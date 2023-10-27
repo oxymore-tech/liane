@@ -48,6 +48,7 @@ jobs:
           ENV_MAPTILER_KEY: ${{ secrets.MAPTILER_KEY }}
           ENV_APP_ENV: ${{ env.app_env }}
           ENV_APP_VERSION: ${{steps.exact-version.outputs.tag}}
+          ENV_TEST_ACCOUNT: ${{ secrets.TEST_ACCOUNT }}
 
       - name: Setup Node
         uses: actions/setup-node@v3

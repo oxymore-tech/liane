@@ -32,4 +32,11 @@ public sealed class DebugController : ControllerBase
   //   var sent = await hubService.SendNotification(augustin,
   //     new Notification.Reminder("test", "test", DateTime.UtcNow, ImmutableList.Create(new Recipient(augustin)), ImmutableHashSet<Answer>.Empty, "Bravo " + i, "Bravo2 " + i, null));
   // }
+
+  // [HttpGet("test")]
+  // public string Test([FromQuery] int nb)
+  // {
+  //   //throw new ArgumentException("Membre déjà actif");
+  //   throw new ValidationException("Route", ValidationMessage.Required);
+  // }
 }

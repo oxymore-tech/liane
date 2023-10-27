@@ -34,7 +34,7 @@ public sealed class MockServiceImpl : IMockService
         ObjectId.GenerateNewId().ToString()!,
         false,
         f.Phone.PhoneNumber("0#########"),
-        null, null, null, DateTime.UtcNow, null,
+        null, null, null, DateTime.UtcNow, null, new UserStats(),
         new UserInfo(f.Name.FirstName() + "-Bot", "$", null, Gender.Unspecified)
       )
     );

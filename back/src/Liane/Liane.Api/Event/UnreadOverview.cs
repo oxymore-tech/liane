@@ -5,6 +5,6 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Event;
 
 public sealed record UnreadOverview(
-  int NotificationsCount,
+  ImmutableList<Ref<Notification>> Notifications,
   ImmutableList<Ref<ConversationGroup>> Conversations
 );

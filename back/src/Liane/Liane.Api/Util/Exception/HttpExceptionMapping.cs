@@ -13,39 +13,52 @@ public static class HttpExceptionMapping
 {
   public static System.Exception Map(HttpStatusCode? code, string responseContent)
   {
-    switch (code)
+    return code switch
     {
-      case HttpStatusCode.NotFound:
-        return new ResourceNotFoundException(responseContent);
-      case HttpStatusCode.Unauthorized:
-        return new UnauthorizedAccessException(responseContent);
-      case HttpStatusCode.Forbidden:
-        return new ForbiddenException();
-      case HttpStatusCode.ExpectationFailed:
-        return new ExpectationFailedException(responseContent);
-    }
-
-    return new HttpRequestException($"{code} : {responseContent}");
+      HttpStatusCode.NotFound => new ResourceNotFoundException(responseContent),
+      HttpStatusCode.Unauthorized => new UnauthorizedAccessException(responseContent),
+      HttpStatusCode.Forbidden => new ForbiddenException(),
+      HttpStatusCode.ExpectationFailed => new ExpectationFailedException(responseContent),
+      _ => new HttpRequestException($"{code} : {responseContent}")
+    };
   }
 
   public static IActionResult? Map(System.Exception exception, ModelStateDictionary? modelState = null, ILogger? logger = null)
   {
     switch (exception)
     {
-      case TaskCanceledException:
-        logger?.LogInformation("Request canceled");
-        return new BadRequestObjectResult("Request canceled");
+      case TaskCanceledException e:
+      {
+        var validationErrorResponse = new Dictionary<string, object> { ["title"] = exception.Message };
+
+        logger?.LogWarning(e.Message);
+        return new BadRequestObjectResult(validationErrorResponse);
+      }
+
+      case ArgumentException e:
+      {
+        var validationErrorResponse = new Dictionary<string, object> { ["title"] = exception.Message };
+
+        logger?.LogWarning(e, e.Message);
+        return new BadRequestObjectResult(validationErrorResponse);
+      }
 
       case ValidationException e:
       {
         var errors = new ModelStateDictionary(modelState ?? new ModelStateDictionary());
-        foreach (var (field, message) in e.Errors) errors.AddModelError(field, message);
+        foreach (var (field, message) in e.Errors)
+        {
+          errors.AddModelError(field, message);
+        }
 
-        var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = "One or more validation errors occurred." };
+        var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = exception.Message };
+
+        logger?.LogWarning(e, e.Message);
         return new BadRequestObjectResult(validationErrorResponse);
       }
 
       case ResourceNotFoundException e:
+        logger?.LogWarning(e, e.Message);
         return new NotFoundObjectResult(e.Message);
 
       case UnauthorizedAccessException _:
@@ -54,8 +67,12 @@ public static class HttpExceptionMapping
       case ForbiddenException e:
         return Result(e.Message, HttpStatusCode.Forbidden);
 
-      case ExpectationFailedException e:
+      case ExpectationFailedException e: 
+      {
+        logger?.LogWarning(e, e.Message);
         return Result(e.Message, HttpStatusCode.ExpectationFailed);
+      }
+        
     }
 
     return null;

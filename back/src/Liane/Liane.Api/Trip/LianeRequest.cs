@@ -11,7 +11,8 @@ public record BaseLianeRequest
   [property:SerializeAsResolvedRef]
   Ref<RallyingPoint> From,
   [property:SerializeAsResolvedRef]
-  Ref<RallyingPoint> To
+  Ref<RallyingPoint> To,
+  GeolocationLevel GeolocationLevel
 );
 public sealed record LianeRequest(
   string? Id,
@@ -20,5 +21,6 @@ public sealed record LianeRequest(
   int AvailableSeats,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
-  DayOfTheWeekFlag? Recurrence = null
-) : BaseLianeRequest(DepartureTime, ReturnTime, AvailableSeats, From, To) ,IIdentity;
+  DayOfTheWeekFlag? Recurrence = null,
+  GeolocationLevel GeolocationLevel = GeolocationLevel.None
+) : BaseLianeRequest(DepartureTime, ReturnTime, AvailableSeats, From, To, GeolocationLevel) ,IIdentity;

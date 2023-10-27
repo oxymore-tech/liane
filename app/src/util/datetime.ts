@@ -21,8 +21,7 @@ export const formatDuration = (duration: TimeInSeconds) => {
 };
 
 export const addSeconds = (date: Date, seconds: number) => {
-  new Date(date).setSeconds(seconds + date.getUTCSeconds());
-  return new Date(date);
+  return new Date(date.getTime() + seconds * 1000);
 };
 
 export const extractDatePart = (isoDatetime: UTCDateTime) => {

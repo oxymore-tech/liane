@@ -39,6 +39,7 @@ class LocationService : Service() {
   private lateinit var geolocationConfig: GeolocationConfig
   private val wayPoints = mutableListOf<Location>()
   private var preciseTrackingMode = true
+  private var lastLocationResult: Location? = null
 
   fun postPing(
     location: Location
@@ -74,8 +75,12 @@ class LocationService : Service() {
           os.flush()
           os.close()
 
-          if (this.getResponseCode() != 204) Log.d("PING", "Response code was : " + this.getResponseCode().toString())
-
+          val res = this.getResponseCode();
+          if (res != 204) Log.d("PING", "Response code was : " + this.getResponseCode().toString())
+          if (res == 404 || res == 400) {
+            // Stop service if liane is no longer valid
+            stopSelf()
+          }
           this.disconnect()
         } catch (e: Exception) {
           e.printStackTrace()
@@ -100,19 +105,24 @@ class LocationService : Service() {
         val location = locationResult.lastLocation
         if (location != null) {
           Log.d(LogTag, "location update $location")
-          postPing(location)
+
+          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10 || location.elapsedRealtimeNanos/1000 - lastLocationResult!!.elapsedRealtimeNanos/1000 > geolocationConfig.defaultInterval) {
+            // Avoid sending too many pings in precise mode: only post ping if distance is above 10 meters or after default delay
+            postPing(location)
+          }
+          lastLocationResult = location
           val closeToWayPointIndex = wayPoints.indexOfFirst { it.distanceTo(location) <= geolocationConfig.nearWayPointRadius }
           if (closeToWayPointIndex > -1) {
             if (!preciseTrackingMode) startTracking(true)
             else if (closeToWayPointIndex == wayPoints.lastIndex) {
               // Stop tracking
-              Log.d(LogTag, "Reached destination. Service will stop in 5 minutes.")
+              Log.d(LogTag, "Reached destination. Service will stop in 1 minute.")
               Timer().schedule(object : TimerTask() {
                 override fun run() {
                   stopSelf()
                   Log.w(LogTag, "Service stopped.")
                 }
-              }, 5*60*100)
+              }, 60*1000)
               stopSelf()
             }
           } else if (preciseTrackingMode) {
@@ -155,8 +165,8 @@ class LocationService : Service() {
       NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
     val builder =
       notificationBuilder.setOngoing(true)
-        .setContentTitle("Trajet en cours")
-        .setContentText("Ne désactivez pas votre GPS.")
+        .setContentTitle("Votre trajet est en cours")
+     //   .setContentText("Ne désactivez pas votre GPS.")
         .setSmallIcon(R.drawable.ic_notification)
         .setCategory(Notification.CATEGORY_SERVICE)
         .setContentIntent(pendingIntent)
@@ -204,7 +214,7 @@ class LocationService : Service() {
         val notification = createNotification()
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         mNotificationManager.notify(serviceId, notification)
-
+        lastLocationResult = null
         startTracking(true)
         Timer().schedule(object : TimerTask() {
           override fun run() {

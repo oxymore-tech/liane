@@ -6,7 +6,6 @@ import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvide
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { View } from "react-native";
-import { AppDimensions } from "@/theme/dimensions";
 import { AppColors } from "@/theme/colors";
 
 export const HomeBottomSheetContainer = (
@@ -53,7 +52,7 @@ export const HomeBottomSheetContainer = (
     return <View />;
   }
 
-  const bottomSpace = insets.bottom + AppDimensions.bottomBar.margin + h / 2;
+  const bottomSpace = insets.bottom + h / 2;
 
   let stops: number[];
   let paddingTop: number;

@@ -1,14 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.User;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip.Event;
 
@@ -46,9 +51,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   private readonly ICurrentContext currentContext;
   private readonly ILogger<LianeRequestServiceImpl> logger;
   private readonly IAutomaticAnswerService automaticAnswerService;
-
+  private readonly IMongoDatabase mongoDatabase;
+  private readonly IUserStatService userStatService;
   public LianeRequestServiceImpl(INotificationService notificationService, IRallyingPointService rallyingPointService, ILianeService lianeService, IUserService userService,
-    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService)
+    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService, IMongoDatabase mongoDatabase, IUserStatService userStatService)
   {
     this.notificationService = notificationService;
     this.rallyingPointService = rallyingPointService;
@@ -58,6 +64,8 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     this.eventDispatcher = eventDispatcher;
     this.logger = logger;
     this.automaticAnswerService = automaticAnswerService;
+    this.mongoDatabase = mongoDatabase;
+    this.userStatService = userStatService;
   }
 
   public async Task OnEvent(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User>? sender = null)
@@ -74,15 +82,34 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
+  private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Liane> lianeRef, Ref<Api.User.User> memberRef, LianeEvent.JoinRequest joinRequest)
+  {
+    var member = new LianeMember(memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, GeolocationLevel: joinRequest.GeolocationLevel);
+    var liane = await lianeService.AddMember(lianeRef, member);
+    await userStatService.IncrementTotalJoinedTrips(memberRef);
+    if (joinRequest.TakeReturnTrip)
+    {
+      await lianeService.AddMember(liane.Return!, member with { From = joinRequest.To, To = joinRequest.From });
+      await userStatService.IncrementTotalJoinedTrips(memberRef);
+    }
+
+    return new LianeEvent.MemberAccepted(joinRequest.Liane, memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip);
+  }
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
   {
+    var liane = await lianeService.Get(joinRequest.Liane);
+    if (liane.State is not (LianeState.Started or LianeState.NotStarted))
+    {
+      throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
+    }
+
     LianeEvent lianeEvent = answer switch
     {
-      Answer.Accept => new LianeEvent.MemberAccepted(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
+      Answer.Accept => await AcceptMember(liane, e.CreatedBy!, joinRequest),
       Answer.Reject => new LianeEvent.MemberRejected(joinRequest.Liane, e.CreatedBy!, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip),
       _ => throw new ArgumentOutOfRangeException(nameof(answer), answer, null)
     };
-    await eventDispatcher.Dispatch(lianeEvent);
+    await eventDispatcher.Dispatch(lianeEvent, sender);
   }
 
   public async Task<PaginatedResponse<JoinLianeRequest>> List(Pagination pagination)
@@ -107,6 +134,19 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   public async Task<JoinLianeRequest> Get(Ref<Notification> id)
   {
     return await Resolve(await notificationService.Get(id));
+  }
+
+  public async Task RejectJoinLianeRequests(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+  {
+    var filter =
+      Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, LianeEvent.JoinRequest>(n => n.Payload)
+                 & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
+    var result = await mongoDatabase.GetCollection<Notification.Event>()
+      .Find(filter).ToListAsync();
+    await Parallel.ForEachAsync(result, async (req, _) =>
+    {
+      await eventDispatcher.DispatchAnswer(req, Answer.Reject, req.Recipients[0].User);
+    });
   }
 
   public async Task Delete(Ref<Notification> id)

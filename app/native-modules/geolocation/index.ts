@@ -6,8 +6,8 @@ interface BackgroundGeolocationServiceInterface {
   startService(config: BackgroundGeolocationServiceConfig): Promise<void>;
   stopService(): Promise<void>;
   enableLocation(): Promise<void>;
-  isRunning(): Promise<boolean>;
-  watch(callback: (running: boolean) => void): SubscriptionLike;
+  isRunning(lianeId: string): Promise<boolean>;
+  watch(callback: (running: string | undefined) => void): SubscriptionLike;
 }
 
 export type BackgroundGeolocationServiceConfig = {
@@ -36,22 +36,22 @@ const start = (config: BackgroundGeolocationServiceConfig) => {
     const nativeConfig: any = config;
     nativeConfig.geolocationConfig = config.geolocationConfig || DefaultConfig.geolocationConfig;
     nativeConfig.wayPoints = config.wayPoints.map(w => w.join(",")).join(";");
-    return NativeModule.startService(nativeConfig).then(() => running.next(true));
+    return NativeModule.startService(nativeConfig).then(() => running.next(config.pingConfig.lianeId));
   }
   return Promise.reject();
 };
 const stop = () => {
   if (Platform.OS === "android") {
-    return NativeModule.stopService().then(() => running.next(false));
+    return NativeModule.stopService().then(() => running.next(undefined));
   }
   return Promise.reject();
 };
 
-const running = new Subject<boolean>();
+const running = new Subject<string | undefined>();
 export default {
   start,
   stop,
   enableLocation: Platform.OS === "android" ? NativeModule.enableLocation : Promise.resolve,
   isRunning: Platform.OS === "android" ? NativeModule.isRunning : () => Promise.resolve(false),
-  watch: (callback: (running: boolean) => void) => running.subscribe(callback)
+  watch: (callback: (running: string | undefined) => void) => running.subscribe(callback)
 };

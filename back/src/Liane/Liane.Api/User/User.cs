@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.User;
@@ -18,7 +19,8 @@ public record User(
   DateTime? CreatedAt,
   string Pseudo,
   Gender Gender,
-  string? PictureUrl
+  string? PictureUrl,
+  UserStats Stats
 ) : IIdentity;
 
 public sealed record FullUser(
@@ -28,9 +30,10 @@ public sealed record FullUser(
   string FirstName,
   string LastName,
   Gender Gender,
+  UserStats Stats,
   string? PictureUrl = null,
   string? PushToken = null
-) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl)
+) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl, Stats)
 {
   public static string GetPseudo(string? firstName, string? lastName)
   {
@@ -39,7 +42,7 @@ public sealed record FullUser(
       return "Utilisateur inconnu";
     }
 
-    if (lastName is null)
+    if (lastName is null || lastName.Length == 0)
     {
       return firstName;
     }
@@ -53,7 +56,8 @@ public sealed record FullUser(
     DateTime.UtcNow,
     "Utilisateur inconnu",
     "",
-    Gender.Unspecified
+    Gender.Unspecified,
+    new UserStats()
   );
 }
 
@@ -64,4 +68,4 @@ public sealed record UserInfo(
   Gender Gender
 );
 
-public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0);
+public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0, int TotalCreatedTrips = 0, int TotalJoinedTrips =0);

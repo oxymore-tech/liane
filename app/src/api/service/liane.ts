@@ -7,20 +7,19 @@ import {
   UTCDateTime,
   LianeMatchDisplay,
   Feedback,
-  Ref,
   LianeUpdate,
   DayOfTheWeekFlag,
   LianeRecurrence,
-  LianeState
+  LianeState,
+  GeolocationLevel
 } from "@/api";
 import { get, postAs, del, patch, patchAs } from "@/api/http";
-import { JoinRequest, MemberPing } from "@/api/event";
-import { TimeInSeconds } from "@/util/datetime";
+import { JoinRequest } from "@/api/event";
 import { getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { cancelReminder, createReminder } from "@/api/service/notification";
 import { sync } from "@/util/store";
 import { getTripFromLiane } from "@/components/trip/trip";
-import { AppLogger } from "@/api/logger";
+import { FeatureCollection } from "geojson";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
@@ -36,36 +35,30 @@ export interface LianeService {
   updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
   updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
-  warnDelay(id: Ref<Liane>, delay: TimeInSeconds): Promise<void>;
   pause(id: string): Promise<void>;
   unpause(id: string): Promise<void>;
   cancel(id: string): Promise<void>;
-  leave(id: string, userId: string): Promise<void>;
+  start(lianeId: string): Promise<void>;
+  leave(id: string): Promise<void>;
   delete(lianeId: string): Promise<void>;
   deleteJoinRequest(id: string): Promise<void>;
   deleteRecurrence(id: string): Promise<void>;
-  setTracked(id: string, track: boolean): Promise<void>;
-  getTracked(): Promise<string[]>;
+  setTracked(id: string, level: GeolocationLevel): Promise<void>;
+  getProof(id: string): Promise<FeatureCollection>;
 }
 export class LianeServiceClient implements LianeService {
-  async setTracked(id: string, track: boolean): Promise<void> {
-    const trackedLianes = new Set(await retrieveAsync<string[]>("tracked", []));
-    if (track) {
-      trackedLianes.add(id);
-    } else {
-      trackedLianes.delete(id);
-    }
-    await storeAsync("tracked", [...trackedLianes]);
+  async setTracked(id: string, level: GeolocationLevel): Promise<void> {
+    await patch(`/liane/${id}/geolocation`, { body: level });
   }
 
-  async getTracked(): Promise<string[]> {
-    return (await retrieveAsync<string[]>("tracked", []))!;
-  }
   // GET
   async get(id: string): Promise<Liane> {
     return await get<Liane>(`/liane/${id}`);
   }
 
+  async getProof(id: string): Promise<FeatureCollection> {
+    return await get<FeatureCollection>(`/liane/${id}/geolocation`);
+  }
   async list(
     states: LianeState[] = ["NotStarted", "Started"],
     cursor: string | undefined = undefined,
@@ -136,16 +129,6 @@ export class LianeServiceClient implements LianeService {
     await postAs(`/liane/${id}/feedback`, { body: feedback });
   }
 
-  async warnDelay(id: string, delay: number): Promise<void> {
-    const ping: MemberPing = {
-      type: "MemberPing",
-      liane: id,
-      timestamp: new Date().getTime(),
-      delay
-    };
-    await postAs(`/event/member_ping`, { body: ping }).catch(e => AppLogger.warn("GEOPINGS", e));
-  }
-
   async pause(id: string): Promise<void> {
     console.log("TODO: PAUSE LIANE ROUTE", id);
   }
@@ -158,8 +141,8 @@ export class LianeServiceClient implements LianeService {
     await del(`/liane/${lianeId}`);
   }
 
-  async leave(id: string, userId: string) {
-    await del(`/liane/${id}/members/${userId}`);
+  async leave(id: string) {
+    await postAs(`/liane/${id}/leave`);
   }
 
   async deleteJoinRequest(id: string): Promise<void> {
@@ -170,6 +153,9 @@ export class LianeServiceClient implements LianeService {
     await postAs(`/liane/${lianeId}/cancel`);
   }
 
+  async start(lianeId: string): Promise<void> {
+    await postAs(`/liane/${lianeId}/start`);
+  }
   async deleteRecurrence(id: string): Promise<void> {
     await del(`/liane/recurrence/${id}`);
   }
@@ -180,7 +166,12 @@ export class LianeServiceClient implements LianeService {
     const user = await getCurrentUser();
     local = local.filter(l => new Date(l.departureTime).getTime() > now);
     const online = lianes
-      .map(l => ({ ...l, departureTime: getTripFromLiane(l, user!.id!).departureTime }))
+      .map(l => {
+        const trip = getTripFromLiane(l, user!.id!);
+        const tripLiane = { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
+        //console.log("reminder online", user!.id!, x.departureTime, x.wayPoints[0].rallyingPoint.label);
+        return tripLiane;
+      })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
 
     const { added, removed, stored } = sync(
@@ -195,6 +186,7 @@ export class LianeServiceClient implements LianeService {
       await cancelReminder(r.lianeId);
     }
     for (let liane of added) {
+      //console.log("reminder", user!.id!, liane.departureTime, liane.wayPoints[0].rallyingPoint.label);
       await createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
     }
 

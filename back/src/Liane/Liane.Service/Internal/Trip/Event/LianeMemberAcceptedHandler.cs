@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
 
@@ -22,12 +23,7 @@ public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.Membe
 
   public async Task OnEvent(LianeEvent.MemberAccepted e, Ref<Api.User.User>? sender = null)
   {
-    var member = new LianeMember(e.Member, e.From, e.To, e.Seats);
-    var liane = await lianeService.AddMember(e.Liane, member);
-    if (e.TakeReturnTrip)
-    {
-      await lianeService.AddMember(liane.Return!, member with {From = e.To, To = e.From});
-    }
+    var liane = await lianeService.Get(e.Liane);
     var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
     await notificationService.SendEvent("Demande acceptée", 
       "Vous avez rejoint la liane à destination de "+destination+".", 

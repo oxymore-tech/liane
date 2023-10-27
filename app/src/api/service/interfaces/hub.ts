@@ -33,11 +33,12 @@ export interface HubService {
   updateActiveState(active: boolean): void;
   readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
   subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
+  readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
-  unreadNotificationCount: Observable<number>;
+  unreadNotifications: Observable<Ref<Notification>[]>;
   lianeUpdates: Observable<Liane>;
-
+  userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
 }
 
@@ -49,7 +50,7 @@ export type OnNotificationCallback = (n: Notification) => void;
 export type OnLocationCallback = (l: TrackedMemberLocation) => void;
 
 type UnreadOverview = Readonly<{
-  notificationsCount: number;
+  notifications: Ref<Notification>[];
   conversations: Ref<ConversationGroup>[];
 }>;
 
@@ -58,7 +59,8 @@ export abstract class AbstractHubService implements HubService {
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
   lianeUpdates = new Subject<Liane>();
-  unreadNotificationCount = new BehaviorSubject<number>(0);
+  userUpdates = new Subject<FullUser>();
+  unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
   hubState = new Subject<HubState>();
   protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
   // Sets a callback to receive messages after joining a conversation.
@@ -86,7 +88,7 @@ export abstract class AbstractHubService implements HubService {
     // Called when hub is started
     AppLogger.info("HUB", "unread", unread);
     this.unreadConversations.next(unread.conversations);
-    this.unreadNotificationCount.next(unread.notificationsCount);
+    this.unreadNotifications.next(unread.notifications);
   };
 
   protected receiveNotification = async (notification: Notification) => {
@@ -114,6 +116,7 @@ export abstract class AbstractHubService implements HubService {
 
   abstract start(): Promise<FullUser>;
   abstract stop(): Promise<void>;
+  abstract readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
   updateActiveState(active: boolean) {
     this.appStateActive = active;
@@ -175,6 +178,10 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveLianeUpdate = (liane: Liane) => {
     this.lianeUpdates.next(liane);
+  };
+
+  protected receiveUserUpdate = (user: FullUser) => {
+    this.userUpdates.next(user);
   };
 
   abstract readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;

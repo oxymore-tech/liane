@@ -14,6 +14,39 @@ export interface ActionItemProps {
   disabled?: boolean;
   lines?: number;
 }
+
+export const ActionListItem = ({ onPress, color = AppColorPalettes.gray[800], iconName, text }: ActionItemProps) => (
+  <ListItem
+    onPress={onPress}
+    descriptionComponent={<AppText style={{ fontSize: 16, color, flexGrow: 1, flexShrink: 1, paddingVertical: 4 }}>{text}</AppText>}
+    leadingComponent={
+      <View style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+        <AppIcon name={iconName} color={color} />
+      </View>
+    }
+  />
+);
+
+const ListItem = ({
+  leadingComponent,
+  descriptionComponent,
+  onPress
+}: {
+  leadingComponent: React.ReactElement;
+  descriptionComponent: React.ReactElement;
+  onPress: () => void;
+}) => {
+  return (
+    <AppPressableOverlay foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress}>
+      <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
+        {leadingComponent}
+        {descriptionComponent}
+        <AppIcon name={"chevron-right-outline"} />
+      </Row>
+    </AppPressableOverlay>
+  );
+};
+
 export const ActionItem = ({ onPress, color = AppColorPalettes.gray[800], iconName, text, disabled = false, lines = 1 }: ActionItemProps) => (
   <Item
     onPress={onPress}
@@ -33,8 +66,8 @@ export const Item = ({
   onPress,
   disabled
 }: {
-  leadingComponent: JSX.Element;
-  descriptionComponent: JSX.Element;
+  leadingComponent: React.ReactElement;
+  descriptionComponent: React.ReactElement;
   onPress: () => void;
   disabled: boolean;
 }) => {
@@ -59,5 +92,6 @@ const styles = StyleSheet.create({
   rowActionContainer: {
     backgroundColor: AppColorPalettes.gray[100],
     borderRadius: 8
-  }
+  },
+  section: { paddingVertical: 16, marginHorizontal: 24 }
 });

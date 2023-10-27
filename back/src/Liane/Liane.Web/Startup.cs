@@ -23,7 +23,6 @@ using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
 using Liane.Web.Hubs;
 using Liane.Web.Internal.Auth;
-using Liane.Web.Internal.Debug;
 using Liane.Web.Internal.Exception;
 using Liane.Web.Internal.File;
 using Liane.Web.Internal.Json;
@@ -80,6 +79,7 @@ public static class Startup
     services.AddSettings<AuthSettings>(context);
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
+    services.AddService<UserStatServiceImpl>();
     services.AddService<HubServiceImpl>();
     services.AddService<DeleteAccountServiceImpl>();
 
@@ -198,8 +198,8 @@ public static class Startup
 
     services.AddControllers(options =>
     {
-      options.Filters.Add<RequestLoggerFilter>();
       options.Filters.Add<ExceptionFilter>();
+      // options.Filters.Add<RequestLoggerFilter>();
     });
     services.AddService<HttpContextAccessor>();
     services.AddSwaggerDocument(settings =>
@@ -281,7 +281,7 @@ public static class Startup
     app.UseOpenApi();
     app.UseSwaggerUi3();
     app.UseCors("AllowLocal");
-
+    
     var env = context.HostingEnvironment;
     if (env.IsDevelopment())
     {

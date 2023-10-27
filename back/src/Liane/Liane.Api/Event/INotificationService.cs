@@ -15,18 +15,14 @@ public interface INotificationService : ICrudService<Notification>
   Task<Notification> SendInfo(string title, string message, Ref<User.User> to);
 
   Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<User.User> to, LianeEvent lianeEvent, params Answer[] answers);
-
-  Task<Notification> SendReminder(string title, string message, ImmutableList<Ref<User.User>> to, Reminder reminder);
-
-  Task SendReminders(DateTime now, IEnumerable<Notification.Reminder> reminders);
-
+  
   Task Answer(Ref<Notification> id, Answer answer);
 
   Task MarkAsRead(Ref<Notification> id);
 
-  Task<int> GetUnreadCount(Ref<User.User> userId);
+  Task MarkAsRead(IEnumerable<Ref<Notification>> ids);
 
-  Task CleanJoinLianeRequests(IEnumerable<Ref<Trip.Liane>> lianes);
-  
+  Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<User.User> userId);
+
   Task CleanNotifications(IEnumerable<Ref<Trip.Liane>> lianes);
 }
