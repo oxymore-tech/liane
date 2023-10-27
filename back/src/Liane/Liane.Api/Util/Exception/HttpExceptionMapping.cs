@@ -39,7 +39,7 @@ public static class HttpExceptionMapping
       {
         var validationErrorResponse = new Dictionary<string, object> { ["title"] = exception.Message };
 
-        logger?.LogWarning(e.Message, e);
+        logger?.LogWarning(e, e.Message);
         return new BadRequestObjectResult(validationErrorResponse);
       }
 
@@ -53,12 +53,12 @@ public static class HttpExceptionMapping
 
         var validationErrorResponse = new Dictionary<string, object> { ["errors"] = new SerializableError(errors), ["title"] = exception.Message };
 
-        logger?.LogWarning(e.Message, e);
+        logger?.LogWarning(e, e.Message);
         return new BadRequestObjectResult(validationErrorResponse);
       }
 
       case ResourceNotFoundException e:
-        logger?.LogWarning(e.Message, e);
+        logger?.LogWarning(e, e.Message);
         return new NotFoundObjectResult(e.Message);
 
       case UnauthorizedAccessException _:
@@ -69,7 +69,7 @@ public static class HttpExceptionMapping
 
       case ExpectationFailedException e: 
       {
-        logger?.LogWarning(e.Message, e);
+        logger?.LogWarning(e, e.Message);
         return Result(e.Message, HttpStatusCode.ExpectationFailed);
       }
         
