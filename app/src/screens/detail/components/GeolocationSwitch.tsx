@@ -99,6 +99,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     return null;
   }
 
+  const isTrackedLive = isTracked && (!geoloc?.liane || geoloc.liane.id === match.id);
   return (
     <Row spacing={8}>
       {isTracked !== undefined && (
@@ -107,14 +108,12 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
           trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
           thumbColor={geoloc?.isActive ? AppColors.white : AppColors.grayBackground}
           ios_backgroundColor={AppColors.grayBackground}
-          value={isTracked && (geoloc === undefined || geoloc.isActive)}
+          value={isTrackedLive}
           onValueChange={setGeolocalisationEnabled}
         />
       )}
       {isTracked === undefined && <ActivityIndicator color={AppColors.primaryColor} size={"small"} />}
-      <AppText style={[styles.geolocText, { color: geoloc?.isActive ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
-        Géolocalisation
-      </AppText>
+      <AppText style={[styles.geolocText, { color: isTrackedLive ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>Géolocalisation</AppText>
     </Row>
   );
 };

@@ -1,4 +1,4 @@
-import { LatLng, RallyingPoint, WayPoint } from "@/api";
+import { LatLng, RallyingPoint, UTCDateTime, WayPoint } from "@/api";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 import Geolocation from "react-native-geolocation-service";
 import { getAccessToken, getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
@@ -320,7 +320,7 @@ export async function cancelSendLocationPings() {
         return;
       }
       Geolocation.clearWatch(value.watchId);
-      running.next(undefined);
+      updateRunning(undefined);
     } else {
       await BackgroundGeolocationService.stop();
     }
@@ -370,10 +370,27 @@ export async function startPositionTracking(lianeId: string, wayPoints: WayPoint
 }
 
 // Check if geolocation service is running
-export const isLocationServiceRunning = (lianeId: string) =>
-  Platform.OS === "ios" ? Promise.resolve(running.getValue()?.liane === lianeId) : BackgroundGeolocationService.isRunning(lianeId);
+export const isLocationServiceRunning = async (lianeId: string) => {
+  if (Platform.OS === "ios") {
+    const val =
+      running.getValue() ??
+      (await retrieveAsync<{ liane: string; watchId: number; timeOutDate: UTCDateTime } | undefined>("geolocation_lianeId").then(running.next));
+    if (val && new Date() > new Date(val.timeOutDate)) {
+      await cancelSendLocationPings().catch(e => AppLogger.warn("GEOPINGS", "Could not cancel timed out service", e));
+    }
+    return val;
+  } else {
+    return BackgroundGeolocationService.isRunning(lianeId);
+  }
+};
 
-const running = new BehaviorSubject<{ liane: string; watchId: number } | undefined>(undefined);
+// Keep track of current watched liane
+const running = new BehaviorSubject<{ liane: string; watchId: number; timeOutDate: UTCDateTime } | undefined>(undefined);
+
+const updateRunning = (val: { liane: string; watchId: number; timeOutDate: UTCDateTime } | undefined) => {
+  running.next(val);
+  storeAsync("geolocation_lianeId", val).catch(e => AppLogger.warn("GEOPINGS", "Could not persist liane id", e));
+};
 export const watchLocationServiceState = (callback: (running: string | undefined) => void) =>
   Platform.OS === "ios" ? running.subscribe(l => callback(l?.liane)) : BackgroundGeolocationService.watch(callback);
 
@@ -403,7 +420,7 @@ const shareLocationTask = async ({ liane, trip }: LocationPingsSenderProps) => {
         Geolocation.clearWatch(watchId);
       }
       AppLogger.info("GEOPINGS", "Tracking stopped", liane);
-      running.next(undefined);
+      updateRunning(undefined);
       resolve();
     };
 
@@ -455,7 +472,7 @@ const shareLocationTask = async ({ liane, trip }: LocationPingsSenderProps) => {
           showLocationDialog: true
         }
       );
-      running.next({ liane, watchId });
+      updateRunning({ liane, watchId, timeOutDate: new Date(new Date().getTime() + timeout).toISOString() });
     };
 
     // Start tracking
