@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import androidx.preference.PreferenceManager
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -106,8 +107,8 @@ class LocationService : Service() {
         if (location != null) {
           Log.d(LogTag, "location update $location")
 
-          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10 || location.elapsedRealtimeNanos/1000 - lastLocationResult!!.elapsedRealtimeNanos/1000 > geolocationConfig.defaultInterval) {
-            // Avoid sending too many pings in precise mode: only post ping if distance is above 10 meters or after default delay
+          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10) {
+            // Avoid sending too many pings in precise mode: only post ping if distance is above 10 meters
             postPing(location)
           }
           lastLocationResult = location
@@ -215,6 +216,8 @@ class LocationService : Service() {
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         mNotificationManager.notify(serviceId, notification)
         lastLocationResult = null
+        val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        preferences.edit().putString("lianeId", pingConfig.lianeId).apply()
         startTracking(true)
         Timer().schedule(object : TimerTask() {
           override fun run() {
@@ -236,6 +239,8 @@ class LocationService : Service() {
 
   override fun onDestroy() {
     updateClient.removeLocationUpdates(locationCallback)
+    val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+    preferences.edit().remove("lianeId").apply()
     super.onDestroy()
 
   }

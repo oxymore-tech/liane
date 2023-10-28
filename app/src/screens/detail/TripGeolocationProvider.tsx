@@ -5,7 +5,6 @@ import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";
 import { isLocationServiceRunning, watchLocationServiceState } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
-import { addSeconds } from "@/util/datetime";
 
 export interface TripGeolocation {
   liane: Liane;
@@ -90,7 +89,7 @@ export const useMemberTripGeolocation = (memberId: string) => {
 const StalePingDelay = 180; // 3 minutes
 export const useMemberIsMoving = (memberId: string) => {
   const lastLocUpdate = useMemberTripGeolocation(memberId);
-  const [moving, setMoving] = useState(!!lastLocUpdate && addSeconds(new Date(lastLocUpdate.at), 120).getTime() >= new Date().getTime());
+  const [moving, setMoving] = useState(!!lastLocUpdate && (new Date().getTime() - new Date(lastLocUpdate.at).getTime()) / 1000 < StalePingDelay);
 
   useEffect(() => {
     if (!lastLocUpdate) {
@@ -99,7 +98,7 @@ export const useMemberIsMoving = (memberId: string) => {
       const timeout = setInterval(() => {
         const d = (new Date().getTime() - new Date(lastLocUpdate.at).getTime()) / 1000;
         setMoving(d < StalePingDelay);
-      }, 10 * 1000);
+      }, 15 * 1000);
       return () => clearInterval(timeout);
     }
   }, [lastLocUpdate]);
@@ -108,8 +107,13 @@ export const useMemberIsMoving = (memberId: string) => {
 };
 export const useMemberRealTimeDelay = (memberId: string) => {
   const lastDriverLocUpdate = useMemberTripGeolocation(memberId);
-  const { user } = useContext(AppContext);
-  const [delay, setDelay] = useState<number>(lastDriverLocUpdate ? (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000 : 0);
+  const [delay, setDelay] = useState<number>(() => {
+    if (!lastDriverLocUpdate) {
+      return 0;
+    }
+    const d = (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000;
+    return d < StalePingDelay ? d : lastDriverLocUpdate.delay;
+  });
 
   useEffect(() => {
     if (!lastDriverLocUpdate) {
@@ -122,10 +126,10 @@ export const useMemberRealTimeDelay = (memberId: string) => {
         } else {
           setDelay(lastDriverLocUpdate.delay);
         }
-      }, 10 * 1000);
+      }, 15 * 1000);
       return () => clearInterval(timeout);
     }
   }, [lastDriverLocUpdate]);
-  console.log(user?.phone, lastDriverLocUpdate?.member, lastDriverLocUpdate?.at, lastDriverLocUpdate?.delay, delay);
+  //console.log(user?.phone, lastDriverLocUpdate?.member, lastDriverLocUpdate?.at, lastDriverLocUpdate?.delay, delay);
   return lastDriverLocUpdate ? { ...lastDriverLocUpdate, delay } : null;
 };

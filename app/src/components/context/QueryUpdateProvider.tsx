@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useContext } from "react";
+import React, { PropsWithChildren, useContext, useEffect } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useSubscription } from "@/util/hooks/subscription";
 import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse } from "@/api";
@@ -89,15 +89,18 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
   });
 
   // Update notifications local cache
-  services.realTimeHub.subscribeToNotifications(async (n: Notification) => {
-    queryClient.setQueryData<InfiniteData<PaginatedResponse<Notification>>>(NotificationQueryKey, old => {
-      if (!old) {
-        return { pages: [{ pageSize: 1, data: [n] }], pageParams: [undefined] };
-      } else {
-        return updateNotificationPages(old, n);
-      }
+  useEffect(() => {
+    const sub = services.realTimeHub.subscribeToNotifications(async (n: Notification) => {
+      queryClient.setQueryData<InfiniteData<PaginatedResponse<Notification>>>(NotificationQueryKey, old => {
+        if (!old) {
+          return { pages: [{ pageSize: 1, data: [n] }], pageParams: [undefined] };
+        } else {
+          return updateNotificationPages(old, n);
+        }
+      });
+      return sub.unsubscribe();
     });
-  });
+  }, [queryClient, services.realTimeHub]);
   return (
     <QueryUpdaterContext.Provider
       value={{

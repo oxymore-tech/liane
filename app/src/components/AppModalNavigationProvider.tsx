@@ -23,7 +23,6 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
       return;
     }
     getSetting("geolocation").then(async setting => {
-      console.debug(setting, u.phone);
       const mismatchedPermissions = !!setting && setting !== "None" && !(await checkLocationPingsPermissions());
       if (mismatchedPermissions) {
         // Permissions don't match saved settings, so show again

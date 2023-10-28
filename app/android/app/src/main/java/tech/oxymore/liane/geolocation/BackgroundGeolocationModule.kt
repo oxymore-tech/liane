@@ -2,6 +2,7 @@ package tech.oxymore.liane.geolocation
 
 import android.content.Intent
 import android.util.Log
+import androidx.preference.PreferenceManager
 import com.facebook.react.bridge.*
 import tech.oxymore.liane.geolocation.Util.isMyServiceRunning
 
@@ -29,8 +30,15 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
   }
 
   @ReactMethod
-  fun isRunning(promise: Promise){
-    promise.resolve(isMyServiceRunning(LocationService::class.java, reactApplicationContext))
+  fun isRunning(lianeId: String, promise: Promise){
+    val serviceRunning = isMyServiceRunning(LocationService::class.java, reactApplicationContext);
+    if (!serviceRunning) {
+      promise.resolve(false)
+    } else {
+      val preferences = PreferenceManager.getDefaultSharedPreferences(reactApplicationContext)
+      val found = preferences.getString("lianeId", null)
+      promise.resolve(found == lianeId )
+    }
   }
 
   @ReactMethod

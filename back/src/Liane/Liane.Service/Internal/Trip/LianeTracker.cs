@@ -20,7 +20,6 @@ namespace Liane.Service.Internal.Trip;
 public sealed class LianeTracker
 {
   private const double NearPointDistanceInMeters = 100;
-  private const double NearPointTimeSpanInMinutes = 5 ;
   private readonly Api.Trip.Liane liane;
   private readonly ConcurrentDictionary<string, MemberLocationSample?> currentLocationMap = new();
   private readonly Action onTripArrivedDestination;
@@ -46,7 +45,6 @@ public sealed class LianeTracker
     private readonly Api.Trip.Liane liane;
     private Action? onTripArrivedDestination;
     private IOngoingTripSession tripSession = null!;
-    private int autoDisposeTimeout = 0;
 
     public Builder(Api.Trip.Liane liane)
     {
@@ -58,26 +56,12 @@ public sealed class LianeTracker
       onTripArrivedDestination = onArrivedDestination;
       return this;
     }
-    public Builder SetAutoDisposeTimeout(Func<Task> onTimeout, int delayMillis)
-    {
-      Task.Delay(delayMillis).ContinueWith(async _ =>
-      {
-        await tripSession.Dispose();
-        await onTimeout();
-      });
-      autoDisposeTimeout = delayMillis;
-      return this;
-    }
 
     public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService, IMongoDatabase mongo, ILogger<LianeTracker> logger)
     {
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location));
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
       tripSession  = await postgisService.CreateOngoingTrip(liane.Id, routeAsLineString);
-      if (autoDisposeTimeout == 0)
-      {
-        SetAutoDisposeTimeout(() => Task.CompletedTask, 3600 * 1000);
-      }
 
       var previousReport = (await mongo.GetCollection<LianeTrackReport>().FindAsync(r => r.Id == liane.Id)).FirstOrDefault();
       if (previousReport is not null)
@@ -106,7 +90,6 @@ public sealed class LianeTracker
   
   public async Task Push(UserPing ping)
   {
-    var now = DateTime.UtcNow;
     var pingTime = ping.At;
 
     currentLocationMap.TryGetValue(ping.User.Id, out var currentLocation);
@@ -212,17 +195,10 @@ public sealed class LianeTracker
     return -1;
   }
 
-  public bool IsCloseToPickup(Ref<Api.User.User> member)
+  public async Task Dispose()
   {
-    currentLocationMap.TryGetValue(member.Id, out var memberCurrentLocation);
-    currentLocationMap.TryGetValue(liane.Driver.User.Id, out var driverCurrentLocation);
-    if (driverCurrentLocation is null || memberCurrentLocation is null) return false;
-    var lianeMember = liane.Members.First(m => m.User.Id == member.Id);
-    return memberCurrentLocation.NextPointIndex == driverCurrentLocation.NextPointIndex 
-           && lianeMember.From.Id == liane.WayPoints[driverCurrentLocation.NextPointIndex].RallyingPoint.Id
-           && (memberCurrentLocation.PointDistance < NearPointDistanceInMeters || liane.WayPoints[driverCurrentLocation.NextPointIndex].Eta - DateTime.Now < TimeSpan.FromMinutes(NearPointTimeSpanInMinutes));
+    await ongoingTripSession.Dispose();
   }
-
   public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.User.User> member)
   {
     currentLocationMap.TryGetValue(member.Id, out var currentLocation);

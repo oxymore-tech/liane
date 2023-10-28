@@ -1,6 +1,6 @@
-import { LatLng, Liane, RallyingPoint, WayPoint } from "@/api";
+import { LatLng, RallyingPoint, UTCDateTime, WayPoint } from "@/api";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
-import Geolocation, { GeoOptions, GeoPosition } from "react-native-geolocation-service";
+import Geolocation from "react-native-geolocation-service";
 import { getAccessToken, getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
 import { DEFAULT_TLS } from "@/api/location";
 import { MAPTILER_KEY } from "@env";
@@ -174,21 +174,6 @@ export class LocationServiceClient implements LocationService {
   }
 }
 
-export async function getCurrentLocation(options?: GeoOptions) {
-  //TODO no export
-  return new Promise<GeoPosition>(async (resolve, reject) => {
-    Geolocation.getCurrentPosition(
-      position => {
-        resolve(position);
-      },
-      error => {
-        reject(error);
-      },
-      options || { enableHighAccuracy: true, timeout: 5000, maximumAge: 5000 }
-    );
-  });
-}
-
 type LocationPingsSenderProps = { liane: string; trip: WayPoint[] };
 
 const hasPermissionIOS = async (): Promise<boolean> => {
@@ -224,6 +209,17 @@ const hasPermissionIOS = async (): Promise<boolean> => {
   return false;
 };
 
+const inviteToOpenSettings = () => {
+  const openSetting = () => {
+    Linking.openSettings().catch(() => {
+      AppLogger.warn("SETTINGS", "Unable to open settings");
+    });
+  };
+  Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
+    { text: "Modifier les paramètres", onPress: openSetting },
+    { text: "Ignorer", onPress: () => {} }
+  ]);
+};
 export const hasLocationPermission = async () => {
   if (Platform.OS === "ios") {
     return await hasPermissionIOS();
@@ -247,8 +243,10 @@ export const hasLocationPermission = async () => {
 
   if (status === PermissionsAndroid.RESULTS.DENIED) {
     AppLogger.debug("SETTINGS", "Location permission denied by user");
+    inviteToOpenSettings();
   } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
     AppLogger.debug("SETTINGS", "Location permission revoked by user");
+    inviteToOpenSettings();
   }
 
   return false;
@@ -265,26 +263,21 @@ export async function requestEnableGPS() {
   return true;
 }
 
+export const BackgroundGeolocationPermissionToAsk =
+  Platform.OS === "android"
+    ? Platform.Version >= 29
+      ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION
+      : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+    : PERMISSIONS.IOS.LOCATION_ALWAYS;
+
 export const requestBackgroundGeolocation = async () => {
   if (Platform.OS === "ios") {
     if (parseInt(Platform.Version, 10) < 13) {
       const status = await request(PERMISSIONS.IOS.LOCATION_ALWAYS);
       if (status === "granted") {
         return true;
-      } else if (status === "denied") {
-        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-      } else if (status === "unavailable") {
-        Alert.alert(`Erreur: géolocalisation indisponible.`);
-      } else if (status === "blocked") {
-        const openSetting = () => {
-          Linking.openSettings().catch(() => {
-            AppLogger.warn("SETTINGS", "Unable to open settings");
-          });
-        };
-        Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
-          { text: "Modifier les paramètres", onPress: openSetting },
-          { text: "Ignorer", onPress: () => {} }
-        ]);
+      } else {
+        inviteToOpenSettings();
       }
     } else {
       await Linking.openSettings();
@@ -297,20 +290,8 @@ export const requestBackgroundGeolocation = async () => {
       //console.log(status);
       if (status === "granted") {
         return true;
-      } else if (status === "denied") {
-        Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-      } else if (status === "unavailable") {
-        Alert.alert(`Erreur: géolocalisation indisponible.`);
-      } else if (status === "blocked") {
-        const openSetting = () => {
-          Linking.openSettings().catch(() => {
-            AppLogger.warn("SETTINGS", "Unable to open settings");
-          });
-        };
-        Alert.alert("Localisation requise", `Pour continuez, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
-          { text: "Modifier les paramètres", onPress: openSetting },
-          { text: "Ignorer", onPress: () => {} }
-        ]);
+      } else {
+        inviteToOpenSettings();
       }
     } else {
       await Linking.openSettings().catch(() => {
@@ -318,51 +299,6 @@ export const requestBackgroundGeolocation = async () => {
       });
     }
   }
-  return false;
-};
-
-export const requestGeolocation = async () => {
-  if (Platform.OS === "ios") {
-    const status = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    if (status === "granted") {
-      return true;
-    } else if (status === "denied") {
-      Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-    } else if (status === "unavailable") {
-      Alert.alert(`Erreur: géolocalisation indisponible.`);
-    } else if (status === "blocked") {
-      const openSetting = () => {
-        Linking.openSettings().catch(() => {
-          AppLogger.warn("SETTINGS", "Unable to open settings");
-        });
-      };
-      Alert.alert("Localisation requise", `Activez la géolocalisation pour permettre à Liane d'utiliser votre position.`, [
-        { text: "Modifier les paramètres", onPress: openSetting },
-        { text: "Ignorer", onPress: () => {} }
-      ]);
-    }
-  } else if (Platform.OS === "android") {
-    const status = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    //console.log(status);
-    if (status === "granted") {
-      return true;
-    } else if (status === "denied") {
-      Alert.alert(`Liane a besoin de suivre votre position pour pouvoir valider votre trajet.`);
-    } else if (status === "unavailable") {
-      Alert.alert(`Erreur: géolocalisation indisponible.`);
-    } else if (status === "blocked") {
-      const openSetting = () => {
-        Linking.openSettings().catch(() => {
-          AppLogger.warn("SETTINGS", "Unable to open settings");
-        });
-      };
-      Alert.alert("Localisation requise", `Pour continuer, allez dans "Autorisations" > "Localisation" puis sélectionnez "Toujours autoriser".`, [
-        { text: "Modifier les paramètres", onPress: openSetting },
-        { text: "Ignorer", onPress: () => {} }
-      ]);
-    }
-  }
-
   return false;
 };
 
@@ -384,7 +320,7 @@ export async function cancelSendLocationPings() {
         return;
       }
       Geolocation.clearWatch(value.watchId);
-      running.next(undefined);
+      updateRunning(undefined);
     } else {
       await BackgroundGeolocationService.stop();
     }
@@ -434,10 +370,27 @@ export async function startPositionTracking(lianeId: string, wayPoints: WayPoint
 }
 
 // Check if geolocation service is running
-export const isLocationServiceRunning = (lianeId: string) =>
-  Platform.OS === "ios" ? Promise.resolve(running.getValue()?.liane === lianeId) : BackgroundGeolocationService.isRunning(lianeId);
+export const isLocationServiceRunning = async (lianeId: string) => {
+  if (Platform.OS === "ios") {
+    const val =
+      running.getValue() ??
+      (await retrieveAsync<{ liane: string; watchId: number; timeOutDate: UTCDateTime } | undefined>("geolocation_lianeId").then(running.next));
+    if (val && new Date() > new Date(val.timeOutDate)) {
+      await cancelSendLocationPings().catch(e => AppLogger.warn("GEOPINGS", "Could not cancel timed out service", e));
+    }
+    return val;
+  } else {
+    return BackgroundGeolocationService.isRunning(lianeId);
+  }
+};
 
-const running = new BehaviorSubject<{ liane: string; watchId: number } | undefined>(undefined);
+// Keep track of current watched liane
+const running = new BehaviorSubject<{ liane: string; watchId: number; timeOutDate: UTCDateTime } | undefined>(undefined);
+
+const updateRunning = (val: { liane: string; watchId: number; timeOutDate: UTCDateTime } | undefined) => {
+  running.next(val);
+  storeAsync("geolocation_lianeId", val).catch(e => AppLogger.warn("GEOPINGS", "Could not persist liane id", e));
+};
 export const watchLocationServiceState = (callback: (running: string | undefined) => void) =>
   Platform.OS === "ios" ? running.subscribe(l => callback(l?.liane)) : BackgroundGeolocationService.watch(callback);
 
@@ -467,7 +420,7 @@ const shareLocationTask = async ({ liane, trip }: LocationPingsSenderProps) => {
         Geolocation.clearWatch(watchId);
       }
       AppLogger.info("GEOPINGS", "Tracking stopped", liane);
-      running.next(undefined);
+      updateRunning(undefined);
       resolve();
     };
 
@@ -519,7 +472,7 @@ const shareLocationTask = async ({ liane, trip }: LocationPingsSenderProps) => {
           showLocationDialog: true
         }
       );
-      running.next({ liane, watchId });
+      updateRunning({ liane, watchId, timeOutDate: new Date(new Date().getTime() + timeout).toISOString() });
     };
 
     // Start tracking

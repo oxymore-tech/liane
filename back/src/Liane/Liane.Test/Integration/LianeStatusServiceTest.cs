@@ -37,11 +37,11 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     currentContext.SetAllowPastResourceCreation(true);
     var now = DateTime.UtcNow;
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-55));
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15872", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane3 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-55));
     await lianeService.AddMember(liane1, new LianeMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
     await lianeService.AddMember(liane2, new LianeMember(userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
-
+    await lianeService.UpdateState(liane2, LianeState.Started);
     await lianeStatusUpdate.Update(now);
 
     liane1 = await lianeService.Get(liane1.Id);

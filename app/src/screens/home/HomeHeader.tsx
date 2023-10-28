@@ -102,14 +102,14 @@ const HomeScreenHeader = ({ isRootHeader = false, updateTrip, trip }: HomeScreen
               <FilterSelector color={AppColors.white} shortFormat={true} />
             </View>
 
-            <TouchableOpacity
+            {/*<TouchableOpacity
               style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
               onPress={() =>
                 // @ts-ignore
                 navigation.navigate("Profile", { user })
               }>
               <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
           </Row>
         </View>
       )}

@@ -4,11 +4,11 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { APP_VERSION } from "@env";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center, Column } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ActionItem, ActionListItem } from "@/components/ActionItem";
+import { ActionListItem } from "@/components/ActionItem";
 import { useAppNavigation } from "@/api/navigation";
 import { User } from "@/api";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
@@ -21,7 +21,7 @@ import { LineSeparator } from "@/components/Separator";
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
   const { user: loggedUser } = useContext(AppContext);
-  const isMyPage = route.params.user.id === loggedUser!.id;
+  const isMyPage = !route.params || route.params.user.id === loggedUser!.id;
   return (
     <>
       <AppStatusBar style="light-content" />
@@ -46,10 +46,12 @@ const ProfileView = ({ user }: { user: User }) => {
 
   return (
     <ScrollView overScrollMode="never">
-      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.primaryColor }}>
-        <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
-        </Pressable>
+      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.secondaryColor }}>
+        {!isMyPage && (
+          <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
+            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+          </Pressable>
+        )}
         <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
         <Column style={{ marginVertical: 8, alignItems: "center" }}>
           <AppText style={styles.name}>{displayedUser.pseudo}</AppText>

@@ -27,7 +27,7 @@ const Header = () => {
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
-      <AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />
+      {/*<AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />*/}
       <Space />
       <View>
         <AppPressableIcon
@@ -42,14 +42,14 @@ const Header = () => {
           <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 8, height: 12, width: 12, position: "absolute", right: 3, top: 0 }} />
         )}
       </View>
-      <TouchableOpacity
+      {/*<TouchableOpacity
         style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
         onPress={() =>
           // @ts-ignore
           navigation.navigate("Profile", { user })
         }>
         <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
     </Row>
   );
 };
