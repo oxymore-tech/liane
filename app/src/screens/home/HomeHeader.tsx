@@ -5,7 +5,7 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column, Row, Space } from "@/components/base/AppLayout";
 import { CachedPlaceLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 
@@ -203,8 +203,9 @@ export const MapHeader = ({
                           <AppIcon name={"pin"} color={AppColors.primaryColor} size={18} />
                         </View>
                         <Pressable onPress={searchPlace}>
-                          <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{"Sélectionnez votre départ sur la carte"}</AppText>
+                          <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{"D'où partez-vous?"}</AppText>
                         </Pressable>
+                        <Space />
                         {!!to && (
                           <AppPressableIcon
                             onPress={() => {
@@ -264,10 +265,9 @@ export const MapHeader = ({
                     {!to && (
                       <Row style={{ alignItems: "center", flexGrow: 1 }} spacing={8}>
                         <Pressable onPress={searchPlace}>
-                          <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>
-                            {hintPhrase || "Sélectionnez votre arrivée sur la carte"}
-                          </AppText>
+                          <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{hintPhrase || "Où allez-vous ?"}</AppText>
                         </Pressable>
+                        <Space />
                         <AppPressableIcon
                           onPress={() => {
                             updateTrip({ to: from, from: to });
@@ -303,8 +303,12 @@ export const MapHeader = ({
               style={[styles.selectArrivalContainer, AppStyles.shadow]}>
               <Row style={{ paddingHorizontal: 16, paddingVertical: 2, alignItems: "center", height: 50 }} spacing={8}>
                 <AppIcon name={"flag"} color={AppColors.primaryColor} size={16} />
-                <Pressable onPress={searchPlace}>
-                  <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{hintPhrase || "Sélectionnez votre arrivée sur la carte"}</AppText>
+                <Pressable onPress={searchPlace} style={{ flex: 1 }}>
+                  <AppText style={{ fontSize: 18, color: AppColors.primaryColor }}>{hintPhrase || "Où allez-vous?"}</AppText>
+                  <View style={{ height: 4 }} />
+                  <AppText style={{ position: "absolute", bottom: -8, fontSize: 12, color: AppColorPalettes.gray[500] }}>
+                    Sélectionnez un point sur la carte ou tapez pour rechercher
+                  </AppText>
                 </Pressable>
               </Row>
             </Animated.View>
