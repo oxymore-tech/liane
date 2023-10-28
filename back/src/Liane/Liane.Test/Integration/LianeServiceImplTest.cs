@@ -376,9 +376,10 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   public async Task JbShouldMatchAugustinsLiane()
   {
     var augustin = Fakers.FakeDbUsers[0].Id;
-
-    var liane = await testedService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
-    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(DateTime.UtcNow.AddHours(25), Direction.Arrival)),
+    currentContext.SetAllowPastResourceCreation(true);
+    var departureTime = DateTime.Parse("2023-08-08T08:08:00Z");
+    var liane = await testedService.Create(new LianeRequest(null, departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(departureTime.AddHours(1), Direction.Arrival)),
       new Pagination());
 
     // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);
