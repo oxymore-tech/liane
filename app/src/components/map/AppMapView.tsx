@@ -22,7 +22,6 @@ import { AppPressableOverlay } from "../base/AppPressable";
 import { AppIcon } from "../base/AppIcon";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 //const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -231,7 +230,12 @@ const AppMapView = forwardRef(
             <AppPressableOverlay
               backgroundStyle={[{ borderRadius: 20, backgroundColor: AppColors.white }, AppStyles.shadow]}
               style={{ justifyContent: "center", alignItems: "center", height: 40, width: 40 }}>
-              <AppIcon name={"people-outline"} size={22} style={{ justifyContent: "center", alignItems: "center" }} color={AppColors.primaryColor} />
+              <AppIcon
+                name={"options-2-outline"}
+                size={22}
+                style={{ justifyContent: "center", alignItems: "center" }}
+                color={AppColors.primaryColor}
+              />
             </AppPressableOverlay>
 
             <PositionButton
