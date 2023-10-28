@@ -1,6 +1,6 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { BottomTabBarProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -25,21 +25,103 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { Row } from "@/components/base/AppLayout";
-import { NavigationScreenTitles } from "@/api/navigation";
-import { AppPressableIcon } from "@/components/base/AppPressable";
+import { NavigationScreenTitles, useAppNavigation } from "@/api/navigation";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
 import NotificationScreen from "@/screens/notifications/NotificationScreen";
 import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
+import { UserPicture } from "@/components/UserPicture";
+import { NavigationState, ParamListBase, PartialState, Route } from "@react-navigation/native";
+import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const Button = () => {
+  const [showButtonLabel, setShowButtonLabel] = useState(false);
+  const { width } = useAppWindowsDimensions();
+  const { navigation } = useAppNavigation();
+  return (
+    <View style={{ position: "relative", top: -8 }}>
+      {showButtonLabel && (
+        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={{ position: "absolute", top: -40, left: -width / 2 + 28, width }}>
+          <View
+            style={{
+              paddingVertical: 2,
+              paddingHorizontal: 8,
+              backgroundColor: AppColors.primaryColor,
+              borderRadius: 4,
+              flexShrink: 1,
+              alignSelf: "center"
+            }}>
+            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>Créer une Liane</AppText>
+          </View>
+        </Animated.View>
+      )}
+      <AppPressableIcon
+        onTouchStart={() => setShowButtonLabel(true)}
+        onTouchEnd={() => setShowButtonLabel(false)}
+        onTouchCancel={() => setShowButtonLabel(false)}
+        size={32}
+        color={AppColors.white}
+        onPress={() => navigation.navigate("Publish", {})}
+        name={"plus-outline"}
+        style={{ padding: 12 }}
+        backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor }}
+      />
+    </View>
+  );
+};
+const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarProps) => {
+  const buildItem = (
+    r: Route<Extract<string, string>, ParamListBase[string]> & { state?: NavigationState | PartialState<NavigationState> },
+    i: number
+  ) => {
+    const { options } = descriptors[r.key];
+    const Icon = options.tabBarIcon;
+    const Label = options.tabBarLabel;
+    const focused = state.index === i;
+
+    const onPress = () => {
+      const event = navigation.emit({
+        type: "tabPress",
+        target: r.key
+      });
+
+      if (!focused && !event.defaultPrevented) {
+        navigation.navigate(r.name);
+      }
+    };
+
+    return (
+      <View style={{ flex: 1 }}>
+        <AppPressableOverlay
+          backgroundStyle={{ borderRadius: 4 }}
+          style={[{ backgroundColor: focused ? options.tabBarActiveBackgroundColor : undefined }, options.tabBarItemStyle]}
+          onPress={onPress}>
+          {Icon && <Icon focused={focused} />}
+          {Label && !(Label instanceof String) && <Label focused={focused} />}
+        </AppPressableOverlay>
+      </View>
+    );
+  };
+
+  return (
+    <Row style={[{ paddingBottom: insets.bottom, justifyContent: "space-evenly", backgroundColor: AppColors.white }, AppStyles.shadow]}>
+      {state.routes.slice(0, 2).map((r, i) => buildItem(r, i))}
+      <Button />
+      {state.routes.slice(2, 4).map((r, i) => buildItem(r, i + 2))}
+    </Row>
+  );
+};
 function Home() {
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
   const iconSize = 24;
   return (
     <Tab.Navigator
+      tabBar={ButtonTabBar}
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: true,
@@ -62,11 +144,26 @@ function Home() {
         { headerShown: false } //TODO generic header ?
       )}
       {makeTab(
-        "Communautés",
+        "Communauté",
         ({ focused }) => {
           return <TabIcon iconName={"people-outline"} focused={focused} size={iconSize} />;
         },
         CommunitiesScreen
+      )}
+      {makeTab(
+        "Vous",
+        ({ focused }) => {
+          return (
+            <UserPicture
+              size={iconSize}
+              url={user?.pictureUrl}
+              id={user?.id}
+              borderWidth={1}
+              borderColor={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]}
+            />
+          );
+        },
+        ProfileScreen
       )}
     </Tab.Navigator>
   );
@@ -119,10 +216,10 @@ const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
   return (
     <View style={{ paddingHorizontal: 8 }}>
       {typeof iconName === "string" ? (
-        <AppIcon size={size} name={iconName} color={focused ? AppColors.white : AppColors.secondaryColor} />
+        <AppIcon size={size} name={iconName} color={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]} />
       ) : (
         iconName({
-          color: focused ? AppColors.white : AppColorPalettes.blue[400],
+          color: focused ? AppColors.secondaryColor : AppColorPalettes.gray[400],
           height: size,
           width: size
         })
@@ -140,16 +237,19 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       options={() => ({
         headerShown,
         /*  @ts-ignore */
-        header: () => <View style={{ height: 28 }} />,
+        header: () => <View style={{ height: 0 }} />,
         tabBarLabel: ({ focused }) => (
           <AppText
-            style={[styles.tabLabel, { color: focused ? AppColors.white : AppColors.secondaryColor, fontWeight: focused ? "bold" : "normal" }]}>
+            style={[
+              styles.tabLabel,
+              { color: focused ? AppColors.secondaryColor : AppColorPalettes.gray[500], fontWeight: focused ? "bold" : "normal" }
+            ]}>
             {label}
           </AppText>
         ),
         tabBarIcon: icon,
-        tabBarActiveBackgroundColor: AppColors.secondaryColor,
-        tabBarItemStyle: { margin: 5, borderRadius: 18 }
+        // tabBarActiveBackgroundColor: AppColors.secondaryColor,
+        tabBarItemStyle: { paddingHorizontal: 2, alignSelf: "center", alignItems: "center", rowGap: 2, paddingVertical: 4 }
       })}
     />
   );

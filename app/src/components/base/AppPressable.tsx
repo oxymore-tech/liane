@@ -93,14 +93,17 @@ export function AppPressableOverlay({
       {...props}
       onPress={clickable && !disabled ? onPress : undefined}
       style={[backgroundStyle, styles.pressableTarget]}
-      onTouchEnd={() => {
+      onTouchEnd={e => {
         opacitySv.value = 0;
+        props.onTouchEnd?.(e);
       }}
-      onTouchCancel={() => {
+      onTouchCancel={e => {
         opacitySv.value = 0;
+        props.onTouchCancel?.(e);
       }}
-      onTouchStart={() => {
+      onTouchStart={e => {
         opacitySv.value = 1;
+        props.onTouchStart?.(e);
       }}>
       <View style={[styles.pressableTarget, { alignItems: align, justifyContent: align }]}>
         {contentView}

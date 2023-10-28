@@ -29,6 +29,8 @@ export const UserPicture = ({ url, size = 48, id, style, borderWidth = 0, border
       style={[
         style,
         {
+          borderWidth: borderWidth,
+          borderColor: borderColor,
           backgroundColor: color,
           borderRadius: size,
           height: size,
@@ -51,8 +53,6 @@ export const UserPicture = ({ url, size = 48, id, style, borderWidth = 0, border
           name={"person-outline"}
           size={0.6 * size}
           style={{
-            borderWidth: borderWidth,
-            borderColor: borderColor,
             borderRadius: size,
             height: size,
             width: size
