@@ -47,14 +47,17 @@ const Button = () => {
       {showButtonLabel && (
         <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={{ position: "absolute", top: -40, left: -width / 2 + 28, width }}>
           <View
-            style={{
-              paddingVertical: 2,
-              paddingHorizontal: 8,
-              backgroundColor: AppColors.primaryColor,
-              borderRadius: 4,
-              flexShrink: 1,
-              alignSelf: "center"
-            }}>
+            style={[
+              {
+                paddingVertical: 2,
+                paddingHorizontal: 8,
+                backgroundColor: AppColors.primaryColor,
+                borderRadius: 4,
+                flexShrink: 1,
+                alignSelf: "center"
+              },
+              AppStyles.shadow
+            ]}>
             <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>Créer une Liane</AppText>
           </View>
         </Animated.View>

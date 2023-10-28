@@ -301,7 +301,7 @@ export const LianeMatchDetailView = () => {
       <Animated.View
         entering={SlideInDown}
         exiting={SlideOutDown}
-        style={{ paddingHorizontal: 24, position: "absolute", bottom: 4 + insets.bottom, left: 0, right: 0 }}>
+        style={{ paddingHorizontal: 24, position: "absolute", bottom: 80 + insets.bottom, left: 0, right: 0 }}>
         {!userIsMember && !isReturnStep && !isSeatsStep && !isMessageStep && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
