@@ -127,9 +127,9 @@ public class LianeTrackerTest: BaseIntegrationTest
       if (p.coordinate.Distance(Positions.PointisInard) < 4000) break;
     }
 
-     lastLocation = tracker.GetCurrentMemberLocation(userId);
-     driverHasFinished = tracker.MemberHasArrived(userId);
-     passengerHasFinished = tracker.MemberHasArrived(passenger);
+    lastLocation = tracker.GetCurrentMemberLocation(userId);
+    driverHasFinished = tracker.MemberHasArrived(userId);
+    passengerHasFinished = tracker.MemberHasArrived(passenger);
     Assert.AreEqual(LabeledPositions.PointisInard.Id, lastLocation!.NextPoint.Id);
     Assert.False(driverHasFinished);
     Assert.True(passengerHasFinished);

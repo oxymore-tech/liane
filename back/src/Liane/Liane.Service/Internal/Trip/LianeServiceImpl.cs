@@ -57,7 +57,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     ICurrentContext currentContext,
     IRallyingPointService rallyingPointService,
     IChatService chatService,
-    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver, IUserStatService userStatService, IOsrmService osrmService) : base(mongo)
+    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver, IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -70,6 +70,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     this.lianeUpdateObserver = lianeUpdateObserver;
     this.userStatService = userStatService;
     this.osrmService = osrmService;
+    this.trackerLogger = trackerLogger;
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
@@ -724,6 +725,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       {
         (Ref<Api.Trip.Liane>)liane.Id
       });
+      if (lianeDb.State != LianeState.Started)
+      {
+        Trackers.TryRemove(liane.Id, out var doneSession);
+        if(doneSession is not null) await doneSession.Dispose();
+      }
     }
 
     if (lianeDb.State == LianeState.Archived)
@@ -814,12 +820,6 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       );
     await PushUpdate(updated);
   }
-
-  private async Task EndTrip(Ref<Api.Trip.Liane> liane)
-  {
-    await UpdateState(liane.Id, LianeState.Finished);
-    Trackers.TryRemove(liane.Id, out _);
-  }
   public async Task StartLiane(Ref<Api.Trip.Liane> lianeRef)
   {
     var liane = await Get(lianeRef);
@@ -835,11 +835,13 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         {
           // Wait 5 minutes then go to "finished" state 
           Task.Delay(LianeStatusUpdate.FinishedDelayInMinutes * 60 * 1000)
-            .ContinueWith(_ => EndTrip(liane.Id))
+            .ContinueWith(async _ =>
+            {
+              logger.LogInformation($"Liane {liane.Id} is now Finished");
+              await UpdateState(liane.Id, LianeState.Finished);
+            })
             .Start();
         })
-        .SetAutoDisposeTimeout(() => EndTrip(liane.Id)
-          , liane.WayPoints.TotalDuration() * 2 * 1000)
         .Build(osrmService, postgisService, Mongo, trackerLogger);
       
       Trackers.TryAdd(liane.Id, tracker);

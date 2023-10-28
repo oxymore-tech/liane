@@ -22,6 +22,7 @@ public sealed class LianeStatusUpdate : CronJobService
   
   private const int StartedDelayInMinutes = 5;
   public const int FinishedDelayInMinutes = 5;
+  public const int StartedTimeoutInMinutes = 60;
 
   public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ILianeService lianeService, 
     ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
@@ -64,33 +65,29 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private async Task FinishLianes(DateTime from)
   {
-    // Pass NotStarted lianes to Finish. Started lianes are handled in LianeService.
-    var limit = from.AddMinutes(- FinishedDelayInMinutes);
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted)
+    var limitNotStarted = from.AddMinutes(- FinishedDelayInMinutes);
+    var limitStarted = from.AddMinutes(- StartedTimeoutInMinutes);
+    var filterNotStarted = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted)
                  & Builders<LianeDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
-                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta < limit);
-    var lianes = await mongo.GetCollection<LianeDb>()
-      .Find(filter)
-      .ToListAsync();
-
-    var finishedLianes = lianes
-      .Where(l => l.WayPoints.Last().Eta < limit)
-      .ToImmutableList();
-
-    if (finishedLianes.IsEmpty)
+                 & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitNotStarted);
+    var filterTimedOut =  Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started)
+      & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitStarted)
+      & !Builders<LianeDb>.Filter.ElemMatch(l => l.Pings, w => w.At > limitStarted);
+     ;
+     var finishedLianes = await mongo.GetCollection<LianeDb>()
+       .Find(filterNotStarted|filterTimedOut)
+       .ToListAsync();
+    
+    if (finishedLianes.Count == 0)
     {
       return;
     }
-
-    //await notificationService.CleanNotifications(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
     
     await Parallel.ForEachAsync(finishedLianes, async (lianeDb, token) =>
     {
       if (token.IsCancellationRequested) return;
-      // TODO go to Finished when validation procedure is decided
       await lianeService.UpdateState(lianeDb.Id, LianeState.Finished);
     });
-    //await postgisService.Clear(finishedLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableList());
   }
 
   private async Task StartLianes(DateTime from)
