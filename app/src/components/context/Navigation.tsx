@@ -89,7 +89,8 @@ const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarPr
     const onPress = () => {
       const event = navigation.emit({
         type: "tabPress",
-        target: r.key
+        target: r.key,
+        canPreventDefault: true
       });
 
       if (!focused && !event.defaultPrevented) {
@@ -103,7 +104,9 @@ const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarPr
           backgroundStyle={{ borderRadius: 4 }}
           style={[{ backgroundColor: focused ? options.tabBarActiveBackgroundColor : undefined }, options.tabBarItemStyle]}
           onPress={onPress}>
+          {/*@ts-ignore*/}
           {Icon && <Icon focused={focused} />}
+          {/*@ts-ignore*/}
           {Label && !(Label instanceof String) && <Label focused={focused} />}
         </AppPressableOverlay>
       </View>
@@ -258,13 +261,18 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
   );
 };
 
-export const PageHeader = (props: { title?: string | undefined } & Partial<NativeStackHeaderProps>) => {
+export const PageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
   const insets = useSafeAreaInsets();
   // @ts-ignore
   const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
   return (
     <Row style={{ paddingTop: insets.top + 16, padding: 16, backgroundColor: AppColors.white }} spacing={24}>
-      <AppPressableIcon name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} onPress={() => props.navigation?.goBack()} />
+      <AppPressableIcon
+        name={"arrow-ios-back-outline"}
+        color={AppColors.primaryColor}
+        size={32}
+        onPress={props.goBack || (() => props.navigation?.goBack())}
+      />
       <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title || defaultName}</AppText>
     </Row>
   );

@@ -48,10 +48,6 @@ async function initContext(service: AppServices): Promise<{
 
   await initializeRum();
 
-  if (authUser) {
-    await initializeNotification();
-  }
-
   if (authUser?.isSignedUp) {
     try {
       user = await service.realTimeHub.start();
@@ -69,6 +65,9 @@ async function initContext(service: AppServices): Promise<{
         online = false;
       }
     }
+  }
+  if (user) {
+    await initializeNotification();
   }
 
   if (online && user) {
@@ -137,8 +136,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }));
     if (info.online && info.user) {
       this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
-        //console.debug("dbg ------>", this.state.appState);
-        await SERVICES.notification.receiveNotification(n, false); // does nothing if this.state.appState !== "active");
+        await SERVICES.notification.receiveNotification(n, true); // does nothing if this.state.appState !== "active");
+        // TODO disconnect from hub when app is not active
       });
       this.userChangeSubscription = merge(SERVICES.realTimeHub.userUpdates, SERVICES.auth.userChanges).subscribe(user => {
         this.setState(prev => ({

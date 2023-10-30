@@ -13,7 +13,6 @@ import { useDebounceValue } from "@/util/hooks/debounce";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { AppStyles } from "@/theme/styles";
-import { ItineraryForm } from "@/components/forms/ItineraryForm";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
@@ -223,19 +222,26 @@ export const RallyingPointItem = ({
   item,
   color = AppColorPalettes.gray[800],
   labelSize = 14,
-  showIcon = true
+  showIcon = true,
+  detailed = false
 }: {
   item: RallyingPoint;
   color?: ColorValue;
   labelSize?: number;
   showIcon?: boolean;
+  detailed?: boolean;
 }) => {
   return (
-    <Row style={{ alignItems: "center", flex: 1 }} spacing={16}>
+    <Row style={{ alignItems: "center", minHeight: 36 }} spacing={16}>
       {showIcon && <AppIcon name={"rallying-point"} size={28} color={color} />}
-      <Column style={{ justifyContent: "space-evenly", flex: 1 }}>
-        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize, lineHeight: labelSize }]}>{item.label}</AppText>
+      <Column style={{ justifyContent: "space-evenly" }}>
+        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>{item.label}</AppText>
 
+        {detailed && (
+          <AppText style={{ color }} numberOfLines={1}>
+            {item.address}
+          </AppText>
+        )}
         <AppText style={{ color }} numberOfLines={1}>
           {(item.zipCode ? item.zipCode + ", " : "") + item.city}
         </AppText>
@@ -438,7 +444,7 @@ export interface ItinerarySearchFormProps {
   updateTrip: (trip: Partial<Trip>) => void;
   title?: string;
   animateEntry?: boolean;
-  openMap?: () => void;
+  openMap?: (data: "from" | "to") => void;
   editable?: boolean;
 }
 export const ItinerarySearchForm = ({
@@ -491,7 +497,7 @@ export const ItinerarySearchForm = ({
           onSelect={async rp => {
             updateTrip({ [currentPoint]: rp });
           }}
-          showOpenMap={openMap}
+          showOpenMap={() => openMap?.(currentPoint)}
         />
       )}
 

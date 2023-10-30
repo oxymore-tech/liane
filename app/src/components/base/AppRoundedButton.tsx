@@ -1,4 +1,4 @@
-import { ColorValue, Pressable, StyleSheet, View } from "react-native";
+import { ColorValue, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import React, { useMemo } from "react";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -11,8 +11,9 @@ export interface AppRoundedButtonProps {
   onPress?: () => void;
   opacity?: number;
   enabled?: boolean;
+  flex?: number | undefined;
 }
-export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true }: AppRoundedButtonProps) => {
+export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true, flex }: AppRoundedButtonProps) => {
   color = color ?? defaultTextColor(backgroundColor);
   const content = useMemo(
     () => (
@@ -37,9 +38,9 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
       backgroundStyle={{
         backgroundColor,
         opacity,
-        borderRadius: 24
-      }}
-      borderRadius={24}>
+        borderRadius: 24,
+        flex
+      }}>
       {content}
     </AppPressableOverlay>
   ) : (
@@ -47,6 +48,7 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
       style={{
         opacity,
         borderRadius: 24,
+        flex,
         backgroundColor: AppColorPalettes.gray[200]
       }}>
       {content}

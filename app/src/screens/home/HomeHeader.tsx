@@ -211,7 +211,7 @@ export const MapHeader = ({
                             onPress={() => {
                               updateTrip({ to: from, from: to });
                             }}
-                            backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20 }}
+                            backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, marginRight: 8 }}
                             style={{ paddingVertical: 9 }}
                             name={"arrow-switch"}
                             size={18}
@@ -234,7 +234,7 @@ export const MapHeader = ({
                       }}>
                       <AppIcon name={"pin"} color={AppColors.primaryColor} size={18} />
                     </View>
-                    <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
+                    <View style={{ flexShrink: 1, flexGrow: 1 }}>
                       <RallyingPointItem item={from} labelSize={15} showIcon={false} />
                     </View>
 
@@ -260,7 +260,7 @@ export const MapHeader = ({
                     }}>
                     <AppIcon name={"flag"} color={AppColors.primaryColor} size={18} />
                   </View>
-                  <View style={{ flexShrink: 1, flexGrow: 1, height: 36 }}>
+                  <View style={{ flexShrink: 1, flexGrow: 1 }}>
                     {!!to && <RallyingPointItem item={to} labelSize={15} showIcon={false} />}
                     {!to && (
                       <Row style={{ alignItems: "center", flexGrow: 1 }} spacing={8}>
@@ -272,7 +272,7 @@ export const MapHeader = ({
                           onPress={() => {
                             updateTrip({ to: from, from: to });
                           }}
-                          backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20 }}
+                          backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, marginRight: 8 }}
                           style={{ paddingVertical: 9 }}
                           name={"arrow-switch"}
                           size={18}

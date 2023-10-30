@@ -202,6 +202,7 @@ export const CreatePublishLianeMachine = (
         submit: (context, _) => submit(context)
       },
       actions: {
+        //@ts-ignore
         saveCreated: assign<PublishContext, { data: Liane; type: "done.invoke.submit" }>({ created: (ctx, event) => event.data }),
         set: assign<PublishContext, NextEvent>({
           request: (context, event) => {

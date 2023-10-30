@@ -73,7 +73,7 @@ export const RallyingPointsFeaturesDisplayLayer = ({
               } else if (zoom < 12) {
                 newZoom = 12.1;
               } else {
-                newZoom = undefined;
+                newZoom = zoom + 1;
               }
               await controller.setCenter(center, newZoom);
 

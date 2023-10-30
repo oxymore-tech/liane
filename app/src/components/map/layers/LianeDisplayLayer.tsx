@@ -19,9 +19,7 @@ export const getDateParams = (date: Date) =>
 
 export const LianeDisplayLayer = ({
   date = new Date(),
-  onSelect,
-  trafficAsColor = true,
-  trafficAsWidth = true
+  onSelect
 }: {
   date?: Date;
   onSelect?: (
@@ -29,8 +27,6 @@ export const LianeDisplayLayer = ({
       point_type: string;
     }
   ) => void;
-  trafficAsWidth?: boolean;
-  trafficAsColor?: boolean;
 }) => {
   const dateArg = getDateParams(date);
   const [sourceId, setSourceId] = useState("");
@@ -74,7 +70,7 @@ export const LianeDisplayLayer = ({
                 } else if (zoom < 12) {
                   newZoom = 12.1;
                 } else {
-                  newZoom = undefined;
+                  newZoom = zoom + 1;
                 }
                 await controller.setCenter(center, newZoom);
               }
@@ -93,23 +89,6 @@ export const LianeDisplayLayer = ({
           lineWidth: 3
         }}
       />
-
-      {/*TODO separate component with own source (trafficAsColor || trafficAsWidth) && (
-        <MapLibreGL.LineLayer
-          aboveLayerID="Highway"
-          id="lianeTrafficLayer"
-          sourceLayerID="liane_display_traffic"
-          style={{
-            //@ts-ignore
-            lineSortKey: ["get", "count"],
-            lineCap: "round",
-            lineColor: trafficAsColor
-              ? ["interpolate", ["linear"], ["get", "count"], 1, "#46516e", 2, AppColors.primaryColor, 5, "#8c2372"]
-              : AppColors.darkBlue,
-            lineWidth: trafficAsWidth ? ["step", ["get", "count"], 1, 2, 2, 3, 3, 4, 4, 5, 5] : 3
-          }}
-        />
-      )*/}
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
