@@ -3,7 +3,7 @@ import { Liane, Ref, TrackedMemberLocation, User } from "@/api";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";
-import { isLocationServiceRunning, watchLocationServiceState } from "@/api/service/location";
+import { LianeGeolocation } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
 
 export interface TripGeolocation {
@@ -24,11 +24,11 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   // Check if service is running locally
   useEffect(() => {
     if (shouldBeActive) {
-      isLocationServiceRunning(liane.id!).then(setGeolocRunning);
+      LianeGeolocation.isRunningService(liane.id!).then(setGeolocRunning);
     } else {
       setGeolocRunning(false);
     }
-    const sub = watchLocationServiceState(l => setGeolocRunning(l === liane.id!));
+    const sub = LianeGeolocation.watchRunningService(l => setGeolocRunning(l === liane.id!));
     return () => sub.unsubscribe();
   }, [shouldBeActive, liane.id]);
 

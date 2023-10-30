@@ -1,7 +1,7 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 
 import { getSetting } from "@/api/storage";
-import { checkLocationPingsPermissions } from "@/api/service/location";
+import { LianeGeolocation } from "@/api/service/location";
 import { RootNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { UnionUtils } from "@/api";
@@ -23,7 +23,7 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
       return;
     }
     getSetting("geolocation").then(async setting => {
-      const mismatchedPermissions = !!setting && setting !== "None" && !(await checkLocationPingsPermissions());
+      const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkBackgroundGeolocationPermission());
       if (mismatchedPermissions) {
         // Permissions don't match saved settings, so show again
 

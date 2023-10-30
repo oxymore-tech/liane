@@ -4122,11 +4122,6 @@ event-target-shim@^5.0.0, event-target-shim@^5.0.1:
   resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
   integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
 
-eventemitter3@^4.0.7:
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
-  integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
-
 eventsource@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/eventsource/-/eventsource-2.0.2.tgz#76dfcc02930fb2ff339520b6d290da573a9e8508"
@@ -7101,13 +7096,6 @@ react-native-animatable@1.3.3:
   dependencies:
     prop-types "^15.7.2"
 
-react-native-background-actions@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/react-native-background-actions/-/react-native-background-actions-3.0.1.tgz#35a7aa77c8becd47fe677955e257c09b80cfebfb"
-  integrity sha512-xlEjUM2PP+OEQQkr9Z4c4+dRIzhbCh1xAeakL8FKGDib2a3dki2kMR4ZTw+9oHspHn9VF1Fuu78mWXR5zqkVaA==
-  dependencies:
-    eventemitter3 "^4.0.7"
-
 react-native-bouncy-checkbox@^3.0.7:
   version "3.0.7"
   resolved "https://registry.yarnpkg.com/react-native-bouncy-checkbox/-/react-native-bouncy-checkbox-3.0.7.tgz#011aef92b4fbde2a1f223165626c56a9ffe637fb"
@@ -7145,11 +7133,6 @@ react-native-eva-icons@^1.3.1:
   resolved "https://registry.yarnpkg.com/react-native-eva-icons/-/react-native-eva-icons-1.3.1.tgz#1e6e019b0fd3cb1669db50bd6bbdaa6d89327593"
   integrity sha512-emd/aYXuOacuDVTx0SJoLi+xsOdCNdljQB3PTNCM9AQ3m/smG0X1TN0+ihelPO7MqoHzaH0h6lbANtwxGUy8Fw==
 
-react-native-geolocation-service@^5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/react-native-geolocation-service/-/react-native-geolocation-service-5.3.1.tgz#4ce1017789da6fdfcf7576eb6f59435622af4289"
-  integrity sha512-LTXPtPNmrdhx+yeWG47sAaCgQc3nG1z+HLLHlhK/5YfOgfLcAb9HAkhREPjQKPZOUx8pKZMIpdGFUGfJYtimXQ==
-
 react-native-gesture-handler@^2.13.2:
   version "2.13.2"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.13.2.tgz#06813c250922db258ce4ee255f757e7ef32a3ae0"
@@ -7160,6 +7143,11 @@ react-native-gesture-handler@^2.13.2:
     invariant "^2.2.4"
     lodash "^4.17.21"
     prop-types "^15.7.2"
+
+react-native-get-location@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-get-location/-/react-native-get-location-4.0.0.tgz#ba56a1e83d1718fcaa8a35160de044a544400019"
+  integrity sha512-Fco8h+uF6ZhBFw2JrwnWJV+yh05wJNJjsjdomG62sk4HrjWbpoYkFJt6W2wuazreMaft/ynTLxKHDWLc4XPx6g==
 
 react-native-gradle-plugin@^0.71.17:
   version "0.71.19"

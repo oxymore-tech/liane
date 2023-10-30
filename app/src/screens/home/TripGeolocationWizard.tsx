@@ -3,14 +3,12 @@ import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useState } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { check } from "react-native-permissions";
-import { DdLogs } from "@datadog/mobile-react-native";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { getSetting, saveSetting } from "@/api/storage";
-import { BackgroundGeolocationPermissionToAsk, hasLocationPermission, requestBackgroundGeolocation } from "@/api/service/location";
+import { LianeGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GeolocationLevel } from "@/api";
@@ -27,9 +25,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
       if (appState !== "active") {
         return;
       }
-      check(BackgroundGeolocationPermissionToAsk).then(p => {
-        const allowed = p === "granted";
-        DdLogs.info(`Location permission status is now: ${p}`);
+      LianeGeolocation.checkBackgroundGeolocationPermission().then(allowed => {
         getSetting("geolocation")
           .then(setting => {
             console.log("setting", setting);
@@ -112,12 +108,12 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
     );
 
   const authorize = async () => {
-    if ((await check(BackgroundGeolocationPermissionToAsk)) === "granted") {
+    if (await LianeGeolocation.checkBackgroundGeolocationPermission()) {
       props.next(true);
-      AppLogger.info("GEOLOC", "already authorized");
+
       return;
     }
-    if (!(await hasLocationPermission())) {
+    if (!(await LianeGeolocation.checkAndRequestLocationPermission())) {
       AppLogger.info("GEOLOC", "Base geolocation permission needed");
       return;
     }
@@ -142,7 +138,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
         {
           text: "Continuer",
           onPress: () => {
-            requestBackgroundGeolocation().then(() => props.next(true));
+            LianeGeolocation.requestBackgroundGeolocationPermission().then(() => props.next(true));
           },
           style: "default"
         }

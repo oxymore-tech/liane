@@ -6,10 +6,10 @@ import androidx.preference.PreferenceManager
 import com.facebook.react.bridge.*
 import tech.oxymore.liane.geolocation.Util.isMyServiceRunning
 
-public const val LogTag = "BackgroundGeoService"
+public const val LogTag = "RNLianeGeolocation"
 class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactContextBaseJavaModule(context) {
   override fun getName(): String {
-    return "BackgroundGeolocationServiceModule";
+    return "RNLianeGeolocation";
   }
 
   @ReactMethod
@@ -31,7 +31,7 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
 
   @ReactMethod
   fun isRunning(lianeId: String, promise: Promise){
-    val serviceRunning = isMyServiceRunning(LocationService::class.java, reactApplicationContext);
+    val serviceRunning = isMyServiceRunning(LocationService::class.java, reactApplicationContext)
     if (!serviceRunning) {
       promise.resolve(false)
     } else {

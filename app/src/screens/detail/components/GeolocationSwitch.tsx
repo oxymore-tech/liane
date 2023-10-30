@@ -2,7 +2,7 @@ import { Liane } from "@/api";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
 import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
-import { BackgroundGeolocationPermissionToAsk, cancelSendLocationPings, requestEnableGPS, startPositionTracking } from "@/api/service/location";
+import { LianeGeolocation } from "@/api/service/location";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -12,17 +12,18 @@ import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { useAppNavigation } from "@/api/navigation";
 import { useIsFocused } from "@react-navigation/native";
-import { check } from "react-native-permissions";
 
 export const startGeolocationService = async (liane: Liane, force: boolean = false) => {
   const user = await getCurrentUser();
   const me = liane.members.find(l => l.user.id === user!.id)!;
   if (force || (me.geolocationLevel && me.geolocationLevel !== "None")) {
-    requestEnableGPS()
+    //TODO: return this promise with an error specifying if gps is disable or if service failed to start
+    // and let the caller display it (through Alert or notification) to the user
+    LianeGeolocation.requestEnableGPS()
       .then(async () => {
         try {
           const trip = getTripFromLiane(liane, user!.id!);
-          await startPositionTracking(liane.id!, trip.wayPoints);
+          await LianeGeolocation.startSendingPings(liane.id!, trip.wayPoints);
         } catch (e) {
           AppLogger.error("GEOLOC", e);
         }
@@ -47,7 +48,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     if (!focused) {
       return;
     }
-    check(BackgroundGeolocationPermissionToAsk).then(p => setGeolocPermission(p === "granted"));
+    LianeGeolocation.checkBackgroundGeolocationPermission().then(p => setGeolocPermission(p));
   }, [focused]);
 
   const setGeolocalisationEnabled = async (enabled: boolean) => {
@@ -84,7 +85,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
           text: "Continuer",
           onPress: async () => {
             // Cancel ongoing geolocation
-            await cancelSendLocationPings();
+            await LianeGeolocation.stopSendingPings();
             services.liane
               .setTracked(match.id!, enabled ? "Shared" : "None")
               .then(() => setTracked(enabled))
