@@ -14,6 +14,6 @@ export async function initializeRum() {
   }
 }
 
-export async function registerRumUser(user: { id?: string; pseudo: string; isAdmin: boolean }) {
+export async function registerRumUser(user: { id?: string; pseudo?: string; isAdmin: boolean }) {
   await DdSdkReactNative.setUser(user);
 }

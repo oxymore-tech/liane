@@ -11,14 +11,10 @@ import {
 import { Subject, SubscriptionLike } from "rxjs";
 import { AppLogger } from "@/api/logger";
 import { check, PERMISSIONS, request } from "react-native-permissions";
-import { MemberPing } from "@/api/event";
-import { BaseUrl, postAs, tryRefreshToken } from "@/api/http";
-import { isResourceNotFound, isValidationError } from "@/api/exception";
-import { distance } from "@/util/geometry";
-import { sleep } from "@/util/datetime";
-import { UTCDateTime, WayPoint } from "@/api";
-import { getAccessToken, getCurrentUser, retrieveAsync, storeAsync } from "@/api/storage";
+import { MemberPing, distance, sleep, UTCDateTime, WayPoint, isResourceNotFound, isValidationError, HttpClient } from "@liane/common";
+import { AppStorage } from "@/api/storage";
 import DeviceInfo from "react-native-device-info";
+import { AppEnv } from "@/api/env";
 
 const { RNLianeGeolocation } = NativeModules;
 
@@ -107,17 +103,18 @@ class AndroidService implements LianeGeolocation {
   };
   private Platform = Platform as PlatformAndroidStatic;
 
+  private httpClient = new HttpClient(AppEnv, AppLogger as any, AppStorage);
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
-    const user = await getCurrentUser();
+    const user = await AppStorage.getUser();
     // Refresh token here to avoid issues
-    await tryRefreshToken(() => Promise.resolve());
-    const token = await getAccessToken();
+    await this.httpClient.tryRefreshToken(() => Promise.resolve());
+    const token = await AppStorage.getAccessToken();
 
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;
 
     const nativeConfig = {
-      pingConfig: { lianeId, userId: user!.id!, token: token!, url: BaseUrl },
+      pingConfig: { lianeId, userId: user!.id!, token: token!, url: AppEnv.baseUrl },
       timeout,
       geolocationConfig: {
         interval: 90,
@@ -203,6 +200,7 @@ class IosService implements LianeGeolocation {
   };
   private Platform = Platform as PlatformIOSStatic;
   private LocationEventEmitter = new NativeEventEmitter(RNLianeGeolocation);
+  private httpClient = new HttpClient(AppEnv, AppLogger as any, AppStorage);
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;
@@ -236,7 +234,7 @@ class IosService implements LianeGeolocation {
         coordinate,
         timestamp: Math.trunc(position.timestamp)
       };
-      await postAs(`/event/member_ping`, { body: ping }).catch(err => {
+      await this.httpClient.postAs(`/event/member_ping`, { body: ping }).catch(err => {
         AppLogger.warn("GEOPINGS", "Could not send ping", err);
         if (isResourceNotFound(err) || isValidationError(err)) {
           AppLogger.info("GEOPINGS", "Stopping service :", err);
@@ -332,11 +330,11 @@ class IosService implements LianeGeolocation {
   };
 
   private getCurrentGeolocationLianeId = () => {
-    return retrieveAsync<{ liane: string; timeOutDate: UTCDateTime } | undefined>("geolocation_lianeId");
+    return AppStorage.retrieveAsync<{ liane: string; timeOutDate: UTCDateTime } | undefined>("geolocation_lianeId");
   };
 
   private updateCurrentGeolocationLianeId = (val: { liane: string; timeOutDate: UTCDateTime } | undefined) => {
-    storeAsync("geolocation_lianeId", val)
+    AppStorage.storeAsync("geolocation_lianeId", val)
       .then(() => running.next(val?.liane))
       .catch(e => AppLogger.warn("GEOPINGS", "Could not persist liane id", e));
   };

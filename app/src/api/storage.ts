@@ -77,6 +77,30 @@ export class ReactNativeStorage implements CommonAppStorage {
     }
   }
 
+  async storeSession(authUser?: AuthUser) {
+    try {
+      if (authUser) {
+        await this.storeEncryptedString("user_session", JSON.stringify(authUser));
+      } else {
+        await this.storeEncryptedString("user_session");
+      }
+    } catch (e) {
+      AppLogger.warn("STORAGE", "Unable to store user_session", e);
+    }
+  }
+
+  async getSession(): Promise<AuthUser | undefined> {
+    try {
+      const stored = await this.getEncryptedString("user_session");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      AppLogger.warn("STORAGE", "Unable to get user_session", e);
+    }
+    return undefined;
+  }
+
   async getAccessToken(): Promise<string | undefined> {
     return this.getEncryptedString("access_token");
   }

@@ -16,4 +16,8 @@ export interface AppStorage {
   storeAsync<T>(key: string, value: T | undefined): Promise<void>;
 
   retrieveAsync<T>(key: string, defaultValue?: T): Promise<T | undefined>;
+
+  getSession(): Promise<AuthUser | undefined>;
+
+  storeSession(authUser?: AuthUser): Promise<void>;
 }

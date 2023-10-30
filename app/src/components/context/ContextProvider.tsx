@@ -2,7 +2,7 @@ import React, { Component, createContext, ReactNode } from "react";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { AuthUser, FullUser, HubState, LatLng, NetworkUnavailable, UnauthorizedError } from "@liane/common";
 import { initializeRum, registerRumUser } from "@/api/rum";
-import { initializeNotification, initializePushNotification } from "@/api/service/notification";
+import { displayNotifeeNotification, initializeNotification, initializePushNotification } from "@/api/service/notification";
 import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
@@ -12,6 +12,7 @@ import { SubscriptionLike } from "rxjs";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { QueryUpdateProvider } from "@/components/context/QueryUpdateProvider";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
 
 interface AppContextProps {
   position?: LatLng;
@@ -42,7 +43,7 @@ async function initContext(service: AppServices): Promise<{
   user: FullUser | undefined;
   online: boolean;
 }> {
-  let authUser = await service.auth.me();
+  let authUser = await AppStorage.getSession();
   let user;
   let online = true;
 
@@ -66,7 +67,7 @@ async function initContext(service: AppServices): Promise<{
       }
     }
   } else if (authUser && !authUser.isSignedUp) {
-      await registerRumUser({ ...authUser });
+    await registerRumUser({ ...authUser });
   }
 
   if (user) {
@@ -139,8 +140,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }));
     if (info.online && info.user) {
       this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
-        await SERVICES.notification.receiveNotification(n, true); // does nothing if this.state.appState !== "active");
-        // TODO disconnect from hub when app is not active
+        await SERVICES.notification.receiveNotification(n); // does nothing if this.state.appState !== "active"); -> TODO disconnect from hub when app is not active
+        await displayNotifeeNotification(n);
       });
       this.userChangeSubscription = SERVICES.realTimeHub.userUpdates.subscribe(user => {
         this.setState(prev => ({
@@ -211,6 +212,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }
+    if (this.userChangeSubscription) {
+      this.userChangeSubscription.unsubscribe();
+    }
     destroyContext(SERVICES).catch(err => AppLogger.warn("INIT", "Error destroying context:", err));
   }
 
@@ -236,7 +240,9 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     try {
       const user = await SERVICES.auth.me();
       await SERVICES.storage.storeUser(user);
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.error("STORAGE", e);
+    }
   };
 
   setAuthUser = async (a?: AuthUser) => {
