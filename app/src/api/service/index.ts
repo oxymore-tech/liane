@@ -14,14 +14,14 @@ import {
   RoutingService,
   RoutingServiceClient,
   HubServiceClient,
-  LocationService
+  LocationService,
+  DEFAULT_TLS
 } from "@liane/common";
 import { AppEnv } from "@/api/env";
 import { ReactNativeStorage } from "@/api/storage";
 import { ReactNativeLogger } from "@/api/logger";
 import { ReminderService } from "@/api/service/reminder";
 import { ReactNativeLocationService } from "@/api/service/location";
-import { DEFAULT_TLS } from "@/api/location";
 
 export type AppServices = {
   logger: ReactNativeLogger;
@@ -48,7 +48,7 @@ export const CreateAppServices = (): AppServices => ({
   storage,
   logger,
   auth: new AuthServiceClient(http),
-  liane: new LianeServiceClient(http, genericLogger),
+  liane: new LianeServiceClient(http),
   reminder: new ReminderService(storage),
   rallyingPoint: new RallyingPointClient(http),
   realTimeHub: new HubServiceClient(AppEnv, genericLogger, storage, http),

@@ -1,10 +1,9 @@
 import React, { ComponentType, ForwardedRef, forwardRef, PropsWithChildren, useContext, useImperativeHandle, useRef, useState } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
-import { contains, DisplayBoundingBox, fromBoundingBox, LatLng, useSubject } from "@liane/common";
+import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng, useSubject } from "@liane/common";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { FeatureCollection, Position } from "geojson";
-import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import distance from "@turf/distance";
@@ -19,6 +18,7 @@ import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
+import { AppEnv } from "@/api/env";
 
 //const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -196,7 +196,7 @@ const AppMapView = forwardRef(
           rotateEnabled={false}
           pitchEnabled={false}
           style={styles.map}
-          {...MapStyleProps}
+          styleURL={getMapStyleUrl(AppEnv)}
           logoEnabled={false}
           attributionEnabled={false}>
           <MapLibreGL.Camera

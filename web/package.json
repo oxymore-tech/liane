@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@liane/common": "link:../common",
+    "dotenv": "^16.3.1",
     "maplibre-gl": "^3.5.1",
     "next": "13.5.6",
     "react": "^18",

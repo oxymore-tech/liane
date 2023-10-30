@@ -100,7 +100,7 @@ const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarPr
     };
 
     return (
-      <View style={{ flex: 1 }}>
+      <View key={r.name} style={{ flex: 1 }}>
         <AppPressableOverlay
           backgroundStyle={{ borderRadius: 4 }}
           style={[{ backgroundColor: focused ? options.tabBarActiveBackgroundColor : undefined }, options.tabBarItemStyle]}

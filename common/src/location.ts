@@ -2,6 +2,7 @@ import { LatLng, RallyingPoint } from "./api";
 import { AppStorage } from "./storage";
 import { AppEnv } from "./env";
 import { Feature, Geometry, Point } from "geojson";
+import { BoundingBox } from "./geo";
 
 export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
 export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };
@@ -168,3 +169,15 @@ export abstract class AbstractLocationService implements LocationService {
 
   abstract currentLocationImpl(): Promise<LatLng>;
 }
+
+export const DEFAULT_TLS = {
+  lat: 43.602173,
+  lng: 1.445083
+};
+
+export const FR_BBOX: BoundingBox = {
+  from: { lat: 41.172856, lng: -5.818786 },
+  to: { lat: 51.577228, lng: 10.331117 }
+};
+
+export const getMapStyleUrl = (env: AppEnv) => "https://api.maptiler.com/maps/streets-v2/style.json?key=" + env.raw.MAPTILER_KEY;

@@ -9,7 +9,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Answer, Compatible, Exact, formatDuration, getBoundingBox, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
+import { Answer, Compatible, Exact, formatDuration, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { formatMonthDay, formatTime } from "@/api/i18n";
@@ -17,10 +17,10 @@ import { TripCard } from "@/components/TripCard";
 import { useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
-import { MapStyleProps } from "@/api/location";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { WayPointDisplay, WayPointDisplayType } from "@/components/map/markers/WayPointDisplay";
 import { RouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
+import { AppEnv } from "@/api/env";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -159,7 +159,7 @@ const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
   return (
     <MapLibreGL.MapView
       style={{ height: 160, width: "100%" }}
-      {...MapStyleProps}
+      styleURL={getMapStyleUrl(AppEnv)}
       logoEnabled={false}
       rotateEnabled={false}
       scrollEnabled={false}

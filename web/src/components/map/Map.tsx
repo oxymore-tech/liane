@@ -6,6 +6,8 @@ import MoveHandler from "@/components/map/MoveHandler";
 import React, { useRef, useEffect, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { DEFAULT_TLS, getMapStyleUrl } from "@liane/common";
+import { NodeAppEnv } from "@/api/env";
 
 interface MapProps {
   // onZoomEnd?: (zoom: number) => void;
@@ -18,21 +20,17 @@ interface MapProps {
 function Map({}: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map>();
-  const [lng] = useState(1.2680346);
-  const [lat] = useState(43.6005849);
-  const [zoom] = useState(14);
-  const [API_KEY] = useState("SoaAIledY5uSXWqbY5HH");
 
+  // Initialize map
   useEffect(() => {
-    if (map.current) return; // stops map from intializing more than once
-
     map.current = new maplibregl.Map({
       container: mapContainer.current!,
-      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${API_KEY}`,
-      center: [lng, lat],
-      zoom: zoom
+      style: getMapStyleUrl(NodeAppEnv),
+      center: [DEFAULT_TLS.lng, DEFAULT_TLS.lat],
+      zoom: 12
     });
-  }, [API_KEY, lng, lat, zoom]);
+    map.current.addControl(new maplibregl.NavigationControl(), "top-right");
+  }, []);
 
   return (
     <div className="h-full w-full">
