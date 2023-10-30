@@ -4,6 +4,5 @@ module.exports = {
   bracketSameLine: true,
   printWidth: 150,
   bracketSpacing: true,
-  semi: true,
   trailingComma: "none"
 };

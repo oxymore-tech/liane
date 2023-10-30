@@ -162,7 +162,7 @@ export abstract class AbstractLocationService implements LocationService {
 
   currentLocation = async (): Promise<LatLng> => {
     this.lastKnownLocation = await this.currentLocationImpl();
-    this.storage.storeAsync<LatLng>(lastKnownLocationKey, this.lastKnownLocation);
+    await this.storage.storeAsync<LatLng>(lastKnownLocationKey, this.lastKnownLocation);
     return this.lastKnownLocation;
   };
 

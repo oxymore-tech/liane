@@ -1,9 +1,4 @@
-import {
-  AbstractLocationService,
-  AppEnv as CommonAppEnv,
-  AppStorage as CommonAppStorage,
-  LatLng,
-} from "@liane/common";
+import { AbstractLocationService, AppEnv as CommonAppEnv, AppStorage as CommonAppStorage, LatLng } from "@liane/common";
 import BackgroundGeolocationService from "native-modules/geolocation";
 import GetLocation from "react-native-get-location";
 
@@ -14,10 +9,8 @@ export class ReactNativeLocationService extends AbstractLocationService {
     super(env, storage, defaultLocation);
   }
 
-   currentLocationImpl(): Promise<LatLng> {
-     return  GetLocation.getCurrentPosition({ timeout: 8000, enableHighAccuracy: true });
-
+  async currentLocationImpl(): Promise<LatLng> {
+    const loc = await GetLocation.getCurrentPosition({ timeout: 8000, enableHighAccuracy: true });
+    return { lat: loc.latitude, lng: loc.longitude };
   }
 }
-
-
