@@ -66,7 +66,8 @@ interface GeoError {
 }
 
 interface GeoPosition {
-  coordinate: { latitude: number; longitude: number };
+  latitude: number;
+  longitude: number;
   horizontalAccuracy: number;
   altitude: number | null;
   verticalAccuracy: number | null;
@@ -228,7 +229,7 @@ class IosService implements LianeGeolocation {
     const onPositionCallback = async (position: GeoPosition) => {
       // Send ping
       AppLogger.debug("GEOPINGS", "Position tracked", position);
-      const coordinate = { lat: position.coordinate.latitude, lng: position.coordinate.longitude };
+      const coordinate = { lat: position.latitude, lng: position.longitude };
       const ping: MemberPing = {
         type: "MemberPing",
         liane: lianeId,
