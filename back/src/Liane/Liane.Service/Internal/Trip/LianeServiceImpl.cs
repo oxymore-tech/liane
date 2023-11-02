@@ -48,7 +48,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly IOsrmService osrmService;
   private readonly ILogger<LianeTracker> trackerLogger;
   private readonly ILianeTrackerCache trackerCache;
-  
+
   public LianeServiceImpl(
     IMongoDatabase mongo,
     IRoutingService routingService,
@@ -167,7 +167,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     return await Get(created.Id);
   }
 
-  
+
   private async Task<LianeDb> ToDb(LianeRequest lianeRequest, string originalId, DateTime createdAt, string createdBy, Ref<LianeRecurrence>? recurrence)
   {
     if (lianeRequest.From == lianeRequest.To)
@@ -355,12 +355,12 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Driver.User == member.Id && l.State == LianeState.NotStarted)
       .ForEachAsync(async (l) => await Delete(l.Id));
-  
+
     // Cancel ongoing trips where user is driver
     await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Driver.User == member.Id && l.State == LianeState.Started)
       .ForEachAsync(async (l) => await CancelLiane(l.Id));
-    
+
     // Leave liane not yet started and joined as members
     await Mongo.GetCollection<LianeDb>()
       .Find(
@@ -368,7 +368,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         Builders<LianeDb>.Filter.Eq(l => l.State, LianeState.NotStarted))
           .ForEachAsync(async (l) => await RemoveMember(l.Id, member.Id));
 
-    // Cancel participation to ongoing trips joined as members 
+    // Cancel participation to ongoing trips joined as members
     await Mongo.GetCollection<LianeDb>()
       .Find(
         Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
@@ -719,7 +719,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
     if (lianeDb.State != LianeState.NotStarted)
     {
-      // Remove liane from potential search results 
+      // Remove liane from potential search results
       await postgisService.Clear(new[]
       {
         (Ref<Api.Trip.Liane>)liane.Id
@@ -737,7 +737,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       // TODO count avoided carbon emissions
       await userStatService.IncrementTotalTrips(lianeDb.CreatedBy!, 0);
     }
-    
+
     await PushUpdate(lianeDb);
   }
 
@@ -777,7 +777,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     var userFeatures = features.Features.Where(f => (string)f.Properties["user"] == userId);
     return new FeatureCollection(userFeatures.ToList());
   }
-  
+
   public async Task ForceSyncDatabase()
   {
     var results = await Mongo.GetCollection<LianeDb>()
@@ -836,20 +836,20 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)),
         new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
       );
-    
+
     await PushUpdate(updated);
   }
-  
-  
-  
+
+
+
   LianeState GetUserState(Api.Trip.Liane liane, LianeMember member)
   {
     if (member.Cancellation is not null) return LianeState.Canceled;
-    
+
     var current = liane.State;
     if (current == LianeState.Started)
     {
-      // Return NotStarted while user has not confirmed 
+      // Return NotStarted while user has not confirmed
       if (member.Departure is null) return LianeState.NotStarted;
       else
       {
@@ -858,10 +858,10 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         {
           return LianeState.Finished;
         }
-        
+
       }
     }
-     
+
     // Final states
     if (current == LianeState.Finished && member.Feedback is not null)
     {
@@ -873,11 +873,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
   private async Task CreateTracker(Api.Trip.Liane liane)
   {
-    // Create liane tracker 
+    // Create liane tracker
     var tracker = await new LianeTracker.Builder(liane)
       .SetTripArrivedDestinationCallback(() =>
       {
-        // Wait 5 minutes then go to "finished" state 
+        // Wait 5 minutes then go to "finished" state
         Task.Delay(LianeStatusUpdate.FinishedDelayInMinutes * 60 * 1000)
           .ContinueWith(async _ =>
           {
@@ -887,10 +887,10 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
           .Start();
       })
       .Build(osrmService, postgisService, Mongo, trackerLogger);
-      
+
     trackerCache.Trackers.TryAdd(liane.Id, tracker);
   }
-  
+
   public async Task SyncTrackers()
   {
     var started = await Mongo.GetCollection<LianeDb>().Find(l => l.State == LianeState.Started).ToListAsync();
@@ -899,5 +899,61 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         var liane = await Get(lianeDb.Id);
         await CreateTracker(liane);
     }
+  }
+
+
+ public async Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter)
+  {
+    var mongoFilter = Builders<DetailedLianeTrackReportDb>.Filter.Empty;
+    if (filter.Date is not null)
+    {
+      mongoFilter &= Builders<DetailedLianeTrackReportDb>.Filter.Gte(r => r.StartedAt, filter.Date.Value.Date) &
+                     Builders<DetailedLianeTrackReportDb>.Filter.Lte(r => r.StartedAt, filter.Date.Value.Date.AddHours(24));
+    }
+
+    if (filter.Members is not null)
+    {
+      foreach (var requiredMember in filter.Members)
+      {
+        mongoFilter &= Builders<DetailedLianeTrackReportDb>.Filter.ElemMatch(r => r.Liane.Members, m => requiredMember == m.User);
+      }
+    }
+
+    if (filter.WayPoints is not null)
+    {
+      foreach (var requiredPoint in filter.WayPoints)
+      {
+        mongoFilter &= Builders<DetailedLianeTrackReportDb>.Filter.ElemMatch(r => r.Liane.WayPoints, m => m.RallyingPoint == requiredPoint);
+      }
+    }
+    var reports = await Mongo.Paginate<LianeTrackReport, Cursor.Time,DetailedLianeTrackReportDb>(
+        pagination,
+        l => l.StartedAt,
+        fluent => fluent
+          .JoinOneToOne<LianeTrackReport, LianeDb>("liane")
+          .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations"))
+          .Match(mongoFilter)
+          );
+
+    return await reports.SelectAsync(MapLianeTrackReport);
+  }
+
+  private async Task<DetailedLianeTrackReport> MapLianeTrackReport(DetailedLianeTrackReportDb r)
+  {
+    var liane = await MapEntity(r.Liane);
+    return new DetailedLianeTrackReport(r.Id, liane.WayPoints, liane.Members, liane.Driver, r.StartedAt, r.FinishedAt);
+  }
+
+  public async Task<DetailedLianeTrackReport> GetTripRecord(string id)
+  {
+    var report = await Mongo.GetCollection<LianeTrackReport>()
+      .Aggregate()
+      .Match(l => l.Id == id)
+      .JoinOneToOne<LianeTrackReport, LianeDb>("liane")
+      .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations"))
+      .FirstOrDefaultAsync();
+    if (report is null) throw new ResourceNotFoundException("LianeTrackReport "+id);
+    return await MapLianeTrackReport(report);
+
   }
 }

@@ -54,36 +54,52 @@ public static class MongoDatabaseExtensions
       .FirstOrDefaultAsync();
   }
 
-  public static async Task<PaginatedResponse<TData>> Paginate<TData, TCursor>(
+  public static Task<PaginatedResponse<TData>> Paginate<TData, TCursor>(
     this IMongoDatabase mongo,
     Pagination pagination,
     Expression<Func<TData, object?>> paginationField,
     FilterDefinition<TData> baseFilter,
-    bool? sortAsc = null,
+    bool? sortAsc = null, 
     CancellationToken cancellationToken = default
   ) where TData : IIdentity where TCursor : Cursor
   {
+    return Paginate<TData, TCursor, TData>(
+      mongo,
+      pagination,
+      paginationField,
+      t=>t.Match(baseFilter), 
+      sortAsc,
+      cancellationToken);
+  }
+
+  public static async Task<PaginatedResponse<TProjection>> Paginate<TData, TCursor, TProjection>(
+    this IMongoDatabase mongo,
+    Pagination pagination,
+    Expression<Func<TProjection, object?>> paginationField,
+     Func<IAggregateFluent<TData>, IAggregateFluent<TProjection>> pipeline,
+    bool? sortAsc = null, 
+    CancellationToken cancellationToken = default
+  ) where TData : IIdentity where TProjection : IIdentity where TCursor : Cursor
+  {
     var effectiveSortAsc = sortAsc ?? pagination.SortAsc;
     var sort = effectiveSortAsc
-      ? Builders<TData>.Sort.Ascending(paginationField).Ascending(m => m.Id)
-      : Builders<TData>.Sort.Descending(paginationField).Descending(m => m.Id);
+      ? Builders<TProjection>.Sort.Ascending(paginationField).Ascending(m => m.Id)
+      : Builders<TProjection>.Sort.Descending(paginationField).Descending(m => m.Id);
 
     var collection = mongo.GetCollection<TData>();
-    var filter = pagination.Cursor != null ? CreatePaginationFilter(pagination.Cursor, effectiveSortAsc, paginationField) : FilterDefinition<TData>.Empty;
-
-    filter = Builders<TData>.Filter.And(baseFilter, filter);
+    var filter = pagination.Cursor != null ? CreatePaginationFilter(pagination.Cursor, effectiveSortAsc, paginationField) : FilterDefinition<TProjection>.Empty;
 
     // Check if collection has next page by selecting one more entry
-    var find = collection.Find(filter)
-      .Sort(sort)
-      .Limit(pagination.Limit + 1);
-    var result = await find.ToListAsync(cancellationToken: cancellationToken);
+   
+      var agg = pipeline(collection.Aggregate()).Match(filter).Sort(sort)
+        .Limit(pagination.Limit+1);
+      var result = await agg.ToListAsync(cancellationToken: cancellationToken);
 
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
     var data = result.GetRange(0, count);
-    var cursor = hasNext ? Cursor.From<TCursor, TData>(data.Last(), paginationField) : null;
-    return new PaginatedResponse<TData>(count, cursor, data.Take(pagination.Limit).ToImmutableList());
+    var cursor = hasNext ? Cursor.From<TCursor, TProjection>(data.Last(), paginationField) : null;
+    return new PaginatedResponse<TProjection>(count, cursor, data.Take(pagination.Limit).ToImmutableList());
   }
 
   private static FilterDefinition<TData> CreatePaginationFilter<TData>(Cursor cursor, bool sortAsc, Expression<Func<TData, object?>> indexedField)
@@ -115,5 +131,18 @@ public static class MongoDatabaseExtensions
   {
     var collectionName = typeof(T).FullName!.Split(".").Last().Split("+")[0].Replace("Db", "", StringComparison.OrdinalIgnoreCase);
     return collectionName.ToSnakeCase();
+  }
+
+  public static IAggregateFluent<BsonDocument> Lookup<T, TForeignCollection>(this IAggregateFluent<T> aggregate,  string alias) where T: IIdentity where TForeignCollection: IIdentity
+  {
+    var name = GetCollectionName<TForeignCollection>();
+    return aggregate.Lookup(name, "_id", "_id", alias);
+  }
+  
+  public static IAggregateFluent<BsonDocument> JoinOneToOne<T, TForeignCollection>(this IAggregateFluent<T> aggregate,  string alias) where T: IIdentity where TForeignCollection: IIdentity
+  {
+    return aggregate.Lookup<T, TForeignCollection>(alias).AppendStage<BsonDocument>(new BsonDocument("$set",
+      new BsonDocument(alias,
+        new BsonDocument("$first", "$"+alias))));
   }
 }

@@ -1,7 +1,6 @@
-﻿using System.Collections.Immutable;
-using System.Threading.Tasks;
-using Liane.Api.Routing;
+﻿using System.Threading.Tasks;
 using Liane.Api.Trip;
+using Liane.Api.Util.Pagination;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,9 +48,9 @@ public sealed class RallyingPointController : ControllerBase
     return rallyingPointGenerator.Generate();
   }
 
-  [HttpGet("")]
+ /* [HttpGet("")]
   [DisableAuth]
-  public async Task<ImmutableList<RallyingPoint>> List(
+  public async Task<ImmutableList<RallyingPoint>> Search(
     [FromQuery] double? lat, [FromQuery] double? lng,
     [FromQuery] int? distance = null,
     [FromQuery] int? limit = 10,
@@ -63,7 +62,15 @@ public sealed class RallyingPointController : ControllerBase
       from = new LatLng((double)lat, (double)lng);
     }
 
-    return await rallyingPointService.List(from, distance: distance, search: search, limit: limit);
+    return await rallyingPointService.Search(from, distance: distance, search: search, limit: limit);
+  }
+  */
+  [HttpGet("")]
+  [DisableAuth]
+  public async Task<PaginatedResponse<RallyingPoint>> List(
+    [FromQuery] RallyingPointFilter rallyingPointFilter)
+  {
+    return await rallyingPointService.List(rallyingPointFilter);
   }
 
   [HttpGet("snap")]
