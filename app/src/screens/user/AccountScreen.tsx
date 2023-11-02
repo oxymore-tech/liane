@@ -35,7 +35,7 @@ export const AccountScreen = () => {
         </Column>
 
         <LineSeparator />
-
+        <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
         <ActionListItem
           onPress={() => {
             Alert.alert("Supprimer définitivement ce compte ?", "Toutes les données liées seront supprimées.", [
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
-    backgroundColor: AppColors.primaryColor
+    backgroundColor: AppColors.secondaryColor
   },
   backContainer: {
     position: "absolute",

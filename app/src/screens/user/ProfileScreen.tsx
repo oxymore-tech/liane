@@ -72,8 +72,7 @@ const Actions = () => {
   const { navigation } = useAppNavigation();
   return (
     <Column>
-      <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
-      <ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
+      {/*<ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />*/}
       <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
       <ActionListItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
       {/*<LineSeparator />

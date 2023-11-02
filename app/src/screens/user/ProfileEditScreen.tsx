@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
-    backgroundColor: AppColors.primaryColor
+    backgroundColor: AppColors.secondaryColor
   },
   backContainer: {
     position: "absolute",
