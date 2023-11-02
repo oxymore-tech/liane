@@ -24,7 +24,9 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   // Check if service is running locally
   useEffect(() => {
     if (shouldBeActive) {
-      LianeGeolocation.isRunningService(liane.id!).then(setGeolocRunning);
+      LianeGeolocation.currentLiane().then(id => {
+        setGeolocRunning(liane.id! === id);
+      });
     } else {
       setGeolocRunning(false);
     }

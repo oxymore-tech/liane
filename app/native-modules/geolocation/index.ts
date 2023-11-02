@@ -37,7 +37,7 @@ export interface LianeGeolocation {
   startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void>;
   stopSendingPings(): Promise<void>;
   requestEnableGPS(): Promise<void>;
-  isRunningService(lianeId: string): Promise<boolean>;
+  currentLiane(): Promise<string | undefined>;
   watchRunningService(callback: (running: string | undefined) => void): SubscriptionLike;
   checkAndRequestLocationPermission(): Promise<boolean>;
   requestBackgroundGeolocationPermission(): Promise<boolean>;
@@ -102,7 +102,7 @@ class AndroidService implements LianeGeolocation {
     startService(config: BackgroundGeolocationServiceConfig): Promise<void>;
     stopService(): Promise<void>;
     enableLocation(): Promise<void>;
-    isRunning(lianeId: string): Promise<boolean>;
+    current(): Promise<string | undefined>;
     watch(callback: (running: string | undefined) => void): SubscriptionLike;
   };
   private Platform = Platform as PlatformAndroidStatic;
@@ -137,7 +137,7 @@ class AndroidService implements LianeGeolocation {
     return this.AndroidNativeModule.stopService().then(() => running.next(undefined));
   };
   requestEnableGPS = this.AndroidNativeModule.enableLocation;
-  isRunningService = this.AndroidNativeModule.isRunning;
+  currentLiane = this.AndroidNativeModule.current;
   watchRunningService = (callback: (running: string | undefined) => void) => running.subscribe(callback);
   async checkAndRequestLocationPermission(): Promise<boolean> {
     if (this.Platform.Version < 23) {
@@ -340,13 +340,13 @@ class IosService implements LianeGeolocation {
       .then(() => running.next(val?.liane))
       .catch(e => AppLogger.warn("GEOPINGS", "Could not persist liane id", e));
   };
-  isRunningService = async (lianeId: string) => {
+  currentLiane = async () => {
     const val = await this.getCurrentGeolocationLianeId();
     if (val && new Date() > new Date(val.timeOutDate)) {
       // Stop timed-out service
       await this.stopSendingPings();
     }
-    return val?.liane === lianeId;
+    return val?.liane;
   };
   watchRunningService(callback: (running: string | undefined) => void): SubscriptionLike {
     return running.subscribe(callback);
