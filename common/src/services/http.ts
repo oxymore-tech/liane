@@ -1,55 +1,51 @@
 import { Mutex } from "async-mutex";
-import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "./exception";
-import { FilterQuery, SortOptions } from "./filter";
-import { AuthResponse } from "./api";
-import { AppEnv } from "./env";
-import { AppLogger } from "./logger";
-import { AppStorage } from "./storage";
+import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "../exception";
+import { AuthResponse } from "../api";
+import { AppEnv } from "../env";
+import { AppLogger } from "../logger";
+import { AppStorage } from "../storage";
+import urlJoin from "url-join";
 
 export class HttpClient {
   private readonly refreshTokenMutex = new Mutex();
 
-  constructor(
-    private env: AppEnv,
-    private logger: AppLogger,
-    private storage: AppStorage
-  ) {}
+  constructor(private env: AppEnv, private logger: AppLogger, private storage: AppStorage) {}
 
-  get<T>(uri: string, options: QueryAsOptions<T> = {}): Promise<T> {
+  get<T>(uri: string, options: QueryAsOptions = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("GET", uri, options);
   }
 
-  async getAsString(uri: string, options: QueryAsOptions<any> = {}): Promise<string> {
+  async getAsString(uri: string, options: QueryAsOptions = {}): Promise<string> {
     const response = await this.fetchAndCheck("GET", uri, options);
     return await response.text();
   }
 
-  postAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  postAs<T>(uri: string, options: QueryPostOptions = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("POST", uri, options);
   }
 
-  async postAsString(uri: string, options: QueryPostOptions<any> = {}): Promise<string> {
+  async postAsString(uri: string, options: QueryPostOptions = {}): Promise<string> {
     const response = await this.fetchAndCheck("POST", uri, options);
     return await response.text();
   }
 
-  del(uri: string, options: QueryPostOptions<any> = {}) {
+  del(uri: string, options: QueryPostOptions = {}) {
     return this.fetchAndCheck("DELETE", uri, options);
   }
 
-  post(uri: string, options: QueryPostOptions<any> = {}) {
+  post(uri: string, options: QueryPostOptions = {}) {
     return this.fetchAndCheck("POST", uri, options);
   }
 
-  patch(uri: string, options: QueryPostOptions<any> = {}) {
+  patch(uri: string, options: QueryPostOptions = {}) {
     return this.fetchAndCheck("PATCH", uri, options);
   }
 
-  patchAs<T>(uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  patchAs<T>(uri: string, options: QueryPostOptions = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("PATCH", uri, options);
   }
 
-  private async fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions<T> = {}): Promise<T> {
+  private async fetchAndCheckAs<T>(method: MethodType, uri: string, options: QueryPostOptions = {}): Promise<T> {
     const response = await this.fetchAndCheck(method, uri, options);
     if (response.status === 204) {
       // Do not try parsing body
@@ -75,7 +71,7 @@ export class HttpClient {
     return !body || body instanceof Blob || body instanceof FormData;
   }
 
-  private async fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions<any> = {}): Promise<Response> {
+  private async fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions = {}): Promise<Response> {
     const { body } = options;
     const url = this.formatUrl(uri, options);
     const formattedBody = this.formatBodyAsJsonIfNeeded(body);
@@ -170,30 +166,17 @@ export class HttpClient {
     return h;
   }
 
-  private formatUrl<T>(uri: string, { listOptions, params }: QueryAsOptions<T>) {
-    const url = new URL(uri, this.env.baseUrl);
-    if (listOptions) {
-      const { filter, skip, limit, sort, search } = listOptions;
-      if (filter) {
-        url.searchParams.append("filter", JSON.stringify(filter));
-      }
-      if (search) {
-        url.searchParams.append("search", search);
-      }
-      if (skip) {
-        url.searchParams.append("skip", skip.toString());
-      }
-      if (limit) {
-        url.searchParams.append("limit", limit.toString());
-      }
-      if (sort) {
-        url.searchParams.append("sort", JSON.stringify(sort));
-      }
-    }
+  private formatUrl(uri: string, { params }: QueryAsOptions) {
+    const url = new URL(urlJoin(this.env.baseUrl, uri));
+
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        if (v) {
-          url.searchParams.append(k, v.toString());
+        if (v !== undefined) {
+          if (Array.isArray(v)) {
+            v.forEach(item => url.searchParams.append(k, item.toString()));
+          } else {
+            url.searchParams.append(k, v.toString());
+          }
         }
       }
     }
@@ -201,23 +184,14 @@ export class HttpClient {
   }
 }
 
-export interface ListOptions<T> {
-  readonly filter?: FilterQuery<T>;
-  readonly skip?: number;
-  readonly limit?: number;
-  readonly search?: string;
-  readonly sort?: SortOptions<T>;
-}
-
 type MethodType = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type QueryParams = { [k: string]: any };
 
-export interface QueryAsOptions<T> {
-  listOptions?: ListOptions<T>;
+export interface QueryAsOptions {
   params?: QueryParams;
 }
 
-export interface QueryPostOptions<T> extends QueryAsOptions<T> {
+export interface QueryPostOptions extends QueryAsOptions {
   body?: any;
 }

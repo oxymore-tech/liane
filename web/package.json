@@ -10,13 +10,21 @@
   },
   "dependencies": {
     "@liane/common": "link:../common",
+    "@xstate/react": "^3.2.2",
+    "d3": "^7.8.5",
     "dotenv": "^16.3.1",
+    "flowbite": "^2.0.0",
+    "flowbite-react": "^0.6.4",
     "maplibre-gl": "^3.5.1",
     "next": "13.5.6",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-icons": "^4.11.0",
+    "react-query": "^3.39.3",
+    "xstate": "^4.37.0"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

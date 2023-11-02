@@ -9,14 +9,14 @@ import {
   TrackedMemberLocation,
   User,
   UTCDateTime
-} from "./api";
+} from "../api";
 import { Answer, Notification } from "./notification";
-import { AppLogger } from "./logger";
-import { LianeEvent } from "./event";
-import { AppEnv } from "./env";
-import { AppStorage } from "./storage";
+import { AppLogger } from "../logger";
+import { LianeEvent } from "../event";
+import { AppEnv } from "../env";
+import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
-import { NetworkUnavailable } from "./exception";
+import { NetworkUnavailable } from "../exception";
 
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
@@ -88,10 +88,7 @@ export abstract class AbstractHubService implements HubService {
   protected onReceiveLocationUpdateCallback: { [n: Ref<User>]: OnLocationCallback | undefined } = {};
   protected appStateActive: boolean = true;
 
-  protected constructor(
-    protected env: AppEnv,
-    protected logger: AppLogger
-  ) {}
+  protected constructor(protected env: AppEnv, protected logger: AppLogger) {}
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
@@ -227,12 +224,7 @@ export class HubServiceClient extends AbstractHubService {
   private hub: HubConnection;
 
   private isStarted = false;
-  constructor(
-    env: AppEnv,
-    logger: AppLogger,
-    private storage: AppStorage,
-    private http: HttpClient
-  ) {
+  constructor(env: AppEnv, logger: AppLogger, private storage: AppStorage, private http: HttpClient) {
     super(env, logger);
     this.hub = new HubConnectionBuilder()
       .withUrl(`${env.baseUrl}/hub`, {

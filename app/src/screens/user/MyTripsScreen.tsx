@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, useQueryClient, UseQueryResult } from "react-query";
 import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError, useObservable } from "@liane/common";

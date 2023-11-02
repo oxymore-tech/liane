@@ -12,17 +12,29 @@ export const createStateSequence = <T, TKey extends string>(
     [stateKeys[stateKeys.length - 1].key, createState(nextState, stateKeys[stateKeys.length - 1].validation, stateKeys[stateKeys.length - 2].key)]
   ];
 
-  return <{ [name in TKey]: {} }>Object.fromEntries(seq);
+  return <{ [name in TKey]: NonNullable<unknown> }>Object.fromEntries(seq);
 };
 
-export const CreateSubmittingState = <K>(machineId: string, cancelTargetState?: K, onSuccess?: string) => ({
+export const CreateSubmittingState = ({
+  cancelTargetState,
+  onSuccess,
+  successTargetState,
+  serviceId,
+  submittingState
+}: {
+  cancelTargetState: string;
+  onSuccess?: string;
+  successTargetState?: string;
+  serviceId?: string;
+  submittingState?: string;
+}) => ({
   initial: "pending",
   on: {
-    CANCEL: { target: cancelTargetState || "#" + machineId + ".overview" }
+    CANCEL: { target: cancelTargetState }
   },
   invoke: {
-    id: "submit",
-    src: "submit",
+    id: serviceId ?? "submit",
+    src: serviceId ?? "submit",
     onDone: {
       target: ".success",
       actions: onSuccess
@@ -38,10 +50,10 @@ export const CreateSubmittingState = <K>(machineId: string, cancelTargetState?: 
         10000: { target: "failure" }
       }
     },
-    success: { always: { target: "#" + machineId + ".done" } },
+    success: { always: { target: successTargetState || ".done" } },
     failure: {
       on: {
-        RETRY: { target: "#" + machineId + ".submitting" }
+        RETRY: { target: submittingState ?? ".submitting" }
       }
     }
   }
@@ -51,3 +63,5 @@ type RetryEvent = { type: "RETRY" };
 type CancelEvent = { type: "CANCEL" };
 
 export type SubmittingEvents = RetryEvent | CancelEvent;
+
+export type ServiceDoneEvent<T> = { type: "done.invoke.submit"; data: T };

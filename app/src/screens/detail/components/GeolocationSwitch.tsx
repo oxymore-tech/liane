@@ -59,7 +59,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     }
 
     setTracked(undefined);
-    if (geoloc === undefined || geoloc.liane.id !== match.id) {
+    if (geoloc === undefined || geoloc.liane.id !== match.id || match.state !== "Started") {
       services.liane
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => setTracked(enabled))

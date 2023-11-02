@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ReactNode } from "react";
-import ContextProvider from "@/components/context-provider";
+import React, { ReactNode } from "react";
+import ContextProvider from "@/components/ContextProvider";
+import { PageLayout } from "./dashboard/layout";
 
 export const metadata: Metadata = {
   title: "Liane",
@@ -12,7 +13,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <body>
-        <ContextProvider>{children}</ContextProvider>
+        <ContextProvider>
+          <PageLayout>{children}</PageLayout>
+        </ContextProvider>
       </body>
     </html>
   );

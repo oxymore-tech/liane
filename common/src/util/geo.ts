@@ -1,4 +1,4 @@
-import { LatLng } from "./api";
+import { LatLng } from "../api";
 // @ts-ignore
 import { GeoJSON } from "geojson";
 

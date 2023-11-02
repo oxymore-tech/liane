@@ -499,7 +499,7 @@ BEGIN
        longest_lianes as (select liane_id,
                                  sum(length)                                                               as length,
                                  st_simplify(st_linemerge(st_collect(s.geometry order by s.eta)), 0.00005) as geometry,
-                                 case when filter_type = 'pickup' then (array_agg(s.to_id order by s.eta desc))[1] 
+                                 case when filter_type = 'pickup' then (array_agg(s.to_id order by s.eta desc))[1]
                                    else (array_agg(s.from_id order by s.eta asc))[1]  end as extremity_point_id
                           from (select liane_id,
                                        to_id,
@@ -678,15 +678,9 @@ CREATE OR REPLACE
 $$
 DECLARE
   mvt             bytea;
-  after           timestamp;
-  timezone_offset integer;
 BEGIN
-  SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
-  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD'), timezone('utc', now())::date) +
-          make_interval(mins => timezone_offset))
-  INTO after;
 
-  if z > 7 then
+  if z > 5 then
     SELECT INTO mvt ST_AsMVT(tile.*, 'rallying_point_display', 4096, 'geom')
     FROM (SELECT ST_AsMVTGeom(
                    st_transform(location, 3857),
@@ -698,7 +692,8 @@ BEGIN
                  address,
                  zip_code,
                  city,
-                 place_count
+                 place_count,
+                 is_active
           FROM rallying_point
           where rallying_point.location @
                 ST_Transform(ST_TileEnvelope(z, x, y), 4326)) as tile

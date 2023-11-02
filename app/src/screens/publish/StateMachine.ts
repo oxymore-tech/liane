@@ -1,6 +1,14 @@
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 import React from "react";
-import { createStateSequence, DayOfTheWeekFlag, Liane, RallyingPoint, SubmittingEvents } from "@liane/common";
+import {
+  createStateSequence,
+  CreateSubmittingState,
+  DayOfTheWeekFlag,
+  Liane,
+  RallyingPoint,
+  ServiceDoneEvent,
+  SubmittingEvents
+} from "@liane/common";
 
 export const PublishStateSequence = ["trip", "date", "vehicle"] as const;
 
@@ -37,10 +45,11 @@ type PublishEvent = { type: "PUBLISH" };
 type OpenMapEvent = { type: "MAP"; data: "from" | "to" };
 type BackEvent = { type: "BACK" };
 type ReturnEvent = { type: "RETURN"; data: null | undefined | Date };
+type InternalEvents = ServiceDoneEvent<Liane>;
 
 type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent | OpenMapEvent | BackEvent | ReturnEvent;
 
-export type PublishStateMachine = StateMachine<PublishContext, Schema, Event>;
+export type PublishStateMachine = StateMachine<PublishContext, Schema, Event | InternalEvents>;
 
 export type PublishStateMachineInterpreter = Interpreter<PublishContext, Schema, Event>;
 
@@ -190,8 +199,12 @@ export const CreatePublishLianeMachine = (
             }
           }
         },
-        // @ts-ignore
-        submitting: { ...CreateSubmittingState("publish", undefined, "saveCreated") },
+        submitting: CreateSubmittingState({
+          onSuccess: "saveCreated",
+          cancelTargetState: "#publish.overview",
+          successTargetState: "#publish.done",
+          submittingState: "#publish.submitting"
+        }),
         done: { type: "final" }
       }
     },
@@ -200,8 +213,7 @@ export const CreatePublishLianeMachine = (
         submit: (context, _) => submit(context)
       },
       actions: {
-        //@ts-ignore
-        saveCreated: assign<PublishContext, { data: Liane; type: "done.invoke.submit" }>({ created: (ctx, event) => event.data }),
+        saveCreated: assign<PublishContext, ServiceDoneEvent<Liane>>({ created: (_, event) => event.data }),
         set: assign<PublishContext, NextEvent>({
           request: (context, event) => {
             return {

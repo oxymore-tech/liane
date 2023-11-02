@@ -1,8 +1,8 @@
-import { LatLng, RallyingPoint } from "./api";
-import { AppStorage } from "./storage";
-import { AppEnv } from "./env";
+import { LatLng, RallyingPoint } from "../api";
+import { AppStorage } from "../storage";
+import { AppEnv } from "../env";
 import { Feature, Geometry, Point } from "geojson";
-import { BoundingBox } from "./geo";
+import { BoundingBox } from "../util/geo";
 
 export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
 export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };

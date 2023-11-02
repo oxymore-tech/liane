@@ -7,12 +7,12 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/api/navigation";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { getSetting, saveSetting } from "@/api/storage";
 import { LianeGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";
 import { AppContext } from "@/components/context/ContextProvider";
-import { GeolocationLevel } from "@/api";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
+import { GeolocationLevel } from "@liane/common";
 
 export const TripGeolocationWizard = WithFullscreenModal(
   () => {
@@ -26,9 +26,9 @@ export const TripGeolocationWizard = WithFullscreenModal(
         return;
       }
       LianeGeolocation.checkBackgroundGeolocationPermission().then(allowed => {
-        getSetting("geolocation")
+        AppStorage.getSetting("geolocation")
           .then(setting => {
-            console.log("setting", setting);
+            //console.log("setting", setting);
             if (setting) {
               const settingAllowed = setting !== "None";
               setPage(!allowed && settingAllowed ? 1 : 2);
@@ -70,7 +70,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
         {page === 1 && (
           <Page2
             next={(authorize: boolean) => {
-              saveSetting("geolocation", authorize ? "Shared" : "None").then(next);
+              AppStorage.saveSetting("geolocation", authorize ? "Shared" : "None").then(next);
             }}
           />
         )}
@@ -78,7 +78,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
           <Page3
             next={endTutorial}
             prev={() => {
-              saveSetting("geolocation", null).then(prev);
+              AppStorage.saveSetting("geolocation", null).then(prev);
             }}
           />
         )}
@@ -198,7 +198,7 @@ const Page3 = (props: { next: () => void; prev: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel | null>(null);
   useEffect(() => {
-    getSetting("geolocation").then(setTrackedLevel);
+    AppStorage.getSetting("geolocation").then(setTrackedLevel);
   }, []);
   if (!trackedLevel) {
     return <ActivityIndicator />;

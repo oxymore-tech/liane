@@ -1,4 +1,4 @@
-import { LatLng, RallyingPoint } from "./api";
+import { LatLng, RallyingPoint } from "../api";
 import { HttpClient } from "./http";
 // @ts-ignore
 import { GeoJSON, Position } from "geojson";

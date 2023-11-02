@@ -1,4 +1,4 @@
-import { AppLogger } from "liane-common";
+import { AppLogger } from "@liane/common";
 
 export class ConsoleAppLogger implements AppLogger {
   debug(tag: string, args: any): void {

@@ -1,6 +1,5 @@
 import {
   AppLogger,
-  AppStorage,
   AuthService,
   AuthServiceClient,
   HttpClient,
@@ -24,15 +23,11 @@ import { ReminderService } from "@/api/service/reminder";
 import { ReactNativeLocationService } from "@/api/service/location";
 
 export type AppServices = {
-  logger: ReactNativeLogger;
-
-  storage: AppStorage;
   auth: AuthService;
   liane: LianeService;
   rallyingPoint: RallyingPointService;
   realTimeHub: HubService;
   location: LocationService;
-
   routing: RoutingService;
   notification: NotificationService;
   reminder: ReminderService;
@@ -40,18 +35,15 @@ export type AppServices = {
 
 const storage = new ReactNativeStorage();
 const logger = new ReactNativeLogger();
-const genericLogger = logger as AppLogger;
 
-const http = new HttpClient(AppEnv, genericLogger, storage);
+const http = new HttpClient(AppEnv, logger as AppLogger, storage);
 
 export const CreateAppServices = (): AppServices => ({
-  storage,
-  logger,
-  auth: new AuthServiceClient(http),
+  auth: new AuthServiceClient(http, storage),
   liane: new LianeServiceClient(http),
   reminder: new ReminderService(storage),
   rallyingPoint: new RallyingPointClient(http),
-  realTimeHub: new HubServiceClient(AppEnv, genericLogger, storage, http),
+  realTimeHub: new HubServiceClient(AppEnv, logger as AppLogger, storage, http),
   location: new ReactNativeLocationService(AppEnv, storage, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
   notification: new NotificationServiceClient(http)

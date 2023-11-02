@@ -34,7 +34,7 @@ import Animated, {
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DriverInfo } from "@/screens/detail/components/DriverInfo";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
-import { getSetting } from "@/api/storage";
+import { AppStorage } from "@/api/storage";
 
 const StepView = ({
   displayFull,
@@ -136,7 +136,7 @@ export const LianeMatchDetailView = () => {
 
   const userIsMember = liane.liane.members.findIndex(m => m.user.id === user!.id) >= 0;
   const requestJoin = async () => {
-    const geolocationLevel = await getSetting("geolocation");
+    const geolocationLevel = await AppStorage.getSetting("geolocation");
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
       from: fromPoint.id!,

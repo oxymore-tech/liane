@@ -9,13 +9,15 @@ import { AppText } from "@/components/base/AppText";
 import { sleep } from "@liane/common";
 
 type CodeInputProps = {
-  onValidate: () => Promise<void>;
+  submitting?: boolean;
+  submit: () => void;
   retry: () => void;
+  canSubmit?: boolean;
   code: string;
   onChange: (code: string) => void;
 };
 
-const resendDelay = 30;
+const resendDelay = 60;
 const Retry = (props: { retry: () => void }) => {
   const [allowRetryCountdown, setAllowRetryCountdown] = useState(resendDelay);
 
@@ -51,15 +53,9 @@ const Retry = (props: { retry: () => void }) => {
   );
 };
 
-export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps) => {
-  const [validating, setValidating] = useState(false);
-  const disabled = code.length < 6 || validating;
+export const CodeInput = ({ canSubmit, onChange, submitting, submit, retry, code }: CodeInputProps) => {
   const buttonColor = {
-    backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
-  };
-  const validate = () => {
-    setValidating(true);
-    onValidate().finally(() => setValidating(false));
+    backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
   };
 
   return (
@@ -73,7 +69,7 @@ export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps)
             returnKeyLabel={"next"}
             onChangeText={onChange}
             keyboardType={"numeric"}
-            onSubmitEditing={validate}
+            onSubmitEditing={submit}
             maxLength={6}
           />
           <Row style={{ position: "absolute", bottom: 8 }} spacing={4}>
@@ -84,9 +80,9 @@ export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps)
             ))}
           </Row>
         </Column>
-        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={validate}>
-          {!validating && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
-          {validating && <ActivityIndicator color={AppColors.white} size={"small"} />}
+        <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
+          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
+          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
         </Pressable>
       </View>
       <Retry retry={retry} />

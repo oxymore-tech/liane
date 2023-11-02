@@ -1,8 +1,9 @@
 // @ts-ignore
 import { FeatureCollection, GeoJSON } from "geojson";
 import { LatLng } from "../api";
-import { BoundingBox } from "../geo";
-
+import { BoundingBox } from "./geo";
+import turfDistance from "@turf/distance";
+import { point } from "@turf/helpers";
 export interface CameraPadding {
   paddingLeft?: number;
   paddingRight?: number;
@@ -46,7 +47,7 @@ export function intersect(a: Iterable<any>, b: Iterable<any>) {
   return Array.from(intersection);
 }
 
-export const distance = (p1: LatLng, p2: LatLng) => turf.distance(turf.point([p1.lng, p1.lat]), turf.point([p2.lng, p2.lat]), "meters");
+export const distance = (p1: LatLng, p2: LatLng) => turfDistance(point([p1.lng, p1.lat]), point([p2.lng, p2.lat]), "meters");
 
 export const EmptyFeatureCollection = <FeatureCollection>{
   type: "FeatureCollection",

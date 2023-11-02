@@ -1,6 +1,6 @@
-import { ConversationGroup, PaginatedResponse, Ref, User, UTCDateTime } from "./api";
+import { ConversationGroup, PaginatedResponse, Ref, User, UTCDateTime } from "../api";
 import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
-import { LianeEvent } from "./event";
+import { LianeEvent } from "../event";
 import { HttpClient } from "./http";
 
 export type Notification = (Info | Event | NewMessage) & AbstractNotification;

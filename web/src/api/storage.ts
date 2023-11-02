@@ -1,40 +1,46 @@
 import { AppStorage, AuthResponse, AuthUser, FullUser } from "@liane/common";
 
 export class LocalStorageImpl implements AppStorage {
+  async storeSession(authUser?: AuthUser | undefined): Promise<void> {
+    await this.storeAsync("userSession", authUser);
+  }
   clearStorage(): Promise<void> {
     localStorage.clear();
     return Promise.resolve();
   }
 
   getAccessToken(): Promise<string | undefined> {
-    return Promise.resolve(localStorage.getItem("token") ?? undefined);
+    return this.retrieveAsync("token");
   }
 
   getRefreshToken(): Promise<string | undefined> {
-    return Promise.resolve(localStorage.getItem("refreshToken") ?? undefined);
+    return this.retrieveAsync("refreshToken");
   }
 
-  getUserSession(): Promise<AuthUser | undefined> {
-    const item = localStorage.getItem("userSession");
-    if (!item) {
-      return Promise.resolve(undefined);
-    }
-    return Promise.resolve(JSON.parse(item) as AuthUser);
+  getSession(): Promise<AuthUser | undefined> {
+    return this.retrieveAsync("userSession");
   }
 
-  processAuthResponse(authResponse: AuthResponse): Promise<AuthUser> {
+  async processAuthResponse(authResponse: AuthResponse): Promise<AuthUser> {
     const { accessToken, refreshToken } = authResponse.token;
-    localStorage.setItem("token", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    localStorage.setItem("userSession", JSON.stringify(authResponse.user));
+    await this.storeAsync("token", accessToken);
+    await this.storeAsync("refreshToken", refreshToken);
+    await this.storeAsync("userSession", authResponse.user);
     return Promise.resolve(authResponse.user);
   }
-
-  getOfflineUser(): Promise<FullUser | undefined> {
-    return Promise.resolve(undefined);
+  getUser(): Promise<FullUser | undefined> {
+    return this.retrieveAsync("user");
+  }
+  retrieveAsync<T>(key: string, defaultValue?: T): Promise<T | undefined> {
+    const found = localStorage.getItem(key);
+    return Promise.resolve(found ? (JSON.parse(found) as T) : defaultValue);
+  }
+  storeAsync<T>(key: string, value: T | undefined): Promise<void> {
+    localStorage.setItem(key, JSON.stringify(value));
+    return Promise.resolve();
   }
 
-  storeOfflineUser(_?: FullUser): Promise<void> {
-    return Promise.resolve(undefined);
+  async storeUser(user?: FullUser): Promise<void> {
+    await this.storeAsync("user", user);
   }
 }

@@ -69,7 +69,7 @@ export async function displayNotifeeNotification(notification: Notification) {
     android: DefaultAndroidSettings,
     title: notification.title,
     body: notification.message,
-    data: notification
+    data: { uri: "liane://" } //TODO add to notification payload
   });
 }
 

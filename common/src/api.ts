@@ -195,11 +195,13 @@ export type PaginatedResponse<T> = Readonly<{
   pageSize: number;
   data: T[];
   next?: string;
+  totalCount?: number | null;
 }>;
 
 export type PaginatedRequestParams = {
-  cursor?: string;
+  cursor: string | undefined;
   limit: number;
+  asc?: boolean;
 };
 
 export type TargetTimeDirection = "Departure" | "Arrival";

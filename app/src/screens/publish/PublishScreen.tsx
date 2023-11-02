@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
@@ -79,18 +79,19 @@ export const PublishScreen = () => {
   );
   const machine = useInterpret(m);
   const [state] = useActor(machine);
-  machine.onDone(() => {
-    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
+  useEffect(() => {
     if (!state.done) {
       return;
     }
-    navigation.popToTop();
-    if (shouldShow) {
-      showTutorial("driver", state.context.created!.id);
-    } else {
-      navigation.navigate(HOME_TRIPS);
-    }
-  });
+    machine.onDone(() => {
+      navigation.popToTop();
+      if (shouldShow) {
+        showTutorial("driver", state.context.created!.id);
+      } else {
+        navigation.navigate(HOME_TRIPS);
+      }
+    });
+  }, [machine, navigation, shouldShow, showTutorial, state.context.created, state.done]);
 
   return (
     /*  @ts-ignore */

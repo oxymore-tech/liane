@@ -1,4 +1,26 @@
 {
   "extends": ["next/core-web-vitals", "prettier"],
-  "plugins": ["prettier"]
+  "plugins": ["prettier"],
+  "rules": {
+    "@typescript-eslint/ban-ts-comment": "off",
+    "no-use-before-define": "off",
+    "@typescript-eslint/no-use-before-define": [ "error" ],
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": [ "error" ],
+    "import/prefer-default-export": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "prettier/prettier": [ "error", { "endOfLine": "auto" } ],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ]
+
+  }
 }

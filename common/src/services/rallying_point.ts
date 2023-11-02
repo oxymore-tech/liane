@@ -1,9 +1,10 @@
-import { LatLng, RallyingPoint } from "./api";
+import { LatLng, PaginatedResponse, RallyingPoint } from "../api";
 import { FeatureCollection } from "geojson";
 import { HttpClient } from "./http";
 
 export interface RallyingPointService {
   search(search: string, location?: LatLng): Promise<RallyingPoint[]>;
+  list(query: { search?: string; location?: LatLng; offset?: number; limit?: number }): Promise<PaginatedResponse<RallyingPoint>>;
   view(lowerLeft: LatLng, upperRight: LatLng): Promise<FeatureCollection>;
   snap(location: LatLng): Promise<RallyingPoint>;
 }
@@ -12,13 +13,28 @@ export class RallyingPointClient implements RallyingPointService {
   constructor(private http: HttpClient) {}
 
   async search(search: string, location?: LatLng): Promise<RallyingPoint[]> {
-    const res = await this.http.get<RallyingPoint[]>("/rallying_point", { params: { search, lng: location?.lng, lat: location?.lat } });
-    if (res.length === 0) {
-      return this.http.get<RallyingPoint[]>("/rallying_point", { params: { search } });
+    const res = await this.list({ search, location });
+    if (res.data.length === 0) {
+      return (await this.list({ search })).data;
     }
-    return res;
+    return res.data;
   }
 
+  list({
+    search,
+    location,
+    offset,
+    limit
+  }: {
+    search?: string;
+    location?: LatLng;
+    offset?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<RallyingPoint>> {
+    return this.http.get<PaginatedResponse<RallyingPoint>>("/rallying_point", {
+      params: { search, lng: location?.lng, lat: location?.lat, offset, limit }
+    });
+  }
   snap(location: LatLng): Promise<RallyingPoint> {
     return this.http.get("/rallying_point/snap", { params: { lng: location.lng, lat: location.lat } });
   }

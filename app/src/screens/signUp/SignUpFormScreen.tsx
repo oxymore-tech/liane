@@ -9,15 +9,15 @@ import { FieldValues, FormProvider, SubmitErrorHandler, SubmitHandler, useContro
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppToggle } from "@/components/base/AppOptionToggle";
 import { AppContext } from "@/components/context/ContextProvider";
-import { SignUpLianeContext } from "@/screens/signUp/StateMachine";
 import { AppLogger } from "@/api/logger";
+import { SignUpLianeContext } from "@/screens/signUp/SignUpScreen";
 
 export const SignUpFormScreen = () => {
   const { ...methods } = useForm();
 
   const machine = useContext(SignUpLianeContext);
 
-  const { services, refreshUser } = useContext(AppContext);
+  const { services } = useContext(AppContext);
 
   const onSubmit: SubmitHandler<FieldValues> = data => {
     services.auth
@@ -28,7 +28,6 @@ export const SignUpFormScreen = () => {
       })
       .catch(e => AppLogger.error("LOGIN", e))
       .then(async () => {
-        await refreshUser();
         machine.send("NEXT");
       });
   };

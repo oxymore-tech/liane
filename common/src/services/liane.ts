@@ -10,15 +10,16 @@ import {
   DayOfTheWeekFlag,
   LianeRecurrence,
   LianeState,
-  GeolocationLevel
-} from "./api";
+  GeolocationLevel,
+  PaginatedRequestParams
+} from "../api";
 import { FeatureCollection } from "geojson";
-import { JoinRequest } from "./event";
+import { JoinRequest } from "../event";
 import { HttpClient } from "./http";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
-  list(states: LianeState[], cursor?: string, pageSize?: number, asc?: boolean): Promise<PaginatedResponse<Liane>>;
+  list(states: LianeState[], pagination: PaginatedRequestParams): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   join(joinRequest: JoinRequest): Promise<JoinRequest>;
   match(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
@@ -56,13 +57,8 @@ export class LianeServiceClient implements LianeService {
   async getProof(id: string): Promise<FeatureCollection> {
     return await this.http.get<FeatureCollection>(`/liane/${id}/geolocation`);
   }
-  async list(
-    states: LianeState[] = ["NotStarted", "Started"],
-    cursor: string | undefined = undefined,
-    pageSize: number = 10,
-    asc: boolean | undefined = undefined
-  ) {
-    let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
+  async list(states: LianeState[] = ["NotStarted", "Started"], pagination: PaginatedRequestParams) {
+    /* let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
     if (cursor) {
       paramString += `&cursor=${cursor}`;
     }
@@ -71,8 +67,8 @@ export class LianeServiceClient implements LianeService {
     }
     if (asc !== undefined) {
       paramString += `&asc=${asc}`;
-    }
-    return await this.http.get<PaginatedResponse<Liane>>("/liane" + paramString);
+    }*/
+    return await this.http.get<PaginatedResponse<Liane>>("/liane", { params: { ...pagination, state: states } });
   }
 
   async post(liane: LianeRequest): Promise<Liane> {
