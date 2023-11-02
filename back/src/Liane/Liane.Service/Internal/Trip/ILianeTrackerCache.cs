@@ -1,9 +1,18 @@
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Liane.Service.Internal.Trip;
 
 public interface ILianeTrackerCache
 {
    ConcurrentDictionary<string, LianeTracker> Trackers { get; }
+   
+   ConcurrentDictionary<(string Liane, string Member), HashSet<string>> Subscribers { get; }
+}
+
+public class LianeTrackerCacheImpl : ILianeTrackerCache
+{
+  public ConcurrentDictionary<string, LianeTracker> Trackers { get; } = new ();
+  public  ConcurrentDictionary<(string Liane, string Member), HashSet<string>> Subscribers { get; } = new();
+  
 }

@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Image;
+using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
@@ -88,6 +89,7 @@ public static class Startup
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
     services.AddService<LianeRecurrenceServiceImpl>();
+    services.AddSingleton<ILianeTrackerCache>(new LianeTrackerCacheImpl());
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
@@ -319,6 +321,17 @@ public static class Startup
 
     var postgisMigrationService = app.ApplicationServices.GetRequiredService<PostgisUpdateService>();
     postgisMigrationService.Execute()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
+    
+    var lianeService = app.ApplicationServices.GetRequiredService<ILianeService>();
+    // Synchronize databases and cache 
+    lianeService.ForceSyncDatabase()
+      .ConfigureAwait(false)
+      .GetAwaiter()
+      .GetResult();
+    lianeService.SyncTrackers()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
