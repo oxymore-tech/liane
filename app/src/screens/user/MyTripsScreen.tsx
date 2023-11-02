@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
-import { UseQueryResult, useQueries, useQueryClient } from "react-query";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useQueries, useQueryClient, UseQueryResult } from "react-query";
 import { JoinLianeRequestDetailed, Liane, Ref } from "@/api";
 import { UnauthorizedError } from "@/api/exception";
 import { useAppNavigation } from "@/api/navigation";
@@ -13,13 +13,13 @@ import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";
-import { UserPicture } from "@/components/UserPicture";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { useObservable } from "@/util/hooks/subscription";
 import { useIsFocused } from "@react-navigation/native";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
+import { LianeGeolocation } from "@/api/service/location";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -42,14 +42,6 @@ const Header = () => {
           <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 8, height: 12, width: 12, position: "absolute", right: 3, top: 0 }} />
         )}
       </View>
-      {/*<TouchableOpacity
-        style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
-        onPress={() =>
-          // @ts-ignore
-          navigation.navigate("Profile", { user })
-        }>
-        <UserPicture size={32} url={user?.pictureUrl} id={user?.id} />
-      </TouchableOpacity>*/}
     </Row>
   );
 };
@@ -81,6 +73,17 @@ const MyTripsScreen = () => {
     }
     // do not add function 'showTutorial' to dependencies
   }, [focused, shouldShow]);
+
+  // Cancel pings if necessary
+  useEffect(() => {
+    LianeGeolocation.currentLiane().then(async current => {
+      if (!current) return;
+      const liane = await services.liane.get(current);
+      if (liane.state !== "Started") {
+        await LianeGeolocation.stopSendingPings();
+      }
+    });
+  }, []);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;

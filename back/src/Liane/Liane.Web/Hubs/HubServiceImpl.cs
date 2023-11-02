@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Trip;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -21,18 +21,19 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
   private readonly IUserService userService;
+  private readonly ILianeTrackerCache trackerCache;
 
   private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
 
   // TODO periodically clean disconnected users and outdated pairs (string Liane, string Member)
-  private readonly ConcurrentDictionary<(string Liane, string Member), HashSet<string>> locationTrackers = new();
   private readonly MemoryCache lastValueCache = new(new MemoryCacheOptions());
 
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache)
   {
     this.hubContext = hubContext;
     this.logger = logger;
     this.userService = userService;
+    this.trackerCache = trackerCache;
   }
 
   public Priority Priority => Priority.High;
@@ -118,7 +119,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   public Task<TrackedMemberLocation?> Subscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    locationTrackers.AddOrUpdate((liane.Id, member.Id), _ => new HashSet<string> { user }, (_, set) =>
+    trackerCache.Subscribers.AddOrUpdate((liane.Id, member.Id), _ => new HashSet<string> { user }, (_, set) =>
     {
       set.Add(user);
       return set;
@@ -129,21 +130,21 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    var found = locationTrackers.TryGetValue((liane.Id, member.Id), out var set);
+    var found = trackerCache.Subscribers.TryGetValue((liane.Id, member.Id), out var set);
     if (!found)
     {
       logger.LogWarning($"{user.Id} failed to unsubscribe from ({liane.Id}{member.Id})");
       return Task.CompletedTask;
     }
     set!.Remove(user);
-    if (set.Count == 0) locationTrackers.Remove((liane.Id, member.Id), out _);
+    if (set.Count == 0) trackerCache.Subscribers.Remove((liane.Id, member.Id), out _);
     return Task.CompletedTask;
   }
 
   public async Task Push(TrackedMemberLocation update)
   {
     lastValueCache.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
-    var contained = locationTrackers.TryGetValue((update.Liane, update.Member), out var list);
+    var contained = trackerCache.Subscribers.TryGetValue((update.Liane, update.Member), out var list);
     if (!contained)
     {
       return;

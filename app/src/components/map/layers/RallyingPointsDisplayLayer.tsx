@@ -1,29 +1,20 @@
 import { RallyingPoint, Ref } from "@/api";
 import React from "react";
 import { TilesUrl } from "@/api/http";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 
-export const RallyingPointsDisplayLayer = ({
-  type,
-  onSelect
-}: {
-  onSelect?: (rp: RallyingPoint) => void;
-  selected?: Ref<RallyingPoint> | undefined;
-  type?: "from" | "to" | undefined;
-}) => {
+export const RallyingPointsDisplayLayer = ({ onSelect }: { onSelect?: (rp: RallyingPoint) => void; selected?: Ref<RallyingPoint> | undefined }) => {
   const controller = useAppMapViewController();
   const url = TilesUrl + "/rallying_point_display";
-  const color = type ? AppColors.primaryColor : AppColors.black;
-  const image = type ? (type === "from" ? "pickup" : "deposit") : "rp";
   return (
     <MapLibreGL.VectorSource
       id={"all_rallying_points"}
       url={url}
       maxZoomLevel={14}
-      hitbox={{ width: 64, height: 64 }}
+      hitbox={{ width: 32, height: 32 }}
       onPress={
         onSelect
           ? async f => {
@@ -45,7 +36,7 @@ export const RallyingPointsDisplayLayer = ({
                 } else if (zoom < 12) {
                   newZoom = 12.1;
                 } else {
-                  newZoom = undefined;
+                  newZoom = zoom + 1;
                 }
                 await controller.setCenter(center, newZoom);
               }
@@ -55,23 +46,38 @@ export const RallyingPointsDisplayLayer = ({
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        minZoomLevel={7}
+        minZoomLevel={10.5}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
           textSize: 12,
-          textColor: color,
-          textHaloColor: "#fff",
-          textHaloWidth: 1.2,
+          textColor: AppColors.black,
+          textHaloColor: AppColors.white,
+          textHaloWidth: 1.5,
           textField: ["step", ["zoom"], "", 12, ["get", "label"]],
           textAllowOverlap: false,
+          iconAllowOverlap: true,
           textAnchor: "bottom",
           textOffset: [0, -3.4],
           textMaxWidth: 5.4,
           visibility: "visible",
           textOptional: true,
-          iconImage: image,
+          iconOptional: false,
+          iconImage: "deposit",
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+        }}
+      />
+      <MapLibreGL.CircleLayer
+        id="rp_symbols_small"
+        sourceLayerID={"rallying_point_display"}
+        minZoomLevel={5}
+        maxZoomLevel={10.5}
+        style={{
+          circleColor: AppColorPalettes.pink[500],
+          circleRadius: 4,
+          circleStrokeColor: AppColors.white,
+          circleStrokeWidth: 1,
+          visibility: "visible"
         }}
       />
     </MapLibreGL.VectorSource>

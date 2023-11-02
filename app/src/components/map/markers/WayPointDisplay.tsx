@@ -4,13 +4,14 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import React from "react";
 import { MarkerView } from "../AppMapView";
+import { AppStyles } from "@/theme/styles";
 
 export type WayPointDisplayType = "to" | "from" | "step" | "pickup" | "deposit";
 export const WayPointDisplay = ({
   rallyingPoint,
   type,
   active = true,
-  size = 14,
+  size = 16,
   offsetY
 }: // showIcon = true
 {
@@ -20,21 +21,21 @@ export const WayPointDisplay = ({
   size?: number;
   offsetY?: number;
 }) => {
-  let color: ColorValue = AppColors.white;
+  let color: ColorValue = AppColors.primaryColor;
   let icon;
 
   switch (type) {
     case "to":
-      icon = <AppIcon name={"flag"} color={active ? AppColors.primaryColor : AppColors.black} size={size} />;
+      icon = <AppIcon name={"flag"} color={AppColors.white} size={size} />;
       break;
     case "from":
-      icon = <AppIcon name={"pin"} color={active ? AppColors.primaryColor : AppColors.black} size={size} />;
+      icon = <AppIcon name={"pin"} color={AppColors.white} size={size} />;
       break;
     case "pickup":
-      icon = <AppIcon name={"car"} color={active ? AppColors.primaryColor : AppColors.black} size={size} />;
+      icon = <AppIcon name={"car"} color={AppColors.white} size={size} />;
       break;
     case "deposit":
-      icon = <AppIcon name={"directions-walk"} color={active ? AppColors.primaryColor : AppColors.black} size={size} />;
+      icon = <AppIcon name={"directions-walk"} color={AppColors.white} size={size} />;
       break;
     default:
       icon = undefined;
@@ -46,19 +47,22 @@ export const WayPointDisplay = ({
   return (
     <MarkerView id={rallyingPoint.id!} coordinate={[rallyingPoint.location.lng, rallyingPoint.location.lat]}>
       <View
-        style={{
-          padding: 4,
-          alignItems: "center",
-          justifyContent: "center",
-          width: type !== "step" && showIcon ? size + 10 : 8,
-          height: type !== "step" && showIcon ? size + 10 : 8,
-          backgroundColor: color,
-          borderRadius: 48,
-          borderColor: AppColors.white,
-          borderWidth: 1,
-          position: "relative",
-          top: offsetY
-        }}>
+        style={[
+          {
+            padding: 4,
+            alignItems: "center",
+            justifyContent: "center",
+            width: type !== "step" && showIcon ? size + 10 : 8,
+            height: type !== "step" && showIcon ? size + 10 : 8,
+            backgroundColor: color,
+            borderRadius: 48,
+            borderColor: AppColors.white,
+            borderWidth: 1,
+            position: "relative",
+            top: offsetY
+          },
+          AppStyles.shadow
+        ]}>
         {showIcon && icon}
       </View>
     </MarkerView>

@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Dapper;
 using GeoJSON.Text.Geometry;
@@ -43,7 +42,7 @@ public sealed partial class PostgisServiceImpl
     public async Task Dispose()
     {
       using var connection = postgis.NewConnection();
-      await connection.ExecuteAsync("DELETE FROM ongoing_trip WHERE liane_id = @id", new { id });
+      await connection.ExecuteAsync("DELETE FROM ongoing_trip WHERE id = @id", new { id });
     }
   }
 }

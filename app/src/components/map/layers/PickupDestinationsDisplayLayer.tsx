@@ -56,7 +56,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
                 } else if (zoom < 12) {
                   newZoom = 12.1;
                 } else {
-                  newZoom = undefined;
+                  newZoom = zoom + 1;
                 }
                 await controller.setCenter(center, newZoom);
               }
@@ -95,6 +95,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
           textMaxWidth: 5.4,
           visibility: "visible",
           textOptional: true,
+          iconOptional: false,
           iconImage: ["case", ["==", ["get", "point_type"], "suggestion"], "deposit", "rp"],
           iconAnchor: "bottom",
           iconSize: ["step", ["zoom"], 0.25, 8, 0.3]
@@ -118,6 +119,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
           textMaxWidth: 5.4,
           visibility: "visible",
           textOptional: false,
+          iconOptional: false,
           iconAllowOverlap: true,
           iconImage: "deposit_cluster",
           iconAnchor: "bottom",

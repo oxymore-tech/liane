@@ -146,7 +146,6 @@ export const PublishScreenView = () => {
           return true;
         }}>
         <SelectOnMapView
-          type={isFrom ? "from" : "to"}
           onSelect={p => machine.send("UPDATE", { data: { [isFrom ? "from" : "to"]: p } })}
           title={"Choisissez un point " + (isFrom ? "de départ" : "d'arrivée")}
         />
@@ -243,7 +242,7 @@ export const PublishScreenView = () => {
             ]);
           }
         }}
-        openMap={() => machine.send("MAP", { data: state.context.request.from ? "to" : "from" })}
+        openMap={data => machine.send("MAP", { data })}
       />
       <Animated.View style={[styles.stepperIndicatorBaseStyle, stepperIndicatorStyle]} />
 
