@@ -12,7 +12,7 @@ import { ActionListItem } from "@/components/ActionItem";
 import { useAppNavigation } from "@/api/navigation";
 import { capitalize, User } from "@liane/common";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { formatMonthYear } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { LineSeparator } from "@/components/Separator";
@@ -58,7 +58,7 @@ const ProfileView = ({ user }: { user: User }) => {
       </Center>
       <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
         {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
-        <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
+        <AppText style={styles.data}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
         {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
         <DebugIdView object={user} />
       </Column>

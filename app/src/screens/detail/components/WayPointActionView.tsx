@@ -9,7 +9,7 @@ import { showLocation } from "react-native-map-link";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import { formatTime } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { UserPicture } from "@/components/UserPicture";
 
 const EstimatedDelayDisplay = ({ locationUpdate, initialTime }: { locationUpdate: TrackedMemberLocation; initialTime: Date }) => {
@@ -29,7 +29,7 @@ const EstimatedDelayDisplay = ({ locationUpdate, initialTime }: { locationUpdate
     <Row style={{ alignItems: "center" }}>
       <AppIcon name={"arrowhead-right-outline"} size={16} color={AppColorPalettes.gray[500]} />
       {isOnTime && <AppText style={{ color: AppColorPalettes.gray[500] }}>Départ à l'heure prévue</AppText>}
-      {!isOnTime && <AppText style={{ color: AppColorPalettes.gray[500] }}>Départ estimé à {formatTime(estimated)}</AppText>}
+      {!isOnTime && <AppText style={{ color: AppColorPalettes.gray[500] }}>Départ estimé à {AppLocalization.formatTime(estimated)}</AppText>}
     </Row>
   );
 };

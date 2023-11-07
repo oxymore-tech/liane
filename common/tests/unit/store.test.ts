@@ -1,4 +1,5 @@
-import { sync } from "../src/util/store";
+import { sync } from "../../src";
+import { describe, expect, test } from "vitest";
 
 describe("store", () => {
   test("should sync lists", () => {

@@ -11,7 +11,7 @@ export type JoinRequest = Readonly<{
   seats: number;
   takeReturnTrip: boolean;
   message: string;
-  geolocationLevel: GeolocationLevel;
+  geolocationLevel: GeolocationLevel | null;
 }>;
 
 export type MemberAccepted = Readonly<{

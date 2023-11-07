@@ -1,5 +1,5 @@
 import { capitalize, Event, Notification, UnionUtils } from "@liane/common";
-import { toRelativeTimeString } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -13,7 +13,7 @@ export const NotificationItem = ({ notification: item, read }: { notification: N
   const { user } = useContext(AppContext);
   const userIndex = item.recipients.findIndex(r => r.user === user?.id);
   const seen = userIndex >= 0 && !!item.recipients[userIndex].seenAt;
-  const datetime = capitalize(toRelativeTimeString(new Date(item.createdAt!)));
+  const datetime = capitalize(AppLocalization.toRelativeTimeString(new Date(item.createdAt!)));
   const { navigation } = useAppNavigation();
 
   let icon: IconName = "message-square-outline";

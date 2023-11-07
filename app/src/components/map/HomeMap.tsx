@@ -1,6 +1,6 @@
 import { Observable, Subject } from "rxjs";
-import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
-import { DisplayBoundingBox, getBoundingBox, getPoint, Liane, Ref, useObservable } from "@liane/common";
+import { FeatureCollection, Polygon, Position } from "geojson";
+import { DisplayBoundingBox, getBoundingBox, getPoint, Liane, Ref } from "@liane/common";
 import React, { PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
@@ -20,6 +20,7 @@ import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
+import { useObservable } from "@/util/hooks/subscription";
 
 export type HomeMapProps = {
   onMovingStateChanged: (moving: boolean) => void;

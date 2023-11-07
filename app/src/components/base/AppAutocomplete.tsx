@@ -5,7 +5,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Identity } from "@liane/common";
-import { useDebounceValue } from "@liane/common";
+import { useDebounceValue } from "@/util/hooks/debounce";
 
 export interface AppAutocompleteProps<T extends Identity> extends Omit<Omit<AppTextInputProps, "onChange">, "value"> {
   value?: T;

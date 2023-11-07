@@ -97,14 +97,15 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
       query = query.OrderBy(rp => rp.Location.Distance(center.Value));
     }
 
-    var total = await connection.QuerySingleAsync<int>("select count(*) from rallying_point");
+    var total = await connection.QueryCountAsync(Query.Select<RallyingPoint>()
+      .Where(filter));
     var results = await connection.QueryAsync(query);
-    return new PaginatedResponse<RallyingPoint>(limit, null, results, total);
+    return new PaginatedResponse<RallyingPoint>(limit, null, results, (int)total);
   }
 
   private static string ToSearchPattern(string search)
   {
-    var words = NonAlphanumeric.Replace(search, " ")
+    var words = NonAlphanumeric.Replace(search, ".")
       .Trim()
       .ToLower()
       .Split();
@@ -112,7 +113,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return string.Concat(words.Select(w =>
     {
       var removeAccent = AccentedChars.Aggregate(w, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
-      return $@"\m{removeAccent}.*";
+      return $@"\m{removeAccent}";
     }));
   }
 

@@ -1,4 +1,5 @@
-import { getBoundingBox } from "../src/util/geometry";
+import { getBoundingBox } from "../../src";
+import { describe, expect, test } from "vitest";
 
 describe("geometry", () => {
   test("should compute bounding box", () => {

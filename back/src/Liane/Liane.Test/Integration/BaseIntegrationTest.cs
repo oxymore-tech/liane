@@ -99,6 +99,7 @@ public abstract class BaseIntegrationTest
     services.AddService(Moq.Mock.Of<ILianeMemberTracker>());
     services.AddService(Moq.Mock.Of<IImageService>());
     services.AddService<LianeServiceImpl>();
+    services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<UserStatServiceImpl>();
     services.AddService<PushServiceImpl>();

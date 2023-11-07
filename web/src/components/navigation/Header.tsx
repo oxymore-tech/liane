@@ -38,7 +38,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
   }, [machine, refreshUser, state]);
 
   const hasFailed = state.toStrings().some(x => x.includes("failure"));
-  const handleEnterKey = e => {
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       machine.send(hasFailed ? "RETRY" : "NEXT");
     }
@@ -79,7 +79,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
           </div>
         </div>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className="justify-start flex-row-reverse gap-2">
         <Button
           gradientDuoTone="pinkToOrange"
           isProcessing={state.toStrings().some(x => x.includes("pending"))}
@@ -106,7 +106,7 @@ function LogoutModal({ show, onClosed }: { onClosed: () => void; show: boolean }
           <p>Voulez-vous vraiment fermer votre session ?</p>
         </div>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className="justify-start flex-row-reverse gap-2">
         <Button
           gradientDuoTone="pinkToOrange"
           onClick={() => {
@@ -114,9 +114,6 @@ function LogoutModal({ show, onClosed }: { onClosed: () => void; show: boolean }
             onClosed?.();
           }}>
           Déconnexion
-        </Button>
-        <Button color="gray" onClick={onClosed}>
-          Annuler
         </Button>
       </Modal.Footer>
     </Modal>
@@ -132,15 +129,16 @@ export function Header({}: HeaderProps) {
 
   return (
     <>
-      <Navbar fluid>
-        <Navbar.Brand className="flex-none text-xl font-semibold dark:text-white" href="#">
-          Liane
+      <Navbar fluid className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 z-[8] border-b">
+        <Navbar.Brand className="flex-none text-xl font-semibold dark:text-white text-orange-800 h-12" href="#">
+          <svg className="mr-3 h-6 sm:h-9 fill-[#F25757] dark:fill-white" height="24" viewBox="0 0 512 95" aria-label="Liane Brand Logo">
+            <use href="/logo.svg#img"></use>
+          </svg>
         </Navbar.Brand>
         <div className="flex md:order-2">
           <Button gradientDuoTone="pinkToOrange" onClick={() => setModalVisible(true)}>
             {user ? "Déconnexion" : "Connexion"}
           </Button>
-          <Navbar.Toggle />
         </div>
       </Navbar>
       <LogoutModal onClosed={onClose} show={modalVisible && !!user} />

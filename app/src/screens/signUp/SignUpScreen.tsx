@@ -17,7 +17,8 @@ import { AppStyles } from "@/theme/styles";
 import { PasswordInput } from "@/screens/signUp/PasswordInput";
 import { CreateLoginMachine, SignUpStateMachineInterpreter } from "@liane/common";
 import { AppLogger } from "@/api/logger";
-import { AppEnv } from "@/api/env";
+import { RNAppEnv } from "@/api/env";
+import { Center } from "@/components/base/AppLayout";
 
 const t = scopedTranslate("SignUp");
 
@@ -41,9 +42,9 @@ const SignUpPage = () => {
       "INIT",
       state.context,
       state.value,
-      AppEnv.raw.TEST_ACCOUNT,
+      RNAppEnv.raw.TEST_ACCOUNT,
       state.context.phone.value,
-      state.context.phone.value === AppEnv.raw.TEST_ACCOUNT
+      state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
     );
     machine.send(state.toStrings().some(x => x.includes("failure")) ? "RETRY" : "NEXT");
   };
@@ -57,7 +58,7 @@ const SignUpPage = () => {
         <AppText numberOfLines={-1} style={styles.helperText}>
           {state.matches("phone")
             ? t("Veuillez entrer votre numéro de téléphone")
-            : state.context.phone.value === AppEnv.raw.TEST_ACCOUNT
+            : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
             ? t("Entrez votre mot de passe")
             : t("Entrez le code reçu par SMS")}
         </AppText>
@@ -69,7 +70,7 @@ const SignUpPage = () => {
             submit={submit}
             submitting={submitting}
           />
-        ) : state.context.phone.value === AppEnv.raw.TEST_ACCOUNT ? (
+        ) : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT ? (
           <PasswordInput code={state.context.code.value || ""} onChange={set} onValidate={submit} />
         ) : (
           <CodeInput
@@ -101,9 +102,10 @@ const SignUpScreen = () => {
         sendCode: async (phone, code) => {
           const pushToken = await getPushToken();
           return await services.auth.login({ phone, code, pushToken });
-        }
+        },
+        signUpUser: payload => services.auth.updateUserInfo(payload)
       },
-      AppEnv.raw.TEST_ACCOUNT
+      RNAppEnv.raw.TEST_ACCOUNT
     )
   );
   const machine = useInterpret(m);
@@ -124,7 +126,9 @@ const SignUpScreen = () => {
       {["code", "phone"].some(state.matches) && <SignUpPage />}
       {state.matches("form") && <SignUpFormScreen />}
       {!["code", "phone", "form"].some(state.matches) && (
-        <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
+        <Center style={[AppStyles.fullHeight]}>
+          <ActivityIndicator color={AppColors.primaryColor} size="large" />
+        </Center>
       )}
     </SignUpLianeContext.Provider>
   );

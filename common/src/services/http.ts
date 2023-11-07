@@ -1,7 +1,6 @@
 import { Mutex } from "async-mutex";
 import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "../exception";
 import { AuthResponse } from "../api";
-import { AppEnv } from "../env";
 import { AppLogger } from "../logger";
 import { AppStorage } from "../storage";
 import urlJoin from "url-join";
@@ -9,7 +8,11 @@ import urlJoin from "url-join";
 export class HttpClient {
   private readonly refreshTokenMutex = new Mutex();
 
-  constructor(private env: AppEnv, private logger: AppLogger, private storage: AppStorage) {}
+  constructor(
+    private baseUrl: string,
+    private logger: AppLogger,
+    private storage: AppStorage
+  ) {}
 
   get<T>(uri: string, options: QueryAsOptions = {}): Promise<T> {
     return this.fetchAndCheckAs<T>("GET", uri, options);
@@ -76,9 +79,7 @@ export class HttpClient {
     const url = this.formatUrl(uri, options);
     const formattedBody = this.formatBodyAsJsonIfNeeded(body);
     const formattedHeaders = await this.headers(body);
-    if (this.env.isDev) {
-      this.logger.debug("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
-    }
+    this.logger.debug("HTTP", `Fetch API ${method} "${url}"`, formattedBody ?? "");
     const response = await fetch(url, {
       headers: formattedHeaders,
       method,
@@ -125,9 +126,8 @@ export class HttpClient {
         await this.refreshTokenMutex.waitForUnlock();
       } else {
         return this.refreshTokenMutex.runExclusive(async () => {
-          if (this.env.isDev) {
-            this.logger.debug("HTTP", "Try refresh token...");
-          }
+          this.logger.debug("HTTP", "Try refresh token...");
+
           // Call refresh token endpoint
           try {
             const res = await Promise.race([
@@ -167,7 +167,7 @@ export class HttpClient {
   }
 
   private formatUrl(uri: string, { params }: QueryAsOptions) {
-    const url = new URL(urlJoin(this.env.baseUrl, uri));
+    const url = new URL(urlJoin(this.baseUrl, uri));
 
     if (params) {
       for (const [k, v] of Object.entries(params)) {

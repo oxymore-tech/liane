@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Util;
@@ -71,31 +69,6 @@ public static class EnumerableExtensions
     }
 
     return outs.ToImmutableList();
-  }
-
-  public static PaginatedResponse<T> Paginate<T, TCursor>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
-    where T : IIdentity where TCursor : Cursor
-  {
-    var totalCount = collection.Count;
-    IEnumerable<T> enumerable = collection;
-
-    enumerable = enumerable.Sort(pagination.SortAsc, paginationField.Compile());
-
-    if (pagination.Cursor is not null)
-    {
-      var filter = pagination.Cursor.ToFilter(pagination.SortAsc, paginationField);
-      enumerable = enumerable.Where(e => filter.Compile()(e));
-    }
-
-    var paginated = enumerable
-      .Take(pagination.Limit + 1)
-      .ToImmutableList();
-    var limited = paginated.Take(pagination.Limit)
-      .ToImmutableList();
-    var last = limited.LastOrDefault();
-    var limit = limited.Count;
-    var next = paginated.Count > limited.Count && last is not null ? Cursor.From<TCursor, T>(last, paginationField) : null;
-    return new PaginatedResponse<T>(limit, next, limited, totalCount);
   }
 
   private static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)

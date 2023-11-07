@@ -20,7 +20,7 @@ export function useDebounce<T>(
   run: (args: T) => void;
   isPending: boolean;
 } {
-  const callbackRef = React.useRef<number | undefined>();
+  const callbackRef = React.useRef<ReturnType<typeof setTimeout> | undefined>();
   const [pending, setPending] = React.useState(false);
 
   const run = (args: T) => {

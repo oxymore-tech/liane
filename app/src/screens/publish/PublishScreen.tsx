@@ -43,7 +43,7 @@ import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
 import { AppStorage } from "@/api/storage";
-import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 
 interface StepProps<T> {
   editable: boolean;
@@ -293,12 +293,12 @@ const DateStepView = ({
             {isRecurrent ? (
               <Row style={{ flexShrink: 1, flexGrow: 1 }}>
                 <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>
-                  Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
+                  Les {AppLocalization.formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
                 </AppText>
-                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {formatTime(date)}</AppText>
+                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {AppLocalization.formatTime(date)}</AppText>
               </Row>
             ) : (
-              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatShortMonthDay)}</AppText>
+              <AppText style={styles.stepResume}>Départ {AppLocalization.toRelativeTimeString(date, AppLocalization.formatShortMonthDay)}</AppText>
             )}
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>
@@ -434,7 +434,7 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
         {!editable && (
           <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
             <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppText style={styles.stepResume}>{date ? "Retour à " + formatTime(date) : "Pas de retour"}</AppText>
+              <AppText style={styles.stepResume}>{date ? "Retour à " + AppLocalization.formatTime(date) : "Pas de retour"}</AppText>
               <AppIcon name={"edit-2"} color={AppColors.white} />
             </Row>
           </Animated.View>

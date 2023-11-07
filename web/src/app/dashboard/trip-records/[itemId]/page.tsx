@@ -2,29 +2,36 @@
 import { useQuery } from "react-query";
 import { useAppServices } from "@/components/ContextProvider";
 import Map, { useMapContext } from "@/components/map/Map";
-import React, { useEffect, useMemo, useState } from "react";
-import maplibregl from "maplibre-gl";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FeatureCollection } from "geojson";
-import { RallyingPoint } from "@liane/common";
+import { LianeMember, RallyingPoint, asPoint } from "@liane/common";
 import { Card } from "flowbite-react";
 import { TripRecord } from "@/api/api";
-import { TimelineChart, TimelineData } from "@/components/charts/timeline/Timeline";
+import { dispatchHighlightPointEvent, TimelineChart, TimelineData } from "@/components/charts/timeline/Timeline";
 import { IconButton } from "@/components/base/IconButton";
 import { useRouter } from "next/navigation";
+import { dispatchCustomEvent, useEvent } from "@/utils/hooks";
+import { RouteLayer } from "@/components/map/layers/RouteLayer";
+import { MarkersLayer } from "@/components/map/layers/base/MarkersLayer";
+import { FitFeatures } from "@/components/map/FitFeatures";
+import { useLocalization } from "@/api/intl";
 
 const TripView = ({ record }: { record: TripRecord }) => {
+  const WebLocalization = useLocalization();
   const trip = record.wayPoints[0].rallyingPoint.city + " → " + record.wayPoints[record.wayPoints.length - 1].rallyingPoint.city;
   const router = useRouter();
   return (
-    <div className="px-4 py-2 absolute z-50">
+    <div className="px-4 py-2 absolute z-[5]">
       <Card>
         <div className="grid gap-4" style={{ gridTemplateColumns: "auto 1fx", gridTemplateRows: "auto 1fx" }}>
           <IconButton className={"row-start-1 col-start-1"} aria-label="Close" icon="close" onClick={() => router.back()} />
 
           <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white row-start-1 col-start-2">{trip}</h5>
           <div className="font-normal text-gray-700 dark:text-gray-400 col-start-2 row-start-2">
-            <p className="font-normal text-gray-700 dark:text-gray-400">{new Date(record.startedAt).toLocaleDateString()}</p>
-            <p className="font-normal text-gray-700 dark:text-gray-400 ">Trajet démarré à {new Date(record.startedAt).toLocaleTimeString()}</p>
+            <p className="font-normal text-gray-700 dark:text-gray-400">{WebLocalization.formatDate(new Date(record.startedAt))}</p>
+            <p className="font-normal text-gray-700 dark:text-gray-400 ">
+              Trajet démarré à {WebLocalization.formatTime24h(new Date(record.startedAt))}
+            </p>
           </div>
         </div>
       </Card>
@@ -32,133 +39,190 @@ const TripView = ({ record }: { record: TripRecord }) => {
   );
 };
 
-const Legend = ({ users, startDate, endDate }: { users: TimelineData; startDate: Date; endDate: Date }) => {
-  return (
-    <div className="px-4 py-6 absolute bottom-0 z-50 w-3/4">
-      <Card>
-        <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Membres</h5>
-        <TimelineChart data={users} startDate={startDate} endDate={endDate} />
-      </Card>
-    </div>
-  );
-};
+type RecordUserData = Omit<Omit<LianeMember, "from">, "to"> & { from: RallyingPoint; to: RallyingPoint };
 
+const milliInADay = 3600 * 24 * 1000;
+const generateId = (userIndex: number, startDate: Date, d: Date) => {
+  // Use a function returning a positive integer as it is required for feature ids in maplibre
+  // The result is within int32 range for a delta of less than 24 hours and less than a dozen users
+  return userIndex * milliInADay + (d.getTime() - startDate.getTime()) + 1;
+};
 export default function TripRecordItemPage({ params }: { params: { itemId: string } }) {
+  const WebLocalization = useLocalization();
   const services = useAppServices()!;
   const { data: pings } = useQuery(["record_pings", params.itemId], () => services.record.getRecordPings(params.itemId));
   const { data: record } = useQuery(["liane", params.itemId], () => services.record.get(params.itemId));
   const from = record?.wayPoints[0];
   const to = record ? record.wayPoints[record.wayPoints.length - 1] : undefined;
   const [userList, setUserList] = useState<string[]>([]);
-  const users = useMemo(() => {
-    if (!record || !pings) return [] as TimelineData;
+  const startDate = useMemo(() => (record ? new Date(record.startedAt) : null), [record]);
+  const users: TimelineData<RecordUserData> = useMemo(() => {
+    if (!record || !pings) return [];
 
-    return userList.map((u, i) => ({
-      user: record.members.find(m => m.user.id === u)!.user,
-      color: colors[i],
-      points: pings.features.filter(f => f.properties.user === u).map(f => new Date(f.properties.at))
-    }));
+    return userList.map((u, i) => {
+      const member = record.members.find(m => m.user.id === u)!;
+      return {
+        data: {
+          ...member,
+          to: record.wayPoints.find(w => w.rallyingPoint.id === member.to)!.rallyingPoint,
+          from: record.wayPoints.find(w => w.rallyingPoint.id === member.from)!.rallyingPoint
+        },
+        color: colors[i],
+        points: pings.features.filter(f => f.properties.user === u).map(f => new Date(f.properties.at))
+      };
+    });
   }, [userList, record, pings]);
+  const coloredFeatures = useMemo(() => {
+    let users: string[] = [];
+    if (!pings || !record) {
+      return null;
+    }
+    const coloredFeatures = {
+      ...pings,
+      features: pings.features.map((f, i) => {
+        let foundIndex = users.indexOf(f.properties.user);
+        if (foundIndex < 0) {
+          foundIndex = users.length;
+          users.push(f.properties.user);
+        }
+        const date = new Date(f.properties.at);
+        return {
+          ...f,
+          id: generateId(foundIndex, startDate!, date),
+          properties: { ...f.properties, color: colors[foundIndex] }
+        };
+      })
+    };
+    setUserList(users);
+    return coloredFeatures;
+  }, [pings, record, startDate]);
+
   return (
-    <div className="grow w-full">
+    <div className="grow w-full relative">
       {!!record && <TripView record={record} />}
       {!!record && (
-        <Legend startDate={new Date(record.startedAt)} endDate={record.finishedAt ? new Date(record.finishedAt) : new Date(to!.eta)} users={users} />
+        <div className="px-4 py-6 absolute bottom-0 z-[5] w-full">
+          <Card>
+            <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Membres</h5>
+            <TimelineChart
+              data={users}
+              startDate={startDate!}
+              endDate={record.finishedAt ? new Date(record.finishedAt) : new Date(to!.eta)}
+              idExtractor={(m, date) =>
+                generateId(
+                  userList.findIndex(u => u === m.user.id!),
+                  startDate!,
+                  date
+                )
+              }
+              labelExtractor={m => m.user.pseudo}
+              renderTooltip={m => {
+                return (
+                  <div>
+                    <span style={{ whiteSpace: "nowrap" }}>{m.from.label + " → " + m.to.label}</span>
+                    <br />
+                    {!!m.departure && (
+                      <>
+                        <span>Départ: {WebLocalization.formatTime24h(new Date(m.departure))}</span>
+                        <br />
+                      </>
+                    )}
+                    {!!m.cancellation && (
+                      <>
+                        <span>Annulation: {WebLocalization.formatTime24h(new Date(m.cancellation))}</span>
+                        <br />
+                      </>
+                    )}
+                    <span>Géolocalisation: {m.geolocationLevel !== "None" ? "oui" : "non"}</span>
+                    <br />
+                  </div>
+                );
+              }}
+              onHoveredStateChanged={(id, hovered) => {
+                dispatchHighlightMarkerEvent({ id, highlight: hovered });
+              }}
+              onClick={id => dispatchCenterMarkerEvent({ id })}
+            />
+          </Card>
+        </div>
       )}
       <Map center={from?.rallyingPoint.location}>
-        {from && to && <RouteLayer from={from.rallyingPoint} to={to.rallyingPoint} />}
-        {pings && <MarkersLayer features={pings} setUserList={setUserList} />}
+        {!!record && <RouteLayer points={record.wayPoints.map(w => w.rallyingPoint)} />}
+        {!!coloredFeatures && <PingsMarkersLayer features={coloredFeatures!} />}
+        {!!record && !!coloredFeatures && (
+          <FitFeatures features={[...coloredFeatures.features, ...record.wayPoints.map(w => asPoint(w.rallyingPoint.location))]} />
+        )}
       </Map>
     </div>
   );
 }
 const colors = ["#0080ff", "#522b1d", "#00cc54", "#ff0088", "#ff3c00"];
-function MarkersLayer({
-  features,
-  setUserList
-}: {
-  features: FeatureCollection<GeoJSON.Point, { user: string; at: string }>;
-  setUserList: (users: string[]) => void;
-}) {
+
+export type HighlightPingMarkerEvent = { id: number; highlight: boolean };
+const HighlightPingMarkerEventName = "highlightPingMarker";
+export type CenterPingMarkerEvent = { id: number };
+const CenterPingMarkerEventName = "centerPingMarker";
+export const dispatchHighlightMarkerEvent = (payload: HighlightPingMarkerEvent) => dispatchCustomEvent(HighlightPingMarkerEventName, payload);
+export const dispatchCenterMarkerEvent = (payload: CenterPingMarkerEvent) => dispatchCustomEvent(CenterPingMarkerEventName, payload);
+function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.Point, { user: string; at: string; color: string }> }) {
   const map = useMapContext();
+  const highlightedIds = useRef<null | number>(null);
 
-  useEffect(() => {
-    if (!map.current) return;
-    let users: string[] = [];
-    const markers = features.features.map(f => {
-      let foundIndex = users.indexOf(f.properties.user);
-      if (foundIndex < 0) {
-        foundIndex = users.length;
-        users.push(f.properties.user);
-      }
-
-      const popup = new maplibregl.Popup({ offset: 25, className: "liane-popup" }).setHTML(
-        `<div class="dark:bg-gray-800 py-5 px-4 rounded"><p>${new Date(f.properties.at).toLocaleString()}</p></div>`
-      );
-
-      return new maplibregl.Marker({ color: colors[foundIndex] })
-        .setLngLat([f.geometry.coordinates[0], f.geometry.coordinates[1]])
-        .setPopup(popup)
-        .addTo(map.current!);
-    });
-    setUserList(users);
-    return () => markers.forEach(m => m.remove());
-  }, [features, map, setUserList]);
-  return <></>;
-}
-
-function RouteLayer({ from, to }: { from: RallyingPoint; to: RallyingPoint }) {
-  const map = useMapContext();
-  const services = useAppServices()!;
-  const id = "route_" + from.id + "_" + to.id;
-  const { data: route } = useQuery(id, () => {
-    return services.routing.getRoute([from.location, to.location]);
+  useEvent(HighlightPingMarkerEventName, (e: HighlightPingMarkerEvent) => {
+    map.current?.setFeatureState({ source: "pings", id: e.id }, { hover: e.highlight });
   });
-  const mapFeatures = useMemo(() => {
-    if (!route || route.geometry.coordinates.length === 0) {
-      return undefined;
-    }
-
-    const features: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features: route.geometry.coordinates.map((line): GeoJSON.Feature => {
-        return {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: line
-          }
-        };
-      })
-    };
-
-    return features;
-  }, [route]);
+  useEvent(CenterPingMarkerEventName, (e: CenterPingMarkerEvent) => {
+    const f = features.features.find(f => f.id === e.id)!;
+    map.current?.flyTo({ center: [f.geometry.coordinates[0], f.geometry.coordinates[1]], animate: true });
+  });
 
   useEffect(() => {
-    map.current?.once("load", () => {
-      if (!map.current || !mapFeatures || map.current?.getSource(id)) {
-        return;
-      }
-      map.current?.addSource(id, {
+    const mmap = map.current;
+    mmap?.once("load", () => {
+      if (!mmap || mmap.getSource("pings")) return;
+
+      mmap?.addSource("pings", {
         type: "geojson",
-        data: mapFeatures
+        data: features
       });
-      map.current?.addLayer({
-        id,
-        source: id,
-        type: "line",
-        paint: {
-          "line-color": "#131870",
-          "line-width": 3
-        }
-      });
+
       return () => {
-        map.current?.removeLayer(id);
-        map.current?.removeSource(id);
+        if (!mmap?.loaded()) return;
+        mmap?.removeSource("pings");
       };
     });
-  }, [map, id, mapFeatures]);
-  return <></>;
+  }, [features, map]);
+
+  const component = useMemo(() => {
+    return (
+      <MarkersLayer
+        id={"pings"}
+        source={"pings"}
+        onMouseEnterPoint={e => {
+          if (!e.features || e.features.length === 0) return;
+          const f = e.features![0];
+          highlightedIds.current = f.id as number;
+          dispatchHighlightPointEvent({ id: highlightedIds.current, highlight: true });
+          map.current?.setFeatureState({ source: "pings", id: highlightedIds.current }, { hover: true });
+        }}
+        onMouseLeavePoint={e => {
+          if (!highlightedIds.current) return;
+          dispatchHighlightPointEvent({ id: highlightedIds.current, highlight: false });
+          map.current?.setFeatureState({ source: "pings", id: highlightedIds.current }, { hover: false });
+          highlightedIds.current = null;
+        }}
+        props={{
+          layout: {
+            "icon-size": 0.8
+          },
+          paint: {
+            "icon-color": ["get", "color"],
+            "icon-halo-color": "#0F172A",
+            "icon-halo-width": ["case", ["boolean", ["feature-state", "hover"], false], 1.5, 0.6]
+          }
+        }}
+      />
+    );
+  }, [map]);
+  return component;
 }

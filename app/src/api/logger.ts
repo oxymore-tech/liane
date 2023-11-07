@@ -42,7 +42,9 @@ const namespaceLoggers = (() => {
 
 export class ReactNativeLogger implements CommonAppLogger<LoggerNamespace> {
   debug(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].debug(...args);
+    if (__DEV__) {
+      namespaceLoggers[tag].debug(...args);
+    }
   }
 
   info(tag: LoggerNamespace, ...args: any[]): void {

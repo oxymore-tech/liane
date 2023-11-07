@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, useQueryClient, UseQueryResult } from "react-query";
-import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError, useObservable } from "@liane/common";
+import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
@@ -18,6 +18,7 @@ import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { useIsFocused } from "@react-navigation/native";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { LianeGeolocation } from "@/api/service/location";
+import { useObservable } from "@/util/hooks/subscription";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -82,7 +83,9 @@ const MyTripsScreen = () => {
   // Cancel pings if necessary
   useEffect(() => {
     LianeGeolocation.currentLiane().then(async current => {
-      if (!current) return;
+      if (!current) {
+        return;
+      }
       const liane = await services.liane.get(current);
       if (liane.state !== "Started") {
         await LianeGeolocation.stopSendingPings();

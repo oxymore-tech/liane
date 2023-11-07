@@ -1,8 +1,10 @@
 import { AppLogger } from "@liane/common";
+import { AppEnv } from "@liane/common/src";
 
 export class ConsoleAppLogger implements AppLogger {
+  constructor(private env: AppEnv) {}
   debug(tag: string, args: any): void {
-    console.debug(tag, args);
+    if (this.env.isDev) console.debug(tag, args);
   }
 
   error(tag: string, args: any): void {

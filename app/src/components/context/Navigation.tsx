@@ -22,8 +22,6 @@ import HomeScreen from "@/screens/home/HomeScreen";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-
-import { useObservable } from "@liane/common";
 import { AppStyles } from "@/theme/styles";
 import { Row } from "@/components/base/AppLayout";
 import { NavigationScreenTitles, useAppNavigation } from "@/api/navigation";
@@ -35,6 +33,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { NavigationState, ParamListBase, PartialState, Route } from "@react-navigation/native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import { useObservable } from "@/util/hooks/subscription";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

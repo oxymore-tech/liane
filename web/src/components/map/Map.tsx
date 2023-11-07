@@ -1,26 +1,27 @@
 "use client";
 
-import React, { createContext, PropsWithChildren, useContext, useEffect, useRef } from "react";
+import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { DEFAULT_TLS, getMapStyleUrl, LatLng } from "@liane/common";
 import { NodeAppEnv } from "@/api/env";
+import { useElementSize } from "@/utils/hooks";
 
 export type MapProps = {
-  // onZoomEnd?: (zoom: number) => void;
-  // onMoveEnd?: (center: LatLng) => void;
   center?: LatLng;
+  onZoom?: (zoom: number) => void;
 } & PropsWithChildren;
 
 // @ts-ignore
-const MapContext = createContext<React.MutableRefObject<maplibregl.Map | undefined>>();
+const MapContext = createContext<React.MutableRefObject<maplibregl.Map | null>>();
 
 export const useMapContext = () => {
   return useContext(MapContext);
 };
-function Map({ children, center }: MapProps) {
+const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, center, onZoom }: MapProps, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map>();
+  const map = useRef<maplibregl.Map | null>(null);
+  useImperativeHandle<maplibregl.Map | null, maplibregl.Map | null>(ref, () => map.current);
   useEffect(() => {
     if (map.current) return;
     map.current = new maplibregl.Map({
@@ -29,8 +30,20 @@ function Map({ children, center }: MapProps) {
       center: center ? [center.lng, center.lat] : [DEFAULT_TLS.lng, DEFAULT_TLS.lat],
       zoom: 12
     });
-    map.current.addControl(new maplibregl.NavigationControl(), "top-right");
+    const control = new maplibregl.NavigationControl();
+    map.current.addControl(control, "top-right");
   }, [mapContainer]);
+
+  useEffect(() => {
+    if (!onZoom) return;
+    const listener = () => {
+      onZoom(map.current!.getZoom());
+    };
+    map.current?.on("zoom", listener);
+    return () => {
+      map.current?.off("zoom", listener);
+    };
+  }, [onZoom]);
 
   useEffect(() => {
     if (!map.current || !center) return;
@@ -38,11 +51,12 @@ function Map({ children, center }: MapProps) {
   }, [center]);
 
   return (
-    <div className="h-full w-full">
-      <div ref={mapContainer} className="h-full w-full" />
+    <div ref={mapContainer} className="h-full w-full">
       <MapContext.Provider value={map}>{children}</MapContext.Provider>
     </div>
   );
-}
+});
+
+Map.displayName = "Map";
 
 export default Map;

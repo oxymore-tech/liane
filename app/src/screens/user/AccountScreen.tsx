@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { formatMonthYear } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -30,7 +30,7 @@ export const AccountScreen = () => {
         </Center>
 
         <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-          <AppText style={styles.userDateContainer}>Membre depuis {capitalize(formatMonthYear(new Date(user!.createdAt!)))}</AppText>
+          <AppText style={styles.userDateContainer}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(user!.createdAt!)))}</AppText>
           <AppText style={styles.userDateContainer}>{user!.phone}</AppText>
         </Column>
 

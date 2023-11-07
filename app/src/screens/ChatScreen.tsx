@@ -8,7 +8,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
-import { toRelativeTimeString } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
 import { getTripFromLiane } from "@/components/trip/trip";
@@ -30,7 +30,7 @@ const MessageBubble = ({
   previousSender?: Ref<User> | undefined;
 }) => {
   const firstBySender = previousSender !== sender.id;
-  const date = capitalize(toRelativeTimeString(new Date(message.createdAt!)));
+  const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
   return (
     <Row
       spacing={8}

@@ -107,8 +107,7 @@ DECLARE
   points_cluster_distance double precision;
 BEGIN
   SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
-  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD'), timezone('utc', now())::date) +
-          make_interval(mins => timezone_offset))
+  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD') + make_interval(mins => timezone_offset), timezone('utc', now())::date))
   INTO after;
 
   SELECT (case
@@ -333,8 +332,7 @@ DECLARE
   segments_limit  integer;
 BEGIN
   SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
-  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD'), timezone('utc', now())::date) +
-          make_interval(mins => timezone_offset))
+  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD') + make_interval(mins => timezone_offset), timezone('utc', now())::date))
   INTO after;
 
   SELECT (case
@@ -445,8 +443,7 @@ DECLARE
   points_cluster_distance double precision;
 BEGIN
   SELECT (coalesce((query_params ->> 'offset')::integer, 0)) INTO timezone_offset;
-  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD'), timezone('utc', now())::date) +
-          make_interval(mins => timezone_offset))
+  SELECT (coalesce(to_date(query_params ->> 'day', 'YYYY-MM-DD') + make_interval(mins => timezone_offset), timezone('utc', now())::date))
   INTO after;
 
   if query_params ->> 'pickup' is not null then

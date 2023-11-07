@@ -1,6 +1,6 @@
 import { AppStorage, Liane, RallyingPoint, sync, UTCDateTime } from "@liane/common";
 import notifee, { AndroidAction, AndroidImportance, TriggerType } from "@notifee/react-native";
-import { formatTime } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { DefaultAndroidSettings } from "@/api/service/notification";
 import { getTripFromLiane } from "@/components/trip/trip";
 
@@ -76,7 +76,7 @@ export class ReminderService {
           actions: AndroidReminderActions
         },
         title: "Départ imminent",
-        body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
+        body: `Vous avez rendez-vous à ${AppLocalization.formatTime(departureTime)} à ${departureLocation.label}.`,
         data: { uri: `liane://liane/${lianeId}`, liane: lianeId }
       },
       {

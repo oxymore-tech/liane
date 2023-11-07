@@ -54,43 +54,83 @@ public static class MongoDatabaseExtensions
       .FirstOrDefaultAsync();
   }
 
-  public static Task<PaginatedResponse<TData>> Paginate<TData, TCursor>(
-    this IMongoDatabase mongo,
+  public static Task<PaginatedResponse<TData>> PaginateTime<TData>(
+    this IMongoCollection<TData> collection,
     Pagination pagination,
     Expression<Func<TData, object?>> paginationField,
-    FilterDefinition<TData> baseFilter,
+    FilterDefinition<TData>? baseFilter = null,
     bool? sortAsc = null, 
     CancellationToken cancellationToken = default
-  ) where TData : IIdentity where TCursor : Cursor
+  ) where TData : IIdentity 
   {
-    return Paginate<TData, TCursor, TData>(
-      mongo,
+    return Paginate<TData, Cursor.Time, TData>(
+      collection,
       pagination,
-      paginationField,
-      t=>t.Match(baseFilter), 
+      ImmutableList.Create(paginationField),
+      t=>t.Match(baseFilter?? Builders<TData>.Filter.Empty), 
+      sortAsc,
+      cancellationToken);
+  }
+  
+  public static Task<PaginatedResponse<TProjection>> PaginateTime<TData, TProjection>(
+    this IMongoCollection<TData> collection,
+    Pagination pagination,
+    Expression<Func<TProjection, object?>> paginationField,
+    Func<IAggregateFluent<TData>, IAggregateFluent<TProjection>> pipeline,
+    bool? sortAsc = null, 
+    CancellationToken cancellationToken = default
+  ) where TData : IIdentity where TProjection : IIdentity
+  {
+    return Paginate<TData, Cursor.Time, TProjection>(
+      collection,
+      pagination,
+      ImmutableList.Create(paginationField),
+      pipeline, 
+      sortAsc,
+      cancellationToken);
+  }
+  public static Task<PaginatedResponse<TData>> PaginateNatural<TData>(
+    this IMongoCollection<TData> collection,
+    Pagination pagination,
+    FilterDefinition<TData>? baseFilter = null,
+    bool? sortAsc = null,
+    CancellationToken cancellationToken = default
+  ) where TData : IIdentity 
+  {
+    return Paginate<TData, Cursor.Natural, TData>(
+      collection,
+      pagination,
+      ImmutableList<Expression<Func<TData, object?>>>.Empty,
+      t=>t.Match(baseFilter ?? Builders<TData>.Filter.Empty), 
       sortAsc,
       cancellationToken);
   }
 
-  public static async Task<PaginatedResponse<TProjection>> Paginate<TData, TCursor, TProjection>(
-    this IMongoDatabase mongo,
+  private static async Task<PaginatedResponse<TProjection>> Paginate<TData, TCursor, TProjection>(
+    this IMongoCollection<TData> collection,
     Pagination pagination,
-    Expression<Func<TProjection, object?>> paginationField,
+    ImmutableList<Expression<Func<TProjection, object?>>> paginationFields,
      Func<IAggregateFluent<TData>, IAggregateFluent<TProjection>> pipeline,
     bool? sortAsc = null, 
     CancellationToken cancellationToken = default
   ) where TData : IIdentity where TProjection : IIdentity where TCursor : Cursor
   {
     var effectiveSortAsc = sortAsc ?? pagination.SortAsc;
-    var sort = effectiveSortAsc
-      ? Builders<TProjection>.Sort.Ascending(paginationField).Ascending(m => m.Id)
-      : Builders<TProjection>.Sort.Descending(paginationField).Descending(m => m.Id);
+    
+    paginationFields = paginationFields.Append(m => m.Id).ToImmutableList();
+    
+    var sort = Builders<TProjection>.Sort.Combine(
+      paginationFields.Select(f => effectiveSortAsc
+      ? Builders<TProjection>.Sort.Ascending(f)
+      : Builders<TProjection>.Sort.Descending(f))
+    );
 
-    var collection = mongo.GetCollection<TData>();
-    var filter = pagination.Cursor != null ? CreatePaginationFilter(pagination.Cursor, effectiveSortAsc, paginationField) : FilterDefinition<TProjection>.Empty;
-
-    // Check if collection has next page by selecting one more entry
+    
+    var filterFields = pagination.Cursor?.GetFilterFields().Select((value, index) => value is null ? null : GetFieldFilter(effectiveSortAsc, paginationFields[index], value)).Where(f => f is not null);
+    var filter = filterFields is not null ?Builders<TProjection>.Filter.Or(filterFields) :FilterDefinition<TProjection>.Empty;
    
+    
+    // Check if collection has next page by selecting one more entry
       var agg = pipeline(collection.Aggregate()).Match(filter).Sort(sort)
         .Limit(pagination.Limit+1);
       var result = await agg.ToListAsync(cancellationToken: cancellationToken);
@@ -98,15 +138,13 @@ public static class MongoDatabaseExtensions
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
     var data = result.GetRange(0, count);
-    var cursor = hasNext ? Cursor.From<TCursor, TProjection>(data.Last(), paginationField) : null;
+    var cursor = hasNext ? Cursor.From<TCursor>(paginationFields.Select(f => f.Compile()(data.Last()))) : null;
     return new PaginatedResponse<TProjection>(count, cursor, data.Take(pagination.Limit).ToImmutableList());
   }
 
-  private static FilterDefinition<TData> CreatePaginationFilter<TData>(Cursor cursor, bool sortAsc, Expression<Func<TData, object?>> indexedField)
-    where TData : IIdentity
+  private static FilterDefinition<T> GetFieldFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField, object value)
   {
-    
-    return cursor.ToFilter(sortAsc, indexedField);
+    return sortAsc ? Builders<T>.Filter.Gt(paginationField, value) : Builders<T>.Filter.Lt(paginationField, value);
   }
 
   public static async Task<ImmutableList<TOut>> Select<T, TOut>(this IAsyncCursorSource<T> source, Func<T, TOut> transformer, bool parallel = false, CancellationToken cancellationToken = default)

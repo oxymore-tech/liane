@@ -26,16 +26,39 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-.liane-popup .maplibregl-popup-close-button {
-  font-size: large;
-  padding: 0 4px;
+::-webkit-scrollbar {
+  width: 12px;
 }
 
-.liane-popup .maplibregl-popup-content {
-  background: transparent;
-  padding: 0;
+::-webkit-scrollbar-track {
+  border-radius: 7px;
+  background-color: rgba(231, 231, 231, 0.5);
+  border: 1px solid #cacaca;
 }
 
-.liane-popup .maplibregl-popup-tip {
-  display:none;
+::-webkit-scrollbar-thumb {
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+  background-color: #000000;
+}
+
+.animate {
+  animation-duration: 0.3s;
+  animation-name: animate-fade;
+  animation-timing-function: cubic-bezier(.26, .53, .74, 1);
+}
+
+
+.animate.slide { animation-name: animate-slide; }
+
+@keyframes animate-slide {
+  0% {
+    opacity: 0;
+    transform: translate(0, 20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
 }

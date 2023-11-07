@@ -4,7 +4,7 @@ import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, useObservable, User } from "@liane/common";
+import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@liane/common";
 import { getTotalDistance, getTripFromLiane, getTripFromMatch, useLianeStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -25,11 +25,12 @@ import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { GeolocationSwitch, startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-import { formatMonthDay } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
+import { useObservable } from "@/util/hooks/subscription";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -195,7 +196,7 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
 };
 
 export const LianeWithDateView = (props: { liane: Liane }) => {
-  const date = capitalize(formatMonthDay(new Date(props.liane.departureTime)));
+  const date = capitalize(AppLocalization.formatMonthDay(new Date(props.liane.departureTime)));
   const { user } = useContext(AppContext);
   const { wayPoints } = useMemo(() => getTripFromLiane(props.liane, user!.id!), [props.liane, user]);
   const passengers = useMemo(

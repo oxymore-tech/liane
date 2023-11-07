@@ -3,32 +3,25 @@
 import { useMapContext } from "@/components/map/Map";
 import { useEffect, useMemo } from "react";
 import { NodeAppEnv } from "@/api/env";
+import { VectorSourceSpecification } from "maplibre-gl";
+import { AppEnv } from "@liane/common";
 
 export type LianeDisplayLayerProps = {
   date: Date;
 };
 
-const getDateParams = (date: Date) =>
-  "offset=" +
-  date.getTimezoneOffset() +
-  "&day=" +
-  date.getFullYear() +
-  "-" +
-  (1 + date.getMonth()).toString().padStart(2, "0") +
-  "-" +
-  date.getDate().toString().padStart(2, "0");
 export function LianeDisplayLayer({ date }: LianeDisplayLayerProps) {
   const map = useMapContext();
-  const args = useMemo(() => getDateParams(date), [date]);
+  const args = useMemo(() => AppEnv.getLayerDateParams(date), [date]);
   useEffect(() => {
-    const url = NodeAppEnv.tilesUrl + "/liane_display?" + args;
+    const url = NodeAppEnv.lianeTilesUrl;
     map.current?.once("load", () => {
       if (!map.current || map.current?.getSource("liane_display")) {
         return;
       }
       map.current?.addSource("liane_display", {
         type: "vector",
-        url
+        tiles: [url + "/{z}/{x}/{y}"]
       });
       map.current?.addLayer({
         id: "liane_display",
@@ -45,6 +38,17 @@ export function LianeDisplayLayer({ date }: LianeDisplayLayerProps) {
         map.current?.removeSource("liane_display");
       };
     });
-  }, [map, args]);
+  }, [map]);
+  useEffect(() => {
+    const lianeSource = map.current?.getSource("liane_display");
+    if (map.current && lianeSource) {
+      const url = NodeAppEnv.lianeTilesUrl + "/{z}/{x}/{y}?" + args;
+      (lianeSource as VectorSourceSpecification).tiles = [url];
+      map.current.style.sourceCaches["liane_display"].clearTiles();
+      // Load the new tiles for the current viewport (map.transform -> viewport)
+      map.current.style.sourceCaches["liane_display"].update(map.current.transform);
+      map.current.triggerRepaint();
+    }
+  }, [args]);
   return <></>;
 }

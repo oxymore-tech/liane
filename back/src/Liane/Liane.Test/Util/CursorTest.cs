@@ -26,7 +26,7 @@ public sealed class CursorTest
     var date = DateTime.UtcNow;
     var dateStr = ((DateTimeOffset)date).ToUnixTimeMilliseconds();
     var cursor = (Cursor)$"{dateStr}_{id}";
-    var strCursor = (string)cursor;
+    var strCursor = cursor.ToString();
     Assert.AreEqual($"{dateStr}_{id}", strCursor);
   }
   

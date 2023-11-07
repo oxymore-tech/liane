@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ImagePickerResponse, launchImageLibrary } from "react-native-image-picker";
-import { formatMonthYear } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -124,7 +124,7 @@ const ProfileEditView = () => {
       </Row>
 
       <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-        <AppText style={styles.userDateContainer}>Membre depuis {capitalize(formatMonthYear(new Date(user!.createdAt!)))}</AppText>
+        <AppText style={styles.userDateContainer}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(user!.createdAt!)))}</AppText>
         <AppText style={styles.userDateContainer}>{user!.phone}</AppText>
       </Column>
     </ScrollView>

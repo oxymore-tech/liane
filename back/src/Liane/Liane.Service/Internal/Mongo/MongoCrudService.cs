@@ -30,6 +30,8 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
     Mongo = mongo;
   }
 
+  protected IMongoCollection<TDb> Collection => Mongo.GetCollection<TDb>();
+  
   public virtual async Task<TOut> Get(Ref<TOut> reference)
   {
     if (reference is Ref<TOut>.Resolved resolved1) return resolved1.Value;
@@ -40,14 +42,14 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
 
   public virtual async Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references)
   {
-    var query = Mongo.GetCollection<TDb>().Find(Builders<TDb>.Filter.In(f => f.Id, references.Select(r => (string)r).ToImmutableList()));
+    var query = Collection.Find(Builders<TDb>.Filter.In(f => f.Id, references.Select(r => (string)r).ToImmutableList()));
     var resolved = await query.SelectAsync(MapEntity);
     return resolved.ToDictionary(v => v.Id!);
   }
 
   public virtual async Task<bool> Delete(Ref<TOut> reference)
   {
-    var res = await Mongo.GetCollection<TDb>()
+    var res = await Collection
       .DeleteOneAsync(rp => rp.Id == reference.Id);
     return res.IsAcknowledged;
   }
@@ -69,6 +71,16 @@ public abstract class BaseMongoCrudService<TDb, TOut> : IInternalResourceResolve
   {
     return MongoAccessLevelContextFactory.NewMongoAccessLevelContext<TDb>(accessLevel, userId).HasAccessLevelFilterDefinition;
   }
+  
+  protected Task<long> Count(FilterDefinition<TDb>? filter = null)
+  {
+    return Collection.CountDocumentsAsync(filter ?? FilterDefinition<TDb>.Empty);
+  }
+
+  protected Task<TDb> Update(string id, UpdateDefinition<TDb> update)
+  {
+    return Collection.FindOneAndUpdateAsync<TDb>(r => r.Id == id, update, new FindOneAndUpdateOptions<TDb>{ReturnDocument = ReturnDocument.After});
+  }
 }
 
 public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TDb, TOut>, ICrudService<TIn, TOut> where TIn : class, IIdentity where TDb : class, IIdentity where TOut : class, IIdentity
@@ -82,7 +94,7 @@ public abstract class MongoCrudService<TIn, TDb, TOut> : BaseMongoCrudService<TD
     var id = obj.Id ?? ObjectId.GenerateNewId()
       .ToString();
     var created = ToDb(obj, id);
-    await Mongo.GetCollection<TDb>()
+    await Collection
       .InsertOneAsync(created);
     return await MapEntity(created);
   }
@@ -117,7 +129,7 @@ public abstract class MongoCrudEntityService<TIn, TDb, TOut> : BaseMongoCrudServ
     var id = lianeRequest.Id ?? ObjectId.GenerateNewId().ToString();
     var createdAt = DateTime.UtcNow;
     var created = await ToDb(lianeRequest, id, createdAt, ownerId ?? CurrentContext.CurrentUser().Id);
-    await Mongo.GetCollection<TDb>()
+    await Collection
       .InsertOneAsync(created);
     return await MapEntity(created);
   }

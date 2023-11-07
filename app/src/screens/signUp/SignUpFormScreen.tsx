@@ -8,7 +8,6 @@ import { AppStyles } from "@/theme/styles";
 import { FieldValues, FormProvider, SubmitErrorHandler, SubmitHandler, useController, useForm } from "react-hook-form";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppToggle } from "@/components/base/AppOptionToggle";
-import { AppContext } from "@/components/context/ContextProvider";
 import { AppLogger } from "@/api/logger";
 import { SignUpLianeContext } from "@/screens/signUp/SignUpScreen";
 
@@ -17,19 +16,12 @@ export const SignUpFormScreen = () => {
 
   const machine = useContext(SignUpLianeContext);
 
-  const { services } = useContext(AppContext);
-
   const onSubmit: SubmitHandler<FieldValues> = data => {
-    services.auth
-      .updateUserInfo({
-        firstName: data.firstname,
-        lastName: data.name,
-        gender: data.name === "M." ? "Man" : data.name === "Mme" ? "Woman" : "Unspecified"
-      })
-      .catch(e => AppLogger.error("LOGIN", e))
-      .then(async () => {
-        machine.send("NEXT");
-      });
+    machine.send("SIGNUP", {
+      firstName: data.firstname,
+      lastName: data.name,
+      gender: data.name === "M." ? "Man" : data.name === "Mme" ? "Woman" : "Unspecified"
+    });
   };
 
   const onError: SubmitErrorHandler<FormValues> = errors => {
@@ -46,8 +38,8 @@ export const SignUpFormScreen = () => {
           <View style={{ paddingHorizontal: 8, paddingBottom: 16 }}>
             <OptionField name={"gender"} options={["M.", "Mme", "Non spécifié"]} defaultIndex={2} />
           </View>
-          <TextField name={"name"} />
-          <TextField name={"firstname"} />
+          <TextField name={"name"} minLength={2} />
+          <TextField name={"firstname"} minLength={2} />
 
           <Space />
           <AppRoundedButton
@@ -80,8 +72,8 @@ const OptionField = ({ name, defaultIndex = 0, options }: { name: keyof FormValu
   return <AppToggle options={options} defaultSelectedValue={defaultValue} onSelectValue={field.onChange} />;
 };
 
-const TextField = ({ name, required = true }: { name: keyof FormValues; required?: boolean }) => {
-  const { field, fieldState } = useController({ name, rules: { required } });
+const TextField = ({ name, required = true, minLength = 1 }: { name: keyof FormValues; required?: boolean; minLength?: number }) => {
+  const { field, fieldState } = useController({ name, rules: { required, minLength } });
 
   let errorMessage;
   if (fieldState.invalid && fieldState.error?.type === "required") {
@@ -90,7 +82,7 @@ const TextField = ({ name, required = true }: { name: keyof FormValues; required
   let borderColor;
   if (errorMessage) {
     borderColor = ContextualColors.redAlert.light;
-  } else if (required && field.value?.length > 1) {
+  } else if (required && field.value?.length > minLength) {
     borderColor = AppColorPalettes.blue[300];
   } else {
     borderColor = AppColorPalettes.gray[200];
@@ -106,7 +98,7 @@ const TextField = ({ name, required = true }: { name: keyof FormValues; required
           value={field.value}
         />
       </View>
-      {errorMessage && <AppText style={{ paddingHorizontal: 16, color: ContextualColors.redAlert.text }}>{errorMessage}</AppText>}
+      {!!errorMessage && <AppText style={{ paddingHorizontal: 16, color: ContextualColors.redAlert.text }}>{errorMessage}</AppText>}
     </Column>
   );
 };

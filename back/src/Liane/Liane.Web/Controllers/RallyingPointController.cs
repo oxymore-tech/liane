@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
+using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,15 @@ public sealed class RallyingPointController : ControllerBase
 {
   private readonly IRallyingPointService rallyingPointService;
   private readonly IRallyingPointGenerator rallyingPointGenerator;
+  private readonly ICurrentContext currentContext;
+  private readonly IRallyingPointRequestService rallyingPointRequestService;
 
-  public RallyingPointController(IRallyingPointService rallyingPointService, IRallyingPointGenerator rallyingPointGenerator)
+  public RallyingPointController(IRallyingPointService rallyingPointService, IRallyingPointGenerator rallyingPointGenerator, ICurrentContext currentContext, IRallyingPointRequestService rallyingPointRequestService)
   {
     this.rallyingPointService = rallyingPointService;
     this.rallyingPointGenerator = rallyingPointGenerator;
+    this.currentContext = currentContext;
+    this.rallyingPointRequestService = rallyingPointRequestService;
   }
 
   [HttpPost("")]
@@ -47,24 +52,7 @@ public sealed class RallyingPointController : ControllerBase
   {
     return rallyingPointGenerator.Generate();
   }
-
- /* [HttpGet("")]
-  [DisableAuth]
-  public async Task<ImmutableList<RallyingPoint>> Search(
-    [FromQuery] double? lat, [FromQuery] double? lng,
-    [FromQuery] int? distance = null,
-    [FromQuery] int? limit = 10,
-    [FromQuery] string? search = null)
-  {
-    LatLng? from = null;
-    if (lat != null && lng != null)
-    {
-      from = new LatLng((double)lat, (double)lng);
-    }
-
-    return await rallyingPointService.Search(from, distance: distance, search: search, limit: limit);
-  }
-  */
+  
   [HttpGet("")]
   [DisableAuth]
   public async Task<PaginatedResponse<RallyingPoint>> List(
@@ -78,5 +66,31 @@ public sealed class RallyingPointController : ControllerBase
   public async Task<RallyingPoint?> Snap([FromQuery] double lat, [FromQuery] double lng)
   {
     return await rallyingPointService.Snap(new(lat, lng), IRallyingPointService.MaxRadius);
+  }
+
+  [HttpGet("request/all")]
+  [RequiresAdminAuth]
+  public Task<PaginatedResponse<RallyingPointRequest>> ListAllRequests(Pagination pagination)
+  {
+    return rallyingPointRequestService.Paginate(pagination);
+  }
+  
+  [HttpGet("request")]
+  public Task<PaginatedResponse<RallyingPointRequest>> ListRequests(Pagination pagination)
+  {
+    return rallyingPointRequestService.ListForCurrentUser(pagination);
+  }
+
+  [HttpPost("request")]
+  public Task<RallyingPointRequest> CreateRequest([FromBody] RallyingPointRequest req)
+  {
+    return rallyingPointRequestService.Create(req with {Status = null});
+  }
+  
+  [HttpPatch("request/{id}")]
+  [RequiresAdminAuth]
+  public Task<RallyingPointRequest> UpdateRequestStatus([FromRoute] string id, [FromBody] RallyingPointRequestStatus status)
+  {
+    return rallyingPointRequestService.UpdateRequestStatus(id, status with{By = currentContext.CurrentUser().Id});
   }
 }

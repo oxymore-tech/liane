@@ -20,13 +20,15 @@ export const CreateSubmittingState = ({
   onSuccess,
   successTargetState,
   serviceId,
-  submittingState
+  submittingState,
+  onError
 }: {
   cancelTargetState: string;
   onSuccess?: string;
   successTargetState?: string;
   serviceId?: string;
   submittingState?: string;
+  onError?: string;
 }) => ({
   initial: "pending",
   on: {
@@ -40,7 +42,8 @@ export const CreateSubmittingState = ({
       actions: onSuccess
     },
     onError: {
-      target: ".failure"
+      target: ".failure",
+      actions: onError
     }
   },
   states: {
@@ -65,3 +68,4 @@ type CancelEvent = { type: "CANCEL" };
 export type SubmittingEvents = RetryEvent | CancelEvent;
 
 export type ServiceDoneEvent<T> = { type: "done.invoke.submit"; data: T };
+export type ServiceErrorEvent = { type: string; data: any };

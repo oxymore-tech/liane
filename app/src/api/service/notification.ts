@@ -4,7 +4,7 @@ import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messag
 import { Linking, Platform } from "react-native";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
-import { AppEnv } from "@/api/env";
+import { RNAppEnv } from "@/api/env";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 
 const DefaultChannelId = "liane_default";
@@ -35,7 +35,7 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 const pressActionMap = {
   loc: async (lianeId: string) => {
     const logger = AppLogger as any;
-    const http = new HttpClient(AppEnv, logger, AppStorage);
+    const http = new HttpClient(RNAppEnv.baseUrl, logger, AppStorage);
     const lianeService = new LianeServiceClient(http);
     const liane = await lianeService.get(lianeId);
     await lianeService.start(liane.id!).then(() => startGeolocationService(liane));

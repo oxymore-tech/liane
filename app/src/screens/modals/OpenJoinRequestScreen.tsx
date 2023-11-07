@@ -9,10 +9,10 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Answer, Compatible, Exact, formatDuration, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
+import { Answer, Compatible, Exact, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppIcon } from "@/components/base/AppIcon";
-import { formatMonthDay, formatTime } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { TripCard } from "@/components/TripCard";
 import { useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
@@ -20,7 +20,7 @@ import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScree
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { WayPointDisplay, WayPointDisplayType } from "@/components/map/markers/WayPointDisplay";
 import { RouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
-import { AppEnv } from "@/api/env";
+import { RNAppEnv } from "@/api/env";
 
 export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"OpenJoinLianeRequest">();
@@ -89,7 +89,9 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
     const role = data.seats > 0 ? "conducteur" : "passager";
     const reqIsExactMatch = UnionUtils.isInstanceOf<Exact>(data.match, "Exact");
     const wayPoints = reqIsExactMatch ? data.targetLiane.wayPoints : data.match.wayPoints;
-    const dateTime = `${formatMonthDay(new Date(data.targetLiane.departureTime))} à ${formatTime(new Date(data.targetLiane.departureTime))}`;
+    const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetLiane.departureTime))} à ${AppLocalization.formatTime(
+      new Date(data.targetLiane.departureTime)
+    )}`;
     const headerDate = (
       <Row spacing={8}>
         <AppIcon name={"calendar-outline"} />
@@ -127,7 +129,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           <AppText numberOfLines={2} style={{ fontSize: 14 }}>
             {reqIsExactMatch || (data.match as Compatible).delta.totalInSeconds <= 60
               ? "Votre trajet reste inchangé"
-              : "Le trajet sera rallongé de " + formatDuration((data.match as Compatible).delta.totalInSeconds)}
+              : "Le trajet sera rallongé de " + AppLocalization.formatDuration((data.match as Compatible).delta.totalInSeconds)}
           </AppText>
         </Row>
         {data.seats > 0 && !data.targetLiane.driver.canDrive && (
@@ -159,7 +161,7 @@ const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
   return (
     <MapLibreGL.MapView
       style={{ height: 160, width: "100%" }}
-      styleURL={getMapStyleUrl(AppEnv)}
+      styleURL={getMapStyleUrl(RNAppEnv)}
       logoEnabled={false}
       rotateEnabled={false}
       scrollEnabled={false}

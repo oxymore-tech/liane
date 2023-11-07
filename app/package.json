@@ -18,7 +18,7 @@
   "dependencies": {
     "@datadog/mobile-react-native": "^1.8.5",
     "@datadog/mobile-react-navigation": "^1.8.5",
-    "@liane/common": "file:../common",
+    "@liane/common": "file:../common/dist",
     "@maplibre/maplibre-react-native": "^9.1.0",
     "@microsoft/signalr": "^7.0.12",
     "@notifee/react-native": "^7.8.0",

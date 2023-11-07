@@ -1,9 +1,9 @@
 import React, { PropsWithChildren, useCallback, useContext, useEffect, useState } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import { capitalize, Exact, formatDuration, getPoint, JoinRequest, UnionUtils } from "@liane/common";
+import { capitalize, Exact, getPoint, JoinRequest, UnionUtils } from "@liane/common";
 import { getTotalDuration, getTripMatch } from "@/components/trip/trip";
-import { formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
 import { Column, Row, Space } from "@/components/base/AppLayout";
 import { LineSeparator } from "@/components/Separator";
@@ -121,10 +121,10 @@ export const LianeMatchDetailView = () => {
 
   const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
 
-  const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
+  const formattedDepartureTime = capitalize(AppLocalization.formatMonthDay(new Date(liane.liane.departureTime)));
 
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
-  const tripDuration = formatDuration(getTotalDuration(currentTrip.slice(1)));
+  const tripDuration = AppLocalization.formatDuration(getTotalDuration(currentTrip.slice(1)));
 
   const [message, setMessage] = useState("");
   const [seats, setSeats] = useState(liane.freeSeatsCount > 0 ? -1 : 1);
@@ -231,11 +231,15 @@ export const LianeMatchDetailView = () => {
             }}
             animateSummary={firstEdit}
             onEdit={liane.returnTime ? () => setStep(2) : undefined}
-            summary={takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.returnTime), formatTime) : "Aller simple"}
+            summary={
+              takeReturnTrip
+                ? "Retour " + AppLocalization.toRelativeTimeString(new Date(liane.returnTime), AppLocalization.formatTime)
+                : "Aller simple"
+            }
             icon={"corner-down-right-outline"}>
             <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
               <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }} numberOfLines={2}>
-                Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.returnTime), formatTime)}?
+                Voulez vous effectuer le trajet retour {AppLocalization.toRelativeTimeString(new Date(liane.returnTime), AppLocalization.formatTime)}?
               </AppText>
             </Animated.View>
           </StepView>

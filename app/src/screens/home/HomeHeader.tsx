@@ -16,7 +16,7 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useSelector } from "@xstate/react";
 import { capitalize, SearchedLocation, Trip } from "@liane/common";
-import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
@@ -361,9 +361,11 @@ export const FilterSelector = ({ formatter, shortFormat = false, color = default
   const date = targetTime?.dateTime || new Date();
 
   const defaultFormatter = shortFormat
-    ? (d: Date) => capitalize(toRelativeDateString(d, formatShortMonthDay))!
+    ? (d: Date) => capitalize(AppLocalization.toRelativeDateString(d, AppLocalization.formatShortMonthDay))!
     : (d: Date) => {
-        return targetTime?.direction === "Arrival" ? "Arrivée " : "Départ " + toRelativeDateString(d, formatShortMonthDay);
+        return targetTime?.direction === "Arrival"
+          ? "Arrivée "
+          : "Départ " + AppLocalization.toRelativeDateString(d, AppLocalization.formatShortMonthDay);
       };
 
   return (

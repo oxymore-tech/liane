@@ -14,7 +14,7 @@ import { check, PERMISSIONS, request } from "react-native-permissions";
 import { MemberPing, distance, sleep, UTCDateTime, WayPoint, isResourceNotFound, isValidationError, HttpClient } from "@liane/common";
 import { AppStorage } from "@/api/storage";
 import DeviceInfo from "react-native-device-info";
-import { AppEnv } from "@/api/env";
+import { RNAppEnv } from "@/api/env";
 
 const { RNLianeGeolocation } = NativeModules;
 
@@ -103,7 +103,7 @@ class AndroidService implements LianeGeolocation {
   };
   private Platform = Platform as PlatformAndroidStatic;
 
-  private httpClient = new HttpClient(AppEnv, AppLogger as any, AppStorage);
+  private httpClient = new HttpClient(RNAppEnv, AppLogger as any, AppStorage);
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
     const user = await AppStorage.getUser();
     // Refresh token here to avoid issues
@@ -114,7 +114,7 @@ class AndroidService implements LianeGeolocation {
     const timeout = tripDuration + 3600 * 1000;
 
     const nativeConfig = {
-      pingConfig: { lianeId, userId: user!.id!, token: token!, url: AppEnv.baseUrl },
+      pingConfig: { lianeId, userId: user!.id!, token: token!, url: RNAppEnv.baseUrl },
       timeout,
       geolocationConfig: {
         interval: 90,
@@ -200,7 +200,7 @@ class IosService implements LianeGeolocation {
   };
   private Platform = Platform as PlatformIOSStatic;
   private LocationEventEmitter = new NativeEventEmitter(RNLianeGeolocation);
-  private httpClient = new HttpClient(AppEnv, AppLogger as any, AppStorage);
+  private httpClient = new HttpClient(RNAppEnv, AppLogger as any, AppStorage);
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;

@@ -4,7 +4,11 @@
     "Liane": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "LIANE_CLOUDFLARE__ACCOUNTID":"eef907be39228e1444cc13042b90997a",
+        "LIANE_CLOUDFLARE__ACCOUNTHASH":"boxAzHNMt6Z2TVNFAJ2vsQ",
+        "LIANE_CLOUDFLARE__APIKEY":"62XzgBi5odk5jTgQxBhd2k19E6srtFgVGaZDxCUv",
+        "LIANE_FIREBASE__SERVICEACCOUNTFILE":"/home/cla/Downloads/service-account.json"
       }
     }
   }

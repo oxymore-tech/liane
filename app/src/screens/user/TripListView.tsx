@@ -1,8 +1,8 @@
 import React, { useContext, useMemo } from "react";
 
 import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
-import { capitalize, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, useObservable, User, UTCDateTime } from "@liane/common";
-import { formatMonthDay } from "@/api/i18n";
+import { capitalize, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@liane/common";
+import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
@@ -244,7 +244,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 
 const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
   <View style={styles.header}>
-    <AppText style={styles.headerTitle}>{capitalize(formatMonthDay(new Date(date)))}</AppText>
+    <AppText style={styles.headerTitle}>{capitalize(AppLocalization.formatMonthDay(new Date(date)))}</AppText>
   </View>
 );
 

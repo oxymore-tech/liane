@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { DayOfTheWeekFlag } from "@liane/common";
-import { daysList } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 
 import { Row } from "@/components/base/AppLayout";
 
@@ -57,7 +57,7 @@ const selectDate = (dayIndex: number, onChangeDays: (daysOfTheWeek: DayOfTheWeek
   const currentSelectedDays = selectedDays ?? "0000000";
   let newSelectedDays = "";
 
-  daysList.forEach((_day: string, index: number) => {
+  AppLocalization.daysList.forEach((_day: string, index: number) => {
     // Replace selected day at selected index
     newSelectedDays += index === dayIndex ? replaceSelectedDay(currentSelectedDays.charAt(index)) : currentSelectedDays.charAt(index);
   });

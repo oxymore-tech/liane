@@ -1,9 +1,165 @@
 "use client";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
-import { User } from "@liane/common";
+import { Tooltip } from "flowbite-react";
+import { dispatchCustomEvent, useElementSize, useEvent } from "@/utils/hooks";
+import { useLocalization } from "@/api/intl";
+
+/**
+ * Timeline component for time-series
+ */
+export type TimelineData<T> = { data: T; color: string; points: Date[] }[];
+export const TimelineChart = <T,>({
+  data,
+  startDate,
+  endDate,
+  idExtractor,
+  labelExtractor,
+  renderTooltip,
+  onHoveredStateChanged,
+  onClick
+}: {
+  data: TimelineData<T>;
+  startDate: Date;
+  endDate: Date;
+  idExtractor: (d: T, date: Date) => number;
+  labelExtractor: (d: T) => string;
+  renderTooltip?: (d: T) => JSX.Element;
+  onHoveredStateChanged?: (pointId: number, hovered: boolean) => void;
+  onClick?: (pointId: number) => void;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const duration = endDate.getTime() - startDate.getTime();
+  const { width, height } = useElementSize(ref, { width: 90, height: 20 }, [data.length, duration]);
+
+  useEvent(HighlightPointEventName, (e: HighlightPointEvent<T>) => {
+    const id = "#p" + e.id;
+    const point = document.querySelector(id) as SVGCircleElement | null;
+    if (!point) return;
+    point.setAttribute("stroke-width", e.highlight ? HoveredPointStrokeWidth.toString() : "0");
+    point.setAttribute("r", (e.highlight ? HoveredPointRadius : DefaultPointRadius).toString());
+  });
+
+  const axisSize = 20;
+  const paddingTop = 8;
+  const paddingBottom = paddingTop;
+  const legendSize = 90;
+  const rectPadding = 8;
+  const actualWidth = width - legendSize;
+  const lineHeight = 36;
+  const chartHeight = axisSize + paddingTop + paddingBottom + lineHeight * data.length;
+
+  return (
+    <div ref={ref}>
+      <div className="absolute">
+        <ul
+          className="text-left  text-gray-500 dark:text-gray-400 grid"
+          style={{ gridTemplateRows: `${paddingTop}px repeat(${data.length}, ${lineHeight}px) 20px`, maxWidth: legendSize }}>
+          {data.map((d, i) => (
+            <li
+              key={i}
+              style={{ gridRow: (i + 2).toString(), maxHeight: lineHeight, textOverflow: "ellipsis" }}
+              className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
+              <span className="w-4 h-4 rounded border dark:border-white border-gray-800" style={{ backgroundColor: d.color }} />
+              {renderTooltip && (
+                <Tooltip placement="right" content={renderTooltip(d.data)}>
+                  <span className="cursor-default">{labelExtractor(d.data)}</span>
+                </Tooltip>
+              )}
+              {!renderTooltip && <span className="cursor-default">{labelExtractor(d.data)}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <svg width={actualWidth + 2 * rectPadding} height={height} style={{ marginLeft: legendSize, height: chartHeight.toString() + "px" }}>
+        <g>
+          <rect width={actualWidth + 2 * rectPadding} height={height - axisSize} className="fill-slate-300" />
+          <g transform={`translate(${[rectPadding, height - axisSize].join(",")})`}>
+            <TimeAxis startDate={startDate} endDate={endDate} width={actualWidth} />
+          </g>
+        </g>
+        {data.map((el, i) => {
+          const y = paddingTop + lineHeight / 2 + lineHeight * i;
+          return (
+            <g key={i.toString()}>
+              <line x1={0} y1={y} x2={actualWidth + 2 * rectPadding} y2={y} strokeDasharray="4" stroke="black" />
+              {el.points.map(p => {
+                const id = idExtractor(el.data, p);
+                return (
+                  <TimelinePoint
+                    key={id}
+                    id={"p" + id}
+                    x={rectPadding + ((p.getTime() - startDate.getTime()) / duration) * actualWidth}
+                    y={y}
+                    color={el.color}
+                    onHoverStateChanged={
+                      onHoveredStateChanged
+                        ? hovered => {
+                            onHoveredStateChanged(id, hovered);
+                          }
+                        : undefined
+                    }
+                    onClick={onClick ? () => onClick(id) : undefined}
+                  />
+                );
+              })}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
+const HoveredPointRadius = 7;
+const DefaultPointRadius = 4;
+const HoveredPointStrokeWidth = 4;
+const TimelinePoint = ({
+  x,
+  y,
+  color,
+  id,
+  onHoverStateChanged,
+  onClick
+}: {
+  x: number;
+  y: number;
+  color: string;
+  id?: string;
+  onHoverStateChanged?: (hovered: boolean) => void;
+  onClick?: () => void;
+}) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <circle
+      id={id}
+      cx={x}
+      cy={y}
+      stroke="#0F172A"
+      strokeWidth={hovered ? HoveredPointStrokeWidth : 0}
+      r={hovered ? HoveredPointRadius : DefaultPointRadius}
+      fill={color}
+      style={{
+        cursor: hovered ? "pointer" : "default",
+        transitionProperty: "all",
+        transitionDuration: "150ms",
+        transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)"
+      }}
+      onClick={onClick}
+      onMouseEnter={() => {
+        setHovered(true);
+        onHoverStateChanged?.(true);
+      }}
+      onMouseLeave={() => {
+        setHovered(false);
+        onHoverStateChanged?.(false);
+      }}
+    />
+  );
+};
 
 const TimeAxis = ({ startDate, endDate, width }: { startDate: Date; endDate: Date; width: number }) => {
+  const WebLocalization = useLocalization();
   const ticks = useMemo(() => {
     const minutes = [5, 10, 15, 30, 60];
     let index = 0;
@@ -16,7 +172,7 @@ const TimeAxis = ({ startDate, endDate, width }: { startDate: Date; endDate: Dat
     const xScale = d3.scaleTime([startDate, endDate], [0, width]);
 
     return xScale.ticks(tickCount).map(value => ({
-      value: value.toLocaleTimeString(),
+      value: WebLocalization.formatTime24h(value),
       xOffset: xScale(value)
     }));
   }, [startDate, endDate, width]);
@@ -24,103 +180,31 @@ const TimeAxis = ({ startDate, endDate, width }: { startDate: Date; endDate: Dat
   return (
     <svg>
       <path d={["M", 0, 6, "v", -6, "H", width, "v", 6].join(" ")} fill="none" stroke="currentColor" />
-      {ticks.map(({ value, xOffset }) => (
-        <g key={value} transform={`translate(${xOffset}, 0)`}>
-          <line y2="6" stroke="currentColor" />
-          <text
-            key={value}
-            className="fill-gray-500 dark:fill-gray-400"
-            style={{
-              fontSize: "11px",
-              textAnchor: "middle",
-              transform: "translateY(20px)"
-            }}>
-            {value}
-          </text>
-        </g>
-      ))}
+      <svg className="fill-green-500" xmlns="http://www.w3.org/2000/svg" x="-12" y="3" height="24" viewBox="0 -960 960 960" width="24">
+        <path d="M320-200v-560l440 280-440 280Z" />
+      </svg>
+      {ticks.map(({ value, xOffset }, i) =>
+        i > 0 || xOffset > 15 ? (
+          <g key={value} transform={`translate(${xOffset}, 0)`}>
+            <line y2="6" stroke="currentColor" />(
+            <text
+              key={value}
+              className="fill-gray-500 dark:fill-gray-400 cursor-default"
+              style={{
+                fontSize: "11px",
+                textAnchor: "middle",
+                transform: "translateY(20px)"
+              }}>
+              {value}
+            </text>
+          </g>
+        ) : null
+      )}
     </svg>
   );
 };
 
-export type TimelineData = { user: User; color: string; points: Date[] }[];
-export const TimelineChart = ({ data, startDate, endDate }: { data: TimelineData; startDate: Date; endDate: Date }) => {
-  const ref = useRef<HTMLDivElement>();
+export type HighlightPointEvent<T> = { id: number; highlight: boolean };
+const HighlightPointEventName = "highlightTimelinePoint";
 
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(20);
-  const duration = endDate.getTime() - startDate.getTime();
-
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    setWidth(ref.current.clientWidth);
-    setHeight(ref.current.clientHeight);
-  }, [data.length, duration]);
-  //style={{ height: "200px" }}
-  // https://2019.wattenberger.com/blog/react-and-d3
-  const axisSize = 20;
-  const paddingTop = 8;
-  const paddingBottom = paddingTop;
-  const legendSize = 90;
-  const actualWidth = width - legendSize;
-  const lineHeight = 36;
-
-  return (
-    <div ref={ref}>
-      <div className="absolute">
-        <ul
-          className="text-left text-gray-500 dark:text-gray-400 grid"
-          style={{ gridTemplateRows: `${paddingTop}px repeat(${data.length}, ${lineHeight}px) 20px` }}>
-          {data.map((d, i) => (
-            <li key={d.user.id!} style={{ gridRow: (i + 2).toString() }} className="flex items-center space-x-1">
-              <span className="w-4 h-4 rounded border dark:border-white border-gray-800" style={{ backgroundColor: d.color }} />
-              <span>{d.user.pseudo}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <svg
-        width={actualWidth}
-        height={height}
-        style={{ marginLeft: legendSize, height: (axisSize + paddingTop + paddingBottom + lineHeight * data.length).toString() + "px" }}>
-        <g>
-          <rect width={actualWidth} height={height - axisSize} className="fill-slate-300" />
-          <g transform={`translate(${[0, height - axisSize].join(",")})`}>
-            <TimeAxis startDate={startDate} endDate={endDate} width={actualWidth} />
-          </g>
-        </g>
-        {data.map((user, i) => {
-          const y = paddingTop + lineHeight / 2 + lineHeight * i; //(axisSize + (i + 0.5) * (height - paddingTop - axisSize)) / data.length;
-          return (
-            <g key={i.toString()}>
-              <line x1={0} y1={y} x2={actualWidth} y2={y} strokeDasharray="4" stroke="black" />
-              {user.points.map((p, j) => (
-                <TimelinePoint key={i + "_" + j} x={((p.getTime() - startDate.getTime()) / duration) * actualWidth} y={y} color={user.color} />
-              ))}
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-};
-
-const TimelinePoint = ({ x, y, color }: { x: number; y: number; color: string }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <circle
-      cx={x}
-      cy={y}
-      r={hovered ? 7 : 4}
-      fill={color}
-      style={{
-        cursor: hovered ? "pointer" : "default",
-        transitionProperty: "all",
-        transitionDuration: "150ms",
-        transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)"
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    />
-  );
-};
+export const dispatchHighlightPointEvent = <T,>(event: HighlightPointEvent<T>) => dispatchCustomEvent(HighlightPointEventName, event);

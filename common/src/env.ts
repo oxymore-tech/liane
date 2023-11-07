@@ -1,3 +1,5 @@
+import urlJoin from "url-join";
+
 export type AppEnvVariables = {
   DD_CLIENT_TOKEN: string | null;
   DD_APP_ID: string | null;
@@ -22,10 +24,27 @@ export class AppEnv {
   }
 
   get baseUrl() {
-    return `${this.raw.API_URL || `https://${this.host}`}/api`;
+    return urlJoin(this.raw.API_URL || `https://${this.host}`, "api");
   }
 
-  get tilesUrl() {
-    return `${this.raw.TILES_URL || `https://${this.host}`}`;
+  get rallyingPointsTilesUrl() {
+    return urlJoin(this.raw.TILES_URL || `https://${this.host}`, "rallying_point_display");
   }
+
+  get lianeTilesUrl() {
+    return urlJoin(this.raw.TILES_URL || `https://${this.host}`, "liane_display");
+  }
+
+  get lianeFilteredTilesUrl() {
+    return urlJoin(this.raw.TILES_URL || `https://${this.host}`, "liane_display_filter_test");
+  }
+  public static readonly getLayerDateParams = (date: Date) =>
+    "offset=" +
+    date.getTimezoneOffset() +
+    "&day=" +
+    date.getFullYear() +
+    "-" +
+    (1 + date.getMonth()).toString().padStart(2, "0") +
+    "-" +
+    date.getDate().toString().padStart(2, "0");
 }

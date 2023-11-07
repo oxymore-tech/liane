@@ -13,7 +13,8 @@
     "build": "tsc && vite build && yarn upgrade @liane/common --cwd ../app --check-files",
     "lint": "eslint ./src/ --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn test && yarn build",
+    "test": "vitest --run"
   },
   "dependencies": {
     "@microsoft/signalr": "^7.0.12",
@@ -25,11 +26,9 @@
     "url-join": "^5.0.0",
     "xstate": "^4.37.0"
   },
-  "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
-  },
   "devDependencies": {
+    "@faker-js/faker": "^8.2.0",
+    "@mapbox/vt2geojson": "^1.1.5",
     "@types/geojson": "^7946.0.11",
     "@types/react": "^18.2.33",
     "@types/turf": "^3.5.32",
@@ -42,6 +41,7 @@
     "prettier": "^3.0.3",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
-    "vite-plugin-dts": "^3.6.0"
+    "vite-plugin-dts": "^3.6.0",
+    "vitest": "^0.34.6"
   }
 }

@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ColorValue, Platform, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
-import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
-
+import { AppLocalization } from "@/api/i18n";
 import { Center, Row } from "@/components/base/AppLayout";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
@@ -55,7 +53,9 @@ export const DatePagerSelector = ({
             backgroundStyle={styles.buttonBorderRadius}>
             <Row spacing={6}>
               <AppText style={{ fontWeight: "bold", color, fontSize: size }}>
-                {formatter ? formatter(date || new Date()) : capitalize(toRelativeDateString(date, formatShortMonthDay))}
+                {formatter
+                  ? formatter(date || new Date())
+                  : capitalize(AppLocalization.toRelativeDateString(date, AppLocalization.formatShortMonthDay))}
               </AppText>
             </Row>
           </AppPressableOverlay>

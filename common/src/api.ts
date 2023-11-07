@@ -70,16 +70,7 @@ export type LatLng = Readonly<{
   lng: number;
 }>;
 
-export enum LocationType {
-  Parking = "Parking",
-  CarpoolArea = "CarpoolArea",
-  Supermarket = "Supermarket",
-  HighwayExit = "HighwayExit",
-  RelayParking = "RelayParking",
-  AbandonedRoad = "AbandonedRoad",
-  AutoStop = "AutoStop",
-  TownHall = "TownHall"
-}
+export type LocationType = "Parking" | "CarpoolArea" | "Supermarket" | "HighwayExit" | "RelayParking" | "AbandonedRoad" | "AutoStop" | "TownHall";
 
 export type RallyingPoint = Identity &
   Readonly<{

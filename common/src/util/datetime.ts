@@ -9,19 +9,6 @@ export const createDatetimeCursor = (datetime: Date, id?: string) => {
   return datetime.toString() + id ? "_" + id : "";
 };
 
-export const formatDuration = (duration: TimeInSeconds) => {
-  if (duration < 60) {
-    return "1 min";
-  }
-  return duration >= 3600
-    ? Math.floor(duration / 3600) +
-        "h" +
-        Math.floor((duration % 3600) / 60)
-          .toString()
-          .padStart(2, "0")
-    : Math.floor(duration / 60).toString() + " min";
-};
-
 export const addSeconds = (date: Date, seconds: number) => {
   return new Date(date.getTime() + seconds * 1000);
 };
@@ -49,4 +36,28 @@ export const getFirstFutureDate = (date: Date, recurrence: DayOfTheWeekFlag) => 
     return null;
   }
   return addSeconds(date, 3600 * 24 * dDay);
+};
+
+export const toISOWithTimezoneString = (date: Date) => {
+  const tzo = -date.getTimezoneOffset(),
+    dif = tzo >= 0 ? "+" : "-",
+    pad = (num: number) => (num < 10 ? "0" : "") + num;
+
+  return (
+    date.getFullYear() +
+    "-" +
+    pad(date.getMonth() + 1) +
+    "-" +
+    pad(date.getDate()) +
+    "T" +
+    pad(date.getHours()) +
+    ":" +
+    pad(date.getMinutes()) +
+    ":" +
+    pad(date.getSeconds()) +
+    dif +
+    pad(Math.floor(Math.abs(tzo) / 60)) +
+    ":" +
+    pad(Math.abs(tzo) % 60)
+  );
 };

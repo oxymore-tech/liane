@@ -12,7 +12,7 @@ public sealed record RallyingPoint(
   string ZipCode,
   string City,
   int? PlaceCount,
-  bool IsActive
+  bool IsActive = true
 ) : IIdentity;
 
 public enum LocationType

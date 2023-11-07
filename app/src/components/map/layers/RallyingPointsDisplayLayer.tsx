@@ -4,15 +4,14 @@ import { AppColors, AppColorPalettes } from "@/theme/colors";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { useAppMapViewController } from "@/components/map/AppMapView";
-import { AppEnv } from "@/api/env";
+import { RNAppEnv } from "@/api/env";
 
 export const RallyingPointsDisplayLayer = ({ onSelect }: { onSelect?: (rp: RallyingPoint) => void; selected?: Ref<RallyingPoint> | undefined }) => {
   const controller = useAppMapViewController();
-  const url = AppEnv.tilesUrl + "/rallying_point_display";
   return (
     <MapLibreGL.VectorSource
       id={"all_rallying_points"}
-      url={url}
+      url={RNAppEnv.rallyingPointsTilesUrl}
       maxZoomLevel={14}
       hitbox={{ width: 32, height: 32 }}
       onPress={
