@@ -38,11 +38,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: liane-common-${{ github.run_number }}.tar
-
-      - name: Untar dist
-        working-directory: ./common
-        run: tar -x ../liane-common.tar
-
+          path: web/
 
       - name: Deploy on server
         uses: appleboy/ssh-action@master
