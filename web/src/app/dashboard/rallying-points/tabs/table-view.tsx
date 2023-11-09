@@ -1,11 +1,11 @@
 import { useAppServices } from "@/components/ContextProvider";
 import React, { useEffect, useState } from "react";
-import { useDebounceValue } from "@liane/common";
 import { useQuery } from "react-query";
 import { Checkbox, Table, TextInput } from "flowbite-react";
 import { getIconComponent } from "@/components/base/Icon";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { Pagination } from "@/components/base/Pagination";
+import { useDebounceValue } from "@/utils/hooks";
 
 export function RallyingPointsTablePage() {
   const services = useAppServices();

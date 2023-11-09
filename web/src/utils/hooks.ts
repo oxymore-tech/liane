@@ -65,3 +65,16 @@ export const useElementSize = (ref: React.RefObject<HTMLElement>, initial?: { wi
   }, [ref, ...(dependencies || [])]);
   return { height, width };
 };
+
+export function useDebounceValue<T>(value: T, delay?: number): T | undefined {
+  const [debouncedValue, setDebouncedValue] = React.useState<T | undefined>(undefined);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay || 300);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
