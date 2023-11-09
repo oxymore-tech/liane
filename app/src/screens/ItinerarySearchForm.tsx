@@ -3,16 +3,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
-import {
-  asSearchedLocation,
-  getKeyForTrip,
-  isRallyingPointSearchedLocation,
-  RallyingPoint,
-  Ref,
-  SearchedLocation,
-  Trip,
-  useDebounceValue
-} from "@liane/common";
+import { asSearchedLocation, getKeyForTrip, isRallyingPointSearchedLocation, RallyingPoint, Ref, SearchedLocation, Trip } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -20,6 +11,7 @@ import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
 import { AppStyles } from "@/theme/styles";
+import { useDebounceValue } from "@/util/hooks/debounce";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
