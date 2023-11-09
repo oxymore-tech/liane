@@ -158,12 +158,13 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
 }
 const colors = ["#0080ff", "#522b1d", "#00cc54", "#ff0088", "#ff3c00"];
 
-export type HighlightPingMarkerEvent = { id: number; highlight: boolean };
+type HighlightPingMarkerEvent = { id: number; highlight: boolean };
 const HighlightPingMarkerEventName = "highlightPingMarker";
-export type CenterPingMarkerEvent = { id: number };
+type CenterPingMarkerEvent = { id: number };
 const CenterPingMarkerEventName = "centerPingMarker";
-export const dispatchHighlightMarkerEvent = (payload: HighlightPingMarkerEvent) => dispatchCustomEvent(HighlightPingMarkerEventName, payload);
-export const dispatchCenterMarkerEvent = (payload: CenterPingMarkerEvent) => dispatchCustomEvent(CenterPingMarkerEventName, payload);
+const dispatchHighlightMarkerEvent = (payload: HighlightPingMarkerEvent) => dispatchCustomEvent(HighlightPingMarkerEventName, payload);
+const dispatchCenterMarkerEvent = (payload: CenterPingMarkerEvent) => dispatchCustomEvent(CenterPingMarkerEventName, payload);
+
 function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.Point, { user: string; at: string; color: string }> }) {
   const map = useMapContext();
   const highlightedIds = useRef<null | number>(null);

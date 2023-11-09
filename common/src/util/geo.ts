@@ -69,13 +69,12 @@ export const isFeatureCollection = (x: any): x is FeatureCollection => {
 };
 
 export function intersect(a: Iterable<any>, b: Iterable<any>) {
-  const setA = new Set(a);
   const setB = new Set(b);
-  const intersection = new Set([...setA].filter(x => setB.has(x)));
+  const intersection = new Set(Array.from(a).filter(x => setB.has(x)));
   return Array.from(intersection);
 }
 
-export const distance = (p1: LatLng, p2: LatLng) => turfDistance(point([p1.lng, p1.lat]), point([p2.lng, p2.lat]), "meters");
+export const distance = (p1: LatLng, p2: LatLng) => turfDistance(point([p1.lng, p1.lat]), point([p2.lng, p2.lat]), { units: "meters" });
 
 export const asPoint = (p: LatLng) => point([p.lng, p.lat]);
 

@@ -55,6 +55,7 @@ class SelectControl implements IControl {
 
 const generatePolygon = (ne: LngLat, sw: LngLat) => {
   const bbox = [Math.min(ne.lng, sw.lng), Math.min(ne.lat, sw.lat), Math.max(ne.lng, sw.lng), Math.max(ne.lat, sw.lat)];
+  // @ts-ignore
   return bboxPolygon(bbox);
 };
 

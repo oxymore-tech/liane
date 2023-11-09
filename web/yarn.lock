@@ -312,84 +312,100 @@
   dependencies:
     tslib "^2.4.0"
 
-"@turf/bbox-polygon@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/bbox-polygon/-/bbox-polygon-6.5.0.tgz#f18128b012eedfa860a521d8f2b3779cc0801032"
-  integrity sha512-+/r0NyL1lOG3zKZmmf6L8ommU07HliP4dgYToMoTxqzsWzyLjaj/OzgQ8rBmv703WJX+aS6yCmLuIhYqyufyuw==
+"@turf/bbox-polygon@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/bbox-polygon/-/bbox-polygon-7.0.0-alpha.2.tgz#27e21cd8188b16d4233a3e9700ba307b8344d9ef"
+  integrity sha512-g1E/rXhZxEkaDg9ouIyxhkBKZx1gjnRM4mRx8fMPKdGUYifWYs1yyFceyour8qKbiBxfrdIsQq/rjb4B3FiEYg==
   dependencies:
-    "@turf/helpers" "^6.5.0"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
-"@turf/bbox@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/bbox/-/bbox-6.5.0.tgz#bec30a744019eae420dac9ea46fb75caa44d8dc5"
-  integrity sha512-RBbLaao5hXTYyyg577iuMtDB8ehxMlUqHEJiMs8jT1GHkFhr6sYre3lmLsPeYEi/ZKj5TP5tt7fkzNdJ4GIVyw==
+"@turf/bbox@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/bbox/-/bbox-7.0.0-alpha.2.tgz#07e6d4e4dfff6803fa2f82ca3f07354708037ff7"
+  integrity sha512-21eOif210CQO83Di4ye2y30bnFcvqXggSBv4x9RaoPBo4p3aJTRePT0dZW7B9oNuOPK3EXwZ2j4wvsFQ9h1nkg==
   dependencies:
-    "@turf/helpers" "^6.5.0"
-    "@turf/meta" "^6.5.0"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    "@turf/meta" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
-"@turf/buffer@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/buffer/-/buffer-6.5.0.tgz#22bd0d05b4e1e73eaebc69b8f574a410ff704842"
-  integrity sha512-qeX4N6+PPWbKqp1AVkBVWFerGjMYMUyencwfnkCesoznU6qvfugFHNAngNqIBVnJjZ5n8IFyOf+akcxnrt9sNg==
+"@turf/buffer@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/buffer/-/buffer-7.0.0-alpha.2.tgz#a63f408edc75e6fe9c2f1a3aa9f24d80f10ee01a"
+  integrity sha512-NoTxgOqLfAqm1+Crb3koepYXikxXp567w13HLDBiCrBzRHhSn5ioRy9TBtj4hn0j+SpeGQGXt3ehqyDS22yE5A==
   dependencies:
-    "@turf/bbox" "^6.5.0"
-    "@turf/center" "^6.5.0"
-    "@turf/helpers" "^6.5.0"
-    "@turf/meta" "^6.5.0"
-    "@turf/projection" "^6.5.0"
+    "@turf/bbox" "^7.0.0-alpha.2"
+    "@turf/center" "^7.0.0-alpha.2"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    "@turf/jsts" "^2.7.1"
+    "@turf/meta" "^7.0.0-alpha.2"
+    "@turf/projection" "^7.0.0-alpha.2"
     d3-geo "1.7.1"
-    turf-jsts "*"
 
-"@turf/center@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/center/-/center-6.5.0.tgz#3bcb6bffcb8ba147430cfea84aabaed5dbdd4f07"
-  integrity sha512-T8KtMTfSATWcAX088rEDKjyvQCBkUsLnK/Txb6/8WUXIeOZyHu42G7MkdkHRoHtwieLdduDdmPLFyTdG5/e7ZQ==
+"@turf/center@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/center/-/center-7.0.0-alpha.2.tgz#9082a62472ea3fea336f0c59ce74541d0539e014"
+  integrity sha512-ePSxmkf+lNkNyEG8wAN5JAzaYSf5hg3SWLas86Eqk/rOmsMxVEKGxB34bdJSSkqO5NxOM/Fve2gJ9WrJ+9L7ug==
   dependencies:
-    "@turf/bbox" "^6.5.0"
-    "@turf/helpers" "^6.5.0"
+    "@turf/bbox" "^7.0.0-alpha.2"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
-"@turf/clone@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/clone/-/clone-6.5.0.tgz#895860573881ae10a02dfff95f274388b1cda51a"
-  integrity sha512-mzVtTFj/QycXOn6ig+annKrM6ZlimreKYz6f/GSERytOpgzodbQyOgkfwru100O1KQhhjSudKK4DsQ0oyi9cTw==
+"@turf/clone@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/clone/-/clone-7.0.0-alpha.2.tgz#3522d3d8ce0e675941b613f236d1c755496885a6"
+  integrity sha512-XcIVH7SAtYkbRLmNzCH88meFR9CxMRSlTxD6NP3/j67rf9nrJRJ1iXZtbomODiXz6INji3Yav74LtmjWGmtVqA==
   dependencies:
-    "@turf/helpers" "^6.5.0"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
-"@turf/distance@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-6.5.0.tgz#21f04d5f86e864d54e2abde16f35c15b4f36149a"
-  integrity sha512-xzykSLfoURec5qvQJcfifw/1mJa+5UwByZZ5TZ8iaqjGYN0vomhV9aiSLeYdUGtYRESZ+DYC/OzY+4RclZYgMg==
+"@turf/distance@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.0.0-alpha.2.tgz#b7ff9e3e94a425df95b1fd9e7eb0ece8a1351957"
+  integrity sha512-x4qwTcD452YAVK74QA13k9wWb78vF+IkU4x5SzaHozHIifHA2W+KDy5Wr5zIrDATY+qrTH34ppDhH7lYk1NZ+Q==
   dependencies:
-    "@turf/helpers" "^6.5.0"
-    "@turf/invariant" "^6.5.0"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    "@turf/invariant" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
-"@turf/helpers@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-6.5.0.tgz#f79af094bd6b8ce7ed2bd3e089a8493ee6cae82e"
-  integrity sha512-VbI1dV5bLFzohYYdgqwikdMVpe7pJ9X3E+dlr425wa2/sMJqYDhTO++ec38/pcPvPE6oD9WEEeU3Xu3gza+VPw==
-
-"@turf/invariant@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-6.5.0.tgz#970afc988023e39c7ccab2341bd06979ddc7463f"
-  integrity sha512-Wv8PRNCtPD31UVbdJE/KVAWKe7l6US+lJItRR/HOEW3eh+U/JwRCSUl/KZ7bmjM/C+zLNoreM2TU6OoLACs4eg==
+"@turf/helpers@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.0.0-alpha.2.tgz#0b51dd9f0237141515480cf736970d7e3f3d8bab"
+  integrity sha512-AuN4uqcLw7uZOc0XspEDZsVBeeKMZX+eqAWwfA2hapczX6yBxHdeVM074SmWgMbYkG18UNqk70gNXBz4KIowog==
   dependencies:
-    "@turf/helpers" "^6.5.0"
+    tslib "^2.3.0"
 
-"@turf/meta@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/meta/-/meta-6.5.0.tgz#b725c3653c9f432133eaa04d3421f7e51e0418ca"
-  integrity sha512-RrArvtsV0vdsCBegoBtOalgdSOfkBrTJ07VkpiCnq/491W67hnMWmDu7e6Ztw0C3WldRYTXkg3SumfdzZxLBHA==
+"@turf/invariant@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-7.0.0-alpha.2.tgz#571de7b180495305f1b20073674b317312fca27e"
+  integrity sha512-2TbEX96Zgq7FeQBvgW0aFbRT7T2LqUxLVGppNrJ1Cb/NVsDSdyEHEA/r10EwrbOz3kcoO/Tn2Qgv8qk8POVnaw==
   dependencies:
-    "@turf/helpers" "^6.5.0"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
-"@turf/projection@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/projection/-/projection-6.5.0.tgz#d2aad862370bf03f2270701115464a8406c144b2"
-  integrity sha512-/Pgh9mDvQWWu8HRxqpM+tKz8OzgauV+DiOcr3FCjD6ubDnrrmMJlsf6fFJmggw93mtVPrZRL6yyi9aYCQBOIvg==
+"@turf/jsts@^2.7.1":
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/@turf/jsts/-/jsts-2.7.1.tgz#c039569fcef704bef2bb7367c7ddada5008d9628"
+  integrity sha512-+nwOKme/aUprsxnLSfr2LylV6eL6T1Tuln+4Hl92uwZ8FrmjDRCH5Bi1LJNVfWCiYgk8+5K+t2zDphWNTsIFDA==
   dependencies:
-    "@turf/clone" "^6.5.0"
-    "@turf/helpers" "^6.5.0"
-    "@turf/meta" "^6.5.0"
+    jsts "2.7.1"
+
+"@turf/meta@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/meta/-/meta-7.0.0-alpha.2.tgz#851a140e00ee3d8c9ea48e0abf43eff6db2a022d"
+  integrity sha512-NqQntK+4kFF0H/ZLFkO7IsTm5pGlcWcGdNadRyRginz00TAb6lPYS4ZSgKI96Pv8BJlfdm0R9jgZcgSvlHGc3w==
+  dependencies:
+    "@turf/helpers" "^7.0.0-alpha.2"
+
+"@turf/projection@^7.0.0-alpha.2":
+  version "7.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@turf/projection/-/projection-7.0.0-alpha.2.tgz#136cef9aae89fea3c10ce915e39cd7dcb01ffd93"
+  integrity sha512-AzoJ/1R+s+7kkfQW8n/FbrPX5i0PwzPIh1NHgq790ES8qVDrRydGaom1r+iD+s+EvUr36LxqFeBKzxVSA5pHyQ==
+  dependencies:
+    "@turf/clone" "^7.0.0-alpha.2"
+    "@turf/helpers" "^7.0.0-alpha.2"
+    "@turf/meta" "^7.0.0-alpha.2"
+    tslib "^2.3.0"
 
 "@types/d3-array@*":
   version "3.0.9"
@@ -2627,6 +2643,11 @@ json5@^1.0.2:
   dependencies:
     minimist "^1.2.0"
 
+jsts@2.7.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/jsts/-/jsts-2.7.1.tgz#a921c0cc9eefeef588bd53e952e0a7782d812d52"
+  integrity sha512-x2wSZHEBK20CY+Wy+BPE7MrFQHW6sIsdaGUMEqmGAio+3gFzQaBYPwLRonUfQf9Ak8pBieqj9tUofX1+WtAEIg==
+
 "jsx-ast-utils@^2.4.1 || ^3.0.0", jsx-ast-utils@^3.3.3:
   version "3.3.5"
   resolved "https://registry.yarnpkg.com/jsx-ast-utils/-/jsx-ast-utils-3.3.5.tgz#4766bd05a8e2a11af222becd19e15575e52a853a"
@@ -3768,15 +3789,10 @@ tsconfig-paths@^3.14.2:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tslib@^2.0.0, tslib@^2.1.0, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.6.0:
+tslib@^2.0.0, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.6.0:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
-
-turf-jsts@*:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/turf-jsts/-/turf-jsts-1.2.3.tgz#59757f542afbff9a577bbf411f183b8f48d38aa4"
-  integrity sha512-Ja03QIJlPuHt4IQ2FfGex4F4JAr8m3jpaHbFbQrgwr7s7L6U8ocrHiF3J1+wf9jzhGKxvDeaCAnGDot8OjGFyA==
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"
