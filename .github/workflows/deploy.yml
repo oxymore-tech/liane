@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     concurrency: production
-    needs: common
 
     steps:
       - uses: actions/checkout@v3
