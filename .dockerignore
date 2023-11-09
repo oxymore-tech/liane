@@ -1,0 +1,15 @@
+
+**/.next/
+**/node_modules/
+**/dist/
+
+.github/
+.idea/
+.vscode/
+
+app/
+back/
+data/
+deploy/
+doc/
+webo/

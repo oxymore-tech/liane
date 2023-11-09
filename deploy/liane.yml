@@ -94,7 +94,7 @@ services:
 
   web:
     build:
-      context: ../web
+      context: ..
       args:
         DOMAIN: ${DOMAIN}
     labels:
