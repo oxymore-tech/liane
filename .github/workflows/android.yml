@@ -7,6 +7,7 @@ on:
       - develop
     paths:
       - app/**
+      - '!app/ios/**'
       - common/**
 
 jobs:
@@ -16,6 +17,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Build common
+        id: common
+        uses: ./.github/actions/common
 
       - name: Find Version
         id: version
@@ -52,16 +57,6 @@ jobs:
           ENV_APP_ENV: ${{ env.app_env }}
           ENV_APP_VERSION: ${{steps.exact-version.outputs.tag}}
           ENV_TEST_ACCOUNT: ${{ secrets.TEST_ACCOUNT }}
-
-      - uses: ./.github/workflows/common.yml
-      - name: Download common dist
-        uses: actions/download-artifact@v3
-        with:
-          name: liane-common-${{steps.exact-version.outputs.tag}}.tar
-
-      - name: Untar dist
-        working-directory: ./common
-        run: tar -x ../liane-common.tar
 
       - name: Setup Node
         uses: actions/setup-node@v3

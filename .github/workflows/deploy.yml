@@ -16,11 +16,13 @@ jobs:
   
   common:
     uses: ./.github/workflows/common.yml
-  
+
   deployment:
     runs-on: ubuntu-latest
     environment: production
     concurrency: production
+    needs: common
+
     steps:
       - uses: actions/checkout@v3
 

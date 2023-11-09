@@ -26,7 +26,7 @@ jobs:
         working-directory: ./common
         run: yarn
 
-      - name: Build
+      - name: Run unit tests & Build
         working-directory: ./common
         run: yarn prepublishOnly
 
