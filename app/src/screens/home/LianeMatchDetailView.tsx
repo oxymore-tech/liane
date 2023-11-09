@@ -1,22 +1,19 @@
 import React, { PropsWithChildren, useCallback, useContext, useEffect, useState } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import { Exact, getPoint, UnionUtils } from "@/api";
+import { capitalize, Exact, getPoint, JoinRequest, UnionUtils } from "@liane/common";
 import { getTotalDuration, getTripMatch } from "@/components/trip/trip";
-import { capitalize } from "@/util/strings";
-import { formatMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
 import { Column, Row, Space } from "@/components/base/AppLayout";
 import { LineSeparator } from "@/components/Separator";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
-import { formatDuration } from "@/util/datetime";
 import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { JoinRequest } from "@/api/event";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppStyles } from "@/theme/styles";
@@ -37,7 +34,7 @@ import Animated, {
 import { AppPressable, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DriverInfo } from "@/screens/detail/components/DriverInfo";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
-import { getSetting } from "@/api/storage";
+import { AppStorage } from "@/api/storage";
 
 const StepView = ({
   displayFull,
@@ -124,10 +121,10 @@ export const LianeMatchDetailView = () => {
 
   const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
 
-  const formattedDepartureTime = capitalize(formatMonthDay(new Date(liane.liane.departureTime)));
+  const formattedDepartureTime = capitalize(AppLocalization.formatMonthDay(new Date(liane.liane.departureTime)));
 
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
-  const tripDuration = formatDuration(getTotalDuration(currentTrip.slice(1)));
+  const tripDuration = AppLocalization.formatDuration(getTotalDuration(currentTrip.slice(1)));
 
   const [message, setMessage] = useState("");
   const [seats, setSeats] = useState(liane.freeSeatsCount > 0 ? -1 : 1);
@@ -139,7 +136,7 @@ export const LianeMatchDetailView = () => {
 
   const userIsMember = liane.liane.members.findIndex(m => m.user.id === user!.id) >= 0;
   const requestJoin = async () => {
-    const geolocationLevel = await getSetting("geolocation");
+    const geolocationLevel = await AppStorage.getSetting("geolocation");
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
       from: fromPoint.id!,
@@ -234,11 +231,15 @@ export const LianeMatchDetailView = () => {
             }}
             animateSummary={firstEdit}
             onEdit={liane.returnTime ? () => setStep(2) : undefined}
-            summary={takeReturnTrip ? "Retour " + toRelativeTimeString(new Date(liane.returnTime), formatTime) : "Aller simple"}
+            summary={
+              takeReturnTrip
+                ? "Retour " + AppLocalization.toRelativeTimeString(new Date(liane.returnTime), AppLocalization.formatTime)
+                : "Aller simple"
+            }
             icon={"corner-down-right-outline"}>
             <Animated.View entering={firstEdit ? undefined : SlideInLeft}>
               <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }} numberOfLines={2}>
-                Voulez vous effectuer le trajet retour {toRelativeTimeString(new Date(liane.returnTime), formatTime)}?
+                Voulez vous effectuer le trajet retour {AppLocalization.toRelativeTimeString(new Date(liane.returnTime), AppLocalization.formatTime)}?
               </AppText>
             </Animated.View>
           </StepView>

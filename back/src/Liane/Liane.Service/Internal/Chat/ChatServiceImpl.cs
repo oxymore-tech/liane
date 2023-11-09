@@ -61,12 +61,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     if (userMembershipIndex < 0) throw new NullReferenceException();
 
     // Update Member's last connection and return
-    var conversation = await Mongo.GetCollection<ConversationGroup>()
-      .FindOneAndUpdateAsync<ConversationGroup>(
-        g => g.Id == group.Id,
-        Builders<ConversationGroup>.Update.Set(g => g.Members[userMembershipIndex].LastReadAt, timestamp),
-        new FindOneAndUpdateOptions<ConversationGroup> { ReturnDocument = ReturnDocument.After }
-      );
+    var conversation = await Update(group, Builders<ConversationGroup>.Update.Set(g => g.Members[userMembershipIndex].LastReadAt, timestamp));
     var members = await userService.GetMany(conversation.Members.Select(m => m.User).ToImmutableList());
     return conversation with { Members = conversation.Members.Select(m => m with { User = members[m.User.Id] }).ToImmutableList() };
   }
@@ -123,7 +118,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
   public async Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group)
   {
     // Get messages in DESC order
-    var messages = await Mongo.Paginate<DbChatMessage, Cursor.Time>(
+    var messages = await Mongo.GetCollection<DbChatMessage>().PaginateTime(
       pagination,
       m => m.CreatedAt,
       Builders<DbChatMessage>.Filter.Where(m => m.Group == group.Id),

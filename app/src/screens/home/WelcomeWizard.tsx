@@ -7,18 +7,18 @@ import { AppText } from "@/components/base/AppText";
 import WelcomeBg from "@/assets/images/tutorial/welcome_bg.svg";
 import { AppRoundedButton, AppRoundedButtonOutline } from "@/components/base/AppRoundedButton";
 import { AppContext } from "@/components/context/ContextProvider";
-import { hideTutorial, shouldShowTutorial } from "@/api/storage";
+import { AppStorage } from "@/api/storage";
 
 export const WelcomeWizardModal = () => {
   const { user } = useContext(AppContext);
   const [page, setPage] = useState(0);
   const [show, setShow] = useState<boolean | undefined>(undefined);
   useEffect(() => {
-    shouldShowTutorial("welcome").then(setShow);
+    AppStorage.shouldShowTutorial("welcome").then(setShow);
   }, [user?.id]);
   const endTutorial = () => {
     setShow(false);
-    hideTutorial("welcome");
+    AppStorage.hideTutorial("welcome");
   };
   const next = () => setPage(page + 1);
   const prev = () => setPage(page - 1);

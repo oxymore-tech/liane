@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Liane } from "@/api";
+import { Liane } from "@liane/common";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { AppContext } from "@/components/context/ContextProvider";
 import { getTripFromLiane } from "@/components/trip/trip";

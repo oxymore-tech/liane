@@ -1,0 +1,49 @@
+name: Common Build
+
+on:
+  workflow_call:
+
+jobs:
+  common-build:
+    name: Common Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+          cache-dependency-path: ./common/yarn.lock
+
+      - uses: c-hive/gha-yarn-cache@v2
+        with:
+          directory: ./common
+
+      - name: Install dependencies
+        working-directory: ./common
+        run: yarn
+
+      - name: Build
+        working-directory: ./common
+        run: yarn prepublishOnly
+
+      - name: Find Exact Version
+        id: exact-version
+        uses: jimschubert/query-tag-action@v2
+        with:
+          abbrev: 1
+          skip-unshallow: true
+
+      - name: Tar files
+        working-directory: ./common
+        run: tar -cvf liane-common.tar dist package.json
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: liane-common-${{steps.exact-version.outputs.tag}}.tar
+          path: liane-common.tar
+          retention-days: 5

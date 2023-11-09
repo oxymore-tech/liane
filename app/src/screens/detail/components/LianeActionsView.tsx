@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { DayOfTheWeekFlag, getPoint, Liane, LianeMatch } from "@/api";
+import { DayOfTheWeekFlag, getPoint, Liane, LianeMatch } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/api/navigation";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";

@@ -5,7 +5,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { Center } from "@/components/base/AppLayout";
 
 import { AppColorPalettes } from "@/theme/colors";
-import { getUniqueColor } from "@/util/strings";
+import { getUniqueColor } from "@liane/common";
 
 export interface UserPictureProps {
   url: string | null | undefined;

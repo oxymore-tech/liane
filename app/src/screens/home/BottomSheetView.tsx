@@ -2,10 +2,10 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { Exact, getPoint, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@/api";
+import { Exact, formatDuration, getPoint, LianeMatch, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@liane/common";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView } from "@/components/trip/TripSegmentView";
-import { getTotalDuration, getTrip } from "@/components/trip/trip";
+import { getTotalDuration, getTrip, UserTrip } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
@@ -16,7 +16,6 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { AppTabs } from "@/components/base/AppTabs";
 import { UserPicture } from "@/components/UserPicture";
-import { formatDuration } from "@/util/datetime";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppStyles } from "@/theme/styles";
@@ -145,7 +144,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
     return null;
   }
 
-  const renderItem = ({ item }: { item: any }) => {
+  const renderItem = ({ item }: { item: { lianeMatch: LianeMatch; trip: UserTrip; returnTime: UTCDateTime } }) => {
     const driver = item.lianeMatch.liane.members.find((l: LianeMember) => l.user.id === item.lianeMatch.liane.driver.user)!.user;
     const duration = formatDuration(getTotalDuration(item.trip.wayPoints.slice(1)));
     const userIsMember = !!item.lianeMatch.liane.members.find(m => m.user.id === user!.id);

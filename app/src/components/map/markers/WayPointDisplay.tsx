@@ -1,4 +1,4 @@
-import { RallyingPoint } from "@/api";
+import { RallyingPoint } from "@liane/common";
 import { ColorValue, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon } from "@/components/base/AppIcon";

@@ -1,8 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, useQueryClient, UseQueryResult } from "react-query";
-import { JoinLianeRequestDetailed, Liane, Ref } from "@/api";
-import { UnauthorizedError } from "@/api/exception";
+import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
 import { useAppNavigation } from "@/api/navigation";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
@@ -16,14 +15,14 @@ import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { FutureStates } from "@/components/context/QueryUpdateProvider";
-import { useObservable } from "@/util/hooks/subscription";
 import { useIsFocused } from "@react-navigation/native";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { LianeGeolocation } from "@/api/service/location";
+import { useObservable } from "@/util/hooks/subscription";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
-  const { user, services } = useContext(AppContext);
+  const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
@@ -52,7 +51,14 @@ const MyTripsScreen = () => {
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    { queryKey: LianeQueryKey, queryFn: () => services.liane.list(FutureStates, undefined, 25, false) }
+    {
+      queryKey: LianeQueryKey,
+      queryFn: async () => {
+        const lianes = await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
+        await services.reminder.syncWithStorage(lianes.data);
+        return lianes;
+      }
+    }
   ]);
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -77,7 +83,9 @@ const MyTripsScreen = () => {
   // Cancel pings if necessary
   useEffect(() => {
     LianeGeolocation.currentLiane().then(async current => {
-      if (!current) return;
+      if (!current) {
+        return;
+      }
       const liane = await services.liane.get(current);
       if (liane.state !== "Started") {
         await LianeGeolocation.stopSendingPings();
@@ -177,7 +185,7 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
       </>
     );
   },
-  (repository, params, cursor) => repository.liane.list(["Finished", "Archived"], cursor, 10, false),
+  (repository, params, cursor) => repository.liane.list(["Finished", "Archived"], { cursor, limit: 10, asc: false }),
   LianePastQueryKey,
   NoRecentTrip
 );

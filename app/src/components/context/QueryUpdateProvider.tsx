@@ -1,11 +1,10 @@
 import React, { PropsWithChildren, useContext, useEffect } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { useSubscription } from "@/util/hooks/subscription";
-import { JoinLianeRequestDetailed, Liane, LianeState, PaginatedResponse } from "@/api";
-import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { InfiniteData, useQueryClient } from "react-query";
-import { Notification } from "@/api/notification";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
+import { JoinLianeRequestDetailed, Liane, LianeState, Notification, PaginatedResponse } from "@liane/common";
+import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { useSubscription } from "@/util/hooks/subscription";
 
 /**
  * This component is responsible for updating local query cache
@@ -66,6 +65,7 @@ const readNotifications = (old: InfiniteData<PaginatedResponse<Notification>>, u
     }))
   };
 };
+
 export const QueryUpdateProvider = (props: PropsWithChildren) => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
@@ -11,7 +11,7 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
 {
   const int MaxRadius = 50_000;
 
-  Task<ImmutableList<RallyingPoint>> List(LatLng? center, int? distance = null, string? search = null, int? limit = null);
+  Task<PaginatedResponse<RallyingPoint>> List(RallyingPointFilter rallyingPointFilter);
 
   Task Insert(IEnumerable<RallyingPoint> rallyingPoints, bool clearAll = false);
 

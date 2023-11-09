@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY package.json ./
 COPY yarn.lock ./
+COPY liane-common.tar /common/
+RUN cd /common && tar -xvf liane-common.tar
 
 RUN yarn
 

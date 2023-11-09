@@ -9,15 +9,14 @@ import { Column, Row, Space } from "@/components/base/AppLayout";
 import { CachedPlaceLocationsView, CachedTripsView, PlaceSuggestions, RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import Animated, { SlideInLeft, SlideInUp, SlideOutLeft, SlideOutUp } from "react-native-reanimated";
 
-import { SearchedLocation, Trip } from "@/api/service/location";
 import { AppText } from "@/components/base/AppText";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { AppContext } from "@/components/context/ContextProvider";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useSelector } from "@xstate/react";
-import { capitalize } from "@/util/strings";
-import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
+import { capitalize, SearchedLocation, Trip } from "@liane/common";
+import { AppLocalization } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
@@ -362,9 +361,11 @@ export const FilterSelector = ({ formatter, shortFormat = false, color = default
   const date = targetTime?.dateTime || new Date();
 
   const defaultFormatter = shortFormat
-    ? (d: Date) => capitalize(toRelativeDateString(d, formatShortMonthDay))!
+    ? (d: Date) => capitalize(AppLocalization.toRelativeDateString(d, AppLocalization.formatShortMonthDay))!
     : (d: Date) => {
-        return targetTime?.direction === "Arrival" ? "Arrivée " : "Départ " + toRelativeDateString(d, formatShortMonthDay);
+        return targetTime?.direction === "Arrival"
+          ? "Arrivée "
+          : "Départ " + AppLocalization.toRelativeDateString(d, AppLocalization.formatShortMonthDay);
       };
 
   return (

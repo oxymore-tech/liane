@@ -8,7 +8,6 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -85,7 +84,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       filter &= Builders<Notification>.Filter.Eq("payload.liane", notificationFilter.Liane);
     }
 
-    return await Mongo.Paginate<Notification, Cursor.Time>(pagination, r => r.CreatedAt, filter, false);
+    return await Collection.PaginateTime(pagination, r => r.CreatedAt, filter, false);
   }
 
   public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Liane>> lianes)

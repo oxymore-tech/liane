@@ -4,9 +4,8 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { RallyingPoint, Ref, WayPoint } from "@/api";
+import { addSeconds, RallyingPoint, Ref, WayPoint } from "@liane/common";
 import { AppIcon } from "@/components/base/AppIcon";
-import { addSeconds } from "@/util/datetime";
 
 export interface WayPointsViewProps {
   wayPoints: WayPoint[];

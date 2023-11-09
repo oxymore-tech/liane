@@ -4,12 +4,11 @@ import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@/api";
-import { useLianeStatus, getTotalDistance, getTripFromMatch, getTripFromLiane } from "@/components/trip/trip";
+import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@liane/common";
+import { getTotalDistance, getTripFromLiane, getTripFromMatch, useLianeStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { getBoundingBox } from "@/util/geometry";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
@@ -24,15 +23,14 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { GeolocationSwitch, startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-import { formatMonthDay } from "@/api/i18n";
-import { capitalize } from "@/util/strings";
+import { AppLocalization } from "@/api/i18n";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
+import { useObservable } from "@/util/hooks/subscription";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -198,7 +196,7 @@ const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
 };
 
 export const LianeWithDateView = (props: { liane: Liane }) => {
-  const date = capitalize(formatMonthDay(new Date(props.liane.departureTime)));
+  const date = capitalize(AppLocalization.formatMonthDay(new Date(props.liane.departureTime)));
   const { user } = useContext(AppContext);
   const { wayPoints } = useMemo(() => getTripFromLiane(props.liane, user!.id!), [props.liane, user]);
   const passengers = useMemo(
@@ -247,6 +245,28 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
   );
 };
 
+const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
+  const [loading, setLoading] = useState(false);
+  return (
+    <AppPressableOverlay
+      backgroundStyle={{
+        backgroundColor: loading ? AppColorPalettes.gray[500] : AppColors.primaryColor,
+        position: "relative",
+        left: -8,
+        borderTopRightRadius: 16
+      }}
+      onPress={() => {
+        setLoading(true);
+        startAction().then(() => setLoading(false));
+      }}>
+      <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+        {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
+        {loading && <ActivityIndicator size="small" color={AppColors.white} />}
+        <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+      </Row>
+    </AppPressableOverlay>
+  );
+};
 const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
 
@@ -272,19 +292,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
         {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <LianeStatusView liane={liane.liane} />}
       </Row>
       {status === "StartingSoon" && (
-        <AppPressableOverlay
-          backgroundStyle={{
-            backgroundColor: AppColors.primaryColor,
-            position: "relative",
-            left: -8,
-            borderTopRightRadius: 16
-          }}
-          onPress={() => services.liane.start(liane.liane.id!).then(() => startGeolocationService(liane.liane))}>
-          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
-            <AppIcon name={"play-circle"} color={AppColors.white} />
-            <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
-          </Row>
-        </AppPressableOverlay>
+        <StartButton startAction={() => services.liane.start(liane.liane.id!).then(() => startGeolocationService(liane.liane))} />
       )}
 
       <Row style={styles.resumeContainer} spacing={4}>
@@ -303,7 +311,10 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
             <InfoItem icon={"twisting-arrow"} value={tripDistance} />
           </Row>
           <Row>
-            <InfoItem icon={"seat"} value={"Reste " + liane.freeSeatsCount + " place" + (liane.freeSeatsCount > 1 ? "s" : "")} />
+            <InfoItem
+              icon={"seat"}
+              value={liane.freeSeatsCount > 0 ? "Reste " + liane.freeSeatsCount + " place" + (liane.freeSeatsCount > 1 ? "s" : "") : "Complet"}
+            />
           </Row>
         </Column>
 

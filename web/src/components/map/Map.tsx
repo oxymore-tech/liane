@@ -1,28 +1,62 @@
-import { MapContainer, MapContainerProps, TileLayer } from "react-leaflet";
-import { LatLng } from "@/api";
-import ZoomHandler from "@/components/map/ZoomHandler";
-import MoveHandler from "@/components/map/MoveHandler";
-import React from "react";
+"use client";
 
-interface MapProps extends MapContainerProps {
-  onZoomEnd?: (zoom: number) => void;
-  onMoveEnd?: (center: LatLng) => void;
-  tileServer: string;
-  points?: JSX.Element[];
-  routes?: JSX.Element[];
-}
+import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { DEFAULT_TLS, getMapStyleUrl, LatLng } from "@liane/common";
+import { NodeAppEnv } from "@/api/env";
+import { useElementSize } from "@/utils/hooks";
 
-function Map({ onZoomEnd, onMoveEnd, tileServer, points, routes, ...props }: MapProps) {
-  return <MapContainer {...props}>
-    <TileLayer
-      url={tileServer}
-      zIndex={2}
-    />
-    { onZoomEnd && <ZoomHandler callback={onZoomEnd}></ZoomHandler>}
-    { onMoveEnd && <MoveHandler callback={onMoveEnd}></MoveHandler>}
-    { points }
-    { routes }
-  </MapContainer>;
-}
+export type MapProps = {
+  center?: LatLng;
+  onZoom?: (zoom: number) => void;
+} & PropsWithChildren;
+
+// @ts-ignore
+const MapContext = createContext<React.MutableRefObject<maplibregl.Map | null>>();
+
+export const useMapContext = () => {
+  return useContext(MapContext);
+};
+const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, center, onZoom }: MapProps, ref) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  useImperativeHandle<maplibregl.Map | null, maplibregl.Map | null>(ref, () => map.current);
+  useEffect(() => {
+    if (map.current) return;
+    map.current = new maplibregl.Map({
+      container: mapContainer.current!,
+      style: getMapStyleUrl(NodeAppEnv),
+      center: center ? [center.lng, center.lat] : [DEFAULT_TLS.lng, DEFAULT_TLS.lat],
+      zoom: 12
+    });
+    const control = new maplibregl.NavigationControl();
+    map.current.addControl(control, "top-right");
+  }, [mapContainer]);
+
+  useEffect(() => {
+    if (!onZoom) return;
+    const listener = () => {
+      onZoom(map.current!.getZoom());
+    };
+    map.current?.on("zoom", listener);
+    return () => {
+      map.current?.off("zoom", listener);
+    };
+  }, [onZoom]);
+
+  useEffect(() => {
+    if (!map.current || !center) return;
+    map.current.setCenter([center.lng, center.lat]);
+  }, [center]);
+
+  return (
+    <div ref={mapContainer} className="h-full w-full">
+      <MapContext.Provider value={map}>{children}</MapContext.Provider>
+    </div>
+  );
+});
+
+Map.displayName = "Map";
 
 export default Map;

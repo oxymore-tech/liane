@@ -9,15 +9,15 @@ import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { AppIcon } from "@/components/base/AppIcon";
-import { formatMonthDay, formatTime } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { CardTextInput } from "@/components/base/CardTextInput";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { TripCard } from "@/components/TripCard";
-import { Exact, UnionUtils } from "@/api";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
-import { JoinRequest } from "@/api/event";
+import { Exact, JoinRequest, UnionUtils } from "@liane/common";
+import { AppStorage } from "@/api/storage";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
   const { route, navigation } = useAppNavigation<"RequestJoin">();
@@ -33,12 +33,15 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =
     request.seats > 0 ? `Conducteur (${Math.abs(request.seats)} place${plural})` : Math.abs(request.seats) + " passager" + plural;
-  const dateTime = `${formatMonthDay(new Date(request.targetLiane.departureTime))} à ${formatTime(new Date(request.targetLiane.departureTime))}`;
+  const dateTime = `${AppLocalization.formatMonthDay(new Date(request.targetLiane.departureTime))} à ${AppLocalization.formatTime(
+    new Date(request.targetLiane.departureTime)
+  )}`;
   const fromPoint = exactMatch ? request.from : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.pickup)!.rallyingPoint;
   const toPoint = exactMatch ? request.to : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.deposit)!.rallyingPoint;
 
   const wayPoints = exactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
+    const geolocationLevel = await AppStorage.getSetting("geolocation");
     const unresolvedRequest: JoinRequest = {
       type: "JoinRequest",
       from: fromPoint.id!,
@@ -46,7 +49,8 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
       seats: request.seats,
       takeReturnTrip: request.takeReturnTrip,
       liane: request.targetLiane.id!,
-      to: toPoint.id!
+      to: toPoint.id!,
+      geolocationLevel
     };
     const r = { ...unresolvedRequest, message: message };
     await services.liane.join(r);

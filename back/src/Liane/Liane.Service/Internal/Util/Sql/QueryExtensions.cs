@@ -79,4 +79,10 @@ public static class QueryExtensions
     var (sql, parameters) = query.ToSql();
     return connection.QueryAsync<T>(sql, parameters, transaction);
   }
+  
+  public static Task<long> QueryCountAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
+  {
+    var (sql, parameters) = query.ToSql();
+    return connection.QuerySingleAsync<long>($"select count(*) from ({sql}) query", parameters, transaction);
+  }
 }

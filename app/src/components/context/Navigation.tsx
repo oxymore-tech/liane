@@ -22,7 +22,6 @@ import HomeScreen from "@/screens/home/HomeScreen";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
 import { Row } from "@/components/base/AppLayout";
 import { NavigationScreenTitles, useAppNavigation } from "@/api/navigation";
@@ -34,6 +33,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { NavigationState, ParamListBase, PartialState, Route } from "@react-navigation/native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import { useObservable } from "@/util/hooks/subscription";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -99,7 +99,7 @@ const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarPr
     };
 
     return (
-      <View style={{ flex: 1 }}>
+      <View key={r.name} style={{ flex: 1 }}>
         <AppPressableOverlay
           backgroundStyle={{ borderRadius: 4 }}
           style={[{ backgroundColor: focused ? options.tabBarActiveBackgroundColor : undefined }, options.tabBarItemStyle]}

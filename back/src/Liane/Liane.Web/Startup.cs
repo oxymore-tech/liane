@@ -85,6 +85,7 @@ public static class Startup
     services.AddService<DeleteAccountServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
+    services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();

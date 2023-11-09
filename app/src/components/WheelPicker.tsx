@@ -2,20 +2,21 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  StyleProp,
-  TextStyle,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   Animated,
-  ViewStyle,
+  FlatList,
+  FlatListProps,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleProp,
+  StyleSheet,
+  TextStyle,
   View,
   ViewProps,
-  FlatListProps,
-  FlatList
+  ViewStyle
 } from "react-native";
-import { StyleSheet } from "react-native";
 import { AppText } from "@/components/base/AppText";
-import { mod } from "@/util/numbers";
+import { mod } from "@liane/common";
+
 interface Props {
   selectedIndex: number;
   options: string[];

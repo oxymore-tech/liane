@@ -83,6 +83,12 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
       ? FullUser.Unknown(userId)
       : MapUser(userDb);
   }
+  
+  public async Task<FullUser?> TryGetFullUser(string userId)
+  {
+    var userDb = await Mongo.Get<DbUser>(userId);
+    return userDb is not null ? MapUser(userDb) : null;
+  }
 
   public Task Delete(string id)
   {

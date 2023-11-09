@@ -1,12 +1,11 @@
-import { RallyingPoint, Ref } from "@/api";
-import React, { useEffect, useState } from "react";
+import { AppEnv, RallyingPoint, Ref } from "@liane/common";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAppMapViewController } from "@/components/map/AppMapView";
-import { TilesUrl } from "@/api/http";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
-import { getDateParams } from "@/components/map/layers/LianeDisplayLayer";
 import { AppLogger } from "@/api/logger";
+import { RNAppEnv } from "@/api/env";
 
 export type PickupDestinationsDisplayLayerProps = {
   date?: Date;
@@ -16,7 +15,7 @@ export type PickupDestinationsDisplayLayerProps = {
 };
 
 export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, point, type }: PickupDestinationsDisplayLayerProps) => {
-  const dateArg = getDateParams(date);
+  const dateArg = useMemo(() => AppEnv.getLayerDateParams(date), [date]);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
     setSourceId("segmentsFiltered" + dateArg + point + type);
@@ -24,7 +23,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
   }, [dateArg, point, type]);
 
   const controller = useAppMapViewController();
-  const url = TilesUrl + "/liane_display_filter_test?" + dateArg + `&${type}=` + point;
+  const url = RNAppEnv.lianeFilteredTilesUrl + "?" + dateArg + `&${type}=` + point;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (

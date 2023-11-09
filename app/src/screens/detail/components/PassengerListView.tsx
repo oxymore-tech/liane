@@ -1,4 +1,4 @@
-import { LianeMember } from "@/api";
+import { LianeMember } from "@liane/common";
 import { Column, Row } from "@/components/base/AppLayout";
 import { View } from "react-native";
 import { AppText } from "@/components/base/AppText";

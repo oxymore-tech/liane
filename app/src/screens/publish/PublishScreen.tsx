@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
@@ -17,10 +17,6 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "react-query";
 import { useActor, useInterpret } from "@xstate/react";
-
-import { DayOfTheWeekFlag } from "@/api";
-import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
-import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -41,11 +37,13 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { getFirstFutureDate } from "@/util/datetime";
+import { DayOfTheWeekFlag, getFirstFutureDate } from "@liane/common";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
-import { getSetting } from "@/api/storage";
+import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { AppStorage } from "@/api/storage";
+import { AppLocalization } from "@/api/i18n";
 
 interface StepProps<T> {
   editable: boolean;
@@ -63,7 +61,7 @@ export const PublishScreen = () => {
 
   const [m] = useState(() =>
     CreatePublishLianeMachine(async ctx => {
-      const geolocationLevel = await getSetting("geolocation");
+      const geolocationLevel = await AppStorage.getSetting("geolocation");
       const liane = await services.liane.post({
         to: ctx.request.to!.id!,
         from: ctx.request.from!.id!,
@@ -81,18 +79,19 @@ export const PublishScreen = () => {
   );
   const machine = useInterpret(m);
   const [state] = useActor(machine);
-  machine.onDone(() => {
-    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
+  useEffect(() => {
     if (!state.done) {
       return;
     }
-    navigation.popToTop();
-    if (shouldShow) {
-      showTutorial("driver", state.context.created!.id);
-    } else {
-      navigation.navigate(HOME_TRIPS);
-    }
-  });
+    machine.onDone(() => {
+      navigation.popToTop();
+      if (shouldShow) {
+        showTutorial("driver", state.context.created!.id);
+      } else {
+        navigation.navigate(HOME_TRIPS);
+      }
+    });
+  }, [machine, navigation, shouldShow, showTutorial, state.context.created, state.done]);
 
   return (
     /*  @ts-ignore */
@@ -294,12 +293,12 @@ const DateStepView = ({
             {isRecurrent ? (
               <Row style={{ flexShrink: 1, flexGrow: 1 }}>
                 <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>
-                  Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
+                  Les {AppLocalization.formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
                 </AppText>
-                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {formatTime(date)}</AppText>
+                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {AppLocalization.formatTime(date)}</AppText>
               </Row>
             ) : (
-              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatShortMonthDay)}</AppText>
+              <AppText style={styles.stepResume}>Départ {AppLocalization.toRelativeTimeString(date, AppLocalization.formatShortMonthDay)}</AppText>
             )}
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>
@@ -435,7 +434,7 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
         {!editable && (
           <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
             <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppText style={styles.stepResume}>{date ? "Retour à " + formatTime(date) : "Pas de retour"}</AppText>
+              <AppText style={styles.stepResume}>{date ? "Retour à " + AppLocalization.formatTime(date) : "Pas de retour"}</AppText>
               <AppIcon name={"edit-2"} color={AppColors.white} />
             </Row>
           </Animated.View>

@@ -1,9 +1,8 @@
-import { RallyingPoint } from "@/api";
+import { isFeatureCollection, RallyingPoint } from "@liane/common";
 import { FeatureCollection } from "geojson";
 import { ColorValue } from "react-native";
 import { AppColors } from "@/theme/colors";
 import React, { useMemo } from "react";
-import { isFeatureCollection } from "@/util/geometry";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 
