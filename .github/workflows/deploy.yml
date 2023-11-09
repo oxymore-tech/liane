@@ -13,6 +13,10 @@ on:
       - common/**
 
 jobs:
+  
+  common:
+    uses: ./.github/workflows/common.yml
+  
   deployment:
     runs-on: ubuntu-latest
     environment: production
@@ -31,8 +35,6 @@ jobs:
             echo "project=liane-dev" >> $GITHUB_ENV
             echo "branch=develop" >> $GITHUB_ENV
           fi
-
-      - uses: ./.github/workflows/common.yml
 
       - name: Download common dist
         uses: actions/download-artifact@v3
