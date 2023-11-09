@@ -14,9 +14,6 @@ on:
 
 jobs:
   
-  common:
-    uses: ./.github/workflows/common.yml
-
   deployment:
     runs-on: ubuntu-latest
     environment: production
@@ -37,12 +34,6 @@ jobs:
             echo "project=liane-dev" >> $GITHUB_ENV
             echo "branch=develop" >> $GITHUB_ENV
           fi
-
-      - name: Download common dist
-        uses: actions/download-artifact@v3
-        with:
-          name: liane-common-${{ github.run_number }}.tar
-          path: web/
 
       - name: Deploy on server
         uses: appleboy/ssh-action@master
