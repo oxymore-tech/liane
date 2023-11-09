@@ -30,13 +30,6 @@ jobs:
         working-directory: ./common
         run: yarn prepublishOnly
 
-      - name: Find Exact Version
-        id: exact-version
-        uses: jimschubert/query-tag-action@v2
-        with:
-          abbrev: 1
-          skip-unshallow: true
-
       - name: Tar files
         working-directory: ./common
         run: tar -cvf liane-common.tar dist package.json
@@ -44,6 +37,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: liane-common-${{steps.exact-version.outputs.tag}}.tar
+          name: liane-common-${{ github.run_number }}.tar
           path: liane-common.tar
           retention-days: 5

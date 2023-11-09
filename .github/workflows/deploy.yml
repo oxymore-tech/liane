@@ -32,19 +32,12 @@ jobs:
             echo "branch=develop" >> $GITHUB_ENV
           fi
 
-      - name: Find Exact Version
-        id: exact-version
-        uses: jimschubert/query-tag-action@v2
-        with:
-          abbrev: 1
-          skip-unshallow: true
-
       - uses: ./.github/workflows/common.yml
 
       - name: Download common dist
         uses: actions/download-artifact@v3
         with:
-          name: liane-common-${{steps.exact-version.outputs.tag}}.tar
+          name: liane-common-${{ github.run_number }}.tar
 
       - name: Untar dist
         working-directory: ./common
