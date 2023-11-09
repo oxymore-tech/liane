@@ -26,13 +26,9 @@ jobs:
         working-directory: ./common
         run: yarn
 
-      - name: Run tests
-        working-directory: ./common
-        run: yarn test unit
-
       - name: Build
         working-directory: ./common
-        run: yarn build
+        run: yarn prepublishOnly
 
       - name: Find Exact Version
         id: exact-version
@@ -43,7 +39,7 @@ jobs:
 
       - name: Tar files
         working-directory: ./common
-        run: tar -cvf liane-common.tar .
+        run: tar -cvf liane-common.tar dist package.json
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3

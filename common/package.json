@@ -13,7 +13,7 @@
     "build": "tsc && vite build && yarn upgrade @liane/common --cwd ../app --check-files",
     "lint": "eslint ./src/ --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "prepublishOnly": "yarn test && yarn build",
+    "prepublishOnly": "yarn test unit && tsc && vite build",
     "test": "vitest --run"
   },
   "dependencies": {
