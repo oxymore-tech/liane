@@ -356,18 +356,27 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     currentContext.SetCurrentUser(userA);
     const int total = 20;
     const int pageSize = 10;
+    var created = new List<Api.Trip.Liane>();
     for (var i = 0; i < total; i++)
     {
       var lianeA = Fakers.LianeRequestFaker.Generate();
-      await testedService.Create(lianeA, userA.Id);
+      created.Add(await testedService.Create(lianeA, userA.Id));
     }
+    created = created.OrderByDescending(l => l.DepartureTime).ToList();
 
     var firstPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
+    Assert.AreEqual(20, firstPage.TotalCount);
     Assert.AreEqual(pageSize, firstPage.Data.Count);
+    Assert.AreEqual(0, created.FindIndex(l => l.Id == firstPage.Data.First().Id));
+    Assert.AreEqual(9, created.FindIndex(l => l.Id == firstPage.Data.Last().Id));
     Assert.NotNull(firstPage.Next);
-
+    var cursorId = (firstPage.Next as Cursor.Time)!.Id;
+    Assert.AreEqual(10, created.FindIndex(l => l.Id == cursorId));
+    
     var lastPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
     Assert.AreEqual(pageSize, lastPage.Data.Count);
+    Assert.AreEqual(10, created.FindIndex(l => l.Id == lastPage.Data.First().Id));
+    Assert.AreEqual(19, created.FindIndex(l => l.Id == lastPage.Data.Last().Id));
     Assert.Null(lastPage.Next);
 
     Assert.True(firstPage.Data.First().DepartureTime > lastPage.Data.First().DepartureTime);

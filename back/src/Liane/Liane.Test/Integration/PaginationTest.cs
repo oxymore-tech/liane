@@ -42,7 +42,7 @@ public sealed class PaginationTest: BaseIntegrationTest
     Thread.Sleep(1);
     var list = ImmutableList.Create(e1, e2, e4, e3, e5);
     await collection.InsertManyAsync(list);
-    var actual = await collection.PaginateTime(new Pagination(new Cursor.Time(new DateTime(2023, 02, 16), null), 3), t => t.CreatedAt);
+    var actual = await collection.PaginateTime(new Pagination(new Cursor.Time(new DateTime(2023, 02, 17), null), 3), t => t.CreatedAt);
     CollectionAssert.AreEquivalent(ImmutableList.Create(e3, e4, e5), actual.Data);
     Assert.AreEqual(3, actual.PageSize);
     Assert.IsNull(actual.Next);
@@ -78,10 +78,10 @@ public sealed class PaginationTest: BaseIntegrationTest
     Thread.Sleep(1);
     var list = ImmutableList.Create(e4, e5, e3, e1, e2);
     await collection.InsertManyAsync(list);
-    var actual =  await collection.PaginateTime(new Pagination(new Cursor.Time(new DateTime(2023, 02, 15), null), 3), e => e.CreatedAt);
+    var actual =  await collection.PaginateTime(new Pagination(new Cursor.Time(new DateTime(2023, 02, 16), null), 3), e => e.CreatedAt);
     CollectionAssert.AreEquivalent(ImmutableList.Create(e2, e3, e4), actual.Data);
     Assert.AreEqual(3, actual.PageSize);
-    Assert.AreEqual(new Cursor.Time(new DateTime(2023, 02, 17).ToUniversalTime(), e4.Id), actual.Next);
+    Assert.AreEqual(new Cursor.Time(new DateTime(2023, 02, 18).ToUniversalTime(), e5.Id), actual.Next);
   }
 
   internal sealed record TestEntity(string Id, Ref<User>? CreatedBy, DateTime? CreatedAt) : IEntity;

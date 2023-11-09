@@ -277,7 +277,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
     }
 
-    return await paginatedLianes.SelectAsync(MapEntity);
+    return await paginatedLianes.SelectAsync(MapEntity) with{TotalCount = await Count(filter)};
   }
 
   private FilterDefinition<LianeDb> BuildFilter(LianeFilter lianeFilter)

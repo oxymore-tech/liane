@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
@@ -119,16 +120,33 @@ public static class MongoDatabaseExtensions
     
     paginationFields = paginationFields.Append(m => m.Id).ToImmutableList();
     
+    // Sort entities by given pagination fields
     var sort = Builders<TProjection>.Sort.Combine(
       paginationFields.Select(f => effectiveSortAsc
       ? Builders<TProjection>.Sort.Ascending(f)
       : Builders<TProjection>.Sort.Descending(f))
     );
 
+    // Get pagination fields in order then build filter 
+    // In the case of ascending sort with two fields, the final filter is built in the following way :
+    //    field1 >= value1 || (field1 == value1 && field2 >= value2) 
+    var filterFields = pagination.Cursor?.GetFilterFields().Select(
+      (value, index) => value is null ? null : GetFieldFilter(effectiveSortAsc, paginationFields[index], value)).Where(f => f is not null).ToList();
+ 
     
-    var filterFields = pagination.Cursor?.GetFilterFields().Select((value, index) => value is null ? null : GetFieldFilter(effectiveSortAsc, paginationFields[index], value)).Where(f => f is not null);
-    var filter = filterFields is not null ?Builders<TProjection>.Filter.Or(filterFields) :FilterDefinition<TProjection>.Empty;
-   
+    var filter = FilterDefinition<TProjection>.Empty;
+    if (filterFields is not null)
+    {
+      for (int i = 0; i < filterFields.Count; i++)
+      {
+        filterFields[i] = Builders<TProjection>.Filter.And( 
+          pagination.Cursor!.GetFilterFields().Take(i).Select((value, index) => Builders<TProjection>.Filter.Eq(paginationFields[index], value))
+            .Append(filterFields[i])
+          );
+      }
+
+      filter = Builders<TProjection>.Filter.Or(filterFields);
+    }
     
     // Check if collection has next page by selecting one more entry
       var agg = pipeline(collection.Aggregate()).Match(filter).Sort(sort)
@@ -138,13 +156,13 @@ public static class MongoDatabaseExtensions
     var hasNext = result.Count > pagination.Limit;
     var count = Math.Min(result.Count, pagination.Limit);
     var data = result.GetRange(0, count);
-    var cursor = hasNext ? Cursor.From<TCursor>(paginationFields.Select(f => f.Compile()(data.Last()))) : null;
+    var cursor = hasNext ? Cursor.From<TCursor>(paginationFields.Select(f => f.Compile()(result.Last()))) : null;
     return new PaginatedResponse<TProjection>(count, cursor, data.Take(pagination.Limit).ToImmutableList());
   }
 
   private static FilterDefinition<T> GetFieldFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField, object value)
   {
-    return sortAsc ? Builders<T>.Filter.Gt(paginationField, value) : Builders<T>.Filter.Lt(paginationField, value);
+    return sortAsc ? Builders<T>.Filter.Gte(paginationField, value) : Builders<T>.Filter.Lte(paginationField, value);
   }
 
   public static async Task<ImmutableList<TOut>> Select<T, TOut>(this IAsyncCursorSource<T> source, Func<T, TOut> transformer, bool parallel = false, CancellationToken cancellationToken = default)
