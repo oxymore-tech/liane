@@ -18,12 +18,14 @@ function test_compose {
 
 function liane_compose {
   PROJECT=$(get_project)
+  DOMAIN=$(get_domain)
   APP_ENV=$(get_app_env)
   APP_VERSION=$(get_app_version)
   MONGO_HOST_PORT=$(get_mongo_host_port)
   POSTGIS_HOST_PORT=$(get_postgis_host_port)
   
   export PROJECT
+  export DOMAIN
   export APP_ENV
   export APP_VERSION
   export MONGO_HOST_PORT
@@ -54,6 +56,17 @@ function start {
 
 function stop {
   liane_compose down
+}
+
+function get_domain() {
+  local project
+  
+  project=$(get_project)
+  if [[ "${project}" = "liane" ]]; then
+    echo "liane.app"
+  else
+    echo "dev.liane.app"
+  fi
 }
 
 function get_app_env() {
