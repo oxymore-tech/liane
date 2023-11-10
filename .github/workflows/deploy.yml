@@ -71,25 +71,3 @@ jobs:
           path: "test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
-
-      - name: Copy e2e test results
-        uses: nicklasfrahm/scp-action@main
-        if: always()
-        with:
-          direction: download
-          insecure_ignore_fingerprint: true
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
-          source: "/tmp/e2e-${{ env.project }}/test-output.xml"
-          target: "e2e-output.xml"
-
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: e2e tests
-          path: "e2e-output.xml"
-          reporter: jest-junit
-          fail-on-error: true
