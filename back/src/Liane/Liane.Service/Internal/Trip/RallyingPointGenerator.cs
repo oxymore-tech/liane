@@ -36,16 +36,24 @@ public sealed class RallyingPointGenerator : IRallyingPointGenerator
     this.addressService = addressService;
   }
 
-  public async Task Generate()
+  public async Task Generate(ImmutableList<string> sources)
   {
     logger.LogInformation("Generate rallying points...");
-
-    logger.LogDebug("Loading carpool areas...");
-    IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();
-    logger.LogDebug("Loading town halls...");
-    rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
-    logger.LogDebug("Loading custom rallying points...");
-    rawRallyingPoints = rawRallyingPoints.Concat(LoadCustom());
+    IEnumerable<RallyingPoint> rawRallyingPoints;
+    if (sources.Count == 1 && sources.First() == "test")
+    {
+      rawRallyingPoints = await LoadTownHall();
+      rawRallyingPoints = rawRallyingPoints.Where(rp => new[] { "46", "31", "48", "09", "81", "82", "12" }.Any(code => rp.ZipCode.StartsWith(code)));
+    }
+    else
+    {
+      logger.LogDebug("Loading carpool areas...");
+      rawRallyingPoints = await LoadCarpoolArea();
+      logger.LogDebug("Loading town halls...");
+      rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
+      logger.LogDebug("Loading custom rallying points...");
+      rawRallyingPoints = rawRallyingPoints.Concat(LoadCustom());
+    }
 
     logger.LogDebug("Clustering...");
 

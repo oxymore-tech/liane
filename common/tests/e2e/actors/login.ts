@@ -21,11 +21,11 @@ export class LoginActor {
         sendCode: (phone, code) => this.auth.login({ phone, code }),
         signUpUser: payload => this.auth.updateUserInfo(payload)
       },
-      "0000111111",
+      TestEnv.TEST_ACCOUNT,
       !!user
     );
     const service = interpret(signUpMachine);
-    const actions = {
+    const actions: { [k: string]: () => void } = {
       phone: () => {
         service.send("SET", { data: userPhone });
         service.send("NEXT");

@@ -1,10 +1,10 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
 import { addSeconds, AppEnv } from "../../src";
 import vt2geojson from "@mapbox/vt2geojson";
 import { FeatureCollection } from "geojson";
 import { CreateServices } from "./setup/services";
 import { TestEnv } from "./setup/environment";
 import { faker } from "@faker-js/faker";
+import refGeojson from "./resources/mairie46185_mairie_46309.json";
 
 const Services = CreateServices();
 
@@ -53,7 +53,6 @@ describe("Liane Service", () => {
 
     // Check liane is displayed on the expected tile
     const geojson = await readLianeTile(10, 516, 368, "liane_display");
-    const refGeojson = require("./resources/mairie46185_mairie_46309.json");
     expect(geojson.features[0].geometry).toEqual(refGeojson);
   });
 });

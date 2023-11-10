@@ -1,4 +1,5 @@
-﻿using System.IO;
+using System.Collections.Immutable;
+using System.IO;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
@@ -50,9 +51,9 @@ public sealed class RallyingPointController : ControllerBase
 
   [HttpPost("generate")]
   [RequiresAdminAuth]
-  public Task Generate()
+  public Task Generate([FromQuery(Name = "source")] string[] sources)
   {
-    return rallyingPointGenerator.Generate();
+    return rallyingPointGenerator.Generate(sources.ToImmutableList());
   }
   
   [HttpGet("")]

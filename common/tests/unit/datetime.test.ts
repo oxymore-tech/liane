@@ -1,5 +1,4 @@
 import { DayOfTheWeekFlag, getFirstFutureDate } from "../../src";
-import { describe, expect, test } from "vitest";
 
 describe("recurrence", () => {
   test("should get next day", () => {

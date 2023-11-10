@@ -58,7 +58,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     return await GetFullUser(id);
   }
 
-  public async Task<FullUser> GetByPhone(string phone)
+  public async Task<bool> IsSignedUp(string phone)
   {
     var phoneNumber = phone.ToPhoneNumber();
 
@@ -70,10 +70,10 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
 
     if (dbUser is null)
     {
-      throw new ResourceNotFoundException($"User ${phoneNumber}");
+      return false;
     }
 
-    return MapUser(dbUser);
+    return dbUser.UserInfo is not null;
   }
 
   public async Task<FullUser> GetFullUser(string userId)

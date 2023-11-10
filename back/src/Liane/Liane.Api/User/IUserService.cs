@@ -10,7 +10,7 @@ public interface IUserService : IResourceResolverService<User>
   Task UpdateLastConnection(string id, DateTime timestamp);
   Task UpdatePushToken(string id, string pushToken);
   Task<FullUser> UpdateInfo(string id, UserInfo info);
-  Task<FullUser> GetByPhone(string phone);
+  Task<bool> IsSignedUp(string phone);
   Task<FullUser> GetFullUser(string userId);
   Task<FullUser?> TryGetFullUser(string userId);
   Task Delete(string id);

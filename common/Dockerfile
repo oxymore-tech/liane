@@ -23,4 +23,6 @@ WORKDIR /tests
 
 COPY --from=build /tests /tests
 
-CMD ["yarn", "test", "e2e", "--reporter=default", "--reporter=junit", "--outputFile=./report/test-output.xml"]
+RUN node /tests/tests/e2e/setup/init-back.js ${VITE_API_URL}
+
+CMD ["yarn", "test", "e2e", "--reporter=default"]

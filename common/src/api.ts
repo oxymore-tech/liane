@@ -41,6 +41,7 @@ export type AuthRequest = Readonly<{
   phone: string;
   code: string;
   pushToken?: string;
+  withRefresh?: boolean;
 }>;
 
 export type UserInfo = Readonly<{ firstName: string; lastName: string; gender: "Man" | "Woman" | "Unspecified"; pictureUrl?: string }>;

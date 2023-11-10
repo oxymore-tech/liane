@@ -17,7 +17,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
       {
         sendPhone: (p: string) => services.auth.sendSms(p),
         sendCode: async (phone: string, code: string) => {
-          return await services.auth.login({ phone, code });
+          return await services.auth.login({ phone, code, withRefresh: false });
         }
       },
       undefined,

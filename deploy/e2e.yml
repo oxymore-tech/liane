@@ -4,9 +4,12 @@ services:
   mongo:
     image: "mongo:4.4"
     command: mongod --quiet
+    volumes:
+      - "../common/tests/e2e/setup/init-mongodb.js:/docker-entrypoint-initdb.d/init.js"
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongo
       MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_DATABASE: liane
 
   postgis:
     image: "postgis/postgis:15-3.3"

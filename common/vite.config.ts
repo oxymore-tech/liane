@@ -13,7 +13,8 @@ export default defineConfig({
   resolve: { alias: { src: resolve("src/") } },
   plugins: [
     dts({
-      insertTypesEntry: true
+      insertTypesEntry: true,
+      tsconfigPath: "tsconfig.build.json"
     })
   ]
 });

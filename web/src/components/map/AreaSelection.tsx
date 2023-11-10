@@ -7,6 +7,7 @@ import maplibregl, { GeoJSONSource, IControl, LngLat, MapGeoJSONFeature, MapMous
 import bboxPolygon from "@turf/bbox-polygon";
 import { featureCollection } from "@turf/helpers";
 import React from "react";
+import { BBox } from "geojson";
 
 class SelectControl implements IControl {
   private active: boolean = false;
@@ -61,7 +62,7 @@ const generatePolygon = (ne: LngLat, sw: LngLat) => {
 
 export type AreaSelectionProps = {
   targetLayers: string[];
-  onSelectFeatures: (features: MapGeoJSONFeature[], ctrlKey: boolean) => void;
+  onSelectFeatures: (features: MapGeoJSONFeature[], ctrlKey: boolean, bbox?: BBox) => void;
   onToggleTool?: (active: boolean) => void;
   onHoverFeatureStateChanged?: (f: MapGeoJSONFeature, hovered: boolean) => void;
 };
@@ -117,7 +118,13 @@ export const AreaSelection = ({ targetLayers, onSelectFeatures, onHoverFeatureSt
           }
         );
         if (features) {
-          onSelectFeatures(features, e.originalEvent.ctrlKey);
+          const bbox: BBox = [
+            Math.min(drawing.current!.lng, e.lngLat.lng),
+            Math.min(drawing.current!.lat, e.lngLat.lat),
+            Math.max(drawing.current!.lng, e.lngLat.lng),
+            Math.max(drawing.current!.lat, e.lngLat.lat)
+          ];
+          onSelectFeatures(features, e.originalEvent.ctrlKey, bbox);
           setInAreaFeatures(undefined);
         }
         (map.current?.getSource("selection") as GeoJSONSource | undefined)?.setData(EmptyFeatureCollection);

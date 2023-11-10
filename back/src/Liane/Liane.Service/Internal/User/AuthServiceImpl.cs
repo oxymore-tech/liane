@@ -101,25 +101,26 @@ public sealed class AuthServiceImpl : IAuthService
 
     var (refreshToken, encryptedToken, salt) = GenerateRefreshToken();
 
-    var userId = dbUser?.Id ?? ObjectId.GenerateNewId().ToString();
+    var userId = dbUser?.Id ?? ObjectId.GenerateNewId().ToString()!;
 
     var createdAt = DateTime.UtcNow;
     var update = Builders<DbUser>.Update
       .SetOnInsert(p => p.Phone, number)
       .SetOnInsert(p => p.IsAdmin, isAdmin)
       .SetOnInsert(p => p.CreatedAt, createdAt)
-      .Set(p => p.RefreshToken, encryptedToken)
-      .Set(p => p.Salt, salt)
       .Set(p => p.PushToken, request.PushToken);
+    
+    if (request.WithRefresh) update = update.Set(p => p.RefreshToken, encryptedToken).Set(p => p.Salt, salt);
+    
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
     var authUser = new AuthUser(userId, dbUser?.IsAdmin ?? isAdmin, dbUser?.UserInfo is not null);
-    return GenerateAuthResponse(authUser, refreshToken);
+    return GenerateAuthResponse(authUser, request.WithRefresh ? refreshToken : null);
   }
 
   private (string, bool) Authenticate(AuthRequest request)
   {
-    var phoneNumber = request.Phone.ToPhoneNumber().ToString();
+    var phoneNumber = request.Phone.ToPhoneNumber().ToString()!;
     var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber().ToString();
 
     if (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode))

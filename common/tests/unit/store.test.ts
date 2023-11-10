@@ -1,5 +1,4 @@
 import { sync } from "../../src";
-import { describe, expect, test } from "vitest";
 
 describe("store", () => {
   test("should sync lists", () => {
