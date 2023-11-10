@@ -87,11 +87,11 @@ export default function ContextProvider({ children }: { children: ReactNode }) {
 
 export const PageLayout = ({ children, ...props }: PropsWithChildren & React.HTMLProps<HTMLDivElement>) => {
   const user = useCurrentUser();
-  const pathname = usePathname();
-  const router = useRouter();
-  useEffect(() => {
-    if (user === null && pathname !== "/") router.replace("/");
-  }, [pathname, router, user]);
+  // const pathname = usePathname();
+  // const router = useRouter();
+  // useEffect(() => {
+  //   if (user === null && pathname !== "/") router.replace("/");
+  // }, [pathname, router, user]);
 
   return (
     <main className="h-screen w-full flex flex-col dark:bg-gray-900 bg-white overflow-hidden" {...props}>
