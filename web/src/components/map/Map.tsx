@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef } from "react";
+import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { DEFAULT_TLS, getMapStyleUrl, LatLng } from "@liane/common";
@@ -21,6 +21,7 @@ export const useMapContext = () => {
 const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, center, onZoom }: MapProps, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const [ready, setReady] = useState(false);
   useImperativeHandle<maplibregl.Map | null, maplibregl.Map | null>(ref, () => map.current);
   useEffect(() => {
     if (map.current) return;
@@ -32,6 +33,7 @@ const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, cente
     });
     const control = new maplibregl.NavigationControl();
     map.current.addControl(control, "top-right");
+    setReady(true);
   }, [mapContainer]);
 
   useEffect(() => {
@@ -50,6 +52,7 @@ const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, cente
     map.current.setCenter([center.lng, center.lat]);
   }, [center]);
 
+  if (!ready) return null;
   return (
     <div ref={mapContainer} className="h-full w-full">
       <MapContext.Provider value={map}>{children}</MapContext.Provider>
