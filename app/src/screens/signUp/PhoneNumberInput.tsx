@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -6,21 +6,16 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 
 type PhoneNumberInputProps = {
-  onValidate: () => Promise<void>;
-  phoneNumber: string;
+  submitting?: boolean;
+  submit: () => void;
   onChange: (code: string) => void;
+  canSubmit: boolean;
+  phoneNumber: string;
 };
 
-export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNumberInputProps) => {
-  const [validating, setValidating] = useState(false);
-  const disabled = phoneNumber.length < 10 || validating;
+export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit }: PhoneNumberInputProps) => {
   const buttonColor = {
-    backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
-  };
-
-  const validate = () => {
-    setValidating(true);
-    onValidate().finally(() => setValidating(false));
+    backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
   };
 
   return (
@@ -35,12 +30,12 @@ export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNum
           keyboardType={"phone-pad"}
           autoComplete={"tel"}
           textContentType={"telephoneNumber"}
-          onSubmitEditing={validate}
+          onSubmitEditing={submit}
           maxLength={10}
         />
-        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={validate}>
-          {!validating && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
-          {validating && <ActivityIndicator color={AppColors.white} size={"small"} />}
+        <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
+          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
+          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
         </Pressable>
       </View>
     </View>

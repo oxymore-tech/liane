@@ -10,12 +10,15 @@ on:
       - back/**
       - web/**
       - deploy/**
+      - common/**
 
 jobs:
+  
   deployment:
     runs-on: ubuntu-latest
     environment: production
     concurrency: production
+
     steps:
       - uses: actions/checkout@v3
 
@@ -30,7 +33,7 @@ jobs:
             echo "project=liane-dev" >> $GITHUB_ENV
             echo "branch=develop" >> $GITHUB_ENV
           fi
-          
+
       - name: Deploy on server
         uses: appleboy/ssh-action@master
         with:

@@ -25,7 +25,7 @@ export const SlideUpModal = ({ backgroundColor = AppColors.darkBlue, visible, se
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
         <View style={{ backgroundColor, paddingHorizontal: 12, paddingVertical: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
           <Row style={{ position: "absolute", right: 20, top: 27, zIndex: 10 }}>
-            <AppPressableOverlay style={{ padding: 4 }} onPress={() => setVisible(false)} borderRadius={12}>
+            <AppPressableOverlay style={{ padding: 4 }} onPress={() => setVisible(false)}>
               <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} size={28} />
             </AppPressableOverlay>
           </Row>

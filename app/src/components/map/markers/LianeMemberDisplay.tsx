@@ -1,14 +1,14 @@
-import { LatLng, User } from "@/api";
+import { LatLng, User } from "@liane/common";
 import { StyleSheet, Text, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import React from "react";
 import { MarkerView, useAppMapViewController } from "../AppMapView";
 import { AppStyles } from "@/theme/styles";
-import { useSubscriptionValue } from "@/util/hooks/subscription";
 import Svg, { Path } from "react-native-svg";
 import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
-import { formatDuration } from "@/util/datetime";
+import { AppLocalization } from "@/api/i18n";
+import { useSubscriptionValue } from "@/util/hooks/subscription";
 
 export const LianeMemberDisplay = ({
   location,
@@ -33,7 +33,7 @@ export const LianeMemberDisplay = ({
   const controller = useAppMapViewController();
   const region = useSubscriptionValue(controller.subscribeToRegionChanges);
   const zoom = region?.zoomLevel || 10;
-  const formattedDelay = delay ? formatDuration(delay) : undefined;
+  const formattedDelay = delay ? AppLocalization.formatDuration(delay) : undefined;
   const description = isMoving ? (formattedDelay ? " arrive dans " + formattedDelay : "") : "est à l'arrêt";
   if (minZoom && zoom <= minZoom) {
     return null;

@@ -1,18 +1,15 @@
 import { Observable, Subject } from "rxjs";
-import { FeatureCollection, GeoJSON, Polygon, Position } from "geojson";
-import { getPoint, Liane, Ref } from "@/api";
+import { FeatureCollection, Polygon, Position } from "geojson";
+import { DisplayBoundingBox, getBoundingBox, getPoint, Liane, Ref } from "@liane/common";
 import React, { PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import { useObservable } from "@/util/hooks/subscription";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DisplayBoundingBox, getBoundingBox } from "@/util/geometry";
 import AppMapView, { AppMapViewController } from "@/components/map/AppMapView";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
 import { useIsFocused } from "@react-navigation/native";
-import { getSetting } from "@/api/storage";
 import { LianeDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
 import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
 import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer";
@@ -22,6 +19,8 @@ import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
+import { useObservable } from "@/util/hooks/subscription";
 
 export type HomeMapProps = {
   onMovingStateChanged: (moving: boolean) => void;
@@ -200,8 +199,8 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
     const [trafficAsWidth, setTrafficAsWidth] = useState(true);
     const [trafficAsColor, setTrafficAsColor] = useState(true);
     useEffect(() => {
-      getSetting("map.lianeTrafficAsWidth").then(setTrafficAsWidth);
-      getSetting("map.lianeTrafficAsColor").then(setTrafficAsColor);
+      AppStorage.getSetting("map.lianeTrafficAsWidth").then(setTrafficAsWidth);
+      AppStorage.getSetting("map.lianeTrafficAsColor").then(setTrafficAsColor);
     }, [isFocused]);
 
     return (

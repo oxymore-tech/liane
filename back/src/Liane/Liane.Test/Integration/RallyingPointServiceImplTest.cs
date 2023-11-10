@@ -20,8 +20,8 @@ public sealed class RallyingPointServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShoudList()
   {
-    var actual = await testedService.List(null);
-    Assert.IsNotEmpty(actual);
+    var actual = await testedService.List(new RallyingPointFilter());
+    Assert.IsNotEmpty(actual.Data);
   }
   
   [Test]

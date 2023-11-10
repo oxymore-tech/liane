@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { LatLng } from "@/api";
+import { LatLng } from "@liane/common";
 
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppContext } from "@/components/context/ContextProvider";

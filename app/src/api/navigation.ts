@@ -7,11 +7,9 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, UnionUtils, User } from "./index";
+import { JoinLianeRequestDetailed, Liane, UnionUtils, Event, NewMessage, Notification, JoinRequest, MemberAccepted, User } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
-import { Event, NewMessage, Notification } from "@/api/notification";
-import { JoinRequest, MemberAccepted } from "@/api/event";
 import { checkInitialNotification } from "@/api/service/notification";
 
 export const HOME_TRIPS = "Mes trajets";

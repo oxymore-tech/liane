@@ -1,8 +1,8 @@
 import { useMemberIsMoving } from "@/screens/detail/TripGeolocationProvider";
 import React from "react";
-import { User } from "@/api";
 import { LianeMemberDisplay } from "@/components/map/markers/LianeMemberDisplay";
 import { AppLogger } from "@/api/logger";
+import { User } from "@liane/common";
 
 export const LocationMarker = (props: { user: User }) => {
   const lastLocUpdate = useMemberIsMoving(props.user.id!);

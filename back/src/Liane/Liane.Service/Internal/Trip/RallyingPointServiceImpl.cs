@@ -4,8 +4,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Dapper;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis.Db;
@@ -58,41 +60,52 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return results.ToDictionary(r => r.Id!);
   }
 
-  public async Task<ImmutableList<RallyingPoint>> List(LatLng? center, int? distance = null, string? search = null, int? limit = null)
+  public async Task<PaginatedResponse<RallyingPoint>> List(RallyingPointFilter rallyingPointFilter)
   {
     var filter = Filter<RallyingPoint>.Empty;
-
-    if (search is not null)
+       
+    if (rallyingPointFilter.Search is not null)
     {
-      var regex = ToSearchPattern(search);
+      var regex = ToSearchPattern(rallyingPointFilter.Search!);
       filter &= Filter<RallyingPoint>.Regex(r => r.Label, regex)
                 | Filter<RallyingPoint>.Regex(r => r.City, regex)
                 | Filter<RallyingPoint>.Regex(r => r.ZipCode, regex)
                 | Filter<RallyingPoint>.Regex(r => r.Address, regex);
     }
 
+    var center = rallyingPointFilter.GetLatLng();
     if (center.HasValue)
     {
-      filter &= Filter<RallyingPoint>.Near(x => x.Location, center.Value, distance ?? 500_000);
+      filter &= Filter<RallyingPoint>.Near(x => x.Location, center.Value, rallyingPointFilter.Distance ?? 500_000);
     }
 
+    if (rallyingPointFilter.Types is not null)
+    {
+      filter &= Filter<RallyingPoint>.Where(r => r.Type, ComparisonOperator.In, rallyingPointFilter.Types);
+    }
+       
     using var connection = db.NewConnection();
-
+    var limit = rallyingPointFilter.Limit ?? 15;
+    var offset = rallyingPointFilter.Offset ?? 0;
     var query = Query.Select<RallyingPoint>()
       .Where(filter)
+      .Skip(offset)
       .Take(limit);
-
+       
     if (center.HasValue)
     {
       query = query.OrderBy(rp => rp.Location.Distance(center.Value));
     }
 
-    return await connection.QueryAsync(query);
+    var total = await connection.QueryCountAsync(Query.Select<RallyingPoint>()
+      .Where(filter));
+    var results = await connection.QueryAsync(query);
+    return new PaginatedResponse<RallyingPoint>(limit, null, results, (int)total);
   }
 
   private static string ToSearchPattern(string search)
   {
-    var words = NonAlphanumeric.Replace(search, " ")
+    var words = NonAlphanumeric.Replace(search, ".")
       .Trim()
       .ToLower()
       .Split();
@@ -100,7 +113,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return string.Concat(words.Select(w =>
     {
       var removeAccent = AccentedChars.Aggregate(w, (current, accentedChar) => Regex.Replace(current, accentedChar, accentedChar));
-      return $@"\m{removeAccent}.*";
+      return $@"\m{removeAccent}";
     }));
   }
 

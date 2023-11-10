@@ -1,4 +1,4 @@
-import { LianeMatch } from "@/api";
+import { LianeMatch } from "@liane/common";
 import { Row } from "@/components/base/AppLayout";
 import React from "react";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";

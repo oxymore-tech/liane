@@ -1,5 +1,5 @@
-import { Liane } from "@/api";
-import { useLianeStatus, LianeStatus } from "@/components/trip/trip";
+import { Liane } from "@liane/common";
+import { LianeStatus, useLianeStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
 import { ColorValue } from "react-native";

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import React from "react";
 import { BehaviorSubject, Observable, Subject, Subscribable, SubscriptionLike } from "rxjs";
 
 export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T) => void) => {
-  useEffect(() => {
+  React.useEffect(() => {
     const sub = observable.subscribe({ next: callback });
     return () => {
       sub.unsubscribe();
@@ -11,8 +11,8 @@ export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T)
 };
 
 export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike) => {
-  const [value, setValue] = useState<T>();
-  useEffect(() => {
+  const [value, setValue] = React.useState<T>();
+  React.useEffect(() => {
     const sub = subscribe(v => setValue(v));
     return () => {
       sub.unsubscribe();
@@ -22,8 +22,8 @@ export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) =>
 };
 
 export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => {
-  const [value, setValue] = useState<T>(defaultValue);
-  useEffect(() => {
+  const [value, setValue] = React.useState<T>(defaultValue);
+  React.useEffect(() => {
     const sub = observable.subscribe(v => {
       //  console.debug("rec observed value ->", v);
       setValue(v);
@@ -36,13 +36,13 @@ export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => 
 };
 
 export const useSubject = <T>() => {
-  return useMemo(() => {
+  return React.useMemo(() => {
     return new Subject<T>();
   }, []);
 };
 
 export const useBehaviorSubject = <T>(initialValue: T) => {
-  return useMemo(() => {
+  return React.useMemo(() => {
     return new BehaviorSubject<T>(initialValue);
   }, []);
 };

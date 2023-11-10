@@ -1,4 +1,4 @@
-import { Liane } from "@/api";
+import { Liane } from "@liane/common";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
 import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
@@ -7,14 +7,14 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { getCurrentUser } from "@/api/storage";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
 import { useAppNavigation } from "@/api/navigation";
 import { useIsFocused } from "@react-navigation/native";
 
 export const startGeolocationService = async (liane: Liane, force: boolean = false) => {
-  const user = await getCurrentUser();
+  const user = await AppStorage.getUser();
   const me = liane.members.find(l => l.user.id === user!.id)!;
   if (force || (me.geolocationLevel && me.geolocationLevel !== "None")) {
     //TODO: return this promise with an error specifying if gps is disable or if service failed to start
@@ -59,7 +59,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     }
 
     setTracked(undefined);
-    if (geoloc === undefined || geoloc.liane.id !== match.id) {
+    if (geoloc === undefined || geoloc.liane.id !== match.id || match.state !== "Started") {
       services.liane
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => setTracked(enabled))

@@ -1,27 +1,25 @@
 import React, { ComponentType, ForwardedRef, forwardRef, PropsWithChildren, useContext, useImperativeHandle, useRef, useState } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
-import { LatLng } from "@/api";
+import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { FeatureCollection, Position } from "geojson";
-import { DEFAULT_TLS, FR_BBOX, MapStyleProps } from "@/api/location";
 import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/context/ContextProvider";
-import { DisplayBoundingBox, fromBoundingBox } from "@/util/geometry";
-import { contains } from "@/api/geo";
 import distance from "@turf/distance";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
-import Images = MapLibreGL.Images;
-import UserLocation = MapLibreGL.UserLocation;
-import { useSubject } from "@/util/hooks/subscription";
 import { SubscriptionLike } from "rxjs";
 import { displayInfo } from "@/components/base/InfoDisplayer";
 import { AppPressableOverlay } from "../base/AppPressable";
 import { AppIcon } from "../base/AppIcon";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
+import Images = MapLibreGL.Images;
+import UserLocation = MapLibreGL.UserLocation;
+import { RNAppEnv } from "@/api/env";
+import { useSubject } from "@/util/hooks/subscription";
 
 //const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -199,7 +197,7 @@ const AppMapView = forwardRef(
           rotateEnabled={false}
           pitchEnabled={false}
           style={styles.map}
-          {...MapStyleProps}
+          styleURL={getMapStyleUrl(RNAppEnv)}
           logoEnabled={false}
           attributionEnabled={false}>
           <MapLibreGL.Camera

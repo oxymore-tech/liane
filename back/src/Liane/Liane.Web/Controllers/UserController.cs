@@ -33,7 +33,7 @@ public sealed class UserController : ControllerBase
   {
     return userService.UpdatePushToken(currentContext.CurrentUser().Id, pushToken);
   }
-
+  
   [HttpPatch]
   public Task<FullUser> UpdateInfo([FromBody] UserInfo info)
   {

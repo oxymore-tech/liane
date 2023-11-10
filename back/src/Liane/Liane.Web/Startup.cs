@@ -41,6 +41,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using NLog;
 using NLog.Config;
+using NLog.Filters;
 using NLog.Layouts;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
@@ -85,6 +86,7 @@ public static class Startup
     services.AddService<DeleteAccountServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
+    services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
@@ -178,8 +180,25 @@ public static class Startup
     };
     var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
     loggingConfiguration.AddTarget(consoleTarget);
+    
+    var requestLoggingRule = new LoggingRule("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Info, LogLevel.Info, consoleTarget);
+
+    requestLoggingRule.Filters.Add(
+      new WhenMethodFilter(logEvent =>
+      {
+        if (!logEvent.Properties.TryGetValue("Path", out var path))
+        {
+          return FilterResult.LogFinal;
+        }
+        
+        return path?.ToString() == "/health" ? FilterResult.IgnoreFinal : FilterResult.LogFinal;
+      })
+    );
+    
+    loggingConfiguration.AddRule(requestLoggingRule);
     loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
-    var logFactory = NLogBuilder.ConfigureNLog(loggingConfiguration);
+
+    var logFactory = LogManager.Setup().LoadConfiguration(loggingConfiguration);
     return logFactory.GetCurrentClassLogger();
   }
 
@@ -250,9 +269,8 @@ public static class Startup
       .ConfigureLogging(logging =>
       {
         logging.ClearProviders();
-        logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
       })
-      .UseNLog()
+      .UseNLog(new NLogAspNetCoreOptions { RemoveLoggerFactoryFilter = false })
       .ConfigureAppConfiguration((hostingContext, config) =>
       {
         var env = hostingContext.HostingEnvironment;
@@ -265,8 +283,6 @@ public static class Startup
         config.SetFileProvider(compositeFileProvider);
         config.AddJsonFile("default.json", true, true);
         config.AddJsonFile($"default.{env.EnvironmentName}.json", true, true);
-        config.AddJsonFile("appsettings.json", true, true);
-        config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
         config.AddCommandLine(args);
         config.AddEnvironmentVariables("LIANE_");
       })
@@ -283,7 +299,7 @@ public static class Startup
     app.UseOpenApi();
     app.UseSwaggerUi3();
     app.UseCors("AllowLocal");
-    
+
     var env = context.HostingEnvironment;
     if (env.IsDevelopment())
     {
@@ -324,7 +340,7 @@ public static class Startup
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
-    
+
     var lianeService = app.ApplicationServices.GetRequiredService<ILianeService>();
     // Synchronize databases and cache 
     lianeService.ForceSyncDatabase()

@@ -111,18 +111,16 @@ public sealed class MockServiceImpl : IMockService
     radius ??= DefaultRadius;
     if (to is null)
     {
-      var rallyingPoints = await rallyingPointService.List(from, distance: radius);
-      var half = rallyingPoints.Count / 2;
-      var departureSet = rallyingPoints.Take(half).ToImmutableList();
-      var arrivalSet = rallyingPoints.Skip(half).Take(half).ToImmutableList();
+      var rallyingPoints = await rallyingPointService.List(RallyingPointFilter.Create(from, radius, limit: 50));
+      var half = rallyingPoints.Data.Count / 2;
+      var departureSet = rallyingPoints.Data.Take(half).ToImmutableList();
+      var arrivalSet = rallyingPoints.Data.Skip(half).Take(half).ToImmutableList();
 
       return (departureSet, arrivalSet);
-    }
-
-    {
-      var departureSet = await rallyingPointService.List(from, distance: radius);
-      var arrivalSet = await rallyingPointService.List(to, distance: radius);
-      return (departureSet, arrivalSet);
+    } else {
+      var departureSet = await rallyingPointService.List(RallyingPointFilter.Create(from, radius, limit: 50));
+      var arrivalSet = await rallyingPointService.List(RallyingPointFilter.Create(to.Value, radius, limit: 50));
+      return (departureSet.Data, arrivalSet.Data);
     }
   }
 }

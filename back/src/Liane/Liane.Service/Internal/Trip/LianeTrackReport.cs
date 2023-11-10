@@ -11,9 +11,8 @@ public sealed record MemberLocationSample
 );
 
 public sealed record LianeTrackReport(
-  Ref<Api.Trip.Liane>? Id,
+  string Id,
   ImmutableList<MemberLocationSample> MemberLocations,
   DateTime StartedAt,
   DateTime? FinishedAt = null
-);
-
+): IIdentity;

@@ -1,4 +1,4 @@
-import { User } from "@/api";
+import { User } from "@liane/common";
 import { Item } from "@/components/ActionItem";
 import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";

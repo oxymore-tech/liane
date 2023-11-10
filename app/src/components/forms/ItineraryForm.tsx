@@ -4,7 +4,7 @@ import { Column } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import { RallyingPointField } from "@/screens/home/HomeHeader";
-import { RallyingPoint } from "@/api";
+import { RallyingPoint } from "@liane/common";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 
 export interface ItineraryFormProps {

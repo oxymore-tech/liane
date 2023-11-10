@@ -7,6 +7,8 @@ on:
       - develop
     paths:
       - app/**
+      - '!app/android/**'
+      - common/**
 
 jobs:
   ios-build:
@@ -15,6 +17,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Build common
+        id: common
+        uses: ./.github/actions/common
 
       - name: Find Version
         id: version
@@ -53,7 +59,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: 'yarn'
           cache-dependency-path: ./app/yarn.lock
 
@@ -64,7 +70,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./app
         run: yarn
-      
+
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1
         with:
@@ -99,7 +105,7 @@ jobs:
           from_file: ./app/ios/liane/GoogleService-Info.plist
           to_file: ./app/ios/liane/GoogleService-Info.plist
           commit: false
-      
+
       - name: Build IOS App
         uses: yukiarrr/ios-build-action@v1.4.0
         with:

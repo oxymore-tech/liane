@@ -1,6 +1,5 @@
-import { Event, Notification } from "@/api/notification";
-import { capitalize } from "@/util/strings";
-import { toRelativeTimeString } from "@/api/i18n";
+import { capitalize, Event, Notification, UnionUtils } from "@liane/common";
+import { AppLocalization } from "@/api/i18n";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -8,14 +7,13 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { UnionUtils } from "@/api";
 import { getNotificationNavigation, useAppNavigation } from "@/api/navigation";
 
 export const NotificationItem = ({ notification: item, read }: { notification: Notification; read: () => void }) => {
   const { user } = useContext(AppContext);
   const userIndex = item.recipients.findIndex(r => r.user === user?.id);
   const seen = userIndex >= 0 && !!item.recipients[userIndex].seenAt;
-  const datetime = capitalize(toRelativeTimeString(new Date(item.createdAt!)));
+  const datetime = capitalize(AppLocalization.toRelativeTimeString(new Date(item.createdAt!)));
   const { navigation } = useAppNavigation();
 
   let icon: IconName = "message-square-outline";

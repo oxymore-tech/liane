@@ -3,9 +3,9 @@ import { AppText } from "@/components/base/AppText";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import React from "react";
-import { RallyingPoint, UTCDateTime } from "@/api";
+import { RallyingPoint, UTCDateTime } from "@liane/common";
 import { ColorValue, StyleSheet } from "react-native";
-import { formatDateTime } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 
 export interface TripOverviewHeaderProps {
   from: RallyingPoint;
@@ -25,7 +25,7 @@ export const TripOverviewHeader = ({ from, to, dateTime, color }: TripOverviewHe
         <AppIcon name={"arrow-forward-outline"} color={textColor} size={14} />
         <AppText style={[styles.headerText, { color: textColor }]}>{to.city}</AppText>
       </Row>
-      <AppText style={[styles.headerText, { color: textColor, fontSize: 14 }]}>{formatDateTime(new Date(dateTime))}</AppText>
+      <AppText style={[styles.headerText, { color: textColor, fontSize: 14 }]}>{AppLocalization.formatDateTime(new Date(dateTime))}</AppText>
     </Column>
   );
 };

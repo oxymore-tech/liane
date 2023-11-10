@@ -91,7 +91,12 @@ public sealed class ChatHub : Hub<IHubClient>
     logger.LogInformation("User {userId} connected to hub with connection ID : {ConnectionId}", userId, Context.ConnectionId);
     await hubService.AddConnectedUser(userId, Context.ConnectionId);
     // Get user data
-    var user = await userService.GetFullUser(userId);
+    var user = await userService.TryGetFullUser(userId);
+    if (user is null)
+    {
+      // Throw if user does not exist (ex: account was deleted but a token is still in use)
+      throw new UnauthorizedAccessException();
+    }
     await Clients.Caller.Me(user);
     // Send latest unread notifications count and conversations 
     var unreadConversationsIds = await chatService.GetUnreadConversationsIds(userId);

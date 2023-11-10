@@ -2,7 +2,9 @@ import { ColorValue, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import React, { useMemo } from "react";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { AppColorPalettes, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { Row } from "@/components/base/AppLayout";
 
 export interface AppRoundedButtonProps {
   color?: ColorValue;
@@ -12,12 +14,13 @@ export interface AppRoundedButtonProps {
   opacity?: number;
   enabled?: boolean;
   flex?: number | undefined;
+  icon?: IconName;
 }
-export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true, flex }: AppRoundedButtonProps) => {
+export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true, flex, icon }: AppRoundedButtonProps) => {
   color = color ?? defaultTextColor(backgroundColor);
   const content = useMemo(
     () => (
-      <View style={styles.buttonPadding}>
+      <Row style={[styles.buttonPadding, { justifyContent: "center", alignItems: "center" }]} spacing={4}>
         <AppText
           style={{
             fontWeight: "bold",
@@ -28,7 +31,8 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
           }}>
           {text}
         </AppText>
-      </View>
+        {icon && <AppIcon name={icon} color={AppColors.white} />}
+      </Row>
     ),
     [color, text]
   );

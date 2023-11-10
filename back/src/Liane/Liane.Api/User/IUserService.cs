@@ -12,5 +12,6 @@ public interface IUserService : IResourceResolverService<User>
   Task<FullUser> UpdateInfo(string id, UserInfo info);
   Task<FullUser> GetByPhone(string phone);
   Task<FullUser> GetFullUser(string userId);
+  Task<FullUser?> TryGetFullUser(string userId);
   Task Delete(string id);
 }

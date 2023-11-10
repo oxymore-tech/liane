@@ -10,10 +10,9 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionListItem } from "@/components/ActionItem";
 import { useAppNavigation } from "@/api/navigation";
-import { User } from "@/api";
+import { capitalize, User } from "@liane/common";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { formatMonthYear } from "@/api/i18n";
-import { capitalize } from "@/util/strings";
+import { AppLocalization } from "@/api/i18n";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { LineSeparator } from "@/components/Separator";
@@ -59,7 +58,7 @@ const ProfileView = ({ user }: { user: User }) => {
       </Center>
       <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
         {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
-        <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
+        <AppText style={styles.data}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
         {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
         <DebugIdView object={user} />
       </Column>
@@ -73,8 +72,7 @@ const Actions = () => {
   const { navigation } = useAppNavigation();
   return (
     <Column>
-      <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
-      <ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
+      {/*<ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />*/}
       <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
       <ActionListItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
       {/*<LineSeparator />

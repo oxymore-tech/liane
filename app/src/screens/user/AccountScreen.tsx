@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { formatMonthYear } from "@/api/i18n";
+import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -10,7 +10,7 @@ import { AppText } from "@/components/base/AppText";
 import { Center, Column } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
-import { capitalize } from "@/util/strings";
+import { capitalize } from "@liane/common";
 import { LineSeparator } from "@/components/Separator";
 import { ActionListItem } from "@/components/ActionItem";
 
@@ -30,12 +30,12 @@ export const AccountScreen = () => {
         </Center>
 
         <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-          <AppText style={styles.userDateContainer}>Membre depuis {capitalize(formatMonthYear(new Date(user!.createdAt!)))}</AppText>
+          <AppText style={styles.userDateContainer}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(user!.createdAt!)))}</AppText>
           <AppText style={styles.userDateContainer}>{user!.phone}</AppText>
         </Column>
 
         <LineSeparator />
-
+        <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
         <ActionListItem
           onPress={() => {
             Alert.alert("Supprimer définitivement ce compte ?", "Toutes les données liées seront supprimées.", [
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
-    backgroundColor: AppColors.primaryColor
+    backgroundColor: AppColors.secondaryColor
   },
   backContainer: {
     position: "absolute",

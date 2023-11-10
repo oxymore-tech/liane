@@ -70,7 +70,7 @@ public sealed class LianeTracker
       }
       else
       {
-        await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(liane, ImmutableList<MemberLocationSample>.Empty, DateTime.UtcNow));
+        await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(liane.Id, ImmutableList<MemberLocationSample>.Empty, DateTime.UtcNow));
       }
       return new LianeTracker(osrmService, mongo, liane, onTripArrivedDestination ?? delegate {  }, tripSession);
     }

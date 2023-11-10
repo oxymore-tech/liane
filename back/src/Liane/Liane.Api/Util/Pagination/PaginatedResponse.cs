@@ -9,7 +9,7 @@ public sealed record PaginatedResponse<TData>(
   int PageSize,
   Cursor? Next,
   ImmutableList<TData> Data,
-  int? TotalCount = null
+  long? TotalCount = null
 )
 {
   public PaginatedResponse<TOut> Select<TOut>(Func<TData, TOut> transformer)

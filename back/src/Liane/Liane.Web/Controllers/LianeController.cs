@@ -29,16 +29,14 @@ public sealed class LianeController : ControllerBase
   private readonly IMockService mockService;
   private readonly EventDispatcher eventDispatcher;
   private readonly ILianeRecurrenceService lianeRecurrenceService;
-  private readonly ILianeRequestService lianeRequestService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService, ILianeRequestService lianeRequestService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
     this.eventDispatcher = eventDispatcher;
     this.lianeRecurrenceService = lianeRecurrenceService;
-    this.lianeRequestService = lianeRequestService;
   }
 
   [HttpGet("{id}")]
@@ -215,4 +213,17 @@ public sealed class LianeController : ControllerBase
     }
   }
 
+  [HttpGet("record")]
+  [RequiresAdminAuth]
+  public Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords([FromQuery] Pagination pagination, [FromQuery] TripRecordFilter filter)
+  {
+    return lianeService.ListTripRecords(pagination, filter);
+  }
+  
+  [HttpGet("record/{id}")]
+  [RequiresAdminAuth]
+  public Task<DetailedLianeTrackReport> GetRecord([FromRoute]string id)
+  {
+    return lianeService.GetTripRecord(id);
+  }
 }

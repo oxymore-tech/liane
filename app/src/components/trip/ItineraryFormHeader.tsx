@@ -1,17 +1,10 @@
-import { Trip } from "@/api/service/location";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppBackController } from "@/components/AppBackContextProvider";
 import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { AppStyles } from "@/theme/styles";
-import { Column, Row } from "@/components/base/AppLayout";
-import { Pressable, StyleSheet } from "react-native";
-import { AppIcon } from "@/components/base/AppIcon";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppText } from "@/components/base/AppText";
+import { StyleSheet } from "react-native";
+import { AppColors } from "@/theme/colors";
 import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import React from "react";
-import { FloatingBackButton } from "../FloatingBackButton";
-import { useAppNavigation } from "@/api/navigation";
+import { Trip } from "@liane/common";
 
 export interface ItineraryFormHeaderProps {
   editable?: boolean;

@@ -66,7 +66,7 @@ public sealed class AuthServiceImpl : IAuthService
       throw new UnauthorizedAccessException("Too many requests");
     }
 
-    smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
+    smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(30));
 
     if (twilioSettings is { Account: not null, Token: not null })
     {
@@ -82,7 +82,7 @@ public sealed class AuthServiceImpl : IAuthService
         to: phoneNumber
       );
 
-      logger.LogInformation("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
+      logger.LogDebug("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
     }
   }
 
