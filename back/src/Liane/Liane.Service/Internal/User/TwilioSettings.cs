@@ -1,3 +1,3 @@
 namespace Liane.Service.Internal.User;
 
-public sealed record TwilioSettings(string? Account, string? Token, string? From);
+public sealed record TwilioSettings(string? Account, string? Token, string? From, string? TestCode);
