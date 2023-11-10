@@ -52,10 +52,9 @@ const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, cente
     map.current.setCenter([center.lng, center.lat]);
   }, [center]);
 
-  if (!ready) return null;
   return (
     <div ref={mapContainer} className="h-full w-full">
-      <MapContext.Provider value={map}>{children}</MapContext.Provider>
+      {ready ? <MapContext.Provider value={map}>{children}</MapContext.Provider> : null}
     </div>
   );
 });

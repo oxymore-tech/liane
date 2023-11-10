@@ -77,22 +77,25 @@ const RPIconLayer = ({
   // Load layer icons
   useEffect(() => {
     map.current?.once("load", () => {
+      console.log("run");
+      // if (!map.current?.getImage("rp_active"))
       map.current?.loadImage("/rp_pink.png", function (error, image) {
         if (error) throw error;
 
         if (!image) console.warn("No image found");
         else {
-          map.current?.addImage("rp_active", image);
+          if (!map.current?.getImage("rp_active")) map.current?.addImage("rp_active", image);
           setImages(old => [...old, "rp_active"]);
         }
       });
 
+      //  if (!map.current?.getImage("rp_inactive"))
       map.current?.loadImage("/rp_gray.png", function (error, image) {
         if (error) throw error;
 
         if (!image) console.warn("No image found");
         else {
-          map.current?.addImage("rp_inactive", image);
+          if (!map.current?.getImage("rp_inactive")) map.current?.addImage("rp_inactive", image);
           setImages(old => [...old, "rp_inactive"]);
         }
       });
@@ -103,10 +106,12 @@ const RPIconLayer = ({
     };
   }, [map]);
 
-  const ready = useMemo(() => images.length == 2, [images.length]);
+  console.log(images.length);
+  const ready = useMemo(() => images.length >= 2, [images.length]);
 
   // Add layer once icons are ready
   useEffect(() => {
+    console.log(ready, map.current?.getSource("rallying_point_display"), !map.current?.getLayer("rallying_point_display"));
     if (ready && map.current?.getSource("rallying_point_display") && !map.current?.getLayer("rallying_point_display")) {
       map.current?.addLayer({
         id: "rallying_point_display",
