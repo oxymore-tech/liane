@@ -23,4 +23,4 @@ WORKDIR /tests
 
 COPY --from=build /tests /tests
 
-CMD ["yarn", "test", "e2e", "--reporter=junit", "--outputFile=./report/test-output.xml"]
+CMD ["yarn", "test", "e2e", "--reporter=default", "--reporter=junit", "--outputFile=./report/test-output.xml"]
