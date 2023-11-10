@@ -91,5 +91,5 @@ jobs:
         with:
           name: e2e tests
           path: "e2e-output.xml"
-          reporter: junit-xml
+          reporter: jest-junit
           fail-on-error: true
