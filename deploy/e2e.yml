@@ -11,26 +11,23 @@ services:
   postgis:
     image: "postgis/postgis:15-3.3"
     environment:
-      POSTGRES_DB: liane_test
+      POSTGRES_DB: liane
       POSTGRES_USER: mongo
       POSTGRES_PASSWORD: secret
   
-  #osrm:
-    #image: "osrm/osrm-backend"
-    #command: osrm-routed --algorithm mld /data/france-latest.osrm
-    #volumes:
-    #  - "/data/osm:/data:ro"
-
+  osrm:
+    image: "osrm/osrm-backend"
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
+    volumes:
+      - "/data/osm:/data:ro"
 
   back:
     build: ../back
     environment:
       LIANE_Mongo__Username: mongo
       LIANE_Mongo__Password: secret
-      LIANE_Mongo__Host: mongo
       LIANE_Database__Username: mongo
       LIANE_Database__Password: secret
-      LIANE_Database__Host: postgis
       LIANE_Twilio__TestCode: "333333"
       LIANE_Auth__SecretKey: "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M"
       LIANE_Auth__TestAccount: "0000111111"
@@ -38,26 +35,20 @@ services:
       LIANE_Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
       LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
       LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}
-      LIANE_Osrm__Url: "http://gjini.co:5000"
-      LIANE_Generator__IsEnabled:
-      LIANE_Firebase__ServiceAccountFile:
     depends_on:
       - mongo
       - postgis
-      #- osrm
+      - osrm
 
   martin:
     image: ghcr.io/maplibre/martin
     command: [ "--config", "/config.yaml" ]
-
     volumes:
       - "./martin/config.yaml:/config.yaml:ro"
     environment:
       DB_USER: mongo
       DB_PASSWORD: secret
     depends_on:
-      postgis:
-        -
       back:
           condition: service_healthy
 

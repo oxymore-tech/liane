@@ -17,7 +17,7 @@ ENV VITE_TEST_CODE ${TEST_CODE}
 
 COPY . .
 
-FROM node:20
+FROM node:20 AS test
 
 WORKDIR /tests
 

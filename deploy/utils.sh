@@ -16,6 +16,14 @@ function test_compose {
   docker compose -f "${LIANE_HOME}/deploy/test.yml" -p "${TEST_PROJECT}" "${@}"
 }
 
+function e2e_compose {
+  TEST_PROJECT="e2e-$(get_project)"
+  
+  export TEST_PROJECT
+  
+  docker compose -f "${LIANE_HOME}/deploy/e2e.yml" -p "${TEST_PROJECT}" "${@}"
+}
+
 function liane_compose {
   PROJECT=$(get_project)
   DOMAIN=$(get_domain)
@@ -38,6 +46,12 @@ function run_it_tests {
   test_compose build
   test_compose run test
   test_compose down
+}
+
+function run_e2e_tests {  
+  e2e_compose build
+  e2e_compose run test
+  e2e_compose down
 }
 
 function dump {

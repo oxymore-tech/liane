@@ -86,6 +86,7 @@ services:
       LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
       LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}
       LIANE_Generator__IsEnabled: ${GENERATOR_IS_ENABLED}
+      LIANE_Firebase__ServiceAccountFile: "/app/service-account.json"
     restart: unless-stopped
     networks:
       - gateway
