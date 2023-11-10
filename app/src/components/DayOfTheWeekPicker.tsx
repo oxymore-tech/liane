@@ -27,7 +27,7 @@ export const DayOfTheWeekPicker = ({
   return (
     <View style={{}}>
       <Row style={styles.rowContainer} spacing={6}>
-        {daysList.map((day: string, index: number) => (
+        {AppLocalization.daysList.map((day: string, index: number) => (
           <AppPressableOverlay
             onPress={() => selectDate(index, onChangeDays, selectedDaysString)}
             backgroundStyle={[

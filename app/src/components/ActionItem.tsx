@@ -64,15 +64,15 @@ export const Item = ({
   leadingComponent,
   descriptionComponent,
   onPress,
-  disabled
+  disabled = false
 }: {
   leadingComponent: React.ReactElement;
   descriptionComponent: React.ReactElement;
   onPress: () => void;
-  disabled: boolean;
+  disabled?: boolean;
 }) => {
   return (
-    <AppPressableOverlay disabled={disabled} foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress} borderRadius={12}>
+    <AppPressableOverlay disabled={disabled} foregroundColor={WithAlpha(AppColors.black, 0.1)} onPress={onPress}>
       <Column style={[{ alignItems: "center", margin: 8 }]} spacing={8}>
         {leadingComponent}
         {descriptionComponent}

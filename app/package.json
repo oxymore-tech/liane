@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android --main-activity tech.oxymore.liane.MainActivity",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
+    "lint": "tsc --noEmit && eslint .",
     "start": "react-native start",
     "build": "cd android && ./gradlew bundleRelease",
     "test": "jest",

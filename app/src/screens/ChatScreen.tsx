@@ -1,4 +1,4 @@
-import { capitalize, ChatMessage, ConversationGroup, Liane, PaginatedResponse, Ref, User } from "@liane/common";
+import { capitalize, ChatMessage, ConversationGroup, PaginatedResponse, Ref, User } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -10,8 +10,6 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/api/navigation";
-import { TripOverviewHeader } from "@/components/trip/TripOverviewHeader";
-import { getTripFromLiane } from "@/components/trip/trip";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
@@ -69,20 +67,9 @@ const MessageBubble = ({
   );
 };
 
-const AttachedLianeOverview = ({ liane, user }: { liane: Liane; user: User }) => {
-  const { wayPoints, departureTime } = getTripFromLiane(liane, user!.id!);
-
-  return (
-    <View style={{ paddingLeft: 56, paddingTop: 8, paddingRight: 16 }}>
-      <TripOverviewHeader from={wayPoints[0].rallyingPoint} to={wayPoints[wayPoints.length - 1].rallyingPoint} dateTime={departureTime} />
-    </View>
-  );
-};
-
 export const ChatScreen = () => {
   const { navigation, route } = useAppNavigation<"Chat">();
   const groupId = route.params.conversationId;
-  const attachedLiane: Liane | undefined = route.params.liane;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);

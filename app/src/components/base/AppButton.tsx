@@ -35,12 +35,7 @@ export function AppButton({
   const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 2 : 1);
 
   return (
-    <AppPressableOverlay
-      {...props}
-      borderRadius={borderRadius}
-      backgroundStyle={{ backgroundColor, borderRadius }}
-      style={styles.contentContainer}
-      disabled={disabled}>
+    <AppPressableOverlay {...props} backgroundStyle={{ backgroundColor, borderRadius }} style={styles.contentContainer} disabled={disabled}>
       <Row>
         {icon && (
           <View style={styles.iconContainer}>

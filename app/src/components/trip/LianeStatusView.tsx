@@ -7,7 +7,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 export const LianeStatusView = ({ liane }: { liane: Liane }) => {
   const lianeStatus = useLianeStatus(liane);
-  const [statusText, color] = getLianeStatusStyle(lianeStatus!);
+  const [statusText] = getLianeStatusStyle(lianeStatus!);
   if (!statusText) {
     return null;
   }

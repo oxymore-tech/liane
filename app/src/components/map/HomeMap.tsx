@@ -9,7 +9,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AppMapView, { AppMapViewController } from "@/components/map/AppMapView";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
-import { useIsFocused } from "@react-navigation/native";
 import { LianeDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
 import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
 import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer";
@@ -19,7 +18,6 @@ import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
-import { AppStorage } from "@/api/storage";
 import { useObservable } from "@/util/hooks/subscription";
 
 export type HomeMapProps = {
@@ -194,15 +192,6 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
       }
     };
 
-    // Debug settings
-    const isFocused = useIsFocused();
-    const [trafficAsWidth, setTrafficAsWidth] = useState(true);
-    const [trafficAsColor, setTrafficAsColor] = useState(true);
-    useEffect(() => {
-      AppStorage.getSetting("map.lianeTrafficAsWidth").then(setTrafficAsWidth);
-      AppStorage.getSetting("map.lianeTrafficAsColor").then(setTrafficAsColor);
-    }, [isFocused]);
-
     return (
       <AppMapView
         bounds={mapBounds}
@@ -217,8 +206,6 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         ref={appMapRef}>
         {state.matches("map") && (
           <LianeDisplayLayer
-            trafficAsWidth={trafficAsWidth}
-            trafficAsColor={trafficAsColor}
             date={state.context.filter.targetTime?.dateTime}
             onSelect={rp => {
               if (rp) {

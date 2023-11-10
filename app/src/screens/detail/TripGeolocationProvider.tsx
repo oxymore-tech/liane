@@ -1,5 +1,5 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { addSeconds, Liane, Ref, TrackedMemberLocation, User } from "@liane/common";
+import { Liane, Ref, TrackedMemberLocation, User } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";

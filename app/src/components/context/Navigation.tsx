@@ -8,7 +8,6 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { WithBadge } from "@/components/base/WithBadge";
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
-import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { AccountScreen } from "@/screens/user/AccountScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
@@ -193,7 +192,6 @@ function Navigation() {
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
-        <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen
           name="TripGeolocationWizard"
           component={TripGeolocationWizard}

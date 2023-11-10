@@ -73,6 +73,10 @@ jobs:
         working-directory: ./app
         run: yarn
 
+      - name: Check tslint and eslint
+        working-directory: ./app
+        run: yarn lint
+
       - name: Set up our JDK environment
         uses: actions/setup-java@v1.4.3
         with:

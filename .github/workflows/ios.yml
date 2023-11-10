@@ -71,6 +71,10 @@ jobs:
         working-directory: ./app
         run: yarn
 
+      - name: Check tslint and eslint
+        working-directory: ./app
+        run: yarn lint
+        
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1
         with:

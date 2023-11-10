@@ -2,7 +2,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { Exact, formatDuration, getPoint, LianeMatch, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@liane/common";
+import { Exact, getPoint, LianeMatch, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@liane/common";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip, UserTrip } from "@/components/trip/trip";
@@ -19,6 +19,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppStyles } from "@/theme/styles";
+import { AppLocalization } from "@/api/i18n";
 
 const EmptyResultView = (props: { message: string }) => (
   <AppText style={[{ paddingHorizontal: 24, paddingVertical: 8, alignSelf: "center" }]}>{props.message}</AppText>
@@ -146,7 +147,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
 
   const renderItem = ({ item }: { item: { lianeMatch: LianeMatch; trip: UserTrip; returnTime: UTCDateTime } }) => {
     const driver = item.lianeMatch.liane.members.find((l: LianeMember) => l.user.id === item.lianeMatch.liane.driver.user)!.user;
-    const duration = formatDuration(getTotalDuration(item.trip.wayPoints.slice(1)));
+    const duration = AppLocalization.formatDuration(getTotalDuration(item.trip.wayPoints.slice(1)));
     const userIsMember = !!item.lianeMatch.liane.members.find(m => m.user.id === user!.id);
     return (
       <Column>

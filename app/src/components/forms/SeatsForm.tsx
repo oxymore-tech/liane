@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet } from "react-native";
 
 import { Column, Row } from "@/components/base/AppLayout";
-import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppButton } from "@/components/base/AppButton";
 import { AppIcon } from "@/components/base/AppIcon";

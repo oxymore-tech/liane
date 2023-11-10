@@ -21,9 +21,8 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
       return;
     }
     AppStorage.getSetting("geolocation").then(async setting => {
-
-        const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkBackgroundGeolocationPermission());
-        if (mismatchedPermissions) {
+      const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkBackgroundGeolocationPermission());
+      if (mismatchedPermissions) {
         // Permissions don't match saved settings, so show again
 
         RootNavigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined });

@@ -117,7 +117,7 @@ const AppMapView = forwardRef(
     };
 
     useImperativeHandle(ref, () => controller);
-    const regionMoveCallbackRef = useRef<number | undefined>();
+    const regionMoveCallbackRef = useRef<ReturnType<typeof setTimeout> | undefined>();
     const moving = useRef<boolean>(false);
 
     const [showUserLocation, setShowUserLocation] = useState(false);

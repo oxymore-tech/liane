@@ -2,7 +2,7 @@ import { AppColors, ContextualColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { Row, Space } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator } from "react-native";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";

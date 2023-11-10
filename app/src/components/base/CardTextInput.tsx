@@ -12,6 +12,7 @@ export interface CardTextInputProps extends TextInputProps {
 export const CardTextInput = ({ minHeight = 160, style = {}, ...props }: CardTextInputProps) => {
   return (
     <View style={[styles.card, { minHeight, justifyContent: "flex-start" }]}>
+      {/* @ts-ignore */}
       <AppTextInput {...props} style={[styles.input, style]} />
     </View>
   );
