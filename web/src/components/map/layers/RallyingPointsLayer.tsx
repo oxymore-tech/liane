@@ -29,7 +29,7 @@ export function RallyingPointsLayer({ useLianeIcon = true, onClickPoint, highlig
         promoteId: "id"
       });
     };
-    console.log("ICI 1");
+    console.log("Map loaded state is", map.current?.loaded());
     const url = NodeAppEnv.rallyingPointsTilesUrl;
     map.current?.once("load", () => {
       addSource();
