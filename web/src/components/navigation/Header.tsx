@@ -30,7 +30,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
   useEffect(() => {
     if (!state.done) return;
     machine.onDone(async () => {
-      if (state.context.authUser?.isSignedUp) {
+      if (state.context.authUser?.isSignedUp && state.context.authUser?.isAdmin) {
         await refreshUser();
         onClosed();
       } else setAdminError(true);
