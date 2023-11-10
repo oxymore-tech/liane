@@ -74,7 +74,7 @@ public sealed class AuthServiceImpl : IAuthService
       var generator = new Random();
       var code = generator.Next(0, 1000000).ToString("D6");
 
-      smsCodeCache.Set(phoneNumber.ToString(), code, TimeSpan.FromMinutes(2));
+      smsCodeCache.Set(phoneNumber.ToString()!, code, TimeSpan.FromMinutes(2));
 
       var message = await MessageResource.CreateAsync(
         body: $"{code} est votre code liane",
@@ -83,6 +83,10 @@ public sealed class AuthServiceImpl : IAuthService
       );
 
       logger.LogDebug("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
+    }
+    else if (twilioSettings.TestCode is not null)
+    {
+      smsCodeCache.Set(phoneNumber.ToString()!, twilioSettings.TestCode, TimeSpan.FromMinutes(2));
     }
   }
 
