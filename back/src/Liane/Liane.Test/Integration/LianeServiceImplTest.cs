@@ -53,107 +53,6 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  [Ignore("TODO")]
-  public Task ShouldDisplayLiane()
-  {
-    return Task.CompletedTask;
-    // TODO test with postgis
-    // var userA = Fakers.FakeDbUsers[0];
-    //
-    // var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    //
-    // currentContext.SetCurrentUser(userA, true);
-    // var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
-    // Assert.IsNotNull(actual);
-    //
-    // CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id), actual.Lianes.Select(l => l.Id));
-    //
-    // Assert.AreEqual(1, actual.Segments.Count);
-  }
-
-  [Test]
-  [Ignore("TODO")]
-  public Task ShouldDisplay2Lianes()
-  {
-    return Task.CompletedTask;
-    // var userA = Fakers.FakeDbUsers[0];
-    //
-    // var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    // var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
-    //
-    // currentContext.SetCurrentUser(userA, true);
-    // var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
-    // Assert.IsNotNull(actual);
-    //
-    // CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id), actual.Lianes.Select(l => l.Id));
-    //
-    // Assert.AreEqual(3, actual.Segments.Count);
-  }
-
-  [Test]
-  [Ignore("TODO")]
-  public Task ShouldDisplay3Lianes()
-  {
-    return Task.CompletedTask;
-    // var userA = Fakers.FakeDbUsers[0];
-    //
-    // var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    // var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
-    // var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.LeCrouzet, LabeledPositions.LesBondonsParking);
-    //
-    // currentContext.SetCurrentUser(userA, true);
-    // var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
-    // Assert.IsNotNull(actual);
-    //
-    // CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id, liane3.Id), actual.Lianes.Select(l => l.Id));
-    //
-    // Assert.AreEqual(4, actual.Segments.Count);
-  }
-
-  [Test]
-  [Ignore("TODO")]
-  public Task ShouldDisplay3LianesWithIntersection()
-  {
-    return Task.CompletedTask;
-    // var userA = Fakers.FakeDbUsers[0];
-    //
-    // var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende);
-    // var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Florac);
-    // var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.LeCrouzet, LabeledPositions.Rampon);
-    //
-    // currentContext.SetCurrentUser(userA, true);
-    // var actual = await testedService.Display(new LatLng(44.395646, 3.578453), new LatLng(44.290312, 3.660679), DateTime.Now);
-    // Assert.IsNotNull(actual);
-    //
-    // CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id, liane3.Id), actual.Lianes.Select(l => l.Id));
-    //
-    // Assert.AreEqual(4, actual.Segments.Count);
-  }
-
-  [Test]
-  [Ignore("TODO")]
-  public Task ShouldDisplay2CrossingLianes()
-  {
-    return Task.CompletedTask;
-    // var userA = Fakers.FakeDbUsers[0];
-    //
-    // var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Mende, LabeledPositions.SaintEtienneDuValdonnezParking);
-    // var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.SaintBauzileEglise, LabeledPositions.LanuejolsParkingEglise);
-    //
-    // // var box = Geometry.GetBoundingBox(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663));
-    // // Console.WriteLine("BB {0}", box.ToJson());
-    // // await DebugGeoJson();
-    //
-    // currentContext.SetCurrentUser(userA, true);
-    // var actual = await testedService.Display(new LatLng(44.538856, 3.488159), new LatLng(44.419804, 3.585663), DateTime.Now);
-    // Assert.IsNotNull(actual);
-    //
-    // CollectionAssert.AreEquivalent(ImmutableList.Create(liane1.Id, liane2.Id), actual.Lianes.Select(l => l.Id));
-
-    // Assert.AreEqual(6, actual.Segments.Count);
-  }
-
-  [Test]
   public async Task TestMatchLiane()
   {
     var userA = Fakers.FakeDbUsers[0].Id;
@@ -349,7 +248,6 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  [Ignore("FIXME")]
   public async Task TestListAll()
   {
     var userA = Fakers.FakeDbUsers[0];

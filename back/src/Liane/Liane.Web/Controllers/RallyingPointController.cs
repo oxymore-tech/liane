@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -54,18 +56,35 @@ public sealed class RallyingPointController : ControllerBase
   }
   
   [HttpGet("")]
-  [DisableAuth]
-  public async Task<PaginatedResponse<RallyingPoint>> List(
-    [FromQuery] RallyingPointFilter rallyingPointFilter)
+  public async Task<PaginatedResponse<RallyingPoint>> List([FromQuery] RallyingPointFilter rallyingPointFilter)
   {
     return await rallyingPointService.List(rallyingPointFilter);
   }
 
   [HttpGet("snap")]
-  [DisableAuth]
   public async Task<RallyingPoint?> Snap([FromQuery] double lat, [FromQuery] double lng)
   {
     return await rallyingPointService.Snap(new(lat, lng), IRallyingPointService.MaxRadius);
+  }
+  
+  [HttpGet("export")]
+  [RequiresAdminAuth]
+  public async Task<FileStreamResult> DownloadCsv([FromQuery] RallyingPointFilter rallyingPointFilter)
+  {
+    using var reader = await rallyingPointService.ExportCsv(rallyingPointFilter);
+    var stream = await reader.GetStream();
+    return new FileStreamResult(stream, "text/csv"){FileDownloadName = "rallying_point.csv"};
+  }
+  
+  [HttpPost("import")]
+  [RequiresAdminAuth]
+  public async Task ImportCsv(IFormFile file)
+  {
+    using var stream = new MemoryStream();
+    using var writer = await rallyingPointService.ImportCsv();
+    var uploadTask = file.CopyToAsync(stream);
+    var importTask = writer.Write(stream);
+    await Task.WhenAll(uploadTask, importTask);
   }
 
   [HttpGet("request/all")]

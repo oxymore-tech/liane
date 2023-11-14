@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Dapper;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
@@ -60,7 +59,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return results.ToDictionary(r => r.Id!);
   }
 
-  public async Task<PaginatedResponse<RallyingPoint>> List(RallyingPointFilter rallyingPointFilter)
+  private Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)
   {
     var filter = Filter<RallyingPoint>.Empty;
        
@@ -83,8 +82,15 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     {
       filter &= Filter<RallyingPoint>.Where(r => r.Type, ComparisonOperator.In, rallyingPointFilter.Types);
     }
-       
+
+    return filter;
+  }
+
+  public async Task<PaginatedResponse<RallyingPoint>> List(RallyingPointFilter rallyingPointFilter)
+  {
     using var connection = db.NewConnection();
+    var filter = GetFilter(rallyingPointFilter);
+    var center = rallyingPointFilter.GetLatLng();
     var limit = rallyingPointFilter.Limit ?? 15;
     var offset = rallyingPointFilter.Offset ?? 0;
     var query = Query.Select<RallyingPoint>()
@@ -149,14 +155,46 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return closest.Distance <= radius ? closest.Point : null;
   }
 
-  public Task<bool> Delete(Ref<RallyingPoint> reference)
+  public async Task<bool> Delete(Ref<RallyingPoint> reference)
   {
-    throw new NotImplementedException();
+    return await DeleteMany(new[] { reference }) > 0;
   }
 
-  public Task<RallyingPoint> Create(RallyingPoint obj)
+  public async Task<RallyingPoint> Create(RallyingPoint obj)
   {
-    throw new NotImplementedException();
+    using var connection = db.NewConnection();
+    await connection.InsertAsync(obj);
+    return obj;
+  }
+
+  public async Task SetActive(IEnumerable<Ref<RallyingPoint>> points, bool active)
+  {
+    using var connection = db.NewConnection();
+    var field = FieldDefinition<RallyingPoint>.From(r => r.IsActive);
+    await connection.UpdateAsync(new UpdateQuery<RallyingPoint>(
+      Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points), 
+      new Dictionary<FieldDefinition<RallyingPoint>, object?> { {field, active} }
+      ));
+  }
+
+  public Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points)
+  {
+    var idsFilter = Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points.Select(p => p.Id));
+    return DeleteMany(idsFilter);
+  }
+
+  public Task<int> DeleteMany(RallyingPointFilter rallyingPointFilter)
+  {
+    var filter = GetFilter(rallyingPointFilter);
+    return DeleteMany(filter);
+  }
+
+  private async Task<int> DeleteMany(Filter<RallyingPoint> filter)
+  {
+    using var connection = db.NewConnection();
+    const string usedPointsIds = "select id from rallying_point_stats union select from_id from segment union select to_id from segment";
+    var usedPointsFilter = Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.Nin, usedPointsIds);
+    return await connection.DeleteAsync(filter & usedPointsFilter);
   }
 
   public async Task Insert(IEnumerable<RallyingPoint> rallyingPoints, bool clearAll = false)
@@ -173,4 +211,17 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
     tx.Commit();
   }
+
+  public async Task<IDatabaseImportContext> ImportCsv()
+  {
+    return await db.BeginTextImport<RallyingPoint>(c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
+  }
+
+  public async Task<IDatabaseExportContext> ExportCsv(RallyingPointFilter rallyingPointFilter)
+  {
+    var filter = GetFilter(rallyingPointFilter);
+    return await db.BeginTextExport(filter, c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
+  }
+  
+  
 }

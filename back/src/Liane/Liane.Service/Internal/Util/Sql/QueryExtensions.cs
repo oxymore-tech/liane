@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Util.Exception;
@@ -35,10 +34,9 @@ public static class QueryExtensions
 
   public static Task<int> UpdateAsync<T>(this IDbConnection connection, T table, IDbTransaction? transaction = null) where T : IIdentity
   {
-    var setters = typeof(T)
-      .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-      .Where(p => p.Name != nameof(IIdentity.Id))
-      .ToImmutableDictionary(p => (FieldDefinition<T>)Mapper.GetColumnName(p.Name), p => p.GetValue(table));
+    var setters = Mapper.GetColumns<T>()
+      .Where(p => p.PropertyInfo.Name != nameof(IIdentity.Id))
+      .ToImmutableDictionary(p => (FieldDefinition<T>)p.ColumnName, p => p.PropertyInfo.GetValue(table));
 
     var query = Query.Update<T>()
       .Set(setters)

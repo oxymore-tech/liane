@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
@@ -49,7 +50,7 @@ public abstract record Filter<T>
     internal override string ToSql(NamedParams namedParams) => "";
   }
 
-  public sealed record Condition(FieldDefinition<T> Field, ComparisonOperator Operator, object? Operand) : Filter<T>
+  private sealed record Condition(FieldDefinition<T> Field, ComparisonOperator Operator, object? Operand) : Filter<T>
   {
     internal override string ToSql(NamedParams namedParams)
     {
@@ -65,15 +66,15 @@ public abstract record Filter<T>
         ComparisonOperator.Gte => $"{fd} >= {operand}",
         ComparisonOperator.Lt => $"{fd} < {operand}",
         ComparisonOperator.Lte => $"{fd} <= {operand}",
-        ComparisonOperator.In => $"{fd} = ANY({operand})",
-        ComparisonOperator.Nin => $"NOT {fd} = ANY({operand})",
+        ComparisonOperator.In => Operand is IEnumerable and not string ? $"{fd} = ANY({operand})" : $"{fd} IN ({operand})",
+        ComparisonOperator.Nin => Operand is IEnumerable and not string ?$"NOT {fd} = ANY({operand})" : $"{fd} NOT IN ({operand})",
         ComparisonOperator.Regex => $"{fd} ~* {operand}",
-        _ => throw new ArgumentOutOfRangeException()
+        _ => throw new ArgumentOutOfRangeException($"Unknown operator {Operator.ToString()}")
       };
     }
   }
 
-  public sealed record NearFilter(FieldDefinition<T>.Distance Distance, int Radius) : Filter<T>
+  private sealed record NearFilter(FieldDefinition<T>.Distance Distance, int Radius) : Filter<T>
   {
     internal override string ToSql(NamedParams namedParams)
     {
@@ -81,15 +82,15 @@ public abstract record Filter<T>
     }
   }
 
-  public sealed record Boolean(BooleanOperator Operator, ImmutableList<Filter<T>> Operands) : Filter<T>
+  private sealed record Boolean(BooleanOperator Operator, ImmutableList<Filter<T>> Operands) : Filter<T>
   {
     internal override string ToSql(NamedParams namedParams) => $"({string.Join($" {Operator.ToString().ToUpper()} ", Operands.Select(o => o.ToSql(namedParams)))})";
   }
 
-  public Filter<T> And(Filter<T> right) => Combine(right, BooleanOperator.And);
-  public Filter<T> Or(Filter<T> right) => Combine(right, BooleanOperator.Or);
+  private Filter<T> And(Filter<T> right) => Combine(right, BooleanOperator.And);
+  private Filter<T> Or(Filter<T> right) => Combine(right, BooleanOperator.Or);
 
-  public Filter<T> Combine(Filter<T> right, BooleanOperator booleanOperator) => this switch
+  private Filter<T> Combine(Filter<T> right, BooleanOperator booleanOperator) => this switch
   {
     Boolean b => b.Operator == booleanOperator ? new Boolean(booleanOperator, b.Operands.Add(right)) : new Boolean(booleanOperator, ImmutableList.Create(this, right)),
     EmptyFilter => right,

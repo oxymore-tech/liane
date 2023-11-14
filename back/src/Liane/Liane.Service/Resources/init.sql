@@ -1,12 +1,40 @@
 /** Create tables **/
 
+CREATE TABLE IF NOT EXISTS rallying_point
+(
+  id          varchar(24),
+  label       varchar(255)          not null,
+  location    geometry(Point, 4326) not null,
+  type        varchar(24),
+  address     varchar(255),
+  zip_code    varchar(24),
+  city        varchar(255),
+  place_count integer,
+  is_active   boolean default true,
+  PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS segment
 (
   from_id  VARCHAR(24),
   to_id    VARCHAR(24),
   geometry geometry(LineString, 4326),
-  PRIMARY KEY (from_id, to_id)
+  PRIMARY KEY (from_id, to_id),
+  CONSTRAINT segment_rallying_points_from_id_fk
+    FOREIGN KEY (from_id) REFERENCES rallying_point,
+  CONSTRAINT segment_rallying_points_to_id_fk
+    FOREIGN KEY (to_id) REFERENCES rallying_point
 );
+
+ALTER TABLE segment DROP CONSTRAINT IF EXISTS  segment_rallying_points_from_id_fk;
+ALTER TABLE segment DROP CONSTRAINT IF EXISTS  segment_rallying_points_to_id_fk;
+ALTER TABLE segment
+  ADD CONSTRAINT segment_rallying_points_from_id_fk
+    FOREIGN KEY (from_id) REFERENCES rallying_point;
+ALTER TABLE segment
+  ADD CONSTRAINT segment_rallying_points_to_id_fk
+    FOREIGN KEY (to_id) REFERENCES rallying_point;
+
 
 CREATE TABLE IF NOT EXISTS liane_waypoint
 (
@@ -19,25 +47,22 @@ CREATE TABLE IF NOT EXISTS liane_waypoint
     FOREIGN KEY (from_id, to_id) REFERENCES segment
 );
 
-CREATE TABLE IF NOT EXISTS rallying_point
-(
-  id          varchar(24),
-  label       varchar(255)          not null,
-  location    geometry(Point, 4326) not null,
-  type        varchar(24),
-  address     varchar(255),
-  zip_code    varchar(24),
-  city        varchar(255),
-  place_count integer,
-  is_active   boolean,
-  PRIMARY KEY (id)
-);
-
 CREATE TABLE IF NOT EXISTS ongoing_trip
 (
   id       varchar(24),
   geometry geometry(LineString, 4326),
   PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS rallying_point_stats
+(
+  id          varchar(24),
+  total_trip_count integer,
+  last_trip_usage date,
+  PRIMARY KEY (id),
+  CONSTRAINT rallying_point_stats_fk
+    FOREIGN KEY (id) REFERENCES rallying_point
+    ON DELETE CASCADE 
 );
 
 
@@ -185,7 +210,8 @@ BEGIN
                                  place_count
                           from rallying_point
                           where z > 5
-                            and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)),
+                            and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
+                            and is_active),
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids, bool_or(lianes_parts.to_id = clipped_points.id) as is_deposit
                              from lianes_parts
                                     inner join clipped_points on
@@ -538,7 +564,8 @@ BEGIN
                           from rallying_point
                           where z > 5
                             and location @ ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-                            and st_distancesphere(origin_point_location, location) > 200),
+                            and st_distancesphere(origin_point_location, location) > 200
+                            and is_active),
 
        suggestion_points as (select clipped_points.*, array_agg(lianes_parts.liane_id) as liane_ids
                              from lianes_parts
