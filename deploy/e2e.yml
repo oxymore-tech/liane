@@ -59,12 +59,12 @@ services:
     build:
       context: ../common
       target: test
+      args:
+        API_URL: "http://back:5000"
+        TILES_ULR: "http://martin:3000"
+        TEST_CODE: "333333"
     volumes:
       - "/tmp/${TEST_PROJECT}:/tests/report"
-    environment:
-      API_URL: "http://back:5000"
-      TILES_ULR: "http://martin:3000"
-      TEST_CODE: "333333"
     depends_on:
       - back
       - martin

@@ -8,7 +8,7 @@ on:
     paths:
       - app/**
       - '!app/ios/**'
-      - common/**
+      - common/src/**
 
 jobs:
   android-build:
