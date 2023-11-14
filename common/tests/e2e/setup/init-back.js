@@ -26,4 +26,6 @@ async function login() {
 async function generateRallyingPoints(token) {
   await post(`${apiUrl}/api/rallying_point/generate?source=test`, undefined, token);
 }
+
+console.log(`Initializing server context at '${apiUrl}...'`);
 login().then(token => generateRallyingPoints(token));
