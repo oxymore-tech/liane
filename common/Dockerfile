@@ -23,6 +23,4 @@ ENV VITE_API_URL ${API_URL}
 ENV VITE_TILES_ULR ${TILES_ULR}
 ENV VITE_TEST_CODE ${TEST_CODE}
 
-RUN node /tests/tests/e2e/setup/init-back.js ${API_URL}
-
-CMD ["yarn", "test", "e2e", "--reporter=default"]
+ENTRYPOINT node /tests/tests/e2e/setup/init-back.js $VITE_API_URL && yarn test e2e --reporter=default
