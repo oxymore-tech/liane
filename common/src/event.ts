@@ -1,49 +1,52 @@
 import { GeolocationLevel, LatLng, Liane, RallyingPoint, Ref, User } from "./api";
 import { TimeInSeconds } from "./util";
+import { IUnion } from "./union";
 
 export type LianeEvent = JoinRequest | MemberAccepted | MemberRejected | MemberHasLeft | MemberPing;
 
-export type JoinRequest = Readonly<{
-  type: "JoinRequest";
-  liane: Ref<Liane>;
-  from: Ref<RallyingPoint>;
-  to: Ref<RallyingPoint>;
-  seats: number;
-  takeReturnTrip: boolean;
-  message: string;
-  geolocationLevel: GeolocationLevel | null;
-}>;
+export type JoinRequest = Readonly<
+  {
+    liane: Ref<Liane>;
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    seats: number;
+    takeReturnTrip: boolean;
+    message: string;
+    geolocationLevel: GeolocationLevel | null;
+  } & IUnion<"JoinRequest">
+>;
 
-export type MemberAccepted = Readonly<{
-  type: "MemberAccepted";
-  liane: Ref<Liane>;
-  member: Ref<User>;
-  from: Ref<RallyingPoint>;
-  to: Ref<RallyingPoint>;
-  seats: number;
-  takeReturnTrip: boolean;
-}>;
+export type MemberAccepted = Readonly<
+  {
+    liane: Ref<Liane>;
+    member: Ref<User>;
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    seats: number;
+    takeReturnTrip: boolean;
+  } & IUnion<"MemberAccepted">
+>;
 
-export type MemberRejected = Readonly<{
-  type: "MemberRejected";
-  liane: Ref<Liane>;
-  member: Ref<User>;
-  from: Ref<RallyingPoint>;
-  to: Ref<RallyingPoint>;
-  seats: number;
-  takeReturnTrip: boolean;
-  reason: string | undefined;
-}>;
+export type MemberRejected = Readonly<
+  {
+    liane: Ref<Liane>;
+    member: Ref<User>;
+    from: Ref<RallyingPoint>;
+    to: Ref<RallyingPoint>;
+    seats: number;
+    takeReturnTrip: boolean;
+    reason: string | undefined;
+  } & IUnion<"MemberRejected">
+>;
 
-export type MemberHasLeft = Readonly<{
-  type: "MemberHasLeft";
-  liane: Ref<Liane>;
-}>;
+export type MemberHasLeft = Readonly<
+  {
+    liane: Ref<Liane>;
+  } & IUnion<"MemberHasLeft">
+>;
 
 export type MemberPing = Readonly<
   {
-    type: "MemberPing";
-    //member: Ref<User>;
     liane: Ref<Liane>;
     timestamp: number;
   } & (
@@ -52,5 +55,6 @@ export type MemberPing = Readonly<
         coordinate: LatLng;
         delay?: TimeInSeconds;
       }
-  )
+  ) &
+    IUnion<"MemberPing">
 >;

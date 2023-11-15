@@ -7,7 +7,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, UnionUtils, Event, NewMessage, Notification, JoinRequest, MemberAccepted, User } from "@liane/common";
+import { JoinLianeRequestDetailed, Liane, Event, Notification, JoinRequest, User, UnionUtils } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
@@ -71,15 +71,15 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
 };
 
 export function getNotificationNavigation(notification: Notification) {
-  if (UnionUtils.isInstanceOf<Event>(notification, "Event")) {
-    if (UnionUtils.isInstanceOf<JoinRequest>(notification.payload, "JoinRequest")) {
+  if (UnionUtils.isInstanceOf(notification, "Event")) {
+    if (UnionUtils.isInstanceOf(notification.payload, "JoinRequest")) {
       return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
         navigation.navigate("OpenJoinLianeRequest", { request: notification });
-    } else if (UnionUtils.isInstanceOf<MemberAccepted>(notification.payload, "MemberAccepted")) {
+    } else if (UnionUtils.isInstanceOf(notification.payload, "MemberAccepted")) {
       return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
         navigation.navigate("LianeDetail", { liane: notification.payload.liane });
     }
-  } else if (UnionUtils.isInstanceOf<NewMessage>(notification, "NewMessage")) {
+  } else if (UnionUtils.isInstanceOf(notification, "NewMessage")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("Chat", { conversationId: notification.conversation });
   }

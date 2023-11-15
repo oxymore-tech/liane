@@ -7,6 +7,7 @@ export * from "./storage";
 
 export * from "./api";
 export * from "./event";
+export * from "./union";
 export * from "./localization";
 export * from "./services/rallying_point";
 export * from "./services/liane";

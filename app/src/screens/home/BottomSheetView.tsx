@@ -2,7 +2,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { Exact, getPoint, LianeMatch, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@liane/common";
+import { getPoint, LianeMatch, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@liane/common";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView } from "@/components/trip/TripSegmentView";
 import { getTotalDuration, getTrip, UserTrip } from "@/components/trip/trip";
@@ -100,7 +100,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   const [showCompatible, setShowCompatible] = useState(false);
   const formattedData = useMemo(() => {
     const matches = (state.context.matches ?? []).map(item => {
-      const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(item.match, "Exact");
+      const lianeIsExactMatch = UnionUtils.isInstanceOf(item.match, "Exact");
       const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
       const fromPoint = getPoint(item, "pickup");
       const toPoint = getPoint(item, "deposit");

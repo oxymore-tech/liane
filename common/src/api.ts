@@ -1,11 +1,6 @@
 import { TimeInSeconds } from "./util";
 import { FeatureCollection } from "geojson";
-
-export class UnionUtils {
-  static isInstanceOf<T extends { type: string }>(notification: { type: string }, type: T["type"]): notification is T {
-    return notification.type === type;
-  }
-}
+import { IUnion, UnionUtils } from "./union";
 
 export type Identity = Readonly<{
   id?: string;
@@ -209,9 +204,8 @@ export type LianeSearchFilter = Readonly<{
   availableSeats: number;
 }>;
 
-export type Exact = { type: "Exact"; pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> };
+export type Exact = { pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> } & IUnion<"Exact">;
 export type Compatible = {
-  type: "Compatible";
   pickup: Ref<RallyingPoint>;
   deposit: Ref<RallyingPoint>;
   wayPoints: WayPoint[];
@@ -225,7 +219,7 @@ export type Compatible = {
     depositInSeconds: number;
     depositInMeters: number;
   };
-};
+} & IUnion<"Compatible">;
 export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{
@@ -237,7 +231,7 @@ export type LianeMatch = Readonly<{
 }>;
 
 export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): RallyingPoint => {
-  const wp = UnionUtils.isInstanceOf<Exact>(match.match, "Exact") ? match.liane.wayPoints : match.match.wayPoints;
+  const wp = UnionUtils.isInstanceOf(match.match, "Exact") ? match.liane.wayPoints : match.match.wayPoints;
   return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
 

@@ -1,4 +1,4 @@
-import { capitalize, Event, Notification, UnionUtils } from "@liane/common";
+import { capitalize, Notification, UnionUtils } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -17,7 +17,7 @@ export const NotificationItem = ({ notification: item, read }: { notification: N
   const { navigation } = useAppNavigation();
 
   let icon: IconName = "message-square-outline";
-  if (UnionUtils.isInstanceOf<Event>(item, "Event")) {
+  if (UnionUtils.isInstanceOf(item, "Event")) {
     switch (item.payload.type) {
       case "MemberAccepted":
         icon = "calendar-outline";

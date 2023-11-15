@@ -16,7 +16,7 @@ import { TripCard } from "@/components/TripCard";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
-import { Exact, JoinRequest, UnionUtils } from "@liane/common";
+import { JoinRequest, UnionUtils } from "@liane/common";
 import { AppStorage } from "@/api/storage";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
@@ -28,7 +28,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const request = route.params.request;
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
-  const exactMatch = UnionUtils.isInstanceOf<Exact>(request.match, "Exact");
+  const exactMatch = UnionUtils.isInstanceOf(request.match, "Exact");
 
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =

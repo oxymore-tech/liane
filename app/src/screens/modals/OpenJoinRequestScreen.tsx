@@ -87,7 +87,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
   ({ data }) => {
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
-    const reqIsExactMatch = UnionUtils.isInstanceOf<Exact>(data.match, "Exact");
+    const reqIsExactMatch = UnionUtils.isInstanceOf(data.match, "Exact");
     const wayPoints = reqIsExactMatch ? data.targetLiane.wayPoints : data.match.wayPoints;
     const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetLiane.departureTime))} à ${AppLocalization.formatTime(
       new Date(data.targetLiane.departureTime)
@@ -152,7 +152,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
 const DetailedRequestQueryKey = "DetailedRequestQueryKey";
 
 const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
-  const reqIsExactMatch = UnionUtils.isInstanceOf<Exact>(request.match, "Exact");
+  const reqIsExactMatch = UnionUtils.isInstanceOf(request.match, "Exact");
   const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
   const boundingBox = getBoundingBox(
     wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]),

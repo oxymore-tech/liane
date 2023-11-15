@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useCallback, useContext, useEffect, useState } from "react";
 import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
-import { capitalize, Exact, getPoint, JoinRequest, UnionUtils } from "@liane/common";
+import { capitalize, getPoint, JoinRequest, UnionUtils } from "@liane/common";
 import { getTotalDuration, getTripMatch } from "@/components/trip/trip";
 import { AppLocalization } from "@/api/i18n";
 import { AppBottomSheetScrollView } from "@/components/base/AppBottomSheet";
@@ -113,7 +113,7 @@ export const LianeMatchDetailView = () => {
   const queryClient = useQueryClient();
   const { navigation } = useAppNavigation();
   const liane = state.context.selectedMatch!;
-  const lianeIsExactMatch = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact");
+  const lianeIsExactMatch = UnionUtils.isInstanceOf(liane.match, "Exact");
 
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");

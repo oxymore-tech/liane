@@ -8,7 +8,7 @@ vi.setConfig({ testTimeout: 5_000 });
 
 const newUserPhone = faker.helpers.replaceSymbolWithNumber("06########");
 
-describe.sequential("Auth Service", () => {
+describe.sequential("Signing up and authenticating", () => {
   test("Should be undefined", async () => {
     const user = await Services.auth.me();
     expect(user).undefined;

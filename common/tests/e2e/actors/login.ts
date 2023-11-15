@@ -72,4 +72,6 @@ export class LoginActor {
     };
     executeAction();
   };
+
+  signUpUser = (phone: string) => new Promise<string>((resolve, reject) => this.runScenario(ctx => resolve(ctx.authUser!.id), reject, phone));
 }

@@ -1,4 +1,4 @@
-import { Exact, getPoint, LianeMatch, RallyingPoint, UnionUtils, WayPoint } from "@liane/common";
+import { getPoint, LianeMatch, RallyingPoint, UnionUtils, WayPoint } from "@liane/common";
 import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -22,7 +22,7 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   const isSameDeposit = !to || to.id === toPoint.id;
 
   const wayPoints = useMemo(() => {
-    const isCompatibleMatch = !UnionUtils.isInstanceOf<Exact>(match.match, "Exact");
+    const isCompatibleMatch = !UnionUtils.isInstanceOf(match.match, "Exact");
     const trip = getTripMatch(
       toPoint,
       fromPoint,

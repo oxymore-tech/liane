@@ -4,7 +4,7 @@ import { LianeGeolocation } from "@/api/service/location";
 import { RootNavigation } from "@/api/navigation";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppStorage } from "@/api/storage";
-import { Event, MemberAccepted, UnionUtils } from "@liane/common";
+import { UnionUtils } from "@liane/common";
 
 export interface IAppModalNavigation {
   showTutorial: (as: "passenger" | "driver", lianeId?: string) => void;
@@ -32,7 +32,7 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
       if (!setting) {
         setShowTutorial({ showAs: "driver" });
         const sub = services.realTimeHub.subscribeToNotifications(async n => {
-          if (UnionUtils.isInstanceOf<Event>(n, "Event") && UnionUtils.isInstanceOf<MemberAccepted>(n.payload, "MemberAccepted")) {
+          if (UnionUtils.isInstanceOf(n, "Event") && UnionUtils.isInstanceOf(n.payload, "MemberAccepted")) {
             setShowTutorial({ showAs: "passenger", lianeId: n.payload.liane });
             sub.unsubscribe();
           }

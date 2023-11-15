@@ -21,7 +21,7 @@ export interface LianeService {
   get(lianeId: string): Promise<Liane>;
   list(states: LianeState[], pagination: PaginatedRequestParams): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
-  join(joinRequest: JoinRequest): Promise<JoinRequest>;
+  join(joinRequest: JoinRequest): Promise<void>;
   match(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   listJoinRequests(): Promise<PaginatedResponse<JoinLianeRequestDetailed>>;
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
@@ -57,26 +57,16 @@ export class LianeServiceClient implements LianeService {
   async getProof(id: string): Promise<FeatureCollection> {
     return await this.http.get<FeatureCollection>(`/liane/${id}/geolocation`);
   }
-  async list(states: LianeState[] = ["NotStarted", "Started"], pagination: PaginatedRequestParams) {
-    /* let paramString = "?" + states.map((state: string) => `state=${state}`).join("&");
-    if (cursor) {
-      paramString += `&cursor=${cursor}`;
-    }
-    if (pageSize) {
-      paramString += `&limit=${pageSize}`;
-    }
-    if (asc !== undefined) {
-      paramString += `&asc=${asc}`;
-    }*/
-    return await this.http.get<PaginatedResponse<Liane>>("/liane", { params: { ...pagination, state: states } });
+  async list(states: LianeState[] = ["NotStarted", "Started"], pagination?: PaginatedRequestParams) {
+    return await this.http.get<PaginatedResponse<Liane>>("/liane", { params: { ...(pagination ?? {}), state: states } });
   }
 
   async post(liane: LianeRequest): Promise<Liane> {
     return await this.http.postAs<Liane>("/liane/", { body: liane });
   }
 
-  async join(joinRequest: JoinRequest): Promise<JoinRequest> {
-    return await this.http.postAs<JoinRequest>(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
+  async join(joinRequest: JoinRequest): Promise<void> {
+    return await this.http.postAs(`/event/join_request`, { body: joinRequest }); // TODO now returns nothing ?
   }
 
   async match(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {

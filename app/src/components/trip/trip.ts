@@ -1,6 +1,5 @@
 import {
   addSeconds,
-  Exact,
   JoinLianeRequestDetailed,
   Liane,
   LianeMatch,
@@ -31,7 +30,7 @@ export const getTripFromLiane = (liane: Liane, user: Ref<User>) => {
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
 };
 export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
-  const wayPoints = UnionUtils.isInstanceOf<Exact>(request.match, "Exact") ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetLiane.wayPoints : request.match.wayPoints;
   const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
   const arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
   const departureTime = wayPoints[departureIndex].eta;
@@ -39,7 +38,7 @@ export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
 };
 
 export const getTripFromMatch = (liane: LianeMatch) => {
-  const wayPoints = UnionUtils.isInstanceOf<Exact>(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
   const departureIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.pickup);
   const arrivalIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.deposit);
   return <UserTripMatch>{

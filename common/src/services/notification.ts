@@ -2,8 +2,9 @@ import { ConversationGroup, PaginatedResponse, Ref, User, UTCDateTime } from "..
 import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
 import { LianeEvent } from "../event";
 import { HttpClient } from "./http";
+import { IUnion } from "../union";
 
-export type Notification = (Info | Event | NewMessage) & AbstractNotification;
+export type Notification = Info | Event | NewMessage;
 
 export enum Answer {
   Accept = "Accept",
@@ -15,33 +16,29 @@ export type Recipient = Readonly<{
   seenAt?: UTCDateTime;
 }>;
 
-type AbstractNotification = Readonly<{
-  type: string;
-  id?: string;
-  createdBy: Ref<User>;
-  createdAt: UTCDateTime;
-  recipients: Recipient[];
-  answers: Answer[];
-  title: string;
-  message: string;
-}>;
+type AbstractNotification<Key extends string> = Readonly<
+  {
+    id?: string;
+    createdBy: Ref<User>;
+    createdAt: UTCDateTime;
+    recipients: Recipient[];
+    answers: Answer[];
+    title: string;
+    message: string;
+  } & IUnion<Key>
+>;
 
-export type Info = Readonly<{
-  type: "Info";
-}> &
-  AbstractNotification;
+export type Info = AbstractNotification<"Info">;
 
 export type NewMessage = Readonly<{
-  type: "NewMessage";
   conversation: Ref<ConversationGroup>;
 }> &
-  AbstractNotification;
+  AbstractNotification<"NewMessage">;
 
 export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
-  type: "Event";
   payload: T;
 }> &
-  AbstractNotification;
+  AbstractNotification<"Event">;
 
 export interface NotificationService {
   receiveNotification(notification: Notification): Promise<void>;

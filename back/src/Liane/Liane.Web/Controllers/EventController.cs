@@ -25,14 +25,14 @@ public sealed class EventController : ControllerBase
   public async Task<IActionResult> Create([FromBody] LianeEvent.JoinRequest lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
-    return NoContent(); // TODO return event 
+    return NoContent();
   }
   
   [HttpPost("member_ping")]
   public async Task<IActionResult> Create([FromBody] LianeEvent.MemberPing lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
-    return NoContent(); // TODO return event 
+    return NoContent();
   }
 
 
