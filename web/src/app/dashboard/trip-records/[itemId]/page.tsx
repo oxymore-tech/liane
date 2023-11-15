@@ -2,10 +2,10 @@
 import { useQuery } from "react-query";
 import { useAppServices } from "@/components/ContextProvider";
 import Map, { useMapContext } from "@/components/map/Map";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { FeatureCollection } from "geojson";
 import { asPoint, LianeMember, RallyingPoint } from "@liane/common";
-import { Card } from "flowbite-react";
+import { Card, ToggleSwitch } from "flowbite-react";
 import { TripRecord } from "@/api/api";
 import { dispatchHighlightPointEvent, TimelineChart, TimelineData } from "@/components/charts/timeline/Timeline";
 import { IconButton } from "@/components/base/IconButton";
@@ -15,9 +15,8 @@ import { RouteLayer } from "@/components/map/layers/RouteLayer";
 import { MarkersLayer } from "@/components/map/layers/base/MarkersLayer";
 import { FitFeatures } from "@/components/map/FitFeatures";
 import { useLocalization } from "@/api/intl";
-import { WebLogger } from "@/api/logger";
 
-const TripView = ({ record }: { record: TripRecord }) => {
+const TripView = ({ record, children }: { record: TripRecord } & PropsWithChildren) => {
   const WebLocalization = useLocalization();
   const trip = record.wayPoints[0].rallyingPoint.city + " → " + record.wayPoints[record.wayPoints.length - 1].rallyingPoint.city;
   const router = useRouter();
@@ -33,6 +32,7 @@ const TripView = ({ record }: { record: TripRecord }) => {
             <p className="font-normal text-gray-700 dark:text-gray-400 ">
               Trajet démarré à {WebLocalization.formatTime24h(new Date(record.startedAt))}
             </p>
+            {children}
           </div>
         </div>
       </Card>
@@ -51,7 +51,8 @@ const generateId = (userIndex: number, startDate: Date, d: Date) => {
 export default function TripRecordItemPage({ params }: { params: { itemId: string } }) {
   const WebLocalization = useLocalization();
   const services = useAppServices()!;
-  const { data: pings } = useQuery(["record_pings", params.itemId], () => services.record.getRecordPings(params.itemId));
+  const [useRawPings, setUseRawPings] = useState(false);
+  const { data: pings } = useQuery(["record_pings", params.itemId, useRawPings], () => services.record.getRecordPings(params.itemId, useRawPings));
   const { data: record } = useQuery(["liane", params.itemId], () => services.record.get(params.itemId));
   const from = record?.wayPoints[0];
   const to = record ? record.wayPoints[record.wayPoints.length - 1] : undefined;
@@ -100,7 +101,11 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
 
   return (
     <div className="grow w-full relative">
-      {!!record && <TripView record={record} />}
+      {!!record && (
+        <TripView record={record}>
+          <ToggleSwitch checked={useRawPings} label="Afficher les pings bruts" onChange={setUseRawPings} />
+        </TripView>
+      )}
       {!!record && (
         <div className="px-4 py-6 absolute bottom-0 z-[5] w-full">
           <Card>
@@ -166,7 +171,7 @@ const CenterPingMarkerEventName = "centerPingMarker";
 const dispatchHighlightMarkerEvent = (payload: HighlightPingMarkerEvent) => dispatchCustomEvent(HighlightPingMarkerEventName, payload);
 const dispatchCenterMarkerEvent = (payload: CenterPingMarkerEvent) => dispatchCustomEvent(CenterPingMarkerEventName, payload);
 
-function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.Point, { user: string; at: string; color: string }> }) {
+function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.Point, any> }) {
   const map = useMapContext();
 
   useEvent(HighlightPingMarkerEventName, (e: HighlightPingMarkerEvent) => {
@@ -200,7 +205,8 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
         id={"pings"}
         source={"pings"}
         onMouseEnterPoint={f => {
-          WebLogger.info("PING", f.properties);
+          // Log more details in console
+          console.log("PING", f.properties);
           const id = f.id as number;
           dispatchHighlightPointEvent({ id, highlight: true });
           map.current?.setFeatureState({ source: "pings", id }, { hover: true });

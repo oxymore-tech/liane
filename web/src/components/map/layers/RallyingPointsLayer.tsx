@@ -19,17 +19,17 @@ export function RallyingPointsLayer({ useLianeIcon = true, onClickPoint, highlig
   useEffect(() => {
     const addSource = () => {
       if (map.current?.getSource("rallying_point_display")) {
-        console.log("Rallying points source is already loaded");
+        //WebLogger.debug("Rallying points source is already loaded");
         return;
       }
-      console.log("Adding rallying points source");
+      //WebLogger.debug("Adding rallying points source");
       map.current?.addSource("rallying_point_display", {
         type: "vector",
         url,
         promoteId: "id"
       });
     };
-    console.log("Map loaded state is", map.current?.loaded());
+    //WebLogger.debug("Map loaded state is", map.current?.loaded());
     const url = NodeAppEnv.rallyingPointsTilesUrl;
     map.current?.once("load", () => {
       addSource();
@@ -43,7 +43,6 @@ export function RallyingPointsLayer({ useLianeIcon = true, onClickPoint, highlig
   const component = useMemo(() => {
     const onClickListener = onClickPoint
       ? (e: MapMouseEvent & { features?: MapGeoJSONFeature[] | undefined } & Object) => {
-          console.log(e);
           if (e.features && e.features.length > 0) {
             onClickPoint(e.features[0], e.originalEvent.ctrlKey);
           }
@@ -77,7 +76,6 @@ const RPIconLayer = ({
   // Load layer icons
   useEffect(() => {
     map.current?.once("load", () => {
-      console.log("run");
       // if (!map.current?.getImage("rp_active"))
       map.current?.loadImage("/rp_pink.png", function (error, image) {
         if (error) throw error;
@@ -106,12 +104,11 @@ const RPIconLayer = ({
     };
   }, [map]);
 
-  console.log(images.length);
   const ready = useMemo(() => images.length >= 2, [images.length]);
 
   // Add layer once icons are ready
   useEffect(() => {
-    console.log(ready, map.current?.getSource("rallying_point_display"), !map.current?.getLayer("rallying_point_display"));
+    //WebLogger.debug(ready, map.current?.getSource("rallying_point_display"), !map.current?.getLayer("rallying_point_display"));
     if (ready && map.current?.getSource("rallying_point_display") && !map.current?.getLayer("rallying_point_display")) {
       map.current?.addLayer({
         id: "rallying_point_display",

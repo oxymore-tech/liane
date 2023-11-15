@@ -107,9 +107,11 @@ public sealed class LianeController : ControllerBase
 
   
   [HttpGet("{id}/geolocation")]
-  public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id)
+  public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id, [FromQuery] bool raw = true)
   {
-    return currentContext.CurrentUser().IsAdmin ? lianeService.GetGeolocationPings(id) : lianeService.GetGeolocationPingsForCurrentUser(id);
+    return currentContext.CurrentUser().IsAdmin ? 
+      (raw ? lianeService.GetRawGeolocationPings(id) : lianeService.GetGeolocationPings(id)) : 
+      lianeService.GetGeolocationPingsForCurrentUser(id);
   }
   
   [HttpPatch("{id}/geolocation")]

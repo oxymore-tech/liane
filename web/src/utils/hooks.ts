@@ -35,7 +35,6 @@ export const usePaginatedQuery = <T>(queryKey: QueryKey, loadData: (nextCursor: 
 export const useEvent = <T>(name: string, listener: (event: T) => void) => {
   useEffect(() => {
     const eventListener = ({ detail }: CustomEvent) => {
-      //console.log(name);
       listener(detail);
     };
     //@ts-ignore

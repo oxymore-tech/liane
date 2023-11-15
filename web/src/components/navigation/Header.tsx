@@ -33,7 +33,10 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
       if (state.context.authUser?.isSignedUp && state.context.authUser?.isAdmin) {
         await refreshUser();
         onClosed();
-      } else setAdminError(true);
+      } else {
+        setAdminError(true);
+        await services.storage.clearStorage();
+      }
     });
   }, [machine, refreshUser, state]);
 

@@ -742,6 +742,20 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
 
   public async Task<FeatureCollection> GetGeolocationPings(Ref<Api.Trip.Liane> liane)
   {
+    var report = await Mongo.GetCollection<LianeTrackReport>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
+    if (report is null) return new FeatureCollection();
+    var features = report.MemberLocations
+      .Where(ping => ping.Coordinate is not null)
+      .Select(ping => new Feature(
+        new Point(new Position(ping.Coordinate!.Value.Lat, ping.Coordinate!.Value.Lng)),
+        new Dictionary<string, object> { ["user"] = ping.member.Id, ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] =ping.NextPointIndex, ["d"] = ping.PointDistance}
+      ))
+      .ToList();
+    return new FeatureCollection(features);
+  }
+  
+  public async Task<FeatureCollection> GetRawGeolocationPings(Ref<Api.Trip.Liane> liane)
+  {
     var lianeDb = await Mongo.GetCollection<LianeDb>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
     var features = lianeDb.Pings
       .Where(ping => ping.Coordinate is not null)

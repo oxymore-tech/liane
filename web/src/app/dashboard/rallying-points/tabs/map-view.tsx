@@ -17,7 +17,7 @@ export const RallyingPointsMapPage = () => {
 
   const [selectedFeatures, setSelectedFeatures] = useState<MapGeoJSONFeature[]>([]);
 
-  console.log("selected", selectedFeatures.length, "features", selectedFeatures);
+  //WebLogger.debug("selected", selectedFeatures.length, "features", selectedFeatures);
 
   const totalItems = selectedFeatures.length;
   const ref = useRef<maplibregl.Map>(null);
@@ -38,7 +38,7 @@ export const RallyingPointsMapPage = () => {
           useLianeIcon={false}
           highlightedFeatures={selectedFeatures}
           onClickPoint={(f, ctrlKey) => {
-            console.log(ctrlKey, selectedFeatures.length);
+            //WebLogger.debug(ctrlKey, selectedFeatures.length);
             setSelectedFeatures(current => (ctrlKey ? [...current, f] : [f]));
           }}
         />
