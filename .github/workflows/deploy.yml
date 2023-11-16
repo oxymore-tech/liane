@@ -88,21 +88,20 @@ jobs:
           path: "test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
-          
-      - name: e2e test report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: e2e tests
-          path: "e2e-junit.xml"
-          reporter: jest-junit
-          fail-on-error: true
-
-#      - name: e2e test results
-#        uses: EnricoMi/publish-unit-test-result-action@v2
+#          
+#      - name: e2e test report
+#        uses: dorny/test-reporter@v1
 #        if: always()
 #        with:
-#          files: |
-#            e2e-junit.xml
-#            test-results/**/*.trx
-#            test-results/**/*.json
+#          name: e2e tests
+#          path: "e2e-junit.xml"
+#          reporter: jest-junit
+#          fail-on-error: true
+
+      - name: Test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            test-results.trx
+            e2e-junit.xml
