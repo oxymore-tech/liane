@@ -62,7 +62,6 @@ describe.sequential("Session", () => {
   });
   test("Should refresh token after network error", () =>
     new Promise<void>((done, fail) => {
-      fail("fake error");
       offlineHttp
         .tryRefreshToken(async () => {})
         .catch(e => {
