@@ -88,20 +88,27 @@ jobs:
           path: "test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
-#          
-#      - name: e2e test report
-#        uses: dorny/test-reporter@v1
+          
+      - name: Test report
+        uses: phoenix-actions/test-reporting@v8
+        if: success() || failure()
+        with:
+          name: it tests
+          path: test-results.trx
+          reporter: dotnet-trx
+
+      - name: e2e test report
+        uses: phoenix-actions/test-reporting@v8
+        if: success() || failure()
+        with:
+          name: e2e tests
+          path: e2e-junit.xml
+          reporter: jest-junit
+          
+#      - name: Test results
+#        uses: EnricoMi/publish-unit-test-result-action@v2
 #        if: always()
 #        with:
-#          name: e2e tests
-#          path: "e2e-junit.xml"
-#          reporter: jest-junit
-#          fail-on-error: true
-
-      - name: Test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: |
-            test-results.trx
-            e2e-junit.xml
+#          files: |
+#            test-results.trx
+#            e2e-junit.xml
