@@ -89,17 +89,9 @@ jobs:
           reporter: dotnet-trx
           fail-on-error: true
           
-      - name: Test report
-        uses: phoenix-actions/test-reporting@v8
-        if: success() || failure()
-        with:
-          name: it tests
-          path: test-results.trx
-          reporter: dotnet-trx
-
       - name: e2e test report
-        uses: phoenix-actions/test-reporting@v8
-        if: success() || failure()
+        uses: dorny/test-reporter@main
+        if: always()
         with:
           name: e2e tests
           path: e2e-junit.xml
