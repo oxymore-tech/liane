@@ -81,7 +81,7 @@ jobs:
           target: "e2e-junit.xml"
 
       - name: Test report
-        uses: dorny/test-reporter@v1.7.0
+        uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Integration tests
@@ -90,7 +90,7 @@ jobs:
           fail-on-error: true
           
       - name: e2e test report
-        uses: dorny/test-reporter@v1.7.0
+        uses: dorny/test-reporter@v1
         if: always()
         with:
           name: e2e tests
