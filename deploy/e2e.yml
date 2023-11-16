@@ -35,6 +35,7 @@ services:
       LIANE_Auth__SecretKey: "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M"
       LIANE_Auth__TestAccount: "0000111111"
       LIANE_Auth__TestCode:  "333333"
+      LIANE_Auth__Cooldown: 0
       LIANE_Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
       LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
       LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}

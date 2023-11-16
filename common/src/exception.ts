@@ -71,3 +71,14 @@ export const isValidationError = (e: Error): e is ValidationError => {
 export const isUnauthorizedError = (e: Error): e is UnauthorizedError => {
   return e.message === "Unauthorized";
 };
+
+export class TimedOutError extends Error {
+  constructor() {
+    super("Timed out");
+  }
+}
+export class ConcurrencyError extends Error {
+  constructor(message?: string) {
+    super(message ?? "Resource unavailable");
+  }
+}

@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { HttpClient, NetworkUnavailable, QueryPostOptions, UnauthorizedError } from "../../src";
+import { ConcurrencyError, HttpClient, NetworkUnavailable, QueryPostOptions, UnauthorizedError } from "../../src";
 import { LocalStorageImpl } from "./mocks/storage";
 import { TestEnv } from "./setup/environment";
 import { CreateServices } from "./setup/services";
+import { expect } from "vitest";
 
 const phoneNumber = faker.helpers.replaceSymbolWithNumber("06########");
 
@@ -72,6 +73,14 @@ describe.sequential("Session", () => {
             .catch(fail);
         });
     }));
+  test("Should not send request while refreshing token", async () => {
+    await storage.setAccessToken("dummy");
+    const catchError = vi.fn(e => expect(e).instanceof(ConcurrencyError));
+    const createPromise = () => new Promise(resolve => baseServices.auth.me().then(resolve).catch(catchError));
+    const user = await Promise.race([createPromise(), createPromise(), createPromise()]);
+    expect(catchError).toHaveBeenCalledTimes(2);
+    expect(user).to.not.undefined;
+  });
 
   test("Should not refresh with invalid token", () =>
     new Promise<void>((done, fail) => {

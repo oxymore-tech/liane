@@ -1,5 +1,5 @@
 import { Mutex } from "async-mutex";
-import { ForbiddenError, ResourceNotFoundError, UnauthorizedError, ValidationError } from "../exception";
+import { ConcurrencyError, ForbiddenError, ResourceNotFoundError, TimedOutError, UnauthorizedError, ValidationError } from "../exception";
 import { AuthResponse } from "../api";
 import { AppLogger } from "../logger";
 import { AppStorage } from "../storage";
@@ -132,7 +132,7 @@ export class HttpClient {
     if (this.refreshTokenMutex.isLocked()) {
       // Reject on unlock if this is concurrent refresh so that calling service can retry manually to avoid duplicate requests
       await this.refreshTokenMutex.waitForUnlock();
-      throw new Error("Concurrent refresh");
+      throw new ConcurrencyError();
     } else {
       return this.refreshTokenMutex.runExclusive(async () => {
         this.logger.info("HTTP", "Try refresh token...");
@@ -140,7 +140,7 @@ export class HttpClient {
         // Call refresh token endpoint
         try {
           const res = await Promise.race([
-            new Promise<AuthResponse>((_, reject) => setTimeout(() => reject("Timed out"), this.timeout)),
+            new Promise<AuthResponse>((_, reject) => setTimeout(() => reject(new TimedOutError()), this.timeout)),
             this.postAs<AuthResponse>(refreshTokenUri, { body: { userId: user.id, refreshToken } })
           ]);
           await this.storage.processAuthResponse(res);
