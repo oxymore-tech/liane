@@ -42,13 +42,15 @@ function liane_compose {
   docker compose -f "${LIANE_HOME}/deploy/liane.yml" -p "${PROJECT}" "${@}"
 }
 
-function run_it_tests {  
+function run_it_tests {
+  test_compose down
   test_compose build
   test_compose run test
   test_compose down
 }
 
-function run_e2e_tests {  
+function run_e2e_tests {
+  e2e_compose down
   e2e_compose build
   e2e_compose run test
   e2e_compose down
