@@ -85,7 +85,10 @@ export abstract class AbstractHubService implements HubService {
   protected onReceiveLocationUpdateCallback: { [n: Ref<User>]: OnLocationCallback | undefined } = {};
   protected appStateActive: boolean = true;
 
-  protected constructor(protected baseUrl: string, protected logger: AppLogger) {}
+  protected constructor(
+    protected readonly baseUrl: string,
+    protected readonly logger: AppLogger
+  ) {}
 
   protected receiveMessage = async (convId: string, message: ChatMessage) => {
     // Called when receiving a message inside current conversation
@@ -218,7 +221,12 @@ export class HubServiceClient extends AbstractHubService {
   private hub: HubConnection;
 
   private isStarted = false;
-  constructor(baseUrl: string, logger: AppLogger, private storage: AppStorage, private http: HttpClient) {
+  constructor(
+    baseUrl: string,
+    logger: AppLogger,
+    protected readonly storage: AppStorage,
+    protected readonly http: HttpClient
+  ) {
     super(baseUrl, logger);
     this.hub = new HubConnectionBuilder()
       .withUrl(`${baseUrl}/hub`, {

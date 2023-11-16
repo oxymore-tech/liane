@@ -18,5 +18,8 @@
   },
   "Osrm": {
     "Url": "http://osrm:5000"
+  },
+  "Auth": {
+    "Cooldown": 30
   }
 }

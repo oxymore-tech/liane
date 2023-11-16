@@ -102,9 +102,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
   return (
     <div className="grow w-full relative">
       {!!record && (
-        <TripView record={record}>
-          <ToggleSwitch checked={useRawPings} label="Afficher les pings bruts" onChange={setUseRawPings} />
-        </TripView>
+        <TripView record={record}>{/*<ToggleSwitch checked={useRawPings} label="Afficher les pings bruts" onChange={setUseRawPings} />*/}</TripView>
       )}
       {!!record && (
         <div className="px-4 py-6 absolute bottom-0 z-[5] w-full">

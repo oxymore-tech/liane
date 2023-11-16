@@ -5,13 +5,15 @@ import { AppLogger } from "../logger";
 import { AppStorage } from "../storage";
 import urlJoin from "url-join";
 
+const refreshTokenUri = "/auth/token";
 export class HttpClient {
   private readonly refreshTokenMutex = new Mutex();
 
   constructor(
-    private baseUrl: string,
-    private logger: AppLogger,
-    private storage: AppStorage
+    protected readonly baseUrl: string,
+    protected readonly logger: AppLogger,
+    protected readonly storage: AppStorage,
+    protected readonly timeout: number = 10000 // in seconds
   ) {}
 
   get<T>(uri: string, options: QueryAsOptions = {}): Promise<T> {
@@ -101,9 +103,11 @@ export class HttpClient {
           throw new ResourceNotFoundError(await response.text());
 
         case 401:
-          return this.tryRefreshToken(async () => {
-            return this.fetchAndCheck(method, uri, options);
-          });
+          if (uri === refreshTokenUri) throw new UnauthorizedError();
+          else
+            return this.tryRefreshToken(async () => {
+              return this.fetchAndCheck(method, uri, options);
+            });
 
         case 403:
           throw new ForbiddenError();
@@ -120,36 +124,39 @@ export class HttpClient {
   public async tryRefreshToken<TResult>(retryAction: () => Promise<TResult>): Promise<TResult> {
     const refreshToken = await this.storage.getRefreshToken();
     const user = await this.storage.getUser();
-    if (refreshToken && user) {
-      if (this.refreshTokenMutex.isLocked()) {
-        // Ignore if concurrent refresh
-        await this.refreshTokenMutex.waitForUnlock();
-      } else {
-        return this.refreshTokenMutex.runExclusive(async () => {
-          this.logger.debug("HTTP", "Try refresh token...");
-
-          // Call refresh token endpoint
-          try {
-            const res = await Promise.race([
-              new Promise<AuthResponse>((_, reject) => setTimeout(reject, 10000)),
-              this.postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken } })
-            ]);
-            await this.storage.processAuthResponse(res);
-            // Retry
-            return await retryAction();
-          } catch (e) {
-            this.logger.error("HTTP", "Error: could not refresh token: ", e);
-
-            // Logout if unauthorized
-            if (e instanceof UnauthorizedError) {
-              await this.storage.clearStorage();
-            }
-            throw new UnauthorizedError();
-          }
-        });
-      }
+    if (!refreshToken || !user) {
+      this.logger.warn("HTTP", "Error: could not refresh token: user or refresh token not found");
+      throw new UnauthorizedError();
     }
-    throw new UnauthorizedError();
+
+    if (this.refreshTokenMutex.isLocked()) {
+      // Reject on unlock if this is concurrent refresh so that calling service can retry manually to avoid duplicate requests
+      await this.refreshTokenMutex.waitForUnlock();
+      throw new Error("Concurrent refresh");
+    } else {
+      return this.refreshTokenMutex.runExclusive(async () => {
+        this.logger.info("HTTP", "Try refresh token...");
+
+        // Call refresh token endpoint
+        try {
+          const res = await Promise.race([
+            new Promise<AuthResponse>((_, reject) => setTimeout(() => reject("Timed out"), this.timeout)),
+            this.postAs<AuthResponse>(refreshTokenUri, { body: { userId: user.id, refreshToken } })
+          ]);
+          await this.storage.processAuthResponse(res);
+          // Retry
+          return await retryAction();
+        } catch (e) {
+          this.logger.error("HTTP", "Error: could not refresh token: ", e?.toString());
+
+          // Logout if unauthorized
+          if (e instanceof UnauthorizedError) {
+            await this.storage.clearStorage();
+          }
+          throw e;
+        }
+      });
+    }
   }
 
   private async headers(body?: any) {

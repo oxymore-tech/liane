@@ -66,7 +66,10 @@ public sealed class AuthServiceImpl : IAuthService
       throw new UnauthorizedAccessException("Too many requests");
     }
 
-    smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(30));
+    if (authSettings.Cooldown > 0)
+    {
+      smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(authSettings.Cooldown));
+    }
 
     if (twilioSettings is { Account: not null, Token: not null })
     {
@@ -149,13 +152,13 @@ public sealed class AuthServiceImpl : IAuthService
 
     if (dbUser?.RefreshToken is null)
     {
-      throw new UnauthorizedAccessException();
+      throw new UnauthorizedAccessException("Invalid refresh token");
     }
 
     if (dbUser.RefreshToken != HashString(request.RefreshToken, Convert.FromBase64String(dbUser.Salt!)))
     {
       await RevokeRefreshToken(request.UserId);
-      throw new UnauthorizedAccessException();
+      throw new UnauthorizedAccessException("Invalid refresh token");
     }
 
     var (newRefreshToken, encryptedToken, salt) = GenerateRefreshToken();
