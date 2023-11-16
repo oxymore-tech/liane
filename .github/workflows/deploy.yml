@@ -67,7 +67,20 @@ jobs:
           source: "/tmp/it-${{ env.project }}/test-results.trx"
           target: "test-results.trx"
 
-      - name: Test Report
+      - name: Copy e2e results
+        uses: nicklasfrahm/scp-action@main
+        if: always()
+        with:
+          direction: download
+          insecure_ignore_fingerprint: true
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          source: "/tmp/e2e-${{ env.project }}/junit.xml"
+          target: "e2e-junit.xml"
+
+      - name: Test report
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -75,3 +88,21 @@ jobs:
           path: "test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
+          
+      - name: e2e test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: e2e tests
+          path: "e2e-junit.xml"
+          reporter: jest-junit
+          fail-on-error: true
+
+#      - name: e2e test results
+#        uses: EnricoMi/publish-unit-test-result-action@v2
+#        if: always()
+#        with:
+#          files: |
+#            e2e-junit.xml
+#            test-results/**/*.trx
+#            test-results/**/*.json
