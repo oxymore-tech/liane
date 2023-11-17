@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet } from "react-native";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
@@ -9,13 +9,14 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionListItem } from "@/components/ActionItem";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { capitalize, User } from "@liane/common";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
 import { AppLocalization } from "@/api/i18n";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { LineSeparator } from "@/components/Separator";
+import { RNAppEnv } from "@/api/env";
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
@@ -75,12 +76,21 @@ const Actions = () => {
       {/*<ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />*/}
       <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
       <ActionListItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
-      {/*<LineSeparator />
-      <ActionListItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
-      <ActionListItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
-*/}
+      <ActionListItem
+        onPress={() => navigation.navigate("RallyingPointRequests")}
+        iconName={"pin-outline"}
+        text={"Proposer un point de ralliement"}
+      />
+
       <LineSeparator />
       <ActionListItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
+      <ActionListItem
+        onPress={() => {
+          Linking.openURL(`https://${RNAppEnv.host}/privacy-policy`);
+        }}
+        text={"Politique de confidentialité"}
+        iconName={"book-open-outline"}
+      />
       <ActionListItem
         onPress={async () => {
           await services.auth.logout();

@@ -41,7 +41,7 @@ import { DayOfTheWeekFlag, getFirstFutureDate } from "@liane/common";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
-import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
+import { HOME_TRIPS, useAppNavigation } from "@/components/context/routing";
 import { AppStorage } from "@/api/storage";
 import { AppLocalization } from "@/api/i18n";
 

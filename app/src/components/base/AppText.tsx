@@ -21,6 +21,7 @@ export function AppText({ style, children, numberOfLines = 1, ...props }: AppTex
 const styles = StyleSheet.create({
   text: {
     ...AppStyles.text,
+    fontSize: 14,
     flexWrap: "wrap",
     flexShrink: 1,
     textAlignVertical: "center",

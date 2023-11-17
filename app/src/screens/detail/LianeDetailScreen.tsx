@@ -6,7 +6,7 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@liane/common";
 import { getTotalDistance, getTripFromLiane, getTripFromMatch, useLianeStatus } from "@/components/trip/trip";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";

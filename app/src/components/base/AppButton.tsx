@@ -8,7 +8,7 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { User } from "@liane/common";
 import { UserPicture } from "../UserPicture";
 import { Row } from "./AppLayout";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 
 // @ts-ignore
 export type AppButtonProps = PressableProps & {

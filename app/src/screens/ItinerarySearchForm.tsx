@@ -103,9 +103,11 @@ export const CachedPlaceLocationsView = ({
       {showUsePosition && (
         <AppPressableOverlay
           onPress={async () => {
-            //const currentLocation = await services.location.currentLocation();
-            // TODO revese geocoding
-            //  updateValue(closestPoint);
+            const currentLocation = await services.location.currentLocation();
+            const results = await services.location.name(currentLocation);
+            if (results.features.length > 0) {
+              updateValue(results.features[0]);
+            }
           }}>
           <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
             <AppIcon name={"position-on"} color={AppColors.blue} />
@@ -144,7 +146,7 @@ export const CachedPlaceLocationsView = ({
   );
 };
 
-export const CachedLocationsView = ({
+export const CachedRallyingPointsView = ({
   onSelect,
   exceptValues,
   showOpenMap,
@@ -264,7 +266,6 @@ export const PlaceItem = ({
   let iconName: IconName = "pin";
 
   if (isRallyingPointSearchedLocation(item)) {
-    placeTypeName = "Point de ralliement";
     placeName = item.properties!.label!;
     iconName = "rallying-point";
     cityName = item.properties!.city;
@@ -393,9 +394,9 @@ export const PlaceSuggestions = (props: {
           console.warn(queriesErrors);
           setError(queriesErrors[0] || queriesErrors[1]);
         });
-      services.location.search(debouncedSearch, services.location.getLastKnownLocation()).catch(e => console.warn(e));
+      //services.location.search(debouncedSearch, services.location.getLastKnownLocation()).catch(e => console.warn(e));
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, services.location, services.rallyingPoint]);
 
   /*const locationList = useMemo(() => {
     if (props.exceptValues) {
@@ -491,7 +492,7 @@ export const ItinerarySearchForm = ({
         />
       )}
       {editable && currentPoint !== undefined && (currentSearch === undefined || currentSearch.trim().length === 0) && (
-        <CachedLocationsView
+        <CachedRallyingPointsView
           exceptValues={[currentTrip.to?.id, currentTrip.from?.id].filter(i => i !== undefined) as string[]}
           onSelect={async rp => {
             updateTrip({ [currentPoint]: rp });

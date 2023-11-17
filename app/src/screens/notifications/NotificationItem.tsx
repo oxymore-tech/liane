@@ -7,7 +7,7 @@ import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { getNotificationNavigation, useAppNavigation } from "@/api/navigation";
+import { getNotificationNavigation, useAppNavigation } from "@/components/context/routing";
 
 export const NotificationItem = ({ notification: item, read }: { notification: Notification; read: () => void }) => {
   const { user } = useContext(AppContext);

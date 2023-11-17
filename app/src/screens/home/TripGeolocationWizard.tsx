@@ -5,7 +5,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LianeGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";

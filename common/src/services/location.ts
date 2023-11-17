@@ -2,7 +2,7 @@ import { LatLng, RallyingPoint } from "../api";
 import { AppStorage } from "../storage";
 import { AppEnv } from "../env";
 import { Feature, Geometry, Point } from "geojson";
-import { BoundingBox } from "../util/geo";
+import { BoundingBox } from "../util";
 
 export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
 export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };
@@ -10,7 +10,9 @@ export type SearchedLocationSuggestion = {
   place_type_name: string[] | undefined;
   place_name: string;
   place_type: string[];
-  context: Array<{ text: string }>;
+  text: string;
+  text_fr: string;
+  context: Array<{ id: string; text: string; text_fr: string }>;
 } & Feature<Geometry, { ref: string; categories: string[] }>;
 
 export function isRallyingPointSearchedLocation(item: SearchedLocation): item is RallyingPointSearchedLocation {
@@ -39,6 +41,10 @@ export interface LocationService {
     query: string,
     closeTo?: LatLng
   ): Promise<{
+    type: "FeatureCollection";
+    features: Array<SearchedLocationSuggestion>;
+  }>;
+  name(location: LatLng): Promise<{
     type: "FeatureCollection";
     features: Array<SearchedLocationSuggestion>;
   }>;
@@ -119,6 +125,27 @@ export abstract class AbstractLocationService implements LocationService {
 
   getLastKnownLocation(): LatLng {
     return this.lastKnownLocation;
+  }
+
+  async name(location: LatLng): Promise<{
+    type: "FeatureCollection";
+    features: Array<SearchedLocationSuggestion>;
+  }> {
+    let url = `https://api.maptiler.com/geocoding/${location.lng},${location.lat}.json`;
+    url += `?key=${this.env.raw.MAPTILER_KEY}`;
+    url += `&language=${["fr"]}`;
+    url += `&limit=1`;
+
+    const types = ["address", "poi"];
+    url += `&types=${types}`;
+    const response = await fetch(url, {
+      method: "GET"
+    });
+    if (response.status === 200) {
+      return response.json();
+    } else {
+      throw new Error("API returned error " + response.status);
+    }
   }
 
   async search(

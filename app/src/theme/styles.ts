@@ -21,10 +21,7 @@ export const AppStyles = StyleSheet.create({
   inputContainer: {
     backgroundColor: AppColors.white,
     borderRadius: 20,
-    maxHeight: 40,
     minHeight: 40,
-    flex: 1,
-
     borderWidth: 1,
     marginHorizontal: 8,
     paddingHorizontal: 12,
@@ -64,7 +61,6 @@ export const AppStyles = StyleSheet.create({
     fontWeight: "bold"
   },
   text: {
-    fontFamily: "Source Sans 3",
-    fontSize: 14
+    fontFamily: "Source Sans 3"
   }
 });

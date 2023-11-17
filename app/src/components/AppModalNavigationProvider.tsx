@@ -1,7 +1,7 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 
 import { LianeGeolocation } from "@/api/service/location";
-import { RootNavigation } from "@/api/navigation";
+import { RootNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppStorage } from "@/api/storage";
 import { UnionUtils } from "@liane/common";

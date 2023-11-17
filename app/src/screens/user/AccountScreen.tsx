@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppLocalization } from "@/api/i18n";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppStatusBar } from "@/components/base/AppStatusBar";

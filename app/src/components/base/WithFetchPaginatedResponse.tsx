@@ -9,7 +9,7 @@ import { AppText } from "@/components/base/AppText";
 import { Center } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppColors } from "@/theme/colors";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppStyles } from "@/theme/styles";
 
 export interface WithFetchPaginatedResponseProps<T> extends WithFetchResourceProps<T[]> {

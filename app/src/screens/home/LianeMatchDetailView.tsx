@@ -14,7 +14,7 @@ import { SeatsForm } from "@/components/forms/SeatsForm";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
 import { AppStyles } from "@/theme/styles";
 import { AppIcon, IconName } from "@/components/base/AppIcon";

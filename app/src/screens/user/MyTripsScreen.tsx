@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, useQueryClient, UseQueryResult } from "react-query";
 import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";

@@ -11,7 +11,7 @@ import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
 import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppBottomSheetFlatList } from "@/components/base/AppBottomSheet";
 import { AppTabs } from "@/components/base/AppTabs";

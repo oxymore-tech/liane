@@ -195,7 +195,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
     return (
       <AppMapView
         bounds={mapBounds}
-        showGeolocation={state.matches("map") || state.matches("point")} //&& !movingDisplay}
+        showGeolocation={state.matches("map") || state.matches("point") ? "bottom" : undefined} //&& !movingDisplay}
         onRegionChanged={onRegionChanged}
         onStopMovingRegion={() => {
           onMovingStateChanged(false);

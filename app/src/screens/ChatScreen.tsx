@@ -9,7 +9,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { AppLocalization } from "@/api/i18n";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
@@ -209,7 +209,7 @@ export const ChatScreen = () => {
         {conversation && <DebugIdView object={conversation} />}
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"} style={{}}>
+      <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>
         <View
           style={{
             paddingHorizontal: 16,

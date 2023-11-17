@@ -1,6 +1,6 @@
 import { I18n } from "i18n-js";
 import { NativeModules, Platform } from "react-native";
-import { NavigationParamList } from "./navigation";
+import { NavigationParamList } from "@/components/context/routing";
 import en from "../../assets/translations/en.json";
 import fr from "../../assets/translations/fr.json";
 import { Localization } from "@liane/common";

@@ -66,7 +66,18 @@ export type LatLng = Readonly<{
   lng: number;
 }>;
 
-export type LocationType = "Parking" | "CarpoolArea" | "Supermarket" | "HighwayExit" | "RelayParking" | "AbandonedRoad" | "AutoStop" | "TownHall";
+export const RallyingPointLocationTypes = [
+  "Parking",
+  "CarpoolArea",
+  "Supermarket",
+  "HighwayExit",
+  "RelayParking",
+  "AbandonedRoad",
+  "AutoStop",
+  "TownHall"
+] as const;
+
+export type LocationType = (typeof RallyingPointLocationTypes)[number];
 
 export type RallyingPoint = Identity &
   Readonly<{
@@ -79,6 +90,8 @@ export type RallyingPoint = Identity &
     placeCount?: number;
     isActive: boolean;
   }>;
+
+export type RallyingPointRequest = { point: Omit<Omit<RallyingPoint, "isActive">, "id">; comment: string } & Entity;
 
 export type DayOfTheWeekFlag = `${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}`; // First index is Monday
 

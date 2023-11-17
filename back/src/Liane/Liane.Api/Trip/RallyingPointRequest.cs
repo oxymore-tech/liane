@@ -7,7 +7,7 @@ public record RallyingPointRequest(
   string? Id,
   RallyingPoint Point,
   string Comment,
-  Ref<User.User> CreatedBy,
+  Ref<User.User>? CreatedBy,
   DateTime? CreatedAt,
   RallyingPointRequestStatus? Status = null
 ) : IEntity;

@@ -20,9 +20,7 @@ import { AppLocalization } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
-import { UserPicture } from "@/components/UserPicture";
-import { TouchableOpacity } from "react-native-gesture-handler";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const RallyingPointField = forwardRef(
@@ -238,7 +236,7 @@ export const MapHeader = ({
                     </View>
 
                     <AppPressableIcon
-                      backgroundStyle={{ marginRight: 12 }}
+                      backgroundStyle={{ marginRight: 12, borderRadius: 8 }}
                       onPress={() => {
                         updateTrip({ from: undefined });
                       }}
@@ -282,7 +280,7 @@ export const MapHeader = ({
 
                   {!from && (
                     <AppPressableIcon
-                      backgroundStyle={{ marginRight: 12 }}
+                      backgroundStyle={{ marginRight: 12, borderRadius: 8 }}
                       onPress={() => {
                         updateTrip({ to: undefined });
                       }}
@@ -325,12 +323,12 @@ export const MapHeader = ({
                   paddingHorizontal: 4,
                   zIndex: -1,
                   position: "relative",
-                  top: -16
+                  top: -24
                 },
                 AppStyles.shadow
               ]}>
               <AppPressableOverlay onPress={action.onPress} backgroundStyle={{ borderRadius: 16 }}>
-                <Row style={{ alignItems: "center", padding: 8 }} spacing={8}>
+                <Row style={{ alignItems: "center", padding: 8, paddingTop: 16 }} spacing={8}>
                   <AppIcon name={action.icon} color={AppColors.white} />
                   <AppText style={{ fontWeight: "bold", color: AppColors.white }}>{action.title}</AppText>
                 </Row>
@@ -373,6 +371,7 @@ export const FilterSelector = ({ formatter, shortFormat = false, color = default
       <DatePagerSelector
         color={color}
         date={date}
+        size={20}
         onSelectDate={d => machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: new Date(d.toDateString()) } } })}
         formatter={formatter || defaultFormatter}
       />
@@ -410,17 +409,17 @@ export const SearchModal = (props: {
               trailing={
                 inputText.length > 0 ? (
                   <Pressable onPress={() => setInputText("")}>
-                    <AppIcon name={"close-outline"} color={AppColors.white} />
+                    <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
                   </Pressable>
                 ) : undefined
               }
               value={inputText}
               onChangeText={setInputText}
               placeholder={"Adresse, point de ralliement..."}
-              placeholderTextColor={AppColors.white}
-              textColor={AppColors.white}
+              placeholderTextColor={AppColorPalettes.gray[500]}
+              textColor={AppColorPalettes.gray[800]}
               style={AppStyles.input}
-              leading={<AppIcon name={"search-outline"} color={AppColors.white} />}
+              leading={<AppIcon name={"search-outline"} color={AppColors.primaryColor} />}
             />
           </View>
         </Row>
@@ -515,10 +514,10 @@ const styles = StyleSheet.create({
     marginRight: 16
   },
   filterContainer: {
-    height: 50,
+    height: 48,
     backgroundColor: AppColors.primaryColor,
-    borderRadius: 18,
-    paddingVertical: 4
+    borderRadius: 16,
+    paddingVertical: 2
   },
   selectArrivalContainer: {
     marginTop: 8,
@@ -542,7 +541,9 @@ const styles = StyleSheet.create({
     marginLeft: 76,
     color: AppColors.white,
     height: 50,
-    backgroundColor: AppColors.primaryColor
+    backgroundColor: AppColors.white,
+    borderWidth: 1,
+    borderColor: AppColorPalettes.gray[200]
   },
   inputRallyingPointContainer: {
     borderRadius: 18,

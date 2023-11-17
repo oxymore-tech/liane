@@ -3,7 +3,7 @@ import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { DayOfTheWeekFlag, getPoint, Liane, LianeMatch } from "@liane/common";
-import { NavigationParamList, useAppNavigation } from "@/api/navigation";
+import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column } from "@/components/base/AppLayout";

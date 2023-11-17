@@ -3,36 +3,37 @@ import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navig
 import { BottomTabBarProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppContext } from "@/components/context/ContextProvider";
-import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import { NavigationScreenTitles, useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
-import { WithBadge } from "@/components/base/WithBadge";
-import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
-import { SettingsScreen } from "@/screens/user/SettingsScreen";
-import { AccountScreen } from "@/screens/user/AccountScreen";
-import { PublishScreen } from "@/screens/publish/PublishScreen";
-import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
-import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
-import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
-import { ProfileScreen } from "@/screens/user/ProfileScreen";
-import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
-import { ChatScreen } from "@/screens/ChatScreen";
-import HomeScreen from "@/screens/home/HomeScreen";
-import MyTripsScreen from "@/screens/user/MyTripsScreen";
-import SignUpScreen from "@/screens/signUp/SignUpScreen";
+import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { Row } from "@/components/base/AppLayout";
-import { NavigationScreenTitles, useAppNavigation } from "@/api/navigation";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
-import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
-import NotificationScreen from "@/screens/notifications/NotificationScreen";
-import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
-import { UserPicture } from "@/components/UserPicture";
 import { NavigationState, ParamListBase, PartialState, Route } from "@react-navigation/native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
-import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import { Row } from "@/components/base/AppLayout";
+import { AppContext } from "@/components/context/ContextProvider";
 import { useObservable } from "@/util/hooks/subscription";
+import HomeScreen from "@/screens/home/HomeScreen";
+import MyTripsScreen from "@/screens/user/MyTripsScreen";
+import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
+import { UserPicture } from "@/components/UserPicture";
+import { ProfileScreen } from "@/screens/user/ProfileScreen";
+import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
+import { SettingsScreen } from "@/screens/user/SettingsScreen";
+import { PublishScreen } from "@/screens/publish/PublishScreen";
+import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { ChatScreen } from "@/screens/ChatScreen";
+import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
+import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
+import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
+import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
+import { AccountScreen } from "@/screens/user/AccountScreen";
+import NotificationScreen from "@/screens/notifications/NotificationScreen";
+import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequestsScreen";
+import SignUpScreen from "@/screens/signUp/SignUpScreen";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { WithBadge } from "@/components/base/WithBadge";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -200,6 +201,7 @@ function Navigation() {
         <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Notifications" component={NotificationScreen} />
+        <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }
@@ -264,7 +266,7 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
   // @ts-ignore
   const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
   return (
-    <Row style={{ paddingTop: insets.top + 16, padding: 16, backgroundColor: AppColors.white }} spacing={24}>
+    <Row style={[styles.header, { paddingTop: insets.top + 16 }]} spacing={24}>
       <AppPressableIcon
         name={"arrow-ios-back-outline"}
         color={AppColors.primaryColor}
@@ -277,6 +279,11 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
 };
 
 const styles = StyleSheet.create({
+  header: {
+    padding: 16,
+    backgroundColor: AppColors.white,
+    alignItems: "center"
+  },
   bottomBar: {
     itemSpacing: 16,
     margin: 0,

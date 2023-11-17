@@ -1,7 +1,7 @@
 // Return true if event was handled in the callback
 import { useBackHandler } from "@react-native-community/hooks";
 import React, { createContext, PropsWithChildren, useContext } from "react";
-import { RootNavigation } from "@/api/navigation";
+import { RootNavigation } from "@/components/context/routing";
 
 export interface AppBackController {
   goBack: () => void;

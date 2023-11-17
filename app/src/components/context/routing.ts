@@ -31,6 +31,7 @@ export type NavigationParamList = {
   Settings: undefined;
   //OpenValidateTrip: { liane: Liane };
   Notifications: undefined;
+  RallyingPointRequests: undefined;
 };
 
 export const NavigationScreenTitles = {
@@ -39,13 +40,6 @@ export const NavigationScreenTitles = {
   ArchivedTrips: "Historique des trajets",
   Settings: "Paramètres",
   Notifications: "Notifications"
-};
-
-export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
-  const route = useRoute<RouteProp<NavigationParamList, ScreenName>>();
-  const navigation = useNavigation<NativeStackNavigationProp<NavigationParamList, ScreenName>>();
-
-  return { navigation, route };
 };
 
 export const AppLinking: LinkingOptions<NavigationParamList> = {
@@ -68,6 +62,13 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
       }
     }
   }
+};
+
+export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
+  const route = useRoute<RouteProp<NavigationParamList, ScreenName>>();
+  const navigation = useNavigation<NativeStackNavigationProp<NavigationParamList, ScreenName>>();
+
+  return { navigation, route };
 };
 
 export function getNotificationNavigation(notification: Notification) {

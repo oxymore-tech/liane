@@ -18,9 +18,9 @@ import { HomeBottomSheetContainer } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
 import { useBottomBarStyle } from "@/components/context/Navigation";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
-import { HomeMap } from "@/components/map/HomeMap";
+import { HomeMap } from "@/screens/home/HomeMap";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { AppLogger } from "@/api/logger";
 import { AppMapViewController } from "@/components/map/AppMapView";
@@ -99,7 +99,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                   return true;
                 }}
                 onSelectFeature={placeFeature => {
-                  // console.log("place selected", JSON.stringify(placeFeature));
+                  console.log("place selected", JSON.stringify(placeFeature));
                   if (placeFeature.bbox) {
                     appMapRef.current?.fitBounds(
                       getBoundingBox(
@@ -113,19 +113,13 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                     );
                   } else if (placeFeature.geometry.type === "Point") {
                     appMapRef.current?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000);
+                    if (placeFeature.place_type[0] === "rallying_point") {
+                      machine.send("SELECT", { data: placeFeature.properties });
+                    }
                   }
                   return true;
                 }}
               />
-              {/*<Pressable
-                style={[
-                  styles.smallActionButton,
-                  { backgroundColor: AppColors.primaryColor, position: "absolute", bottom: 90 + bottom, left: 16 },
-                  AppStyles.shadow
-                ]}
-                onPress={() => setModalOpen(true)}>
-                <AppIcon name={"search-outline"} color={AppColors.white} />
-              </Pressable>*/}
             </>
           )}
         </View>

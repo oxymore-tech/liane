@@ -1,5 +1,5 @@
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext, useEffect, useRef } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -9,7 +9,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Answer, Compatible, Exact, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
+import { Answer, Compatible, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppLocalization } from "@/api/i18n";

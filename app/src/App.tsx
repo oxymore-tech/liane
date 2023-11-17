@@ -6,7 +6,7 @@ import MapLibreGL from "@maplibre/maplibre-react-native";
 import { AppWindowsSizeProvider } from "@/components/base/AppWindowsSizeProvider";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import Navigation from "@/components/context/Navigation";
-import { AppLinking, RootNavigation } from "@/api/navigation";
+import { AppLinking, RootNavigation } from "@/components/context/routing";
 import { NavigationContainer } from "@react-navigation/native";
 import { AppModalNavigationProvider } from "@/components/AppModalNavigationProvider";
 

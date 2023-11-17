@@ -4,7 +4,7 @@ import { ColorValue, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { AppColors } from "@/theme/colors";
 
 export interface AppOptionToggleProps<T> {
-  options: T[];
+  options: T[] | readonly T[];
   onSelectValue?: (option: T) => void;
   selectionColor?: ColorValue;
   defaultSelectedValue?: T;

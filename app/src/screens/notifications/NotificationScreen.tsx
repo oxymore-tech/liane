@@ -5,7 +5,7 @@ import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginated
 import { AppText } from "@/components/base/AppText";
 import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Notification } from "@liane/common";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";

@@ -10,7 +10,7 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { useIsFocused } from "@react-navigation/native";
 
 export const startGeolocationService = async (liane: Liane, force: boolean = false) => {

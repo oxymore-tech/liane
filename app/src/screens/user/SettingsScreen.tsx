@@ -4,7 +4,7 @@ import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { Column, Row, Space } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { useIsFocused } from "@react-navigation/native";
 import { GeolocationLevel } from "@liane/common";
 import { AppStorage } from "@/api/storage";

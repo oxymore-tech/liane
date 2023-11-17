@@ -1,5 +1,5 @@
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useContext, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";

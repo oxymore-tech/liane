@@ -2,8 +2,8 @@ import React, { ComponentType, ForwardedRef, forwardRef, PropsWithChildren, useC
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
 import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { FeatureCollection, Position } from "geojson";
+import { AppColorPalettes } from "@/theme/colors";
+import { FeatureCollection, GeoJSON, Point, Position } from "geojson";
 import { PositionButton } from "@/components/map/PositionButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import distance from "@turf/distance";
@@ -12,14 +12,11 @@ import { AppText } from "@/components/base/AppText";
 import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
 import { SubscriptionLike } from "rxjs";
 import { displayInfo } from "@/components/base/InfoDisplayer";
-import { AppPressableOverlay } from "../base/AppPressable";
-import { AppIcon } from "../base/AppIcon";
-import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
-import Images = MapLibreGL.Images;
-import UserLocation = MapLibreGL.UserLocation;
 import { RNAppEnv } from "@/api/env";
 import { useSubject } from "@/util/hooks/subscription";
+import Images = MapLibreGL.Images;
+import UserLocation = MapLibreGL.UserLocation;
 
 //const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
@@ -58,14 +55,26 @@ export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: MapMovedCallback;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
-  showGeolocation?: boolean;
+  showGeolocation?: "bottom" | "top";
   bounds?: DisplayBoundingBox | undefined;
   onMapLoaded?: () => void;
+  onLongPress?: ((coordinates: Position) => void) | undefined;
+  onPress?: ((coordinates: Position) => void) | undefined;
 }
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, onStartMovingRegion, children, showGeolocation = false, bounds, onMapLoaded, onStopMovingRegion }: AppMapViewProps,
+    {
+      onRegionChanged,
+      onStartMovingRegion,
+      children,
+      showGeolocation,
+      bounds,
+      onMapLoaded,
+      onStopMovingRegion,
+      onLongPress,
+      onPress
+    }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const { services } = useContext(AppContext);
@@ -126,6 +135,8 @@ const AppMapView = forwardRef(
     return (
       <View style={styles.map}>
         <MapLibreGL.MapView
+          onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
+          onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
           // @ts-ignore
           ref={mapRef}
           onTouchMove={() => {
@@ -224,8 +235,8 @@ const AppMapView = forwardRef(
         </MapLibreGL.MapView>
 
         {showGeolocation && (
-          <Column style={{ position: "absolute", bottom: 24, right: 10 }} spacing={8}>
-            <AppPressableOverlay
+          <Column style={showGeolocation === "bottom" ? styles.locationBottom : styles.locationTop} spacing={8}>
+            {/*<AppPressableOverlay
               backgroundStyle={[{ borderRadius: 20, backgroundColor: AppColors.white }, AppStyles.shadow]}
               style={{ justifyContent: "center", alignItems: "center", height: 40, width: 40 }}>
               <AppIcon
@@ -234,7 +245,7 @@ const AppMapView = forwardRef(
                 style={{ justifyContent: "center", alignItems: "center" }}
                 color={AppColors.primaryColor}
               />
-            </AppPressableOverlay>
+            </AppPressableOverlay>*/}
 
             <PositionButton
               //locationEnabled={showUserLocation}
@@ -335,5 +346,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     paddingBottom: 32
-  }
+  },
+  locationBottom: { position: "absolute", bottom: 24, right: 10 },
+  locationTop: { position: "absolute", right: 10, top: 10 }
 });

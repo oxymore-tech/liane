@@ -22,7 +22,7 @@ export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppT
         paddingBottom: obj.paddingBottom || obj.paddingVertical || obj.padding || 0
       };
     }
-    return {};
+    return { paddingTop: 0, paddingBottom: 0 };
   }, [backgroundStyle]);
   return (
     <View

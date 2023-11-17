@@ -1,5 +1,5 @@
-import { DayOfTheWeekFlag } from "./api";
-import { TimeInSeconds } from "./util";
+import { DayOfTheWeekFlag } from "../api";
+import { TimeInSeconds } from "../util";
 
 export class Localization {
   constructor(private locale: string) {}
