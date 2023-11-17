@@ -125,7 +125,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.page}>
-        <AppMapView bounds={mapBounds} showGeolocation={false}>
+        <AppMapView bounds={mapBounds}>
           {match && <LianeMatchUserRouteLayer match={match} />}
 
           {tripPassengers?.map(p => (
