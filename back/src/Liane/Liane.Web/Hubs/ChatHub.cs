@@ -11,6 +11,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Task = System.Threading.Tasks.Task;
@@ -88,7 +89,7 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     await base.OnConnectedAsync();
     var userId = currentContext.CurrentUser().Id;
-    logger.LogInformation("User {userId} connected to hub with connection ID : {ConnectionId}", userId, Context.ConnectionId);
+    logger.LogInformation("User {userId} connected to hub with connection ID {Protocol} : {ConnectionId}", userId, Context.Features.Get<IHttpTransportFeature>()?.TransportType.ToString(), Context.ConnectionId);
     await hubService.AddConnectedUser(userId, Context.ConnectionId);
     // Get user data
     var user = await userService.TryGetFullUser(userId);
