@@ -34,10 +34,7 @@ public sealed class AutomaticAnswerService : IAutomaticAnswerService
   {
     var liane = await lianeService.Get(joinRequest.Liane);
     var creator = await userService.GetFullUser(liane.CreatedBy);
-    if (!creator.LastName.Equals("$")) return false;
-
-    await eventDispatcher.Dispatch(new LianeEvent.MemberAccepted(liane, newMember, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip), creator);
-    return true;
+    return creator.LastName.Equals("$");
   }
 }
 
@@ -76,6 +73,8 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     if (await automaticAnswerService.TryAcceptRequest(joinRequest, member))
     {
       // Creator is a bot or automatically accepts requests
+      var notification = await AcceptMember(liane, member, joinRequest);
+      await eventDispatcher.Dispatch(notification, liane.CreatedBy);
       return;
     }
 
