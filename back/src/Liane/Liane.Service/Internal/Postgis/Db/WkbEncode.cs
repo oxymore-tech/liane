@@ -32,14 +32,14 @@ public static class WkbEncode
 
   private static void Point(BinaryWriter binaryWriter, IGeometryObject geometryObject)
   {
-    var point = geometryObject as Point;
+    var point = (geometryObject as Point)!;
     var num = 1;
     var flag = HasAltitude(point);
     if (flag)
       num += 1000;
     binaryWriter.Write(WKbndr);
     binaryWriter.Write(num);
-    var coordinates = point.Coordinates as Position;
+    var coordinates = (point.Coordinates as Position)!;
     binaryWriter.Write(coordinates.Longitude);
     binaryWriter.Write(coordinates.Latitude);
     if (!flag)

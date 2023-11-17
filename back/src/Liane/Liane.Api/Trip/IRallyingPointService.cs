@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
-using Liane.Api.Util;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -22,8 +22,9 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
 
   Task<RallyingPoint?> SnapViaRoute(LatLng position, int radius = 100);
 
-  Task<IDatabaseExportContext> ExportCsv(RallyingPointFilter rallyingPointFilter);
-  Task<IDatabaseImportContext> ImportCsv();
+  Task ExportCsv(Stream output, RallyingPointFilter rallyingPointFilter);
+  Task ImportCsv(Stream input);
+
   Task SetActive(IEnumerable<Ref<RallyingPoint>> points, bool active);
   Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points);
   Task<int> DeleteMany(RallyingPointFilter rallyingPointFilter);

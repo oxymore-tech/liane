@@ -21,7 +21,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     {
       return await base.Get(reference);
     }
-    catch (ResourceNotFoundException _)
+    catch (ResourceNotFoundException)
     {
       return FullUser.Unknown(reference);
     }
@@ -83,7 +83,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
       ? FullUser.Unknown(userId)
       : MapUser(userDb);
   }
-  
+
   public async Task<FullUser?> TryGetFullUser(string userId)
   {
     var userDb = await Mongo.Get<DbUser>(userId);
@@ -99,7 +99,7 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   private static FullUser MapUser(DbUser dbUser)
   {
     var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", "", null, Gender.Unspecified);
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats,info.PictureUrl, dbUser.PushToken);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats, info.PictureUrl, dbUser.PushToken);
   }
 
   protected override Task<Api.User.User> MapEntity(DbUser dbUser)

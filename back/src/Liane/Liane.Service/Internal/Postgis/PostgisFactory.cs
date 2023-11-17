@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Dapper;
+using DbUp;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Postgis.Db;
 
@@ -12,19 +13,22 @@ public sealed class PostgisFactory
   {
     var assembly = typeof(PostgisUpdateService).Assembly;
 
-    await using var stream = assembly.GetManifestResourceStream("Liane.Service.Resources.init.sql");
-    if (stream is null)
-    {
-      throw new ResourceNotFoundException("Unable to find init.sql");
-    }
+    var upgrader =
+      DeployChanges.To
+        .PostgresqlDatabase(db.NewConnectionString())
+        .WithScriptsEmbeddedInAssembly(assembly)
+        .LogToAutodetectedLog()
+        .Build();
 
-    using var reader = new StreamReader(stream);
-    var sql = await reader.ReadToEndAsync();
+    var result = upgrader.PerformUpgrade();
+    if (!result.Successful)
+    {
+      throw result.Error;
+    }
 
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    await connection.ExecuteAsync(sql, transaction: tx);
     if (clearAll)
     {
       await connection.ExecuteAsync("DELETE FROM liane_waypoint", transaction: tx);

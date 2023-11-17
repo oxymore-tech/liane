@@ -7,7 +7,7 @@ using Liane.Service.Internal.Util.Sql;
 
 namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-internal class SnakeCaseTypeMap : SqlMapper.ITypeMap
+internal sealed class SnakeCaseTypeMap : SqlMapper.ITypeMap
 {
   private readonly ImmutableDictionary<string, SimpleMemberMap> memberMaps;
   private readonly ConstructorInfo constructorInfo;

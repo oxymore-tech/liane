@@ -13,7 +13,8 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="CsvHelper" Version="30.0.1" />
-        <PackageReference Include="Dapper" Version="2.0.143" />
+        <PackageReference Include="Dapper" Version="2.1.21" />
+        <PackageReference Include="dbup-postgresql" Version="5.0.37" />
         <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
         <PackageReference Include="GeoJSON.Text" Version="1.0.1" />
         <PackageReference Include="MongoDB.Bson" Version="2.19.2" />
@@ -30,6 +31,7 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Resources\*.*" />
+      <EmbeddedResource Include="Scripts\*.sql" />
     </ItemGroup>
 
 

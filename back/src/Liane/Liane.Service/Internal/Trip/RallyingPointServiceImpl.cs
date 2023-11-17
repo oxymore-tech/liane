@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
@@ -62,7 +62,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
   private Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)
   {
     var filter = Filter<RallyingPoint>.Empty;
-       
+
     if (rallyingPointFilter.Search is not null)
     {
       var regex = ToSearchPattern(rallyingPointFilter.Search!);
@@ -97,7 +97,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
       .Where(filter)
       .Skip(offset)
       .Take(limit);
-       
+
     if (center.HasValue)
     {
       query = query.OrderBy(rp => rp.Location.Distance(center.Value));
@@ -172,9 +172,9 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     using var connection = db.NewConnection();
     var field = FieldDefinition<RallyingPoint>.From(r => r.IsActive);
     await connection.UpdateAsync(new UpdateQuery<RallyingPoint>(
-      Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points), 
-      new Dictionary<FieldDefinition<RallyingPoint>, object?> { {field, active} }
-      ));
+      Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points),
+      new Dictionary<FieldDefinition<RallyingPoint>, object?> { { field, active } }
+    ));
   }
 
   public Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points)
@@ -204,24 +204,22 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
 
     if (clearAll)
     {
-      await connection.DeleteAsync(Filter<RallyingPoint>.Empty, tx);
+      await connection.DeleteAsync(Filter<RallyingPointDb>.Empty, tx);
     }
 
-    await connection.InsertMultipleAsync(rallyingPoints, tx);
+    await connection.InsertMultipleAsync(rallyingPoints.Select(r => new RallyingPointDb(r.Id, r.Label, r.Location, r.Type.ToString(), r.Address, r.ZipCode, r.City, r.PlaceCount, r.IsActive)), tx);
 
     tx.Commit();
   }
 
-  public async Task<IDatabaseImportContext> ImportCsv()
+  public async Task ImportCsv(Stream input)
   {
-    return await db.BeginTextImport<RallyingPoint>(c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
+    await db.ImportTableAsCsv<RallyingPoint>(input, c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
   }
 
-  public async Task<IDatabaseExportContext> ExportCsv(RallyingPointFilter rallyingPointFilter)
+  public async Task ExportCsv(Stream output, RallyingPointFilter rallyingPointFilter)
   {
     var filter = GetFilter(rallyingPointFilter);
-    return await db.BeginTextExport(filter, c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
+    await db.ExportTableAsCsv(output, filter, c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
   }
-  
-  
 }

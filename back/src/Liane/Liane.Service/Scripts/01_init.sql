@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS rallying_point_stats
     ON DELETE CASCADE 
 );
 
-
 -- Add indexes
 CREATE INDEX IF NOT EXISTS segment_geometry_index
   ON segment

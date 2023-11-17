@@ -32,6 +32,7 @@ using NLog.Layouts;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
 using NLog.Web;
+using Npgsql;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
@@ -128,7 +129,7 @@ public abstract class BaseIntegrationTest
     MongoFactory.InitSchema(mongo);
     var postgisDatabase = ServiceProvider.GetRequiredService<PostgisDatabase>();
     await PostgisFactory.UpdateSchema(postgisDatabase, true);
-
+    NpgsqlConnection.GlobalTypeMapper.MapEnum<LocationType>();
     mongo.Drop();
     // Init services in child class 
     Setup(mongo);

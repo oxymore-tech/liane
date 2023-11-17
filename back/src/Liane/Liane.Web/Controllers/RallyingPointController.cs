@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.IO;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
@@ -20,7 +19,8 @@ public sealed class RallyingPointController : ControllerBase
   private readonly ICurrentContext currentContext;
   private readonly IRallyingPointRequestService rallyingPointRequestService;
 
-  public RallyingPointController(IRallyingPointService rallyingPointService, IRallyingPointGenerator rallyingPointGenerator, ICurrentContext currentContext, IRallyingPointRequestService rallyingPointRequestService)
+  public RallyingPointController(IRallyingPointService rallyingPointService, IRallyingPointGenerator rallyingPointGenerator, ICurrentContext currentContext,
+    IRallyingPointRequestService rallyingPointRequestService)
   {
     this.rallyingPointService = rallyingPointService;
     this.rallyingPointGenerator = rallyingPointGenerator;
@@ -55,7 +55,7 @@ public sealed class RallyingPointController : ControllerBase
   {
     return rallyingPointGenerator.Generate(sources.ToImmutableList());
   }
-  
+
   [HttpGet("")]
   public async Task<PaginatedResponse<RallyingPoint>> List([FromQuery] RallyingPointFilter rallyingPointFilter)
   {
@@ -67,25 +67,27 @@ public sealed class RallyingPointController : ControllerBase
   {
     return await rallyingPointService.Snap(new(lat, lng), IRallyingPointService.MaxRadius);
   }
-  
+
   [HttpGet("export")]
   [RequiresAdminAuth]
-  public async Task<FileStreamResult> DownloadCsv([FromQuery] RallyingPointFilter rallyingPointFilter)
+  public async Task ExportCsv([FromQuery] RallyingPointFilter rallyingPointFilter)
   {
-    using var reader = await rallyingPointService.ExportCsv(rallyingPointFilter);
-    var stream = await reader.GetStream();
-    return new FileStreamResult(stream, "text/csv"){FileDownloadName = "rallying_point.csv"};
+    HttpContext.Response.Headers.Add("Content-Disposition", "attachment; filename=rallying_point.csv");
+    HttpContext.Response.Headers.Add("Content-Type", "text/csv");
+    await rallyingPointService.ExportCsv(HttpContext.Response.Body, rallyingPointFilter);
   }
-  
+
   [HttpPost("import")]
   [RequiresAdminAuth]
   public async Task ImportCsv(IFormFile file)
   {
-    using var stream = new MemoryStream();
-    using var writer = await rallyingPointService.ImportCsv();
-    var uploadTask = file.CopyToAsync(stream);
-    var importTask = writer.Write(stream);
-    await Task.WhenAll(uploadTask, importTask);
+    if (file.ContentType != "text/csv")
+    {
+      throw new BadHttpRequestException("Must be csv file");
+    }
+
+    await using var input = file.OpenReadStream();
+    await rallyingPointService.ImportCsv(input);
   }
 
   [HttpGet("request/all")]
@@ -94,7 +96,7 @@ public sealed class RallyingPointController : ControllerBase
   {
     return rallyingPointRequestService.Paginate(pagination);
   }
-  
+
   [HttpGet("request")]
   public Task<PaginatedResponse<RallyingPointRequest>> ListRequests(Pagination pagination)
   {
@@ -104,13 +106,13 @@ public sealed class RallyingPointController : ControllerBase
   [HttpPost("request")]
   public Task<RallyingPointRequest> CreateRequest([FromBody] RallyingPointRequest req)
   {
-    return rallyingPointRequestService.Create(req with {Status = null});
+    return rallyingPointRequestService.Create(req with { Status = null });
   }
-  
+
   [HttpPatch("request/{id}")]
   [RequiresAdminAuth]
   public Task<RallyingPointRequest> UpdateRequestStatus([FromRoute] string id, [FromBody] RallyingPointRequestStatus status)
   {
-    return rallyingPointRequestService.UpdateRequestStatus(id, status with{By = currentContext.CurrentUser().Id});
+    return rallyingPointRequestService.UpdateRequestStatus(id, status with { By = currentContext.CurrentUser().Id });
   }
 }

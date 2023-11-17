@@ -1,8 +1,6 @@
-using Liane.Api.Routing;
-
 namespace Liane.Service.Internal.Postgis.Db.Copy;
 
-public class LatLngCopyTypeMapper: ICopyTypeMapper
+internal sealed class LatLngCopyTypeMapper : ICopyTypeMapper
 {
   public string Export(string columnName)
   {

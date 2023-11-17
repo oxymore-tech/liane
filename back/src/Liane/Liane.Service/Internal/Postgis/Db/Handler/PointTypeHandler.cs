@@ -1,3 +1,4 @@
+using System;
 using System.Data;
 using Dapper;
 using GeoJSON.Text.Geometry;
@@ -6,8 +7,14 @@ namespace Liane.Service.Internal.Postgis.Db.Handler;
 
 internal sealed class PointTypeHandler : SqlMapper.TypeHandler<Point>
 {
-  public override void SetValue(IDbDataParameter parameter, Point value)
+  public override void SetValue(IDbDataParameter parameter, Point? value)
   {
+    if (value is null)
+    {
+      parameter.Value = DBNull.Value;
+      return;
+    }
+
     parameter.DbType = DbType.Binary;
     parameter.Value = WkbEncode.Encode(value);
   }
