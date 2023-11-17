@@ -1,5 +1,9 @@
+const withMDX = require("@next/mdx")({
+  extension: /\.(md|mdx)$/
+});
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  pageExtensions: ["mdx", "tsx", "md"],
   env: {
     API_URL: process.env.API_URL,
     APP_ENV: process.env.APP_ENV,
@@ -12,4 +16,4 @@ const nextConfig = {
     TILES_URL: process.env.TILES_URL
   }
 };
-module.exports = nextConfig;
+module.exports = withMDX(nextConfig);
