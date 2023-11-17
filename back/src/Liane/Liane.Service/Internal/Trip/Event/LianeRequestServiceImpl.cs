@@ -50,8 +50,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   private readonly IAutomaticAnswerService automaticAnswerService;
   private readonly IMongoDatabase mongoDatabase;
   private readonly IUserStatService userStatService;
+
   public LianeRequestServiceImpl(INotificationService notificationService, IRallyingPointService rallyingPointService, ILianeService lianeService, IUserService userService,
-    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService, IMongoDatabase mongoDatabase, IUserStatService userStatService)
+    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService, IMongoDatabase mongoDatabase,
+    IUserStatService userStatService)
   {
     this.notificationService = notificationService;
     this.rallyingPointService = rallyingPointService;
@@ -94,6 +96,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
     return new LianeEvent.MemberAccepted(joinRequest.Liane, memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip);
   }
+
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
   {
     var liane = await lianeService.Get(joinRequest.Liane);
@@ -139,13 +142,10 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
   {
     var filter =
       Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, LianeEvent.JoinRequest>(n => n.Payload)
-                 & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
+      & Builders<Notification.Event>.Filter.Where(n => lianes.Contains(n.Payload.Liane));
     var result = await mongoDatabase.GetCollection<Notification.Event>()
       .Find(filter).ToListAsync();
-    await Parallel.ForEachAsync(result, async (req, _) =>
-    {
-      await eventDispatcher.DispatchAnswer(req, Answer.Reject, req.Recipients[0].User);
-    });
+    await Parallel.ForEachAsync(result, async (req, _) => { await eventDispatcher.DispatchAnswer(req, Answer.Reject, req.Recipients[0].User); });
   }
 
   public async Task Delete(Ref<Notification> id)
