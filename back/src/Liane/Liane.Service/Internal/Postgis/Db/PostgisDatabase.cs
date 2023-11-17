@@ -73,14 +73,11 @@ public sealed class PostgisDatabase : IDisposable
     {
       using var reader = await connection.BeginTextExportAsync($"COPY ({sql}) TO STDOUT with (format csv, header, delimiter ',', null '')");
 
-      var textBuffer = new char[4096];
-      while (await reader.ReadBlockAsync(textBuffer) > 0)
+      await using var streamWriter = new StreamWriter(output, Encoding.UTF8, 1024 * 1024 * 10);
+      while (await reader.ReadLineAsync() is { } line)
       {
-        var bytes = Encoding.UTF8.GetBytes(textBuffer);
-        await output.WriteAsync(bytes);
+        await streamWriter.WriteAsync(line);
       }
-
-      await output.FlushAsync();
     }
   }
 

@@ -5,6 +5,7 @@ using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -70,11 +71,13 @@ public sealed class RallyingPointController : ControllerBase
 
   [HttpGet("export")]
   [RequiresAdminAuth]
-  public async Task ExportCsv([FromQuery] RallyingPointFilter rallyingPointFilter)
+  public PushStreamHttpResult ExportCsv([FromQuery] RallyingPointFilter rallyingPointFilter)
   {
-    HttpContext.Response.Headers.Add("Content-Disposition", "attachment; filename=rallying_point.csv");
-    HttpContext.Response.Headers.Add("Content-Type", "text/csv");
-    await rallyingPointService.ExportCsv(HttpContext.Response.Body, rallyingPointFilter);
+    return TypedResults.Stream(
+      o => rallyingPointService.ExportCsv(o, rallyingPointFilter),
+      "text/csv",
+      "rallying_point.csv"
+    );
   }
 
   [HttpPost("import")]
