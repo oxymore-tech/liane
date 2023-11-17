@@ -10,7 +10,7 @@ namespace Liane.Service.Internal.Trip.Event;
 
 public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.MemberAccepted>
 {
-  private readonly ILianeService lianeService; 
+  private readonly ILianeService lianeService;
   private readonly INotificationService notificationService;
   private readonly ICurrentContext currentContext;
 
@@ -25,10 +25,10 @@ public sealed class LianeMemberAcceptedHandler : IEventListener<LianeEvent.Membe
   {
     var liane = await lianeService.Get(e.Liane);
     var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
-    await notificationService.SendEvent("Demande acceptée", 
-      "Vous avez rejoint la liane à destination de "+destination+".", 
+    await notificationService.SendEvent("Demande acceptée",
+      "Vous avez rejoint la liane à destination de " + destination + ".",
       sender ?? currentContext.CurrentUser().Id,
-      e.Member, 
+      e.Member,
       e);
   }
 }
