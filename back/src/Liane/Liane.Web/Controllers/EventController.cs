@@ -3,6 +3,7 @@ using Liane.Api.Event;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Event;
 using Liane.Web.Internal.Auth;
+using Liane.Web.Internal.Debug;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
@@ -22,6 +23,7 @@ public sealed class EventController : ControllerBase
   }
 
   [HttpPost("join_request")]
+  [DebugRequest]
   public async Task<IActionResult> Create([FromBody] LianeEvent.JoinRequest lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
