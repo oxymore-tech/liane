@@ -148,6 +148,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
     var contained = trackerCache.Subscribers.TryGetValue((update.Liane, update.Member), out var list);
     if (!contained)
     {
+      logger.LogWarning($"No subscriber for liane = '{update.Liane}' member = '{update.Member}'");
       return;
     }
 
@@ -156,6 +157,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
       var connectionId = GetConnectionId(userId);
       if (connectionId is null)
       {
+        logger.LogWarning("User '{user}' is disconnected (liane = '{liane}')!", userId, update.Liane);
         continue;
       }
 
