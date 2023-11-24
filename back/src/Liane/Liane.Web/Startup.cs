@@ -91,7 +91,7 @@ public static class Startup
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
     services.AddService<LianeRecurrenceServiceImpl>();
-    services.AddSingleton<ILianeTrackerCache>(new LianeTrackerCacheImpl());
+    services.AddSingleton<LianeTrackerCache>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();

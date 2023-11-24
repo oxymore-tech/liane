@@ -47,7 +47,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly IUserStatService userStatService;
   private readonly IOsrmService osrmService;
   private readonly ILogger<LianeTracker> trackerLogger;
-  private readonly ILianeTrackerCache trackerCache;
+  private readonly LianeTrackerCache trackerCache;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -56,7 +56,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     IRallyingPointService rallyingPointService,
     IChatService chatService,
     ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver,
-    IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger, ILianeTrackerCache trackerCache) : base(mongo)
+    IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger, LianeTrackerCache trackerCache) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -748,12 +748,12 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .Where(ping => ping.Coordinate is not null)
       .Select(ping => new Feature(
         new Point(new Position(ping.Coordinate!.Value.Lat, ping.Coordinate!.Value.Lng)),
-        new Dictionary<string, object> { ["user"] = ping.member.Id, ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] =ping.NextPointIndex, ["d"] = ping.PointDistance}
+        new Dictionary<string, object> { ["user"] = ping.member.Id, ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] = ping.NextPointIndex, ["d"] = ping.PointDistance }
       ))
       .ToList();
     return new FeatureCollection(features);
   }
-  
+
   public async Task<FeatureCollection> GetRawGeolocationPings(Ref<Api.Trip.Liane> liane)
   {
     var lianeDb = await Mongo.GetCollection<LianeDb>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();

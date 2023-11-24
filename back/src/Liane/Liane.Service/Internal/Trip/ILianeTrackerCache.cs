@@ -1,18 +1,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Liane.Api.Trip;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Liane.Service.Internal.Trip;
 
-public interface ILianeTrackerCache
+public sealed class LianeTrackerCache
 {
-   ConcurrentDictionary<string, LianeTracker> Trackers { get; }
-   
-   ConcurrentDictionary<(string Liane, string Member), ConcurrentDictionary<string, bool>> Subscribers { get; }
-}
+  public MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
 
-public class LianeTrackerCacheImpl : ILianeTrackerCache
-{
-  public ConcurrentDictionary<string, LianeTracker> Trackers { get; } = new ();
-  public  ConcurrentDictionary<(string Liane, string Member), ConcurrentDictionary<string, bool>> Subscribers { get; } = new();
-  
+  // TODO periodically clean disconnected users and outdated pairs (string Liane, string Member)
+  public MemoryCache LastPositions { get; } = new(new MemoryCacheOptions());
+
+  public ConcurrentDictionary<string, LianeTracker> Trackers { get; } = new();
 }

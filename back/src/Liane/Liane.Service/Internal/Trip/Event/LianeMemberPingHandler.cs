@@ -15,11 +15,11 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
 {
   private readonly IMongoDatabase mongo;
   private readonly ILianeMemberTracker lianeMemberTracker;
-  private readonly ILianeTrackerCache lianeTrackerCache;
+  private readonly LianeTrackerCache lianeTrackerCache;
   private readonly ICurrentContext currentContext;
   private readonly ILogger<LianeMemberPingHandler> logger;
 
-  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ICurrentContext currentContext, ILogger<LianeMemberPingHandler> logger, ILianeTrackerCache lianeTrackerCache)
+  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ICurrentContext currentContext, ILogger<LianeMemberPingHandler> logger, LianeTrackerCache lianeTrackerCache)
   {
     mongo = db;
     this.lianeMemberTracker = lianeMemberTracker;
@@ -53,13 +53,14 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     {
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }
-    
+
     lianeTrackerCache.Trackers.TryGetValue(liane.Id, out var tracker);
     if (tracker is null)
     {
       logger.LogWarning($"No tracker found for liane {liane.Id}");
       return;
     }
+
     await tracker.Push(ping);
 
     // For now we only share position of the driver, and passengers close to the next pickup point

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
@@ -22,14 +20,9 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
   private readonly IUserService userService;
-  private readonly ILianeTrackerCache trackerCache;
+  private readonly LianeTrackerCache trackerCache;
 
-  private readonly MemoryCache currentConnectionsCache = new(new MemoryCacheOptions());
-
-  // TODO periodically clean disconnected users and outdated pairs (string Liane, string Member)
-  private readonly MemoryCache lastValueCache = new(new MemoryCacheOptions());
-
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, LianeTrackerCache trackerCache)
   {
     this.hubContext = hubContext;
     this.logger = logger;
@@ -41,7 +34,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   private string? GetConnectionId(Ref<User> user)
   {
-    currentConnectionsCache.TryGetValue(user.Id, out string? connectionId);
+    trackerCache.CurrentConnections.TryGetValue(user.Id, out string? connectionId);
     return connectionId;
   }
 
@@ -80,7 +73,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
           null,
           sender,
           message.CreatedAt!.Value,
-          ImmutableList.Create(new Recipient(receiver, null)),
+          ImmutableList.Create(new Recipient(receiver)),
           ImmutableHashSet<Answer>.Empty,
           sender.Pseudo,
           message.Text,
@@ -105,63 +98,46 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   public Task AddConnectedUser(Ref<User> user, string connectionId)
   {
-    // Make mono user group to map userId and connectionId 
-    // https://learn.microsoft.com/fr-fr/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
-
-    currentConnectionsCache.Set(user.Id, connectionId);
+    trackerCache.CurrentConnections.Set(user.Id, connectionId);
     return Task.CompletedTask;
   }
 
   public Task RemoveUser(Ref<User> user, string connectionId)
   {
-    currentConnectionsCache.Remove(user.Id);
+    trackerCache.CurrentConnections.Remove(user.Id);
     return Task.CompletedTask;
   }
 
   public Task<TrackedMemberLocation?> Subscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    trackerCache.Subscribers.AddOrUpdate((liane.Id, member.Id), _ => new ConcurrentDictionary<string, bool> {  [user] = true }, (_, dic) =>
-    {
-      dic[user] = true;
-      return dic;
-    });
-    var lastValue = lastValueCache.Get((liane.Id, member.Id));
+    var lastValue = trackerCache.LastPositions.Get((liane.Id, member.Id));
     return Task.FromResult(lastValue as TrackedMemberLocation);
   }
 
   public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    var found = trackerCache.Subscribers.TryGetValue((liane.Id, member.Id), out var dic);
-    if (!found)
-    {
-      logger.LogWarning($"{user.Id} failed to unsubscribe from ({liane.Id}{member.Id})");
-      return Task.CompletedTask;
-    }
-    dic!.Remove(user, out _);
-    if (dic!.Count == 0) trackerCache.Subscribers.Remove((liane.Id, member.Id), out _);
     return Task.CompletedTask;
   }
 
   public async Task Push(TrackedMemberLocation update)
   {
-    lastValueCache.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
-    var contained = trackerCache.Subscribers.TryGetValue((update.Liane, update.Member), out var list);
-    if (!contained)
+    trackerCache.LastPositions.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
+    if (!trackerCache.Trackers.TryGetValue(update.Liane, out var tracker))
     {
-      logger.LogWarning($"No subscriber for liane = '{update.Liane}' member = '{update.Member}'");
+      logger.LogWarning($"No tracker for liane = '{update.Liane}'");
       return;
     }
-
-    foreach (var userId in list!.Keys)
+    
+    foreach (var member in tracker.Liane.Members)
     {
-      var connectionId = GetConnectionId(userId);
+      var connectionId = GetConnectionId(member.User);
       if (connectionId is null)
       {
-        logger.LogWarning("User '{user}' is disconnected (liane = '{liane}')!", userId, update.Liane);
+        logger.LogInformation("User '{user}' is disconnected, ping not sent : {update}", member.User, update);
         continue;
       }
 
-      logger.LogInformation("Pushing location update to {user} : {update}", userId, update);
+      logger.LogInformation("Pushing location update to {user} : {update}", member.User, update);
       await hubContext.Clients.Client(connectionId).ReceiveLianeMemberLocationUpdate(update);
     }
   }
