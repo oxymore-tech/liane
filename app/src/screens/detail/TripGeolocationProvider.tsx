@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";
 import { LianeGeolocation } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
+import { AppLogger } from "@/api/logger";
 
 export interface TripGeolocation {
   liane: Liane;
@@ -36,11 +37,12 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
 
   // Observe shared position by other members
   useEffect(() => {
+    AppLogger.debug("GEOLOC", "Recreating geolocation observables");
     if (!shouldBeActive) {
       setObservables({});
       return;
     }
-    const members = liane.driver.user === user!.id ? liane.members.map(m => m.user.id!) : [liane.driver.user];
+    const members = liane.members.map(m => m.user.id!); // liane.driver.user === user!.id ? liane.members.map(m => m.user.id!) : [liane.driver.user];
     const subjects: { [k: string]: Subject<TrackedMemberLocation | null> } = {};
     for (let m of members) {
       subjects[m] = new BehaviorSubject<TrackedMemberLocation | null>(null);
@@ -58,7 +60,7 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
         })
       );
     };
-  }, [user?.id, liane, services.realTimeHub, shouldBeActive, user]);
+  }, [user?.id, liane, services.realTimeHub, shouldBeActive]);
 
   if (geolocRunning === undefined) {
     // Return null while fetching informations
