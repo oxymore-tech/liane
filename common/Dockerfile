@@ -16,11 +16,11 @@ WORKDIR /tests
 COPY --from=build /tests /tests
 
 ARG API_URL
-ARG TILES_ULR
+ARG TILES_URL
 ARG TEST_CODE
 
 ENV VITE_API_URL ${API_URL}
-ENV VITE_TILES_ULR ${TILES_ULR}
+ENV VITE_TILES_URL ${TILES_URL}
 ENV VITE_TEST_CODE ${TEST_CODE}
 
 ENTRYPOINT node /tests/tests/e2e/setup/init-back.js $VITE_API_URL && yarn test e2e --bail=0
