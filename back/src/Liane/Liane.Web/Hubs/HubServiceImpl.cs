@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -119,10 +120,10 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   public Task<TrackedMemberLocation?> Subscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    trackerCache.Subscribers.AddOrUpdate((liane.Id, member.Id), _ => new HashSet<string> { user }, (_, set) =>
+    trackerCache.Subscribers.AddOrUpdate((liane.Id, member.Id), _ => new ConcurrentDictionary<string, bool> {  [user] = true }, (_, dic) =>
     {
-      set.Add(user);
-      return set;
+      dic[user] = true;
+      return dic;
     });
     var lastValue = lastValueCache.Get((liane.Id, member.Id));
     return Task.FromResult(lastValue as TrackedMemberLocation);
@@ -130,14 +131,14 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
 
   public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
   {
-    var found = trackerCache.Subscribers.TryGetValue((liane.Id, member.Id), out var set);
+    var found = trackerCache.Subscribers.TryGetValue((liane.Id, member.Id), out var dic);
     if (!found)
     {
       logger.LogWarning($"{user.Id} failed to unsubscribe from ({liane.Id}{member.Id})");
       return Task.CompletedTask;
     }
-    set!.Remove(user);
-    if (set.Count == 0) trackerCache.Subscribers.Remove((liane.Id, member.Id), out _);
+    dic!.Remove(user, out _);
+    if (dic!.Count == 0) trackerCache.Subscribers.Remove((liane.Id, member.Id), out _);
     return Task.CompletedTask;
   }
 
@@ -150,7 +151,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberT
       return;
     }
 
-    foreach (var userId in list!)
+    foreach (var userId in list!.Keys)
     {
       var connectionId = GetConnectionId(userId);
       if (connectionId is null)

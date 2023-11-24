@@ -47,7 +47,11 @@ export interface HubService {
 
   readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
 
-  subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
+  subscribeToPosition(
+    lianeId: string,
+    memberId: string,
+    callback: OnLocationCallback
+  ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 
   readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
@@ -214,7 +218,11 @@ export abstract class AbstractHubService implements HubService {
 
   abstract postAnswer(notificationId: string, answer: Answer): Promise<void>;
 
-  abstract subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike>;
+  abstract subscribeToPosition(
+    lianeId: string,
+    memberId: string,
+    callback: OnLocationCallback
+  ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 }
 
 export class HubServiceClient extends AbstractHubService {
@@ -234,7 +242,7 @@ export class HubServiceClient extends AbstractHubService {
           return (await this.storage.getAccessToken())!;
         }
       })
-      .configureLogging(LogLevel.Information)
+      .configureLogging(LogLevel.Debug)
       .withAutomaticReconnect()
       .build();
   }
@@ -276,10 +284,12 @@ export class HubServiceClient extends AbstractHubService {
       this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
       this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
       this.hub.onclose(err => {
-        this.logger.debug("HUB", "Connection closed with error : ", err);
         this.isStarted = false;
         this.hubState.next("offline");
-        reject(err);
+        if (err) {
+          this.logger.debug("HUB", "Connection closed with error : ", err);
+          reject(err);
+        }
       });
       this.hub
         .start()
@@ -312,7 +322,7 @@ export class HubServiceClient extends AbstractHubService {
 
   stop = async () => {
     this.logger.debug("HUB", "stop");
-    await this.hub.stop();
+    await this.hub.stop().catch(err => console.warn(err));
     this.isStarted = false;
   };
 
@@ -350,7 +360,11 @@ export class HubServiceClient extends AbstractHubService {
     await this.hub.invoke("PostAnswer", notificationId, answer);
   }
 
-  async subscribeToPosition(lianeId: string, memberId: string, callback: OnLocationCallback): Promise<SubscriptionLike> {
+  async subscribeToPosition(
+    lianeId: string,
+    memberId: string,
+    callback: OnLocationCallback
+  ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {
     await this.checkConnection();
     const lastUpdate: TrackedMemberLocation | null = await this.hub.invoke("SubscribeToLocationsUpdates", lianeId, memberId);
     if (lastUpdate) {
@@ -359,8 +373,8 @@ export class HubServiceClient extends AbstractHubService {
     this.onReceiveLocationUpdateCallback[memberId] = callback;
     return {
       closed: this.onReceiveLocationUpdateCallback[memberId] !== callback,
-      unsubscribe: () => {
-        this.checkConnection().then(() => this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId));
+      unsubscribe: async () => {
+        await this.checkConnection().then(() => this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId));
       }
     };
   }

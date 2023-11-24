@@ -1,7 +1,8 @@
 import { CreateServices, UserContext } from "./setup/services";
 import { faker } from "@faker-js/faker";
-import { addSeconds, Answer, UnionUtils } from "../../src";
+import { addSeconds, Answer, LatLng, sleep, TrackedMemberLocation, UnionUtils } from "../../src";
 import { readLianeFilteredTile, readLianeTile } from "./utils/tiles";
+import fc from "fast-check";
 
 const users: UserContext[] = [];
 const userCount = 2;
@@ -129,5 +130,83 @@ describe.sequential("Joining a trip", () => {
       const requestList = await currentUser.services.liane.listJoinRequests();
       expect(requestList.data.length).toBe(0);
     });
+  });
+
+  describe("Both users", () => {
+    test("Should start the trip", async () => {
+      for (const currentUser of users) {
+        await currentUser.services.liane.start(tripId!);
+      }
+    });
+
+    test("Should use geolocation", async () => {
+      let runIndex = 0;
+      await fc.assert(
+        fc.asyncProperty(fc.scheduler(), async s => {
+          const pingsMap = new Map<string, TrackedMemberLocation[]>();
+          const subscriptions = [];
+          const receivePing = vi.fn((subscriberId: string, trackedMemberLocation: TrackedMemberLocation) => {
+            const value = pingsMap.get(subscriberId) ?? [];
+            pingsMap.set(subscriberId, [...value, trackedMemberLocation]);
+          });
+          const driver = users[0];
+          const passenger = users[1];
+          const driverCoords: LatLng[] = [
+            { lat: 44.9358973, lng: 1.5635225 },
+            { lat: 44.9458973, lng: 1.5735225 },
+            { lat: 44.9558973, lng: 1.5835225 }
+          ];
+          const passengerCoords: LatLng[] = [
+            { lat: 44.8358973, lng: 1.5635225 },
+            { lat: 44.8458973, lng: 1.5735225 },
+            { lat: 44.8558973, lng: 1.5835225 }
+          ];
+          for (const subscriber of users) {
+            for (const user of users) {
+              const sub = await subscriber.services.hub.subscribeToPosition(tripId!, user.id, trackedMemberLocation => {
+                receivePing(subscriber.id, trackedMemberLocation);
+              });
+              subscriptions.push(sub);
+            }
+          }
+
+          s.scheduleSequence(
+            driverCoords.map(coordinate => {
+              return () =>
+                sleep(50).then(() =>
+                  driver.services.event.sendPing({
+                    liane: tripId!,
+                    timestamp: new Date().getTime(),
+                    coordinate,
+                    type: "MemberPing"
+                  })
+                );
+            })
+          );
+          s.scheduleSequence(
+            passengerCoords.map(coordinate => {
+              return () =>
+                sleep(50).then(() =>
+                  passenger.services.event.sendPing({
+                    liane: tripId!,
+                    timestamp: new Date().getTime(),
+                    coordinate,
+                    type: "MemberPing"
+                  })
+                );
+            })
+          );
+          await s.waitAll();
+          await sleep(200);
+
+          expect(receivePing).toHaveBeenCalledTimes((runIndex === 0 ? 0 : 4) + (driverCoords.length + passengerCoords.length) * users.length);
+          runIndex++;
+          for (const sub of subscriptions) {
+            await sub.unsubscribe();
+          }
+        }),
+        { numRuns: 10 }
+      );
+    }, 30_000);
   });
 });
