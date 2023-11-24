@@ -15,7 +15,10 @@ export interface AuthService {
 }
 
 export class AuthServiceClient implements AuthService {
-  constructor(private http: HttpClient, private storage: AppStorage) {}
+  constructor(
+    private http: HttpClient,
+    private storage: AppStorage
+  ) {}
 
   async me(): Promise<FullUser | undefined> {
     try {

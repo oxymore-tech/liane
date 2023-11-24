@@ -77,8 +77,3 @@ export class TimedOutError extends Error {
     super("Timed out");
   }
 }
-export class ConcurrencyError extends Error {
-  constructor(message?: string) {
-    super(message ?? "Resource unavailable");
-  }
-}

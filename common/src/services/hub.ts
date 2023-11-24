@@ -293,9 +293,9 @@ export class HubServiceClient extends AbstractHubService {
             // Retry if err 401
             if (err.message.includes("Status code '401'") && (await this.storage.getRefreshToken())) {
               try {
-                await this.http.tryRefreshToken<void>(async () => {
-                  await this.hub.start().catch(e => reject(e));
-                });
+                if (await this.http.tryRefreshToken()) {
+                  await this.hub.start();
+                }
               } catch (e) {
                 reject(e);
               }

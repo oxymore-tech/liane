@@ -21,6 +21,6 @@ venv/
 deploy/.env
 deploy/service-account.json
 dump.rdb
-.env.local
+.env.*
 deploy/db/user.json
 *.temprp.*

@@ -107,7 +107,7 @@ class AndroidService implements LianeGeolocation {
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
     const user = await AppStorage.getUser();
     // Refresh token here to avoid issues
-    await this.httpClient.tryRefreshToken(() => Promise.resolve());
+    await this.httpClient.tryRefreshToken();
     const token = await AppStorage.getAccessToken();
 
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();

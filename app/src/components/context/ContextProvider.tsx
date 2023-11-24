@@ -27,7 +27,12 @@ interface AppContextProps {
 }
 
 let SERVICES = CreateAppServices();
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+    mutations: { retry: false }
+  }
+});
 
 export const AppContext = createContext<AppContextProps>({
   logout: () => {},
