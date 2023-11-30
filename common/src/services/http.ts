@@ -92,7 +92,7 @@ export class HttpClient {
       retryOn: (error, attempt) => this.retryStrategy(error, attempt, options.disableRefreshToken),
       logger: {
         retry: (attempt, delay, error) =>
-          this.logger.debug("HTTP", `'${uri}' : '${error.message ?? typeof error}', will retry in ${delay}ms (${attempt})`),
+          this.logger.debug("HTTP", `'${uri}' : '${error.message ?? typeof error}', will retry in ${delay}ms (#${attempt})`),
         error: (attempt, error) => this.logger.warn("HTTP", `Receive an error, max retry reached (${attempt})`, error)
       }
     });
@@ -118,7 +118,11 @@ export class HttpClient {
     const url = this.formatUrl(uri, options);
     const formattedBody = this.formatBodyAsJsonIfNeeded(body);
     const formattedHeaders = await this.headers(body);
-    this.logger.debug("HTTP", `${method} "${url}"`, formattedBody ?? "");
+    if (formattedBody) {
+      this.logger.debug("HTTP", `${method} "${url}"`, formattedBody);
+    } else {
+      this.logger.debug("HTTP", `${method} "${url}"`);
+    }
     const f = this.options.fetchImpl ?? fetch;
     const response = await f(url, {
       headers: formattedHeaders,

@@ -17,7 +17,7 @@ export type RetryProps<T> = {
 };
 
 export const MAX_ATTEMPTS = 5;
-export const DEFAULT_DELAY = 1000;
+export const DEFAULT_DELAY = 500;
 export const DEFAULT_BACKOFF = 2;
 
 function isDefault(strategy: RetryStrategy): strategy is Default {
@@ -45,7 +45,7 @@ async function apply_strategy(retryOn: RetryStrategy, error: any, attempt: numbe
       }
       throw error;
     }
-    const waitFor = delay + (attempt ? delay * Math.pow(backoff, attempt) : 0);
+    const waitFor = delay * (backoff ? Math.pow(backoff, attempt) : 1);
     if (logger) {
       logger.retry(attempt, waitFor, error);
     }

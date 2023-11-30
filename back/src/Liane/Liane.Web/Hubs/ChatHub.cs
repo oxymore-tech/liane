@@ -89,7 +89,8 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     await base.OnConnectedAsync();
     var userId = currentContext.CurrentUser().Id;
-    logger.LogInformation("User '{userId}' connected to hub with connection ID '{ConnectionId}' using '{Protocol}'", userId, Context.Features.Get<IHttpTransportFeature>()?.TransportType.ToString(), Context.ConnectionId);
+    var protocol = Context.Features.Get<IHttpTransportFeature>()?.TransportType.ToString();
+    logger.LogInformation("User '{userId}' connected to hub with connection ID '{ConnectionId}' using '{Protocol}'", userId, Context.ConnectionId, protocol);
     await hubService.AddConnectedUser(userId, Context.ConnectionId);
     // Get user data
     var user = await userService.TryGetFullUser(userId);
