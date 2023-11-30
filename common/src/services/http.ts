@@ -182,13 +182,10 @@ export class HttpClient {
 
         // Call refresh token endpoint
         try {
-          const ms = this.options.timeout ?? DEFAULT_TIMEOUT;
-          console.log("timeout", ms);
           const res = await Promise.race([
-            new Promise<AuthResponse>((_, reject) => setTimeout(() => reject(new TimedOutError()), ms)),
+            new Promise<AuthResponse>((_, reject) => setTimeout(() => reject(new TimedOutError()), this.options.timeout ?? DEFAULT_TIMEOUT)),
             this.postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken }, disableRefreshToken: true })
           ]);
-          console.log("RES", res);
           await this.storage.processAuthResponse(res);
           return true;
         } catch (e) {
