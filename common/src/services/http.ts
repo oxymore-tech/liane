@@ -2,7 +2,7 @@ import { Mutex } from "async-mutex";
 import { ForbiddenError, ResourceNotFoundError, TimedOutError, UnauthorizedError, ValidationError } from "../exception";
 import { AuthResponse } from "../api";
 import { AppLogger } from "../logger";
-import { AppStorage } from "../storage";
+import { SessionProvider } from "../storage";
 import urlJoin from "url-join";
 import { retry, RetryStrategy } from "../util/retry";
 
@@ -22,7 +22,7 @@ export class HttpClient {
   constructor(
     protected readonly baseUrl: string,
     protected readonly logger: AppLogger,
-    protected readonly storage: AppStorage,
+    protected readonly storage: SessionProvider,
     private readonly options: HttpClientOptions = {}
   ) {}
 
@@ -160,7 +160,7 @@ export class HttpClient {
 
   public async tryRefreshToken(): Promise<boolean> {
     const refreshToken = await this.storage.getRefreshToken();
-    const user = await this.storage.getUser();
+    const user = await this.storage.getSession();
     if (!refreshToken || !user) {
       this.logger.warn("HTTP", "Error: could not refresh token: user or refresh token not found");
       return false;
@@ -190,7 +190,7 @@ export class HttpClient {
 
           // Logout if unauthorized
           if (e instanceof UnauthorizedError) {
-            await this.storage.clearStorage();
+            await this.storage.closeSession();
             return false;
           }
           return true;

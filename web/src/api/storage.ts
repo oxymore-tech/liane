@@ -43,4 +43,7 @@ export class LocalStorageImpl implements AppStorage {
   async storeUser(user?: FullUser): Promise<void> {
     await this.storeAsync("user", user);
   }
+  closeSession(): Promise<void> {
+    return this.clearStorage();
+  }
 }

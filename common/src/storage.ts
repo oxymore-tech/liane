@@ -1,13 +1,7 @@
 import { AuthResponse, AuthUser, FullUser } from "./api";
 
-export interface AppStorage {
-  getRefreshToken(): Promise<string | undefined>;
-
-  processAuthResponse(authResponse: AuthResponse): Promise<AuthUser>;
-
+export interface AppStorage extends SessionProvider {
   clearStorage(): Promise<void>;
-
-  getAccessToken(): Promise<string | undefined>;
 
   storeUser(user?: FullUser): Promise<void>;
 
@@ -17,7 +11,17 @@ export interface AppStorage {
 
   retrieveAsync<T>(key: string, defaultValue?: T): Promise<T | undefined>;
 
+  storeSession(authUser?: AuthUser): Promise<void>;
+}
+
+export interface SessionProvider {
+  getRefreshToken(): Promise<string | undefined>;
+
+  getAccessToken(): Promise<string | undefined>;
+
+  processAuthResponse(authResponse: AuthResponse): Promise<AuthUser>;
+
   getSession(): Promise<AuthUser | undefined>;
 
-  storeSession(authUser?: AuthUser): Promise<void>;
+  closeSession(): Promise<void>;
 }

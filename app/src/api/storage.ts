@@ -155,6 +155,12 @@ export class ReactNativeStorage implements CommonAppStorage {
 
     await this.storeAsync("settings", { ...stored, [name]: value });
   }
+
+  async closeSession(): Promise<void> {
+    // Only clear session's sensitive data
+    await EncryptedStorage.clear();
+    // TODO keep user's id (and name or phone) to indicate that user has been disconnected but can still retrieve his session
+  }
 }
 
 export const AppStorage = new ReactNativeStorage();

@@ -10,6 +10,10 @@ export class LocalStorageImpl implements AppStorage {
     return Promise.resolve();
   }
 
+  closeSession(): Promise<void> {
+    return this.clearStorage();
+  }
+
   getAccessToken(): Promise<string | undefined> {
     return this.retrieveAsync("token");
   }
