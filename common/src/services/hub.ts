@@ -385,6 +385,6 @@ export class HubServiceClient extends AbstractHubService {
   }
 
   private static isUnauthorizedError(error: any): error is FailedToNegotiateWithServerError {
-    return typeof error === "object" && error.message?.toString().indexOf("Error: Unauthorized: Status code '401'") > 0;
+    return typeof error === "object" && error.message?.toString().indexOf("Status code '401'") > 0;
   }
 }
