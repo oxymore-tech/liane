@@ -89,7 +89,7 @@ export class HttpClient {
   private async fetchAndCheckWithRetry(method: MethodType, uri: string, options: QueryPostOptions = {}): Promise<Response> {
     return retry({
       body: () => this.fetchAndCheck(method, uri, options),
-      retryOn: (error, attempt) => this.retryStrategy(error, attempt, options.disableRefreshToken),
+      retryOn: await this.getRetryStrategyWithRefreshToken(this.options.retryStrategy, options.disableRefreshToken),
       logger: {
         retry: (attempt, delay, error) =>
           this.logger.debug("HTTP", `'${uri}' : '${error.message ?? typeof error}', will retry in ${delay}ms (#${attempt})`),
@@ -98,19 +98,21 @@ export class HttpClient {
     });
   }
 
-  private async retryStrategy(error: any, _: number, disableRefreshToken?: boolean): Promise<RetryStrategy> {
-    switch (error.constructor) {
-      case UnauthorizedError:
-        if (disableRefreshToken) {
+  private async getRetryStrategyWithRefreshToken(defaultRetryStrategy?: RetryStrategy, disableRefreshToken?: boolean): Promise<RetryStrategy> {
+    return async error => {
+      switch (error.constructor) {
+        case UnauthorizedError:
+          if (disableRefreshToken) {
+            return false;
+          }
+          return (await this.tryRefreshToken()) ? { delay: 0 } : false;
+        case ValidationError:
+        case ResourceNotFoundError:
+        case ForbiddenError:
           return false;
-        }
-        return (await this.tryRefreshToken()) ? { delay: 0 } : false;
-      case ValidationError:
-      case ResourceNotFoundError:
-      case ForbiddenError:
-        return false;
-    }
-    return this.options.retryStrategy ?? {};
+      }
+      return defaultRetryStrategy ?? {};
+    };
   }
 
   private async fetchAndCheck(method: MethodType, uri: string, options: QueryPostOptions = {}): Promise<Response> {
