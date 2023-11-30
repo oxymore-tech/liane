@@ -86,6 +86,10 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
       return updateLianeList(old, liane);
     });
     queryClient.setQueryData<Liane>(LianeDetailQueryKey(liane.id!), _ => liane);
+    if (liane.state !== "NotStarted") {
+      // Cancel eventual reminder
+      services.reminder.cancelReminder(liane.id!);
+    }
   });
 
   // Update notifications local cache

@@ -56,7 +56,7 @@ export class ReminderService {
     await this.storage.storeAsync("lianes", stored);
   }
 
-  private async cancelReminder(lianeId: string) {
+  public async cancelReminder(lianeId: string) {
     await notifee.cancelTriggerNotification(lianeId);
   }
 
