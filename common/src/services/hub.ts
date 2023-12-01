@@ -19,6 +19,7 @@ import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signal
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { retry, RetryStrategy } from "../util/retry";
 import { FailedToNegotiateWithServerError } from "@microsoft/signalr/dist/esm/Errors";
+import { NetworkUnavailable } from "../exception";
 export type HubState = "online" | "reconnecting" | "offline";
 
 export interface HubService {
@@ -293,9 +294,18 @@ export class HubServiceClient extends AbstractHubService {
         }
       });
 
-      this.startAndRetry().then(() => {
-        this.hubState.next("online");
-      });
+      this.startAndRetry()
+        .then(() => {
+          this.hubState.next("online");
+        })
+        .catch(err => {
+          if (err.message.includes("Network request failed")) {
+            // Network or server unavailable
+            reject(new NetworkUnavailable());
+          } else {
+            reject(err);
+          }
+        });
     });
   }
 
@@ -385,6 +395,6 @@ export class HubServiceClient extends AbstractHubService {
   }
 
   private static isUnauthorizedError(error: any): error is FailedToNegotiateWithServerError {
-    return typeof error === "object" && error.message?.toString().indexOf("Status code '401'") > 0;
+    return typeof error === "object" && error.message?.toString().includes("Status code '401'");
   }
 }
