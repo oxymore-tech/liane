@@ -17,9 +17,8 @@ import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
-import { retry, RetryStrategy } from "../util/retry";
-import { FailedToNegotiateWithServerError } from "@microsoft/signalr/dist/esm/Errors";
-import { NetworkUnavailable } from "../exception";
+import { NetworkUnavailable, UnauthorizedError } from "../exception";
+
 export type HubState = "online" | "reconnecting" | "offline";
 
 export interface HubService {
@@ -29,7 +28,7 @@ export interface HubService {
 
   stop(): Promise<void>;
 
-  start(): Promise<FullUser>;
+  start(): Promise<void>;
 
   connectToChat(
     conversation: Ref<ConversationGroup>,
@@ -140,7 +139,7 @@ export abstract class AbstractHubService implements HubService {
 
   abstract list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
 
-  abstract start(): Promise<FullUser>;
+  abstract start(): Promise<void>;
 
   abstract stop(): Promise<void>;
 
@@ -235,78 +234,62 @@ export class HubServiceClient extends AbstractHubService {
     baseUrl: string,
     logger: AppLogger,
     protected readonly storage: AppStorage,
-    protected readonly http: HttpClient,
-    private reconnectionStrategy?: RetryStrategy
+    protected readonly http: HttpClient
   ) {
     super(baseUrl, logger);
     this.hub = new HubConnectionBuilder()
       .withUrl(`${baseUrl}/hub`, {
         accessTokenFactory: async () => {
-          return (await this.storage.getAccessToken())!;
+          return (await this.http.getUpdatedAccessToken())!;
         }
       })
       .configureLogging(LogLevel.Debug)
+      .withAutomaticReconnect()
       .build();
+
+    this.hub.onreconnecting(() => {
+      this.hubState.next("reconnecting");
+    });
+    this.hub.onreconnected(() => this.hubState.next("online"));
+    this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
+    this.hub.on("ReceiveMessage", this.receiveMessage);
+    this.hub.on("Me", async (next: FullUser) => {
+      await this.storage.storeUser(next);
+      this.receiveUserUpdate(next);
+    });
+    this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
+    this.hub.on("ReceiveNotification", this.receiveNotification);
+    this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
+    this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
+    this.hub.onclose(err => {
+      this.isStarted = false;
+      this.hubState.next("offline");
+      if (err) {
+        this.logger.debug("HUB", "Connection closed with error : ", err);
+      }
+    });
   }
 
-  start() {
+  async start() {
     if (this.isStarted) {
       this.logger.info("HUB", "Already started");
-      return new Promise<FullUser>(async (resolve, reject) => {
-        const found = await this.storage.getUser();
-        if (found) {
-          resolve(found);
-        } else {
-          reject(new Error("current user not found"));
-        }
-      });
+      return;
     }
     this.logger.info("HUB", "start");
-    return new Promise<FullUser>((resolve, reject) => {
-      this.hub.onreconnecting(() => {
-        this.hubState.next("reconnecting");
-      });
-      this.hub.onreconnected(() => this.hubState.next("online"));
-      this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
-      this.hub.on("ReceiveMessage", this.receiveMessage);
-      this.hub.on("Me", async (me: FullUser) => {
-        // Called when hub is started
-        this.logger.debug("HUB", "me", me);
+
+    // we do not wait to connect to the hub to start the app
+    this.startAndRetry()
+      .then(() => {
         this.isStarted = true;
-        await this.storage.storeUser(me);
-        resolve(me);
-        this.hub.off("Me");
-        this.hub.on("Me", async (next: FullUser) => {
-          await this.storage.storeUser(next);
-          this.receiveUserUpdate(next);
-        });
-      });
-      this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
-      this.hub.on("ReceiveNotification", this.receiveNotification);
-      this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
-      this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
-      this.hub.onclose(err => {
+        this.hubState.next("online");
+      })
+      .catch(err => {
         this.isStarted = false;
         this.hubState.next("offline");
         if (err) {
-          this.logger.debug("HUB", "Connection closed with error : ", err);
-          reject(err);
+          this.logger.debug("HUB", "Unable to start the hub, stay offline", err);
         }
       });
-
-      this.startAndRetry()
-        .then(() => {
-          this.hubState.next("online");
-        })
-        .catch(err => {
-          if (err.message.includes("Network request failed")) {
-            // Network or server unavailable
-            reject(new NetworkUnavailable());
-          } else {
-            reject(err);
-          }
-        });
-    });
   }
 
   async stop() {
@@ -320,33 +303,27 @@ export class HubServiceClient extends AbstractHubService {
   }
 
   async readNotifications(ids?: Ref<Notification>[]) {
-    await this.checkConnection();
     await this.hub.invoke("ReadNotifications", ids ?? this.unreadNotifications.getValue());
     this.unreadNotifications.next([]);
   }
 
   async readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime) {
-    await this.checkConnection();
     await this.hub.invoke("ReadConversation", conversation, timestamp);
   }
 
   async joinGroupChat(conversationId: Ref<ConversationGroup>) {
-    await this.checkConnection();
     return this.hub.invoke<ConversationGroup>("JoinGroupChat", conversationId);
   }
 
   async sendToGroup(message: ChatMessage) {
-    await this.checkConnection();
     await this.hub.invoke("SendToGroup", message, this.currentConversationId);
   }
 
   async postEvent(lianeEvent: LianeEvent) {
-    await this.checkConnection();
     await this.hub.invoke("PostEvent", lianeEvent);
   }
 
   async postAnswer(notificationId: string, answer: Answer) {
-    await this.checkConnection();
     await this.hub.invoke("PostAnswer", notificationId, answer);
   }
 
@@ -355,7 +332,6 @@ export class HubServiceClient extends AbstractHubService {
     memberId: string,
     callback: OnLocationCallback
   ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {
-    await this.checkConnection();
     const lastUpdate: TrackedMemberLocation | null = await this.hub.invoke("SubscribeToLocationsUpdates", lianeId, memberId);
     if (lastUpdate) {
       callback(lastUpdate);
@@ -364,37 +340,23 @@ export class HubServiceClient extends AbstractHubService {
     return {
       closed: this.onReceiveLocationUpdateCallback[memberId] !== callback,
       unsubscribe: async () => {
-        await this.checkConnection().then(() => this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId));
+        await this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId);
       }
     };
   }
 
-  private checkConnection = async () => {
-    if (this.hub.state !== "Connected") {
-      this.logger.info("HUB", "Hub is not connected, so try to reconnect", this.hub.state);
-      await this.hub.stop();
-      await this.startAndRetry();
-    }
-  };
-
   private async startAndRetry() {
-    return retry({
-      body: () => this.hub.start(),
-      retryOn: async error => {
-        if (HubServiceClient.isUnauthorizedError(error)) {
-          return (await this.http.tryRefreshToken()) ? { delay: 0 } : false;
-        }
-        return this.reconnectionStrategy ?? {};
-      },
-      logger: {
-        retry: (attempt, delay, error) =>
-          this.logger.debug("HUB", `Start : '${error.message ?? typeof error}', will retry in ${delay}ms (#${attempt})`),
-        error: (attempt, error) => this.logger.warn("HUB", `Start receive an error, max retry reached (${attempt})`, error)
+    if (this.hub.state === "Connected") {
+      return;
+    }
+    return this.hub.start().catch(err => {
+      if (err.message.includes("Network request failed")) {
+        throw new NetworkUnavailable();
+      } else if (err.message.includes("Status code '401'")) {
+        throw new UnauthorizedError();
+      } else {
+        throw err;
       }
     });
-  }
-
-  private static isUnauthorizedError(error: any): error is FailedToNegotiateWithServerError {
-    return typeof error === "object" && error.message?.toString().includes("Status code '401'");
   }
 }

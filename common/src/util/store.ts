@@ -20,7 +20,7 @@ export const sync = <TNew, TOld>(
   // Create reminder for updated or new lianes
   const storedLianeIds = new Set(previous.map(d => keyOld(d)));
   const toAdd = newest.filter(l => !storedLianeIds.has(keyNew(l)!));
-  for (let liane of toAdd) {
+  for (const liane of toAdd) {
     previous.push(convert(liane));
     added.push(liane);
   }

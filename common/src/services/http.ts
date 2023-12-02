@@ -5,6 +5,7 @@ import { AppLogger } from "../logger";
 import { SessionProvider } from "../storage";
 import urlJoin from "url-join";
 import { retry, RetryStrategy } from "../util/retry";
+import { isTokenExpired } from "../util";
 
 export type Fetch = (url: string, options?: RequestInit) => Promise<Response>;
 
@@ -98,7 +99,7 @@ export class HttpClient {
     });
   }
 
-  private async getRetryStrategyWithRefreshToken(defaultRetryStrategy?: RetryStrategy, disableRefreshToken?: boolean): Promise<RetryStrategy> {
+  public async getRetryStrategyWithRefreshToken(defaultRetryStrategy?: RetryStrategy, disableRefreshToken?: boolean): Promise<RetryStrategy> {
     return async error => {
       switch (error.constructor) {
         case UnauthorizedError:
@@ -164,7 +165,20 @@ export class HttpClient {
     }
   }
 
-  public async tryRefreshToken(): Promise<boolean> {
+  public async getUpdatedAccessToken() {
+    const accessToken = await this.storage.getAccessToken();
+    if (!accessToken) {
+      return;
+    }
+    if (!isTokenExpired(accessToken)) {
+      return accessToken;
+    }
+    if (await this.tryRefreshToken()) {
+      return await this.storage.getAccessToken();
+    }
+  }
+
+  private async tryRefreshToken(): Promise<boolean> {
     const refreshToken = await this.storage.getRefreshToken();
     const user = await this.storage.getSession();
     if (!refreshToken || !user) {
