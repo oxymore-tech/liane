@@ -178,7 +178,7 @@ export class HttpClient {
     }
   }
 
-  private async tryRefreshToken(): Promise<boolean> {
+  public async tryRefreshToken(): Promise<boolean> {
     const refreshToken = await this.storage.getRefreshToken();
     const user = await this.storage.getSession();
     if (!refreshToken || !user) {

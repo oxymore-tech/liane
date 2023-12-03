@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { Fetch, HttpClient, NetworkUnavailable } from "../../src";
+import { Fetch, HttpClient, isTokenExpired, NetworkUnavailable, sleep } from "../../src";
 import { LocalStorageImpl } from "./mocks/storage";
 import { TestEnv } from "./setup/environment";
 import { CreateServices } from "./setup/services";
@@ -54,10 +54,14 @@ describe.sequential("Session", () => {
     expect(originalRefreshToken).not.toEqual(newRefreshToken);
   });
   test("Should refresh token from hub", async () => {
+    const expired = isTokenExpired("dummy");
+    expect(expired).to.be.true;
+
     await storage.setAccessToken("dummy");
     const originalRefreshToken = await storage.getRefreshToken();
     expect(originalRefreshToken).not.undefined;
     await baseServices.hub.start();
+    await sleep(2000);
     const newRefreshToken = await storage.getRefreshToken();
     expect(newRefreshToken).not.undefined;
     expect(originalRefreshToken).not.toEqual(newRefreshToken);
