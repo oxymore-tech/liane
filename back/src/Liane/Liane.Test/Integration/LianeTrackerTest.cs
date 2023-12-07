@@ -27,10 +27,10 @@ namespace Liane.Test.Integration;
 public class LianeTrackerTest: BaseIntegrationTest
 {
 
-  private (global::Liane.Api.Trip.Liane liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
+  private (Api.Trip.Liane liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
   {
     var departureTime = DateTime.Parse("2023-08-08T16:12:53.061Z");
-    var liane =  new global::Liane.Api.Trip.Liane(
+    var liane =  new Api.Trip.Liane(
       "6410edc1e02078e7108a5895",
       userId,
       DateTime.Today,
@@ -160,7 +160,7 @@ public class LianeTrackerTest: BaseIntegrationTest
   public async Task ShouldNotFinishTrip()
   {
     var finished = false;
-    var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-case-1.json"));
+    var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-pings-case-1.json"));
     var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
     var userIds = lianeDb.Members.Select((m, i) => (m,i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
     lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
@@ -191,6 +191,41 @@ public class LianeTrackerTest: BaseIntegrationTest
     Assert.False(finished);
   }
 
+  [Test]
+  public async Task Should()
+  {
+    // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende
+    var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-pings-case-Ispagnac-Mende.json"));
+    var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
+    var userIds = lianeDb.Members.Select((m, i) => (m,i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
+    lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
+    await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
+    var liane = await lianeService.Get(lianeDb.Id);
+    var tracker = await new LianeTracker.Builder(liane)
+      .Build(
+        ServiceProvider.GetService<IOsrmService>()!, 
+        ServiceProvider.GetService<IPostgisService>()!, 
+        Db,
+        Moq.Mock.Of<ILogger<LianeTracker>>(), 
+        Moq.Mock.Of<ILianeMemberTracker>()
+      );
+    var pings = lianeDb.Pings
+      .OrderBy(p => p.At)
+      .Select(p => p with{User = userIds[p.User]})
+      .ToImmutableList();
+    
+    // Send first few pings outside of planned route
+    foreach (var p in pings.TakeWhile(p => p.At < DateTime.Parse("2023-12-05T07:42:00Z")))
+    {
+      await tracker.Push(p);
+    }
+
+    // check that next point is Quezac (the car is going towards Quezac)
+    var lastLocation = tracker.GetCurrentMemberLocation(lianeDb.Driver.User);
+    Assert.AreEqual(liane.WayPoints.Last().RallyingPoint.Id, lastLocation!.NextPoint.Id); 
+
+  }
+  
   private IMongoDatabase Db = null!;
   private ILianeService lianeService = null!;
   protected override void Setup(IMongoDatabase db)
