@@ -1,8 +1,11 @@
 import { Platform } from "react-native";
 import { SubscriptionLike } from "rxjs";
-import { WayPoint } from "@liane/common";
+import { HttpClient, WayPoint } from "@liane/common";
 import { IosService } from "./ios";
 import { AndroidService } from "./android";
+import { RNAppEnv } from "@/api/env";
+import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
 
 export interface LianeGeolocation {
   startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void>;
@@ -15,4 +18,6 @@ export interface LianeGeolocation {
   checkBackgroundGeolocationPermission(): Promise<boolean>;
 }
 
-export default (Platform.OS === "ios" ? new IosService() : new AndroidService()) as LianeGeolocation;
+const httpClient = new HttpClient(RNAppEnv.baseUrl, AppLogger as any, AppStorage);
+
+export default (Platform.OS === "ios" ? new IosService(httpClient) : new AndroidService(httpClient)) as LianeGeolocation;

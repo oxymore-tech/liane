@@ -17,6 +17,7 @@ interface GeoWatchOptions {
   enableHighAccuracy?: boolean;
   distanceFilter?: number;
 }
+
 enum PositionError {
   PERMISSION_DENIED = 1,
   POSITION_UNAVAILABLE = 2,
@@ -39,23 +40,13 @@ interface GeoPosition {
   timestamp: number;
 }
 
-export class IosService implements LianeGeolocation {
-  private IosNativeModule = RNLianeGeolocation as {
-    requestAuthorization(authorizationLevel: "always" | "whenInUse"): Promise<"disabled" | "granted" | "denied" | "restricted">;
-    startObserving(options: GeoWatchOptions): void;
-    stopObserving(): void;
-  };
-  private Platform = Platform as PlatformIOSStatic;
-  private LocationEventEmitter = new NativeEventEmitter(RNLianeGeolocation);
-
-  // Use mock storage because background thread does not access keychain storage
-  private accessToken: string | undefined;
-  private httpClient = new HttpClient(RNAppEnv.baseUrl, AppLogger as any, {
+function createBackgroundHttp(accessToken: string) {
+  return new HttpClient(RNAppEnv.baseUrl, AppLogger as any, {
     closeSession: () => {
       return Promise.resolve();
     },
     getAccessToken: () => {
-      return Promise.resolve(this.accessToken);
+      return Promise.resolve(accessToken);
     },
     getRefreshToken: () => {
       return Promise.resolve(undefined);
@@ -67,9 +58,25 @@ export class IosService implements LianeGeolocation {
       throw new Error("not implemented");
     }
   });
-  async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
-    this.accessToken = await this.httpClient.getUpdatedAccessToken(true);
+}
 
+export class IosService implements LianeGeolocation {
+  private IosNativeModule = RNLianeGeolocation as {
+    requestAuthorization(authorizationLevel: "always" | "whenInUse"): Promise<"disabled" | "granted" | "denied" | "restricted">;
+    startObserving(options: GeoWatchOptions): void;
+    stopObserving(): void;
+  };
+  private Platform = Platform as PlatformIOSStatic;
+  private LocationEventEmitter = new NativeEventEmitter(RNLianeGeolocation);
+
+  constructor(private httpClient: HttpClient) {}
+
+  async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
+    const accessToken = await this.httpClient.getUpdatedAccessToken(true);
+    if (!accessToken) {
+      throw new Error("No access token");
+    }
+    const http = createBackgroundHttp(accessToken);
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;
     let preciseTrackingMode = true;
@@ -89,7 +96,11 @@ export class IosService implements LianeGeolocation {
       this.clearWatch();
       const accuracy = precise ? "best" : "nearestTenMeters";
       AppLogger.info("GEOPINGS", "Switched tracking mode to:", accuracy);
-      this.watchPosition(onPositionCallback, onFailedCallback, { distanceFilter: getDistanceFilter(), accuracy, enableHighAccuracy: true });
+      this.watchPosition(onPositionCallback, onFailedCallback, {
+        distanceFilter: getDistanceFilter(),
+        accuracy,
+        enableHighAccuracy: true
+      });
     };
 
     const onPositionCallback = async (position: GeoPosition) => {
@@ -102,7 +113,7 @@ export class IosService implements LianeGeolocation {
         coordinate,
         timestamp: Math.trunc(position.timestamp)
       };
-      await this.httpClient.postAs(`/event/member_ping`, { body: ping }).catch(err => {
+      await http.postAs(`/event/member_ping`, { body: ping }).catch(err => {
         AppLogger.warn("GEOPINGS", "Could not send ping", err);
         if (isResourceNotFound(err) || isValidationError(err)) {
           AppLogger.info("GEOPINGS", "Stopping service :", err);
@@ -132,9 +143,17 @@ export class IosService implements LianeGeolocation {
       this.clearWatch();
     };
 
-    this.updateCurrentGeolocationLianeId({ liane: lianeId, timeOutDate: new Date(new Date().getTime() + timeout).toISOString() });
-    this.watchPosition(onPositionCallback, onFailedCallback, { distanceFilter: getDistanceFilter(), accuracy: "best", enableHighAccuracy: true });
+    this.updateCurrentGeolocationLianeId({
+      liane: lianeId,
+      timeOutDate: new Date(new Date().getTime() + timeout).toISOString()
+    });
+    this.watchPosition(onPositionCallback, onFailedCallback, {
+      distanceFilter: getDistanceFilter(),
+      accuracy: "best",
+      enableHighAccuracy: true
+    });
   }
+
   async stopSendingPings() {
     this.updateCurrentGeolocationLianeId(undefined);
     this.clearWatch();
@@ -175,6 +194,7 @@ export class IosService implements LianeGeolocation {
     }
     return false;
   }
+
   private requestAuthorization = async (authorizationLevel: "always" | "whenInUse") => {
     return this.IosNativeModule.requestAuthorization(authorizationLevel);
   };
@@ -214,9 +234,11 @@ export class IosService implements LianeGeolocation {
     }
     return val?.liane;
   };
+
   watchRunningService(callback: (running: string | undefined) => void): SubscriptionLike {
     return running.subscribe(callback);
   }
+
   async requestEnableGPS(): Promise<void> {
     const enabled = await DeviceInfo.isLocationEnabled();
     if (!enabled) {

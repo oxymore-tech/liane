@@ -1,5 +1,5 @@
 import { SubscriptionLike } from "rxjs";
-import { Linking, PermissionsAndroid, PlatformAndroidStatic } from "react-native";
+import { Linking, PermissionsAndroid, Platform, PlatformAndroidStatic } from "react-native";
 import { HttpClient, WayPoint } from "@liane/common";
 import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
@@ -7,7 +7,6 @@ import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
 import { LianeGeolocation } from "./index";
 import { ALLOW_LOCATION, ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
-import { Platform } from "react-native";
 
 export const LocationAlert = {
   inviteToOpenSettings,
@@ -38,12 +37,15 @@ export class AndroidService implements LianeGeolocation {
   };
   private Platform = Platform as PlatformAndroidStatic;
 
-  private httpClient = new HttpClient(RNAppEnv.baseUrl, AppLogger as any, AppStorage);
+  constructor(private httpClient: HttpClient) {}
+
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
     const user = await AppStorage.getUser();
     // Refresh token here to avoid issues
     const token = await this.httpClient.getUpdatedAccessToken(true);
-
+    if (!token) {
+      throw new Error("No access token");
+    }
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;
 
@@ -70,6 +72,7 @@ export class AndroidService implements LianeGeolocation {
   requestEnableGPS = this.AndroidNativeModule.enableLocation;
   currentLiane = this.AndroidNativeModule.current;
   watchRunningService = (callback: (running: string | undefined) => void) => running.subscribe(callback);
+
   async checkAndRequestLocationPermission(): Promise<boolean> {
     if (this.Platform.Version < 23) {
       return true;
