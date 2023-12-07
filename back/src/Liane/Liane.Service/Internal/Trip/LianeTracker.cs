@@ -28,9 +28,10 @@ public sealed class LianeTracker
   private readonly ILianeMemberTracker lianeMemberTracker;
   private readonly double[] wayPointFractions;
   private bool finished = false;
-  private readonly Timer timer = new (interval: 2*60*1000);
+  private readonly Timer timer = new(interval: 2 * 60 * 1000);
 
-  private LianeTracker(IOsrmService osrmService, IMongoDatabase mongo, Api.Trip.Liane liane, Action onTripArrivedDestination, IOngoingTripSession ongoingTripSession, ILianeMemberTracker lianeMemberTracker)
+  private LianeTracker(IOsrmService osrmService, IMongoDatabase mongo, Api.Trip.Liane liane, Action onTripArrivedDestination, IOngoingTripSession ongoingTripSession,
+    ILianeMemberTracker lianeMemberTracker)
   {
     Liane = liane;
     this.onTripArrivedDestination = onTripArrivedDestination;
@@ -41,7 +42,7 @@ public sealed class LianeTracker
     wayPointFractions = new double[liane.WayPoints.Count];
     Array.Fill(wayPointFractions, -1);
     wayPointFractions[0] = 0.0;
-    timer.Elapsed +=  (source, e) =>
+    timer.Elapsed += (source, e) =>
     {
       foreach (var member in liane.Members)
       {
@@ -49,7 +50,7 @@ public sealed class LianeTracker
       }
     };
   }
-  
+
   public Api.Trip.Liane Liane { get; }
 
   public sealed class Builder
@@ -106,6 +107,7 @@ public sealed class LianeTracker
     {
       bufferedLocations.Add(data);
     }
+
     await mongo.GetCollection<LianeTrackReport>()
       .FindOneAndUpdateAsync(r => r.Id == Liane.Id, Builders<LianeTrackReport>.Update.Push(r => r.MemberLocations, data));
   }
@@ -115,6 +117,15 @@ public sealed class LianeTracker
     currentLocationMap.TryGetValue(userId, out var currentLocation);
     return currentLocation is not null && currentLocation.Count > 0 ? currentLocation.Peek() : null;
   }
+
+  public Task Push2(UserPing ping)
+  {
+    var nextPointIndex = GetFirstWayPoint(ping.User.Id);
+    return InsertMemberLocation(ping.User.Id,
+      new(ping.At, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User)
+    );
+  }
+
   public async Task Push(UserPing ping)
   {
     var pingTime = ping.At;
@@ -186,23 +197,25 @@ public sealed class LianeTracker
 
       await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
+
     await PublishLocation(ping.User.Id);
   }
 
   private async Task PublishLocation(string userId)
   {
     // For now share all positions
-    var currentLocation =  GetCurrentMemberLocation(userId);
+    var currentLocation = GetCurrentMemberLocation(userId);
     if (currentLocation is not null)
     {
       var now = DateTime.UtcNow;
       var d = now - currentLocation.At;
       var isMoving = d > TimeSpan.FromMinutes(2);
-      await lianeMemberTracker.Push(currentLocation with {IsMoving = isMoving, At = isMoving ? currentLocation.At : now });
+      await lianeMemberTracker.Push(currentLocation with { IsMoving = isMoving, At = isMoving ? currentLocation.At : now });
     }
- 
+
     // TODO only share position of the driver, and passengers close to the next pickup point
   }
+
   private async Task<double> GetWayPointFraction(int index)
   {
     var nextPointFraction = wayPointFractions[index];
@@ -255,7 +268,7 @@ public sealed class LianeTracker
   private int? GetDriverNextIndex()
   {
     var driverCurrentLocation = GetCurrentLocation(Liane.Driver.User.Id);
- 
+
     if (driverCurrentLocation is not null)
     {
       return driverCurrentLocation.NextPointIndex;
@@ -272,7 +285,7 @@ public sealed class LianeTracker
   public bool? MemberHasArrived(Ref<Api.User.User> member)
   {
     var currentLocation = GetCurrentLocation(member.Id);
- 
+
     var memberArrivalIndex = Liane.WayPoints.FindIndex(w => w.RallyingPoint.Id == Liane.Members.Find(m => m.User.Id == member.Id)!.To.Id);
     if (currentLocation is null)
     {
@@ -294,5 +307,30 @@ public sealed class LianeTracker
     }
 
     return false;
+  }
+
+  private int GetFirstWayPoint(string userId)
+  {
+    var waypointsWithMembers = Liane.Members.GroupBy(m => m.From)
+      .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
+    return Liane.WayPoints.FindIndex(w =>
+    {
+      var wayPointWithMembers = waypointsWithMembers.GetValueOrDefault(w.RallyingPoint.Id!);
+      if (wayPointWithMembers is null)
+      {
+        return false;
+      }
+
+      return wayPointWithMembers.Any(m => m.User.Id != userId);
+    });
+  }
+
+  public TrackingInfo GetTrackingInfo()
+  {
+    currentLocationMap.TryGetValue(Liane.Driver.User.Id, out var lastLocations);
+
+    var currentLocation = lastLocations?.Peek();
+
+    return new TrackingInfo(Liane.WayPoints[currentLocation!.NextPointIndex].RallyingPoint);
   }
 }

@@ -23,8 +23,8 @@
       "user": {
         "$oid": "63f73936d3436d499d1075f6"
       },
-      "from": "mairie:48075",
-      "to": "mairie:48095",
+      "from": "Ispagnac_Parking",
+      "to": "Mende",
       "seatCount": 3,
       "feedback": null,
       "geolocationLevel": "Shared",
@@ -39,8 +39,8 @@
       "user": {
         "$oid": "654e2de81435035edcef9b7f"
       },
-      "from": "mairie:48122",
-      "to": "mairie:48095",
+      "from": "Quezac_Parking",
+      "to": "Mende",
       "seatCount": -1,
       "feedback": null,
       "geolocationLevel": "Shared",
@@ -725,9 +725,6 @@
   ],
   "conversation": {
     "$oid": "656ed32d6f29603f3cf198a0"
-  },
-  "recurrence": {
-    "$oid": "6551d6611435035edcef9c16"
   },
   "totalSeatCount": 2
 }
