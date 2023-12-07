@@ -48,6 +48,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly IOsrmService osrmService;
   private readonly ILogger<LianeTracker> trackerLogger;
   private readonly LianeTrackerCache trackerCache;
+  private readonly ILianeMemberTracker lianeMemberTracker;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -56,7 +57,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     IRallyingPointService rallyingPointService,
     IChatService chatService,
     ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver,
-    IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger, LianeTrackerCache trackerCache) : base(mongo)
+    IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger, LianeTrackerCache trackerCache, ILianeMemberTracker lianeMemberTracker) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -71,6 +72,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     this.osrmService = osrmService;
     this.trackerLogger = trackerLogger;
     this.trackerCache = trackerCache;
+    this.lianeMemberTracker = lianeMemberTracker;
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
@@ -868,7 +870,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
           })
           .Start();
       })
-      .Build(osrmService, postgisService, Mongo, trackerLogger);
+      .Build(osrmService, postgisService, Mongo, trackerLogger, lianeMemberTracker);
 
     trackerCache.Trackers.TryAdd(liane.Id, tracker);
   }

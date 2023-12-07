@@ -14,15 +14,13 @@ namespace Liane.Service.Internal.Trip.Event;
 public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPing>
 {
   private readonly IMongoDatabase mongo;
-  private readonly ILianeMemberTracker lianeMemberTracker;
   private readonly LianeTrackerCache lianeTrackerCache;
   private readonly ICurrentContext currentContext;
   private readonly ILogger<LianeMemberPingHandler> logger;
 
-  public LianeMemberPingHandler(IMongoDatabase db, ILianeMemberTracker lianeMemberTracker, ICurrentContext currentContext, ILogger<LianeMemberPingHandler> logger, LianeTrackerCache lianeTrackerCache)
+  public LianeMemberPingHandler(IMongoDatabase db, ICurrentContext currentContext, ILogger<LianeMemberPingHandler> logger, LianeTrackerCache lianeTrackerCache)
   {
-    mongo = db;
-    this.lianeMemberTracker = lianeMemberTracker;
+    mongo = db; 
     this.currentContext = currentContext;
     this.logger = logger;
     this.lianeTrackerCache = lianeTrackerCache;
@@ -62,17 +60,5 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     }
 
     await tracker.Push(ping);
-
-    // For now we only share position of the driver, and passengers close to the next pickup point
-    if (memberId == liane.Driver.User.Id)
-    {
-      var currentLocation = tracker.GetCurrentMemberLocation(memberId);
-      if (currentLocation is not null) await lianeMemberTracker.Push(currentLocation);
-    }
-    else // disable for now : if (tracker.IsCloseToPickup(memberId))
-    {
-      var currentLocation = tracker.GetCurrentMemberLocation(memberId);
-      if (currentLocation is not null) await lianeMemberTracker.Push(currentLocation);
-    }
   }
 }

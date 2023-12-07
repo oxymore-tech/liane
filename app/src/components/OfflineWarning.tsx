@@ -3,19 +3,32 @@ import { AppText } from "@/components/base/AppText";
 import { Row, Space } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { ActivityIndicator } from "react-native";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import Animated, { SlideInDown } from "react-native-reanimated";
+import { sleep } from "@liane/common";
 
 export const OfflineWarning = () => {
   const { hubState } = useContext(AppContext);
-  if (!hubState) {
-    return null;
-  }
-  if (!["offline", "reconnecting"].includes(hubState)) {
+  const shouldDisplay = hubState && ["offline", "reconnecting"].includes(hubState);
+  const [display, setDisplay] = useState(shouldDisplay);
+
+  if (!display) {
     return null;
   }
   const isReconnecting = hubState === "reconnecting";
+
+  useEffect(() => {
+    if (hubState === "reconnecting") {
+      setDisplay(true);
+      sleep(2000).then(() => {
+        setDisplay(false);
+      });
+    } else {
+      setDisplay(hubState === "offline");
+    }
+  }, [hubState]);
+
   return (
     <Animated.View style={{ position: "absolute", bottom: 60, left: 24, right: 24 }} entering={SlideInDown}>
       <Row spacing={16} style={{ borderRadius: 8, backgroundColor: ContextualColors.redAlert.bg, padding: 16, alignItems: "center" }}>

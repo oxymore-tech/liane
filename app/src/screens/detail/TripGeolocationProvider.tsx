@@ -90,8 +90,7 @@ export const useMemberTripGeolocation = (memberId: string) => {
   return lastLocUpdate;
 };
 
-const StalePingDelay = 180; // 3 minutes
-export const useMemberIsMoving = (memberId: string) => {
+/*export const useMemberIsMoving = (memberId: string) => {
   const lastLocUpdate = useMemberTripGeolocation(memberId);
   const [moving, setMoving] = useState(!!lastLocUpdate && (new Date().getTime() - new Date(lastLocUpdate.at).getTime()) / 1000 < StalePingDelay);
 
@@ -108,15 +107,14 @@ export const useMemberIsMoving = (memberId: string) => {
   }, [lastLocUpdate]);
 
   return { ...lastLocUpdate, moving };
-};
+};*/
 export const useMemberRealTimeDelay = (memberId: string) => {
   const lastDriverLocUpdate = useMemberTripGeolocation(memberId);
   const [delay, setDelay] = useState<number>(() => {
     if (!lastDriverLocUpdate) {
       return 0;
     }
-    const d = (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000;
-    return d < StalePingDelay ? d : lastDriverLocUpdate.delay;
+    return lastDriverLocUpdate.isMoving ? (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000 : lastDriverLocUpdate.delay;
   });
 
   useEffect(() => {
@@ -124,9 +122,8 @@ export const useMemberRealTimeDelay = (memberId: string) => {
       return;
     } else {
       const timeout = setInterval(() => {
-        const d = (new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000;
-        if (d < StalePingDelay) {
-          setDelay(d);
+        if (lastDriverLocUpdate.isMoving) {
+          setDelay((new Date().getTime() - new Date(lastDriverLocUpdate.at).getTime()) / 1000);
         } else {
           setDelay(lastDriverLocUpdate.delay);
         }
@@ -134,6 +131,6 @@ export const useMemberRealTimeDelay = (memberId: string) => {
       return () => clearInterval(timeout);
     }
   }, [lastDriverLocUpdate]);
-  //console.log(user?.phone, lastDriverLocUpdate?.member, lastDriverLocUpdate?.at, lastDriverLocUpdate?.delay, delay);
+
   return lastDriverLocUpdate ? { ...lastDriverLocUpdate, delay } : null;
 };

@@ -42,12 +42,6 @@ const WayPointView = ({
   isPast?: boolean;
   delay?: number | undefined;
 }) => {
-  /* console.log(
-    wayPoint.rallyingPoint.label,
-    delay,
-    new Date(wayPoint.eta),
-    delay ? new Date(addSeconds(new Date(wayPoint.eta), Math.floor(delay))) : null
-  );*/
   return (
     <Row style={{ alignItems: "center" }} spacing={8}>
       {type === "step" && (
@@ -62,7 +56,10 @@ const WayPointView = ({
         />
       )}
       {(!delay || isPast) && (
-        <TimeView style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]} value={wayPoint.eta} />
+        <TimeView
+          style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
+          value={wayPoint.effectiveTime ?? wayPoint.eta}
+        />
       )}
       {!!delay && !isPast && (
         <Column>
@@ -71,7 +68,10 @@ const WayPointView = ({
             value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
           />
           <View style={{ height: 8 }} />
-          <TimeView style={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }} value={wayPoint.eta} />
+          <TimeView
+            style={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }}
+            value={wayPoint.effectiveTime ?? wayPoint.eta}
+          />
         </Column>
       )}
       <View style={{ flexGrow: 1, flexShrink: 1 }}>

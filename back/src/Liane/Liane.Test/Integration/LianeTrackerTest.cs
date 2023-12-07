@@ -66,7 +66,13 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!, Moq.Mock.Of<ILogger<LianeTracker>>());
+      .Build(
+        ServiceProvider.GetService<IOsrmService>()!, 
+        ServiceProvider.GetService<IPostgisService>()!, 
+        ServiceProvider.GetService<IMongoDatabase>()!, 
+        Moq.Mock.Of<ILogger<LianeTracker>>(), 
+        Moq.Mock.Of<ILianeMemberTracker>()
+        );
  
     var pings = geojsonPings.Features.Select(f =>
     {
@@ -101,8 +107,13 @@ public class LianeTrackerTest: BaseIntegrationTest
     var (liane, geojsonPings) = PrepareTestData(userId);
     var tracker = await new LianeTracker.Builder(liane)
     
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, ServiceProvider.GetService<IMongoDatabase>()!, Moq.Mock.Of<ILogger<LianeTracker>>());
- 
+      .Build(
+        ServiceProvider.GetService<IOsrmService>()!, 
+        ServiceProvider.GetService<IPostgisService>()!, 
+        ServiceProvider.GetService<IMongoDatabase>()!, 
+        Moq.Mock.Of<ILogger<LianeTracker>>(), 
+        Moq.Mock.Of<ILianeMemberTracker>()
+      );
     var pings = geojsonPings.Features.Select(f =>
     {
       var point = (f.Geometry as Point)!;
@@ -160,8 +171,13 @@ public class LianeTrackerTest: BaseIntegrationTest
       {
         finished = true;
       })
-      .Build(ServiceProvider.GetService<IOsrmService>()!, ServiceProvider.GetService<IPostgisService>()!, Db, Moq.Mock.Of<ILogger<LianeTracker>>());
-
+      .Build(
+        ServiceProvider.GetService<IOsrmService>()!, 
+        ServiceProvider.GetService<IPostgisService>()!, 
+        Db,
+        Moq.Mock.Of<ILogger<LianeTracker>>(), 
+        Moq.Mock.Of<ILianeMemberTracker>()
+      );
     var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with{User = userIds[p.User]}).ToImmutableList();
     foreach (var p in pings)
     {
