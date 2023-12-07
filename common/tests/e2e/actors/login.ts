@@ -5,7 +5,7 @@ import { TestEnv } from "../setup/environment";
 
 export class LoginActor {
   constructor(private auth: AuthService) {}
-  runScenario = (
+  runScenario = async (
     onDone: (ctx: SignUpContext) => void,
     fail: (reason: any) => void,
     userPhone: string,
@@ -70,7 +70,7 @@ export class LoginActor {
         await executeAction();
       }
     };
-    executeAction();
+    await executeAction();
   };
 
   signUpUser = (phone: string) => new Promise<string>((resolve, reject) => this.runScenario(ctx => resolve(ctx.authUser!.id), reject, phone));

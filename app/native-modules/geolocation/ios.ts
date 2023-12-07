@@ -68,7 +68,7 @@ export class IosService implements LianeGeolocation {
     }
   });
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
-    this.accessToken = await this.httpClient.getUpdatedAccessToken();
+    this.accessToken = await this.httpClient.getUpdatedAccessToken(true);
 
     const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
     const timeout = tripDuration + 3600 * 1000;

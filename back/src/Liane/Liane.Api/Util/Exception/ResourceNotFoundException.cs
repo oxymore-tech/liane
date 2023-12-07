@@ -10,6 +10,6 @@ public sealed class ResourceNotFoundException : System.Exception
 
   public static ResourceNotFoundException For<T>(Ref<T> reference) where T : class, IIdentity
   {
-    return new ResourceNotFoundException($"{nameof(T)} with id '{reference.Id}'");
+    return new ResourceNotFoundException($"{typeof(T).Name} with id '{reference.Id}'");
   }
 }

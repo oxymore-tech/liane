@@ -66,6 +66,14 @@ function init {
   sudo mkdir -p "${LIANE_HOME}/data"
   sudo chmod -R 777 "${LIANE_HOME}/data"
 
+  start "${@}"
+}
+
+function init_test {
+  echo "Initialize database for e2e testing"
+  init mongo postgis
+  read -r -p "Start the backend and press enter" 
+  node "${LIANE_HOME}/common/tests/e2e/setup/init-back.js" "http://localhost:5000"
   start
 }
 
@@ -74,7 +82,7 @@ function stop {
 }
 
 function start {
-  liane_compose up -d --build --remove-orphans
+  liane_compose up -d --build --remove-orphans "${@}"
 }
 
 case "$1" in
@@ -86,6 +94,9 @@ case "$1" in
   ;;
  start)
   start
+  ;;
+ init-test)
+  init_test
   ;;
  init)
   init
