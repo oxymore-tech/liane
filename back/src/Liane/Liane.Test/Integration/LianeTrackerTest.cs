@@ -68,7 +68,7 @@ public class LianeTrackerTest : BaseIntegrationTest
         ServiceProvider.GetService<IPostgisService>()!,
         ServiceProvider.GetService<IMongoDatabase>()!,
         Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeMemberTracker>()
+        Moq.Mock.Of<ILianeUpdatePushService>()
       );
 
     var pings = geojsonPings.Features.Select(f =>
@@ -106,7 +106,7 @@ public class LianeTrackerTest : BaseIntegrationTest
         ServiceProvider.GetService<IPostgisService>()!,
         ServiceProvider.GetService<IMongoDatabase>()!,
         Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeMemberTracker>()
+        Moq.Mock.Of<ILianeUpdatePushService>()
       );
     var pings = geojsonPings.Features.Select(f =>
     {
@@ -168,7 +168,7 @@ public class LianeTrackerTest : BaseIntegrationTest
         ServiceProvider.GetService<IPostgisService>()!,
         Db,
         Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeMemberTracker>()
+        Moq.Mock.Of<ILianeUpdatePushService>()
       );
     var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with { User = userIds[p.User] }).ToImmutableList();
     foreach (var p in pings)
@@ -184,7 +184,7 @@ public class LianeTrackerTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldTrackFirstWayPointWithPassengers()
+  public async Task ShouldTrackNextWayPointWithPassengers()
   {
     // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende
     var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende.json", "2023-12-05T07:42:00Z");
@@ -194,6 +194,37 @@ public class LianeTrackerTest : BaseIntegrationTest
     Assert.AreEqual("Quezac_Parking", actual.NextPoint.Id);
   }
   
+  [Test]
+  public async Task ShouldTrackFirstWayPointWithPassengers()
+  {
+    // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende.json", "2023-12-05T07:38:00Z");
+
+    // check that next point is Quezac (the car is going towards Quezac)
+    var actual = tracker.GetTrackingInfo();
+    Assert.AreEqual("Quezac_Parking", actual.NextPoint.Id);
+    Assert.AreEqual(562, actual.Delay);
+    Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.At);
+  }
+
+  [Test]
+  public async Task ShouldTrackDestinationWayPoint()
+  {
+    // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende.json", "2023-12-05T07:44:00Z");
+
+    // check that next point is Mende 
+    var actual = tracker.GetTrackingInfo();
+    Assert.AreEqual("Mende", actual.NextPoint.Id);
+    Assert.AreEqual(1450, actual.Delay);
+  }
+  
+  [Test]
+  public async Task ShouldTrackCarCurrentPassengers()
+  {
+    
+  }
+
   private async Task<LianeTracker> SetupTrackerAt(string file, string at)
   {
     var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource(file));
@@ -212,7 +243,7 @@ public class LianeTrackerTest : BaseIntegrationTest
         ServiceProvider.GetService<IPostgisService>()!,
         Db,
         Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeMemberTracker>()
+        Moq.Mock.Of<ILianeUpdatePushService>()
       );
     var pings = lianeDb.Pings
       .OrderBy(p => p.At)
@@ -221,9 +252,10 @@ public class LianeTrackerTest : BaseIntegrationTest
 
 
     // Send first few pings outside of planned route
-    foreach (var p in pings.TakeWhile(p => p.At < DateTime.Parse(at)))
+    var sublist = pings.TakeWhile(p => p.At.ToUniversalTime() < DateTime.Parse(at).ToUniversalTime()).ToList();
+    foreach (var p in sublist)
     {
-      await tracker.Push2(p);
+      await tracker.Push(p);
     }
 
     return tracker;

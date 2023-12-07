@@ -33,6 +33,6 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task ForceSyncDatabase();
   Task UpdateGeolocationSetting(Ref<Liane> liane, GeolocationLevel level);
   Task CancelLiane(Ref<Liane> liane);
-  Task StartLiane(Ref<Liane> liane);
+  Task<bool> StartLiane(Ref<Liane> liane);
   Task SyncTrackers();
 }

@@ -3,7 +3,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public interface ILianeMemberTracker
+public interface ILianeUpdatePushService
 {
   Task<TrackedMemberLocation?> Subscribe(Ref<User.User> user, Ref<Liane> liane, Ref<User.User> member);
   

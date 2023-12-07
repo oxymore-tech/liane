@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Hubs;
 
-public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeMemberTracker, ILianeUpdateObserver
+public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdatePushService, ILianeUpdateObserver
 {
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;

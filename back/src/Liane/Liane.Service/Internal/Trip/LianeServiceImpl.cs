@@ -48,7 +48,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
   private readonly IOsrmService osrmService;
   private readonly ILogger<LianeTracker> trackerLogger;
   private readonly LianeTrackerCache trackerCache;
-  private readonly ILianeMemberTracker lianeMemberTracker;
+  private readonly ILianeUpdatePushService lianeUpdatePushService;
 
   public LianeServiceImpl(
     IMongoDatabase mongo,
@@ -57,7 +57,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     IRallyingPointService rallyingPointService,
     IChatService chatService,
     ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver,
-    IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger, LianeTrackerCache trackerCache, ILianeMemberTracker lianeMemberTracker) : base(mongo)
+    IUserStatService userStatService, IOsrmService osrmService, ILogger<LianeTracker> trackerLogger, LianeTrackerCache trackerCache, ILianeUpdatePushService lianeUpdatePushService) : base(mongo)
   {
     this.routingService = routingService;
     this.currentContext = currentContext;
@@ -72,7 +72,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     this.osrmService = osrmService;
     this.trackerLogger = trackerLogger;
     this.trackerCache = trackerCache;
-    this.lianeMemberTracker = lianeMemberTracker;
+    this.lianeUpdatePushService = lianeUpdatePushService;
   }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
@@ -810,7 +810,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     await PushUpdate(updated);
   }
 
-  public async Task StartLiane(Ref<Api.Trip.Liane> lianeRef)
+  public async Task<bool> StartLiane(Ref<Api.Trip.Liane> lianeRef)
   {
     var liane = await Get(lianeRef);
     var sender = currentContext.CurrentUser().Id;
@@ -818,12 +818,13 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     if (liane.State == LianeState.NotStarted)
     {
       await UpdateState(liane, LianeState.Started);
-      await CreateTracker(liane);
+      return true;
     }
 
     var updated = await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
 
     await PushUpdate(updated);
+    return false;
   }
 
 
@@ -870,7 +871,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
           })
           .Start();
       })
-      .Build(osrmService, postgisService, Mongo, trackerLogger, lianeMemberTracker);
+      .Build(osrmService, postgisService, Mongo, trackerLogger, lianeUpdatePushService);
 
     trackerCache.Trackers.TryAdd(liane.Id, tracker);
   }

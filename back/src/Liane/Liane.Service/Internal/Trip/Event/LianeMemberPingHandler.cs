@@ -5,6 +5,7 @@ using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -14,16 +15,16 @@ namespace Liane.Service.Internal.Trip.Event;
 public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPing>
 {
   private readonly IMongoDatabase mongo;
-  private readonly LianeTrackerCache lianeTrackerCache;
+  private readonly ILianeTrackerService lianeTrackerService;
   private readonly ICurrentContext currentContext;
   private readonly ILogger<LianeMemberPingHandler> logger;
 
-  public LianeMemberPingHandler(IMongoDatabase db, ICurrentContext currentContext, ILogger<LianeMemberPingHandler> logger, LianeTrackerCache lianeTrackerCache)
+  public LianeMemberPingHandler(IMongoDatabase db, ICurrentContext currentContext, ILianeTrackerService lianeTrackerService, ILogger<LianeMemberPingHandler> logger)
   {
     mongo = db; 
     this.currentContext = currentContext;
+    this.lianeTrackerService = lianeTrackerService;
     this.logger = logger;
-    this.lianeTrackerCache = lianeTrackerCache;
   }
 
   public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.User.User>? sender = null)
@@ -52,13 +53,13 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }
 
-    lianeTrackerCache.Trackers.TryGetValue(liane.Id, out var tracker);
-    if (tracker is null)
+    try
+    {
+      await lianeTrackerService.PushPing(liane.Id, ping);
+    }
+    catch (Exception err)
     {
       logger.LogWarning($"No tracker found for liane {liane.Id}");
-      return;
     }
-
-    await tracker.Push(ping);
   }
 }

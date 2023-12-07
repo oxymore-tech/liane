@@ -11,6 +11,7 @@ using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Mock;
 using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
