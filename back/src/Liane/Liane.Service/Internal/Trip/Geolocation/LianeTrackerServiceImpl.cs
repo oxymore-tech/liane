@@ -44,10 +44,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       // TODO for each liane
       foreach (var tracker in trackerCache.Trackers)
       {
-        foreach (var member in tracker.Liane.Members)
-        {
-          PublishLocation(tracker, member.User.Id).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+          PublishLocation(tracker).ConfigureAwait(false).GetAwaiter().GetResult();
       }
 
       
@@ -60,7 +57,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     return await trackerCache.GetOrAddTracker(liane.Id, async (_) =>
     {
       // Create liane tracker
-      var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location));
+      var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location), overview: "full");
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
       var tripSession = await postgisService.CreateOngoingTrip(liane.Id, routeAsLineString);
 
@@ -159,22 +156,22 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
 
-    await PublishLocation(tracker, ping.User.Id);
+    await PublishLocation(tracker);
   }
 
-  private async Task PublishLocation(LianeTracker tracker, string userId)
+  private async Task PublishLocation(LianeTracker tracker)
   {
-    // For now share all positions
-    var currentLocation = tracker.GetCurrentMemberLocation(userId);
-    if (currentLocation is not null)
+    var info = tracker.GetTrackingInfo();
+    foreach (var member in tracker.Liane.Members)
     {
-      var now = DateTime.UtcNow;
-      var d = now - currentLocation.At;
-      var isMoving = d > TimeSpan.FromMinutes(2);
-      await lianeUpdatePushService.Push(currentLocation with { IsMoving = isMoving, At = isMoving ? currentLocation.At : now });
+      await lianeUpdatePushService.Push(info, member.User);
     }
+  }
 
-    // TODO only share position of the driver, and passengers close to the next pickup point
+  public TrackingInfo? GetTrackingInfo(Ref<Api.Trip.Liane> liane)
+  {
+    var tracker = trackerCache.GetTracker(liane);
+    return tracker?.GetTrackingInfo();
   }
 
   private Action GetDefaultOnReachedDestination(Ref<Api.Trip.Liane> liane)

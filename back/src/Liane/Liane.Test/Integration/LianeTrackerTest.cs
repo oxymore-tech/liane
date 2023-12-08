@@ -181,7 +181,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     var actual = tracker.GetTrackingInfo();
     Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
     Assert.AreEqual(562, actual.Car.Delay);
-    Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.At);
+    Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.Car.At);
   }
 
   [Test]
@@ -215,6 +215,9 @@ public class LianeTrackerTest : BaseIntegrationTest
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
     CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Liane.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    // Check we do have location for the other member
+    Assert.AreEqual(1, actual.OtherMembers.Count);
+    Assert.AreNotEqual(tracker.Liane.Driver.User.Id, actual.OtherMembers.Keys.First());
   }
   
   [Test]
@@ -229,7 +232,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     var expectedLocation = tracker.GetCurrentMemberLocation(
       tracker.Liane.Members.First(m => m.User != tracker.Liane.Driver.User
       ).User)?.Location;
-    Assert.Less(5, actual.Car.Position.Distance(expectedLocation!.Value));
+    Assert.Less(1, actual.Car.Position.Distance(expectedLocation!.Value));
   }
 
   private async Task<LianeTracker> SetupTrackerAt(string file, string at)
@@ -253,6 +256,7 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     // Send first few pings outside of planned route
     var sublist = pings.TakeWhile(p => p.At.ToUniversalTime() < DateTime.Parse(at).ToUniversalTime()).ToList();
+    
     foreach (var p in sublist)
     {
       await lianeTrackerService.PushPing(liane, p);

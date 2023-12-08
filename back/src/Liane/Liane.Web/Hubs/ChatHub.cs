@@ -115,16 +115,9 @@ public sealed class ChatHub : Hub<IHubClient>
     await userService.UpdateLastConnection(userId, now);
   }
 
-  public async Task<TrackedMemberLocation?> SubscribeToLocationsUpdates(string lianeId, string memberId)
+  public async Task<TrackingInfo?> GetLastTrackingInfo(string lianeId)
   {
-    var userId = currentContext.CurrentUser().Id;
-    return await lianeUpdatePushService.Subscribe(userId, lianeId, memberId);
-  }
-  
-  public async Task UnsubscribeFromLocationsUpdates(string lianeId, string memberId)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    await lianeUpdatePushService.Unsubscribe(userId, lianeId, memberId);
+    return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
   }
 
   public async Task ReadNotifications(IEnumerable<Ref<Notification>> notifications)

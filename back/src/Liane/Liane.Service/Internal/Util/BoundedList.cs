@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Liane.Service.Internal.Util;
 
-public class BufferedList<T>: IEnumerable<T>
+public class BufferedList<T>: IReadOnlyCollection<T>
 {
   private int capacity;
   private LinkedList<T> list = new  ();

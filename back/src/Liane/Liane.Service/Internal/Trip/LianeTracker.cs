@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,16 +9,14 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
-using Newtonsoft.Json.Schema;
 
 namespace Liane.Service.Internal.Trip;
 
 public sealed class LianeTracker
 {
   private readonly ConcurrentDictionary<string, BufferedList<MemberLocationSample>> currentLocationMap = new();
-  private Car car;
   private readonly double[] wayPointFractions;
-  private bool finished = false;
+  private bool finished;
 
   public LianeTracker(IOngoingTripSession ongoingTripSession, Api.Trip.Liane liane)
   {
@@ -99,12 +98,17 @@ public sealed class LianeTracker
 
     var currentLocation = lastLocations?.Peek();
     if (currentLocation is null) return null;
-    var isMoving = !currentLocation.Coordinate.HasValue || lastLocations!.Count == 1 ||
-                   lastLocations.Any(l => l.Coordinate.HasValue && l.Coordinate.Value.Distance(currentLocation.Coordinate.Value) > 1);
+    var isMoving = IsMoving(currentLocation, lastLocations);
     return new TrackedMemberLocation(member, Liane, currentLocation.At, Liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds,
       currentLocation.RawCoordinate, isMoving);
   }
-  
+
+  private static bool IsMoving(MemberLocationSample currentLocation, IReadOnlyCollection<MemberLocationSample>? lastLocations)
+  {
+    return !currentLocation.Coordinate.HasValue || lastLocations!.Count == 1 ||
+           lastLocations.Any(l => l.Coordinate.HasValue && l.Coordinate.Value.Distance(currentLocation.Coordinate.Value) > 1);
+  }
+
   public int? GetDriverNextIndex()
   {
     var driverCurrentLocation = GetCurrentLocation(Liane.Driver.User.Id);
@@ -169,10 +173,6 @@ public sealed class LianeTracker
 
   public TrackingInfo GetTrackingInfo()
   {
-    currentLocationMap.TryGetValue(Liane.Driver.User.Id, out var driverLastLocations);
-
-    var driverCurrentLocation = driverLastLocations?.Peek();
-
     var carPassengers = currentLocationMap.Where(entry =>
     {
       var userId = entry.Key;
@@ -182,19 +182,32 @@ public sealed class LianeTracker
     })
       .Select(entry => (Ref<Api.User.User>) entry.Key).ToImmutableHashSet();
 
-    var carPosition = currentLocationMap.Where(entry => carPassengers
-        .Contains(entry.Key))
-      .Select(entry => entry.Value.Peek())
-      .OrderByDescending(lastLocation => lastLocation!.At)
-      .First();
+    var lastCarPings = currentLocationMap
+      .Where(entry => carPassengers.Contains(entry.Key))
+      .SelectMany(entry => entry.Value)
+      .OrderByDescending(ping => ping.At)
+      .Take(3)
+      .ToImmutableList();
     
-    var car = new Car(
-      Liane.WayPoints[driverCurrentLocation!.NextPointIndex].RallyingPoint,
-      (long)driverCurrentLocation.Delay.TotalSeconds,
+    var carPosition = lastCarPings.FirstOrDefault();
+
+    
+    var car = carPosition?.Coordinate is not null ? new Car(
+      carPosition.At,
+      Liane.WayPoints[carPosition.NextPointIndex].RallyingPoint,
+      (long)carPosition.Delay.TotalSeconds,
       carPosition.Coordinate.Value,
-      carPassengers
-    );
-    return new TrackingInfo(driverCurrentLocation.At, car);
+      carPassengers,
+      IsMoving(lastCarPings.First(), lastCarPings)
+    ) : null;
+
+    var otherMembers = currentLocationMap
+      .Where(entry => !carPassengers.Contains(entry.Key))
+      .ToImmutableDictionary(
+        entry =>(Ref<Api.User.User>) entry.Key,
+        entry => GetCurrentMemberLocation(entry.Key)!
+        );
+    return new TrackingInfo(Liane, car, otherMembers);
   }
 
   public async Task Dispose()

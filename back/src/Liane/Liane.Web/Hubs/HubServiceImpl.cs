@@ -22,13 +22,15 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
   private readonly ILogger<HubServiceImpl> logger;
   private readonly IUserService userService;
   private readonly ILianeTrackerCache trackerCache;
+  private readonly ILianeTrackerService lianeTrackerService;
 
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache, ILianeTrackerService lianeTrackerService)
   {
     this.hubContext = hubContext;
     this.logger = logger;
     this.userService = userService;
     this.trackerCache = trackerCache;
+    this.lianeTrackerService = lianeTrackerService;
   }
 
   public Priority Priority => Priority.High;
@@ -109,20 +111,15 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
     return Task.CompletedTask;
   }
 
-  public Task<TrackedMemberLocation?> Subscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
+  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Api.Trip.Liane> liane)
   {
-    var lastValue = trackerCache.LastPositions.Get((liane.Id, member.Id));
-    return Task.FromResult(lastValue as TrackedMemberLocation);
+    var lastValue = lianeTrackerService.GetTrackingInfo(liane);
+    return Task.FromResult(lastValue);
   }
 
-  public Task Unsubscribe(Ref<User> user, Ref<Api.Trip.Liane> liane, Ref<User> member)
+  public async Task Push(TrackingInfo update, Ref<User> user)
   {
-    return Task.CompletedTask;
-  }
-
-  public async Task Push(TrackedMemberLocation update)
-  {
-    trackerCache.LastPositions.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
+    trackerCache.LastPositions.Set((update.Liane.Id, user.Id), update, TimeSpan.FromMinutes(60));
     var tracker = trackerCache.GetTracker(update.Liane);
     if (tracker is null)
     {
@@ -135,12 +132,12 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
       var connectionId = GetConnectionId(member.User);
       if (connectionId is null)
       {
-        logger.LogInformation("User '{user}' is disconnected, ping not sent : {update}", member.User, update);
+        logger.LogInformation("User '{user}' is disconnected, tracking info not sent : {update}", member.User, update);
         continue;
       }
 
-      logger.LogInformation("Pushing location update to {user} : {update}", member.User, update);
-      await hubContext.Clients.Client(connectionId).ReceiveLianeMemberLocationUpdate(update);
+      logger.LogInformation("Pushing tracking info to {user} : {update}", member.User, update);
+      await hubContext.Clients.Client(connectionId).ReceiveTrackingInfo(update);
     }
   }
 
