@@ -204,7 +204,7 @@ public sealed class LianeTracker
     var otherMembers = currentLocationMap
       .Where(entry => !carPassengers.Contains(entry.Key))
       .ToImmutableDictionary(
-        entry =>(Ref<Api.User.User>) entry.Key,
+        entry => entry.Key,
         entry => GetCurrentMemberLocation(entry.Key)!
         );
     return new TrackingInfo(Liane, car, otherMembers);

@@ -168,12 +168,6 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     }
   }
 
-  public TrackingInfo? GetTrackingInfo(Ref<Api.Trip.Liane> liane)
-  {
-    var tracker = trackerCache.GetTracker(liane);
-    return tracker?.GetTrackingInfo();
-  }
-
   private Action GetDefaultOnReachedDestination(Ref<Api.Trip.Liane> liane)
   {
     return () =>

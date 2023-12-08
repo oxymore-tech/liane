@@ -8,10 +8,6 @@ namespace Liane.Service.Internal.Trip.Geolocation;
 
 public interface ILianeTrackerCache
 {
-   MemoryCache CurrentConnections { get; } 
-
-   MemoryCache LastPositions { get; } 
-  
    IEnumerable<LianeTracker> Trackers { get; }
 
    LianeTracker? GetTracker(Ref<Api.Trip.Liane> liane);

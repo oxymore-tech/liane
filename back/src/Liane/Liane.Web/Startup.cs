@@ -93,7 +93,7 @@ public static class Startup
     services.AddService<LianeServiceImpl>();
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
-    services.AddSingleton<LianeTrackerCache>();
+    services.AddService<LianeTrackerCache>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();

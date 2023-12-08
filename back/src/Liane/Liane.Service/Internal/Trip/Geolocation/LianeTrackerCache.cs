@@ -9,10 +9,6 @@ namespace Liane.Service.Internal.Trip.Geolocation;
 
 public sealed class LianeTrackerCache : ILianeTrackerCache
 {
-  public MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
-
-  // TODO periodically clean disconnected users and outdated pairs (string Liane, string Member)
-  public MemoryCache LastPositions { get; } = new(new MemoryCacheOptions());
   
   private readonly ConcurrentDictionary<string, LianeTracker> trackers = new();
   public IEnumerable<LianeTracker> Trackers => trackers.Values;
