@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DeepEqual.Syntax;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
@@ -166,7 +168,7 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Quezac_Parking", actual.NextPoint.Id);
+    Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
   }
   
   [Test]
@@ -177,8 +179,8 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Quezac_Parking", actual.NextPoint.Id);
-    Assert.AreEqual(562, actual.Delay);
+    Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
+    Assert.AreEqual(562, actual.Car.Delay);
     Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.At);
   }
 
@@ -188,16 +190,46 @@ public class LianeTrackerTest : BaseIntegrationTest
     // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende
     var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende.json", "2023-12-05T07:44:00Z");
 
-    // check that next point is Mende 
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Mende", actual.NextPoint.Id);
-    Assert.AreEqual(1450, actual.Delay);
+    
+    // check that next point is Mende 
+    Assert.AreEqual("Mende", actual.Car.NextPoint.Id);
+    Assert.AreEqual(1450, actual.Car.Delay);
   }
   
   [Test]
-  public async Task ShouldTrackCarCurrentPassengers()
+  public async Task ShouldNotHavePassengersInCarWhenNoPassengersPing()
   {
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende-2.json", "2023-11-16T07:46:00Z");
+
+    var actual = tracker.GetTrackingInfo();
+    // Check who's in the car
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Liane.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
     
+  }
+  [Test]
+  public async Task ShouldNotHavePassengersInCarBeforePickup()
+  {
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende-2.json", "2023-11-16T07:54:00Z");
+
+    var actual = tracker.GetTrackingInfo();
+    // Check who's in the car
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Liane.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+  }
+  
+  [Test]
+  public async Task ShouldHavePassengersInCar()
+  {
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende-2.json", "2023-11-16T08:02:00Z");
+
+    var actual = tracker.GetTrackingInfo();
+    // Check who's in the car
+    CollectionAssert.AreEquivalent(tracker.Liane.Members.Select(m => m.User.Id), actual.Car.Members.Select(m => m.Id));
+    // Check car's current location
+    var expectedLocation = tracker.GetCurrentMemberLocation(
+      tracker.Liane.Members.First(m => m.User != tracker.Liane.Driver.User
+      ).User)?.Location;
+    Assert.Less(5, actual.Car.Position.Distance(expectedLocation!.Value));
   }
 
   private async Task<LianeTracker> SetupTrackerAt(string file, string at)
