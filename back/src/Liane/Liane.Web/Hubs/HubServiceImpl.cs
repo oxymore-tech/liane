@@ -9,6 +9,7 @@ using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -20,9 +21,9 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
   private readonly IUserService userService;
-  private readonly LianeTrackerCache trackerCache;
+  private readonly ILianeTrackerCache trackerCache;
 
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, LianeTrackerCache trackerCache)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache)
   {
     this.hubContext = hubContext;
     this.logger = logger;
@@ -122,13 +123,14 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
   public async Task Push(TrackedMemberLocation update)
   {
     trackerCache.LastPositions.Set((update.Liane.Id, update.Member.Id), update, TimeSpan.FromMinutes(60));
-    if (!trackerCache.Trackers.TryGetValue(update.Liane, out var tracker))
+    var tracker = trackerCache.GetTracker(update.Liane);
+    if (tracker is null)
     {
       logger.LogWarning($"No tracker for liane = '{update.Liane}'");
       return;
     }
     
-    foreach (var member in tracker.Liane.Members)
+    foreach (var member in tracker!.Liane.Members)
     {
       var connectionId = GetConnectionId(member.User);
       if (connectionId is null)

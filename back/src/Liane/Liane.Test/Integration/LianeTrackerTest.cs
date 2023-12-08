@@ -11,12 +11,10 @@ using Liane.Api.Trip;
 using Liane.Api.User;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -61,15 +59,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     var userId = "6410edc1e02078e7108a5897"; // driver
     var passenger = "63f7a5c90f65806b1adb3081";
     var (liane, geojsonPings) = PrepareTestData(userId);
-    var tracker = await new LianeTracker.Builder(liane)
-      .SetTripArrivedDestinationCallback(() => { finished = true; })
-      .Build(
-        ServiceProvider.GetService<IOsrmService>()!,
-        ServiceProvider.GetService<IPostgisService>()!,
-        ServiceProvider.GetService<IMongoDatabase>()!,
-        Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeUpdatePushService>()
-      );
+    var tracker = await lianeTrackerService.Start(liane, () => { finished = true; });
 
     var pings = geojsonPings.Features.Select(f =>
     {
@@ -81,7 +71,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     foreach (var p in pings.OrderBy(p => p.timestamp))
     {
       if (finished) break;
-      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
     }
 
     var lastLocation = tracker.GetCurrentMemberLocation(userId);
@@ -100,14 +90,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     var userId = "6410edc1e02078e7108a5897"; //driver
     var passenger = "63f7a5c90f65806b1adb3081";
     var (liane, geojsonPings) = PrepareTestData(userId);
-    var tracker = await new LianeTracker.Builder(liane)
-      .Build(
-        ServiceProvider.GetService<IOsrmService>()!,
-        ServiceProvider.GetService<IPostgisService>()!,
-        ServiceProvider.GetService<IMongoDatabase>()!,
-        Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeUpdatePushService>()
-      );
+    var tracker = await lianeTrackerService.Start(liane);
     var pings = geojsonPings.Features.Select(f =>
     {
       var point = (f.Geometry as Point)!;
@@ -117,7 +100,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     }).OrderBy(p => p.timestamp).ToImmutableList();
     foreach (var p in pings.Take(pings.Count / 2))
     {
-      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
     }
 
     var lastLocation = tracker.GetCurrentMemberLocation(userId);
@@ -129,7 +112,7 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     foreach (var p in pings.Skip(pings.Count / 2))
     {
-      await tracker.Push(new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
       if (p.coordinate.Distance(Positions.PointisInard) < 4000) break;
     }
 
@@ -142,7 +125,7 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     // Check that a ping far away from the initial track does not finish the trip
     var southWest = new LatLng(Positions.PointisInard.Lat - 0.08, Positions.PointisInard.Lng + 0.3);
-    await tracker.Push(new UserPing(userId, pings.Last().timestamp, TimeSpan.Zero, southWest));
+    await lianeTrackerService.PushPing(liane, new UserPing(userId, pings.Last().timestamp, TimeSpan.Zero, southWest));
 
     lastLocation = tracker.GetCurrentMemberLocation(userId);
     driverHasFinished = tracker.MemberHasArrived(userId);
@@ -161,20 +144,12 @@ public class LianeTrackerTest : BaseIntegrationTest
     lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
     await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
     var liane = await lianeService.Get(lianeDb.Id);
-    var tracker = await new LianeTracker.Builder(liane)
-      .SetTripArrivedDestinationCallback(() => { finished = true; })
-      .Build(
-        ServiceProvider.GetService<IOsrmService>()!,
-        ServiceProvider.GetService<IPostgisService>()!,
-        Db,
-        Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeUpdatePushService>()
-      );
+    var tracker =  await lianeTrackerService.Start(liane, () => { finished = true; });
     var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with { User = userIds[p.User] }).ToImmutableList();
     foreach (var p in pings)
     {
       if (finished) break;
-      await tracker.Push(p);
+      await lianeTrackerService.PushPing(liane, p);
     }
 
     var lastLocation = tracker.GetCurrentMemberLocation(pings.Last().User);
@@ -237,14 +212,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     };
     await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
     var liane = await lianeService.Get(lianeDb.Id);
-    var tracker = await new LianeTracker.Builder(liane)
-      .Build(
-        ServiceProvider.GetService<IOsrmService>()!,
-        ServiceProvider.GetService<IPostgisService>()!,
-        Db,
-        Moq.Mock.Of<ILogger<LianeTracker>>(),
-        Moq.Mock.Of<ILianeUpdatePushService>()
-      );
+    var tracker = await lianeTrackerService.Start(liane);
     var pings = lianeDb.Pings
       .OrderBy(p => p.At)
       .Select(p => p with { User = userIds[p.User] })
@@ -255,7 +223,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     var sublist = pings.TakeWhile(p => p.At.ToUniversalTime() < DateTime.Parse(at).ToUniversalTime()).ToList();
     foreach (var p in sublist)
     {
-      await tracker.Push(p);
+      await lianeTrackerService.PushPing(liane, p);
     }
 
     return tracker;
@@ -263,10 +231,12 @@ public class LianeTrackerTest : BaseIntegrationTest
 
   private IMongoDatabase Db = null!;
   private ILianeService lianeService = null!;
+  private ILianeTrackerService lianeTrackerService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     Db = db;
     lianeService = ServiceProvider.GetRequiredService<ILianeService>();
+    lianeTrackerService = ServiceProvider.GetRequiredService<ILianeTrackerService>();
   }
 }

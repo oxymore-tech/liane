@@ -8,6 +8,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
+using Newtonsoft.Json.Schema;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -29,7 +30,13 @@ public sealed class LianeTracker
   public Api.Trip.Liane Liane { get; }
   
   public IOngoingTripSession TripSession { get; }
-  
+
+  public bool Finished => finished;
+
+  public void Finish()
+  {
+    finished = true;
+  }
 
   public async Task<double> GetWayPointFraction(int index)
   {
