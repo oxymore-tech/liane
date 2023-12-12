@@ -13,7 +13,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 import { WayPointsView } from "@/components/trip/WayPointsView";
-import { TripGeolocationProvider, useMemberRealTimeDelay } from "@/screens/detail/TripGeolocationProvider";
+import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolocationProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
@@ -95,7 +95,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
-  const lastDriverLocUpdate = useMemberRealTimeDelay(item.driver.user);
+  const lastDriverLocUpdate = useCarDelay();
   const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";

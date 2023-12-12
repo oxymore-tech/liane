@@ -4,7 +4,7 @@ import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch, RallyingPoint, User } from "@liane/common";
+import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch } from "@liane/common";
 import { getTotalDistance, getTripFromLiane, getTripFromMatch, useLianeStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
 import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
-import { TripGeolocationProvider, useMemberRealTimeDelay } from "@/screens/detail/TripGeolocationProvider";
+import { TripGeolocationProvider, useCarDelay, useTrackingInfo } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
 import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
@@ -83,7 +83,7 @@ export const LianeDetailScreen = () => {
 const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; request?: JoinLianeRequestDetailed }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
-  const { services, user } = useContext(AppContext);
+  const { services } = useContext(AppContext);
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const ref = useRef<BottomSheetRefProps>(null);
   const { top: insetsTop } = useSafeAreaInsets();
@@ -106,30 +106,28 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   }, [match?.liane.id, bSheetTop, insetsTop, height]);
 
   const driver = useMemo(() => match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user, [match]);
-  const tripPassengers = useMemo(() => {
-    return match?.liane.members
+  const trackingInfo = useTrackingInfo();
+  const notInCar = useMemo(() => {
+    if (!trackingInfo?.otherMembers || !match) {
+      return [];
+    }
+    const members = Object.keys(trackingInfo.otherMembers);
+    return members
       .map(m => {
-        if (m.user.id === driver?.id) {
-          return null;
-        }
-        const currentRallyingPointIndex = match.liane.wayPoints.findIndex(w => w.rallyingPoint.id === m.from);
-        if (currentRallyingPointIndex < tripMatch!.departureIndex) {
-          return null;
-        }
-        const currentRallyingPoint = match.liane.wayPoints[currentRallyingPointIndex].rallyingPoint;
-        const currentUser = m.user;
-        return { user: currentUser, departurePoint: currentRallyingPoint };
+        const info = trackingInfo.otherMembers[m];
+        return { user: match.liane.members.find(lm => lm.user.id === m)!.user, info: { ...info, position: info.location! } };
       })
-      .filter(m => m !== null) as { user: User; departurePoint: RallyingPoint }[];
-  }, [driver?.id, match, tripMatch, user?.id]);
+      .filter(m => !!m.info.position);
+  }, [trackingInfo, match]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.page}>
         <AppMapView bounds={mapBounds}>
           {match && <LianeMatchUserRouteLayer match={match} />}
 
-          {tripPassengers?.map(p => (
-            <LocationMarker key={p.user.id} user={p.user} />
+          {notInCar.map(p => (
+            <LocationMarker key={p.user.id} user={p.user} info={p.info} />
           ))}
 
           {tripMatch?.wayPoints.map((w, i) => {
@@ -144,7 +142,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             return <WayPointDisplay key={w.rallyingPoint.id} rallyingPoint={w.rallyingPoint} type={type} />;
           })}
 
-          {driver && tripMatch && <LocationMarker user={driver} />}
+          {driver && tripMatch && trackingInfo?.car && <LocationMarker user={driver} info={trackingInfo?.car} />}
           {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
         </AppMapView>
 
@@ -203,7 +201,7 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
     () => props.liane.members.filter(m => m.user.id !== props.liane.driver.user && user?.id !== m.user.id),
     [props.liane, user?.id]
   );
-  const lastDriverLocUpdate = useMemberRealTimeDelay(props.liane.driver.user);
+  const lastDriverLocUpdate = useCarDelay();
 
   return (
     <Column spacing={4} style={styles.flex}>
