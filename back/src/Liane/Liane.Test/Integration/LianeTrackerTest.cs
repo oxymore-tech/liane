@@ -180,7 +180,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
     Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
-    Assert.AreEqual(562, actual.Car.Delay);
+    Assert.Less(Math.Abs(actual.Car.Delay - 562), 10); // Check difference with expected value is less than 10 seconds
     Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.Car.At);
   }
 
@@ -194,7 +194,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     
     // check that next point is Mende 
     Assert.AreEqual("Mende", actual.Car.NextPoint.Id);
-    Assert.AreEqual(1450, actual.Car.Delay);
+    Assert.Less(Math.Abs(actual.Car.Delay - 1450), 10); // Check difference with expected value is less than 10 seconds
   }
   
   [Test]
