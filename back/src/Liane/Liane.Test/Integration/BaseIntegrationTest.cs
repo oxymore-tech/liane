@@ -17,6 +17,7 @@ using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Test.Mock;
@@ -97,7 +98,7 @@ public abstract class BaseIntegrationTest
     services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService(Moq.Mock.Of<ILianeUpdateObserver>());
-    services.AddService(Moq.Mock.Of<ILianeMemberTracker>());
+    services.AddService(Moq.Mock.Of<ILianeUpdatePushService>());
     services.AddService(Moq.Mock.Of<IImageService>());
     services.AddService<LianeServiceImpl>();
     services.AddService<RallyingPointRequestServiceImpl>();
@@ -107,6 +108,7 @@ public abstract class BaseIntegrationTest
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
     services.AddService<LianeRecurrenceServiceImpl>();
+    services.AddService<LianeTrackerServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();
     services.AddService<DeleteAccountServiceImpl>();    
     services.AddSingleton<LianeTrackerCache>();

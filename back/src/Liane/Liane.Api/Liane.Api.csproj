@@ -13,5 +13,9 @@
     <PackageReference Include="System.Collections.Immutable" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Trip\Geolocation\" />
+  </ItemGroup>
+
 
 </Project>

@@ -1,5 +1,5 @@
 import notifee, { Event, EventType } from "@notifee/react-native";
-import { AuthService, FullUser, HttpClient, LianeServiceClient, Notification } from "@liane/common";
+import { AuthService, FullUser, HttpClient, LianeServiceClient, Notification, UnionUtils } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Linking, Platform } from "react-native";
 import { AppLogger } from "@/api/logger";
@@ -69,7 +69,7 @@ export async function displayNotifeeNotification(notification: Notification) {
     android: DefaultAndroidSettings,
     title: notification.title,
     body: notification.message,
-    data: { uri: "liane://" } //TODO add to notification payload
+    data: { uri: UnionUtils.isInstanceOf(notification, "Event") ? notification.payload : "liane://" }
   });
 }
 

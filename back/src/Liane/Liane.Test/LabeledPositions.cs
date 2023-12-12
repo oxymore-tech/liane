@@ -57,6 +57,10 @@ public sealed class LabeledPositions
 
   public static readonly RallyingPoint LanuejolsParkingEglise =
     new("LanuejolsfakeId", "Lanuejols_Parking_Eglise", Positions.LanuejolsParkingEglise, LocationType.CarpoolArea, "", "48000", "", null, true);
+  
+  public static readonly RallyingPoint Lavogne =
+    new("Lavogne", "Lavogne", Positions.Lavogne, LocationType.CarpoolArea, "", "48000", "", null, true);
+
 
   public static readonly RallyingPoint RodezMacDrive = new("Rodez_Mac_Drive", "Rodez_Mac_Drive", Positions.RodezMacDrive, LocationType.CarpoolArea, "", "48000", "", null, true);
 
@@ -81,6 +85,7 @@ public sealed class LabeledPositions
   public static readonly RallyingPoint LO = new("custom:001", "Living Objects", Positions.LO, LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
   public static readonly IImmutableSet<RallyingPoint> RallyingPoints = ImmutableHashSet.Create(
     Mende,
+    Lavogne,
     Florac,
     LeCrouzet,
     GorgesDuTarnCausses,

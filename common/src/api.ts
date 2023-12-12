@@ -129,6 +129,7 @@ export type WayPoint = Readonly<{
   duration: TimeInSeconds;
   distance: number;
   eta: UTCDateTime;
+  effectiveTime?: UTCDateTime;
 }>;
 
 export type LianeMember = Readonly<{
@@ -276,4 +277,19 @@ export type TrackedMemberLocation = {
   nextPoint: Ref<RallyingPoint>;
   delay: TimeInSeconds;
   location?: LatLng;
+  isMoving: boolean;
+};
+export type Car = {
+  at: UTCDateTime;
+  nextPoint: Ref<RallyingPoint>;
+  delay: number;
+  position: LatLng;
+  members: Ref<User>[];
+  isMoving: boolean;
+};
+
+export type TrackingInfo = {
+  liane: Ref<Liane>;
+  car?: Car;
+  otherMembers: { [id: string]: TrackedMemberLocation };
 };

@@ -1,15 +1,4 @@
-import {
-  ChatMessage,
-  ConversationGroup,
-  FullUser,
-  Liane,
-  PaginatedRequestParams,
-  PaginatedResponse,
-  Ref,
-  TrackedMemberLocation,
-  User,
-  UTCDateTime
-} from "../api";
+import { ChatMessage, ConversationGroup, FullUser, Liane, PaginatedRequestParams, PaginatedResponse, Ref, TrackingInfo, UTCDateTime } from "../api";
 import { Answer, Notification } from "./notification";
 import { AppLogger } from "../logger";
 import { LianeEvent } from "../event";
@@ -48,11 +37,7 @@ export interface HubService {
 
   readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
 
-  subscribeToPosition(
-    lianeId: string,
-    memberId: string,
-    callback: OnLocationCallback
-  ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
+  subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 
   readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
@@ -68,7 +53,7 @@ export type ConsumeMessage = (res: ChatMessage) => void;
 export type Disconnect = () => Promise<void>;
 export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
 export type OnNotificationCallback = (n: Notification) => void;
-export type OnLocationCallback = (l: TrackedMemberLocation) => void;
+export type OnLocationCallback = (l: TrackingInfo) => void;
 
 type UnreadOverview = Readonly<{
   notifications: Ref<Notification>[];
@@ -87,7 +72,7 @@ export abstract class AbstractHubService implements HubService {
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage | null = null;
-  protected onReceiveLocationUpdateCallback: { [n: Ref<User>]: OnLocationCallback | undefined } = {};
+  protected onReceiveLocationUpdateCallback: OnLocationCallback | undefined;
   protected appStateActive: boolean = true;
 
   protected constructor(
@@ -195,9 +180,9 @@ export abstract class AbstractHubService implements HubService {
 
   protected receiveLocationUpdateCallback: OnLocationCallback = l => {
     this.logger.debug("GEOLOC", "received", l);
-    const callback = this.onReceiveLocationUpdateCallback[l.member];
-    if (callback) {
-      callback(l);
+
+    if (this.onReceiveLocationUpdateCallback) {
+      this.onReceiveLocationUpdateCallback(l);
     }
   };
 
@@ -219,11 +204,7 @@ export abstract class AbstractHubService implements HubService {
 
   abstract postAnswer(notificationId: string, answer: Answer): Promise<void>;
 
-  abstract subscribeToPosition(
-    lianeId: string,
-    memberId: string,
-    callback: OnLocationCallback
-  ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
+  abstract subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 }
 
 export class HubServiceClient extends AbstractHubService {
@@ -259,7 +240,7 @@ export class HubServiceClient extends AbstractHubService {
     });
     this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
     this.hub.on("ReceiveNotification", this.receiveNotification);
-    this.hub.on("ReceiveLianeMemberLocationUpdate", this.receiveLocationUpdateCallback);
+    this.hub.on("ReceiveTrackingInfo", this.receiveLocationUpdateCallback);
     this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
     this.hub.onclose(err => {
       this.isStarted = false;
@@ -327,20 +308,16 @@ export class HubServiceClient extends AbstractHubService {
     await this.hub.invoke("PostAnswer", notificationId, answer);
   }
 
-  async subscribeToPosition(
-    lianeId: string,
-    memberId: string,
-    callback: OnLocationCallback
-  ): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {
-    const lastUpdate: TrackedMemberLocation | null = await this.hub.invoke("SubscribeToLocationsUpdates", lianeId, memberId);
-    if (lastUpdate) {
-      callback(lastUpdate);
-    }
-    this.onReceiveLocationUpdateCallback[memberId] = callback;
+  async subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {
+    const lastUpdate: TrackingInfo = await this.hub.invoke("GetLastTrackingInfo", lianeId);
+
+    callback(lastUpdate);
+
+    this.onReceiveLocationUpdateCallback = callback;
     return {
-      closed: this.onReceiveLocationUpdateCallback[memberId] !== callback,
+      closed: this.onReceiveLocationUpdateCallback !== callback,
       unsubscribe: async () => {
-        await this.hub.invoke("UnsubscribeFromLocationsUpdates", lianeId, memberId);
+        this.onReceiveLatestMessagesCallback = null;
       }
     };
   }

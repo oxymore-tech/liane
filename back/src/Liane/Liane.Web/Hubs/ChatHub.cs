@@ -28,10 +28,10 @@ public sealed class ChatHub : Hub<IHubClient>
   private readonly IHubService hubService;
   private readonly INotificationService notificationService;
   private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeMemberTracker lianeMemberTracker;
+  private readonly ILianeUpdatePushService lianeUpdatePushService;
 
   public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService,
-    EventDispatcher eventDispatcher, ILianeMemberTracker lianeMemberTracker)
+    EventDispatcher eventDispatcher, ILianeUpdatePushService lianeUpdatePushService)
   {
     this.logger = logger;
     this.chatService = chatService;
@@ -40,7 +40,7 @@ public sealed class ChatHub : Hub<IHubClient>
     this.hubService = hubService;
     this.notificationService = notificationService;
     this.eventDispatcher = eventDispatcher;
-    this.lianeMemberTracker = lianeMemberTracker;
+    this.lianeUpdatePushService = lianeUpdatePushService;
   }
 
   public async Task PostEvent(LianeEvent lianeEvent)
@@ -115,16 +115,9 @@ public sealed class ChatHub : Hub<IHubClient>
     await userService.UpdateLastConnection(userId, now);
   }
 
-  public async Task<TrackedMemberLocation?> SubscribeToLocationsUpdates(string lianeId, string memberId)
+  public async Task<TrackingInfo?> GetLastTrackingInfo(string lianeId)
   {
-    var userId = currentContext.CurrentUser().Id;
-    return await lianeMemberTracker.Subscribe(userId, lianeId, memberId);
-  }
-  
-  public async Task UnsubscribeFromLocationsUpdates(string lianeId, string memberId)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    await lianeMemberTracker.Unsubscribe(userId, lianeId, memberId);
+    return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
   }
 
   public async Task ReadNotifications(IEnumerable<Ref<Notification>> notifications)

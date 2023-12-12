@@ -19,6 +19,7 @@ using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.Trip.Event;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -91,7 +92,8 @@ public static class Startup
     services.AddService<ChatServiceImpl>();
     services.AddService<LianeServiceImpl>();
     services.AddService<LianeRecurrenceServiceImpl>();
-    services.AddSingleton<LianeTrackerCache>();
+    services.AddService<LianeTrackerServiceImpl>();
+    services.AddService<LianeTrackerCache>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
@@ -347,7 +349,9 @@ public static class Startup
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
-    lianeService.SyncTrackers()
+    
+    var lianeTrackerService = app.ApplicationServices.GetRequiredService<ILianeTrackerService>();
+    lianeTrackerService.SyncTrackers()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();

@@ -1,6 +1,6 @@
 import { CreateServices, UserContext } from "./setup/services";
 import { faker } from "@faker-js/faker";
-import { addSeconds, Answer, LatLng, sleep, TrackedMemberLocation, UnionUtils } from "../../src";
+import { addSeconds, Answer, LatLng, sleep, TrackingInfo, UnionUtils } from "../../src";
 import { readLianeFilteredTile, readLianeTile } from "./utils/tiles";
 import fc from "fast-check";
 
@@ -140,12 +140,11 @@ describe.sequential("Joining a trip", () => {
     });
 
     test("Should use geolocation", async () => {
-      let runIndex = 0;
       await fc.assert(
         fc.asyncProperty(fc.scheduler(), async s => {
-          const pingsMap = new Map<string, TrackedMemberLocation[]>();
+          const pingsMap = new Map<string, TrackingInfo[]>();
           const subscriptions = [];
-          const receivePing = vi.fn((subscriberId: string, trackedMemberLocation: TrackedMemberLocation) => {
+          const receivePing = vi.fn((subscriberId: string, trackedMemberLocation: TrackingInfo) => {
             const value = pingsMap.get(subscriberId) ?? [];
             pingsMap.set(subscriberId, [...value, trackedMemberLocation]);
           });
@@ -162,12 +161,10 @@ describe.sequential("Joining a trip", () => {
             { lat: 44.8558973, lng: 1.5835225 }
           ];
           for (const subscriber of users) {
-            for (const user of users) {
-              const sub = await subscriber.services.hub.subscribeToPosition(tripId!, user.id, trackedMemberLocation => {
-                receivePing(subscriber.id, trackedMemberLocation);
-              });
-              subscriptions.push(sub);
-            }
+            const sub = await subscriber.services.hub.subscribeToTrackingInfo(tripId!, trackedMemberLocation => {
+              receivePing(subscriber.id, trackedMemberLocation);
+            });
+            subscriptions.push(sub);
           }
 
           s.scheduleSequence(
@@ -199,8 +196,8 @@ describe.sequential("Joining a trip", () => {
           await s.waitAll();
           await sleep(200);
 
-          expect(receivePing).toHaveBeenCalledTimes((runIndex === 0 ? 0 : 4) + (driverCoords.length + passengerCoords.length) * users.length);
-          runIndex++;
+          // For each user, we expect to receive an update for each ping + one initial update
+          expect(receivePing).toHaveBeenCalledTimes((driverCoords.length + passengerCoords.length + 1) * users.length);
           for (const sub of subscriptions) {
             await sub.unsubscribe();
           }

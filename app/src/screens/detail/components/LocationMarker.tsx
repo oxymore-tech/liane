@@ -1,18 +1,20 @@
-import { useMemberIsMoving } from "@/screens/detail/TripGeolocationProvider";
 import React from "react";
 import { LianeMemberDisplay } from "@/components/map/markers/LianeMemberDisplay";
-import { AppLogger } from "@/api/logger";
-import { User } from "@liane/common";
+import { LatLng, TimeInSeconds, User, UTCDateTime } from "@liane/common";
+import { useRealtimeDelay } from "@/util/hooks/delay";
 
-export const LocationMarker = (props: { user: User }) => {
-  const lastLocUpdate = useMemberIsMoving(props.user.id!);
-
-  AppLogger.debug("GEOLOC", `${props.user.pseudo}:`, lastLocUpdate);
-  if (!lastLocUpdate || !lastLocUpdate.location) {
+export const LocationMarker = (props: {
+  user: User;
+  info: {
+    delay: TimeInSeconds;
+    position: LatLng;
+    isMoving: boolean;
+    at: UTCDateTime;
+  };
+}) => {
+  if (!props.info) {
     return null;
   }
-
-  return (
-    <LianeMemberDisplay location={lastLocUpdate.location} size={32} user={props.user} delay={lastLocUpdate.delay} isMoving={lastLocUpdate.moving} />
-  );
+  const d = useRealtimeDelay(props.info);
+  return <LianeMemberDisplay location={props.info.position} size={32} user={props.user} delay={d} isMoving={props.info.isMoving} />;
 };

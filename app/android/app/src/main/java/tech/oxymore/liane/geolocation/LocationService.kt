@@ -228,12 +228,11 @@ class LocationService : Service() {
       } catch (e: Exception){
           Toast.makeText(this, "Erreur: impossible de démarrer la géolocalisation", Toast.LENGTH_SHORT).show()
           e.printStackTrace()
+          stopSelf()
       }
     }
 
-    if (!::pingConfig.isInitialized || !::geolocationConfig.isInitialized) {
-      Log.e(LogTag, "Config incomplete")
-    }
+
     return START_STICKY
   }
 
