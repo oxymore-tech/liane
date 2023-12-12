@@ -103,7 +103,26 @@ export class IosService implements LianeGeolocation {
       });
     };
 
+    let repingTimeout: ReturnType<typeof setTimeout> | undefined;
+    const postPing = async (ping: MemberPing) => {
+      await http.postAs(`/event/member_ping`, { body: ping }).catch(err => {
+        AppLogger.warn("GEOPINGS", "Could not send ping", err);
+        if (isResourceNotFound(err) || isValidationError(err)) {
+          AppLogger.info("GEOPINGS", "Stopping service :", err);
+          stopTracking();
+        }
+      });
+
+      // If no position update is received for a moment, keep sending this position
+      // to have a homogeneous behavior with Android phones
+      repingTimeout = setTimeout(() => {
+        postPing(ping);
+      }, (preciseTrackingMode ? 10 : 2 * 60) * 1000);
+    };
     const onPositionCallback = async (position: GeoPosition) => {
+      if (repingTimeout) {
+        clearTimeout(repingTimeout);
+      }
       // Send ping
       AppLogger.debug("GEOPINGS", "Position tracked", position);
       const coordinate = { lat: position.latitude, lng: position.longitude };
@@ -113,13 +132,9 @@ export class IosService implements LianeGeolocation {
         coordinate,
         timestamp: Math.trunc(position.timestamp)
       };
-      await http.postAs(`/event/member_ping`, { body: ping }).catch(err => {
-        AppLogger.warn("GEOPINGS", "Could not send ping", err);
-        if (isResourceNotFound(err) || isValidationError(err)) {
-          AppLogger.info("GEOPINGS", "Stopping service :", err);
-          stopTracking();
-        }
-      });
+
+      await postPing(ping);
+
       const nearWayPointIndex = wayPoints.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= 500);
       if (nearWayPointIndex > -1) {
         if (!preciseTrackingMode) {
