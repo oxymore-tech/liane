@@ -6,7 +6,7 @@ export const useRealtimeDelay = (props: { at: UTCDateTime; delay: number; isMovi
     if (!props) {
       return 0;
     }
-    return props.isMoving ? (new Date().getTime() - new Date(props.at).getTime()) / 1000 : props.delay;
+    return props.delay - (props.isMoving ? (new Date().getTime() - new Date(props.at).getTime()) / 1000 : 0);
   });
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export const useRealtimeDelay = (props: { at: UTCDateTime; delay: number; isMovi
     } else {
       const timeout = setInterval(() => {
         if (props!.isMoving) {
-          setDelay((new Date().getTime() - new Date(props!.at).getTime()) / 1000);
+          setDelay(props.delay - (new Date().getTime() - new Date(props!.at).getTime()) / 1000);
         } else {
           setDelay(props!.delay);
         }

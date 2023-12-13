@@ -116,7 +116,7 @@ export class IosService implements LianeGeolocation {
       // If no position update is received for a moment, keep sending this position
       // to have a homogeneous behavior with Android phones
       repingTimeout = setTimeout(() => {
-        postPing(ping, Math.trunc(new Date().getTime() / 1000));
+        postPing(ping, new Date().getTime());
       }, 2 * 60 * 1000);
     };
     const onPositionCallback = async (position: GeoPosition) => {
