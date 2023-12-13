@@ -134,7 +134,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
     this.userChangeSubscription = SERVICES.realTimeHub.userUpdates.subscribe(async u => {
       await registerRumUser({ ...u });
-      await initializePushNotification(u, SERVICES.auth);
       this.setState(prev => ({
         ...prev,
         user: u
