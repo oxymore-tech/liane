@@ -17,8 +17,8 @@ import { AppPressableIcon } from "@/components/base/AppPressable";
 import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { useIsFocused } from "@react-navigation/native";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
-import { LianeGeolocation } from "@/api/service/location";
 import { useObservable } from "@/util/hooks/subscription";
+import { LianeGeolocation } from "@/api/service/location";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -91,7 +91,7 @@ const MyTripsScreen = () => {
         await LianeGeolocation.stopSendingPings();
       }
     });
-  }, []);
+  }, [services.liane]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;

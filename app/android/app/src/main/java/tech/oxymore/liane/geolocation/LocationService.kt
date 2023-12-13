@@ -41,6 +41,7 @@ class LocationService : Service() {
   private val wayPoints = mutableListOf<Location>()
   private var preciseTrackingMode = true
   private var lastLocationResult: Location? = null
+  private var lastPing: Long = 0
 
   fun postPing(
     location: Location
@@ -107,8 +108,9 @@ class LocationService : Service() {
         if (location != null) {
           Log.d(LogTag, "location update $location")
 
-          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10) {
+          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10 || (System.currentTimeMillis() - lastPing) >= 2*60*1000 ) {
             // Avoid sending too many pings in precise mode: only post ping if distance is above 10 meters
+            lastPing = location.time
             postPing(location)
           }
           lastLocationResult = location

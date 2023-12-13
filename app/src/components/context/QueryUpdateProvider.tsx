@@ -5,6 +5,7 @@ import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen
 import { JoinLianeRequestDetailed, Liane, LianeState, Notification, PaginatedResponse } from "@liane/common";
 import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useSubscription } from "@/util/hooks/subscription";
+import { LianeGeolocation } from "@/api/service/location";
 
 /**
  * This component is responsible for updating local query cache
@@ -90,6 +91,16 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
       // Cancel eventual reminder
       services.reminder.cancelReminder(liane.id!);
     }
+
+    // Cancel pings if necessary
+    LianeGeolocation.currentLiane().then(async current => {
+      if (!current) {
+        return;
+      }
+      if (current === liane.id && liane.state !== "Started") {
+        await LianeGeolocation.stopSendingPings();
+      }
+    });
   });
 
   // Update notifications local cache
