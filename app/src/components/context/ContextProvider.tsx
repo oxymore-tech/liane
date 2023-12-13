@@ -2,7 +2,7 @@ import React, { Component, createContext, ReactNode } from "react";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { AuthUser, FullUser, HubState, LatLng, NetworkUnavailable, UnauthorizedError } from "@liane/common";
 import { initializeRum, registerRumUser } from "@/api/rum";
-import { displayNotifeeNotification, initializeNotification } from "@/api/service/notification";
+import { displayNotifeeNotification, initializeNotification, initializePushNotification } from "@/api/service/notification";
 import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
@@ -91,6 +91,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     let user = await AppStorage.getUser();
     if (user) {
       await registerRumUser(user);
+      await initializePushNotification(user, SERVICES.auth);
       await SERVICES.realTimeHub.start();
     }
 
@@ -133,6 +134,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
     this.userChangeSubscription = SERVICES.realTimeHub.userUpdates.subscribe(async u => {
       await registerRumUser({ ...u });
+      await initializePushNotification(u, SERVICES.auth);
       this.setState(prev => ({
         ...prev,
         user: u
