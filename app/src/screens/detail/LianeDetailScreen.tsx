@@ -265,14 +265,24 @@ const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
     </AppPressableOverlay>
   );
 };
+
+const StartingSoonView = (props: { liane: Liane }) => {
+  const status = useLianeStatus(props.liane);
+  const { services } = useContext(AppContext);
+  if (status === "StartingSoon") {
+    return <StartButton startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))} />;
+  } else {
+    return null;
+  }
+};
 const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
 
   const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
-  const status = useLianeStatus(liane.liane);
-  const { services, user } = useContext(AppContext);
+
+  const { user } = useContext(AppContext);
 
   return (
     <Column style={styles.bottomContainer}>
@@ -287,11 +297,9 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
       </View>
 
       <Row style={styles.statusLianeContainer}>
-        {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <LianeStatusView liane={liane.liane} />}
+        {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && !request && <LianeStatusView liane={liane.liane} />}
       </Row>
-      {status === "StartingSoon" && (
-        <StartButton startAction={() => services.liane.start(liane.liane.id!).then(() => startGeolocationService(liane.liane))} />
-      )}
+      {!request && <StartingSoonView liane={liane.liane} />}
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>
@@ -339,7 +347,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
           </Row>
         </Column>
       </Row>
-      {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && <GeolocationSwitch liane={liane.liane} />}
+      {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && !request && <GeolocationSwitch liane={liane.liane} />}
       <LianeActionsView match={liane} request={request} />
     </Column>
   );

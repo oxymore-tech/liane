@@ -114,7 +114,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           text={"Modifier la liane"}
         />
       )}
-      {liane.state === "NotStarted" && !currentUserIsDriver && (
+      {liane.state === "NotStarted" && currentUserIsMember && !currentUserIsDriver && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
@@ -122,6 +122,16 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text={"Quitter la liane"}
+        />
+      )}
+      {request && !currentUserIsMember && (
+        <AppRoundedButton
+          color={defaultTextColor(AppColors.primaryColor)}
+          onPress={() => {
+            cancelDemand(navigation, services, queryClient, request);
+          }}
+          backgroundColor={ContextualColors.redAlert.bg}
+          text={"Annuler la demande"}
         />
       )}
       {liane.state === "Started" && (
