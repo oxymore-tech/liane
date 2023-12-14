@@ -19,12 +19,12 @@ public sealed class LianeStatusUpdate : CronJobService
   private readonly ILianeService lianeService;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
   private readonly ILianeRequestService lianeRequestService;
-  
+
   private const int StartedDelayInMinutes = 5;
   public const int FinishedDelayInMinutes = 5;
   public const int StartedTimeoutInMinutes = 60;
 
-  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ILianeService lianeService, 
+  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ILianeService lianeService,
     ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
     false)
   {
@@ -46,43 +46,40 @@ public sealed class LianeStatusUpdate : CronJobService
 
   private async Task CancelLianes(DateTime from)
   {
-    var limit = from; //.AddMinutes(StartedDelayInMinutes);
+    var limit = from;
     var filter = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive))
-                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta <= limit);
+                 & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limit);
     var canceled = (await mongo.GetCollection<LianeDb>()
         .Find(filter)
         .Project(l => (Ref<Api.Trip.Liane>)l.Id)
         .ToListAsync())
       .ToImmutableHashSet();
-    
-    await Parallel.ForEachAsync(canceled, async (id, _) =>
-    {
-      await lianeService.UpdateState(id, LianeState.Canceled);
-    });
+
+    await Parallel.ForEachAsync(canceled, async (id, _) => { await lianeService.UpdateState(id, LianeState.Canceled); });
     //await postgisService.Clear(canceled.ToImmutableList());
     await lianeRequestService.RejectJoinLianeRequests(canceled);
   }
 
   private async Task FinishLianes(DateTime from)
   {
-    var limitNotStarted = from.AddMinutes(- FinishedDelayInMinutes);
-    var limitStarted = from.AddMinutes(- StartedTimeoutInMinutes);
+    var limitNotStarted = from.AddMinutes(-FinishedDelayInMinutes);
+    var limitStarted = from.AddMinutes(-StartedTimeoutInMinutes);
     var filterNotStarted = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.NotStarted)
-                 & Builders<LianeDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
-                 & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitNotStarted);
-    var filterTimedOut =  Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started)
-      & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitStarted)
-      & !Builders<LianeDb>.Filter.ElemMatch(l => l.Pings, w => w.At > limitStarted);
-     ;
-     var finishedLianes = await mongo.GetCollection<LianeDb>()
-       .Find(filterNotStarted|filterTimedOut)
-       .ToListAsync();
-    
+                           & Builders<LianeDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
+                           & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitNotStarted);
+    var filterTimedOut = Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started)
+                         & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitStarted)
+                         & !Builders<LianeDb>.Filter.ElemMatch(l => l.Pings, w => w.At > limitStarted);
+    ;
+    var finishedLianes = await mongo.GetCollection<LianeDb>()
+      .Find(filterNotStarted | filterTimedOut)
+      .ToListAsync();
+
     if (finishedLianes.Count == 0)
     {
       return;
     }
-    
+
     await Parallel.ForEachAsync(finishedLianes, async (lianeDb, token) =>
     {
       if (token.IsCancellationRequested) return;
@@ -98,7 +95,7 @@ public sealed class LianeStatusUpdate : CronJobService
                  & (
                    Builders<LianeDb>.Filter.Where(l => l.DepartureTime <= limit)
                    & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from)
-                   );
+                 );
     var activeLianes = await mongo.GetCollection<LianeDb>()
       .Find(filter)
       .ToListAsync();
@@ -113,7 +110,7 @@ public sealed class LianeStatusUpdate : CronJobService
       if (token.IsCancellationRequested) return;
       await lianeService.UpdateState(lianeDb.Id, LianeState.Started);
     });
-    
+
     // TODO create ongoing trip here ?
     var toClear = activeLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableHashSet();
     //await postgisService.Clear(toClear);
@@ -138,5 +135,4 @@ public sealed class LianeStatusUpdate : CronJobService
       }
     });
   }
-  
 }
