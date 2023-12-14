@@ -19,15 +19,7 @@ const App = () => (
       <ContextProvider>
         <AppBackContextProvider backHandler={() => false}>
           <AppModalNavigationProvider>
-            <NavigationContainer
-              linking={AppLinking}
-              ref={RootNavigation}
-              // onReady={() => {
-              //   DdRumReactNavigationTracking.startTrackingViews(
-              //     RootNavigation.current
-              //   );
-              // }}
-            >
+            <NavigationContainer linking={AppLinking} ref={RootNavigation}>
               <Navigation />
             </NavigationContainer>
           </AppModalNavigationProvider>
