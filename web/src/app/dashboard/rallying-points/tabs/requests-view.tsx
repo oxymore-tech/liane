@@ -1,6 +1,6 @@
 import { useAppServices } from "@/components/ContextProvider";
 import React, { useState } from "react";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Table, Pagination } from "flowbite-react";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { useLocalization } from "@/api/intl";

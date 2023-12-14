@@ -1,6 +1,6 @@
 import { useAppServices } from "@/components/ContextProvider";
 import React, { useEffect, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Checkbox, Table, TextInput } from "flowbite-react";
 import { getIconComponent } from "@/components/base/Icon";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
@@ -13,11 +13,14 @@ export function RallyingPointsTablePage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [search, setSearch] = useState("");
   const delayedSearch = useDebounceValue(search, 400);
-  const { data, isLoading: loading } = useQuery(["rallying_points", pageSize, currentPage, delayedSearch || ""], ({ queryKey }) => {
-    const search = queryKey[3] as string;
-    const pageSize = queryKey[1] as number;
-    const currentPage = queryKey[2] as number;
-    return services.rallyingPoint.list({ offset: pageSize * currentPage, limit: pageSize, search: search.length > 0 ? search : undefined });
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["rallying_points", pageSize, currentPage, delayedSearch || ""],
+    queryFn: ({ queryKey }) => {
+      const search = queryKey[3] as string;
+      const pageSize = queryKey[1] as number;
+      const currentPage = queryKey[2] as number;
+      return services.rallyingPoint.list({ offset: pageSize * currentPage, limit: pageSize, search: search.length > 0 ? search : undefined });
+    }
   });
 
   const totalItems = data?.totalCount || 0;

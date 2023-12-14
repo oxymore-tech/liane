@@ -8,7 +8,7 @@ export interface RecordService {
   getRecordPings(id: string, raw?: boolean): Promise<FeatureCollection<GeoJSON.Point, { user: string; at: string }>>;
   recreate(id: string): Promise<void>;
 }
-export class RecordServiceClient {
+export class RecordServiceClient implements RecordService {
   constructor(private http: HttpClient) {}
 
   list(params?: TripRecordFilterParams) {
@@ -22,7 +22,7 @@ export class RecordServiceClient {
       params: { raw: raw ?? false }
     });
   }
-  recreate(id: string) {
-    return this.http.post(`/liane/record/${id}/recreate`);
+  async recreate(id: string) {
+    await this.http.post(`/liane/record/${id}/recreate`);
   }
 }
