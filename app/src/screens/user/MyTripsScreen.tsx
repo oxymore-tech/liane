@@ -55,7 +55,7 @@ const MyTripsScreen = () => {
       queryKey: LianeQueryKey,
       queryFn: async () => {
         const lianes = await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
-        await services.reminder.syncWithStorage(lianes.data);
+        await services.reminder.syncReminders(lianes.data);
         return lianes;
       }
     }

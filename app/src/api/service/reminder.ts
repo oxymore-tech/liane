@@ -1,8 +1,9 @@
-import { AppStorage, Liane, RallyingPoint, sync, UTCDateTime } from "@liane/common";
+import { AppStorage, Liane, RallyingPoint } from "@liane/common";
 import notifee, { AndroidAction, AndroidImportance, TriggerType } from "@notifee/react-native";
 import { AppLocalization } from "@/api/i18n";
 import { DefaultAndroidSettings } from "@/api/service/notification";
 import { getTripFromLiane } from "@/components/trip/trip";
+import { ReactNativeLogger } from "@/api/logger";
 
 const AndroidReminderActions: AndroidAction[] = [
   {
@@ -21,39 +22,22 @@ const AndroidReminderActions: AndroidAction[] = [
 ];
 
 export class ReminderService {
-  constructor(private storage: AppStorage) {}
+  constructor(private storage: AppStorage, private logger: ReactNativeLogger) {}
 
-  async syncWithStorage(lianes: Liane[]): Promise<void> {
-    let local = (await this.storage.retrieveAsync<LocalLianeData[]>("lianes")) || [];
+  async syncReminders(lianes: Liane[]): Promise<void> {
     const now = new Date().getTime() + 1000 * 60 * 5;
     const user = await this.storage.getUser();
-    local = local.filter(l => new Date(l.departureTime).getTime() > now);
     const online = lianes
       .map(l => {
         const trip = getTripFromLiane(l, user!.id!);
-        const tripLiane = { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
-        //console.log("reminder online", user!.id!, x.departureTime, x.wayPoints[0].rallyingPoint.label);
-        return tripLiane;
+        return { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
       })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
-
-    const { added, removed, stored } = sync(
-      online,
-      local,
-      liane => ({ lianeId: liane.id!, departureTime: liane.departureTime }),
-      l => l.id!,
-      d => d.lianeId,
-      (l, d) => l.departureTime !== d.departureTime
-    );
-    for (const r of removed) {
-      await this.cancelReminder(r.lianeId);
-    }
-    for (const liane of added) {
-      //console.log("reminder", user!.id!, liane.departureTime, liane.wayPoints[0].rallyingPoint.label);
+    await notifee.cancelAllNotifications();
+    for (const liane of online) {
       await this.createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
     }
-
-    await this.storage.storeAsync("lianes", stored);
+    this.logger.info("NOTIFICATIONS", `Reminders synced for ${online.length} liane(s)`);
   }
 
   public async cancelReminder(lianeId: string) {
@@ -87,8 +71,3 @@ export class ReminderService {
     );
   }
 }
-
-export type LocalLianeData = {
-  lianeId: string;
-  departureTime: UTCDateTime;
-};

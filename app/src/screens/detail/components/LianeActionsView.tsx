@@ -36,7 +36,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const [date, setDate] = useState(new Date(liane.departureTime));
   const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || "0000000");
 
-  const initialMinDate = new Date(new Date().getTime() + 10 * 60000);
+  const initialMinDate = new Date(new Date().getTime() + 60000);
 
   const lianeHasRecurrence = !!liane.recurrence;
   const editOptions = useMemo(() => {
