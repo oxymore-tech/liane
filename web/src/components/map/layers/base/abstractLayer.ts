@@ -53,6 +53,7 @@ export const useLayer = <TLayer extends SupportedLayers>(
     map.current?.on("sourcedata", function (e) {
       if (e.sourceId === source && e.isSourceLoaded && !map.current?.getLayer(id)) {
         add();
+        //@ts-ignore
         map.current?.off("sourcedata", this);
       }
     });

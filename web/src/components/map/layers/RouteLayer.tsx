@@ -1,8 +1,11 @@
 import { RallyingPoint } from "@liane/common";
 import { useMapContext } from "@/components/map/Map";
 import { useAppServices } from "@/components/ContextProvider";
-import { useQuery } from "react-query";
-import React, { useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import React, { useMemo } from "react";
+import { GeojsonSource } from "@/components/map/GeojsonSource";
+import { FeatureCollection } from "geojson";
+import { useLayer } from "@/components/map/layers/base/abstractLayer";
 
 export const getRouteId = (points: RallyingPoint[]) => {
   return "route_" + points.map(p => p.id!).join("_");
@@ -31,34 +34,25 @@ export function RouteLayer({ points }: { points: RallyingPoint[] }) {
           ...route
         }
       ]
-    };
+    } as FeatureCollection;
   }, [route]);
 
-  useEffect(() => {
-    const mmap = map.current;
-    mmap?.once("load", () => {
-      if (!mmap || !mapFeatures || mmap?.getSource(id)) {
-        return;
-      }
-      mmap?.addSource(id, {
-        type: "geojson",
-        data: mapFeatures
-      });
-      mmap?.addLayer({
-        id,
-        source: id,
-        type: "line",
+  return mapFeatures ? <InnerComponent features={mapFeatures} id={id} /> : null;
+}
+
+const InnerComponent = ({ features, id }: { features: FeatureCollection; id: string }) => {
+  useLayer(
+    {
+      id,
+      source: id,
+      props: {
         paint: {
           "line-color": "#131870",
           "line-width": 3
         }
-      });
-      return () => {
-        if (!mmap.loaded()) return;
-        mmap?.removeLayer(id);
-        mmap?.removeSource(id);
-      };
-    });
-  }, [map, id, mapFeatures]);
-  return <></>;
-}
+      }
+    },
+    "line"
+  );
+  return <GeojsonSource id={id} data={features} />;
+};

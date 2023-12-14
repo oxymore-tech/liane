@@ -27,9 +27,7 @@ public interface ILianeService : ICrudEntityService<LianeRequest, Liane>
   Task<Liane> GetForCurrentUser(Ref<Liane> l, Ref<Api.User.User>? user = null);
   Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter);
   Task<DetailedLianeTrackReport> GetTripRecord(string id);
-  Task<FeatureCollection> GetGeolocationPings(Ref<Liane> liane);
   Task<FeatureCollection> GetRawGeolocationPings(Ref<Liane> liane);
-  Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Liane> liane);
   Task ForceSyncDatabase();
   Task UpdateGeolocationSetting(Ref<Liane> liane, GeolocationLevel level);
   Task CancelLiane(Ref<Liane> liane);

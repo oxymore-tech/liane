@@ -1,11 +1,10 @@
 "use client";
-import { useQuery } from "react-query";
 import { useAppServices } from "@/components/ContextProvider";
 import Map, { useMapContext } from "@/components/map/Map";
 import React, { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { FeatureCollection } from "geojson";
 import { asPoint, LianeMember, RallyingPoint } from "@liane/common";
-import { Card, ToggleSwitch } from "flowbite-react";
+import { Button, Card, ToggleSwitch } from "flowbite-react";
 import { TripRecord } from "@/api/api";
 import { dispatchHighlightPointEvent, TimelineChart, TimelineData } from "@/components/charts/timeline/Timeline";
 import { IconButton } from "@/components/base/IconButton";
@@ -15,6 +14,27 @@ import { RouteLayer } from "@/components/map/layers/RouteLayer";
 import { MarkersLayer } from "@/components/map/layers/base/MarkersLayer";
 import { FitFeatures } from "@/components/map/FitFeatures";
 import { useLocalization } from "@/api/intl";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { GeojsonSource } from "@/components/map/GeojsonSource";
+
+const RegenButton = ({ id }: { id: string }) => {
+  const [loading, setLoading] = useState(false);
+  const services = useAppServices();
+  const queryClient = useQueryClient();
+  return (
+    <Button
+      isProcessing={loading}
+      onClick={async () => {
+        setLoading(true);
+        await services.record.recreate(id);
+        setLoading(false);
+        await queryClient.invalidateQueries({ queryKey: ["liane", id] });
+        await queryClient.invalidateQueries({ queryKey: ["record_pings", id, false] });
+      }}>
+      Régénérer le rapport
+    </Button>
+  );
+};
 
 const TripView = ({ record, children }: { record: TripRecord } & PropsWithChildren) => {
   const WebLocalization = useLocalization();
@@ -52,28 +72,15 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
   const WebLocalization = useLocalization();
   const services = useAppServices()!;
   const [useRawPings, setUseRawPings] = useState(false);
-  const { data: pings } = useQuery(["record_pings", params.itemId, useRawPings], () => services.record.getRecordPings(params.itemId, useRawPings));
-  const { data: record } = useQuery(["liane", params.itemId], () => services.record.get(params.itemId));
+  const { data: pings } = useQuery({
+    queryKey: ["record_pings", params.itemId, useRawPings],
+    queryFn: () => services.record.getRecordPings(params.itemId, useRawPings)
+  });
+  const { data: record } = useQuery({ queryKey: ["liane", params.itemId], queryFn: () => services.record.get(params.itemId) });
   const from = record?.wayPoints[0];
   const to = record ? record.wayPoints[record.wayPoints.length - 1] : undefined;
   const [userList, setUserList] = useState<string[]>([]);
   const startDate = useMemo(() => (record ? new Date(record.startedAt) : null), [record]);
-  const users: TimelineData<RecordUserData> = useMemo(() => {
-    if (!record || !pings) return [];
-
-    return userList.map((u, i) => {
-      const member = record.members.find(m => m.user.id === u)!;
-      return {
-        data: {
-          ...member,
-          to: record.wayPoints.find(w => w.rallyingPoint.id === member.to)!.rallyingPoint,
-          from: record.wayPoints.find(w => w.rallyingPoint.id === member.from)!.rallyingPoint
-        },
-        color: colors[i],
-        points: pings.features.filter(f => f.properties.user === u).map(f => new Date(f.properties.at))
-      };
-    });
-  }, [userList, record, pings]);
   const coloredFeatures = useMemo(() => {
     let users: string[] = [];
     if (!pings || !record) {
@@ -99,62 +106,133 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
     return coloredFeatures;
   }, [pings, record, startDate]);
 
+  const users: TimelineData<RecordUserData> = useMemo(() => {
+    if (!record || !pings) return [];
+
+    return userList
+      .filter(u => u !== "car")
+      .map((u, i) => {
+        const member = record.members.find(m => m.user.id === u)!;
+        return {
+          data: {
+            ...member,
+            to: record.wayPoints.find(w => w.rallyingPoint.id === member.to)!.rallyingPoint,
+            from: record.wayPoints.find(w => w.rallyingPoint.id === member.from)!.rallyingPoint
+          },
+          color: colors[i],
+          points: pings.features.filter(f => f.properties.user === u).map(f => new Date(f.properties.at))
+        };
+      });
+  }, [userList, record, pings]);
+
+  const car = useMemo(() => {
+    if (!record || !pings) return null;
+    const carIndex = userList.findIndex(u => u === "car");
+    if (carIndex < 0) return null;
+    return [
+      { color: colors[carIndex], data: {}, points: pings.features.filter(f => f.properties.user === "car").map(f => new Date(f.properties.at)) }
+    ];
+  }, [record, pings, userList]);
+
+  const endDate = record ? (record.finishedAt ? new Date(record.finishedAt) : new Date(to!.eta)) : undefined;
+  const [displayMembers, setDisplayMembers] = useState(false);
+
+  const markerFeatures = useMemo(() => {
+    return displayMembers || !coloredFeatures
+      ? coloredFeatures
+      : { ...coloredFeatures, features: coloredFeatures?.features.filter(f => f.properties.user === "car") };
+  }, [coloredFeatures, displayMembers]);
+
   return (
     <div className="grow w-full relative">
       {!!record && (
-        <TripView record={record}>{/*<ToggleSwitch checked={useRawPings} label="Afficher les pings bruts" onChange={setUseRawPings} />*/}</TripView>
+        <TripView record={record}>
+          <div>
+            <RegenButton id={params.itemId} />
+          </div>
+        </TripView>
       )}
       {!!record && (
         <div className="px-4 py-6 absolute bottom-0 z-[5] w-full">
           <Card>
             <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Membres</h5>
-            <TimelineChart
-              data={users}
-              startDate={startDate!}
-              endDate={record.finishedAt ? new Date(record.finishedAt) : new Date(to!.eta)}
-              idExtractor={(m, date) =>
-                generateId(
-                  userList.findIndex(u => u === m.user.id!),
-                  startDate!,
-                  date
-                )
-              }
-              labelExtractor={m => m.user.pseudo}
-              renderTooltip={m => {
-                return (
-                  <div>
-                    <span style={{ whiteSpace: "nowrap" }}>{m.from.label + " → " + m.to.label}</span>
-                    <br />
-                    {!!m.departure && (
-                      <>
-                        <span>Départ: {WebLocalization.formatTime24h(new Date(m.departure))}</span>
-                        <br />
-                      </>
-                    )}
-                    {!!m.cancellation && (
-                      <>
-                        <span>Annulation: {WebLocalization.formatTime24h(new Date(m.cancellation))}</span>
-                        <br />
-                      </>
-                    )}
-                    <span>Géolocalisation: {m.geolocationLevel !== "None" ? "oui" : "non"}</span>
-                    <br />
-                  </div>
-                );
-              }}
-              onHoveredStateChanged={(id, hovered) => {
-                dispatchHighlightMarkerEvent({ id, highlight: hovered });
-              }}
-              onClick={id => dispatchCenterMarkerEvent({ id })}
-            />
+            {car && (
+              <TimelineChart
+                data={car}
+                startDate={startDate!}
+                endDate={endDate!}
+                idExtractor={(_, date) =>
+                  generateId(
+                    userList.findIndex(u => u === "car"),
+                    startDate!,
+                    date
+                  )
+                }
+                labelExtractor={_ => "Voiture"}
+                onHoveredStateChanged={(id, hovered) => {
+                  dispatchHighlightMarkerEvent({ id, highlight: hovered });
+                }}
+                onClick={id => dispatchCenterMarkerEvent({ id })}
+              />
+            )}
+            <div className="flex gap-2 flex-row">
+              <span>Afficher tous les membres</span>
+              <ToggleSwitch
+                checked={displayMembers}
+                onChange={() => {
+                  setDisplayMembers(prev => !prev);
+                }}
+              />
+            </div>
+            {displayMembers && (
+              <TimelineChart
+                data={users}
+                startDate={startDate!}
+                endDate={endDate!}
+                idExtractor={(m, date) =>
+                  generateId(
+                    userList.findIndex(u => u === m.user.id!),
+                    startDate!,
+                    date
+                  )
+                }
+                labelExtractor={m => m.user.pseudo}
+                renderTooltip={m => {
+                  return (
+                    <div>
+                      <span style={{ whiteSpace: "nowrap" }}>{m.from.label + " → " + m.to.label}</span>
+                      <br />
+                      {!!m.departure && (
+                        <>
+                          <span>Départ: {WebLocalization.formatTime24h(new Date(m.departure))}</span>
+                          <br />
+                        </>
+                      )}
+                      {!!m.cancellation && (
+                        <>
+                          <span>Annulation: {WebLocalization.formatTime24h(new Date(m.cancellation))}</span>
+                          <br />
+                        </>
+                      )}
+                      <span>Géolocalisation activée: {m.geolocationLevel !== "None" ? "oui" : "non"}</span>
+                      <br />
+                    </div>
+                  );
+                }}
+                onHoveredStateChanged={(id, hovered) => {
+                  dispatchHighlightMarkerEvent({ id, highlight: hovered });
+                }}
+                onClick={id => dispatchCenterMarkerEvent({ id })}
+              />
+            )}
           </Card>
         </div>
       )}
       <Map center={from?.rallyingPoint.location}>
         {!!record && <RouteLayer points={record.wayPoints.map(w => w.rallyingPoint)} />}
-        {!!coloredFeatures && <PingsMarkersLayer features={coloredFeatures!} />}
-        {!!record && !!coloredFeatures && (
-          <FitFeatures features={[...coloredFeatures.features, ...record.wayPoints.map(w => asPoint(w.rallyingPoint.location))]} />
+        {!!markerFeatures && <PingsMarkersLayer features={markerFeatures!} />}
+        {!!record && !!markerFeatures && (
+          <FitFeatures features={[...markerFeatures.features, ...record.wayPoints.map(w => asPoint(w.rallyingPoint.location))]} />
         )}
       </Map>
     </div>
@@ -180,50 +258,36 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
     map.current?.flyTo({ center: [f.geometry.coordinates[0], f.geometry.coordinates[1]], animate: true });
   });
 
-  useEffect(() => {
-    const mmap = map.current;
-    mmap?.once("load", () => {
-      if (!mmap || mmap.getSource("pings")) return;
-
-      mmap?.addSource("pings", {
-        type: "geojson",
-        data: features
-      });
-
-      return () => {
-        if (!mmap?.loaded()) return;
-        mmap?.removeSource("pings");
-      };
-    });
-  }, [features, map]);
-
   return useMemo(() => {
     return (
-      <MarkersLayer
-        id={"pings"}
-        source={"pings"}
-        onMouseEnterPoint={f => {
-          // Log more details in console
-          console.log("PING", f.properties);
-          const id = f.id as number;
-          dispatchHighlightPointEvent({ id, highlight: true });
-          map.current?.setFeatureState({ source: "pings", id }, { hover: true });
-        }}
-        onMouseLeavePoint={id => {
-          dispatchHighlightPointEvent({ id, highlight: false });
-          map.current?.setFeatureState({ source: "pings", id }, { hover: false });
-        }}
-        props={{
-          layout: {
-            "icon-size": 0.8
-          },
-          paint: {
-            "icon-color": ["get", "color"],
-            "icon-halo-color": "#0F172A",
-            "icon-halo-width": ["case", ["boolean", ["feature-state", "hover"], false], 1.5, 0.6]
-          }
-        }}
-      />
+      <>
+        <GeojsonSource id={"pings"} data={features} />
+        <MarkersLayer
+          id={"pings"}
+          source={"pings"}
+          onMouseEnterPoint={f => {
+            // Log more details in console
+            console.log("PING", { ...f.properties, geometry: f.geometry });
+            const id = f.id as number;
+            dispatchHighlightPointEvent({ id, highlight: true });
+            map.current?.setFeatureState({ source: "pings", id }, { hover: true });
+          }}
+          onMouseLeavePoint={id => {
+            dispatchHighlightPointEvent({ id, highlight: false });
+            map.current?.setFeatureState({ source: "pings", id }, { hover: false });
+          }}
+          props={{
+            layout: {
+              "icon-size": 0.8
+            },
+            paint: {
+              "icon-color": ["get", "color"],
+              "icon-halo-color": "#0F172A",
+              "icon-halo-width": ["case", ["boolean", ["feature-state", "hover"], false], 1.5, 0.6]
+            }
+          }}
+        />
+      </>
     );
-  }, [map]);
+  }, [map, features]);
 }

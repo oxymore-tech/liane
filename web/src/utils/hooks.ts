@@ -1,11 +1,15 @@
-import React, { MutableRefObject, useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { PaginatedResponse } from "@liane/common";
-import { QueryKey, useInfiniteQuery } from "react-query";
+import { QueryFunction, QueryKey, useInfiniteQuery } from "@tanstack/react-query";
 
-export const usePaginatedQuery = <T>(queryKey: QueryKey, loadData: (nextCursor: string, queryKey: QueryKey) => Promise<PaginatedResponse<T>>) => {
+export const usePaginatedQuery = <T>(
+  queryKey: QueryKey,
+  loadData: (nextCursor: string | undefined, queryKey: QueryKey) => Promise<PaginatedResponse<T>>
+) => {
   const [refreshing, setRefreshing] = useState(false);
   const [fetchingNextPage, setFetchingNextPage] = useState(false);
-
+  const queryFn: QueryFunction<PaginatedResponse<T>, QueryKey, string | undefined> = ({ pageParam = undefined, queryKey }) =>
+    loadData(pageParam, queryKey);
   const {
     isLoading: loading,
     error,
@@ -13,7 +17,10 @@ export const usePaginatedQuery = <T>(queryKey: QueryKey, loadData: (nextCursor: 
     refetch,
     fetchNextPage: next,
     hasNextPage
-  } = useInfiniteQuery<PaginatedResponse<T>, Error>(queryKey, ({ pageParam = undefined, queryKey }) => loadData(pageParam, queryKey), {
+  } = useInfiniteQuery({
+    queryKey: [queryKey],
+    queryFn,
+    initialPageParam: undefined,
     getNextPageParam: lastPage => (lastPage.next ? lastPage.next : undefined)
   });
 
@@ -77,3 +84,13 @@ export function useDebounceValue<T>(value: T, delay?: number): T | undefined {
 
   return debouncedValue;
 }
+
+const groupBy = function <T>(xs: T[], key: (t: T) => string): { [k: string]: T[] } {
+  return xs.reduce(
+    function (rv, x) {
+      (rv[key(x)] = rv[key(x)] || []).push(x);
+      return rv;
+    },
+    {} as { [k: string]: T[] }
+  );
+};

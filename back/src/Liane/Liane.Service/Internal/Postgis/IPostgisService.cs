@@ -13,10 +13,9 @@ public sealed record BatchGeometryUpdateInput(HashSet<string> Lianes, HashSet<(s
 
 public sealed record BatchGeometryUpdate(List<SegmentDb> Segments, List<LianeWaypointDb> WayPoints);
 
-public interface IOngoingTripSession
+public interface ITripSession: IAsyncDisposable
 {
   public Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate);
-  public Task Dispose();
 }
 
 public interface IPostgisService
@@ -26,7 +25,8 @@ public interface IPostgisService
   Task Clear(IEnumerable<Ref<Api.Trip.Liane>> lianes);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to);
-  Task<IOngoingTripSession> CreateOngoingTrip(string id, LineString route);
+  Task<ITripSession> CreateOngoingTrip(string id, LineString route);
+  Task<ITripSession> CreateOfflineTrip(string id, LineString route);
   Task<ImmutableList<Ref<Api.Trip.Liane>>> ListSearchableLianes();
   Task<ImmutableList<Ref<Api.Trip.Liane>>> ListOngoingLianes();
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQueryClient } from "react-query";
 import { useAppServices } from "@/components/ContextProvider";
 import { Pagination, Table } from "flowbite-react";
 import { Icon } from "@/components/base/Icon";
@@ -11,6 +10,7 @@ import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { toISOWithTimezoneString } from "@liane/common";
 import { useLocalization } from "@/api/intl";
 import { DatePicker } from "@/components/base/DatePicker";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function TripRecordsPage() {
   const services = useAppServices();

@@ -737,20 +737,6 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         Builders<LianeDb>.Update.Unset(l => l.Recurrence));
   }
 
-  public async Task<FeatureCollection> GetGeolocationPings(Ref<Api.Trip.Liane> liane)
-  {
-    var report = await Mongo.GetCollection<LianeTrackReport>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
-    if (report is null) return new FeatureCollection();
-    var features = report.MemberLocations
-      .Where(ping => ping.Coordinate is not null)
-      .Select(ping => new Feature(
-        new Point(new Position(ping.Coordinate!.Value.Lat, ping.Coordinate!.Value.Lng)),
-        new Dictionary<string, object> { ["user"] = ping.member.Id, ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] = ping.NextPointIndex, ["d"] = ping.PointDistance }
-      ))
-      .ToList();
-    return new FeatureCollection(features);
-  }
-
   public async Task<FeatureCollection> GetRawGeolocationPings(Ref<Api.Trip.Liane> liane)
   {
     var lianeDb = await Mongo.GetCollection<LianeDb>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
@@ -762,14 +748,6 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       ))
       .ToList();
     return new FeatureCollection(features);
-  }
-
-  public async Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Api.Trip.Liane> liane)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    var features = await GetGeolocationPings(liane);
-    var userFeatures = features.Features.Where(f => (string)f.Properties["user"] == userId);
-    return new FeatureCollection(userFeatures.ToList());
   }
 
   public async Task ForceSyncDatabase()
@@ -883,7 +861,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
         l => l.StartedAt,
         fluent => fluent
           .JoinOneToOne<LianeTrackReport, LianeDb>("liane")
-          .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations"))
+          .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations").Exclude("carLocations"))
           .Match(mongoFilter)
       );
 
@@ -902,7 +880,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       .Aggregate()
       .Match(l => l.Id == id)
       .JoinOneToOne<LianeTrackReport, LianeDb>("liane")
-      .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations"))
+      .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations").Exclude("carLocations"))
       .Match(Builders<DetailedLianeTrackReportDb>.Filter.Exists(l => l.Liane))
       .FirstOrDefaultAsync();
     if (report is null) throw new ResourceNotFoundException("LianeTrackReport " + id);

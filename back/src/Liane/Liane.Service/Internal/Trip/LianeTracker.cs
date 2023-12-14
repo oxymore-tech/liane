@@ -17,11 +17,12 @@ public sealed class LianeTracker
   private readonly ConcurrentDictionary<string, BufferedList<MemberLocationSample>> currentLocationMap = new();
   private readonly double[] wayPointFractions;
   private bool finished;
+  private TrackingInfo? lastTrackingInfo;
 
-  public LianeTracker(IOngoingTripSession ongoingTripSession, Api.Trip.Liane liane)
+  public LianeTracker(ITripSession tripSession, Api.Trip.Liane liane)
   {
     Liane = liane;
-    TripSession = ongoingTripSession;
+    TripSession = tripSession;
     wayPointFractions = new double[liane.WayPoints.Count];
     Array.Fill(wayPointFractions, -1);
     wayPointFractions[0] = 0.0;
@@ -29,7 +30,7 @@ public sealed class LianeTracker
   }
   public Api.Trip.Liane Liane { get; }
   
-  public IOngoingTripSession TripSession { get; }
+  public ITripSession TripSession { get; }
 
   public bool Finished => finished;
 
@@ -81,8 +82,8 @@ public sealed class LianeTracker
     {
       bufferedLocations.Add(data);
     }
-
-    
+    // Invalidate tracking info
+    lastTrackingInfo = null;
   }
 
   
@@ -173,6 +174,7 @@ public sealed class LianeTracker
 
   public TrackingInfo GetTrackingInfo()
   {
+    if (lastTrackingInfo is not null) return lastTrackingInfo;
     var carPassengers = currentLocationMap.Where(entry =>
     {
       var userId = entry.Key;
@@ -207,12 +209,13 @@ public sealed class LianeTracker
         entry => entry.Key,
         entry => GetCurrentMemberLocation(entry.Key)!
         );
-    return new TrackingInfo(Liane, car, otherMembers);
+    lastTrackingInfo = new TrackingInfo(Liane, car, otherMembers);
+    return lastTrackingInfo;
   }
 
   public async Task Dispose()
   {
-    await TripSession.Dispose();
+    await TripSession.DisposeAsync();
   }
 
 

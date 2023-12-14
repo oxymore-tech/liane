@@ -6,7 +6,7 @@ import { NodeAppEnv } from "@/api/env";
 import { LocalStorageImpl } from "@/api/storage";
 import { WebLogger } from "@/api/logger";
 import { RecordService, RecordServiceClient } from "@/api/records";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Flowbite } from "flowbite-react";
 import { Header } from "@/components/navigation/Header";
 import { SideMenu } from "@/components/navigation/SideMenu";

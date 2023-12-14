@@ -30,14 +30,16 @@ public sealed class LianeController : ControllerBase
   private readonly IMockService mockService;
   private readonly EventDispatcher eventDispatcher;
   private readonly ILianeRecurrenceService lianeRecurrenceService;
+  private readonly ILianeTrackerService lianeTrackerService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService, ILianeTrackerService lianeTrackerService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
     this.mockService = mockService;
     this.eventDispatcher = eventDispatcher;
     this.lianeRecurrenceService = lianeRecurrenceService;
+    this.lianeTrackerService = lianeTrackerService;
   }
 
   [HttpGet("{id}")]
@@ -111,8 +113,8 @@ public sealed class LianeController : ControllerBase
   public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id, [FromQuery] bool raw = true)
   {
     return currentContext.CurrentUser().IsAdmin ? 
-      (raw ? lianeService.GetRawGeolocationPings(id) : lianeService.GetGeolocationPings(id)) : 
-      lianeService.GetGeolocationPingsForCurrentUser(id);
+      (raw ? lianeService.GetRawGeolocationPings(id) : lianeTrackerService.GetGeolocationPings(id)) : 
+      lianeTrackerService.GetGeolocationPingsForCurrentUser(id);
   }
   
   [HttpPatch("{id}/geolocation")]
@@ -228,5 +230,12 @@ public sealed class LianeController : ControllerBase
   public Task<DetailedLianeTrackReport> GetRecord([FromRoute]string id)
   {
     return lianeService.GetTripRecord(id);
+  }
+  
+  [HttpPost("record/{id}/recreate")]
+  [RequiresAdminAuth]
+  public Task  RecreateReport([FromRoute]string id)
+  {
+    return  lianeTrackerService.RecreateReport(id);
   }
 }
