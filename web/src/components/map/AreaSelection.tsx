@@ -8,6 +8,8 @@ import bboxPolygon from "@turf/bbox-polygon";
 import { featureCollection } from "@turf/helpers";
 import React from "react";
 import { BBox } from "geojson";
+import { useLayer } from "@/components/map/layers/base/abstractLayer";
+import { GeojsonSource } from "@/components/map/GeojsonSource";
 
 class SelectControl implements IControl {
   private active: boolean = false;
@@ -151,45 +153,34 @@ export const AreaSelection = ({ targetLayers, onSelectFeatures, onHoverFeatureSt
       setInAreaFeatures(features);
     };
 
-    const addLayer = () => {
-      if (map.current?.getSource("selection")) {
-        return;
-      }
-      map.current?.addSource("selection", {
-        type: "geojson",
-        data: EmptyFeatureCollection
-      });
+    map.current?.on("click", onClick);
+    map.current?.on("mousemove", onMove);
 
-      map.current?.addLayer({
-        id: "selection",
-        source: "selection",
-        type: "fill",
+    return () => {
+      drawing.current = null;
+      map.current?.off("click", onClick);
+      map.current?.off("mousemove", onMove);
+    };
+  }, [isDrawing, map, onSelectFeatures, targetLayers]);
+
+  useLayer(
+    {
+      source: "selection",
+      id: "selection",
+      props: {
         paint: {
           "fill-outline-color": "#000",
           "fill-color": "#b4b5b5",
           "fill-opacity": 0.3
         }
-      });
-
-      map.current?.on("click", onClick);
-      map.current?.on("mousemove", onMove);
-    };
-
-    if (map.current?.loaded()) addLayer();
-    else map.current?.once("load", addLayer);
-
-    return () => {
-      drawing.current = null;
-      map.current?.removeLayer("selection");
-      map.current?.removeSource("selection");
-      map.current?.off("click", onClick);
-      map.current?.off("mousemove", onMove);
-    };
-  }, [map, targetLayers, isDrawing, onSelectFeatures]);
+      }
+    },
+    "fill"
+  );
 
   useEffect(() => {
     control.current?.setActive(isDrawing);
   }, [isDrawing]);
 
-  return <></>;
+  return <GeojsonSource id={"selection"} data={EmptyFeatureCollection} />;
 };

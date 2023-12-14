@@ -11,8 +11,11 @@ export function RouteLayer({ points }: { points: RallyingPoint[] }) {
   const map = useMapContext();
   const services = useAppServices()!;
   const id = getRouteId(points);
-  const { data: route } = useQuery(id, () => {
-    return services.routing.getRoute(points.map(p => p.location));
+  const { data: route } = useQuery({
+    queryKey: [id],
+    queryFn: () => {
+      return services.routing.getRoute(points.map(p => p.location));
+    }
   });
   const mapFeatures = useMemo(() => {
     if (!route) {

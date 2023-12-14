@@ -1,11 +1,10 @@
 "use client";
 
-import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { createContext, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { DEFAULT_TLS, getMapStyleUrl, LatLng } from "@liane/common";
 import { NodeAppEnv } from "@/api/env";
-import { useElementSize } from "@/utils/hooks";
 
 export type MapProps = {
   center?: LatLng;
@@ -53,7 +52,7 @@ const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, cente
   }, [center]);
 
   return (
-    <div ref={mapContainer} className="h-full w-full">
+    <div ref={mapContainer} className="h-full w-full relative">
       {ready ? <MapContext.Provider value={map}>{children}</MapContext.Provider> : null}
     </div>
   );
