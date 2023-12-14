@@ -1,6 +1,5 @@
 import { DdSdkReactNative, DdSdkReactNativeConfiguration } from "@datadog/mobile-react-native";
 import { RNAppEnv } from "@/api/env";
-import { DdRumReactNativeNavigationTracking } from "@datadog/mobile-react-native-navigation";
 
 export async function initializeRum() {
   const { DD_CLIENT_TOKEN, DD_APP_ID, APP_ENV, APP_VERSION } = RNAppEnv.raw;
@@ -12,8 +11,6 @@ export async function initializeRum() {
     config.nativeCrashReportEnabled = true;
     config.version = APP_VERSION;
     await DdSdkReactNative.initialize(config);
-
-    DdRumReactNativeNavigationTracking.startTracking();
   }
 }
 

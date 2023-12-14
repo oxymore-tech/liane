@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@datadog/mobile-react-native": "^2.0.1",
-    "@datadog/mobile-react-native-navigation": "^2.0.1",
+    "@datadog/mobile-react-navigation": "^2.0.1",
     "@liane/common": "file:../common",
     "@maplibre/maplibre-react-native": "^9.1.0",
     "@microsoft/signalr": "^7.0.12",

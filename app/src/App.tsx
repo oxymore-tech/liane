@@ -9,6 +9,7 @@ import Navigation from "@/components/context/Navigation";
 import { AppLinking, RootNavigation } from "@/components/context/routing";
 import { NavigationContainer } from "@react-navigation/native";
 import { AppModalNavigationProvider } from "@/components/AppModalNavigationProvider";
+import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
 
 MapLibreGL.setAccessToken(null);
 
@@ -19,7 +20,12 @@ const App = () => (
       <ContextProvider>
         <AppBackContextProvider backHandler={() => false}>
           <AppModalNavigationProvider>
-            <NavigationContainer linking={AppLinking} ref={RootNavigation}>
+            <NavigationContainer
+              linking={AppLinking}
+              ref={RootNavigation}
+              onReady={() => {
+                DdRumReactNavigationTracking.startTrackingViews(RootNavigation.current);
+              }}>
               <Navigation />
             </NavigationContainer>
           </AppModalNavigationProvider>
