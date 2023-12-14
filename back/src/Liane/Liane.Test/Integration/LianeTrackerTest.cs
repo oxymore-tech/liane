@@ -235,7 +235,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     Assert.Less(1, actual.Car.Position.Distance(expectedLocation!.Value));
   }
 
-  private async Task<LianeTracker> SetupTrackerAt(string file, string at)
+  private async Task<(LianeTracker, ImmutableList<UserPing>)> SetupTracker(string file)
   {
     var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource(file));
     var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
@@ -253,16 +253,46 @@ public class LianeTrackerTest : BaseIntegrationTest
       .Select(p => p with { User = userIds[p.User] })
       .ToImmutableList();
 
+    return (tracker, pings);
+  }
 
+  private async Task<LianeTracker> SetupTrackerAt(string file, string? at = null)
+  {
+    var (tracker, pings) = await SetupTracker(file);
     // Send first few pings outside of planned route
-    var sublist = pings.TakeWhile(p => p.At.ToUniversalTime() < DateTime.Parse(at).ToUniversalTime()).ToList();
+    var sublist = (at is null ? pings : pings.TakeWhile(p => p.At.ToUniversalTime() < DateTime.Parse(at).ToUniversalTime())).ToList();
     
     foreach (var p in sublist)
     {
-      await lianeTrackerService.PushPing(liane, p);
+      await lianeTrackerService.PushPing(tracker.Liane, p);
     }
 
     return tracker;
+  }
+  
+    
+  [Test]
+  public async Task ShouldNotHaveMembersInCar()
+  {
+    // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende, with pings received only by passenger
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende-3.json", "2023-12-14T08:05:00Z");
+
+    // check that next point is Quezac (the car is going towards Quezac)
+    var actual = tracker.GetTrackingInfo();
+    Assert.IsNull(actual.Car);
+    Assert.AreEqual(1, actual.OtherMembers.Count);
+    Assert.AreEqual("Quezac_Parking", actual.OtherMembers.First().Value.NextPoint.Id);
+  }
+  
+  [Test]
+  public async Task ShouldHavePickedUpPassenger()
+  {
+    // Init data with json pings Ispagnac (driver) -> Quezac  (passenger) -> Mende, with pings received only by passenger
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-Ispagnac-Mende-3.json", "2023-12-14T08:30:00Z");
+
+    // check that next point is Quezac (the car is going towards Quezac)
+    var actual = tracker.GetTrackingInfo();
+    Assert.IsNotNull(actual.Car);
   }
 
   private IMongoDatabase Db = null!;

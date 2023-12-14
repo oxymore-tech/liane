@@ -157,19 +157,24 @@ public sealed class LianeTracker
 
   public int GetFirstWayPoint(string userId)
   {
-    var waypointsWithMembers = Liane.Members.GroupBy(m => m.From)
-      .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
-    var foundIndex = Liane.WayPoints.FindIndex(w =>
+    int foundIndex;
+    if (Liane.Driver.User.Id == userId)
     {
-      var wayPointWithMembers = waypointsWithMembers.GetValueOrDefault(w.RallyingPoint.Id!);
-      if (wayPointWithMembers is null)
-      {
-        return false;
-      }
+      var waypointsWithPassengers = Liane.Members
+        .Where(m => m.User.Id != Liane.Driver.User)
+        .GroupBy(m => m.From)
+        .Select(g => g.Key.Id)
+        .ToImmutableHashSet();
+      foundIndex = Liane.WayPoints.FindIndex(w => waypointsWithPassengers.Contains(w.RallyingPoint.Id!));
+    }
+    else
+    {
+      var lianeMember = Liane.Members.Find(m => m.User.Id == userId);
+      if (lianeMember is null) return 0;
+      foundIndex = Liane.WayPoints.FindIndex(w => w.RallyingPoint.Id! == lianeMember.From.Id);
+    }
 
-      return wayPointWithMembers.Any(m => m.User.Id != userId);
-    });
-    return foundIndex > 0 ? foundIndex : 0;
+    return foundIndex < 0 ? 0 : foundIndex;
   }
 
   public TrackingInfo GetTrackingInfo()
