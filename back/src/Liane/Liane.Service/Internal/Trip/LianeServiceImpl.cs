@@ -18,7 +18,6 @@ using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
@@ -27,8 +26,6 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
-
-using LngLatTuple = Tuple<double, double>;
 
 public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Liane>, ILianeService
 {

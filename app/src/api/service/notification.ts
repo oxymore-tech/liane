@@ -15,8 +15,7 @@ export const DefaultAndroidSettings = {
   pressAction: {
     id: "default"
   },
-  smallIcon: "ic_notification",
-  largeIcon: "ic_launcher"
+  smallIcon: "ic_notification"
 };
 
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
@@ -47,17 +46,21 @@ const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
   AppLogger.debug("NOTIFICATIONS", "notifee", detail);
 
-  if (type === EventType.PRESS && notification?.data?.uri) {
-    await Linking.openURL(<string>notification.data.uri);
-  } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
-    if (pressAction.id === "loc") {
-      // start sending pings
-      await pressActionMap.loc(notification.data.liane as string);
-    } else {
+  try {
+    if (type === EventType.PRESS && notification?.data?.uri) {
       await Linking.openURL(<string>notification.data.uri);
+    } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
+      if (pressAction.id === "loc") {
+        // start sending pings
+        await pressActionMap.loc(notification.data.liane as string);
+      } else {
+        await Linking.openURL(<string>notification.data.uri);
+      }
+    } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
+      AppLogger.warn("NOTIFICATIONS", "[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
     }
-  } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
-    AppLogger.warn("NOTIFICATIONS", "[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
+  } catch (e) {
+    AppLogger.error("NOTIFICATIONS", "Unable to open notification", e);
   }
 };
 

@@ -34,6 +34,7 @@ export class ReminderService {
       })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
     await notifee.cancelTriggerNotifications();
+    this.logger.info("NOTIFICATIONS", "CancelTriggerNotifications");
     for (const liane of online) {
       await this.createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
     }
@@ -67,8 +68,7 @@ export class ReminderService {
       },
       {
         timestamp,
-        type: TriggerType.TIMESTAMP,
-        alarmManager: true
+        type: TriggerType.TIMESTAMP
       }
     );
   }
