@@ -810,7 +810,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
       if (member.Departure is null) return LianeState.NotStarted;
       else
       {
-        var arrived = trackerCache.GetTracker(liane.Id)!.MemberHasArrived(member.User);
+        var arrived = trackerCache.GetTracker(liane.Id)?.MemberHasArrived(member.User);
         if (arrived is not null && arrived.Value)
         {
           return LianeState.Finished;
