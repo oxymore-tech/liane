@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { ReactNode, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Tooltip } from "flowbite-react";
 import { dispatchCustomEvent, useElementSize, useEvent } from "@/utils/hooks";
@@ -13,6 +13,7 @@ export const TimelineChart = <T,>({
   data,
   startDate,
   endDate,
+  extendedEndDate,
   idExtractor,
   labelExtractor,
   renderTooltip,
@@ -22,14 +23,16 @@ export const TimelineChart = <T,>({
   data: TimelineData<T>;
   startDate: Date;
   endDate: Date;
+  extendedEndDate?: Date;
   idExtractor: (d: T, date: Date) => number;
   labelExtractor: (d: T) => string;
-  renderTooltip?: (d: T) => JSX.Element;
+  renderTooltip?: (d: T) => ReactNode;
   onHoveredStateChanged?: (pointId: number, hovered: boolean) => void;
   onClick?: (pointId: number) => void;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const duration = endDate.getTime() - startDate.getTime();
+  const actualEndDate = !!extendedEndDate && extendedEndDate.getTime() > endDate.getTime() ? extendedEndDate : endDate;
+  const duration = actualEndDate.getTime() - startDate.getTime();
   const { width, height } = useElementSize(ref, { width: 90, height: 20 }, [data.length, duration]);
 
   useEvent(HighlightPointEventName, (e: HighlightPointEvent<T>) => {
@@ -43,9 +46,12 @@ export const TimelineChart = <T,>({
   const axisSize = 20;
   const paddingTop = 8;
   const paddingBottom = paddingTop;
-  const legendSize = 90;
+  const legendSize = 100;
   const rectPadding = 8;
   const actualWidth = width - legendSize;
+  const extendedWidth = actualEndDate
+    ? actualWidth * ((actualEndDate.getTime() - startDate.getTime()) / (endDate.getTime() - startDate.getTime()))
+    : actualWidth;
   const lineHeight = 36;
   const chartHeight = axisSize + paddingTop + paddingBottom + lineHeight * data.length;
 
@@ -59,11 +65,11 @@ export const TimelineChart = <T,>({
             <li
               key={i}
               style={{ gridRow: (i + 2).toString(), maxHeight: lineHeight, textOverflow: "ellipsis" }}
-              className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white">
+              className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white leading-none">
               <span className="w-4 h-4 rounded border dark:border-white border-gray-800" style={{ backgroundColor: d.color }} />
               {renderTooltip && (
                 <Tooltip placement="right" content={renderTooltip(d.data)}>
-                  <span className="cursor-default">{labelExtractor(d.data)}</span>
+                  <span className="cursor-default leading-tight">{labelExtractor(d.data)}</span>
                 </Tooltip>
               )}
               {!renderTooltip && <span className="cursor-default">{labelExtractor(d.data)}</span>}
@@ -71,42 +77,50 @@ export const TimelineChart = <T,>({
           ))}
         </ul>
       </div>
-      <svg width={actualWidth + 2 * rectPadding} height={height} style={{ marginLeft: legendSize, height: chartHeight.toString() + "px" }}>
-        <g>
-          <rect width={actualWidth + 2 * rectPadding} height={height - axisSize} className="fill-slate-300" />
-          <g transform={`translate(${[rectPadding, height - axisSize].join(",")})`}>
-            <TimeAxis startDate={startDate} endDate={endDate} width={actualWidth} />
-          </g>
-        </g>
-        {data.map((el, i) => {
-          const y = paddingTop + lineHeight / 2 + lineHeight * i;
-          return (
-            <g key={i.toString()}>
-              <line x1={0} y1={y} x2={actualWidth + 2 * rectPadding} y2={y} strokeDasharray="4" stroke="black" />
-              {el.points.map(p => {
-                const id = idExtractor(el.data, p);
-                return (
-                  <TimelinePoint
-                    key={id}
-                    id={"p" + id}
-                    x={rectPadding + ((p.getTime() - startDate.getTime()) / duration) * actualWidth}
-                    y={y}
-                    color={el.color}
-                    onHoverStateChanged={
-                      onHoveredStateChanged
-                        ? hovered => {
-                            onHoveredStateChanged(id, hovered);
-                          }
-                        : undefined
-                    }
-                    onClick={onClick ? () => onClick(id) : undefined}
-                  />
-                );
-              })}
+      <div
+        style={{
+          marginLeft: legendSize,
+          height: chartHeight.toString() + "px",
+          overflowX: "scroll",
+          width: actualWidth + 2 * rectPadding + "px"
+        }}>
+        <svg width={extendedWidth + 2 * rectPadding} height={height}>
+          <g>
+            <rect width={extendedWidth + 2 * rectPadding} height={height - axisSize} className="fill-slate-300" />
+            <g transform={`translate(${[rectPadding, height - axisSize].join(",")})`}>
+              <TimeAxis startDate={startDate} endDate={actualEndDate} width={extendedWidth} />
             </g>
-          );
-        })}
-      </svg>
+          </g>
+          {data.map((el, i) => {
+            const y = paddingTop + lineHeight / 2 + lineHeight * i;
+            return (
+              <g key={i.toString()}>
+                <line x1={0} y1={y} x2={extendedWidth + 2 * rectPadding} y2={y} strokeDasharray="4" stroke="black" />
+                {el.points.map(p => {
+                  const id = idExtractor(el.data, p);
+                  return (
+                    <TimelinePoint
+                      key={id}
+                      id={"p" + id}
+                      x={rectPadding + ((p.getTime() - startDate.getTime()) / duration) * extendedWidth}
+                      y={y}
+                      color={el.color}
+                      onHoverStateChanged={
+                        onHoveredStateChanged
+                          ? hovered => {
+                              onHoveredStateChanged(id, hovered);
+                            }
+                          : undefined
+                      }
+                      onClick={onClick ? () => onClick(id) : undefined}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
     </div>
   );
 };

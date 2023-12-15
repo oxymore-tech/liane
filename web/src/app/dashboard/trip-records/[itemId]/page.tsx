@@ -1,8 +1,8 @@
 "use client";
 import { useAppServices } from "@/components/ContextProvider";
 import Map, { useMapContext } from "@/components/map/Map";
-import React, { PropsWithChildren, useEffect, useMemo, useState } from "react";
-import { FeatureCollection } from "geojson";
+import React, { PropsWithChildren, useMemo, useState } from "react";
+import { FeatureCollection, GeoJSON } from "geojson";
 import { asPoint, LianeMember, RallyingPoint } from "@liane/common";
 import { Button, Card, ToggleSwitch } from "flowbite-react";
 import { TripRecord } from "@/api/api";
@@ -16,6 +16,7 @@ import { FitFeatures } from "@/components/map/FitFeatures";
 import { useLocalization } from "@/api/intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GeojsonSource } from "@/components/map/GeojsonSource";
+import { Popup } from "@/components/map/Popup";
 
 const RegenButton = ({ id }: { id: string }) => {
   const [loading, setLoading] = useState(false);
@@ -80,6 +81,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
   const from = record?.wayPoints[0];
   const to = record ? record.wayPoints[record.wayPoints.length - 1] : undefined;
   const [userList, setUserList] = useState<string[]>([]);
+  const [displayMembers, setDisplayMembers] = useState(false);
   const startDate = useMemo(() => (record ? new Date(record.startedAt) : null), [record]);
   const coloredFeatures = useMemo(() => {
     let users: string[] = [];
@@ -103,6 +105,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
       })
     };
     setUserList(users);
+    setDisplayMembers(!users.includes("car"));
     return coloredFeatures;
   }, [pings, record, startDate]);
 
@@ -135,13 +138,19 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
   }, [record, pings, userList]);
 
   const endDate = record ? (record.finishedAt ? new Date(record.finishedAt) : new Date(to!.eta)) : undefined;
-  const [displayMembers, setDisplayMembers] = useState(false);
 
   const markerFeatures = useMemo(() => {
     return displayMembers || !coloredFeatures
       ? coloredFeatures
       : { ...coloredFeatures, features: coloredFeatures?.features.filter(f => f.properties.user === "car") };
   }, [coloredFeatures, displayMembers]);
+
+  // @ts-ignore
+  const lastPing = useMemo(() => {
+    if (!pings) return undefined;
+    const sorted = pings!.features.map(f => new Date(f.properties.at)).sort((a, b) => a.getTime() - b.getTime());
+    return sorted.pop();
+  }, [pings]);
 
   return (
     <div className="grow w-full relative">
@@ -189,6 +198,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
                 data={users}
                 startDate={startDate!}
                 endDate={endDate!}
+                extendedEndDate={lastPing}
                 idExtractor={(m, date) =>
                   generateId(
                     userList.findIndex(u => u === m.user.id!),
@@ -249,6 +259,7 @@ const dispatchCenterMarkerEvent = (payload: CenterPingMarkerEvent) => dispatchCu
 
 function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.Point, any> }) {
   const map = useMapContext();
+  const [displayPopup, setDisplayPopup] = useState<{ lng: number; lat: number; properties: any } | null>();
 
   useEvent(HighlightPingMarkerEventName, (e: HighlightPingMarkerEvent) => {
     map.current?.setFeatureState({ source: "pings", id: e.id }, { hover: e.highlight });
@@ -258,13 +269,20 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
     map.current?.flyTo({ center: [f.geometry.coordinates[0], f.geometry.coordinates[1]], animate: true });
   });
 
-  return useMemo(() => {
+  const mapFeatures = useMemo(() => {
     return (
       <>
         <GeojsonSource id={"pings"} data={features} />
         <MarkersLayer
           id={"pings"}
           source={"pings"}
+          onClickPoint={e => {
+            if (!e.features || e.features.length === 0 || !map.current) return;
+            const coords = (e.features![0].geometry as GeoJSON.Point).coordinates;
+            const point = map.current.project({ lng: coords[0], lat: coords[1] });
+            console.log("EEE", e.lngLat, coords, e.point, point, e.features);
+            setDisplayPopup({ ...e.lngLat, properties: { ...e.features[0].properties, coordinates: coords } });
+          }}
           onMouseEnterPoint={f => {
             // Log more details in console
             console.log("PING", { ...f.properties, geometry: f.geometry });
@@ -290,4 +308,25 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
       </>
     );
   }, [map, features]);
+  return (
+    <>
+      {mapFeatures}
+      {displayPopup && (
+        <Popup lngLat={displayPopup}>
+          <div className="overflow-x-scroll">
+            <table className="py-4">
+              <tbody>
+                {Object.entries(displayPopup.properties).map(([k, v]) => (
+                  <tr key={k}>
+                    <td className="whitespace-nowrap font-medium px-2">{k}</td>
+                    <td>{JSON.stringify(v)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Popup>
+      )}
+    </>
+  );
 }
