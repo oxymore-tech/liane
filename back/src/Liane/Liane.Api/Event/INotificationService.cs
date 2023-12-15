@@ -12,7 +12,7 @@ public interface INotificationService : ICrudService<Notification>
 {
   Task<PaginatedResponse<Notification>> List(NotificationFilter notificationFilter, Pagination pagination);
 
-  Task<Notification> SendInfo(string title, string message, Ref<User.User> to);
+  Task<Notification> SendInfo(string title, string message, Ref<User.User> to, string? uri);
 
   Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<User.User> to, LianeEvent lianeEvent, params Answer[] answers);
   

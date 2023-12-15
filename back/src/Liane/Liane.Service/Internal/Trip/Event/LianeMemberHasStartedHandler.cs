@@ -11,11 +11,13 @@ public class LianeMemberHasStartedHandler : IEventListener<LianeEvent.MemberHasS
   private readonly ILianeService lianeService;
   private readonly ILianeRequestService lianeRequestService;
   private readonly ILianeTrackerService lianeTrackerService;
-  public LianeMemberHasStartedHandler(ILianeService lianeService, ILianeRequestService lianeRequestService, ILianeTrackerService lianeTrackerService)
+  private readonly INotificationService notificationService;
+  public LianeMemberHasStartedHandler(ILianeService lianeService, ILianeRequestService lianeRequestService, ILianeTrackerService lianeTrackerService, INotificationService notificationService)
   {
     this.lianeService = lianeService;
     this.lianeRequestService = lianeRequestService;
     this.lianeTrackerService = lianeTrackerService;
+    this.notificationService = notificationService;
   }
 
   public async Task OnEvent(LianeEvent.MemberHasStarted e, Ref<Api.User.User>? sender = null)

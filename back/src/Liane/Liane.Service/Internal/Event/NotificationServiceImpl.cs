@@ -28,9 +28,9 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     this.logger = logger;
   }
 
-  public Task<Notification> SendInfo(string title, string message, Ref<Api.User.User> to) => Create(
+  public Task<Notification> SendInfo(string title, string message, Ref<Api.User.User> to, string? uri) => Create(
     new Notification.Info(
-      null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), ImmutableHashSet<Answer>.Empty, title, message)
+      null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), ImmutableHashSet<Answer>.Empty, title, message, uri)
   );
 
   public Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(

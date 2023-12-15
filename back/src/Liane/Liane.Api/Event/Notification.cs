@@ -49,6 +49,7 @@ public abstract record Notification : IEntity
     ImmutableHashSet<Answer> Answers,
     string Title,
     string Message,
+    string? Uri = null,
     DateTime? SeenAt = null
   ) : Notification;
 

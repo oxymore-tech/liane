@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
@@ -22,7 +23,6 @@ namespace Liane.Service.Internal.Trip.Geolocation;
 public class LianeTrackerServiceImpl: ILianeTrackerService
 {
   private readonly LianeTrackerCache trackerCache;
-
   private readonly IOsrmService osrmService;
   private readonly IPostgisService postgisService;
   private readonly IMongoDatabase mongo;
@@ -30,9 +30,12 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
   private readonly ILianeUpdatePushService lianeUpdatePushService;
   private readonly Timer timer = new(interval: 2 * 60 * 1000);
   private readonly ConcurrentDictionary<string, Action?> onReachedDestinationActions = new();
+  private readonly ConcurrentDictionary<string, DateTime> lastCarMove = new();
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
-  public LianeTrackerServiceImpl(LianeTrackerCache trackerCache, ILogger<LianeTrackerServiceImpl> logger, IPostgisService postgisService, IOsrmService osrmService, IMongoDatabase mongo, ILianeUpdatePushService lianeUpdatePushService, ILianeService lianeService, ICurrentContext currentContext)
+  private readonly INotificationService notificationService;
+  public const int StoppedDurationInMinutes = 15;
+  public LianeTrackerServiceImpl(LianeTrackerCache trackerCache, ILogger<LianeTrackerServiceImpl> logger, IPostgisService postgisService, IOsrmService osrmService, IMongoDatabase mongo, ILianeUpdatePushService lianeUpdatePushService, ILianeService lianeService, ICurrentContext currentContext, INotificationService notificationService)
   {
     this.trackerCache = trackerCache;
     this.logger = logger;
@@ -42,11 +45,12 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     this.lianeUpdatePushService = lianeUpdatePushService;
     this.lianeService = lianeService;
     this.currentContext = currentContext;
+    this.notificationService = notificationService;
     timer.Elapsed += (_, _) =>
     {
       foreach (var tracker in trackerCache.Trackers)
       {
-          PublishLocation(tracker).ConfigureAwait(false).GetAwaiter().GetResult();
+        PublishLocation(tracker).ConfigureAwait(false).GetAwaiter().GetResult();
       }
     };
   }
@@ -167,6 +171,16 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
   private async Task PublishLocation(LianeTracker tracker)
   {
     var info = tracker.GetTrackingInfo();
+    if (info.Car is not null && !tracker.Finished)
+    {
+      if (lastCarMove.TryGetValue(tracker.Liane.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
+      {
+        // Notify driver 
+        await notificationService.SendInfo("Votre trajet est-il toujours en cours ?","", tracker.Liane.Driver.User, "liane://liane/" + tracker.Liane.Id);
+      }
+
+      lastCarMove[tracker.Liane.Id] = info.Car.At;
+    }
     foreach (var member in tracker.Liane.Members)
     {
       await lianeUpdatePushService.Push(info, member.User);

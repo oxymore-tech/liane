@@ -783,7 +783,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     await PushUpdate(updated);
   }
 
-  public async Task<bool> StartLiane(Ref<Api.Trip.Liane> lianeRef)
+  public async Task StartLiane(Ref<Api.Trip.Liane> lianeRef)
   {
     var liane = await Get(lianeRef);
     var sender = currentContext.CurrentUser().Id;
@@ -791,13 +791,11 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     if (liane.State == LianeState.NotStarted)
     {
       await UpdateState(liane, LianeState.Started);
-      return true;
     }
 
     var updated = await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
 
     await PushUpdate(updated);
-    return false;
   }
 
 
