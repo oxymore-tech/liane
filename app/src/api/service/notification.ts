@@ -1,11 +1,12 @@
 import notifee, { Event, EventType } from "@notifee/react-native";
-import { AuthService, FullUser, HttpClient, LianeServiceClient, Notification, UnionUtils } from "@liane/common";
+import { FullUser, HttpClient, LianeServiceClient, Notification, UnionUtils } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Linking, Platform } from "react-native";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { RNAppEnv } from "@/api/env";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
+import { AppServices } from "@/api/service/index";
 
 const DefaultChannelId = "liane_default";
 
@@ -105,23 +106,20 @@ export async function initializeNotification() {
   ]);
 }
 
-export async function initializePushNotification(user: FullUser, authService: AuthService) {
+export async function initPushNotification(user: FullUser, services: AppServices) {
   try {
     const pushToken = await PushNotifications?.getToken();
     if (pushToken && pushToken !== user.pushToken) {
-      AppLogger.debug("NOTIFICATIONS", "New push token", pushToken);
-      // Update server's token
-      await authService.updatePushToken(pushToken);
+      services.logger.debug("NOTIFICATIONS", "New push token", pushToken);
+      await services.auth.updatePushToken(pushToken);
     }
     PushNotifications?.onTokenRefresh(async p => {
-      await authService.updatePushToken(p);
+      await services.auth.updatePushToken(p);
     });
     PushNotifications?.onMessage(onMessageReceived);
-    return true;
   } catch (e) {
-    console.error(e);
+    services.logger.error("NOTIFICATIONS", "Unable to initPushNotification", e);
   }
-  return false;
 }
 
 export const PushNotifications = (() => {

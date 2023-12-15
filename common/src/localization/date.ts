@@ -75,7 +75,7 @@ export class Localization {
     }
   };
 
-  formatDateTime = (date: Date) => {
+  formatDateTime = (date: Date | number) => {
     return `${this.formatMonthDay(date)} à ${this.formatTime(date)}`;
   };
 

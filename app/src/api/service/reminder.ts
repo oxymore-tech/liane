@@ -33,11 +33,10 @@ export class ReminderService {
         return { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
       })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
-    await notifee.cancelAllNotifications();
+    await notifee.cancelTriggerNotifications();
     for (const liane of online) {
       await this.createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
     }
-    this.logger.info("NOTIFICATIONS", `Reminders synced for ${online.length} liane(s)`);
   }
 
   public async cancelReminder(lianeId: string) {
@@ -45,6 +44,9 @@ export class ReminderService {
   }
 
   async createReminder(lianeId: string, departureLocation: RallyingPoint, departureTime: Date) {
+    const timestamp = Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000);
+    const departure = `${AppLocalization.formatDateTime(departureTime)}`;
+    this.logger.info("NOTIFICATIONS", `Reminder for ${lianeId} - ${departure} will be triggered at ${AppLocalization.formatDateTime(timestamp)}`);
     await notifee.createTriggerNotification(
       {
         id: lianeId,
@@ -64,7 +66,7 @@ export class ReminderService {
         data: { uri: `liane://liane/${lianeId}`, liane: lianeId }
       },
       {
-        timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000),
+        timestamp,
         type: TriggerType.TIMESTAMP,
         alarmManager: true
       }
