@@ -4,7 +4,6 @@ import { UTCDateTime } from "@liane/common";
 const getDelayInSeconds = (delay: number, at: UTCDateTime, moving: boolean) => {
   const now = new Date().getTime();
   const d = (now - new Date(at).getTime()) / 1000;
-  console.log(d, delay, at, moving);
   return moving ? delay - d : delay + d;
 };
 

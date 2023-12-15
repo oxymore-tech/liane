@@ -448,7 +448,13 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
 
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay backgroundStyle={styles.cancelButtonBackground} style={styles.validateButton} onPress={() => onChange(null)}>
+            <AppPressableOverlay
+              backgroundStyle={styles.cancelButtonBackground}
+              style={styles.validateButton}
+              onPress={() => {
+                setDate(null);
+                onChange(null);
+              }}>
               <Center>
                 <Row spacing={4}>
                   <AppText style={styles.cancelText}>Annuler</AppText>
