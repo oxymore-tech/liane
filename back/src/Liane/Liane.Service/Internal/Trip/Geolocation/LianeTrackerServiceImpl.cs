@@ -180,7 +180,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       if (lastCarMove.TryGetValue(tracker.Liane.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
       {
         // Notify driver
-        await notificationService.SendInfo("Votre trajet est-il toujours en cours ?", "", tracker.Liane.Driver.User, "liane://liane/" + tracker.Liane.Id);
+        _ = notificationService.SendInfo("Votre trajet est-il toujours en cours ?", "", tracker.Liane.Driver.User, "liane://liane/" + tracker.Liane.Id);
       }
 
       lastCarMove[tracker.Liane.Id] = info.Car.At;
