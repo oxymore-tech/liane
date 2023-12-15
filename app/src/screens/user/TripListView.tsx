@@ -1,6 +1,16 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useMemo, useState } from "react";
 
-import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  SectionBase,
+  SectionList,
+  SectionListData,
+  SectionListRenderItemInfo,
+  StyleSheet,
+  View
+} from "react-native";
 import { capitalize, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
@@ -18,6 +28,7 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
 import { useObservable } from "@/util/hooks/subscription";
+import { AppLogger } from "@/api/logger";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
   date: string;
@@ -163,25 +174,41 @@ const LianeItem = ({ item }: { item: Liane }) => {
         </Row>
       )}
       {status === "StartingSoon" && <View style={{ height: 44 }} />}
-      {status === "StartingSoon" && (
-        <AppPressableOverlay
-          backgroundStyle={{
-            position: "absolute",
-            bottom: 0,
-            left: -16,
-            right: -16,
-            backgroundColor: AppColors.primaryColor,
-            borderBottomRightRadius: 16,
-            borderBottomLeftRadius: 16
-          }}
-          onPress={() => services.liane.start(item.id!).then(() => startGeolocationService(item))}>
-          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
-            <AppIcon name={"play-circle"} color={AppColors.white} />
-            <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
-          </Row>
-        </AppPressableOverlay>
-      )}
+      {status === "StartingSoon" && <StartButton item={item} />}
     </View>
+  );
+};
+
+const StartButton = ({ item }: { item: Liane }) => {
+  const [loading, setLoading] = useState(false);
+  const { services } = useContext(AppContext);
+  return (
+    <AppPressableOverlay
+      backgroundStyle={{
+        position: "absolute",
+        bottom: 0,
+        left: -16,
+        right: -16,
+        backgroundColor: AppColors.primaryColor,
+        borderBottomRightRadius: 16,
+        borderBottomLeftRadius: 16
+      }}
+      onPress={() => {
+        setLoading(true);
+        services.liane
+          .start(item.id!)
+          .then(() => startGeolocationService(item))
+          .catch(e => {
+            AppLogger.error("GEOPINGS", e);
+          })
+          .finally(() => setLoading(false));
+      }}>
+      <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+        {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
+        {loading && <ActivityIndicator size="small" color={AppColors.white} />}
+        <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+      </Row>
+    </AppPressableOverlay>
   );
 };
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {

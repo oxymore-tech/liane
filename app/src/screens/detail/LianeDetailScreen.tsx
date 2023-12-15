@@ -31,6 +31,7 @@ import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 import { useObservable } from "@/util/hooks/subscription";
+import { AppLogger } from "@/api/logger";
 
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
@@ -255,7 +256,11 @@ const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
       }}
       onPress={() => {
         setLoading(true);
-        startAction().then(() => setLoading(false));
+        startAction()
+          .catch(e => {
+            AppLogger.error("GEOPINGS", e);
+          })
+          .finally(() => setLoading(false));
       }}>
       <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
         {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
@@ -296,9 +301,12 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
         <LianeWithDateView liane={liane.liane} />
       </View>
 
-      <Row style={styles.statusLianeContainer}>
-        {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && !request && <LianeStatusView liane={liane.liane} />}
-      </Row>
+      {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && !request && (
+        <Row style={styles.statusLianeContainer}>
+          <LianeStatusView liane={liane.liane} />
+          <GeolocationSwitch liane={liane.liane} />
+        </Row>
+      )}
       {!request && <StartingSoonView liane={liane.liane} />}
 
       <Row style={styles.resumeContainer} spacing={4}>
@@ -347,7 +355,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
           </Row>
         </Column>
       </Row>
-      {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && !request && <GeolocationSwitch liane={liane.liane} />}
+
       <LianeActionsView match={liane} request={request} />
     </Column>
   );
@@ -390,7 +398,8 @@ const styles = StyleSheet.create({
     backgroundColor: AppColorPalettes.gray[100]
   },
   statusLianeContainer: {
-    paddingVertical: 8
+    paddingVertical: 8,
+    justifyContent: "space-between"
   },
   flex: {
     flex: 1

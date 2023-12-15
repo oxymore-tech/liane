@@ -1,24 +1,23 @@
 import { useEffect, useState } from "react";
 import { UTCDateTime } from "@liane/common";
 
+const getDelayInSeconds = (delay: number, at: UTCDateTime, moving: boolean) => {
+  const now = new Date().getTime();
+  const d = (now - new Date(at).getTime()) / 1000;
+  console.log(d, delay, at, moving);
+  return moving ? delay - d : delay + d;
+};
+
 export const useRealtimeDelay = (props: { at: UTCDateTime; delay: number; isMoving: boolean } | undefined) => {
-  const [delay, setDelay] = useState<number>(() => {
-    if (!props) {
-      return 0;
-    }
-    return props.delay - (props.isMoving ? (new Date().getTime() - new Date(props.at).getTime()) / 1000 : 0);
-  });
+  const [delay, setDelay] = useState<number>(0);
 
   useEffect(() => {
     if (!props) {
       return;
     } else {
+      setDelay(getDelayInSeconds(props.delay, props.at, props.isMoving));
       const timeout = setInterval(() => {
-        if (props!.isMoving) {
-          setDelay(props.delay - (new Date().getTime() - new Date(props!.at).getTime()) / 1000);
-        } else {
-          setDelay(props!.delay);
-        }
+        setDelay(getDelayInSeconds(props.delay, props.at, props.isMoving));
       }, 15 * 1000);
       return () => clearInterval(timeout);
     }
