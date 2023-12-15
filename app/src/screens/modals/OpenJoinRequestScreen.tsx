@@ -77,6 +77,7 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
           onPress={acceptRequest}
           backgroundColor={AppColors.primaryColor}
           text={"Accepter"}
+          loading={false}
         />
       </Row>
     </ScrollView>

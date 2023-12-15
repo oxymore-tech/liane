@@ -21,19 +21,32 @@ public sealed class LianeEventJsonTest
       new LianeEvent.MemberHasLeft("6408a644437b60cfd3b15874", "augustin"));
     var actual = JsonSerializer.Serialize(e, options);
     Assert.AreEqual(
-      "{\"type\":\"Event\",\"id\":\"id\",\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00Z\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"type\":\"MemberHasLeft\",\"liane\":\"6408a644437b60cfd3b15874\",\"member\":\"augustin\"},\"seenAt\":null}",
+      "{\"type\":\"Event\",\"id\":\"id\",\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00Z\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"type\":\"MemberHasLeft\",\"liane\":\"6408a644437b60cfd3b15874\",\"member\":\"augustin\"},\"seenAt\":null,\"uri\":null}",
+      actual);
+  }
+
+  [Test]
+  public void ShouldSerializeWithUri()
+  {
+    var e = new Notification.Event("id", "augustin", DateTime.Parse("2023-03-03T00:00:00Z").ToUniversalTime(), ImmutableList<Recipient>.Empty, ImmutableHashSet.Create(Answer.Accept, Answer.Reject),
+      "Titre", "Augustin a quitté la liane",
+      new LianeEvent.JoinRequest("6408a644437b60cfd3b15874", "Ispa", "Blajoux", -1, false, "Coucou"));
+    var actual = JsonSerializer.Serialize(e, options);
+    Assert.AreEqual(
+      "{\"type\":\"Event\",\"id\":\"id\",\"createdBy\":\"augustin\",\"createdAt\":\"2023-03-03T00:00:00Z\",\"recipients\":[],\"answers\":[\"Accept\",\"Reject\"],\"title\":\"Titre\",\"message\":\"Augustin a quitt\\u00E9 la liane\",\"payload\":{\"type\":\"JoinRequest\",\"liane\":\"6408a644437b60cfd3b15874\",\"from\":\"Ispa\",\"to\":\"Blajoux\",\"seats\":-1,\"takeReturnTrip\":false,\"message\":\"Coucou\",\"geolocationLevel\":\"None\"},\"seenAt\":null,\"uri\":\"liane://join_request/id\"}",
       actual);
   }
 
   [Test]
   public void ShouldSerializeMemberPing()
   {
-    var actual = JsonSerializer.Serialize(new LianeEvent.MemberPing("XXXX", ((DateTimeOffset)DateTime.Parse("2023-03-03T00:00:00Z")).ToUnixTimeMilliseconds(),TimeSpan.FromMinutes(15), null), options);
+    var actual = JsonSerializer.Serialize(new LianeEvent.MemberPing("XXXX", ((DateTimeOffset)DateTime.Parse("2023-03-03T00:00:00Z")).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(15), null),
+      options);
     Assert.AreEqual(
       "{\"type\":\"MemberPing\",\"liane\":\"XXXX\",\"timestamp\":1677801600000,\"delay\":\"00:15:00\",\"coordinate\":null}",
       actual);
   }
-  
+
   [Test]
   public void ShouldDeserialize()
   {
