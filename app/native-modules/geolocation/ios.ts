@@ -81,6 +81,10 @@ export class IosService implements LianeGeolocation {
     const timeout = tripDuration + 3600 * 1000;
     let preciseTrackingMode = true;
     AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
+    setTimeout(() => {
+      AppLogger.info("GEOPINGS", "tracking service timed out");
+      this.stopSendingPings();
+    }, timeout);
 
     const onFailedCallback = (error: GeoError) => {
       AppLogger.error("GEOPINGS", "Failed to start geolocation for liane " + lianeId, error);
