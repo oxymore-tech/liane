@@ -163,7 +163,7 @@ class LocationService : Service() {
   private fun createNotification(): Notification {
     val intent = Intent(Intent.ACTION_VIEW)
     if (::pingConfig.isInitialized) intent.data = Uri.parse("liane://liane/" + pingConfig.lianeId)
-    val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
+    val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     val notificationBuilder =
       NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
     val builder =
