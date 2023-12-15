@@ -31,6 +31,7 @@ public abstract record Notification : IEntity
   
   public string? Uri => this switch
     {
+      Info i => i.Uri,
       Event e => e.Payload switch
       {
         LianeEvent.JoinRequest => "liane://join_request/" + Id,
