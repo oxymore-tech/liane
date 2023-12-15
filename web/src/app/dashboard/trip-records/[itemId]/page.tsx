@@ -170,6 +170,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
                 data={car}
                 startDate={startDate!}
                 endDate={endDate!}
+                extendedEndDate={lastPing}
                 idExtractor={(_, date) =>
                   generateId(
                     userList.findIndex(u => u === "car"),
