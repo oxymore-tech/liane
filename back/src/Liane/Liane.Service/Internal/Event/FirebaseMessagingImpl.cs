@@ -9,7 +9,6 @@ using Google.Apis.Auth.OAuth2;
 using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.User;
-using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using Notification = Liane.Api.Event.Notification;
@@ -101,39 +100,20 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
 
   private Message GetFirebaseMessage(Notification notification)
   {
-    return notification switch
+    var data = new Dictionary<string, string>();
+    if (notification.Uri is not null)
     {
-      Notification.Reminder r => new Message
+      data.Add("uri", notification.Uri);
+    }
+    return new Message
+    {
+      Notification = new FirebaseAdmin.Messaging.Notification
       {
-        Notification = new FirebaseAdmin.Messaging.Notification
-        {
-          Title = notification.Title,
-          Body = notification.Message,
-        },
-
-        Apns = new ApnsConfig { Aps = new Aps { ContentAvailable = true } },
-        Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.High },
-        Data = BuildPayLoad(r),
+        Title = notification.Title,
+        Body = notification.Message
       },
-      Notification.Event r => new Message
-      {
-        Notification = new FirebaseAdmin.Messaging.Notification
-        {
-          Title = notification.Title,
-          Body = notification.Message,
-        },
-        Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.Normal },
-        Data = r.Uri.GetOrDefault(u => new Dictionary<string, string> { { "uri", u } })
-      },
-      _ => new Message
-      {
-        Notification = new FirebaseAdmin.Messaging.Notification
-        {
-          Title = notification.Title,
-          Body = notification.Message,
-        },
-        Data = notification.Uri.GetOrDefault(u => new Dictionary<string, string> { { "uri", u } })
-      }
+      Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.Normal },
+      Data = data
     };
   }
 

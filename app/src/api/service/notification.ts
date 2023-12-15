@@ -66,11 +66,15 @@ notifee.onBackgroundEvent(openNotification);
 notifee.onForegroundEvent(openNotification);
 
 export async function displayNotifeeNotification(notification: Notification) {
+  const data: { [key: string]: string | object | number } = {};
+  if (notification.uri) {
+    data.uri = notification.uri;
+  }
   await notifee.displayNotification({
     android: DefaultAndroidSettings,
     title: notification.title,
     body: notification.message,
-    data: { uri: notification.uri }
+    data
   });
 }
 

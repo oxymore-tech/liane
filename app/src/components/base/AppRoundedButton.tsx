@@ -1,6 +1,6 @@
-import { ColorValue, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ColorValue, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -10,7 +10,7 @@ export interface AppRoundedButtonProps {
   color?: ColorValue;
   backgroundColor: ColorValue;
   text: string;
-  onPress?: () => void;
+  onPress?: () => any | Promise<any>;
   opacity?: number;
   enabled?: boolean;
   flex?: number | undefined;
@@ -18,6 +18,7 @@ export interface AppRoundedButtonProps {
 }
 export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacity = 1, enabled = true, flex, icon }: AppRoundedButtonProps) => {
   color = color ?? defaultTextColor(backgroundColor);
+  const [loading, setLoading] = useState(false);
   const content = useMemo(
     () => (
       <Row style={[styles.buttonPadding, { justifyContent: "center", alignItems: "center" }]} spacing={4}>
@@ -29,16 +30,27 @@ export const AppRoundedButton = ({ color, backgroundColor, text, onPress, opacit
             textAlign: "center",
             paddingVertical: 4
           }}>
-          {text}
+          {loading ? " " : text}
         </AppText>
-        {icon && <AppIcon name={icon} color={AppColors.white} />}
+        {loading && <ActivityIndicator size="small" color={AppColors.white} />}
+        {icon && !loading && <AppIcon name={icon} color={AppColors.white} />}
       </Row>
     ),
-    [color, text]
+    [loading, color, text, icon]
   );
-  return enabled ? (
+  return enabled && !loading ? (
     <AppPressableOverlay
-      onPress={onPress}
+      onPress={async () => {
+        if (!onPress) {
+          return;
+        }
+        try {
+          setLoading(true);
+          await onPress();
+        } finally {
+          setLoading(false);
+        }
+      }}
       backgroundStyle={{
         backgroundColor,
         opacity,

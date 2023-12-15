@@ -147,9 +147,9 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       {["Finished", "Archived", "Canceled"].includes(liane.state) && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
-          onPress={() => {
+          onPress={async () => {
             if (currentUserIsDriver) {
-              relaunchLiane(navigation, match);
+              await relaunchLiane(navigation, match);
             } else {
               //TODO
             }
