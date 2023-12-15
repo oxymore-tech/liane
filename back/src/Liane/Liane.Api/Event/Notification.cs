@@ -28,6 +28,18 @@ public abstract record Notification : IEntity
   public abstract ImmutableHashSet<Answer> Answers { get; init; }
   public abstract string Title { get; init; }
   public abstract string Message { get; init; }
+  
+  public string? Uri => this switch
+    {
+      Event e => e.Payload switch
+      {
+        LianeEvent.JoinRequest => "liane://join_request/" + Id,
+        LianeEvent.MemberAccepted m => "liane://liane/" + m.Liane.Id,
+        _ => null
+      },
+      NewMessage m => "liane://chat/" + m.Conversation.Id,
+      _ => null
+    };
 
   public sealed record Info(
     string? Id,

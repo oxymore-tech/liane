@@ -123,16 +123,16 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
           Body = notification.Message,
         },
         Android = new AndroidConfig { Priority = FirebaseAdmin.Messaging.Priority.Normal },
-        Data = BuildUri(r).GetOrDefault(u => new Dictionary<string, string> {{"uri", u }})
+        Data = r.Uri.GetOrDefault(u => new Dictionary<string, string> { { "uri", u } })
       },
-      _ => new Message 
+      _ => new Message
       {
         Notification = new FirebaseAdmin.Messaging.Notification
         {
           Title = notification.Title,
           Body = notification.Message,
         },
-        Data = BuildUri(notification).GetOrDefault(u => new Dictionary<string, string> {{"uri", u }})
+        Data = notification.Uri.GetOrDefault(u => new Dictionary<string, string> { { "uri", u } })
       }
     };
   }
@@ -148,21 +148,6 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     firebaseMessage.Token = deviceToken;
 
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
-  }
-
-  private string? BuildUri(Notification notification)
-  {
-    return notification switch
-    {
-      Notification.Event e => e.Payload switch
-      {
-        LianeEvent.JoinRequest => "liane://join_request/"+ notification.Id,
-        LianeEvent.MemberAccepted m => "liane://liane/"+m.Liane.Id,
-        _ => null
-      },
-      Notification.NewMessage m => "liane://chat/"+m.Conversation.Id,
-      _ => null
-    };
   }
 
   private IReadOnlyDictionary<string, string> BuildPayLoad(Notification payload)

@@ -46,9 +46,8 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
       var connectionId = GetConnectionId(recipient);
       if (connectionId is not null)
       {
-        var result = await hubContext.Clients.Client(connectionId)
+        return await hubContext.Clients.Client(connectionId)
           .ReceiveNotification(notification);
-        return result;
       }
     }
     catch (Exception e)

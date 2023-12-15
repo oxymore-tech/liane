@@ -25,6 +25,7 @@ type AbstractNotification<Key extends string> = Readonly<
     answers: Answer[];
     title: string;
     message: string;
+    uri?: string;
   } & IUnion<Key>
 >;
 

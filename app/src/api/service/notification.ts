@@ -1,5 +1,5 @@
 import notifee, { Event, EventType } from "@notifee/react-native";
-import { FullUser, HttpClient, LianeServiceClient, Notification, UnionUtils } from "@liane/common";
+import { FullUser, HttpClient, LianeServiceClient, Notification } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Linking, Platform } from "react-native";
 import { AppLogger } from "@/api/logger";
@@ -70,7 +70,7 @@ export async function displayNotifeeNotification(notification: Notification) {
     android: DefaultAndroidSettings,
     title: notification.title,
     body: notification.message,
-    data: { uri: UnionUtils.isInstanceOf(notification, "Event") ? notification.payload : "liane://" }
+    data: { uri: notification.uri }
   });
 }
 
@@ -132,13 +132,13 @@ export const PushNotifications = (() => {
   }
   return undefined;
 })();
-const openFirebaseNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
+const openFirebaseNotification = async (m: FirebaseMessagingTypes.RemoteMessage | null) => {
   if (!m) {
     return;
   }
   AppLogger.info("NOTIFICATIONS", "opened firebase notification", m);
   if (m?.data?.uri) {
-    Linking.openURL(<string>m.data.uri);
+    await Linking.openURL(<string>m.data.uri);
   }
 };
 
