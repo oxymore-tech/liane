@@ -171,20 +171,21 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
   private async Task PublishLocation(LianeTracker tracker)
   {
     var info = tracker.GetTrackingInfo();
-    if (info.Car is not null && !tracker.Finished)
-    {
-      if (lastCarMove.TryGetValue(tracker.Liane.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
-      {
-        // Notify driver 
-        await notificationService.SendInfo("Votre trajet est-il toujours en cours ?","", tracker.Liane.Driver.User, "liane://liane/" + tracker.Liane.Id);
-      }
-
-      lastCarMove[tracker.Liane.Id] = info.Car.At;
-    }
     foreach (var member in tracker.Liane.Members)
     {
       await lianeUpdatePushService.Push(info, member.User);
     }
+    if (info.Car is not null && !tracker.Finished)
+    {
+      if (lastCarMove.TryGetValue(tracker.Liane.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
+      {
+        // Notify driver
+        await notificationService.SendInfo("Votre trajet est-il toujours en cours ?", "", tracker.Liane.Driver.User, "liane://liane/" + tracker.Liane.Id);
+      }
+
+      lastCarMove[tracker.Liane.Id] = info.Car.At;
+    }
+  
   }
 
   private Action GetDefaultOnReachedDestination(Ref<Api.Trip.Liane> liane)
