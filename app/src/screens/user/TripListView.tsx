@@ -174,7 +174,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
         </Row>
       )}
       {status === "StartingSoon" && <View style={{ height: 44 }} />}
-      {status === "StartingSoon" && <StartButton item={item} />}
+      {status === "StartingSoon" || (status === "Started" && item.state === "NotStarted" && <StartButton item={item} />)}
     </View>
   );
 };
