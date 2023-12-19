@@ -131,6 +131,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       else if (currentLocation is not null && currentLocation.PointDistance <= ILianeTrackerService.NearPointDistanceInMeters)
       {
         // Getting out of a way point zone
+        // TODO We can mark the current time as the effective time for the current waypoint
         pingNextPointIndex++;
       }
       else
