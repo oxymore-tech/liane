@@ -158,6 +158,7 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     }
 
     await userStatService.IncrementTotalCreatedTrips(createdBy);
+    await rallyingPointService.UpdateStats(new []{entity.From, entity.To}, entity.ReturnTime ?? entity.DepartureTime, entity.ReturnTime is null ? 1 : 2);
     return await Get(created.Id);
   }
 
@@ -333,7 +334,10 @@ public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Li
     }
 
     var updated = await Update(liane, updateDef);
-
+    
+    var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
+    if(pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+    
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
     await PushUpdate(updated);

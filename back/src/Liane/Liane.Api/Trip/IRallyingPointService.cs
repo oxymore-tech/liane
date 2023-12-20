@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
@@ -28,4 +30,8 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
   Task SetActive(IEnumerable<Ref<RallyingPoint>> points, bool active);
   Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points);
   Task<int> DeleteMany(RallyingPointFilter rallyingPointFilter);
+  Task UpdateStats(Ref<RallyingPoint> point, DateTime lastUsage, int incUsageCount = 1);
+  Task UpdateStats(IEnumerable<Ref<RallyingPoint>> point, DateTime lastUsage, int incUsageCount = 1);
+  Task<RallyingPointStats> GetStats(Ref<RallyingPoint> point);
+  Task<FeatureCollection> GetDepartment(string n);
 }

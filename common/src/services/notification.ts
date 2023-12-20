@@ -83,7 +83,7 @@ export abstract class AbstractNotificationService implements NotificationService
 }
 
 export class NotificationServiceClient extends AbstractNotificationService {
-  constructor(private http: HttpClient) {
+  constructor(protected http: HttpClient) {
     super();
   }
 

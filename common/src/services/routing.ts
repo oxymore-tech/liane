@@ -16,7 +16,7 @@ export interface RoutingService {
 }
 
 export class RoutingServiceClient implements RoutingService {
-  constructor(private http: HttpClient) {}
+  constructor(protected http: HttpClient) {}
 
   async getRoute(pointsCoordinates: LatLng[]): Promise<Route> {
     const { coordinates } = await this.http.postAs<RawRouteResponse>("/basicRoute/", { body: { coordinates: pointsCoordinates } });

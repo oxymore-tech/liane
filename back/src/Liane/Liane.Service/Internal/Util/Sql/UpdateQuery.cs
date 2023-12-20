@@ -7,13 +7,25 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Liane.Service.Internal.Util.Sql;
 
-public sealed record UpdateQuery<T>(Filter<T> Filter, IDictionary<FieldDefinition<T>, object?> Setters) : IQuery<T>
+public sealed record UpdateQuery<T>(Filter<T> Filter) : IQuery<T>
 {
-  public UpdateQuery<T> Set(IDictionary<FieldDefinition<T>, object?> setters) => this with { Setters = setters };
-
+  private IDictionary<FieldDefinition<T>, object?> setters = new Dictionary<FieldDefinition<T>, object?>();
+  private IDictionary<FieldDefinition<T>, int> increment = new Dictionary<FieldDefinition<T>, int>();
   public UpdateQuery<T> Set<TValue>(Expression<Func<T, TValue>> field, TValue value)
   {
-    Setters.Add(FieldDefinition<T>.From(field), value);
+    setters.Add(FieldDefinition<T>.From(field), value);
+    return this;
+  }
+  
+  public UpdateQuery<T> Set<TValue>(FieldDefinition<T> field, TValue value)
+  {
+    setters.Add(field, value);
+    return this;
+  }
+  
+  public UpdateQuery<T> Increment<TValue>(Expression<Func<T, TValue>> field, int value = 1)
+  {
+    increment.Add(FieldDefinition<T>.From(field), value);
     return this;
   }
 
@@ -24,13 +36,14 @@ public sealed record UpdateQuery<T>(Filter<T> Filter, IDictionary<FieldDefinitio
 
     var stringBuilder = new StringBuilder();
     stringBuilder.Append($"UPDATE {Mapper.GetTableName<T>()}");
-    if (Setters.IsNullOrEmpty())
+    if (setters.IsNullOrEmpty() && increment.IsNullOrEmpty())
     {
       throw new ArgumentException("No Setters defined");
     }
 
-    stringBuilder.Append($"SET {string.Join(", ", Setters.Select(kv => $"{kv.Key.ToSql(namedParams)} = {namedParams.Add(kv.Value)}"))}");
-
+    stringBuilder.Append($"\nSET {string.Join(", ", setters.Select(kv => $"{kv.Key.ToSql(namedParams)} = {namedParams.Add(kv.Value)}"))}");
+    if (!setters.IsNullOrEmpty() && !increment.IsNullOrEmpty()) stringBuilder.Append(", ");
+    stringBuilder.Append(string.Join(", ", increment.Select(kv => $"{kv.Key.ToSql(namedParams)} = {kv.Key.ToSql(namedParams)} + {namedParams.Add(kv.Value)}")));
     if (!string.IsNullOrEmpty(sqlFilter))
     {
       stringBuilder.Append($"\nWHERE {sqlFilter}");

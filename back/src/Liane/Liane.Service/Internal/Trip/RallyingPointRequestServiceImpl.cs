@@ -1,6 +1,11 @@
 using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
@@ -55,5 +60,19 @@ public class RallyingPointRequestServiceImpl : MongoCrudEntityService<RallyingPo
   protected override Task<RallyingPointRequest> ToDb(RallyingPointRequest inputDto, string originalId, DateTime createdAt, string createdBy)
   {
     return Task.FromResult(inputDto with { Id = originalId, CreatedAt = createdAt, CreatedBy = createdBy });
+  }
+  
+  public async Task<FeatureCollection> GetDepartment(string n)
+  {
+    var filter = Builders<RallyingPointRequest>.Filter.Regex(r => r.Point.ZipCode, new BsonRegularExpression(new Regex(n+"\\d{3}")));
+    var fc = new FeatureCollection((await Collection.Find(filter).ToListAsync()).Select(r =>
+    {
+      var location = r.Point.Location.ToGeoJson();
+      var f = new Feature(location, r, r.Id);
+      var transformedProperties = f.Properties.Keys.Select(key => (key.NormalizeToCamelCase(), f.Properties[key]))
+        .ToImmutableDictionary(entry => entry.Item1, entry => entry.Item2);
+      return new Feature(location, transformedProperties, f.Id);
+    }).ToList());
+    return fc;
   }
 }

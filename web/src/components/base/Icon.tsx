@@ -8,6 +8,7 @@ import {
   LuMails,
   LuMap,
   LuMapPin,
+  LuPlus,
   LuRefreshCw,
   LuRotateCcw,
   LuSearch,
@@ -22,6 +23,7 @@ export type IconProps = {
 } & IconContext;
 
 export type IconName =
+  | "add"
   | "close"
   | "home"
   | "shield-check"
@@ -67,6 +69,8 @@ export function getIconComponent(name: IconName) {
       return LuMails;
     case "table":
       return LuTable2;
+    case "add":
+      return LuPlus;
     default:
       console.warn("Unknown icon", name);
       return null;

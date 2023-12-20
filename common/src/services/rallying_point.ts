@@ -11,7 +11,7 @@ export interface RallyingPointService {
 }
 
 export class RallyingPointClient implements RallyingPointService {
-  constructor(private http: HttpClient) {}
+  constructor(protected http: HttpClient) {}
 
   async search(search: string, location?: LatLng): Promise<RallyingPoint[]> {
     const res = await this.list({ search, location });

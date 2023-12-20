@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, PropsWithChildren, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { AppStorage, AuthService, AuthServiceClient, FullUser, HttpClient, RallyingPointClient, RoutingServiceClient } from "@liane/common";
+import { AppStorage, AuthService, AuthServiceClient, FullUser, HttpClient, RoutingService, RoutingServiceClient } from "@liane/common";
 import { NodeAppEnv } from "@/api/env";
 import { LocalStorageImpl } from "@/api/storage";
 import { WebLogger } from "@/api/logger";
@@ -14,6 +14,8 @@ import { Navigation } from "@/api/navigation";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { usePathname, useRouter } from "next/navigation";
 import { ToastMessage } from "@/components/base/ToastMessage";
+import { PointsAdminService, PointsAdminServiceClient } from "@/api/points_admin";
+import { OsmService, OsmServiceClient } from "@/api/osm";
 
 type AppContextProps = {
   user?: FullUser;
@@ -22,8 +24,9 @@ type AppContextProps = {
     storage: AppStorage;
     auth: AuthService;
     record: RecordService;
-    routing: RoutingServiceClient;
-    rallyingPoint: RallyingPointClient;
+    routing: RoutingService;
+    rallyingPoint: PointsAdminService;
+    osm: OsmService;
   };
 };
 //@ts-ignore
@@ -38,8 +41,15 @@ const http = new HttpClient(NodeAppEnv.baseUrl, WebLogger, storage);
 const auth = new AuthServiceClient(http, storage);
 const record = new RecordServiceClient(http);
 const routing = new RoutingServiceClient(http);
-const rallyingPoint = new RallyingPointClient(http);
-const queryClient = new QueryClient();
+const rallyingPoint = new PointsAdminServiceClient(http);
+const osm = new OsmServiceClient(storage);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false
+    }
+  }
+});
 
 export default function ContextProvider({ children }: { children: ReactNode }) {
   const [user, setInternalUser] = useState<FullUser | null | undefined>();
@@ -74,7 +84,8 @@ export default function ContextProvider({ children }: { children: ReactNode }) {
               auth,
               routing,
               rallyingPoint,
-              record
+              record,
+              osm
             }
           } as AppContextProps
         }>
@@ -97,11 +108,12 @@ export const PageLayout = ({ children, ...props }: PropsWithChildren & React.HTM
     <main className="h-screen w-full flex flex-col dark:bg-gray-900 bg-white overflow-hidden" {...props}>
       <Flowbite>
         <Header />
-        <div className="grow w-full relative">
+
+        <div className="w-full grow max-h-full">
           {!!user && (
             <div className="flex h-full">
               <SideMenu pages={Navigation} />
-              <div className="flex h-full w-full">{children}</div>
+              <div className="flex relative grow w-full">{children}</div>
             </div>
           )}
           {user === null && children}

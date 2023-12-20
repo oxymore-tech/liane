@@ -12,7 +12,7 @@ public interface IQuery<T>
 public sealed class Query
 {
   public static SelectQuery<T> Select<T>() where T : notnull => new(Filter<T>.Empty, null, null, ImmutableList<FieldDefinition<T>>.Empty);
-  public static UpdateQuery<T> Update<T>() where T : notnull => new(Filter<T>.Empty, ImmutableDictionary<FieldDefinition<T>, object?>.Empty);
+  public static UpdateQuery<T> Update<T>() where T : notnull => new(Filter<T>.Empty);
   public static InsertQuery<T> Insert<T>(T entity) where T : notnull => new(entity);
   public static InsertQuery<T> Insert<T>(IEnumerable<T> entities) where T : notnull => new(entities);
   public static DeleteQuery<T> Delete<T>(Filter<T> where) where T : notnull => new(where);

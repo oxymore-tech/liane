@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Util;
@@ -38,17 +39,25 @@ public sealed class RallyingPointController : ControllerBase
 
   [HttpDelete("{id}")]
   [RequiresAdminAuth]
-  public async Task Delete(string id)
+  public async Task Delete([FromRoute] string id)
   {
     await rallyingPointService.Delete(id);
   }
 
-  [HttpPut("{id}")]
+  [HttpPatch("{id}")]
   [RequiresAdminAuth]
-  public async Task Update([FromQuery] string id, [FromBody] RallyingPoint rallyingPoint)
+  public async Task Update([FromRoute] string id, [FromBody] RallyingPoint rallyingPoint)
   {
     await rallyingPointService.Update(id, rallyingPoint);
   }
+  
+  [HttpGet("{id}/stats")]
+  [RequiresAdminAuth]
+  public Task<RallyingPointStats> GetStats([FromRoute] string id)
+  {
+   return rallyingPointService.GetStats(id);
+  }
+
 
   [HttpPost("generate")]
   [RequiresAdminAuth]
@@ -61,6 +70,13 @@ public sealed class RallyingPointController : ControllerBase
   public async Task<PaginatedResponse<RallyingPoint>> List([FromQuery] RallyingPointFilter rallyingPointFilter)
   {
     return await rallyingPointService.List(rallyingPointFilter);
+  }
+
+  [HttpGet("department/{n}")]
+  [RequiresAdminAuth]
+  public async Task<FeatureCollection> GetPointsInDepartment([FromRoute] string n)
+  {
+    return await rallyingPointService.GetDepartment(n);
   }
 
   [HttpGet("snap")]
@@ -98,6 +114,13 @@ public sealed class RallyingPointController : ControllerBase
   public Task<PaginatedResponse<RallyingPointRequest>> ListAllRequests(Pagination pagination)
   {
     return rallyingPointRequestService.Paginate(pagination);
+  }
+
+  [HttpGet("request/department/{n}")]
+  [RequiresAdminAuth]
+  public async Task<FeatureCollection> GetRequestsInDepartment([FromRoute] string n)
+  {
+    return await rallyingPointRequestService.GetDepartment(n);
   }
 
   [HttpGet("request")]

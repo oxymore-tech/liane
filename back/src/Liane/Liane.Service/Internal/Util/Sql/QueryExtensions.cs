@@ -2,8 +2,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
+using GeoJSON.Text.Feature;
+using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 
@@ -38,9 +41,12 @@ public static class QueryExtensions
       .Where(p => p.PropertyInfo.Name != nameof(IIdentity.Id))
       .ToImmutableDictionary(p => (FieldDefinition<T>)p.ColumnName, p => p.PropertyInfo.GetValue(table));
 
-    var query = Query.Update<T>()
-      .Set(setters)
-      .Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, table.Id));
+    var query = Query.Update<T>();
+    foreach (var setter in  setters.AsEnumerable())
+    {
+      query = query.Set(setter.Key, setter.Value);
+    }
+    query = query.Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, table.Id));
 
     return connection.UpdateAsync(query, transaction);
   }
@@ -82,5 +88,19 @@ public static class QueryExtensions
   {
     var (sql, parameters) = query.ToSql();
     return connection.QuerySingleAsync<long>($"select count(*) from ({sql}) query", parameters, transaction);
+  }
+
+  public static async Task<FeatureCollection> QueryGeoJsonAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
+  {
+    var (sql, parameters) = query.ToSql();
+      sql = $"SELECT json_build_object('type', 'FeatureCollection','features', coalesce(json_agg(ST_AsGeoJSON(t.*)::json), '[]'::json)) FROM ({sql}) AS t";
+      var strResult = await connection.QuerySingleAsync<string>(sql, parameters, transaction);
+      var result = JsonSerializer.Deserialize<FeatureCollection>(strResult) ?? new FeatureCollection();
+      var transformedFeatures = result.Features.Select(f =>
+      {
+       return new Feature(f.Geometry, f.Properties.Select(entry => (entry.Key.NormalizeToCamelCase(), entry.Value))
+          .ToImmutableDictionary(entry => entry.Item1, entry => entry.Item2), f.Id);
+      });
+      return new FeatureCollection(transformedFeatures.ToList());
   }
 }

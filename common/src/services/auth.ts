@@ -16,7 +16,7 @@ export interface AuthService {
 
 export class AuthServiceClient implements AuthService {
   constructor(
-    private http: HttpClient,
+    protected http: HttpClient,
     private storage: AppStorage
   ) {}
 
