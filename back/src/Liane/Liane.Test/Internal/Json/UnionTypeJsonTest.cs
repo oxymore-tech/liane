@@ -65,7 +65,6 @@ public sealed class UnionTypeJsonTest
     Assert.AreEqual("{\"type\":\"MemberHasLeft\",\"liane\":\"lianeId1\",\"member\":\"augustin\"}", actual);
   }
 
-  
   [Test]
   public void ShouldSerializeNotification()
   {
@@ -75,6 +74,15 @@ public sealed class UnionTypeJsonTest
     Assert.AreEqual("{\"type\":\"Event\",\"id\":\"id\",\"createdBy\":\"userA\",\"createdAt\":\"2023-05-06T08:08:08Z\",\"recipients\":[],\"answers\":[],\"title\":\"title\",\"message\":\"message\",\"payload\":{\"type\":\"MemberAccepted\",\"liane\":\"lianeId1\",\"member\":\"augustin\",\"from\":\"a\",\"to\":\"b\",\"seats\":1,\"takeReturnTrip\":false},\"seenAt\":null,\"uri\":\"liane://liane/lianeId1\"}", actual);
   }
   
+  [Test]
+  public void ShouldSerializeNotificationInfo()
+  {
+    var notif = new Notification.Info("id", "userA", DateTime.Parse("2023-05-06T08:08:08Z").ToUniversalTime(), ImmutableList<Recipient>.Empty, ImmutableHashSet<Answer>.Empty, "title", "message", "liane://liane/customUriTest");
+    var actual = JsonSerializer.Serialize(notif, options);
+    Console.Out.Write(actual);
+    Assert.AreEqual("{\"type\":\"Info\",\"id\":\"id\",\"createdBy\":\"userA\",\"createdAt\":\"2023-05-06T08:08:08Z\",\"recipients\":[],\"answers\":[],\"title\":\"title\",\"message\":\"message\",\"uri\":\"liane://liane/customUriTest\",\"seenAt\":null}", actual);
+  }
+
   [Test]
   public void ShouldSerializeConcrete1()
   {
