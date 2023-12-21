@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Api.Event;
 
@@ -29,6 +30,7 @@ public abstract record Notification : IEntity
   public abstract string Title { get; init; }
   public abstract string Message { get; init; }
   
+  [BsonIgnore]
   public string? Uri => this switch
     {
       Info i => i.Uri,
