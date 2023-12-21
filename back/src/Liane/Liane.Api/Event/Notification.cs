@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Liane.Api.Event;
 
@@ -28,19 +29,8 @@ public abstract record Notification : IEntity
   public abstract ImmutableHashSet<Answer> Answers { get; init; }
   public abstract string Title { get; init; }
   public abstract string Message { get; init; }
-  
-  public string? Uri => this switch
-    {
-      Info i => i.Uri,
-      Event e => e.Payload switch
-      {
-        LianeEvent.JoinRequest => "liane://join_request/" + Id,
-        LianeEvent.MemberAccepted m => "liane://liane/" + m.Liane.Id,
-        _ => null
-      },
-      NewMessage m => "liane://chat/" + m.Conversation.Id,
-      _ => null
-    };
+
+  [BsonIgnore] public abstract string? Uri { get; init; }
 
   public sealed record Info(
     string? Id,
@@ -64,8 +54,11 @@ public abstract record Notification : IEntity
     string Message,
     Ref<ConversationGroup> Conversation,
     DateTime? SeenAt = null
-  ) : Notification;
-  
+  ) : Notification
+  {
+    public override string? Uri { get; init; } = "liane://chat/" + Conversation.Id;
+  }
+
   public sealed record Reminder(
     string? Id,
     Ref<User.User>? CreatedBy,
@@ -76,7 +69,10 @@ public abstract record Notification : IEntity
     string Message,
     Api.Event.Reminder Payload,
     DateTime? SeenAt = null
-  ) : Notification;
+  ) : Notification
+  {
+    public override string? Uri { get; init; } = "liane://liane/" + Payload.Liane.Id;
+  }
 
   public sealed record Event(
     string? Id,
@@ -88,7 +84,15 @@ public abstract record Notification : IEntity
     string Message,
     LianeEvent Payload,
     DateTime? SeenAt = null
-  ) : Notification;
+  ) : Notification
+  {
+    public override string? Uri { get; init; } = Payload switch
+    {
+      LianeEvent.JoinRequest => "liane://join_request/" + Id,
+      LianeEvent.MemberAccepted m => "liane://liane/" + m.Liane.Id,
+      _ => null
+    };
+  }
 }
 
 public sealed record Reminder(Ref<Trip.Liane> Liane, ImmutableList<WayPoint> Trip, bool Driver);
