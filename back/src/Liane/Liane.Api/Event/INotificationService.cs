@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ public interface INotificationService : ICrudService<Notification>
 
   Task<Notification> SendInfo(string title, string message, Ref<User.User> to, string? uri);
 
-  Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<User.User> to, LianeEvent lianeEvent, params Answer[] answers);
+  Task<Notification> SendEvent(string title, string message, Ref<User.User> createdBy, Ref<User.User> to, LianeEvent lianeEvent, params Answer[] answers);
   
   Task Answer(Ref<Notification> id, Answer answer);
 

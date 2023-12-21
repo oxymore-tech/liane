@@ -274,7 +274,7 @@ const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
 const StartingSoonView = (props: { liane: Liane }) => {
   const status = useLianeStatus(props.liane);
   const { services } = useContext(AppContext);
-  if (status === "StartingSoon") {
+  if (status === "StartingSoon" || (status === "Started" && props.liane.state === "NotStarted")) {
     return <StartButton startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))} />;
   } else {
     return null;

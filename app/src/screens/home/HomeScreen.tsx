@@ -112,10 +112,13 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                       1000
                     );
                   } else if (placeFeature.geometry.type === "Point") {
-                    appMapRef.current?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000);
-                    if (placeFeature.place_type[0] === "rallying_point") {
-                      machine.send("SELECT", { data: placeFeature.properties });
-                    }
+                    appMapRef.current
+                      ?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000)
+                      ?.then(() => {
+                        if (placeFeature.place_type[0] === "rallying_point") {
+                          machine.send("SELECT", { data: placeFeature.properties });
+                        }
+                      });
                   }
                   return true;
                 }}
