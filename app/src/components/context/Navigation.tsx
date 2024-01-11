@@ -285,7 +285,6 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   bottomBar: {
-    itemSpacing: 16,
     margin: 0,
     backgroundColor: AppColors.white,
     overflow: "hidden",

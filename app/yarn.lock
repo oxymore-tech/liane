@@ -2258,20 +2258,30 @@
     "@turf/helpers" "^6.5.0"
     "@turf/invariant" "^6.5.0"
 
-"@turf/bbox-polygon@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/bbox-polygon/-/bbox-polygon-6.5.0.tgz#f18128b012eedfa860a521d8f2b3779cc0801032"
-  integrity sha512-+/r0NyL1lOG3zKZmmf6L8ommU07HliP4dgYToMoTxqzsWzyLjaj/OzgQ8rBmv703WJX+aS6yCmLuIhYqyufyuw==
+"@turf/bbox-polygon@^7.0.0-alpha.110+1411d63a7":
+  version "7.0.0-alpha.110"
+  resolved "https://registry.yarnpkg.com/@turf/bbox-polygon/-/bbox-polygon-7.0.0-alpha.110.tgz#a27baa7d84d214f6426164ab0d9c8e445d9d79f7"
+  integrity sha512-BjIsmrgsT9PP/7r0zPIOtUUmzcO3epxt4WoGOpmfG8GDuqVPHnnRp+FxBr9LMeLE+9Ur9rxHP/x0XfVbxEVvpA==
   dependencies:
-    "@turf/helpers" "^6.5.0"
+    "@turf/helpers" "^7.0.0-alpha.110+1411d63a7"
+    tslib "^2.6.2"
 
-"@turf/bbox@*", "@turf/bbox@^6.5.0":
+"@turf/bbox@*":
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/@turf/bbox/-/bbox-6.5.0.tgz#bec30a744019eae420dac9ea46fb75caa44d8dc5"
   integrity sha512-RBbLaao5hXTYyyg577iuMtDB8ehxMlUqHEJiMs8jT1GHkFhr6sYre3lmLsPeYEi/ZKj5TP5tt7fkzNdJ4GIVyw==
   dependencies:
     "@turf/helpers" "^6.5.0"
     "@turf/meta" "^6.5.0"
+
+"@turf/bbox@^7.0.0-alpha.110+1411d63a7":
+  version "7.0.0-alpha.110"
+  resolved "https://registry.yarnpkg.com/@turf/bbox/-/bbox-7.0.0-alpha.110.tgz#e238b1939ab3d0fc62722b6e2f83df4ec8080067"
+  integrity sha512-Y9PZ1JJhFoESEFRdUey5EhFgYZ8mtIQq8ePX+joLviML4tZf1jmqJWPbAnArWD4ennfJEbqJNEVG/ygaI89tew==
+  dependencies:
+    "@turf/helpers" "^7.0.0-alpha.110+1411d63a7"
+    "@turf/meta" "^7.0.0-alpha.110+1411d63a7"
+    tslib "^2.6.2"
 
 "@turf/bearing@^6.5.0":
   version "6.5.0"
@@ -2297,7 +2307,7 @@
     "@turf/helpers" "^6.5.0"
     "@turf/invariant" "^6.5.0"
 
-"@turf/distance@^7.0.0-alpha.2":
+"@turf/distance@^7.0.0-alpha.110", "@turf/distance@^7.0.0-alpha.2":
   version "7.0.0-alpha.110"
   resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.0.0-alpha.110.tgz#888397b29c068a46f155140879ff3f88d3d0af05"
   integrity sha512-sXD/7Z/7UOekhDXE202zffcuznLABUw/HnFNWhSxj19/7A0e7Wy4KLL2VjYaVppNyy0lQIkwU/Lvt7U+PjXJFQ==
@@ -2306,21 +2316,22 @@
     "@turf/invariant" "^7.0.0-alpha.110+1411d63a7"
     tslib "^2.6.2"
 
-"@turf/envelope@^6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@turf/envelope/-/envelope-6.5.0.tgz#73e81b9b7ed519bd8a614d36322d6f9fbeeb0579"
-  integrity sha512-9Z+FnBWvOGOU4X+fMZxYFs1HjFlkKqsddLuMknRaqcJd6t+NIv5DWvPtDL8ATD2GEExYDiFLwMdckfr1yqJgHA==
+"@turf/envelope@^7.0.0-alpha.110":
+  version "7.0.0-alpha.110"
+  resolved "https://registry.yarnpkg.com/@turf/envelope/-/envelope-7.0.0-alpha.110.tgz#369bde53a7305708ad1e0edfef827170c8fadc49"
+  integrity sha512-7OdGhOIKWage32U9E0kEDljMDzu70RX+qAFvKGT3s22MZuiAkXbHHfunYJ6G8t18o+aHOP/mcV0JgxL8EplovA==
   dependencies:
-    "@turf/bbox" "^6.5.0"
-    "@turf/bbox-polygon" "^6.5.0"
-    "@turf/helpers" "^6.5.0"
+    "@turf/bbox" "^7.0.0-alpha.110+1411d63a7"
+    "@turf/bbox-polygon" "^7.0.0-alpha.110+1411d63a7"
+    "@turf/helpers" "^7.0.0-alpha.110+1411d63a7"
+    tslib "^2.6.2"
 
 "@turf/helpers@6.5.0", "@turf/helpers@6.x", "@turf/helpers@^6.5.0":
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-6.5.0.tgz#f79af094bd6b8ce7ed2bd3e089a8493ee6cae82e"
   integrity sha512-VbI1dV5bLFzohYYdgqwikdMVpe7pJ9X3E+dlr425wa2/sMJqYDhTO++ec38/pcPvPE6oD9WEEeU3Xu3gza+VPw==
 
-"@turf/helpers@^7.0.0-alpha.110+1411d63a7", "@turf/helpers@^7.0.0-alpha.2":
+"@turf/helpers@^7.0.0-alpha.110", "@turf/helpers@^7.0.0-alpha.110+1411d63a7", "@turf/helpers@^7.0.0-alpha.2":
   version "7.0.0-alpha.110"
   resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.0.0-alpha.110.tgz#48b7113bbfde6f3a2edf13cf810666077e798ecb"
   integrity sha512-gqvXMoXct0md3P/HQvjTAXEB3z9LPm8+IH4+HRKggxi0Kr0ZoFtuIjR0SzZzLdpy/5aYcfq9G7wssjr/+1TBiQ==
@@ -2378,6 +2389,13 @@
   integrity sha512-RrArvtsV0vdsCBegoBtOalgdSOfkBrTJ07VkpiCnq/491W67hnMWmDu7e6Ztw0C3WldRYTXkg3SumfdzZxLBHA==
   dependencies:
     "@turf/helpers" "^6.5.0"
+
+"@turf/meta@^7.0.0-alpha.110+1411d63a7":
+  version "7.0.0-alpha.110"
+  resolved "https://registry.yarnpkg.com/@turf/meta/-/meta-7.0.0-alpha.110.tgz#0c01bc45f97db74638a64074a9562022f3d070c6"
+  integrity sha512-4CTF+JLu5W7uPywl5DtLMkUY9Qvf7UnMLdW9SQqR0Mj4Q3Kd5D4JW679UmQ/ZhprmDFrZUxYXoqX6k0SA/6JyQ==
+  dependencies:
+    "@turf/helpers" "^7.0.0-alpha.110+1411d63a7"
 
 "@turf/nearest-point-on-line@6.5.0":
   version "6.5.0"

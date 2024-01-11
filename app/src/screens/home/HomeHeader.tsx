@@ -20,7 +20,6 @@ import { AppLocalization } from "@/api/i18n";
 import { DatePagerSelector } from "@/components/DatePagerSelector";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
-import { useAppNavigation } from "@/components/context/routing";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 
 export const RallyingPointField = forwardRef(
@@ -87,8 +86,6 @@ type HomeScreenHeaderProp = {
 };
 const HomeScreenHeader = ({ isRootHeader = false, updateTrip, trip }: HomeScreenHeaderProp) => {
   const insets = useSafeAreaInsets();
-  const { navigation } = useAppNavigation();
-  const { user } = useContext(AppContext);
   return (
     <>
       <AppStatusBar style="dark-content" />
@@ -379,7 +376,12 @@ export const FilterSelector = ({ formatter, shortFormat = false, color = default
   );
 };
 
-export const SearchModal = (props: {
+export const SearchModal = ({
+  onSelectTrip,
+  onSelectFeature,
+  isOpened,
+  close
+}: {
   onSelectTrip: (trip: Trip) => boolean;
   onSelectFeature: (feature: SearchedLocation) => boolean;
   title?: string;
@@ -393,13 +395,13 @@ export const SearchModal = (props: {
 
   const inputRef = useRef<TextInput>();
   const closeModal = useCallback(() => {
-    props.close();
+    close();
     setInputText("");
-  }, []);
-  useEffect(() => inputRef.current?.focus(), [props.isOpened]);
+  }, [close]);
+  useEffect(() => inputRef.current?.focus(), [isOpened]);
 
   return (
-    <Modal propagateSwipe isVisible={props.isOpened} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={props.close}>
+    <Modal propagateSwipe isVisible={isOpened} onSwipeComplete={closeModal} style={styles.modal} onBackButtonPress={close}>
       <View style={{ height: "100%", paddingTop: top }}>
         <Row spacing={8}>
           <View style={styles.inputContainer}>
@@ -438,9 +440,8 @@ export const SearchModal = (props: {
             {selectedTab === 0 && inputText.length === 0 && (
               <CachedPlaceLocationsView
                 showUsePosition={false}
-                onSelect={async f => {
-                  const close = props.onSelectFeature(f);
-                  if (close) {
+                onSelect={f => {
+                  if (onSelectFeature(f)) {
                     closeModal();
                   }
                 }}
@@ -450,8 +451,7 @@ export const SearchModal = (props: {
               <CachedTripsView
                 filter={inputText.length > 0 ? inputText : undefined}
                 onSelect={t => {
-                  const close = props.onSelectTrip(t);
-                  if (close) {
+                  if (onSelectTrip(t)) {
                     closeModal();
                   }
                 }}
@@ -461,8 +461,7 @@ export const SearchModal = (props: {
               <PlaceSuggestions
                 currentSearch={inputText}
                 onSelect={f => {
-                  const close = props.onSelectFeature(f);
-                  if (close) {
+                  if (onSelectFeature(f)) {
                     closeModal();
                   }
                   // Cache location

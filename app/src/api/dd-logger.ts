@@ -63,16 +63,10 @@ function formatLogWithErrorArguments(
   }
 
   if (!message) {
-    return [`[${tag}] ${error.message}${formatArgs(args)}`, error.name, error.cause?.toString(), error.stack, { tag, error: message, args }];
+    return [`[${tag}] ${error.message}${formatArgs(args)}`, error.name, undefined, error.stack, { tag, error: message, args }];
   }
 
-  return [
-    `[${tag}] ${message}${formatArgs(args)} : ${error.message}`,
-    error.name,
-    error.cause?.toString(),
-    error.stack,
-    { tag, error: message, args }
-  ];
+  return [`[${tag}] ${message}${formatArgs(args)} : ${error.message}`, error.name, undefined, error.stack, { tag, error: message, args }];
 }
 
 function formatLogArguments(tag: LoggerNamespace, args: any[]): LogArguments | LogWithErrorArguments {
