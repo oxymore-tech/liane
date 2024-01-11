@@ -24,23 +24,15 @@ export const MarkerSymbolLayer = (config: LayerConfig<SymbolLayerSpecification>)
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const loadImage = () =>
-      map.current?.loadImage("/pin.png", function (error, image) {
-        if (error) throw error;
-        if (!image) console.warn("No image found");
-        else if (!map.current?.hasImage("pin")) {
-          map.current?.addImage("pin", image, { sdf: true });
-          setReady(true);
-        }
-        console.log("here");
+      map.current?.loadGlobalImage("/pin.png", "pin", () => {
+        setReady(true);
+        //    console.log("here", config.id);
       });
 
-    console.log(map.current?.loaded());
+    // console.log(map.current?.loaded());
     if (map.current?.loaded()) loadImage();
     else map.current?.once("idle", loadImage);
-    return () => {
-      // if (map.current?.hasImage("pin")) map.current?.removeImage("pin");
-    };
-  }, [map]);
-  console.log("ready", ready);
+  }, [config.id, map]);
+  // console.debug("ready", ready, config.id);
   return ready ? <SymbolLayer {...config} /> : null;
 };

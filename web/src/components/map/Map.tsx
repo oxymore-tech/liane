@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, PropsWithChildren, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
-import maplibregl, { MapMouseEvent } from "maplibre-gl";
+import maplibregl, { MapMouseEvent, MapOptions } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { DEFAULT_TLS, getMapStyleUrl, LatLng } from "@liane/common";
 import { NodeAppEnv } from "@/api/env";
@@ -13,19 +13,44 @@ export type MapProps = {
 } & PropsWithChildren;
 
 // @ts-ignore
-const MapContext = createContext<React.MutableRefObject<maplibregl.Map | null>>();
+const MapContext = createContext<React.MutableRefObject<MapImpl | null>>();
 
 export const useMapContext = () => {
   return useContext(MapContext);
 };
-const Map = React.forwardRef<maplibregl.Map | null, MapProps>(({ children, center, onZoom, onClick }: MapProps, ref) => {
+
+class MapImpl extends maplibregl.Map {
+  constructor(options: MapOptions) {
+    super(options);
+  }
+
+  private imageListeners: { [k: string]: (() => void)[] } = {};
+
+  public loadGlobalImage(path: string, name: string, onLoaded?: () => void) {
+    if (onLoaded) {
+      if (this.hasImage(name)) onLoaded();
+      else this.imageListeners[name] = [...(this.imageListeners[name] ?? []), onLoaded];
+    }
+    this.loadImage(path, (error, image) => {
+      if (error) throw error;
+      if (!image) console.warn("No image found");
+      else if (!this.hasImage(name)) {
+        this.addImage(name, image, { sdf: true });
+        console.log("loaded", name);
+        this.imageListeners[name]?.forEach(l => l());
+      }
+    });
+  }
+}
+
+const Map = React.forwardRef<MapImpl | null, MapProps>(({ children, center, onZoom, onClick }: MapProps, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+  const map = useRef<MapImpl | null>(null);
   const [ready, setReady] = useState(false);
-  useImperativeHandle<maplibregl.Map | null, maplibregl.Map | null>(ref, () => map.current);
+  useImperativeHandle<MapImpl | null, MapImpl | null>(ref, () => map.current);
   useEffect(() => {
     if (map.current) return;
-    map.current = new maplibregl.Map({
+    map.current = new MapImpl({
       container: mapContainer.current!,
       style: getMapStyleUrl(NodeAppEnv),
       center: center ? [center.lng, center.lat] : [DEFAULT_TLS.lng, DEFAULT_TLS.lat],

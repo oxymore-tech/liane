@@ -4,6 +4,7 @@ import {
   LuCloudOff,
   LuFilter,
   LuHome,
+  LuImport,
   LuInfo,
   LuMails,
   LuMap,
@@ -37,7 +38,8 @@ export type IconName =
   | "offline"
   | "alert"
   | "table"
-  | "mails";
+  | "mails"
+  | "import";
 
 export function getIconComponent(name: IconName) {
   switch (name) {
@@ -71,6 +73,8 @@ export function getIconComponent(name: IconName) {
       return LuTable2;
     case "add":
       return LuPlus;
+    case "import":
+      return LuImport;
     default:
       console.warn("Unknown icon", name);
       return null;

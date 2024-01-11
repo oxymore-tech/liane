@@ -5,7 +5,7 @@ type ControlPanelProps = {} & PropsWithChildren;
 type ControlProps = { label: string } & PropsWithChildren;
 export function ControlPanel({ children }: ControlPanelProps) {
   return (
-    <div id="top-left-panel" className="maplibregl-ctrl-top-left max-h-72">
+    <div id="top-left-panel" className="maplibregl-ctrl-top-left max-h-72 flex">
       {children}
     </div>
   );

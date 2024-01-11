@@ -2,7 +2,7 @@ import * as React from "react";
 import { RallyingPoint, RallyingPointLocationLabels, RallyingPointLocationTypes, RallyingPointPropertiesLabels } from "@liane/common";
 import { Button, ButtonProps, Select, Table } from "flowbite-react";
 import { useAppServices } from "@/components/ContextProvider";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { useLocalization } from "@/api/intl";
 import { useEffect, useRef, useState } from "react";

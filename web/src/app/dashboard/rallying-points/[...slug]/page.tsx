@@ -4,7 +4,7 @@ import { notFound, useParams } from "next/navigation";
 import { useAppServices } from "@/components/ContextProvider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GeojsonSource } from "@/components/map/GeojsonSource";
-import { EmptyFeatureCollection, LatLng, RallyingPoint, Ref, toLatLng } from "@liane/common";
+import { EmptyFeatureCollection, RallyingPoint, Ref, toLatLng } from "@liane/common";
 import React, { useMemo, useRef, useState } from "react";
 import { Feature, FeatureCollection, Point } from "geojson";
 import { LineLayer } from "@/components/map/layers/base/LineLayer";
@@ -12,22 +12,23 @@ import Map from "@/components/map/Map";
 import maplibregl, { FillLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { FitFeatures } from "@/components/map/FitFeatures";
-import { Breadcrumb, Button, Card, Checkbox } from "flowbite-react";
+import { Breadcrumb, Card, Checkbox, Toast } from "flowbite-react";
 import centroid from "@turf/centroid";
 import { LayerConfig } from "@/components/map/layers/base/abstractLayer";
 import { SymbolLayerSpecification } from "@maplibre/maplibre-gl-style-spec";
-import { AreaSelectionControl } from "@/components/map/AreaSelection";
-import { ControlPanel } from "@/components/map/ControlPanel";
 import { Marker } from "@/components/map/Marker";
 import { SplitView } from "@/components/base/SplitView";
 import { IconButton } from "@/components/base/IconButton";
-import { PopupContainer } from "@/components/map/Popup";
 import { FormProvider, useController, useForm, useFormContext } from "react-hook-form";
 import { MarkerSymbolLayer, SymbolLayer } from "@/components/map/layers/base/SymbolLayer";
 import { FillLayer } from "@/components/map/layers/base/FillLayer";
 import { RallyingPointEdition, RequestView } from "@/app/dashboard/rallying-points/[...slug]/RallyingPointEdition";
 import { getDepartmentBoundaryQuery, useDepartmentData } from "@/app/dashboard/rallying-points/[...slug]/DepartmentDataStore";
 import { RallyingPointFullRequest } from "@/api/api";
+import { AreaSelectionControl } from "@/components/map/AreaSelection";
+import { ControlPanel, ControlPanelButton, ControlPanelToggle } from "@/components/map/ControlPanel";
+import { Icon } from "@/components/base/Icon";
+import { RallyingPointImportModal } from "@/app/dashboard/rallying-points/[...slug]/RallyingPointImportModal";
 
 export default function RallyingPointsAdminPage() {
   const { slug } = useParams();
@@ -56,7 +57,6 @@ const DepartmentLoadingView = ({ department }: { department: string }) => {
   const { isLoading, boundary, error, reachable, requests, points, parkings } = useDepartmentData(department);
   if (isLoading) return <LoadingViewIndicator />;
   if (error) return <div>{error.message}</div>;
-  //const data = featureCollection([...parkings.features, ...reachable!.features]);
   return <DepartmentView department={department} data={{ points, requests, parkings, reachable }} boundaries={boundary!} />;
 };
 
@@ -75,7 +75,7 @@ const DepartmentView = ({
     const c = centroid(boundaries);
     return toLatLng(c.geometry.coordinates);
   }, [boundaries]);
-  const [selectedLocation, setSelectedLocation] = useState<null | LatLng>();
+  const [newRallyingPoint, setNewRallyingPoint] = useState<null | Partial<RallyingPoint>>();
   const [selectedRallyingPoint, setSelectedRallyingPoint] = useState<null | Ref<RallyingPoint>>();
   const [selectedRequest, setSelectedRequest] = useState<null | Ref<RallyingPointFullRequest>>();
 
@@ -98,26 +98,41 @@ const DepartmentView = ({
     return null;
   }, [data, selectedRequest]);
 
-  const showBottomPane = !!selectedLocation || !!selectedRallyingPointFeature || !!selectedRequest;
+  const showBottomPane = !!newRallyingPoint || !!selectedRallyingPointFeature || !!selectedRequest;
 
-  console.debug(data?.requests, methods.getValues());
+  const [selectingLocation, setSelectingLocation] = useState(false);
+  const [importingPoints, setImportingPoints] = useState(false);
+
   return (
     <SplitView initial={200}>
       <FormProvider {...methods}>
         <Map
           ref={map}
-          center={center}
+          center={newRallyingPoint?.location ?? center}
           onClick={e => {
-            /*setSelectedLocation(e.lngLat);*/
-            //
-            console.log(e.lngLat);
+            if (selectingLocation) {
+              console.log(e.lngLat);
+              setNewRallyingPoint({ location: e.lngLat });
+              setSelectingLocation(false);
+            }
           }}>
-          {/* TODO
-            <ControlPanel>
-              <AreaSelectionControl targetLayers={[]} onSelectFeatures={() => {}} onHoverFeatureStateChanged={() => {}} />
-            </ControlPanel>
-        */}
-          {!!boundaries && <FitFeatures features={boundaries.features.concat(data?.requests?.features ?? [])} setMaxBounds={true} />}
+          <ControlPanel>
+            <AreaSelectionControl targetLayers={[]} onSelectFeatures={() => {}} onHoverFeatureStateChanged={() => {}} />
+            <ControlPanelButton
+              label="Importer des points"
+              onClick={() => {
+                setImportingPoints(true);
+              }}>
+              <Icon name="import" size="20px" color="#000" />
+            </ControlPanelButton>
+            <ControlPanelToggle label="Nouveau point" active={selectingLocation || !!newRallyingPoint} setActive={setSelectingLocation}>
+              <Icon name="add" size="20px" color="#000" />
+            </ControlPanelToggle>
+          </ControlPanel>
+
+          {!!boundaries && !newRallyingPoint && (
+            <FitFeatures features={boundaries.features.concat(data?.requests?.features ?? [])} setMaxBounds={true} />
+          )}
 
           <Sources {...data} />
           <GeojsonSource id={"department_boundary"} data={boundaries ?? EmptyFeatureCollection} />
@@ -143,6 +158,10 @@ const DepartmentView = ({
             props={RPLayerProps}
             onClick={e => {
               if (e.features && e.features.length > 0) {
+                if (selectedRequest) {
+                  map.current?.setFeatureState({ source: "rallying_points_requests", id: selectedRequest }, { selected: false });
+                  setSelectedRequest(null);
+                }
                 if (selectedRallyingPoint)
                   map.current?.setFeatureState({ source: "rallying_points", id: selectedRallyingPoint }, { selected: false });
                 setSelectedRallyingPoint(e.features[0].properties.id!);
@@ -156,25 +175,45 @@ const DepartmentView = ({
             props={RPRequestLayerProps}
             onClick={e => {
               if (e.features && e.features.length > 0) {
-                if (selectedRallyingPoint)
+                if (selectedRallyingPoint) {
                   map.current?.setFeatureState({ source: "rallying_points", id: selectedRallyingPoint }, { selected: false });
+                  setSelectedRallyingPoint(null);
+                }
                 if (selectedRequest) map.current?.setFeatureState({ source: "rallying_points_requests", id: selectedRequest }, { selected: false });
                 setSelectedRequest(e.features[0].properties.id!);
                 map.current?.setFeatureState({ source: "rallying_points_requests", id: e.features[0].properties.id! }, { selected: true });
               }
             }}
           />
-          {selectedLocation && <Marker lngLat={selectedLocation} />}
-          {selectedLocation && (
+          {newRallyingPoint && <Marker lngLat={newRallyingPoint.location!} />}
+          {/*selectedLocation && (
             <PopupContainer lngLat={selectedLocation} anchor={"top"}>
               <Card>
                 <Button>Choisir cette localisation</Button>
               </Card>
             </PopupContainer>
-          )}
+          )*/}
         </Map>
 
-        <LegendView />
+        <div className="absolute z-[5] w-full bottom-0 top-0 pointer-events-none">
+          {selectingLocation && (
+            <div className="absolute z-[5] top-4 w-full">
+              <Toast className="mx-auto pointer-events-auto">
+                <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-500 dark:bg-cyan-800 dark:text-cyan-200">
+                  <Icon name="pin" className="h-5 w-5" />
+                </div>
+                <div className="ml-3 text-sm font-normal">Cliquez sur la carte pour choisir un emplacement</div>
+                <Toast.Toggle
+                  onClick={() => {
+                    setSelectingLocation(false);
+                  }}
+                />
+              </Toast>
+            </div>
+          )}
+          {!selectingLocation && !newRallyingPoint && <LegendView />}
+          <RallyingPointImportModal importingPoints={importingPoints} onClose={() => setImportingPoints(false)} />
+        </div>
       </FormProvider>
       {showBottomPane && (
         <div className=" p-1.5 grow grid bg-white dark:bg-gray-900" style={{ gridTemplateRows: "auto minmax(0, 1fr) auto" }}>
@@ -186,17 +225,23 @@ const DepartmentView = ({
                   map.current?.setFeatureState({ source: "rallying_points", id: selectedRallyingPoint }, { selected: false });
                 if (selectedRequest) map.current?.setFeatureState({ source: "rallying_points_requests", id: selectedRequest }, { selected: false });
                 setSelectedRallyingPoint(null);
-                setSelectedLocation(null);
+                setNewRallyingPoint(null);
                 setSelectedRequest(null);
               }}
             />
             <h3 className="font-bold">
-              {selectedLocation && "Nouveau point de ralliement"}
+              {newRallyingPoint && "Nouveau point de ralliement"}
               {selectedRallyingPointFeature && selectedRallyingPointFeature.properties.label}
               {selectedRequest && "Propostion de point"}
             </h3>
           </div>
           <div className="overflow-y-auto flex flex-col">
+            {newRallyingPoint && (
+              <RallyingPointEdition
+                refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
+                point={{ ...newRallyingPoint }}
+              />
+            )}
             {selectedRallyingPointFeature && (
               <RallyingPointEdition
                 refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
@@ -308,7 +353,6 @@ const ParkingSuggestionLayerProps: LayerConfig<SymbolLayerSpecification>["props"
     "text-size": ["interpolate", ["linear"], ["get", "computed:area"], 0, 8, 500, 12, 1000, 16, 2500, 18],
     "text-optional": false,
     "text-allow-overlap": true
-    //  "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.16, 9, 0.24, 11, 0.36]
   },
   paint: {
     "text-color": ["coalesce", ["get", "color"], "#000"]
@@ -334,14 +378,14 @@ const ItemLegend = ({ name, label }: { name: string; label: string }) => {
 
   return (
     <div className="gap-2 flex items-center">
-      <Checkbox checked={field.value} onChange={field.onChange} />
+      <Checkbox checked={field.value || false} onChange={field.onChange} />
       <span>{label}</span>
     </div>
   );
 };
 const LegendView = () => {
   return (
-    <div className="px-4 py-2 absolute z-[5] bottom-0 ">
+    <div className="px-4 py-2 absolute z-[5] bottom-0 pointer-events-auto ">
       <Card>
         <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Filtres</h5>
         <div className="gap-4 flex items-center">
@@ -349,7 +393,19 @@ const LegendView = () => {
           <ItemLegend name="inactive_rp" label="Points inactifs" />
         </div>
         <ItemLegend name="requested_rp" label="Requêtes" />
-        <ItemLegend name="parking_suggestions" label="Parkings" />
+        <div className="flex flex-row">
+          <ItemLegend name="parking_suggestions" label="Parkings :" />
+          <div className="px-4 flex flex-row ">
+            <div className="px-1 flex flex-row items-center">
+              <span className="p-2 mx-1 bg-[#00FF79] rounded" />
+              <span className="text-sm">Zone couverte par Liane</span>
+            </div>
+            <div className="px-1 flex flex-row items-center">
+              <span className="p-2 mx-1 bg-[#000] rounded" />
+              <span className="text-sm">Zone potentielle</span>
+            </div>
+          </div>
+        </div>
       </Card>
     </div>
   );
