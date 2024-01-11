@@ -3,7 +3,7 @@ import { AppLogger } from "@/api/logger";
 import { Subject } from "rxjs";
 
 export const { RNLianeGeolocation } = NativeModules;
-console.log("RNLianeGeolocation", RNLianeGeolocation);
+
 export const inviteToOpenSettings = (message?: string) => {
   const openSetting = () => {
     Linking.openSettings().catch(() => {
