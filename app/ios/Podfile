@@ -32,9 +32,6 @@ target 'liane' do
    pod 'FirebaseCore', :modular_headers => true
    pod 'GoogleUtilities', :modular_headers => true
    $RNFirebaseAsStaticFramework = true
-   # If project doesn't build due to duplicate symbols, comment the line below
-   pod 'Permission-LocationAlways', :path => "../node_modules/react-native-permissions/ios/LocationAlways/Permission-LocationAlways.podspec", :configurations => ['Release']
-
 
   use_react_native!(
     :path => config[:reactNativePath],
