@@ -32,8 +32,8 @@ export const TimeWheelPicker = ({
   // Update the date based on min and max date
   // If date is modified, return true
   // If not, return false
-  const updateDateTime = (date: Date): boolean => {
-    let newDate = date;
+  const updateDateTime = (d: Date): boolean => {
+    let newDate = d;
     if (minDate && minDate.getTime() > newDate.getTime()) {
       // Replace new date by minDate if under minimum date
       newDate = new Date(minDate.setMinutes(minDate.getMinutes() + minuteStep - (minDate.getMinutes() % minuteStep)));
