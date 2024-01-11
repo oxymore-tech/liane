@@ -7,21 +7,21 @@ import com.facebook.react.bridge.*
 import tech.oxymore.liane.geolocation.Util.isMyServiceRunning
 
 public const val LogTag = "RNLianeGeolocation"
-class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactContextBaseJavaModule(context) {
+
+class BackgroundGeolocationModule(context: ReactApplicationContext?) : ReactContextBaseJavaModule(context) {
   override fun getName(): String {
     return "RNLianeGeolocation";
   }
 
   @ReactMethod
   fun enableLocation(promise: Promise) {
-    if(currentActivity is LocationRequestHandler) (currentActivity as LocationRequestHandler).requestEnableLocation(promise)
+    if (currentActivity is LocationRequestHandler) (currentActivity as LocationRequestHandler).requestEnableLocation(promise)
     else promise.reject("unsupported")
   }
 
-
   @ReactMethod
   fun stopService(promise: Promise) {
-    if (isMyServiceRunning(LocationService::class.java,  reactApplicationContext)) {
+    if (isMyServiceRunning(LocationService::class.java, reactApplicationContext)) {
       reactApplicationContext.stopService(Intent(reactApplicationContext, LocationService::class.java))
       promise.resolve(null)
     } else {
@@ -30,7 +30,7 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
   }
 
   @ReactMethod
-  fun current(promise: Promise){
+  fun current(promise: Promise) {
     val serviceRunning = isMyServiceRunning(LocationService::class.java, reactApplicationContext)
     if (!serviceRunning) {
       promise.resolve(null)
@@ -43,9 +43,9 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
 
   @ReactMethod
   fun startService(config: ReadableMap, promise: Promise) {
-    if (!isMyServiceRunning(LocationService::class.java,  reactApplicationContext)) {
-       val mServiceIntent = Intent(reactApplicationContext, LocationService::class.java)
-       mServiceIntent.putExtras(Arguments.toBundle(config)!!)
+    if (!isMyServiceRunning(LocationService::class.java, reactApplicationContext)) {
+      val mServiceIntent = Intent(reactApplicationContext, LocationService::class.java)
+      mServiceIntent.putExtras(Arguments.toBundle(config)!!)
 
       reactApplicationContext.startService(mServiceIntent)
       Log.d(LogTag, "start service")
@@ -53,6 +53,6 @@ class BackgroundGeolocationModule (context: ReactApplicationContext?) : ReactCon
     } else {
       Log.d(LogTag, "service was already started")
       promise.reject("service already started")
-  }
+    }
   }
 }
