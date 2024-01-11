@@ -25,14 +25,14 @@ export class ReminderService {
   constructor(private storage: AppStorage, private logger: ReactNativeLogger) {}
 
   async syncReminders(lianes: Liane[]): Promise<void> {
-    const now = new Date().getTime() + 1000 * 60 * 5;
+    const now_plus_five = new Date().getTime() + 1000 * 60 * 5;
     const user = await this.storage.getUser();
     const online = lianes
       .map(l => {
         const trip = getTripFromLiane(l, user!.id!);
         return { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
       })
-      .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now);
+      .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now_plus_five);
     await notifee.cancelTriggerNotifications();
     this.logger.info("NOTIFICATIONS", "CancelTriggerNotifications");
     for (const liane of online) {
@@ -45,7 +45,7 @@ export class ReminderService {
   }
 
   async createReminder(lianeId: string, departureLocation: RallyingPoint, departureTime: Date) {
-    const timestamp = Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000);
+    const timestamp = departureTime.getTime() - 1000 * 60 * 5;
     const departure = `${AppLocalization.formatDateTime(departureTime)}`;
     this.logger.info("NOTIFICATIONS", `Reminder for ${lianeId} - ${departure} will be triggered at ${AppLocalization.formatDateTime(timestamp)}`);
     await notifee.createTriggerNotification(
