@@ -25,6 +25,8 @@ import java.io.DataOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
+import androidx.core.core.ServiceCompat
+import android.content.pm.ServiceInfo
 
 
 const val serviceId = 2
@@ -137,7 +139,7 @@ class LocationService : Service() {
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createNotificationChannel()
     val notification = createNotification()
-    startForeground(serviceId, notification)
+    ServiceCompat.startForeground(serviceId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 
     Log.d(
       LogTag, "Created service"

@@ -81,6 +81,12 @@ public sealed class LabeledPositions
 
   public static readonly RallyingPoint MartresTolosane = new("mairie:31324", "Mairie de Martres-Tolosane", Positions.MartresTolosane, LocationType.TownHall, "12 boulevard de la Magdeleine", "31220",
     "Martres-Tolosane", null, true);
+  
+  public static readonly RallyingPoint Montbrun = new("mairie:48101", "MontbrunMairie de Montbrun", Positions.Montbrun, LocationType.TownHall, "Le Village", "48101",
+    "Montbrun", null, true);
+  
+public static readonly RallyingPoint Choizal = new("bnlc:48016-C-002", "Aire de covoiturage du Choizal", Positions.Choizal, LocationType.CarpoolArea, "Croisement D986-D31 CHOIZAL", "48000",
+    "Balsièges", null, true);
 
   public static readonly RallyingPoint LO = new("custom:001", "Living Objects", Positions.LO, LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
   public static readonly IImmutableSet<RallyingPoint> RallyingPoints = ImmutableHashSet.Create(
@@ -118,6 +124,8 @@ public sealed class LabeledPositions
     Tournefeuille,
     AireDesPyrénées,
     MartresTolosane,
-    LO
+    LO,
+    Montbrun,
+    Choizal
   );
 }

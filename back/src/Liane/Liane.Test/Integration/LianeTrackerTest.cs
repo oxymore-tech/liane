@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using DeepEqual.Syntax;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
@@ -19,7 +18,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
@@ -27,7 +25,7 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public class LianeTrackerTest : BaseIntegrationTest
 {
-  private (Api.Trip.Liane liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
+  private static (Api.Trip.Liane liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
   {
     var departureTime = DateTime.Parse("2023-08-08T16:12:53.061Z");
     var liane = new Api.Trip.Liane(
@@ -295,6 +293,17 @@ public class LianeTrackerTest : BaseIntegrationTest
     Assert.IsNotNull(actual.Car);
   }
 
+  [Test]
+  public async Task Trip_3()
+  {
+    var tracker = await SetupTrackerAt("Geolocation/liane-pings-case-3.json", "2023-12-16T12:22:00+1");
+
+    // check that next point is Quezac (the car is going towards Quezac)
+    var actual = tracker.GetTrackingInfo();
+    Assert.IsNotNull(actual.Car);
+  }
+
+  
   private IMongoDatabase Db = null!;
   private ILianeService lianeService = null!;
   private ILianeTrackerService lianeTrackerService = null!;

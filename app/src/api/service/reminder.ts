@@ -68,7 +68,8 @@ export class ReminderService {
       },
       {
         timestamp,
-        type: TriggerType.TIMESTAMP
+        type: TriggerType.TIMESTAMP,
+        alarmManager: true
       }
     );
   }
