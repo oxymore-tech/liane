@@ -3,9 +3,9 @@ import { ForbiddenError, ResourceNotFoundError, TimedOutError, UnauthorizedError
 import { AuthResponse } from "../api";
 import { AppLogger } from "../logger";
 import { SessionProvider } from "../storage";
-import urlJoin from "url-join";
 import { retry, RetryStrategy } from "../util/retry";
 import { isTokenExpired } from "../util";
+import urlJoin from "url-join";
 
 export type Fetch = (url: string, options?: RequestInit) => Promise<Response>;
 
@@ -92,9 +92,14 @@ export class HttpClient {
       body: () => this.fetchAndCheck(method, uri, options),
       retryOn: await this.getRetryStrategyWithRefreshToken(this.options.retryStrategy, options.disableRefreshToken),
       logger: {
-        retry: (attempt, delay, error) =>
-          this.logger.debug("HTTP", `'${uri}' : '${error.message ?? typeof error}', will retry in ${delay}ms (#${attempt})`),
-        error: (attempt, error) => this.logger.warn("HTTP", `Receive an error, max retry reached (${attempt})`, error)
+        retry: (attempt, delay, error) => {
+          const url = this.formatUrl(uri, options);
+          this.logger.debug("HTTP", `'${url}' : '${error.message ?? typeof error}', will retry in ${delay}ms (#${attempt})`);
+        },
+        error: (attempt, error) => {
+          const url = this.formatUrl(uri, options);
+          this.logger.warn("HTTP", `Receive an error, max retry reached (${attempt})`, url, error);
+        }
       }
     });
   }
