@@ -83,7 +83,6 @@ public sealed class RallyingPointServiceImplTest : BaseIntegrationTest
     var expected = csv.Split("\n");
     var actual = value.Split("\n");
     Assert.AreEqual(expected.First(), actual.First());
-    Assert.AreEqual(expected.Length, actual.Length);
     CollectionAssert.AreEquivalent(expected, actual);
   }
 
