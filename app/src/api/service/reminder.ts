@@ -34,7 +34,6 @@ export class ReminderService {
       })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now_plus_five);
     await notifee.cancelTriggerNotifications();
-    this.logger.info("NOTIFICATIONS", "CancelTriggerNotifications");
     for (const liane of online) {
       await this.createReminder(liane.id!, liane.wayPoints[0].rallyingPoint, new Date(liane.departureTime));
     }
@@ -50,7 +49,6 @@ export class ReminderService {
     this.logger.info("NOTIFICATIONS", `Reminder for ${lianeId} - ${departure} will be triggered at ${AppLocalization.formatDateTime(timestamp)}`);
     await notifee.createTriggerNotification(
       {
-        id: lianeId,
         ios: {
           categoryId: "reminder",
           interruptionLevel: "timeSensitive"
