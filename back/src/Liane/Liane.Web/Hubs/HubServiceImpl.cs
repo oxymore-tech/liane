@@ -21,7 +21,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
   private readonly ILogger<HubServiceImpl> logger;
   private readonly IUserService userService;
   private readonly ILianeTrackerCache trackerCache;
-  public MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
+  private MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
 
   public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache)
   {
