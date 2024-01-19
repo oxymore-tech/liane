@@ -32,7 +32,7 @@ public sealed class TokenRequirementHandler : AuthorizationHandler<TokenRequirem
 
             if (string.IsNullOrWhiteSpace(token))
             {
-              context.Fail();
+              AuthFailure(context, httpContext, "Token is empty");
             }
             else
             {
@@ -43,23 +43,28 @@ public sealed class TokenRequirementHandler : AuthorizationHandler<TokenRequirem
         }
         catch (System.Exception e)
         {
-            var referer = httpContext.Request.Headers["Referer"].FirstOrDefault();
-            var message = e.Message;
-            if (referer == null)
-            {
-                logger.LogWarning("Somebody has sent an invalid token : {message}", message);
-            }
-            else
-            {
-                logger.LogWarning("'{referer}' has sent an invalid token : {message}", referer, message);
-            }
-
-            context.Fail();
+          var message = e.Message;
+          AuthFailure(context, httpContext, message);
         }
         
         return Task.CompletedTask;
     }
-    
+
+    private void AuthFailure(AuthorizationHandlerContext context, HttpContext httpContext, string message)
+    {
+      var referer = httpContext.Request.Headers["Referer"].FirstOrDefault();
+      if (referer == null)
+      {
+        logger.LogWarning("Somebody has sent an invalid token : {message}", message);
+      }
+      else
+      {
+        logger.LogWarning("'{referer}' has sent an invalid token : {message}", referer, message);
+      }
+
+      context.Fail();
+    }
+
     private static string? TryExtractToken(HttpContext httpContext)
     {
         // On negotiation
