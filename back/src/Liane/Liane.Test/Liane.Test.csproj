@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="Bogus" Version="34.0.2" />
+        <PackageReference Include="Json.More.Net" Version="1.10.0" />
         <PackageReference Include="NUnit" Version="3.13.3" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageReference Include="Moq" Version="4.18.4" />

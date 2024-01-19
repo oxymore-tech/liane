@@ -20,7 +20,7 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip.Geolocation;
 
-public class LianeTrackerServiceImpl: ILianeTrackerService
+public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 {
   private readonly LianeTrackerCache trackerCache;
   private readonly IOsrmService osrmService;
@@ -34,8 +34,10 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
   private readonly ILianeService lianeService;
   private readonly ICurrentContext currentContext;
   private readonly INotificationService notificationService;
-  public const int StoppedDurationInMinutes = 15;
-  public LianeTrackerServiceImpl(LianeTrackerCache trackerCache, ILogger<LianeTrackerServiceImpl> logger, IPostgisService postgisService, IOsrmService osrmService, IMongoDatabase mongo, ILianeUpdatePushService lianeUpdatePushService, ILianeService lianeService, ICurrentContext currentContext, INotificationService notificationService)
+  private const int StoppedDurationInMinutes = 15;
+
+  public LianeTrackerServiceImpl(LianeTrackerCache trackerCache, ILogger<LianeTrackerServiceImpl> logger, IPostgisService postgisService, IOsrmService osrmService, IMongoDatabase mongo,
+    ILianeUpdatePushService lianeUpdatePushService, ILianeService lianeService, ICurrentContext currentContext, INotificationService notificationService)
   {
     this.trackerCache = trackerCache;
     this.logger = logger;
@@ -54,11 +56,11 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       }
     };
   }
-  
+
   public async Task<LianeTracker> Start(Api.Trip.Liane liane, Action? onReachedDestination = null)
   {
     onReachedDestinationActions[liane.Id] = onReachedDestination ?? GetDefaultOnReachedDestination(liane);
-    return await trackerCache.GetOrAddTracker(liane.Id, async (_) =>
+    return await trackerCache.GetOrAddTracker(liane.Id, async _ =>
     {
       // Create liane tracker
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location), overview: "full");
@@ -76,7 +78,6 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       }
 
       return new LianeTracker(tripSession, liane);
-
     });
   }
 
@@ -86,7 +87,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
 
     var currentLocation = tracker.GetCurrentLocation(ping.User.Id);
     var nextPointIndex = currentLocation?.NextPointIndex ?? tracker.GetFirstWayPoint(ping.User.Id);
-    
+
     if (ping.Coordinate is null)
     {
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User));
@@ -119,10 +120,10 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
         {
           // Driver arrived near destination point
           tracker.Finish();
-            await mongo.GetCollection<LianeTrackReport>()
-              .FindOneAndUpdateAsync(r => r.Id == tracker.Liane.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
-            onReachedDestinationActions.TryGetValue(tracker.Liane.Id, out var callback);
-            callback?.Invoke();
+          await mongo.GetCollection<LianeTrackReport>()
+            .FindOneAndUpdateAsync(r => r.Id == tracker.Liane.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
+          onReachedDestinationActions.TryGetValue(tracker.Liane.Id, out var callback);
+          callback?.Invoke();
         }
 
         await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User));
@@ -153,10 +154,9 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
 
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
-
   }
-  
-  
+
+
   public async Task PushPing(Ref<Api.Trip.Liane> liane, UserPing ping)
   {
     var tracker = trackerCache.GetTracker(liane);
@@ -165,6 +165,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
       logger.LogWarning($"No tracker for liane = '{liane}'");
       return;
     }
+
     await PushPing(tracker, ping);
     await PublishLocation(tracker);
   }
@@ -176,6 +177,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     {
       await lianeUpdatePushService.Push(info, member.User);
     }
+
     if (info.Car is not null && !tracker.Finished)
     {
       if (lastCarMove.TryGetValue(tracker.Liane.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
@@ -186,7 +188,6 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
 
       lastCarMove[tracker.Liane.Id] = info.Car.At;
     }
-  
   }
 
   private Action GetDefaultOnReachedDestination(Ref<Api.Trip.Liane> liane)
@@ -203,7 +204,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
         .Start();
     };
   }
-  
+
   public async Task SyncTrackers()
   {
     var started = await mongo.GetCollection<LianeDb>().Find(l => l.State == LianeState.Started).ToListAsync();
@@ -214,7 +215,7 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     }
   }
 
-  
+
   private async Task InsertMemberLocation(LianeTracker tracker, Ref<Api.User.User> user, MemberLocationSample data)
   {
     tracker.InsertMemberLocation(user, data);
@@ -224,11 +225,12 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     {
       update = Builders<LianeTrackReport>.Update.Combine(update, Builders<LianeTrackReport>.Update.Push(r => r.CarLocations, car));
     }
+
     await mongo.GetCollection<LianeTrackReport>()
       .FindOneAndUpdateAsync(r => r.Id == tracker.Liane.Id, update);
   }
-  
-  
+
+
   public async Task<FeatureCollection> GetGeolocationPings(Ref<Api.Trip.Liane> liane)
   {
     var report = await mongo.GetCollection<LianeTrackReport>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
@@ -239,14 +241,16 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
         new Point(new Position(ping.Coordinate!.Value.Lat, ping.Coordinate!.Value.Lng)),
         new Dictionary<string, object> { ["user"] = ping.Member.Id, ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] = ping.NextPointIndex, ["d"] = ping.PointDistance }
       ));
-  
+
     var carFeatures = (report.CarLocations ?? ImmutableList.Create<Car>())
       .Select(ping => new Feature(
         new Point(new Position(ping.Position.Lat, ping.Position.Lng)),
-        new Dictionary<string, object> { ["user"] = "car", ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] = ping.NextPoint, ["isMoving"] = ping.IsMoving, ["members"] = string.Join(',' , ping.Members.Select(m => m.Id)) }
+        new Dictionary<string, object>
+          { ["user"] = "car", ["at"] = ping.At, ["delay"] = ping.Delay, ["next"] = ping.NextPoint, ["isMoving"] = ping.IsMoving, ["members"] = string.Join(',', ping.Members.Select(m => m.Id)) }
       ));
     return new FeatureCollection(features.Concat(carFeatures).ToList());
   }
+
   public async Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Api.Trip.Liane> liane)
   {
     var userId = currentContext.CurrentUser().Id;
@@ -264,7 +268,8 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
     if (startDate is null) return;
     try
     {
-      if (previousReport is not null) await mongo.GetCollection<LianeTrackReport>().ReplaceOneAsync(r => r.Id == liane.Id, 
+      if (previousReport is not null)
+        await mongo.GetCollection<LianeTrackReport>().ReplaceOneAsync(r => r.Id == liane.Id,
           new LianeTrackReport(liane.Id, ImmutableList<MemberLocationSample>.Empty, ImmutableList<Car>.Empty, startDate.Value)
         );
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location), overview: "full");
@@ -276,11 +281,10 @@ public class LianeTrackerServiceImpl: ILianeTrackerService
         await PushPing(tracker, ping);
       }
     }
-    catch (Exception e)
+    catch (Exception)
     {
       if (previousReport is not null) await mongo.GetCollection<LianeTrackReport>().ReplaceOneAsync(r => r.Id == liane.Id, previousReport);
       throw;
     }
   }
-  
 }
