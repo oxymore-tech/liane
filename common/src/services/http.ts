@@ -172,10 +172,7 @@ export class HttpClient {
 
   public async getUpdatedAccessToken(forceRefresh?: boolean) {
     const accessToken = await this.storage.getAccessToken();
-    if (!accessToken) {
-      return;
-    }
-    if (!isTokenExpired(accessToken) && !forceRefresh) {
+    if (accessToken && !isTokenExpired(accessToken) && !forceRefresh) {
       return accessToken;
     }
     if (await this.tryRefreshToken()) {
