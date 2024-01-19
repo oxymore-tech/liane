@@ -221,7 +221,9 @@ export class HubServiceClient extends AbstractHubService {
     this.hub = new HubConnectionBuilder()
       .withUrl(`${baseUrl}/hub`, {
         accessTokenFactory: async () => {
-          return (await this.http.getUpdatedAccessToken())!;
+          const token = await this.http.getUpdatedAccessToken();
+          this.logger.warn("HUB", "Bizarre bizarre token is empty", token);
+          return token!;
         }
       })
       .configureLogging(LogLevel.Debug)
