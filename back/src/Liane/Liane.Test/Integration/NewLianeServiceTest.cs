@@ -1,6 +1,9 @@
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Liane;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -27,10 +30,18 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    
+
     currentContext.SetCurrentUser(userA);
-    await tested.Create(new LianeQuery("Boulot", ImmutableList.Create<CarPoolingConstraint>(new CarPoolingConstraint.FromTo(LabeledPositions.BlajouxParking, LabeledPositions.Mende))));
+    var wayPoints = ImmutableList.Create<Ref<RallyingPoint>>(LabeledPositions.BlajouxParking, LabeledPositions.Mende);
+    var constraints = ImmutableList.Create<CarPoolingConstraint>(new CarPoolingConstraint.NoReturns());
+    await tested.Create(new LianeQuery("Boulot", wayPoints, constraints));
 
     await tested.FindMatches();
+
+    var actual = await tested.List();
+    Assert.AreEqual(1, actual.Count);
+
+    Assert.AreEqual(wayPoints.Select(p => (Ref<RallyingPoint>)p.Id), actual[0].WayPoints);
+    Assert.AreEqual(constraints, actual[0].Constraints);
   }
 }

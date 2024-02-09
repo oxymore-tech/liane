@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Routing;
+using Liane.Api.Trip;
 using Liane.Service.Internal.Postgis.Db.Copy;
 using Liane.Service.Internal.Postgis.Db.Handler;
 using Liane.Service.Internal.Util.Sql;
@@ -28,6 +29,8 @@ public sealed class PostgisDatabase : IDisposable
     SqlMapper.AddTypeHandler(new LineStringTypeHandler());
     SqlMapper.AddTypeHandler(new PointTypeHandler());
     SqlMapper.AddTypeHandler(new LatLngTypeHandler());
+    SqlMapper.AddTypeHandler(new RefTypeHandler<RallyingPoint>());
+    SqlMapper.AddTypeHandler(new RefTypeHandler<Api.User.User>());
     SqlMapper.TypeMapProvider = t => new SnakeCaseTypeMap(t);
     AddCopyTypeMapper<LatLng>(new LatLngCopyTypeMapper());
     var connectionString = NewConnectionString();

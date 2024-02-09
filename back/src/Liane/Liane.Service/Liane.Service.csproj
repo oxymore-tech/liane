@@ -22,6 +22,7 @@
         <PackageReference Include="Npgsql.GeoJSON" Version="7.0.6" />
         <PackageReference Include="Twilio" Version="6.16.1" />
         <PackageReference Include="NodaTime" Version="3.1.11" />
+        <PackageReference Include="UuidExtensions" Version="1.2.0" />
     </ItemGroup>
 
     <ItemGroup>

@@ -7,7 +7,7 @@ namespace Liane.Web.Internal.Json;
 public static class JsonSerializerSettings
 {
   private static readonly JsonConverter[] Converters =
-  {
+  [
     new TimeOnlyJsonConverter(),
     new RefJsonConverterFactory(),
     new CursorJsonConverter(),
@@ -15,7 +15,7 @@ public static class JsonSerializerSettings
     new LngLatTupleConverter(),
     new DayOfTheWeekFlagConverter(),
     new UnionJsonConverterFactory()
-  };
+  ];
 
   private static readonly JsonNamingPolicy NamingPolicy = JsonNamingPolicy.CamelCase;
 
