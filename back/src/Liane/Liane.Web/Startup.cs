@@ -299,7 +299,7 @@ public static class Startup
   private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
   {
     app.UseOpenApi();
-    app.UseSwaggerUi3();
+    app.UseSwaggerUi();
     app.UseCors("AllowLocal");
 
     var env = context.HostingEnvironment;
