@@ -11,6 +11,7 @@ using Liane.Api.Util;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
+using Liane.Service.Internal.Liane;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
@@ -111,7 +112,8 @@ public abstract class BaseIntegrationTest
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();
     services.AddService<DeleteAccountServiceImpl>();    
-    services.AddSingleton<LianeTrackerCache>();
+    services.AddService<LianeTrackerCache>();
+    services.AddService<NewLianeServiceImpl>();
     services.AddEventListeners();
 
     var databaseSettings = GetDatabaseSettings();

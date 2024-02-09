@@ -4,6 +4,10 @@ using System.IO;
 using System.Linq;
 using GeoJSON.Text;
 using GeoJSON.Text.Geometry;
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8629 // Nullable value type may be null.
 
 namespace Liane.Service.Internal.Postgis.Db;
 
@@ -13,19 +17,15 @@ public static class WkbEncode
 
   public static byte[] Encode(IGeometryObject geometryObject)
   {
-    using (var output = new MemoryStream())
-    {
-      using (var binaryWriter = new BinaryWriter(output))
-      {
-        Encode(binaryWriter, geometryObject);
-        var length = (int)output.Length;
-        binaryWriter.Close();
-        var buffer = output.GetBuffer();
-        Array.Resize(ref buffer, length);
-        output.Close();
-        return buffer;
-      }
-    }
+    using var output = new MemoryStream();
+    using var binaryWriter = new BinaryWriter(output);
+    Encode(binaryWriter, geometryObject);
+    var length = (int)output.Length;
+    binaryWriter.Close();
+    var buffer = output.GetBuffer();
+    Array.Resize(ref buffer, length);
+    output.Close();
+    return buffer;
   }
 
   public static byte[] Encode(GeoJSON.Text.Feature.Feature feature) => Encode(feature.Geometry);
