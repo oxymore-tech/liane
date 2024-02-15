@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Liane.Service.Internal.Util.Sql;
 
@@ -11,7 +14,9 @@ public interface IQuery<T>
 
 public sealed class Query
 {
-  public static SelectQuery<T> Select<T>() where T : notnull => new(Filter<T>.Empty, null, null, ImmutableList<FieldDefinition<T>>.Empty);
+  public static SelectQuery<T> Select<T>() where T : notnull =>
+    new(Filter<T>.Empty, null, null, ImmutableList<FieldDefinition<T>>.Empty);
+
   public static UpdateQuery<T> Update<T>() where T : notnull => new(Filter<T>.Empty, ImmutableDictionary<FieldDefinition<T>, object?>.Empty);
   public static InsertQuery<T> Insert<T>(T entity) where T : notnull => new(entity);
   public static InsertQuery<T> Insert<T>(IEnumerable<T> entities) where T : notnull => new(entities);

@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Liane;
@@ -16,13 +15,11 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
 {
   private NewLianeServiceImpl tested = null!;
   private MockCurrentContext currentContext = null!;
-  private IRoutingService routingService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     tested = ServiceProvider.GetRequiredService<NewLianeServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
-    routingService = ServiceProvider.GetRequiredService<IRoutingService>();
   }
 
   [Test]

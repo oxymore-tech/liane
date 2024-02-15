@@ -18,7 +18,12 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
     var sqlFilter = Filter.ToSql(namedParams);
 
     var stringBuilder = new StringBuilder();
-    stringBuilder.Append($"SELECT * FROM {Mapper.GetTableName<T>()}");
+
+    stringBuilder.Append("SELECT ");
+
+    stringBuilder.Append(string.Join(", ", Mapper.GetColumns<T>().Select(c => c.ColumnName)));
+
+    stringBuilder.Append($" FROM {Mapper.GetTableName<T>()}");
 
     if (!string.IsNullOrEmpty(sqlFilter))
     {
