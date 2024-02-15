@@ -31,7 +31,7 @@ public sealed class PostgisFactory
     {
       await connection.ExecuteAsync("DELETE FROM car_pooling_constraint", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM liane", transaction: tx);
-      await connection.ExecuteAsync("DELETE FROM route", transaction: tx);
+      // await connection.ExecuteAsync("DELETE FROM route", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM liane_waypoint", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM segment", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM rallying_point", transaction: tx);

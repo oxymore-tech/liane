@@ -1,10 +1,8 @@
 CREATE TABLE route
 (
-  id         UUID,
   way_points VARCHAR(24)[]              NOT NULL,
   geometry   geometry(LineString, 4326) NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE (way_points)
+  PRIMARY KEY (way_points)
 );
 
 CREATE INDEX IF NOT EXISTS route_geometry_index
@@ -14,12 +12,11 @@ CREATE INDEX IF NOT EXISTS route_geometry_index
 CREATE TABLE liane
 (
   id         UUID,
-  name       VARCHAR(100) NOT NULL,
-  route_id   UUID         NOT NULL,
-  created_by VARCHAR(24)  NOT NULL,
-  created_at TIMESTAMP    NOT NULL,
-  PRIMARY KEY (id),
-  FOREIGN KEY (route_id) REFERENCES route (id)
+  name       VARCHAR(100)  NOT NULL,
+  way_points VARCHAR(24)[] NOT NULL,
+  created_by VARCHAR(24)   NOT NULL,
+  created_at TIMESTAMP     NOT NULL,
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE car_pooling_constraint

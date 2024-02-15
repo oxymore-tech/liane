@@ -58,6 +58,12 @@ public static class QueryExtensions
     return connection.ExecuteAsync(sql, parameters, transaction);
   }
 
+  public static Task<TId> InsertAsync<T, TId>(this IDbConnection connection, InsertQuery<T, TId> query, IDbTransaction? transaction = null) where T : notnull
+  {
+    var (sql, parameters) = query.ToSql();
+    return connection.QuerySingleAsync<TId>(sql, parameters, transaction);
+  }
+
   public static Task<int> InsertMultipleAsync<T>(this IDbConnection connection, IEnumerable<T> entities, IDbTransaction? transaction = null) where T : notnull
   {
     var insert = Query.Insert(entities);
@@ -77,7 +83,7 @@ public static class QueryExtensions
     var (sql, parameters) = query.ToSql();
     return connection.QueryAsync<T>(sql, parameters, transaction);
   }
-  
+
   public static Task<long> QueryCountAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
   {
     var (sql, parameters) = query.ToSql();
