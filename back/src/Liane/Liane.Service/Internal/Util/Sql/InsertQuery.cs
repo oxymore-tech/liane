@@ -32,7 +32,7 @@ public record InsertQuery<T, TId>(object Parameters, OnConflict? OnConflict = nu
     var stringBuilder = new StringBuilder();
     stringBuilder.Append($"INSERT INTO {Mapper.GetTableName<T>()} ");
 
-    stringBuilder.Append($"({string.Join(", ", columns.Select(c => c.ColumnName))}) VALUES ({string.Join(", ", columns.Select(c => $"@{c.PropertyInfo.Name}"))})");
+    stringBuilder.Append($"({string.Join(", ", columns.Select(c => $"\"{c.ColumnName}\""))}) VALUES ({string.Join(", ", columns.Select(c => $"@{c.PropertyInfo.Name}"))})");
 
     switch (OnConflict)
     {

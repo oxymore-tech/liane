@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -66,6 +67,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   private async Task<Service.Internal.Liane.Liane> CreateLiane(DbUser gugu, string name = "Boulot", params Ref<RallyingPoint>[] wayPoints)
   {
     currentContext.SetCurrentUser(gugu);
-    return await tested.Create(new LianeQuery(name, wayPoints.ToImmutableList(), false, true, DayOfTheWeekFlag.All, ImmutableList<TimeConstraint>.Empty, null, null));
+    var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfTheWeekFlag.All));
+    return await tested.Create(new LianeQuery(name, wayPoints.ToImmutableList(), false, true, DayOfTheWeekFlag.All, timeConstraints, null, null));
   }
 }

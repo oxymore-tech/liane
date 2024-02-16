@@ -30,6 +30,7 @@ public sealed class PostgisDatabase : IDisposable
     SqlMapper.AddTypeHandler(new LineStringTypeHandler());
     SqlMapper.AddTypeHandler(new PointTypeHandler());
     SqlMapper.AddTypeHandler(new LatLngTypeHandler());
+    SqlMapper.AddTypeHandler(new TimeOnlyHandler());
     SqlMapper.AddTypeHandler(new RefTypeHandler<RallyingPoint>());
     SqlMapper.AddTypeHandler(new RefTypeHandler<Api.User.User>());
     SqlMapper.TypeMapProvider = t => new SnakeCaseTypeMap(t);
