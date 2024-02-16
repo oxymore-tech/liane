@@ -13,6 +13,7 @@ using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
 using UuidExtensions;
+using ILianeService = Liane.Api.Community.ILianeService;
 using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
@@ -21,7 +22,7 @@ public sealed class NewLianeServiceImpl(
   PostgisDatabase db,
   ICurrentContext currentContext,
   IRoutingService routingService,
-  IRallyingPointService rallyingPointService)
+  IRallyingPointService rallyingPointService) : ILianeService
 {
   public async Task<ImmutableList<Api.Community.Liane>> List()
   {

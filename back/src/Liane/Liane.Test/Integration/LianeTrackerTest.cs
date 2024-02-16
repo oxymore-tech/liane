@@ -25,10 +25,10 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public class LianeTrackerTest : BaseIntegrationTest
 {
-  private static (Api.Trip.Liane liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
+  private static (Api.Trip.Trip liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
   {
     var departureTime = DateTime.Parse("2023-08-08T16:12:53.061Z");
-    var liane = new Api.Trip.Liane(
+    var liane = new Api.Trip.Trip(
       "6410edc1e02078e7108a5895",
       userId,
       DateTime.Today,
@@ -143,7 +143,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     var userIds = lianeDb.Members.Select((m, i) => (m, i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
     lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
     await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
-    var liane = await lianeService.Get(lianeDb.Id);
+    var liane = await tripService.Get(lianeDb.Id);
     var tracker = await lianeTrackerService.Start(liane, () => { finished = true; });
     var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with { User = userIds[p.User] }).ToImmutableList();
     foreach (var p in pings)
@@ -202,7 +202,7 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Liane.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
   }
 
   [Test]
@@ -212,10 +212,10 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Liane.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
     // Check we do have location for the other member
     Assert.AreEqual(1, actual.OtherMembers.Count);
-    Assert.AreNotEqual(tracker.Liane.Driver.User.Id, actual.OtherMembers.Keys.First());
+    Assert.AreNotEqual(tracker.Trip.Driver.User.Id, actual.OtherMembers.Keys.First());
   }
 
   [Test]
@@ -225,10 +225,10 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(tracker.Liane.Members.Select(m => m.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(tracker.Trip.Members.Select(m => m.User.Id), actual.Car.Members.Select(m => m.Id));
     // Check car's current location
     var expectedLocation = tracker.GetCurrentMemberLocation(
-      tracker.Liane.Members.First(m => m.User != tracker.Liane.Driver.User
+      tracker.Trip.Members.First(m => m.User != tracker.Trip.Driver.User
       ).User)?.Location;
     Assert.Less(1, actual.Car.Position.Distance(expectedLocation!.Value));
   }
@@ -245,7 +245,7 @@ public class LianeTrackerTest : BaseIntegrationTest
       Pings = lianeDb.Pings.Select(p => p with { User = userMapping[p.User] }).ToImmutableList()
     };
     await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
-    var liane = await lianeService.Get(lianeDb.Id);
+    var liane = await tripService.Get(lianeDb.Id);
     var tracker = await lianeTrackerService.Start(liane);
     var pings = lianeDb.Pings
       .OrderBy(p => p.At)
@@ -262,7 +262,7 @@ public class LianeTrackerTest : BaseIntegrationTest
 
     foreach (var p in sublist)
     {
-      await lianeTrackerService.PushPing(tracker.Liane, p);
+      await lianeTrackerService.PushPing(tracker.Trip, p);
     }
 
     return (tracker, userMapping);
@@ -321,13 +321,13 @@ public class LianeTrackerTest : BaseIntegrationTest
 
 
   private IMongoDatabase Db = null!;
-  private ILianeService lianeService = null!;
+  private ITripService tripService = null!;
   private ILianeTrackerService lianeTrackerService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     Db = db;
-    lianeService = ServiceProvider.GetRequiredService<ILianeService>();
+    tripService = ServiceProvider.GetRequiredService<ITripService>();
     lianeTrackerService = ServiceProvider.GetRequiredService<ILianeTrackerService>();
   }
 }

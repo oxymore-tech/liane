@@ -2,7 +2,7 @@ namespace Liane.Api.Trip;
 
 public sealed class LianeFilter
 {
-  public bool ForCurrentUser { get; set; }
-  
-  public LianeState[]? States { get; set; }
+  public bool ForCurrentUser { get; init; }
+
+  public LianeState[]? States { get; init; }
 }

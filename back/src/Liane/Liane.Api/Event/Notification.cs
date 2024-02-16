@@ -95,4 +95,4 @@ public abstract record Notification : IEntity
   }
 }
 
-public sealed record Reminder(Ref<Trip.Liane> Liane, ImmutableList<WayPoint> Trip, bool Driver);
+public sealed record Reminder(Ref<Trip.Trip> Liane, ImmutableList<WayPoint> Trip, bool Driver);

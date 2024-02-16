@@ -21,15 +21,15 @@ using NUnit.Framework;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class LianeServiceImplTest : BaseIntegrationTest
+public sealed class TripServiceImplTest : BaseIntegrationTest
 {
-  private LianeServiceImpl testedService = null!;
+  private TripServiceImpl testedService = null!;
   private MockCurrentContext currentContext = null!;
   private IRoutingService routingService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
-    testedService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+    testedService = ServiceProvider.GetRequiredService<TripServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     routingService = ServiceProvider.GetRequiredService<IRoutingService>();
   }
@@ -39,7 +39,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<LianeServiceImpl>();
+    services.AddService<TripServiceImpl>();
     services.AddService<FirebaseMessagingImpl>();
   }
 
@@ -68,7 +68,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       (RouteSegment)(LabeledPositions.ChamperbouxEglise, LabeledPositions.SaintEnimieParking),
     };
 
-    var createdLianes = new List<Api.Trip.Liane>();
+    var createdLianes = new List<Api.Trip.Trip>();
     for (var i = 0; i < baseLianes.Length; i++)
     {
       var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
@@ -83,19 +83,19 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var start = Stopwatch.GetTimestamp();
     // Results
     var results = (await testedService.Match(filter1, new Pagination())).Data;
-    var resultsMatchIds = results.Select(r => r.Liane.Id).ToImmutableList();
+    var resultsMatchIds = results.Select(r => r.Trip.Id).ToImmutableList();
     TestContext.Out.WriteLine((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency);
     // Check results only contain expected matches
     Assert.AreEqual(3, results.Count);
     // Check exact matches
     var expected = createdLianes[4];
     Assert.Contains(expected.Id, resultsMatchIds);
-    Assert.IsInstanceOf<Match.Exact>(results.First(m => m.Liane.Id == expected.Id).Match);
+    Assert.IsInstanceOf<Match.Exact>(results.First(m => m.Trip.Id == expected.Id).Match);
 
     // Check compatible matches
     expected = createdLianes[0];
     Assert.Contains(expected.Id, resultsMatchIds);
-    var compatible = results.First(m => m.Liane.Id == expected.Id).Match;
+    var compatible = results.First(m => m.Trip.Id == expected.Id).Match;
     Assert.IsInstanceOf<Match.Compatible>(compatible);
     Assert.AreEqual(294, ((Match.Compatible)compatible).Delta.TotalInSeconds);
     Assert.AreEqual("SaintEnimie_Parking", ((Match.Compatible)compatible).Pickup.Id);
@@ -103,14 +103,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     expected = createdLianes[2];
     Assert.Contains(expected.Id, resultsMatchIds);
-    compatible = results.First(m => m.Liane.Id == expected.Id).Match;
+    compatible = results.First(m => m.Trip.Id == expected.Id).Match;
     Assert.IsInstanceOf<Match.Compatible>(compatible);
     Assert.AreEqual(550, ((Match.Compatible)compatible).Delta.TotalInSeconds);
     Assert.AreEqual("SaintEnimie_Parking", ((Match.Compatible)compatible).Pickup.Id);
     Assert.AreEqual("Cboux_Eglise", ((Match.Compatible)compatible).Deposit.Id);
   }
 
-  private async Task<Api.Trip.Liane> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
+  private async Task<Api.Trip.Trip> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
   {
     var departureTime = DateTime.UtcNow.AddHours(9);
     currentContext.SetCurrentUser(userA);
@@ -144,7 +144,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0].Id;
     // Create fake Liane in database
     var baseLianesRequests = CreateBaseLianeRequests();
-    var createdLianes = new List<Api.Trip.Liane>();
+    var createdLianes = new List<Api.Trip.Trip>();
     foreach (var t in baseLianesRequests)
     {
       createdLianes.Add(await testedService.Create(t, userA));
@@ -159,7 +159,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     CollectionAssert.AreEquivalent(ImmutableList.Create(
       createdLianes[0].Id,
       createdLianes[2].Id
-    ), actual.Data.Select(l => l.Liane.Id));
+    ), actual.Data.Select(l => l.Trip.Id));
 
     var filter3 = new Filter(
       LabeledPositions.GorgesDuTarnCausses,
@@ -176,7 +176,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var userA = Fakers.FakeDbUsers[0].Id;
     // Create fake Liane in database
     var baseLianesRequests = CreateBaseLianeRequests();
-    var createdLianes = new List<Api.Trip.Liane>();
+    var createdLianes = new List<Api.Trip.Trip>();
     for (var i = 0; i < baseLianesRequests.Length; i++)
     {
       createdLianes.Add(await testedService.Create(baseLianesRequests[i] with { AvailableSeats = i + 1 }, userA));
@@ -191,7 +191,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     CollectionAssert.AreEquivalent(ImmutableList.Create(
       createdLianes[0].Id,
       createdLianes[2].Id
-    ), actual.Data.Select(l => l.Liane.Id));
+    ), actual.Data.Select(l => l.Trip.Id));
 
     var filter2 = new Filter(
       LabeledPositions.GorgesDuTarnCausses,
@@ -200,7 +200,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       AvailableSeats: -4
     );
     actual = await testedService.Match(filter2, new Pagination());
-    CollectionAssert.IsEmpty(actual.Data.Select(l => l.Liane.Id));
+    CollectionAssert.IsEmpty(actual.Data.Select(l => l.Trip.Id));
   }
 
   [Test]
@@ -254,7 +254,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     currentContext.SetCurrentUser(userA);
     const int total = 20;
     const int pageSize = 10;
-    var created = new List<Api.Trip.Liane>();
+    var created = new List<Api.Trip.Trip>();
     for (var i = 0; i < total; i++)
     {
       var lianeA = Fakers.LianeRequestFaker.Generate();
@@ -294,7 +294,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     Assert.AreEqual(1, actual.Data.Count);
 
-    Assert.AreEqual(liane.Id, actual.Data[0].Liane.Id);
+    Assert.AreEqual(liane.Id, actual.Data[0].Trip.Id);
     Assert.IsInstanceOf<Match.Compatible>(actual.Data[0].Match);
     var compatible = (Match.Compatible)actual.Data[0].Match;
 
@@ -321,7 +321,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     Assert.AreEqual(1, actual.Data.Count);
 
-    Assert.AreEqual(liane.Id, actual.Data[0].Liane.Id);
+    Assert.AreEqual(liane.Id, actual.Data[0].Trip.Id);
     Assert.IsInstanceOf<Match.Compatible>(actual.Data[0].Match);
     var compatible = (Match.Compatible)actual.Data[0].Match;
 

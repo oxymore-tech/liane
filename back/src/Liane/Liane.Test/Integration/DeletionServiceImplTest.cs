@@ -16,13 +16,13 @@ public sealed class DeletionServiceImplTest : BaseIntegrationTest
 {
   private IDeleteAccountService testedService = null!;
   private MockCurrentContext currentContext = null!;
-  private ILianeService lianeService = null!;
+  private ITripService tripService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     testedService = ServiceProvider.GetRequiredService<DeleteAccountServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
-    lianeService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+    tripService = ServiceProvider.GetRequiredService<TripServiceImpl>();
   }
 
   [Test]
@@ -30,29 +30,29 @@ public sealed class DeletionServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    var baseLianesRequests = LianeServiceImplTest.CreateBaseLianeRequests();
+    var baseLianesRequests = TripServiceImplTest.CreateBaseLianeRequests();
 
     foreach (var t in baseLianesRequests)
     {
       currentContext.SetCurrentUser(userA);
-      var liane = await lianeService.Create(t, userA.Id);
+      var liane = await tripService.Create(t, userA.Id);
       currentContext.SetCurrentUser(userB);
-      await lianeService.AddMember(liane, new LianeMember(userB.Id, liane.WayPoints.First().RallyingPoint.Id!, liane.WayPoints.Last().RallyingPoint.Id!, -1));
+      await tripService.AddMember(liane, new LianeMember(userB.Id, liane.WayPoints.First().RallyingPoint.Id!, liane.WayPoints.Last().RallyingPoint.Id!, -1));
     }
 
     foreach (var t in baseLianesRequests)
     {
       currentContext.SetCurrentUser(userA);
-      var liane = await lianeService.Create(t with { Recurrence = DayOfWeekFlag.Friday | DayOfWeekFlag.Monday }, userA.Id);
+      var liane = await tripService.Create(t with { Recurrence = DayOfWeekFlag.Friday | DayOfWeekFlag.Monday }, userA.Id);
       currentContext.SetCurrentUser(userB);
-      await lianeService.AddMember(liane, new LianeMember(userB.Id, liane.WayPoints.First().RallyingPoint.Id!, liane.WayPoints.Last().RallyingPoint.Id!, -1));
+      await tripService.AddMember(liane, new LianeMember(userB.Id, liane.WayPoints.First().RallyingPoint.Id!, liane.WayPoints.Last().RallyingPoint.Id!, -1));
     }
 
     currentContext.SetCurrentUser(userA);
     await testedService.DeleteCurrent();
 
     currentContext.SetCurrentUser(userB);
-    var list = await lianeService.List(new LianeFilter { ForCurrentUser = true, States = new[] { LianeState.NotStarted } }, new Pagination());
+    var list = await tripService.List(new LianeFilter { ForCurrentUser = true, States = new[] { LianeState.NotStarted } }, new Pagination());
 
     CollectionAssert.IsEmpty(list.Data);
   }

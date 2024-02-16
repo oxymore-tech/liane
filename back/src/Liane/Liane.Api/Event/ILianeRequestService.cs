@@ -11,7 +11,7 @@ public interface ILianeRequestService : IEventListener<LianeEvent.JoinRequest>
 
   Task<JoinLianeRequest> Get(Ref<Notification> id);
   
-  Task RejectJoinLianeRequests(IEnumerable<Ref<Trip.Liane>> lianes);
+  Task RejectJoinLianeRequests(IEnumerable<Ref<Trip.Trip>> lianes);
 
   Task Delete(Ref<Notification> id);
 }

@@ -87,7 +87,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     return await Collection.PaginateTime(pagination, r => r.CreatedAt, filter, false);
   }
 
-  public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+  public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Trip>> lianes)
   {
     return Mongo.GetCollection<Notification>()
       .DeleteManyAsync(Builders<Notification>.Filter.In("Payload.Liane", lianes));

@@ -23,13 +23,13 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
 {
-  private LianeServiceImpl lianeService = null!;
+  private TripServiceImpl tripService = null!;
   private MockCurrentContext currentContext = null!;
   private ILianeRecurrenceService recurrenceService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
-    lianeService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+    tripService = ServiceProvider.GetRequiredService<TripServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     recurrenceService = ServiceProvider.GetRequiredService<ILianeRecurrenceService>();
   }
@@ -39,7 +39,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService<UserServiceImpl>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<LianeServiceImpl>();
+    services.AddService<TripServiceImpl>();
     services.AddService<FirebaseMessagingImpl>();
   }
 
@@ -52,11 +52,11 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     var expectedCount = departureTime.Day == now.Day ? 4 : 3;
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
-    var created = await lianeService.Create(
+    var created = await tripService.Create(
       new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(3), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
     Assert.NotNull(created.Recurrence);
 
-    var lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    var lianes = await tripService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(expectedCount * 2, lianes.Data.Count);
 
     var forthTrips = lianes.Data.Where(l => l.Return is not null).ToImmutableList();
@@ -64,7 +64,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     Assert.True(forthTrips.All(l => l.Recurrence == created.Recurrence));
     Assert.True((await forthTrips.SelectAsync(async l =>
     {
-      var returnTrip = await lianeService.Get(l.Return!);
+      var returnTrip = await tripService.Get(l.Return!);
       var t = returnTrip.DepartureTime - l.DepartureTime;
       return t == TimeSpan.FromHours(3);
     })).All(result => result));
@@ -84,19 +84,19 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
 
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
-    var created = await lianeService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
+    var created = await tripService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
       bertrand.Id);
     Assert.NotNull(created.Recurrence);
 
-    var lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    var lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
 
     Assert.AreEqual(3, lianes.Data.Count);
 
     // Delete last and test if it is recreated without duplication
-    await lianeService.Delete(lianes.Data.Last().Id);
-    await lianeService.CreateFromRecurrence(lianes.Data.First().Recurrence!.Id, bertrand.Id);
+    await tripService.Delete(lianes.Data.Last().Id);
+    await tripService.CreateFromRecurrence(lianes.Data.First().Recurrence!.Id, bertrand.Id);
 
-    var updatedLianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    var updatedLianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(3, updatedLianes.Data.Count);
   }
 
@@ -109,15 +109,15 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     var departureTime = now.AddDays(3);
     currentContext.SetCurrentUser(bertrand);
     var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
-    var created = await lianeService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
+    var created = await tripService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
       bertrand.Id);
 
     // Deactivate recurrence while cleaning up old lianes
     await recurrenceService.Update(created.Recurrence!.Id, DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek>()));
-    await lianeService.RemoveRecurrence(created.Recurrence!.Id);
+    await tripService.RemoveRecurrence(created.Recurrence!.Id);
 
     // Test recurrence is deactivated
-    var lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    var lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(0, lianes.Data.Count);
     var dbRecurrence = await recurrenceService.Get(created.Recurrence!.Id);
     Assert.False(dbRecurrence.Active);
@@ -127,9 +127,9 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     // Update recurrence
     var newRecurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
     await recurrenceService.Update(created.Recurrence!.Id, newRecurrence);
-    await lianeService.CreateFromRecurrence(created.Recurrence!.Id);
+    await tripService.CreateFromRecurrence(created.Recurrence!.Id);
     // Test liane added correctly
-    lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(1, lianes.Data.Count);
     dbRecurrence = await recurrenceService.Get(created.Recurrence!.Id);
     Assert.True(dbRecurrence.Active);
@@ -146,17 +146,17 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     currentContext.SetCurrentUser(bertrand);
     currentContext.SetAllowPastResourceCreation(true);
     var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
-    var created = await lianeService.Create(
+    var created = await tripService.Create(
       new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(5), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
 
-    var lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    var lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(8, lianes.Data.Count);
     // Deactivate recurrence while cleaning up old lianes
     await recurrenceService.Update(created.Recurrence!.Id, DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek>()));
-    await lianeService.RemoveRecurrence(created.Recurrence!.Id);
+    await tripService.RemoveRecurrence(created.Recurrence!.Id);
 
     // Test recurrence is deactivated
-    lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(0, lianes.Data.Count);
     var dbRecurrence = await recurrenceService.Get(created.Recurrence!.Id);
     Assert.False(dbRecurrence.Active);
@@ -166,9 +166,9 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     // Update recurrence
     var newRecurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
     await recurrenceService.Update(created.Recurrence!.Id, newRecurrence);
-    await lianeService.CreateFromRecurrence(created.Recurrence!.Id);
+    await tripService.CreateFromRecurrence(created.Recurrence!.Id);
     // Test liane added correctly
-    lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(2, lianes.Data.Count);
     Assert.True(lianes.Data.All(l => l.DepartureTime.DayOfWeek == now.AddDays(1).DayOfWeek));
     dbRecurrence = await recurrenceService.Get(created.Recurrence!.Id);
@@ -189,11 +189,11 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     currentContext.SetCurrentUser(bertrand);
     var recurrenceDays = new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek };
     var recurrence = DayOfWeekFlagUtils.Create(recurrenceDays);
-    var created = await lianeService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, returnTime, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
+    var created = await tripService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, returnTime, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
       bertrand.Id);
     Assert.NotNull(created.Recurrence);
 
-    var lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+    var lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
 
     Assert.AreEqual(6, lianes.Data.Count);
 
@@ -215,9 +215,9 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
       }
     
       Assert.AreEqual(1, toUpdate.Count);
-      await lianeService.CreateFromRecurrence(toUpdate[0], toUpdate[0].CreatedBy, 7+days);
+      await tripService.CreateFromRecurrence(toUpdate[0], toUpdate[0].CreatedBy, 7+days);
       
-      lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
+      lianes = await tripService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
 
       Assert.AreEqual(6 + expectedAddedCount, lianes.Data.Count);
     }

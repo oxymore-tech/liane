@@ -8,23 +8,13 @@ using Timer = System.Timers.Timer;
 
 namespace Liane.Api.Util;
 
-public abstract class CronJobService : IHostedService, IDisposable
+public abstract class CronJobService(ILogger logger, string cronExpression, bool runImmediately, bool isEnabled = true)
+  : IHostedService, IDisposable
 {
   private Timer? timer;
-  private readonly CronExpression expression;
-  private readonly TimeZoneInfo timeZoneInfo;
-  private readonly bool runImmediately;
-  private readonly bool isEnabled;
-  protected readonly ILogger Logger;
-
-  protected CronJobService(ILogger logger, string cronExpression, bool runImmediately, bool isEnabled = true)
-  {
-    this.Logger = logger;
-    expression = CronExpression.Parse(cronExpression);
-    this.runImmediately = runImmediately;
-    timeZoneInfo = TimeZoneInfo.Local;
-    this.isEnabled = isEnabled;
-  }
+  private readonly CronExpression expression = CronExpression.Parse(cronExpression);
+  private readonly TimeZoneInfo timeZoneInfo = TimeZoneInfo.Local;
+  protected readonly ILogger Logger = logger;
 
   public virtual async Task StartAsync(CancellationToken cancellationToken)
   {

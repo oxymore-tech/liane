@@ -24,7 +24,7 @@ public sealed record LianeDb(
   Ref<Api.User.User>? CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
-  Ref<Api.Trip.Liane>? Return,
+  Ref<Api.Trip.Trip>? Return,
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,

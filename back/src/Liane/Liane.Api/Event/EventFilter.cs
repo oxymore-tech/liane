@@ -8,7 +8,7 @@ namespace Liane.Api.Event;
 public sealed record NotificationFilter(
   Ref<User.User>? Recipient,
   Ref<User.User>? Sender,
-  Ref<Trip.Liane>? Liane,
+  Ref<Trip.Trip>? Liane,
   PayloadType? PayloadType
 );
 

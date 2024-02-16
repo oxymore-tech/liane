@@ -27,28 +27,28 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     this.routingService = routingService;
   }
 
-  public async Task UpdateGeometry(Api.Trip.Liane liane)
+  public async Task UpdateGeometry(Api.Trip.Trip trip)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE liane_id = @id", new { id = liane.Id }, tx);
+    await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE liane_id = @id", new { id = trip.Id }, tx);
 
-    await InsertLianeWaypoints(liane, connection, tx);
+    await InsertLianeWaypoints(trip, connection, tx);
     await DeleteOrphanSegments(connection, tx);
     tx.Commit();
   }
 
-  private async Task InsertLianeWaypoints(Api.Trip.Liane liane, IDbConnection connection, IDbTransaction tx)
+  private async Task InsertLianeWaypoints(Api.Trip.Trip trip, IDbConnection connection, IDbTransaction tx)
   {
-    if (liane.Members.Select(m => m.SeatCount).Aggregate(0, (v, acc) => v + acc) > 0)
+    if (trip.Members.Select(m => m.SeatCount).Aggregate(0, (v, acc) => v + acc) > 0)
     {
       // Only add liane to research if it has available seats
-      await GetStatsAndExecuteBatch(i => ComputeLianeBatch(i, liane), connection, tx);
+      await GetStatsAndExecuteBatch(i => ComputeLianeBatch(i, trip), connection, tx);
     }
   }
 
-  public async Task SyncGeometries(IEnumerable<Api.Trip.Liane> source)
+  public async Task SyncGeometries(IEnumerable<Api.Trip.Trip> source)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -63,20 +63,20 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     tx.Commit();
   }
 
-  public async Task<ImmutableList<Ref<Api.Trip.Liane>>> ListSearchableLianes()
+  public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListSearchableLianes()
   {
     using var connection = db.NewConnection();
     var results = await connection.QueryAsync<string>(
       "SELECT liane_id FROM liane_waypoint");
-    return results.Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
+    return results.Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
   }
 
-  public async Task<ImmutableList<Ref<Api.Trip.Liane>>> ListOngoingLianes()
+  public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListOngoingLianes()
   {
     using var connection = db.NewConnection();
     var results = await connection.QueryAsync<string>(
       "SELECT id FROM ongoing_trip");
-    return results.Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
+    return results.Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
   }
 
   public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to)
@@ -97,28 +97,28 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     return candidates.ToImmutableList();
   }
 
-  private async Task<BatchGeometryUpdate> ComputeLianeBatch(BatchGeometryUpdateInput input, Api.Trip.Liane liane)
+  private async Task<BatchGeometryUpdate> ComputeLianeBatch(BatchGeometryUpdateInput input, Api.Trip.Trip trip)
   {
     var wayPoints = new List<LianeWaypointDb>();
     var segments = new List<SegmentDb>();
 
-    for (var i = 0; i < liane.WayPoints.Count - 1; i++)
+    for (var i = 0; i < trip.WayPoints.Count - 1; i++)
     {
-      var from = liane.WayPoints[i].RallyingPoint;
-      var to = liane.WayPoints[i + 1].RallyingPoint;
+      var from = trip.WayPoints[i].RallyingPoint;
+      var to = trip.WayPoints[i + 1].RallyingPoint;
       if (input.Segments.Add((from.Id!, to.Id!)))
       {
         var route = await routingService.GetRoute(from.Location, to.Location);
         segments.Add(new SegmentDb(from.Id!, to.Id!, route.Coordinates.ToLineString()));
       }
 
-      wayPoints.Add(new LianeWaypointDb(from.Id!, to.Id!, liane.Id, liane.WayPoints[i].Eta));
+      wayPoints.Add(new LianeWaypointDb(from.Id!, to.Id!, trip.Id, trip.WayPoints[i].Eta));
     }
 
     return new BatchGeometryUpdate(segments, wayPoints);
   }
 
-  public async Task Clear(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+  public async Task Clear(IEnumerable<Ref<Api.Trip.Trip>> lianes)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();

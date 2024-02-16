@@ -14,5 +14,5 @@ public interface IMockService
   /// <param name="from">Starting from location</param>
   /// <param name="to">Arrival to location</param>
   /// <param name="radius">radius (in meters)</param>
-  Task<ImmutableList<Api.Trip.Liane>> GenerateLianes(int count, LatLng from, LatLng? to, int? radius);
+  Task<ImmutableList<Api.Trip.Trip>> GenerateLianes(int count, LatLng from, LatLng? to, int? radius);
 }

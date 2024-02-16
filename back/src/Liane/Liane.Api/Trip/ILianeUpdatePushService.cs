@@ -5,6 +5,6 @@ namespace Liane.Api.Trip;
 
 public interface ILianeUpdatePushService
 {
-  Task<TrackingInfo?> GetLastTrackingInfo(Ref<Liane> liane);
+  Task<TrackingInfo?> GetLastTrackingInfo(Ref<Trip> liane);
   Task Push(TrackingInfo update, Ref<User.User> user);
 }

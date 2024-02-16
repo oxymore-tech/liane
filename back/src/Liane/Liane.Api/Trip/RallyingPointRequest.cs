@@ -16,7 +16,7 @@ public record RallyingPointRequest(
 [Union]
 public abstract record RallyingPointRequestStatus
 {
-  public Ref<User.User> By { init; get; }
+  public Ref<User.User> By { get; init; }
 
   private RallyingPointRequestStatus(Ref<User.User> by)
   {

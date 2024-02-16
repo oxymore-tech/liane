@@ -15,16 +15,16 @@ public sealed class DeleteAccountServiceImpl : IDeleteAccountService
   private readonly ICurrentContext currentContext;
   private readonly IImageService imageService;
   private readonly IUserService userService;
-  private readonly ILianeService lianeService;
+  private readonly ITripService tripService;
   private readonly ILianeRecurrenceService lianeRecurrenceService;
   private readonly ILogger<DeleteAccountServiceImpl> logger;
 
-  public DeleteAccountServiceImpl(ICurrentContext currentContext, IImageService imageService, IUserService userService, ILianeService lianeService, ILianeRecurrenceService lianeRecurrenceService, ILogger<DeleteAccountServiceImpl> logger)
+  public DeleteAccountServiceImpl(ICurrentContext currentContext, IImageService imageService, IUserService userService, ITripService tripService, ILianeRecurrenceService lianeRecurrenceService, ILogger<DeleteAccountServiceImpl> logger)
   {
     this.currentContext = currentContext;
     this.imageService = imageService;
     this.userService = userService;
-    this.lianeService = lianeService;
+    this.tripService = tripService;
     this.lianeRecurrenceService = lianeRecurrenceService;
     this.logger = logger;
   }
@@ -33,7 +33,7 @@ public sealed class DeleteAccountServiceImpl : IDeleteAccountService
   {
     var id = currentContext.CurrentUser().Id;
     // Clear lianes
-    await lianeService.CancelAllTrips(id);
+    await tripService.CancelAllTrips(id);
     await lianeRecurrenceService.ClearForMember(id);
     try
     {

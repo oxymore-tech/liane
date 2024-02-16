@@ -90,7 +90,7 @@ public static class Startup
     services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<LianeServiceImpl>();
+    services.AddService<TripServiceImpl>();
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<LianeTrackerCache>();
@@ -343,7 +343,7 @@ public static class Startup
       .GetAwaiter()
       .GetResult();
 
-    var lianeService = app.ApplicationServices.GetRequiredService<ILianeService>();
+    var lianeService = app.ApplicationServices.GetRequiredService<ITripService>();
     // Synchronize databases and cache 
     lianeService.ForceSyncDatabase()
       .ConfigureAwait(false)
