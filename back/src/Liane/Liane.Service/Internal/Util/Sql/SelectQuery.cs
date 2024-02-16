@@ -21,7 +21,7 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
 
     stringBuilder.Append("SELECT ");
 
-    stringBuilder.Append(string.Join(", ", Mapper.GetColumns<T>().Select(c => c.ColumnName)));
+    stringBuilder.Append(string.Join(", ", Mapper.GetColumns<T>().Select(c => $"\"{c.ColumnName}\"")));
 
     stringBuilder.Append($" FROM {Mapper.GetTableName<T>()}");
 

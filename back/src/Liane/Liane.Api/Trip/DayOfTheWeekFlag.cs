@@ -4,12 +4,13 @@ using System.Linq;
 
 namespace Liane.Api.Trip;
 
-public struct DayOfTheWeekFlag
+public readonly record struct DayOfTheWeekFlag(string FlagValue)
 {
-  public string FlagValue { get; init; }
-  public static implicit operator string(DayOfTheWeekFlag @flag) => @flag.FlagValue;
+  public static implicit operator string(DayOfTheWeekFlag flag) => flag.FlagValue;
 
   public bool IsNever => FlagValue.All(c => c == '0');
+  public static DayOfTheWeekFlag All => new("1111111");
+
   public override string ToString()
   {
     return this;
@@ -22,7 +23,7 @@ public struct DayOfTheWeekFlag
       var flag = FlagValue[Mod(day + (int)start - 1, 7)];
       if (flag == '1')
       {
-        yield return (DayOfWeek) Mod((int)start + day, 7);
+        yield return (DayOfWeek)Mod((int)start + day, 7);
       }
     }
   }
@@ -37,7 +38,8 @@ public struct DayOfTheWeekFlag
       {
         break;
       }
-      var flag = FlagValue[Mod(day + (int)start-1, 7)];
+
+      var flag = FlagValue[Mod(day + (int)start - 1, 7)];
       if (flag == '1')
       {
         yield return fromDate.AddDays(day);
@@ -50,14 +52,16 @@ public struct DayOfTheWeekFlag
     var flag = Enumerable.Repeat('0', 7).ToArray();
     foreach (var d in days)
     {
-      var index = Mod((int)d-1, 7);
+      var index = Mod((int)d - 1, 7);
       flag[index] = '1';
     }
+
     return new DayOfTheWeekFlag { FlagValue = new string(flag) };
   }
 
-  private static int Mod(int x, int m) {
-    return (x%m + m)%m;
+  private static int Mod(int x, int m)
+  {
+    return (x % m + m) % m;
   }
 
   public static int IndexOf(DayOfWeek day)

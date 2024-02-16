@@ -2,15 +2,15 @@ using System.Data;
 using System.Text.Json;
 using Dapper;
 
-namespace Liane.Service.Internal.Liane;
+namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-internal record struct Json<T>(T Value)
+public record struct Json<T>(T Value)
 {
   public static implicit operator T(Json<T> json) => json.Value;
   public static implicit operator Json<T>(T value) => new(value);
 }
 
-internal sealed class JsonTypeHandler<T>(JsonSerializerOptions options) : SqlMapper.TypeHandler<Json<T>>
+public sealed class JsonTypeHandler<T>(JsonSerializerOptions options) : SqlMapper.TypeHandler<Json<T>>
 {
   public override void SetValue(IDbDataParameter parameter, Json<T> value)
   {

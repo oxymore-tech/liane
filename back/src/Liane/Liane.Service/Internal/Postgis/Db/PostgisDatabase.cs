@@ -26,6 +26,7 @@ public sealed class PostgisDatabase : IDisposable
   public PostgisDatabase(DatabaseSettings settings, ILoggerFactory loggerFactory, ILogger<PostgisDatabase> logger)
   {
     this.settings = settings;
+    SqlMapper.AddTypeHandler(new DayOfTheWeekTypeHandler());
     SqlMapper.AddTypeHandler(new LineStringTypeHandler());
     SqlMapper.AddTypeHandler(new PointTypeHandler());
     SqlMapper.AddTypeHandler(new LatLngTypeHandler());
