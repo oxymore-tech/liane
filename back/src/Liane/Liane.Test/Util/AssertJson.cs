@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using DeepEqual.Syntax;
 using Json.More;
 using Liane.Web.Internal.Json;
 using NUnit.Framework;
@@ -25,11 +26,12 @@ public static class AssertJson
     {
       var expectedJsonNode = JsonSerializer.Deserialize<JsonNode>(expectedJson, JsonOptions);
       var actualJsonNode = JsonSerializer.Deserialize<JsonNode>(serializeObject, JsonOptions);
-      expectedJsonNode.IsEquivalentTo(actualJsonNode);
+      Assert.IsTrue(expectedJsonNode.IsEquivalentTo(actualJsonNode));
     }
-    catch (AssertionException)
+    catch (Exception)
     {
       Console.Write(serializeObject);
+      throw;
     }
   }
 

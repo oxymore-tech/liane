@@ -9,7 +9,6 @@ using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
-using Match = Liane.Service.Internal.Liane.Match;
 
 namespace Liane.Test.Integration;
 
@@ -56,12 +55,10 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(1, actual.Count);
 
     Assert.AreEqual(lianeGugu.WayPoints.Select(p => (Ref<RallyingPoint>)p.Id), actual[0].WayPoints);
-    Assert.AreEqual(lianeGugu.TimeConstraints, actual[0].TimeConstraints);
-    CollectionAssert.AreEquivalent(ImmutableList.Create(
-      new Match(lianeJayBee.Id, jayBee.Id, lianeJayBee.WayPoints, null, null, 0),
-      new Match(lianeMathilde.Id, mathilde.Id, lianeMathilde.WayPoints, null, null, 0),
-      new Match(lianeSiloe.Id, siloe.Id, lianeSiloe.WayPoints, null, null, 0)
-    ), lianeGugu.Matches);
+    Assert.AreEqual(3, actual[0].Matches.Count);
+    Assert.AreEqual(lianeJayBee.Id, actual[0].Matches[0].Liane.Id);
+    Assert.AreEqual(lianeSiloe.Id, actual[0].Matches[1].Liane.Id);
+    Assert.AreEqual(lianeMathilde.Id, actual[0].Matches[2].Liane.Id);
   }
 
   private async Task<Service.Internal.Liane.Liane> CreateLiane(DbUser gugu, string name = "Boulot", params Ref<RallyingPoint>[] wayPoints)

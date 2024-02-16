@@ -68,4 +68,15 @@ public readonly record struct DayOfTheWeekFlag(string FlagValue)
   {
     return Mod((int)day - 1, 7);
   }
+
+  public static DayOfTheWeekFlag operator |(DayOfTheWeekFlag a, DayOfTheWeekFlag b)
+  {
+    var flag = new char[7];
+    for (var i = 0; i < 7; i++)
+    {
+      flag[i] = a.FlagValue[i] == '1' || b.FlagValue[i] == '1' ? '1' : '0';
+    }
+
+    return new DayOfTheWeekFlag(new string(flag));
+  }
 }

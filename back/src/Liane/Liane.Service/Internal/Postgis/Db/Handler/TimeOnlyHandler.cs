@@ -5,7 +5,7 @@ using Liane.Api.Trip;
 
 namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-public class TimeOnlyHandler : SqlMapper.TypeHandler<TimeOnly>
+internal sealed class TimeOnlyHandler : SqlMapper.TypeHandler<TimeOnly>
 {
   public override TimeOnly Parse(object value) => TimeOnly.FromTimeSpan((TimeSpan)value);
 
