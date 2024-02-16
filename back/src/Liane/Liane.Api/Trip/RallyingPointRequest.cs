@@ -12,7 +12,6 @@ public record RallyingPointRequest(
   RallyingPointRequestStatus? Status = null
 ) : IEntity;
 
-
 [Union]
 public abstract record RallyingPointRequestStatus
 {
