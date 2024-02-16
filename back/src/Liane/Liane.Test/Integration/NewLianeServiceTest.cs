@@ -2,9 +2,10 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Community;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Liane;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -61,10 +62,10 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(lianeMathilde.Id, actual[0].Matches[2].Liane.Id);
   }
 
-  private async Task<Service.Internal.Liane.Liane> CreateLiane(DbUser gugu, string name = "Boulot", params Ref<RallyingPoint>[] wayPoints)
+  private async Task<Api.Community.Liane> CreateLiane(DbUser gugu, string name = "Boulot", params Ref<RallyingPoint>[] wayPoints)
   {
     currentContext.SetCurrentUser(gugu);
-    var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfTheWeekFlag.All));
-    return await tested.Create(new LianeQuery(name, wayPoints.ToImmutableList(), false, true, DayOfTheWeekFlag.All, timeConstraints, null, null));
+    var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfWeekFlag.All));
+    return await tested.Create(new LianeQuery(name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, null, null));
   }
 }

@@ -6,7 +6,7 @@ namespace Liane.Api.Trip;
 public sealed record LianeRecurrence(string? Id,
   Ref<User.User>? CreatedBy,
   DateTime? CreatedAt,
-  DayOfTheWeekFlag Days,
+  DayOfWeekFlag Days,
   BaseLianeRequest InitialRequest,
   bool Active = true) : IEntity
 {

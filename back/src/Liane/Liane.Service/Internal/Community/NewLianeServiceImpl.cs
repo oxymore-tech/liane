@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
 using GeoJSON.Text.Geometry;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -13,8 +13,9 @@ using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
 using UuidExtensions;
+using Match = Liane.Api.Community.Match;
 
-namespace Liane.Service.Internal.Liane;
+namespace Liane.Service.Internal.Community;
 
 public sealed class NewLianeServiceImpl(
   PostgisDatabase db,
@@ -22,7 +23,7 @@ public sealed class NewLianeServiceImpl(
   IRoutingService routingService,
   IRallyingPointService rallyingPointService)
 {
-  public async Task<ImmutableList<Liane>> List()
+  public async Task<ImmutableList<Api.Community.Liane>> List()
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
@@ -57,7 +58,7 @@ public sealed class NewLianeServiceImpl(
                                                                                             ORDER BY score DESC, liane_a.id;
                                                                                         """, new { lianes = lianes.Select(l => l.Id).ToArray() });
 
-    return lianes.Select(l => new Liane(
+    return lianes.Select(l => new Api.Community.Liane(
       l.Id.ToString(),
       l.Name,
       l.WayPoints.AsRef<RallyingPoint>(),
@@ -99,7 +100,7 @@ public sealed class NewLianeServiceImpl(
                                                          """);
   }
 
-  public async Task<Liane> Create(LianeQuery query)
+  public async Task<Api.Community.Liane> Create(LianeQuery query)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -125,25 +126,11 @@ public sealed class NewLianeServiceImpl(
     await connection.InsertAsync(lianeDb, tx);
 
     tx.Commit();
-    return new Liane(id.ToString(), lianeDb.Name, query.WayPoints, lianeDb.RoundTrip, lianeDb.CanDrive, lianeDb.WeekDays, query.TimeConstraints, lianeDb.VacationStart, lianeDb.VacationEnd,
+    return new Api.Community.Liane(id.ToString(), lianeDb.Name, query.WayPoints, lianeDb.RoundTrip, lianeDb.CanDrive, lianeDb.WeekDays, query.TimeConstraints, lianeDb.VacationStart,
+      lianeDb.VacationEnd,
       ImmutableList<Match>.Empty, lianeDb.CreatedBy, lianeDb.CreatedAt);
   }
 }
-
-public sealed record TimeConstraint(TimeRange When, Ref<RallyingPoint> At, DayOfTheWeekFlag WeekDays);
-
-public readonly record struct TimeRange(TimeOnly Start, TimeOnly? End);
-
-public sealed record LianeQuery(
-  string Name,
-  ImmutableList<Ref<RallyingPoint>> WayPoints,
-  bool RoundTrip,
-  bool CanDrive,
-  DayOfTheWeekFlag WeekDays,
-  ImmutableList<TimeConstraint> TimeConstraints,
-  DateTime? VacationStart,
-  DateTime? VacationEnd
-);
 
 public sealed record LianeDb(
   Guid Id,
@@ -151,7 +138,7 @@ public sealed record LianeDb(
   string[] WayPoints,
   bool RoundTrip,
   bool CanDrive,
-  DayOfTheWeekFlag WeekDays,
+  DayOfWeekFlag WeekDays,
   DateTime? VacationStart,
   DateTime? VacationEnd,
   Ref<Api.User.User> CreatedBy,
@@ -163,36 +150,12 @@ public sealed record TimeConstraintDb(
   TimeOnly Start,
   TimeOnly? End,
   string At,
-  DayOfTheWeekFlag WeekDays
+  DayOfWeekFlag WeekDays
 );
 
 public sealed record RouteDb(
   string[] WayPoints,
   LineString Geometry
-);
-
-public sealed record Liane(
-  string Id,
-  string Name,
-  ImmutableList<Ref<RallyingPoint>> WayPoints,
-  bool RoundTrip,
-  bool CanDrive,
-  DayOfTheWeekFlag WeekDays,
-  ImmutableList<TimeConstraint> TimeConstraints,
-  DateTime? VacationStart,
-  DateTime? VacationEnd,
-  ImmutableList<Match> Matches,
-  Ref<Api.User.User> CreatedBy,
-  DateTime? CreatedAt
-) : IEntity;
-
-public sealed record Match(
-  Ref<Liane> Liane,
-  Ref<Api.User.User> User,
-  ImmutableList<Ref<RallyingPoint>> WayPoints,
-  Ref<RallyingPoint> Pickup,
-  Ref<RallyingPoint> Deposit,
-  float Score
 );
 
 public sealed record MatchDb(

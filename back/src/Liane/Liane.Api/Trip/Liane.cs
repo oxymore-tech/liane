@@ -46,7 +46,7 @@ public sealed record Driver
 );
 
 public sealed record Recurrence
-  (Ref<LianeRecurrence> Id,  DayOfTheWeekFlag Days);
+  (Ref<LianeRecurrence> Id,  DayOfWeekFlag Days);
 
 public sealed record Liane(
   string Id,

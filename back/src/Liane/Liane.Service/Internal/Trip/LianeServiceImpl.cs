@@ -27,45 +27,24 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class LianeServiceImpl : BaseMongoCrudService<LianeDb, Api.Trip.Liane>, ILianeService
+public sealed class LianeServiceImpl(
+  IMongoDatabase mongo,
+  IRoutingService routingService,
+  ICurrentContext currentContext,
+  IRallyingPointService rallyingPointService,
+  IChatService chatService,
+  ILogger<LianeServiceImpl> logger,
+  IUserService userService,
+  IPostgisService postgisService,
+  ILianeRecurrenceService lianeRecurrenceService,
+  ILianeUpdateObserver lianeUpdateObserver,
+  IUserStatService userStatService,
+  LianeTrackerCache trackerCache)
+  : BaseMongoCrudService<LianeDb, Api.Trip.Liane>(mongo), ILianeService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
   private const int MaxDepositDeltaInMeters = 2000;
   private const int LianeMatchPageDeltaInHours = 24;
-
-  private readonly IRoutingService routingService;
-  private readonly IRallyingPointService rallyingPointService;
-  private readonly IUserService userService;
-  private readonly IChatService chatService;
-  private readonly ICurrentContext currentContext;
-  private readonly IPostgisService postgisService;
-  private readonly ILianeRecurrenceService lianeRecurrenceService;
-  private readonly ILogger<LianeServiceImpl> logger;
-  private readonly ILianeUpdateObserver lianeUpdateObserver;
-  private readonly IUserStatService userStatService;
-  private readonly LianeTrackerCache trackerCache;
-
-  public LianeServiceImpl(
-    IMongoDatabase mongo,
-    IRoutingService routingService,
-    ICurrentContext currentContext,
-    IRallyingPointService rallyingPointService,
-    IChatService chatService,
-    ILogger<LianeServiceImpl> logger, IUserService userService, IPostgisService postgisService, ILianeRecurrenceService lianeRecurrenceService, ILianeUpdateObserver lianeUpdateObserver,
-    IUserStatService userStatService, LianeTrackerCache trackerCache) : base(mongo)
-  {
-    this.routingService = routingService;
-    this.currentContext = currentContext;
-    this.rallyingPointService = rallyingPointService;
-    this.chatService = chatService;
-    this.logger = logger;
-    this.userService = userService;
-    this.postgisService = postgisService;
-    this.lianeRecurrenceService = lianeRecurrenceService;
-    this.lianeUpdateObserver = lianeUpdateObserver;
-    this.userStatService = userStatService;
-    this.trackerCache = trackerCache;
-  }
 
   public async Task<Api.Trip.Liane> Create(LianeRequest entity, Ref<Api.User.User>? owner = null)
   {

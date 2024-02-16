@@ -32,7 +32,8 @@ public sealed class LianeController : ControllerBase
   private readonly ILianeRecurrenceService lianeRecurrenceService;
   private readonly ILianeTrackerService lianeTrackerService;
 
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService, ILianeTrackerService lianeTrackerService)
+  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService,
+    ILianeTrackerService lianeTrackerService)
   {
     this.lianeService = lianeService;
     this.currentContext = currentContext;
@@ -47,7 +48,7 @@ public sealed class LianeController : ControllerBase
   public async Task<Api.Trip.Liane> Get([FromRoute] string id)
   {
     var current = currentContext.CurrentResource<Api.Trip.Liane>();
-    return await lianeService.GetForCurrentUser(current is not null? current : id);
+    return await lianeService.GetForCurrentUser(current is not null ? current : id);
   }
 
   [HttpDelete("{id}")]
@@ -63,7 +64,7 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.UpdateDepartureTime(id, update.DepartureTime);
   }
-  
+
   [HttpPost("{id}/cancel")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<IActionResult> CancelLiane([FromRoute] string id)
@@ -72,7 +73,7 @@ public sealed class LianeController : ControllerBase
     await eventDispatcher.Dispatch(new LianeEvent.MemberHasCanceled(id, currentContext.CurrentUser().Id));
     return NoContent();
   }
-  
+
   [HttpPost("{id}/start")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<IActionResult> StartLiane([FromRoute] string id)
@@ -82,7 +83,7 @@ public sealed class LianeController : ControllerBase
     return NoContent();
   }
 
-   
+
   [HttpPost("{id}/leave")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<IActionResult> LeaveLiane([FromRoute] string id)
@@ -92,7 +93,7 @@ public sealed class LianeController : ControllerBase
     await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
     return NoContent();
   }
-  
+
   [HttpGet("{id}/members/{memberId}/contact")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)
@@ -108,22 +109,22 @@ public sealed class LianeController : ControllerBase
     return NoContent();
   }
 
-  
+
   [HttpGet("{id}/geolocation")]
   public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id, [FromQuery] bool raw = true)
   {
-    return currentContext.CurrentUser().IsAdmin ? 
-      (raw ? lianeService.GetRawGeolocationPings(id) : lianeTrackerService.GetGeolocationPings(id)) : 
-      lianeTrackerService.GetGeolocationPingsForCurrentUser(id);
+    return currentContext.CurrentUser().IsAdmin
+      ? (raw ? lianeService.GetRawGeolocationPings(id) : lianeTrackerService.GetGeolocationPings(id))
+      : lianeTrackerService.GetGeolocationPingsForCurrentUser(id);
   }
-  
+
   [HttpPatch("{id}/geolocation")]
   public async Task<IActionResult> UpdateGeolocationSetting([FromRoute] string id, [FromBody] GeolocationLevel level)
   {
     await lianeService.UpdateGeolocationSetting(id, level);
     return NoContent();
   }
-  
+
   [HttpPost("sync")]
   [RequiresAdminAuth]
   public Task ForceSyncDatabase()
@@ -179,39 +180,38 @@ public sealed class LianeController : ControllerBase
 
     return await mockService.GenerateLianes(count, from, to, radius);
   }
-  
-      
+
+
   [HttpGet("recurrence")]
   public Task<ImmutableList<LianeRecurrence>> ListRecurrences()
   {
     return lianeRecurrenceService.ListForCurrentUser();
   }
-  
+
   [HttpGet("recurrence/{id}")]
   public Task<LianeRecurrence> GetRecurrence([FromRoute] string id)
   {
     return lianeRecurrenceService.GetWithResolvedRefs(id);
   }
 
-    
+
   [HttpDelete("recurrence/{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
   public async Task RemoveRecurrence([FromRoute] string id)
   {
-      await lianeRecurrenceService.Delete(id);
-      await lianeService.RemoveRecurrence(id);
+    await lianeRecurrenceService.Delete(id);
+    await lianeService.RemoveRecurrence(id);
   }
-  
-      
+
   [HttpPatch("recurrence/{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
-  public async Task UpdateRecurrence([FromRoute] string id, [FromBody] DayOfTheWeekFlag days)
+  public async Task UpdateRecurrence([FromRoute] string id, [FromBody] DayOfWeekFlag days)
   {
     // Deactivate recurrence while cleaning up old lianes
-    await lianeRecurrenceService.Update(id, DayOfTheWeekFlag.Create(new HashSet<DayOfWeek>()));
+    await lianeRecurrenceService.Update(id, DayOfWeekFlag.None);
     await lianeService.RemoveRecurrence(id);
     // If flag is all 0, we stop here, else reactivate recurrence and create lianes
-    if (!days.IsNever)
+    if (days != DayOfWeekFlag.None)
     {
       await lianeRecurrenceService.Update(id, days);
       await lianeService.CreateFromRecurrence(id);
@@ -224,18 +224,18 @@ public sealed class LianeController : ControllerBase
   {
     return lianeService.ListTripRecords(pagination, filter);
   }
-  
+
   [HttpGet("record/{id}")]
   [RequiresAdminAuth]
-  public Task<DetailedLianeTrackReport> GetRecord([FromRoute]string id)
+  public Task<DetailedLianeTrackReport> GetRecord([FromRoute] string id)
   {
     return lianeService.GetTripRecord(id);
   }
-  
+
   [HttpPost("record/{id}/recreate")]
   [RequiresAdminAuth]
-  public Task  RecreateReport([FromRoute]string id)
+  public Task RecreateReport([FromRoute] string id)
   {
-    return  lianeTrackerService.RecreateReport(id);
+    return lianeTrackerService.RecreateReport(id);
   }
 }

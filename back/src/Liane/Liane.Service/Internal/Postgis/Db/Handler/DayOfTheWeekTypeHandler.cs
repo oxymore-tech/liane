@@ -5,19 +5,19 @@ using Liane.Api.Trip;
 
 namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-internal sealed class DayOfTheWeekTypeHandler : SqlMapper.TypeHandler<DayOfTheWeekFlag>
+internal sealed class DayOfTheWeekTypeHandler : SqlMapper.TypeHandler<DayOfWeekFlag>
 {
-  public override void SetValue(IDbDataParameter parameter, DayOfTheWeekFlag value)
+  public override void SetValue(IDbDataParameter parameter, DayOfWeekFlag value)
   {
     parameter.DbType = DbType.String;
-    parameter.Value = value.FlagValue.ToCharArray();
+    parameter.Value = value.PrintToString().ToCharArray();
   }
 
-  public override DayOfTheWeekFlag Parse(object value)
+  public override DayOfWeekFlag Parse(object value)
   {
     return value switch
     {
-      string s => new DayOfTheWeekFlag(s),
+      string s => DayOfWeekFlagUtils.FromString(s),
       _ => throw new ArgumentOutOfRangeException($"Unable to read from {value.GetType()}")
     };
   }

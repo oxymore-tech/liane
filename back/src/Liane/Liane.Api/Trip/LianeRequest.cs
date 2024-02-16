@@ -21,6 +21,6 @@ public sealed record LianeRequest(
   int AvailableSeats,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
-  DayOfTheWeekFlag? Recurrence = null,
+  DayOfWeekFlag? Recurrence = null,
   GeolocationLevel GeolocationLevel = GeolocationLevel.None
 ) : BaseLianeRequest(DepartureTime, ReturnTime, AvailableSeats, From, To, GeolocationLevel) ,IIdentity;

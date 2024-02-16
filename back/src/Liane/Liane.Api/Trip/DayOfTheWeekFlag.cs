@@ -4,31 +4,77 @@ using System.Linq;
 
 namespace Liane.Api.Trip;
 
-public readonly record struct DayOfTheWeekFlag(string FlagValue)
+[Flags]
+public enum DayOfWeekFlag
 {
-  public static implicit operator string(DayOfTheWeekFlag flag) => flag.FlagValue;
+  None = 0,
+  Monday = 1 << 0,
+  Tuesday = 1 << 1,
+  Wednesday = 1 << 2,
+  Thursday = 1 << 3,
+  Friday = 1 << 4,
+  Saturday = 1 << 5,
+  Sunday = 1 << 6,
+  All = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+}
 
-  public bool IsNever => FlagValue.All(c => c == '0');
-  public static DayOfTheWeekFlag All => new("1111111");
+public static class DayOfWeekFlagUtils
+{
+  private static readonly DayOfWeekFlag[] All =
+  [
+    DayOfWeekFlag.Monday, DayOfWeekFlag.Tuesday, DayOfWeekFlag.Wednesday, DayOfWeekFlag.Thursday, DayOfWeekFlag.Friday, DayOfWeekFlag.Saturday, DayOfWeekFlag.Sunday
+  ];
 
-  public override string ToString()
+
+  public static DayOfWeekFlag ToFlag(this DayOfWeek dayOfWeek)
   {
-    return this;
+    return dayOfWeek switch
+    {
+      DayOfWeek.Sunday => DayOfWeekFlag.Sunday,
+      DayOfWeek.Monday => DayOfWeekFlag.Monday,
+      DayOfWeek.Tuesday => DayOfWeekFlag.Tuesday,
+      DayOfWeek.Wednesday => DayOfWeekFlag.Wednesday,
+      DayOfWeek.Thursday => DayOfWeekFlag.Thursday,
+      DayOfWeek.Friday => DayOfWeekFlag.Friday,
+      DayOfWeek.Saturday => DayOfWeekFlag.Saturday,
+      _ => throw new ArgumentOutOfRangeException(nameof(dayOfWeek), dayOfWeek, null)
+    };
   }
 
-  public IEnumerable<DayOfWeek> GetNextActiveDays(DayOfWeek start = DayOfWeek.Monday)
+  public static DayOfWeekFlag Create(HashSet<DayOfWeek> days)
+  {
+    var flag = DayOfWeekFlag.Monday;
+    foreach (var d in days)
+    {
+      flag |= d switch
+      {
+        DayOfWeek.Sunday => DayOfWeekFlag.Sunday,
+        DayOfWeek.Monday => DayOfWeekFlag.Monday,
+        DayOfWeek.Tuesday => DayOfWeekFlag.Tuesday,
+        DayOfWeek.Wednesday => DayOfWeekFlag.Wednesday,
+        DayOfWeek.Thursday => DayOfWeekFlag.Thursday,
+        DayOfWeek.Friday => DayOfWeekFlag.Friday,
+        DayOfWeek.Saturday => DayOfWeekFlag.Saturday,
+        _ => throw new ArgumentOutOfRangeException(nameof(d), d, null)
+      };
+    }
+
+    return flag;
+  }
+
+  public static IEnumerable<DayOfWeek> GetNextActiveDays(this DayOfWeekFlag flag, DayOfWeek start = DayOfWeek.Monday)
   {
     for (var day = 1; day <= 7; day++)
     {
-      var flag = FlagValue[Mod(day + (int)start - 1, 7)];
-      if (flag == '1')
+      var nextDay = (DayOfWeek)((int)start + day);
+      if (flag.HasFlag(nextDay))
       {
-        yield return (DayOfWeek)Mod((int)start + day, 7);
+        yield return nextDay;
       }
     }
   }
 
-  public IEnumerable<DateTime> GetNextActiveDates(DateTime fromDate, DateTime maxDate)
+  public static IEnumerable<DateTime> GetNextActiveDates(this DayOfWeekFlag flag, DateTime fromDate, DateTime maxDate)
   {
     var start = fromDate.DayOfWeek;
     var dayCount = (maxDate - fromDate).Days + 1;
@@ -39,44 +85,32 @@ public readonly record struct DayOfTheWeekFlag(string FlagValue)
         break;
       }
 
-      var flag = FlagValue[Mod(day + (int)start - 1, 7)];
-      if (flag == '1')
+      var nextDay = (DayOfWeek)((int)start + day);
+      if (flag.HasFlag(nextDay))
       {
         yield return fromDate.AddDays(day);
       }
     }
   }
 
-  public static DayOfTheWeekFlag Create(HashSet<DayOfWeek> days)
+  public static string PrintToString(this DayOfWeekFlag value, char empty = '0')
   {
-    var flag = Enumerable.Repeat('0', 7).ToArray();
-    foreach (var d in days)
+    var flag = Enumerable.Repeat(empty, 7).ToArray();
+    for (var i = 0; i < All.Length; i++)
     {
-      var index = Mod((int)d - 1, 7);
-      flag[index] = '1';
+      if (value.HasFlag(All[i]))
+      {
+        flag[i] = '1';
+      }
     }
 
-    return new DayOfTheWeekFlag { FlagValue = new string(flag) };
+    return new string(flag);
   }
 
-  private static int Mod(int x, int m)
+  public static DayOfWeekFlag FromString(string value)
   {
-    return (x % m + m) % m;
-  }
-
-  public static int IndexOf(DayOfWeek day)
-  {
-    return Mod((int)day - 1, 7);
-  }
-
-  public static DayOfTheWeekFlag operator |(DayOfTheWeekFlag a, DayOfTheWeekFlag b)
-  {
-    var flag = new char[7];
-    for (var i = 0; i < 7; i++)
-    {
-      flag[i] = a.FlagValue[i] == '1' || b.FlagValue[i] == '1' ? '1' : '0';
-    }
-
-    return new DayOfTheWeekFlag(new string(flag));
+    return All.TakeWhile((_, i) => i < value.Length)
+      .Where((_, i) => value[i] == '1')
+      .Aggregate(DayOfWeekFlag.None, (current, t) => current | t);
   }
 }

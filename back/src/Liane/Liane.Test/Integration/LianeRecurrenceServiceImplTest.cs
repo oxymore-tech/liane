@@ -51,7 +51,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     var departureTime = now.AddHours(5);
     var expectedCount = departureTime.Day == now.Day ? 4 : 3;
     currentContext.SetCurrentUser(bertrand);
-    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
+    var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(5).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
     var created = await lianeService.Create(
       new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(3), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
     Assert.NotNull(created.Recurrence);
@@ -83,7 +83,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     var departureTime = now.AddHours(-2);
 
     currentContext.SetCurrentUser(bertrand);
-    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
+    var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek });
     var created = await lianeService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
       bertrand.Id);
     Assert.NotNull(created.Recurrence);
@@ -108,12 +108,12 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     var bertrand = Fakers.FakeDbUsers[2];
     var departureTime = now.AddDays(3);
     currentContext.SetCurrentUser(bertrand);
-    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
+    var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
     var created = await lianeService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
       bertrand.Id);
 
     // Deactivate recurrence while cleaning up old lianes
-    await recurrenceService.Update(created.Recurrence!.Id, DayOfTheWeekFlag.Create(new HashSet<DayOfWeek>()));
+    await recurrenceService.Update(created.Recurrence!.Id, DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek>()));
     await lianeService.RemoveRecurrence(created.Recurrence!.Id);
 
     // Test recurrence is deactivated
@@ -125,7 +125,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
 
 
     // Update recurrence
-    var newRecurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
+    var newRecurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
     await recurrenceService.Update(created.Recurrence!.Id, newRecurrence);
     await lianeService.CreateFromRecurrence(created.Recurrence!.Id);
     // Test liane added correctly
@@ -145,14 +145,14 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
     var departureTime = now.AddDays(3);
     currentContext.SetCurrentUser(bertrand);
     currentContext.SetAllowPastResourceCreation(true);
-    var recurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
+    var recurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(4).DayOfWeek, now.AddDays(5).DayOfWeek, now.DayOfWeek });
     var created = await lianeService.Create(
       new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, departureTime.AddHours(5), 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence), bertrand.Id);
 
     var lianes = await lianeService.List(new LianeFilter() { ForCurrentUser = true }, new Pagination());
     Assert.AreEqual(8, lianes.Data.Count);
     // Deactivate recurrence while cleaning up old lianes
-    await recurrenceService.Update(created.Recurrence!.Id, DayOfTheWeekFlag.Create(new HashSet<DayOfWeek>()));
+    await recurrenceService.Update(created.Recurrence!.Id, DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek>()));
     await lianeService.RemoveRecurrence(created.Recurrence!.Id);
 
     // Test recurrence is deactivated
@@ -164,7 +164,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
 
 
     // Update recurrence
-    var newRecurrence = DayOfTheWeekFlag.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
+    var newRecurrence = DayOfWeekFlagUtils.Create(new HashSet<DayOfWeek> { now.AddDays(1).DayOfWeek });
     await recurrenceService.Update(created.Recurrence!.Id, newRecurrence);
     await lianeService.CreateFromRecurrence(created.Recurrence!.Id);
     // Test liane added correctly
@@ -188,7 +188,7 @@ public sealed class LianeRecurrenceServiceImplTest : BaseIntegrationTest
 
     currentContext.SetCurrentUser(bertrand);
     var recurrenceDays = new HashSet<DayOfWeek> { departureTime.DayOfWeek, departureTime.AddDays(1).DayOfWeek, departureTime.AddDays(4).DayOfWeek };
-    var recurrence = DayOfTheWeekFlag.Create(recurrenceDays);
+    var recurrence = DayOfWeekFlagUtils.Create(recurrenceDays);
     var created = await lianeService.Create(new LianeRequest(ObjectId.GenerateNewId().ToString(), departureTime, returnTime, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille, recurrence),
       bertrand.Id);
     Assert.NotNull(created.Recurrence);
