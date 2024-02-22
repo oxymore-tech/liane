@@ -46,7 +46,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     var bertrand = Fakers.FakeDbUsers[6];
     var lianeBertrand = await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
 
-    var samuel = Fakers.FakeDbUsers[6];
+    var samuel = Fakers.FakeDbUsers[7];
     var lianeSamuel = await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
 
     await tested.FindMatches();
@@ -62,7 +62,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(lianeMathilde.Id, actual[0].Matches[2].Liane.Id);
   }
 
-  private async Task<Api.Community.Liane> CreateLiane(DbUser gugu, string name = "Boulot", params Ref<RallyingPoint>[] wayPoints)
+  private async Task<Api.Community.Liane> CreateLiane(DbUser gugu, string name, params Ref<RallyingPoint>[] wayPoints)
   {
     currentContext.SetCurrentUser(gugu);
     var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfWeekFlag.All));

@@ -25,6 +25,10 @@ public static class DayOfWeekFlagUtils
     DayOfWeekFlag.Monday, DayOfWeekFlag.Tuesday, DayOfWeekFlag.Wednesday, DayOfWeekFlag.Thursday, DayOfWeekFlag.Friday, DayOfWeekFlag.Saturday, DayOfWeekFlag.Sunday
   ];
 
+  private static readonly DayOfWeek[] AllDays =
+  [
+    DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
+  ];
 
   public static DayOfWeekFlag ToFlag(this DayOfWeek dayOfWeek)
   {
@@ -41,10 +45,10 @@ public static class DayOfWeekFlagUtils
     };
   }
 
-  public static DayOfWeekFlag Create(HashSet<DayOfWeek> days)
+  public static DayOfWeekFlag Create(params DayOfWeek[] days)
   {
-    var flag = DayOfWeekFlag.Monday;
-    foreach (var d in days)
+    var flag = DayOfWeekFlag.None;
+    foreach (var d in days.Distinct())
     {
       flag |= d switch
       {
@@ -64,29 +68,29 @@ public static class DayOfWeekFlagUtils
 
   public static IEnumerable<DayOfWeek> GetNextActiveDays(this DayOfWeekFlag flag, DayOfWeek start = DayOfWeek.Monday)
   {
-    for (var day = 1; day <= 7; day++)
+    var startIndex = Array.IndexOf(AllDays, start);
+    for (var i = startIndex; i < AllDays.Length; i++)
     {
-      var nextDay = (DayOfWeek)((int)start + day);
-      if (flag.HasFlag(nextDay))
+      var dayOfWeek = AllDays[i];
+      if (flag.HasFlag(dayOfWeek.ToFlag()))
       {
-        yield return nextDay;
+        yield return dayOfWeek;
       }
     }
   }
 
   public static IEnumerable<DateTime> GetNextActiveDates(this DayOfWeekFlag flag, DateTime fromDate, DateTime maxDate)
   {
-    var start = fromDate.DayOfWeek;
     var dayCount = (maxDate - fromDate).Days + 1;
     for (var day = 1; day <= dayCount; day++)
     {
-      if (fromDate.Date.AddDays(day) > maxDate.Date)
+      var fromPlusDays = fromDate.Date.AddDays(day);
+      if (fromPlusDays > maxDate.Date)
       {
         break;
       }
 
-      var nextDay = (DayOfWeek)((int)start + day);
-      if (flag.HasFlag(nextDay))
+      if (flag.HasFlag(fromPlusDays.DayOfWeek.ToFlag()))
       {
         yield return fromDate.AddDays(day);
       }

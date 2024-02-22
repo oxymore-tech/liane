@@ -42,21 +42,21 @@ public sealed class NewLianeServiceImpl(
                                                                                                    liane_b.id AS liane,
                                                                                                    liane_b.created_by AS "user",
                                                                                                    liane_b.way_points AS way_points,
-                                                                                                   score,
+                                                                                                   st_length(intersection) / a_length AS score,
                                                                                                    st_startpoint(intersection) AS pickup,
                                                                                                    st_endpoint(intersection) AS deposit
                                                                                             FROM (
                                                                                                     SELECT a.way_points AS a,
                                                                                                            b.way_points AS b,
                                                                                                            st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                                                           st_length(st_intersection(a.geometry, b.geometry)) / st_length(a.geometry) as score
+                                                                                                           st_length(a.geometry) AS a_length
                                                                                                     FROM route a
                                                                                                              INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
                                                                                                 ) AS matches
                                                                                             INNER JOIN liane liane_a ON liane_a.way_points = a
                                                                                             INNER JOIN liane liane_b ON liane_b.way_points = b
-                                                                                            WHERE score > 0.3 AND liane_a.id = ANY(@lianes)
-                                                                                            ORDER BY score DESC, liane_a.id;
+                                                                                            WHERE st_length(intersection) / a_length > 0.3 AND liane_a.id = ANY(@lianes)
+                                                                                            ORDER BY st_length(intersection) / a_length DESC, liane_a.id;
                                                                                         """, new { lianes = lianes.Select(l => l.Id).ToArray() });
 
     return lianes.Select(l => new Api.Community.Liane(

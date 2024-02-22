@@ -12,15 +12,12 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class LianeRecurrenceServiceImpl : MongoCrudEntityService<LianeRecurrence>, ILianeRecurrenceService
+public class LianeRecurrenceServiceImpl(
+  IMongoDatabase mongo,
+  ICurrentContext currentContext,
+  IRallyingPointService rallyingPointService)
+  : MongoCrudEntityService<LianeRecurrence>(mongo, currentContext), ILianeRecurrenceService
 {
-  private readonly IRallyingPointService rallyingPointService;
-
-  public LianeRecurrenceServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService) : base(mongo, currentContext)
-  {
-    this.rallyingPointService = rallyingPointService;
-  }
-
   public async Task Update(Ref<LianeRecurrence> recurrence, DayOfWeekFlag days)
   {
     if (days == DayOfWeekFlag.None)

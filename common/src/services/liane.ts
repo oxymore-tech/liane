@@ -7,7 +7,7 @@ import {
   LianeMatchDisplay,
   Feedback,
   LianeUpdate,
-  DayOfTheWeekFlag,
+  DayOfWeekFlag,
   LianeRecurrence,
   LianeState,
   GeolocationLevel,
@@ -27,9 +27,9 @@ export interface LianeService {
   getDetailedJoinRequest(joinRequestId: string): Promise<JoinLianeRequestDetailed>;
   getContact(id: string, memberId: string): Promise<string>;
   getRecurrence(id: string): Promise<LianeRecurrence>;
-  addRecurrence(lianeId: string, recurrence: DayOfTheWeekFlag): Promise<void>;
+  addRecurrence(lianeId: string, recurrence: DayOfWeekFlag): Promise<void>;
   updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
-  updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void>;
+  updateRecurrence(id: string, recurrence: DayOfWeekFlag): Promise<void>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   pause(id: string): Promise<void>;
   unpause(id: string): Promise<void>;
@@ -90,7 +90,7 @@ export class LianeServiceClient implements LianeService {
   }
 
   // PATCH
-  async addRecurrence(lianeId: string, recurrence: DayOfTheWeekFlag): Promise<void> {
+  async addRecurrence(lianeId: string, recurrence: DayOfWeekFlag): Promise<void> {
     console.log("TODO: ADD RECURRENCE TO ALREADY CREATE LIANE ROUTE", lianeId, recurrence);
   }
 
@@ -98,7 +98,7 @@ export class LianeServiceClient implements LianeService {
     return this.http.patchAs<Liane>(`/liane/${id}`, { body: <LianeUpdate>{ departureTime } });
   }
 
-  async updateRecurrence(id: string, recurrence: DayOfTheWeekFlag): Promise<void> {
+  async updateRecurrence(id: string, recurrence: DayOfWeekFlag): Promise<void> {
     await this.http.patch(`/liane/recurrence/${id}`, { body: recurrence });
   }
 

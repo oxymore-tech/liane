@@ -10,7 +10,7 @@ internal sealed class DayOfTheWeekTypeHandler : SqlMapper.TypeHandler<DayOfWeekF
   public override void SetValue(IDbDataParameter parameter, DayOfWeekFlag value)
   {
     parameter.DbType = DbType.String;
-    parameter.Value = value.PrintToString().ToCharArray();
+    parameter.Value = value.PrintToString().ToCharArray(0, 7);
   }
 
   public override DayOfWeekFlag Parse(object value)

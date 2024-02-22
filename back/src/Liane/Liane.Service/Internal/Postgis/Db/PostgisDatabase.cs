@@ -23,7 +23,7 @@ public sealed class PostgisDatabase : IDisposable
   private readonly NpgsqlDataSource dataSource;
   private readonly Dictionary<Type, ICopyTypeMapper> typeMappers = new();
 
-  public PostgisDatabase(DatabaseSettings settings, ILoggerFactory loggerFactory, ILogger<PostgisDatabase> logger)
+  public PostgisDatabase(DatabaseSettings settings, ILoggerFactory loggerFactory)
   {
     this.settings = settings;
     SqlMapper.AddTypeHandler(new DayOfTheWeekTypeHandler());
