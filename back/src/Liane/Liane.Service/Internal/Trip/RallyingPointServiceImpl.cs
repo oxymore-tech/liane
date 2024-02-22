@@ -15,12 +15,12 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class RallyingPointServiceImpl : IRallyingPointService
+public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDatabase db) : IRallyingPointService
 {
   private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]+");
 
   private static readonly string[] AccentedChars =
-  {
+  [
     "[aáÁàÀâÂäÄãÃåÅæÆ]",
     "[cçÇ]",
     "[eéÉèÈêÊëË]",
@@ -28,17 +28,9 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     "[nñÑ]",
     "[oóÓòÒôÔöÖõÕøØœŒß]",
     "[uúÚùÙûÛüÜ]"
-  };
+  ];
 
   private readonly MemoryCache pointCache = new(new MemoryCacheOptions());
-  private readonly IOsrmService osrmService;
-  private readonly PostgisDatabase db;
-
-  public RallyingPointServiceImpl(IOsrmService osrmService, PostgisDatabase db)
-  {
-    this.osrmService = osrmService;
-    this.db = db;
-  }
 
   public Task<RallyingPoint> Get(Ref<RallyingPoint> reference)
   {
@@ -59,7 +51,7 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return results.ToDictionary(r => r.Id!);
   }
 
-  private Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)
+  private static Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)
   {
     var filter = Filter<RallyingPoint>.Empty;
 

@@ -57,9 +57,18 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
 
     Assert.AreEqual(lianeGugu.WayPoints.Select(p => (Ref<RallyingPoint>)p.Id), actual[0].WayPoints);
     Assert.AreEqual(3, actual[0].Matches.Count);
+    
     Assert.AreEqual(lianeJayBee.Id, actual[0].Matches[0].Liane.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[0].Pickup.Id);
+    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[0].Deposit.Id);
+    
     Assert.AreEqual(lianeSiloe.Id, actual[0].Matches[1].Liane.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[1].Pickup.Id);
+    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[1].Deposit.Id);
+    
     Assert.AreEqual(lianeMathilde.Id, actual[0].Matches[2].Liane.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[2].Pickup.Id);
+    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[2].Deposit.Id);
   }
 
   private async Task<Api.Community.Liane> CreateLiane(DbUser gugu, string name, params Ref<RallyingPoint>[] wayPoints)

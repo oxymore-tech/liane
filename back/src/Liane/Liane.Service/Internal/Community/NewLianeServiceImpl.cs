@@ -37,27 +37,29 @@ public sealed class NewLianeServiceImpl(
       .GroupBy(c => c.LianeId)
       .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
 
-    var lianeMatch = await connection.QueryAsync<(Guid, Guid, string, string[], float)>("""
-                                                                                            SELECT liane_a.id AS "from",
-                                                                                                   liane_b.id AS liane,
-                                                                                                   liane_b.created_by AS "user",
-                                                                                                   liane_b.way_points AS way_points,
-                                                                                                   st_length(intersection) / a_length AS score,
-                                                                                                   st_startpoint(intersection) AS pickup,
-                                                                                                   st_endpoint(intersection) AS deposit
-                                                                                            FROM (
-                                                                                                    SELECT a.way_points AS a,
-                                                                                                           b.way_points AS b,
-                                                                                                           st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                                                           st_length(a.geometry) AS a_length
-                                                                                                    FROM route a
-                                                                                                             INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
-                                                                                                ) AS matches
-                                                                                            INNER JOIN liane liane_a ON liane_a.way_points = a
-                                                                                            INNER JOIN liane liane_b ON liane_b.way_points = b
-                                                                                            WHERE st_length(intersection) / a_length > 0.3 AND liane_a.id = ANY(@lianes)
-                                                                                            ORDER BY st_length(intersection) / a_length DESC, liane_a.id;
-                                                                                        """, new { lianes = lianes.Select(l => l.Id).ToArray() });
+    var lianeMatch = await connection.QueryAsync<(Guid, Guid, string, string[], float, LatLng, LatLng, string?, string?)>("""
+                                                                                                            SELECT liane_a.id AS "from",
+                                                                                                                   liane_b.id AS liane,
+                                                                                                                   liane_b.created_by AS "user",
+                                                                                                                   liane_b.way_points AS way_points,
+                                                                                                                   st_length(intersection) / a_length AS score,
+                                                                                                                   st_startpoint(intersection) AS pickup,
+                                                                                                                   st_endpoint(intersection) AS deposit,
+                                                                                                                   nearest_rp(st_startpoint(intersection)) AS pickup_point,
+                                                                                                                   nearest_rp(st_endpoint(intersection)) AS deposit_point
+                                                                                                            FROM (
+                                                                                                                    SELECT a.way_points AS a,
+                                                                                                                           b.way_points AS b,
+                                                                                                                           st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
+                                                                                                                           st_length(a.geometry) AS a_length
+                                                                                                                    FROM route a
+                                                                                                                             INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
+                                                                                                                ) AS matches
+                                                                                                            INNER JOIN liane liane_a ON liane_a.way_points = a
+                                                                                                            INNER JOIN liane liane_b ON liane_b.way_points = b
+                                                                                                            WHERE st_length(intersection) / a_length > 0.3 AND liane_a.id = ANY(@lianes)
+                                                                                                            ORDER BY st_length(intersection) / a_length DESC, liane_a.id;
+                                                                                                        """, new { lianes = lianes.Select(l => l.Id).ToArray() });
 
     return lianes.Select(l => new Api.Community.Liane(
       l.Id.ToString(),
@@ -69,7 +71,7 @@ public sealed class NewLianeServiceImpl(
       constraints.GetValueOrDefault(l.Id, ImmutableList<TimeConstraint>.Empty),
       l.VacationStart,
       l.VacationEnd,
-      lianeMatch.Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), null, null, m.Item5)).ToImmutableList(),
+      lianeMatch.Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), m.Item8, m.Item9, m.Item5)).ToImmutableList(),
       l.CreatedBy,
       l.CreatedAt
     )).ToImmutableList();
@@ -85,19 +87,7 @@ public sealed class NewLianeServiceImpl(
     // Pour chaque cluster, faire des sous ensembles de lianes qui ont des contraintes compatibles
 
     var lianeMatches = await connection.QueryAsync<Guid>("""
-                                                             SELECT liane_a.id, liane_b.id, ratio, intersection
-                                                             FROM (
-                                                                     SELECT a.way_points AS a,
-                                                                            b.way_points AS b,
-                                                                            st_intersection(a.geometry, b.geometry) intersection,
-                                                                            st_length(st_intersection(a.geometry, b.geometry)) / st_length(a.geometry) as ratio
-                                                                     FROM route a
-                                                                              INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
-                                                                 ) AS matches
-                                                             INNER JOIN liane liane_a ON liane_a.way_points = a
-                                                             INNER JOIN liane liane_b ON liane_b.way_points = b
-                                                             WHERE ratio > 0.3
-                                                             ORDER BY ratio DESC;
+                                                             
                                                          """);
   }
 
