@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -14,9 +16,13 @@ using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
 using UuidExtensions;
 using ILianeService = Liane.Api.Community.ILianeService;
+using LianeMatch = Liane.Api.Community.LianeMatch;
+using LianeRequest = Liane.Api.Community.LianeRequest;
 using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
+
+using LianeRawMatch = (Guid, Guid, string, string[], float, LatLng, LatLng, string?, string?);
 
 public sealed class NewLianeServiceImpl(
   PostgisDatabase db,
@@ -24,74 +30,45 @@ public sealed class NewLianeServiceImpl(
   IRoutingService routingService,
   IRallyingPointService rallyingPointService) : ILianeService
 {
-  public async Task<ImmutableList<Api.Community.Liane>> List()
+  public async Task<ImmutableList<LianeMatch>> List()
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
 
-    var lianes = await connection.QueryAsync(Query.Select<LianeDb>()
-      .Where(Filter<LianeDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)));
+    var lianes = await connection.QueryAsync(Query.Select<LianeRequestDb>()
+      .Where(Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)));
 
     var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
-        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeId, ComparisonOperator.In, lianes.Select(l => l.Id)))))
-      .GroupBy(c => c.LianeId)
-      .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
+        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.In, lianes.Select(l => l.Id)))))
+      .GroupBy(c => c.LianeRequestId)
+      .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, DayOfWeekFlagUtils.FromString(c.WeekDays))).ToImmutableList());
 
-    var lianeMatch = await connection.QueryAsync<(Guid, Guid, string, string[], float, LatLng, LatLng, string?, string?)>("""
-                                                                                                            SELECT liane_a.id AS "from",
-                                                                                                                   liane_b.id AS liane,
-                                                                                                                   liane_b.created_by AS "user",
-                                                                                                                   liane_b.way_points AS way_points,
-                                                                                                                   st_length(intersection) / a_length AS score,
-                                                                                                                   st_startpoint(intersection) AS pickup,
-                                                                                                                   st_endpoint(intersection) AS deposit,
-                                                                                                                   nearest_rp(st_startpoint(intersection)) AS pickup_point,
-                                                                                                                   nearest_rp(st_endpoint(intersection)) AS deposit_point
-                                                                                                            FROM (
-                                                                                                                    SELECT a.way_points AS a,
-                                                                                                                           b.way_points AS b,
-                                                                                                                           st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                                                                           st_length(a.geometry) AS a_length
-                                                                                                                    FROM route a
-                                                                                                                             INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
-                                                                                                                ) AS matches
-                                                                                                            INNER JOIN liane liane_a ON liane_a.way_points = a
-                                                                                                            INNER JOIN liane liane_b ON liane_b.way_points = b
-                                                                                                            WHERE st_length(intersection) / a_length > 0.3 AND liane_a.id = ANY(@lianes)
-                                                                                                            ORDER BY st_length(intersection) / a_length DESC, liane_a.id;
-                                                                                                        """, new { lianes = lianes.Select(l => l.Id).ToArray() });
+    var matches = await FindMatches(connection, lianes.Select(l => l.Id));
 
-    return lianes.Select(l => new Api.Community.Liane(
-      l.Id.ToString(),
-      l.Name,
-      l.WayPoints.AsRef<RallyingPoint>(),
-      l.RoundTrip,
-      l.CanDrive,
-      l.WeekDays,
-      constraints.GetValueOrDefault(l.Id, ImmutableList<TimeConstraint>.Empty),
-      l.VacationStart,
-      l.VacationEnd,
-      lianeMatch.Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), m.Item8, m.Item9, m.Item5)).ToImmutableList(),
-      l.CreatedBy,
-      l.CreatedAt
-    )).ToImmutableList();
+    return lianes.Select(l =>
+    {
+      var lianeRequest = new LianeRequest(
+        l.Id.ToString(),
+        l.Name,
+        l.WayPoints.AsRef<RallyingPoint>(),
+        l.RoundTrip,
+        l.CanDrive,
+        l.WeekDays,
+        constraints.GetValueOrDefault(l.Id, ImmutableList<TimeConstraint>.Empty),
+        l.VacationStart,
+        l.VacationEnd,
+        l.CreatedBy,
+        l.CreatedAt
+      );
+      return new LianeMatch(
+        lianeRequest,
+        null,
+        matches.Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), m.Item8, m.Item9, m.Item5)).ToImmutableList()
+      );
+    }).ToImmutableList();
   }
 
-  public async Task FindMatches()
-  {
-    using var connection = db.NewConnection();
-    // TODO
-    // Prendre toutes les lianes en base
-    // Pour chaque liane, resoudre la geometry du trajet en fonction des waypoints
-    // Regrouper ces lianes par clusters des geometries qui sintersect
-    // Pour chaque cluster, faire des sous ensembles de lianes qui ont des contraintes compatibles
-
-    var lianeMatches = await connection.QueryAsync<Guid>("""
-                                                             
-                                                         """);
-  }
-
-  public async Task<Api.Community.Liane> Create(LianeQuery query)
+  public async Task<LianeRequest> Create(LianeRequest request)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -99,31 +76,90 @@ public sealed class NewLianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var id = Uuid7.Guid();
 
-    await connection.InsertMultipleAsync(query.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
+    await connection.InsertMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays.PrintToString())), tx);
 
-    var wayPoints = query.WayPoints.Distinct().ToImmutableList();
+    var wayPoints = request.WayPoints.Distinct().ToImmutableList();
     if (wayPoints.Count <= 1)
     {
       throw new ArgumentException("At least 2 waypoints are required");
     }
 
-    var wayPointsArray = query.WayPoints.Deref();
-    var coordinates = (await query.WayPoints.SelectAsync(w => rallyingPointService.Get(w)))
+    var wayPointsArray = request.WayPoints.Deref();
+    var coordinates = (await request.WayPoints.SelectAsync(rallyingPointService.Get))
       .Select(w => w.Location);
     var route = await routingService.GetRoute(coordinates);
     await connection.InsertAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
 
-    var lianeDb = new LianeDb(id, query.Name, wayPointsArray, query.RoundTrip, query.CanDrive, query.WeekDays, query.VacationStart, query.VacationEnd, userId, DateTime.UtcNow);
-    await connection.InsertAsync(lianeDb, tx);
+    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.VacationStart, request.VacationEnd, null, userId,
+      DateTime.UtcNow);
+    await connection.InsertAsync(lianeRequestDb, tx);
 
     tx.Commit();
-    return new Api.Community.Liane(id.ToString(), lianeDb.Name, query.WayPoints, lianeDb.RoundTrip, lianeDb.CanDrive, lianeDb.WeekDays, query.TimeConstraints, lianeDb.VacationStart,
-      lianeDb.VacationEnd,
-      ImmutableList<Match>.Empty, lianeDb.CreatedBy, lianeDb.CreatedAt);
+    return new LianeRequest(
+      id.ToString(),
+      lianeRequestDb.Name,
+      request.WayPoints,
+      lianeRequestDb.RoundTrip,
+      lianeRequestDb.CanDrive,
+      lianeRequestDb.WeekDays,
+      request.TimeConstraints,
+      lianeRequestDb.VacationStart,
+      lianeRequestDb.VacationEnd,
+      lianeRequestDb.CreatedBy,
+      lianeRequestDb.CreatedAt);
+  }
+
+  /// <summary>
+  /// Récupère toutes les lianes request en base qui matche entre 2 à 2.<br/>
+  /// Pour que 2 liane_request matchent :
+  /// <ul>
+  ///   <li>il faut que leurs trajets se croisent.</li>
+  ///   <li>avec une intersection dont la longueur est au moins égale à 35% du trajet demandé.</li>
+  ///   <li>que si elle appartienne déjà une liane, ce soit la même.</li>
+  /// </ul> 
+  /// </summary>
+  private static async Task<IEnumerable<LianeRawMatch>> FindMatches(IDbConnection connection, IEnumerable<Guid> lianeRequests)
+  {
+    return await connection.QueryAsync<LianeRawMatch>("""
+                                                              SELECT liane_request_a.id AS "from",
+                                                                     liane_request_b.id AS liane_request,
+                                                                     liane_request_b.created_by AS "user",
+                                                                     liane_request_b.way_points AS way_points,
+                                                                     st_length(intersection) / a_length AS score,
+                                                                     st_startpoint(intersection) AS pickup,
+                                                                     st_endpoint(intersection) AS deposit,
+                                                                     nearest_rp(st_startpoint(intersection)) AS pickup_point,
+                                                                     nearest_rp(st_endpoint(intersection)) AS deposit_point
+                                                              FROM (
+                                                                      SELECT a.way_points AS a,
+                                                                             b.way_points AS b,
+                                                                             st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
+                                                                             st_length(a.geometry) AS a_length
+                                                                      FROM route a
+                                                                               INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
+                                                                  ) AS matches
+                                                              INNER JOIN liane_request liane_request_a ON liane_request_a.way_points = a
+                                                              INNER JOIN liane_request liane_request_b ON liane_request_b.way_points = b
+                                                              WHERE st_length(intersection) / a_length > 0.3 AND liane_request_a.id = ANY(@liane_requests)
+                                                              ORDER BY st_length(intersection) / a_length DESC, liane_request_a.id;
+                                                      """, new { liane_requests = lianeRequests.ToArray() });
   }
 }
 
+public sealed record LianeMemberDb(
+  Guid LianeId,
+  Ref<Api.User.User> UserId,
+  DateTime JoinedAt,
+  DateTime? LastReadAt
+);
+
 public sealed record LianeDb(
+  Guid Id,
+  Ref<Api.User.User> CreatedBy,
+  DateTime CreatedAt
+);
+
+public sealed record LianeRequestDb(
   Guid Id,
   string Name,
   string[] WayPoints,
@@ -132,29 +168,20 @@ public sealed record LianeDb(
   DayOfWeekFlag WeekDays,
   DateTime? VacationStart,
   DateTime? VacationEnd,
+  Guid? LianeId,
   Ref<Api.User.User> CreatedBy,
   DateTime CreatedAt
 );
 
 public sealed record TimeConstraintDb(
-  Guid LianeId,
+  Guid LianeRequestId,
   TimeOnly Start,
   TimeOnly? End,
   string At,
-  DayOfWeekFlag WeekDays
+  string WeekDays
 );
 
 public sealed record RouteDb(
   string[] WayPoints,
   LineString Geometry
-);
-
-public sealed record MatchDb(
-  Guid From,
-  Guid Liane,
-  string User,
-  string[] WayPoints,
-  LatLng Pickup,
-  LatLng Deposit,
-  float Score
 );

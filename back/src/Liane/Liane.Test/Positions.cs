@@ -14,7 +14,8 @@ public sealed class Positions
   public static readonly LatLng IspagnacParking = new(44.3722038066219, 3.533528745174408);
   public static readonly LatLng GorgesDuTarnCausses = new(44.36512686514503, 3.414840996265411);
   public static readonly LatLng SaintEnimieParking = new(44.36545637889574, 3.412078320980072);
-  public static readonly LatLng Florac = new(44.31901268309318, 3.578021228313446);
+  public static readonly LatLng Florac = new(44.319013, 3.578021);
+  public static readonly LatLng FloracFormares = new(44.335825,3.5847193);
   public static readonly LatLng SaintChelyDuTarnEnHaut = new(44.338294306952264, 3.381930291652679);
   public static readonly LatLng ChamperbouxEglise = new(44.40842497198885, 3.414583504199982);
   public static readonly LatLng LavalDuTarnEglise = new(44.3533150645425, 3.352039754390717);

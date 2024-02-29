@@ -11,6 +11,24 @@ CREATE INDEX IF NOT EXISTS route_geometry_index
 
 CREATE TABLE liane
 (
+  id         UUID,
+  created_by VARCHAR(24) NOT NULL,
+  created_at TIMESTAMP   NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE liane_member
+(
+  liane_id     UUID,
+  user_id      VARCHAR(24) NOT NULL,
+  joined_at    TIMESTAMP   NOT NULL,
+  last_read_at TIMESTAMP,
+  PRIMARY KEY (liane_id, user_id),
+  FOREIGN KEY (liane_id) REFERENCES liane (id)
+);
+
+CREATE TABLE liane_request
+(
   id             UUID,
   name           VARCHAR(100)  NOT NULL,
   way_points     VARCHAR(24)[] NOT NULL,
@@ -19,18 +37,20 @@ CREATE TABLE liane
   week_days      VARCHAR(7)    NOT NULL,
   vacation_start TIMESTAMP,
   vacation_end   TIMESTAMP,
+  liane_id       UUID,
   created_by     VARCHAR(24)   NOT NULL,
   created_at     TIMESTAMP     NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (liane_id) REFERENCES liane (id)
 );
 
 CREATE TABLE time_constraint
 (
-  liane_id  UUID        NOT NULL,
-  start     TIME        NOT NULL,
-  "end"     TIME,
-  at        VARCHAR(24) NOT NULL,
-  week_days VARCHAR(7)  NOT NULL
+  liane_request_id UUID        NOT NULL,
+  start            TIME        NOT NULL,
+  "end"            TIME,
+  at               VARCHAR(24) NOT NULL,
+  week_days        VARCHAR(7)  NOT NULL
 );
 
 CREATE OR REPLACE FUNCTION nearest_rp(p geometry(Point, 4326), radius float DEFAULT 1000)
@@ -39,10 +59,11 @@ CREATE OR REPLACE FUNCTION nearest_rp(p geometry(Point, 4326), radius float DEFA
   strict
   parallel safe
   language sql
-  AS
+AS
 $$
-  SELECT rp.id FROM rallying_point rp
-               WHERE st_distancesphere(rp.location, p) < radius
-  ORDER BY st_distancesphere(rp.location, p)
-  LIMIT 1;
+SELECT rp.id
+FROM rallying_point rp
+WHERE st_distancesphere(rp.location, p) < radius
+ORDER BY st_distancesphere(rp.location, p)
+LIMIT 1;
 $$;

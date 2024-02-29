@@ -5,7 +5,6 @@ namespace Liane.Api.Community;
 
 public interface ILianeService
 {
-  Task<ImmutableList<Liane>> List();
-  Task FindMatches();
-  Task<Liane> Create(LianeQuery query);
+  Task<ImmutableList<LianeMatch>> List();
+  Task<LianeRequest> Create(LianeRequest request);
 }

@@ -5,7 +5,7 @@ using Liane.Api.Trip;
 
 namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-internal sealed class DayOfTheWeekTypeHandler : SqlMapper.TypeHandler<DayOfWeekFlag>
+internal sealed class DayOfWeekFlagTypeHandler : SqlMapper.TypeHandler<DayOfWeekFlag>
 {
   public override void SetValue(IDbDataParameter parameter, DayOfWeekFlag value)
   {

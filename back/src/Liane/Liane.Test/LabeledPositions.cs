@@ -8,6 +8,7 @@ public sealed class LabeledPositions
 {
   public static readonly RallyingPoint Mende = new("Mende", "Mende", Positions.Mende, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint Florac = new("Florac", "Florac", Positions.Florac, LocationType.CarpoolArea, "", "48000", "", null, true);
+  public static readonly RallyingPoint FloracFormares = new("Florac_Formares", "Florac_Formares", Positions.FloracFormares, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint LeCrouzet = new("LeCrouzet", "LeCrouzet", Positions.LeCrouzet, LocationType.CarpoolArea, "", "48000", "", null, true);
 
   public static readonly RallyingPoint GorgesDuTarnCausses =
@@ -93,6 +94,7 @@ public static readonly RallyingPoint Choizal = new("bnlc:48016-C-002", "Aire de 
     Mende,
     Lavogne,
     Florac,
+    FloracFormares,
     LeCrouzet,
     GorgesDuTarnCausses,
     Cocures,
