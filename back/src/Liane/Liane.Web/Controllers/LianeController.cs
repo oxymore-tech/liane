@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,50 +21,39 @@ namespace Liane.Web.Controllers;
 [Route("api/liane")]
 [ApiController]
 [RequiresAuth]
-public sealed class LianeController : ControllerBase
+public sealed class LianeController(
+  ITripService tripService,
+  ICurrentContext currentContext,
+  IMockService mockService,
+  EventDispatcher eventDispatcher,
+  ILianeRecurrenceService lianeRecurrenceService,
+  ILianeTrackerService lianeTrackerService)
+  : ControllerBase
 {
-  private readonly ITripService tripService;
-  private readonly ICurrentContext currentContext;
-  private readonly IMockService mockService;
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeRecurrenceService lianeRecurrenceService;
-  private readonly ILianeTrackerService lianeTrackerService;
-
-  public LianeController(ITripService tripService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService,
-    ILianeTrackerService lianeTrackerService)
-  {
-    this.tripService = tripService;
-    this.currentContext = currentContext;
-    this.mockService = mockService;
-    this.eventDispatcher = eventDispatcher;
-    this.lianeRecurrenceService = lianeRecurrenceService;
-    this.lianeTrackerService = lianeTrackerService;
-  }
-
   [HttpGet("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
-  public async Task<Api.Trip.Trip> Get([FromRoute] string id)
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
+  public async Task<Trip> Get([FromRoute] string id)
   {
-    var current = currentContext.CurrentResource<Api.Trip.Trip>();
+    var current = currentContext.CurrentResource<Trip>();
     return await tripService.GetForCurrentUser(current is not null ? current : id);
   }
 
   [HttpDelete("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Trip))]
+  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Trip))]
   public async Task Delete([FromRoute] string id)
   {
     await tripService.Delete(id);
   }
 
   [HttpPatch("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
-  public Task<Api.Trip.Trip> Update([FromRoute] string id, [FromBody] LianeUpdate update)
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
+  public Task<Trip> Update([FromRoute] string id, [FromBody] LianeUpdate update)
   {
     return tripService.UpdateDepartureTime(id, update.DepartureTime);
   }
 
   [HttpPost("{id}/cancel")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public async Task<IActionResult> CancelLiane([FromRoute] string id)
   {
     await tripService.CancelTrip(id);
@@ -75,7 +62,7 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpPost("{id}/start")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public async Task<IActionResult> StartLiane([FromRoute] string id)
   {
     await tripService.StartTrip(id);
@@ -85,7 +72,7 @@ public sealed class LianeController : ControllerBase
 
 
   [HttpPost("{id}/leave")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public async Task<IActionResult> LeaveLiane([FromRoute] string id)
   {
     var memberId = currentContext.CurrentUser().Id;
@@ -95,14 +82,14 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpGet("{id}/members/{memberId}/contact")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)
   {
     return tripService.GetContact(id, currentContext.CurrentUser().Id, memberId);
   }
 
   [HttpPost("{id}/feedback")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Trip))]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public async Task<IActionResult> SendFeedback([FromRoute] string id, [FromBody] Feedback feedback)
   {
     await tripService.UpdateFeedback(id, feedback);
@@ -148,27 +135,27 @@ public sealed class LianeController : ControllerBase
   }
 
   [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Trip>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
+  public Task<PaginatedResponse<Trip>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
   {
     return tripService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
   }
 
   [HttpPost("")]
-  public Task<Api.Trip.Trip> Create(LianeRequest lianeRequest)
+  public Task<Trip> Create(LianeRequest lianeRequest)
   {
     return tripService.Create(lianeRequest);
   }
 
   [HttpGet("all")]
   [RequiresAdminAuth]
-  public Task<PaginatedResponse<Api.Trip.Trip>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
+  public Task<PaginatedResponse<Trip>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
     return tripService.List(new LianeFilter(), pagination, cancellationToken);
   }
 
   [HttpPost("generate")]
   [RequiresAdminAuth]
-  public async Task<ImmutableList<Api.Trip.Trip>> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] double? lat2, [FromQuery] double? lng2,
+  public async Task<ImmutableList<Trip>> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] double? lat2, [FromQuery] double? lng2,
     [FromQuery] int? radius)
   {
     var from = new LatLng(lat, lng);
@@ -208,10 +195,10 @@ public sealed class LianeController : ControllerBase
   public async Task UpdateRecurrence([FromRoute] string id, [FromBody] DayOfWeekFlag days)
   {
     // Deactivate recurrence while cleaning up old lianes
-    await lianeRecurrenceService.Update(id, DayOfWeekFlag.None);
+    await lianeRecurrenceService.Update(id, DayOfWeekFlag.Empty);
     await tripService.RemoveRecurrence(id);
     // If flag is all 0, we stop here, else reactivate recurrence and create lianes
-    if (days != DayOfWeekFlag.None)
+    if (!days.IsEmpty())
     {
       await lianeRecurrenceService.Update(id, days);
       await tripService.CreateFromRecurrence(id);

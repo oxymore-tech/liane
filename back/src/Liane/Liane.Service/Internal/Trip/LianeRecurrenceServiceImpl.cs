@@ -20,7 +20,7 @@ public class LianeRecurrenceServiceImpl(
 {
   public async Task Update(Ref<LianeRecurrence> recurrence, DayOfWeekFlag days)
   {
-    if (days == DayOfWeekFlag.None)
+    if (days.IsEmpty())
     {
       await Mongo.GetCollection<LianeRecurrence>().FindOneAndUpdateAsync(r => r.Id == recurrence.Id,
         Builders<LianeRecurrence>.Update.Set(r => r.Active, false)
@@ -81,8 +81,8 @@ public class LianeRecurrenceServiceImpl(
 
   public async Task<IEnumerable<LianeRecurrence>> GetUpdatableRecurrences(DayOfWeek? day = null)
   {
-    var targetDay = (day ?? DateTime.UtcNow.DayOfWeek).ToFlag();
-    var pattern = targetDay.PrintToString('.');
+    DayOfWeekFlag targetDay = day ?? DateTime.UtcNow.DayOfWeek;
+    var pattern = targetDay.ToString('.');
     var filter = Builders<LianeRecurrence>.Filter.Where(r => r.Active) & Builders<LianeRecurrence>.Filter.Regex(r => r.Days, new BsonRegularExpression(new string(pattern)));
     var recurrences = await Mongo.GetCollection<LianeRecurrence>()
       .FindAsync(filter);

@@ -15,11 +15,11 @@ public sealed class DayOfWeekFlagConverter : JsonConverter<DayOfWeekFlag>
     }
 
     var value = reader.GetString()!;
-    return DayOfWeekFlagUtils.FromString(value);
+    return DayOfWeekFlag.Parse(value);
   }
 
   public override void Write(Utf8JsonWriter writer, DayOfWeekFlag value, JsonSerializerOptions options)
   {
-    writer.WriteStringValue(value.PrintToString());
+    writer.WriteStringValue(value.ToString());
   }
 }

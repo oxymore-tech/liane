@@ -41,7 +41,7 @@ public sealed class NewLianeServiceImpl(
     var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
         .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.In, lianes.Select(l => l.Id)))))
       .GroupBy(c => c.LianeRequestId)
-      .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, DayOfWeekFlagUtils.FromString(c.WeekDays))).ToImmutableList());
+      .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
 
     var matches = await FindMatches(connection, lianes.Select(l => l.Id));
 
@@ -76,7 +76,7 @@ public sealed class NewLianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var id = Uuid7.Guid();
 
-    await connection.InsertMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays.PrintToString())), tx);
+    await connection.InsertMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
 
     var wayPoints = request.WayPoints.Distinct().ToImmutableList();
     if (wayPoints.Count <= 1)
@@ -178,7 +178,7 @@ public sealed record TimeConstraintDb(
   TimeOnly Start,
   TimeOnly? End,
   string At,
-  string WeekDays
+  DayOfWeekFlag WeekDays
 );
 
 public sealed record RouteDb(

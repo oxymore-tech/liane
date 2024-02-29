@@ -10,14 +10,14 @@ internal sealed class DayOfWeekFlagTypeHandler : SqlMapper.TypeHandler<DayOfWeek
   public override void SetValue(IDbDataParameter parameter, DayOfWeekFlag value)
   {
     parameter.DbType = DbType.String;
-    parameter.Value = value.PrintToString().ToCharArray(0, 7);
+    parameter.Value = value.ToString().ToCharArray(0, 7);
   }
 
   public override DayOfWeekFlag Parse(object value)
   {
     return value switch
     {
-      string s => DayOfWeekFlagUtils.FromString(s),
+      string s => DayOfWeekFlag.Parse(s),
       _ => throw new ArgumentOutOfRangeException($"Unable to read from {value.GetType()}")
     };
   }

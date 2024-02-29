@@ -10,34 +10,34 @@ public sealed class DayOfWeekFlagTest
   public void ShouldPrintMondayToString()
   {
     var actual = DayOfWeekFlag.Monday;
-    Assert.AreEqual("1000000", actual.PrintToString());
+    Assert.AreEqual("1000000", actual.ToString());
   }
 
   [Test]
   public void ShouldPrintSundayToString()
   {
     var actual = DayOfWeekFlag.Sunday;
-    Assert.AreEqual("0000001", actual.PrintToString());
+    Assert.AreEqual("0000001", actual.ToString());
   }
 
   [Test]
   public void ShouldPrintToString()
   {
     var actual = DayOfWeekFlag.Monday | DayOfWeekFlag.Tuesday | DayOfWeekFlag.Sunday;
-    Assert.AreEqual("1100001", actual.PrintToString());
+    Assert.AreEqual("1100001", actual.ToString());
   }
 
   [Test]
   public void ShouldParseNoneFromString()
   {
-    var actual = DayOfWeekFlagUtils.FromString("a");
-    Assert.AreEqual(DayOfWeekFlag.None, actual);
+    var actual = DayOfWeekFlag.Parse("a");
+    Assert.AreEqual(DayOfWeekFlag.Empty, actual);
   }
 
   [Test]
   public void ShouldParseFromString()
   {
-    var actual = DayOfWeekFlagUtils.FromString("1100001");
+    var actual = DayOfWeekFlag.Parse("1100001");
     Assert.AreEqual(DayOfWeekFlag.Monday | DayOfWeekFlag.Tuesday | DayOfWeekFlag.Sunday, actual);
   }
 }

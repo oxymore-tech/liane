@@ -12,7 +12,7 @@ public class LianeRecurrenceTest
   public void ShouldEnumerateActiveDays()
   {
     DayOfWeek[] days = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Saturday];
-    var recurrence = DayOfWeekFlagUtils.Create(days);
+    var recurrence = DayOfWeekFlag.Create(days);
     CollectionAssert.AreEquivalent(recurrence.GetNextActiveDays(), days);
   }
 
@@ -20,7 +20,7 @@ public class LianeRecurrenceTest
   public void ShouldEnumerateNextDates()
   {
     DayOfWeek[] days = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Saturday];
-    var recurrence = DayOfWeekFlagUtils.Create(days);
+    var recurrence = DayOfWeekFlag.Create(days);
     var now = DateTime.UtcNow;
     var activeDates = new List<DateTime>();
     for (var day = 1; day <= 7; day++)

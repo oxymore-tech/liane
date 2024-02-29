@@ -8,12 +8,12 @@ internal sealed class DayOfWeekFlagSerializer : StructSerializerBase<DayOfWeekFl
 {
   public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, DayOfWeekFlag value)
   {
-    context.Writer.WriteString(value.PrintToString());
+    context.Writer.WriteString(value.ToString());
   }
 
   public override DayOfWeekFlag Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
   {
     var value = context.Reader.ReadString()!;
-    return DayOfWeekFlagUtils.FromString(value);
+    return DayOfWeekFlag.Parse(value);
   }
 }
