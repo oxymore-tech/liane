@@ -119,8 +119,23 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   }
   
   [Test]
-  public void ExactSameLianeRequestShouldMatch()
+  public async Task ExactSameLianeRequestShouldMatch()
   {
+    var gugu = Fakers.FakeDbUsers[0];
+    var lianeGugu = await CreateLiane(gugu, "Boulot", LabeledPositions.Cocures, LabeledPositions.Mende);
+    
+    var jayBee = Fakers.FakeDbUsers[1];
+    var lianeJayBee = await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
+    
+    currentContext.SetCurrentUser(gugu);
+    var actual = await tested.List();
+    Assert.AreEqual(1, actual.Count);
+    Assert.AreEqual(1, actual[0].Matches.Count);
+    
+    Assert.AreEqual(lianeJayBee.Id, actual[0].Matches[0].Liane.Id);
+    Assert.AreEqual(LabeledPositions.Cocures.Id, actual[0].Matches[0].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[0].Deposit?.Id);
+    Assert.AreEqual(1, actual[0].Matches[0].Score);
   }
   
   [Test]

@@ -198,10 +198,10 @@ public sealed class NewLianeServiceImpl(
                                                                              st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
                                                                              st_length(a.geometry) AS a_length
                                                                       FROM route a
-                                                                               INNER JOIN route b ON st_overlaps(a.geometry, b.geometry)
+                                                                        INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
                                                                   ) AS matches
                                                               INNER JOIN liane_request liane_request_a ON liane_request_a.way_points = a
-                                                              INNER JOIN liane_request liane_request_b ON liane_request_b.way_points = b
+                                                              INNER JOIN liane_request liane_request_b ON liane_request_b.way_points = b AND liane_request_b.id != liane_request_a.id
                                                               WHERE st_length(intersection) / a_length > 0.3 AND liane_request_a.id = ANY(@liane_requests)
                                                               ORDER BY st_length(intersection) / a_length DESC, liane_request_a.id;
                                                       """,
