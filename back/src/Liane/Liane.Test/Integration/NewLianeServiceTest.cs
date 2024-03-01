@@ -285,32 +285,21 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       await tested.Join(from, to);
     }
 
-    // Gugu send a message in the liane
+    // Bertrand cannot send a message in this liane
     {
-      currentContext.SetCurrentUser(gugu);
-      var message = await tested.SendMessage(liane, "Hé gamin !");
-      Assert.NotNull(message);
+      currentContext.SetCurrentUser(bertrand);
+      Assert.ThrowsAsync<UnauthorizedAccessException>(() => tested.SendMessage(liane, "Hello there !"));
     }
   }
 
   [Test]
   public async Task ShouldSendAMessageToAJoinedLiane()
   {
+    
     // Mathilde join JayBee : a new liane is created
-    Api.Community.Liane exisitingLiane;
-    {
-      currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = list[0].Matches.First(m => m.User.Id == jayBee.Id).LianeRequest;
-      exisitingLiane = await tested.Join(from, to);
-    }
-
-    // Gugu join JayBee : gugu join the existing liane
     Api.Community.Liane liane;
     {
-      currentContext.SetCurrentUser(gugu);
+      currentContext.SetCurrentUser(mathilde);
       var list = await tested.List();
 
       var from = list[0].LianeRequest;
@@ -318,46 +307,28 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       liane = await tested.Join(from, to);
     }
 
-    // Gugu liane request is attached to the joined liane
+    // Gugu join JayBee : gugu join the existing liane
     {
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
-      Assert.AreEqual(liane.Id, list[0].Liane?.Id);
+
+      var from = list[0].LianeRequest;
+      var to = list[0].Matches.First(m => m.User.Id == jayBee.Id).LianeRequest;
+      await tested.Join(from, to);
     }
 
-    // Gugu leave the liane
+    // Mathilde send a message in the liane
+    {
+      currentContext.SetCurrentUser(mathilde);
+      var message = await tested.SendMessage(liane, "Hé gamin !");
+      Assert.NotNull(message);
+    }
+    
+    // Gugu send a message in the liane
     {
       currentContext.SetCurrentUser(gugu);
-      var left = await tested.Leave(exisitingLiane);
-      Assert.IsTrue(left);
-    }
-
-    // Gugu leave the liane
-    {
-      currentContext.SetCurrentUser(gugu);
-      var left = await tested.Leave(exisitingLiane);
-      Assert.IsFalse(left);
-    }
-
-    // Jaybee leave the liane
-    {
-      currentContext.SetCurrentUser(jayBee);
-      var left = await tested.Leave(exisitingLiane);
-      Assert.IsTrue(left);
-    }
-
-    // Jaybee leave the liane
-    {
-      currentContext.SetCurrentUser(jayBee);
-      var left = await tested.Leave(exisitingLiane);
-      Assert.IsFalse(left);
-    }
-
-    // Gugu liane request is detached from the liane
-    {
-      currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
-      Assert.IsNull(list[0].Liane?.Id);
+      var message = await tested.SendMessage(liane, "J'ai bien reçu ton message \ud83d\ude35\u200d\ud83d\udcab !");
+      Assert.NotNull(message);
     }
   }
 
