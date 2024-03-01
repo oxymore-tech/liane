@@ -261,6 +261,106 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     }
   }
 
+  [Test]
+  public async Task ShouldNotSendAMessageToALeftLiane()
+  {
+    // Mathilde join JayBee : a new liane is created
+    Api.Community.Liane liane;
+    {
+      currentContext.SetCurrentUser(mathilde);
+      var list = await tested.List();
+
+      var from = list[0].LianeRequest;
+      var to = list[0].Matches.First(m => m.User.Id == jayBee.Id).LianeRequest;
+      liane = await tested.Join(from, to);
+    }
+
+    // Gugu join JayBee : gugu join the existing liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+
+      var from = list[0].LianeRequest;
+      var to = list[0].Matches.First(m => m.User.Id == jayBee.Id).LianeRequest;
+      await tested.Join(from, to);
+    }
+
+    // Gugu send a message in the liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var message = await tested.SendMessage(liane, "Hé gamin !");
+      Assert.NotNull(message);
+    }
+  }
+
+  [Test]
+  public async Task ShouldSendAMessageToAJoinedLiane()
+  {
+    // Mathilde join JayBee : a new liane is created
+    Api.Community.Liane exisitingLiane;
+    {
+      currentContext.SetCurrentUser(mathilde);
+      var list = await tested.List();
+
+      var from = list[0].LianeRequest;
+      var to = list[0].Matches.First(m => m.User.Id == jayBee.Id).LianeRequest;
+      exisitingLiane = await tested.Join(from, to);
+    }
+
+    // Gugu join JayBee : gugu join the existing liane
+    Api.Community.Liane liane;
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+
+      var from = list[0].LianeRequest;
+      var to = list[0].Matches.First(m => m.User.Id == jayBee.Id).LianeRequest;
+      liane = await tested.Join(from, to);
+    }
+
+    // Gugu liane request is attached to the joined liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+      Assert.AreEqual(liane.Id, list[0].Liane?.Id);
+    }
+
+    // Gugu leave the liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var left = await tested.Leave(exisitingLiane);
+      Assert.IsTrue(left);
+    }
+
+    // Gugu leave the liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var left = await tested.Leave(exisitingLiane);
+      Assert.IsFalse(left);
+    }
+
+    // Jaybee leave the liane
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var left = await tested.Leave(exisitingLiane);
+      Assert.IsTrue(left);
+    }
+
+    // Jaybee leave the liane
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var left = await tested.Leave(exisitingLiane);
+      Assert.IsFalse(left);
+    }
+
+    // Gugu liane request is detached from the liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+      Assert.IsNull(list[0].Liane?.Id);
+    }
+  }
+
   private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, params Ref<RallyingPoint>[] wayPoints)
   {
     currentContext.SetCurrentUser(user);

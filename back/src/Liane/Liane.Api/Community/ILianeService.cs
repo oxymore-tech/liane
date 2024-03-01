@@ -14,7 +14,7 @@ public interface ILianeService
 
   Task<Liane> Join(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
   Task<bool> Leave(Ref<Liane> liane);
-  Task<ChatMessage> SendMessage(Ref<Liane> liane, ChatMessage message, Ref<User.User> author);
+  Task<ChatMessage> SendMessage(Ref<Liane> liane, string message);
   Task<PaginatedResponse<ChatMessage>> GetMessages(Pagination pagination, Ref<Liane> group);
   
   Task<Liane> ReadAndGetLiane(Ref<Liane> id, Ref<Api.User.User> user, DateTime timestamp);

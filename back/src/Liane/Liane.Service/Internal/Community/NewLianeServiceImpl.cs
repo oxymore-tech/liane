@@ -179,9 +179,23 @@ public sealed class NewLianeServiceImpl(
     return true;
   }
 
-  public Task<ChatMessage> SendMessage(Ref<Api.Community.Liane> liane, ChatMessage message, Ref<Api.User.User> author)
+  public async Task<ChatMessage> SendMessage(Ref<Api.Community.Liane> liane, string message)
   {
-    throw new NotImplementedException();
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
+    var lianeId = Guid.Parse(liane.Id);
+    var count = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id AND user_id = @user_id", new { liane_id = lianeId, user_id = userId }, tx);
+    if (count == 0)
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+
+    var id = Uuid7.Guid();
+    var now = DateTime.UtcNow;
+    await connection.InsertAsync(new LianeMessageDb(id, lianeId, message, userId, now), tx);
+    tx.Commit();
+    return new ChatMessage(id.ToString(), userId, now, message);
   }
 
   public Task<PaginatedResponse<ChatMessage>> GetMessages(Pagination pagination, Ref<Api.Community.Liane> group)
@@ -298,7 +312,10 @@ public sealed record RouteDb(
   LineString Geometry
 );
 
-public sealed record ChatMessageDb(
-  string[] WayPoints,
-  LineString Geometry
-);
+public sealed record LianeMessageDb(
+  Guid Id,
+  Guid LianeId,
+  string Text,
+  Ref<Api.User.User> CreatedBy,
+  DateTime CreatedAt
+) : IEntity<Guid>;

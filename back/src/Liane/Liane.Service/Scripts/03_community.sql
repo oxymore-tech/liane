@@ -11,7 +11,7 @@ CREATE INDEX IF NOT EXISTS route_geometry_index
 
 CREATE TABLE liane
 (
-  id         UUID,
+  id         UUID        NOT NULL,
   created_by VARCHAR(24) NOT NULL,
   created_at TIMESTAMP   NOT NULL,
   PRIMARY KEY (id)
@@ -19,7 +19,7 @@ CREATE TABLE liane
 
 CREATE TABLE liane_member
 (
-  liane_id     UUID,
+  liane_id     UUID        NOT NULL,
   user_id      VARCHAR(24) NOT NULL,
   joined_at    TIMESTAMP   NOT NULL,
   last_read_at TIMESTAMP,
@@ -29,7 +29,7 @@ CREATE TABLE liane_member
 
 CREATE TABLE liane_request
 (
-  id             UUID,
+  id             UUID          NOT NULL,
   name           VARCHAR(100)  NOT NULL,
   way_points     VARCHAR(24)[] NOT NULL,
   round_trip     BOOLEAN       NOT NULL,
@@ -44,6 +44,21 @@ CREATE TABLE liane_request
   UNIQUE (way_points, created_by),
   FOREIGN KEY (liane_id) REFERENCES liane (id)
 );
+
+CREATE TABLE liane_message
+(
+  id         UUID        NOT NULL,
+  liane_id   UUID        NOT NULL,
+  text       TEXT        NOT NULL,
+  created_by VARCHAR(24) NOT NULL,
+  created_at TIMESTAMP   NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (liane_id) REFERENCES liane (id)
+);
+
+CREATE INDEX IF NOT EXISTS liane_message_created_at_index
+  ON liane_message
+    USING brin (created_at);
 
 CREATE TABLE time_constraint
 (
