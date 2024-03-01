@@ -13,7 +13,7 @@ public interface ILianeService
   Task<LianeRequest> Create(LianeRequest request);
 
   Task<Liane> Join(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
-  Task<bool> Leave(Ref<Liane> group, Ref<User.User> user);
+  Task<bool> Leave(Ref<Liane> liane);
   Task<ChatMessage> SendMessage(Ref<Liane> liane, ChatMessage message, Ref<User.User> author);
   Task<PaginatedResponse<ChatMessage>> GetMessages(Pagination pagination, Ref<Liane> group);
   

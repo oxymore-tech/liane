@@ -44,7 +44,7 @@ public sealed record TimeConstraint(TimeRange When, Ref<RallyingPoint> At, DayOf
 public readonly record struct TimeRange(TimeOnly Start, TimeOnly? End);
 
 public sealed record Match(
-  Ref<LianeRequest> Liane,
+  Ref<LianeRequest> LianeRequest,
   [property: SerializeAsResolvedRef] Ref<User.User> User,
   ImmutableList<Ref<RallyingPoint>> WayPoints,
   Ref<RallyingPoint>? Pickup,
