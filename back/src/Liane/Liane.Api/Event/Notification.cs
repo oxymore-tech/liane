@@ -20,7 +20,7 @@ public enum Answer
 }
 
 [Union]
-public abstract record Notification : IEntity
+public abstract record Notification : IEntity<string>
 {
   public abstract string? Id { get; init; }
   public abstract Ref<User.User>? CreatedBy { get; init; }

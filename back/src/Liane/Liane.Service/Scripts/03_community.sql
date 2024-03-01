@@ -41,6 +41,7 @@ CREATE TABLE liane_request
   created_by     VARCHAR(24)   NOT NULL,
   created_at     TIMESTAMP     NOT NULL,
   PRIMARY KEY (id),
+  UNIQUE (way_points, created_by),
   FOREIGN KEY (liane_id) REFERENCES liane (id)
 );
 

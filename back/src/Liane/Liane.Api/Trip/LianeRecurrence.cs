@@ -8,7 +8,7 @@ public sealed record LianeRecurrence(string? Id,
   DateTime? CreatedAt,
   DayOfWeekFlag Days,
   BaseLianeRequest InitialRequest,
-  bool Active = true) : IEntity
+  bool Active = true) : IEntity<string>
 {
   public static LianeRecurrence FromLianeRequest(LianeRequest request)
   {

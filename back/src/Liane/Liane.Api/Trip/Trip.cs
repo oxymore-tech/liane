@@ -60,4 +60,4 @@ public sealed record Trip(
   LianeState State,
   Ref<ConversationGroup>? Conversation,
   Recurrence? Recurrence = null
-) : IEntity, ISharedResource<LianeMember>;
+) : IEntity<string>, ISharedResource<LianeMember>;

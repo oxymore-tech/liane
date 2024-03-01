@@ -84,7 +84,7 @@ public sealed class PaginationTest: BaseIntegrationTest
     Assert.AreEqual(new Cursor.Time(new DateTime(2023, 02, 18).ToUniversalTime(), e5.Id), actual.Next);
   }
 
-  internal sealed record TestEntity(string Id, Ref<User>? CreatedBy, DateTime? CreatedAt) : IEntity;
+  internal sealed record TestEntity(string Id, Ref<User>? CreatedBy, DateTime? CreatedAt) : IEntity<string>;
 
   private IMongoCollection<TestEntity> collection = null!;
 

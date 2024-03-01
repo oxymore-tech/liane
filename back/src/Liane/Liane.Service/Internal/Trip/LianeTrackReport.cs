@@ -17,4 +17,4 @@ public sealed record LianeTrackReport(
   ImmutableList<Car>? CarLocations,
   DateTime StartedAt,
   DateTime? FinishedAt = null
-): IIdentity;
+): IIdentity<string>;

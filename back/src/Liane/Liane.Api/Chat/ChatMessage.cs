@@ -8,4 +8,4 @@ public sealed record ChatMessage(
   Ref<User.User>? CreatedBy,
   DateTime? CreatedAt,
   string Text
-) : IEntity;
+) : IEntity<string>;

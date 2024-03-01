@@ -20,7 +20,7 @@ public sealed record ConversationGroup(
   Ref<User.User>? CreatedBy = null,
   DateTime? CreatedAt = null,
   DateTime? LastMessageAt = null
-) : IEntity, ISharedResource<GroupMemberInfo>
+) : IEntity<string>, ISharedResource<GroupMemberInfo>
 {
   public static ConversationGroup CreateWithMembers(IEnumerable<Ref<User.User>> members, DateTime joinedAt)
   {

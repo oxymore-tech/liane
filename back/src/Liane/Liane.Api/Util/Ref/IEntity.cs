@@ -7,3 +7,5 @@ public interface IEntity : IIdentity
     Ref<User.User>? CreatedBy { get; }
     DateTime? CreatedAt { get; }
 }
+
+public interface IEntity<out T> : IIdentity<T>;

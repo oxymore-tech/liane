@@ -9,4 +9,4 @@ public sealed record DbChatMessage(
   Ref<ConversationGroup> Group, 
   Ref<Api.User.User> CreatedBy, 
   DateTime CreatedAt, 
-  string Text) : IIdentity;
+  string Text) : IIdentity<string>;

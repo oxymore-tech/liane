@@ -30,12 +30,15 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   public async Task GuguShouldMatchLianes()
   {
     var gugu = Fakers.FakeDbUsers[0];
-    var jayBee = Fakers.FakeDbUsers[1];
-    var mathilde = Fakers.FakeDbUsers[2];
-    var siloe = Fakers.FakeDbUsers[3];
     var lianeGugu = await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
+    
+    var jayBee = Fakers.FakeDbUsers[1];
     var lianeJayBee = await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
+    
+    var mathilde = Fakers.FakeDbUsers[2];
     var lianeMathilde = await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
+    
+    var siloe = Fakers.FakeDbUsers[3];
     var lianeSiloe = await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
 
     var gargamel = Fakers.FakeDbUsers[4];
@@ -53,21 +56,22 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     currentContext.SetCurrentUser(gugu);
     var actual = await tested.List();
     Assert.AreEqual(1, actual.Count);
+    Assert.IsNull(actual[0].Liane);
 
     Assert.AreEqual(lianeGugu.WayPoints.Select(p => (Ref<RallyingPoint>)p.Id), actual[0].LianeRequest.WayPoints);
     Assert.AreEqual(3, actual[0].Matches.Count);
 
     Assert.AreEqual(lianeJayBee.Id, actual[0].Matches[0].Liane.Id);
-    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[0].Pickup.Id);
-    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[0].Deposit.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[0].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[0].Deposit?.Id);
 
     Assert.AreEqual(lianeSiloe.Id, actual[0].Matches[1].Liane.Id);
-    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[1].Pickup.Id);
-    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[1].Deposit.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[1].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[1].Deposit?.Id);
 
     Assert.AreEqual(lianeMathilde.Id, actual[0].Matches[2].Liane.Id);
-    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[2].Pickup.Id);
-    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[2].Deposit.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[2].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[2].Deposit?.Id);
   }
 
   [Test]
@@ -102,21 +106,59 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     Assert.AreEqual(3, actual[0].Matches.Count);
 
     Assert.AreEqual(lianeJayBee.Id, actual[0].Matches[0].Liane.Id);
-    Assert.AreEqual(LabeledPositions.FloracFormares.Id, actual[0].Matches[0].Pickup.Id);
-    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[0].Deposit.Id);
+    Assert.AreEqual(LabeledPositions.FloracFormares.Id, actual[0].Matches[0].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[0].Deposit?.Id);
 
     Assert.AreEqual(lianeSiloe.Id, actual[0].Matches[1].Liane.Id);
-    Assert.AreEqual(LabeledPositions.IspagnacParking.Id, actual[0].Matches[1].Pickup.Id);
-    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[1].Deposit.Id);
+    Assert.AreEqual(LabeledPositions.IspagnacParking.Id, actual[0].Matches[1].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[1].Deposit?.Id);
 
     Assert.AreEqual(lianeGugu.Id, actual[0].Matches[2].Liane.Id);
-    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[2].Pickup.Id);
-    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[2].Deposit.Id);
+    Assert.AreEqual(LabeledPositions.QuezacParking.Id, actual[0].Matches[2].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.BalsiegeParkingEglise.Id, actual[0].Matches[2].Deposit?.Id);
   }
   
   [Test]
   public void ExactSameLianeRequestShouldMatch()
   {
+  }
+  
+  [Test]
+  public async Task GuguShouldJoinANewLianeByJoiningAMatch()
+  {
+    var gugu = Fakers.FakeDbUsers[0];
+    var lianeGugu = await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
+    
+    var jayBee = Fakers.FakeDbUsers[1];
+    var lianeJayBee = await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
+    
+    var mathilde = Fakers.FakeDbUsers[2];
+    var lianeMathilde = await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
+    
+    var siloe = Fakers.FakeDbUsers[3];
+    var lianeSiloe = await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
+
+    var gargamel = Fakers.FakeDbUsers[4];
+    var lianeGargamel = await CreateLiane(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
+
+    var caramelo = Fakers.FakeDbUsers[5];
+    var lianeCaramelo = await CreateLiane(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
+
+    var bertrand = Fakers.FakeDbUsers[6];
+    var lianeBertrand = await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
+
+    var samuel = Fakers.FakeDbUsers[7];
+    var lianeSamuel = await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
+
+    currentContext.SetCurrentUser(gugu);
+    var list = await tested.List();
+
+    var from = list[0].LianeRequest;
+    var to = list[0].Matches[0].Liane;
+    var liane = await tested.Join(from, to);
+
+    Assert.AreEqual(gugu.Id, liane.CreatedBy.Id);
+    CollectionAssert.AreEquivalent(ImmutableList.Create(gugu.Id, list[0].Matches[0].User.Id), liane.Members.Select(m => m.User.Id));
   }
 
   private async Task<LianeRequest> CreateLiane(DbUser gugu, string name, params Ref<RallyingPoint>[] wayPoints)

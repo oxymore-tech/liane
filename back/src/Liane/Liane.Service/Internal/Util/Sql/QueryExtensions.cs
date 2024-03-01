@@ -14,15 +14,20 @@ public static class QueryExtensions
   public static async Task<ImmutableList<T>> QueryAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null) =>
     (await QueryAsyncInternal(connection, query, transaction)).ToImmutableList();
 
-  public static async Task<T> GetAsync<T>(this IDbConnection connection, Ref<T> reference, IDbTransaction? transaction = null) where T : class, IIdentity
+  public static async Task<T> GetAsync<T>(this IDbConnection connection, Ref<T> reference, IDbTransaction? transaction = null) where T : class, IIdentity<string>
   {
-    return await FirstOrDefaultAsync(connection, reference, transaction) ?? throw ResourceNotFoundException.For(reference);
+    return await FirstOrDefaultAsync<T, string>(connection, reference.Id, transaction) ?? throw ResourceNotFoundException.For(reference);
+  }
+  
+  public static async Task<T> GetAsync<T, TId>(this IDbConnection connection, TId id, IDbTransaction? transaction = null) where T : class, IIdentity<TId>
+  {
+    return await FirstOrDefaultAsync<T, TId>(connection, id, transaction) ?? throw ResourceNotFoundException.For<T, TId>(id);
   }
 
-  public static Task<T?> FirstOrDefaultAsync<T>(this IDbConnection connection, Ref<T> reference, IDbTransaction? transaction = null) where T : class, IIdentity
+  public static Task<T?> FirstOrDefaultAsync<T, TId>(this IDbConnection connection, TId id, IDbTransaction? transaction = null) where T : class, IIdentity<TId>
   {
     var query = Query.Select<T>()
-      .Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, reference.Id));
+      .Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, id));
     return FirstOrDefaultAsync(connection, query, transaction);
   }
 

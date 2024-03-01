@@ -11,7 +11,7 @@ public sealed record Liane(
   Ref<User.User> CreatedBy,
   DateTime? CreatedAt,
   ImmutableList<LianeMember> Members
-) : IEntity, ISharedResource<LianeMember>;
+) : IEntity<string>, ISharedResource<LianeMember>;
 
 public sealed record LianeMember(
   [property: SerializeAsResolvedRef] Ref<User.User> User,
@@ -31,7 +31,7 @@ public sealed record LianeRequest(
   DateTime? VacationEnd,
   Ref<User.User>? CreatedBy,
   DateTime? CreatedAt
-) : IEntity;
+) : IEntity<string>;
 
 public sealed record LianeMatch(
   LianeRequest LianeRequest,
@@ -47,7 +47,7 @@ public sealed record Match(
   Ref<LianeRequest> Liane,
   [property: SerializeAsResolvedRef] Ref<User.User> User,
   ImmutableList<Ref<RallyingPoint>> WayPoints,
-  Ref<RallyingPoint> Pickup,
-  Ref<RallyingPoint> Deposit,
+  Ref<RallyingPoint>? Pickup,
+  Ref<RallyingPoint>? Deposit,
   float Score
 );

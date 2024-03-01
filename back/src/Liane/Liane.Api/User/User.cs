@@ -21,7 +21,7 @@ public record User(
   Gender Gender,
   string? PictureUrl,
   UserStats Stats
-) : IIdentity;
+) : IIdentity<string>;
 
 public sealed record FullUser(
   string? Id,
