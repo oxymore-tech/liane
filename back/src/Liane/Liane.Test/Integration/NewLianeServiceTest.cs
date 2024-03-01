@@ -20,39 +20,61 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   private NewLianeServiceImpl tested = null!;
   private MockCurrentContext currentContext = null!;
 
+  private DbUser gugu = null!;
+  private DbUser jayBee = null!;
+  private DbUser mathilde = null!;
+  private DbUser siloe = null!;
+  private DbUser gargamel = null!;
+  private DbUser caramelo = null!;
+  private DbUser bertrand = null!;
+  private DbUser samuel = null!;
+
+  private LianeRequest lianeGugu = null!;
+  private LianeRequest lianeJayBee = null!;
+  private LianeRequest lianeMathilde = null!;
+  private LianeRequest lianeSiloe = null!;
+  private LianeRequest lianeGargamel = null!;
+  private LianeRequest lianeCaramelo = null!;
+  private LianeRequest lianeBertrand = null!;
+  private LianeRequest lianeSamuel = null!;
+
   protected override void Setup(IMongoDatabase db)
   {
     tested = ServiceProvider.GetRequiredService<NewLianeServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
   }
 
+  [SetUp]
+  public async Task SetupDefaultLianes()
+  {
+    gugu = Fakers.FakeDbUsers[0];
+    lianeGugu = await CreateLianeRequest(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
+
+    jayBee = Fakers.FakeDbUsers[1];
+    lianeJayBee = await CreateLianeRequest(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
+
+    mathilde = Fakers.FakeDbUsers[2];
+    lianeMathilde = await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
+
+    siloe = Fakers.FakeDbUsers[3];
+    lianeSiloe = await CreateLianeRequest(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
+
+    gargamel = Fakers.FakeDbUsers[4];
+    lianeGargamel = await CreateLianeRequest(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
+
+    caramelo = Fakers.FakeDbUsers[5];
+    lianeCaramelo = await CreateLianeRequest(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
+
+    bertrand = Fakers.FakeDbUsers[6];
+    lianeBertrand = await CreateLianeRequest(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
+
+    samuel = Fakers.FakeDbUsers[7];
+    lianeSamuel = await CreateLianeRequest(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
+  }
+
   [Test]
   public async Task GuguShouldMatchLianes()
   {
-    var gugu = Fakers.FakeDbUsers[0];
-    var lianeGugu = await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
-
-    var jayBee = Fakers.FakeDbUsers[1];
-    var lianeJayBee = await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
-
-    var mathilde = Fakers.FakeDbUsers[2];
-    var lianeMathilde = await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
-
-    var siloe = Fakers.FakeDbUsers[3];
-    var lianeSiloe = await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
-
-    var gargamel = Fakers.FakeDbUsers[4];
-    await CreateLiane(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
-
-    var caramelo = Fakers.FakeDbUsers[5];
-    await CreateLiane(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
-
-    var bertrand = Fakers.FakeDbUsers[6];
-    await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
-
-    var samuel = Fakers.FakeDbUsers[7];
-    await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
-
     currentContext.SetCurrentUser(gugu);
     var actual = await tested.List();
     Assert.AreEqual(1, actual.Count);
@@ -77,27 +99,6 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task MathildeShouldMatchLianes()
   {
-    var gugu = Fakers.FakeDbUsers[0];
-    var jayBee = Fakers.FakeDbUsers[1];
-    var mathilde = Fakers.FakeDbUsers[2];
-    var siloe = Fakers.FakeDbUsers[3];
-    var lianeGugu = await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
-    var lianeJayBee = await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
-    var lianeMathilde = await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
-    var lianeSiloe = await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
-
-    var gargamel = Fakers.FakeDbUsers[4];
-    await CreateLiane(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
-
-    var caramelo = Fakers.FakeDbUsers[5];
-    await CreateLiane(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
-
-    var bertrand = Fakers.FakeDbUsers[6];
-    await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
-
-    var samuel = Fakers.FakeDbUsers[7];
-    await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
-
     currentContext.SetCurrentUser(mathilde);
     var actual = await tested.List();
     Assert.AreEqual(1, actual.Count);
@@ -121,50 +122,23 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ExactSameLianeRequestShouldMatch()
   {
-    var gugu = Fakers.FakeDbUsers[0];
-    await CreateLiane(gugu, "Boulot", LabeledPositions.Cocures, LabeledPositions.Mende);
-
-    var jayBee = Fakers.FakeDbUsers[1];
-    var lianeJayBee = await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
+    await CreateLianeRequest(gugu, "Pain 2", LabeledPositions.Cocures, LabeledPositions.Mende);
 
     currentContext.SetCurrentUser(gugu);
     var actual = await tested.List();
-    Assert.AreEqual(1, actual.Count);
-    Assert.AreEqual(1, actual[0].Matches.Count);
+    Assert.AreEqual(2, actual.Count);
+    Assert.AreEqual(3, actual[1].Matches.Count);
 
-    Assert.AreEqual(lianeJayBee.Id, actual[0].Matches[0].LianeRequest.Id);
-    Assert.AreEqual(LabeledPositions.Cocures.Id, actual[0].Matches[0].Pickup?.Id);
-    Assert.AreEqual(LabeledPositions.Mende.Id, actual[0].Matches[0].Deposit?.Id);
-    Assert.AreEqual(1, actual[0].Matches[0].Score);
+    Assert.AreEqual(lianeJayBee.Id, actual[1].Matches[0].LianeRequest.Id);
+    Assert.AreEqual(jayBee.Id, actual[1].Matches[0].User.Id);
+    Assert.AreEqual(LabeledPositions.Cocures.Id, actual[1].Matches[0].Pickup?.Id);
+    Assert.AreEqual(LabeledPositions.Mende.Id, actual[1].Matches[0].Deposit?.Id);
+    Assert.AreEqual(1, actual[1].Matches[0].Score);
   }
 
   [Test]
   public async Task GuguShouldJoinANewLianeByJoiningAMatch()
   {
-    var gugu = Fakers.FakeDbUsers[0];
-    await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
-
-    var jayBee = Fakers.FakeDbUsers[1];
-    await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
-
-    var mathilde = Fakers.FakeDbUsers[2];
-    await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
-
-    var siloe = Fakers.FakeDbUsers[3];
-    await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
-
-    var gargamel = Fakers.FakeDbUsers[4];
-    await CreateLiane(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
-
-    var caramelo = Fakers.FakeDbUsers[5];
-    await CreateLiane(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
-
-    var bertrand = Fakers.FakeDbUsers[6];
-    await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
-
-    var samuel = Fakers.FakeDbUsers[7];
-    await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
-
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
@@ -183,7 +157,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
-      
+
       Assert.AreEqual(joinedLiane.Id, list[0].Liane!.Id);
       Assert.AreEqual(gugu.Id, list[0].Liane!.CreatedBy.Id);
       CollectionAssert.AreEquivalent(ImmutableList.Create(gugu.Id, jayBee.Id), list[0].Liane!.Members.Select(m => m.User.Id));
@@ -193,30 +167,6 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task GuguShouldJoinAnExistingLianeByJoiningAMatch()
   {
-    var gugu = Fakers.FakeDbUsers[0];
-    await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
-
-    var jayBee = Fakers.FakeDbUsers[1];
-    await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
-
-    var mathilde = Fakers.FakeDbUsers[2];
-    await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
-
-    var siloe = Fakers.FakeDbUsers[3];
-    await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
-
-    var gargamel = Fakers.FakeDbUsers[4];
-    await CreateLiane(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
-
-    var caramelo = Fakers.FakeDbUsers[5];
-    await CreateLiane(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
-
-    var bertrand = Fakers.FakeDbUsers[6];
-    await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
-
-    var samuel = Fakers.FakeDbUsers[7];
-    await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
-
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane exisitingLiane;
     {
@@ -246,31 +196,6 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task WhenTheLastMemberLeaveALianeTheLianeIsDeleted()
   {
-    // setup
-    var gugu = Fakers.FakeDbUsers[0];
-    await CreateLiane(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
-
-    var jayBee = Fakers.FakeDbUsers[1];
-    await CreateLiane(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
-
-    var mathilde = Fakers.FakeDbUsers[2];
-    await CreateLiane(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
-
-    var siloe = Fakers.FakeDbUsers[3];
-    await CreateLiane(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
-
-    var gargamel = Fakers.FakeDbUsers[4];
-    await CreateLiane(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
-
-    var caramelo = Fakers.FakeDbUsers[5];
-    await CreateLiane(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
-
-    var bertrand = Fakers.FakeDbUsers[6];
-    await CreateLiane(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
-
-    var samuel = Fakers.FakeDbUsers[7];
-    await CreateLiane(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
-
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane exisitingLiane;
     {
@@ -306,7 +231,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       var left = await tested.Leave(exisitingLiane);
       Assert.IsTrue(left);
     }
-    
+
     // Gugu leave the liane
     {
       currentContext.SetCurrentUser(gugu);
@@ -336,9 +261,9 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     }
   }
 
-  private async Task<LianeRequest> CreateLiane(DbUser gugu, string name, params Ref<RallyingPoint>[] wayPoints)
+  private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, params Ref<RallyingPoint>[] wayPoints)
   {
-    currentContext.SetCurrentUser(gugu);
+    currentContext.SetCurrentUser(user);
     var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfWeekFlag.All));
     return await tested.Create(new LianeRequest(null, name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, null, null, null, null));
   }

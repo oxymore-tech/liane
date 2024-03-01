@@ -38,7 +38,8 @@ public sealed class NewLianeServiceImpl(
     using var connection = db.NewConnection();
 
     var lianeRequests = await connection.QueryAsync(Query.Select<LianeRequestDb>()
-      .Where(Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)));
+      .Where(Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId))
+      .OrderBy(r => r.Id));
 
     var lianes = (await FetchLianes(connection, lianeRequests.FilterSelect(r => r.LianeId)))
       .ToImmutableDictionary(l => l.Id);
@@ -48,7 +49,9 @@ public sealed class NewLianeServiceImpl(
       .GroupBy(c => c.LianeRequestId)
       .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
 
-    var matches = await FindMatches(connection, lianeRequests.Select(l => l.Id));
+    var matches = (await FindMatches(connection, lianeRequests.Select(l => l.Id)))
+      .GroupBy(m => m.Item1)
+      .ToImmutableDictionary(g => g.Key, g => g.Select(m => m).ToImmutableList());
 
     return lianeRequests.Select(l =>
     {
@@ -68,7 +71,9 @@ public sealed class NewLianeServiceImpl(
       return new LianeMatch(
         lianeRequest,
         l.LianeId?.ToString().GetOrDefault(i => lianes.GetValueOrDefault(i)),
-        matches.Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), m.Item8, m.Item9, m.Item5)).ToImmutableList()
+        matches.GetValueOrDefault(l.Id, ImmutableList<LianeRawMatch>.Empty)
+          .Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), m.Item8, m.Item9, m.Item5))
+          .ToImmutableList()
       );
     }).ToImmutableList();
   }
@@ -224,7 +229,8 @@ public sealed class NewLianeServiceImpl(
                                                                         INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
                                                                   ) AS matches
                                                               INNER JOIN liane_request liane_request_a ON liane_request_a.way_points = a
-                                                              INNER JOIN liane_request liane_request_b ON liane_request_b.way_points = b AND liane_request_b.id != liane_request_a.id
+                                                              INNER JOIN liane_request liane_request_b ON
+                                                                liane_request_b.way_points = b AND liane_request_b.created_by != liane_request_a.created_by
                                                               WHERE st_length(intersection) / a_length > 0.3 AND liane_request_a.id = ANY(@liane_requests)
                                                               ORDER BY st_length(intersection) / a_length DESC, liane_request_a.id;
                                                       """,
