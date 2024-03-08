@@ -6,32 +6,25 @@ using Liane.Service.Internal.Trip.Geolocation;
 
 namespace Liane.Service.Internal.Trip.Event;
 
-public class LianeMemberHasStartedHandler : IEventListener<LianeEvent.MemberHasStarted>
+// ReSharper disable once UnusedType.Global
+// Autodiscovered by DI
+public sealed class LianeMemberHasStartedHandler(
+  ITripService tripService,
+  ILianeRequestService lianeRequestService,
+  ILianeTrackerService lianeTrackerService)
+  : IEventListener<LianeEvent.MemberHasStarted>
 {
-  private readonly ILianeService lianeService;
-  private readonly ILianeRequestService lianeRequestService;
-  private readonly ILianeTrackerService lianeTrackerService;
-  private readonly INotificationService notificationService;
-  public LianeMemberHasStartedHandler(ILianeService lianeService, ILianeRequestService lianeRequestService, ILianeTrackerService lianeTrackerService, INotificationService notificationService)
+  public async Task OnEvent(LianeEvent.MemberHasStarted e, Ref<Api.Auth.User>? sender = null)
   {
-    this.lianeService = lianeService;
-    this.lianeRequestService = lianeRequestService;
-    this.lianeTrackerService = lianeTrackerService;
-    this.notificationService = notificationService;
-  }
-
-  public async Task OnEvent(LianeEvent.MemberHasStarted e, Ref<Api.User.User>? sender = null)
-  {
-    var liane = await lianeService.Get(e.Liane);
+    var liane = await tripService.Get(e.Liane);
     await lianeTrackerService.Start(liane);
-    
+
     if (liane.Driver.User == e.Member.Id)
     {
       // Driver started 
-      await lianeRequestService.RejectJoinLianeRequests(new []{(Ref<Api.Trip.Liane>)e.Liane.Id});
-      
+      await lianeRequestService.RejectJoinLianeRequests(new[] { (Ref<Api.Trip.Trip>)e.Liane.Id });
+
       // TODO notify other carpoolers ?
     }
-
   }
 }

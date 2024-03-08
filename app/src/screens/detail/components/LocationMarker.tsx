@@ -5,6 +5,7 @@ import { useRealtimeDelay } from "@/util/hooks/delay";
 
 export const LocationMarker = (props: {
   user: User;
+  isCar: boolean;
   info: {
     delay: TimeInSeconds;
     position: LatLng;
@@ -16,5 +17,7 @@ export const LocationMarker = (props: {
     return null;
   }
   const d = useRealtimeDelay(props.info);
-  return <LianeMemberDisplay location={props.info.position} size={32} user={props.user} delay={d} isMoving={props.info.isMoving} />;
+  return (
+    <LianeMemberDisplay location={props.info.position} isCar={props.isCar} size={32} user={props.user} delay={d} isMoving={props.info.isMoving} />
+  );
 };

@@ -1,17 +1,19 @@
-import { Liane } from "@liane/common";
+import { Liane, MemberPing } from "@liane/common";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
 import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
 import { LianeGeolocation } from "@/api/service/location";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { useAppNavigation } from "@/components/context/routing";
-import { useIsFocused } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import GetLocation from "react-native-get-location";
+import { GeolocationPermission } from "../../../../native-modules/geolocation";
 
 export const startGeolocationService = async (liane: Liane, force: boolean = false) => {
   const user = await AppStorage.getUser();
@@ -34,6 +36,7 @@ export const startGeolocationService = async (liane: Liane, force: boolean = fal
       });
   }
 };
+
 export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
   const { user } = useContext(AppContext);
   const geoloc = useTripGeolocation();
@@ -42,18 +45,56 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
   const [isTracked, setTracked] = useState<boolean | undefined>(me.geolocationLevel === "Hidden" || me.geolocationLevel === "Shared");
   const { navigation } = useAppNavigation();
 
-  const [geolocPermission, setGeolocPermission] = useState<boolean | null>(null);
-  const focused = useIsFocused();
+  const [geolocPermission, setGeolocPermission] = useState<GeolocationPermission>();
+
+  useFocusEffect(() => {
+    LianeGeolocation.checkGeolocationPermission().then(p => setGeolocPermission(p));
+  });
+
+  const calledWhenLocationChanges = useCallback(
+    async (newLocation: { latitude: number; longitude: number; time: number }) => {
+      try {
+        const coordinate: { lat: number; lng: number } = { lat: newLocation.latitude, lng: newLocation.longitude };
+        const ping: MemberPing = {
+          type: "MemberPing",
+          liane: match.id as string,
+          coordinate,
+          timestamp: Math.trunc(newLocation.time)
+        };
+        AppLogger.debug("GEOPINGS", "Send ping  APPINUSE");
+        await services.location.postPing(ping);
+      } catch (error) {
+        AppLogger.error("GEOPINGS", error);
+      }
+    },
+    [match.id, services.location]
+  );
+
   useEffect(() => {
-    if (!focused) {
+    if (geolocPermission !== GeolocationPermission.AppInUse || !isTracked) {
       return;
     }
-    LianeGeolocation.checkBackgroundGeolocationPermission().then(p => setGeolocPermission(p));
-  }, [focused]);
+
+    const intervalId = setInterval(() => {
+      GetLocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 8000
+      })
+        .then(location => calledWhenLocationChanges(location))
+        .catch(error => {
+          const { code, message } = error;
+          console.warn(code, message);
+        });
+    }, 10000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [calledWhenLocationChanges, geolocPermission, isTracked]);
 
   const setGeolocalisationEnabled = async (enabled: boolean) => {
     const oldValue = isTracked;
-    if (enabled && !geolocPermission) {
+    if (enabled && geolocPermission === GeolocationPermission.Denied) {
       navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: match.id });
       return;
     }
@@ -69,7 +110,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => {
           setTracked(enabled);
-          if (enabled) {
+          if (enabled && geolocPermission === GeolocationPermission.Background) {
             startGeolocationService(match, true);
           }
         })
@@ -78,7 +119,9 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
       Alert.alert("Arrêter la géolocalisation ?", "Vous pourrez relancer le partage en réappuyant sur ce bouton.", [
         {
           text: "Annuler",
-          onPress: () => {},
+          onPress: () => {
+            setTracked(oldValue);
+          },
           style: "cancel"
         },
         {

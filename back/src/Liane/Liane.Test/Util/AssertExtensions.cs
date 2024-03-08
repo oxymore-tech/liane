@@ -1,13 +1,35 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using DeepEqual.Syntax;
+using Liane.Api.Util;
+using Liane.Api.Util.Ref;
 using NUnit.Framework;
 
 namespace Liane.Test.Util;
 
 public static class AssertExtensions
 {
+  public static void AreRefEquivalent<T>(this IEnumerable<string?> expected, IEnumerable<T> actual)
+    where T : class, IIdentity<string>
+  {
+    AreRefEquivalent(expected, actual.FilterSelect(a => (Ref<T>?)a.Id));
+  }
+
+  public static void AssertDeepEqual<T>(this IEnumerable<T> actual, params T[] expected)
+  {
+    expected.WithDeepEqual(actual).Assert();
+  }
+
+  public static void AreRefEquivalent<T>(this IEnumerable<string?> expected, IEnumerable<Ref<T>> actual)
+    where T : class, IIdentity<string>
+  {
+    CollectionAssert.AreEquivalent(expected.Select(r => (Ref<T>)r), actual);
+  }
+
   public static Stream ReadTestResource(string expectedFile, Assembly assembly)
   {
     var file = expectedFile.Replace("/", ".");

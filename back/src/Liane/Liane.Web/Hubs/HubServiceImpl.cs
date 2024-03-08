@@ -5,7 +5,7 @@ using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.Hub;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip.Geolocation;
@@ -108,7 +108,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
     return Task.CompletedTask;
   }
 
-  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Api.Trip.Liane> liane)
+  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Api.Trip.Trip> liane)
   {
     var lastValue = trackerCache.GetTracker(liane)?.GetTrackingInfo();
     return Task.FromResult(lastValue);
@@ -128,13 +128,13 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
     }
   
 
-  public async Task Push(Api.Trip.Liane liane, Ref<User> recipient)
+  public async Task Push(Api.Trip.Trip trip, Ref<User> recipient)
   {
     var connectionId = GetConnectionId(recipient);
     if (connectionId is not null)
     {
-      logger.LogInformation("Pushing liane update to {user} : {update}", recipient, liane);
-      await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
+      logger.LogInformation("Pushing liane update to {user} : {update}", recipient, trip);
+      await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(trip);
     }
   }
   

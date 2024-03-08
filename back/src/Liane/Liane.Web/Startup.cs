@@ -9,6 +9,7 @@ using Liane.Api.Util;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Image;
 using Liane.Service.Internal.Mongo;
@@ -90,10 +91,14 @@ public static class Startup
     services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
-    services.AddService<LianeServiceImpl>();
+    services.AddService<TripServiceImpl>();
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<LianeTrackerCache>();
+    
+    services.AddService<LianeFetcher>();
+    services.AddService<LianeMatcher>();
+    services.AddService<LianeServiceImpl>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();
@@ -212,7 +217,7 @@ public static class Startup
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
-          p => p.WithOrigins("http://localhost:3000")
+          p => p.WithOrigins("http://localhost:3000", "http://localhost:3001")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
@@ -343,7 +348,7 @@ public static class Startup
       .GetAwaiter()
       .GetResult();
 
-    var lianeService = app.ApplicationServices.GetRequiredService<ILianeService>();
+    var lianeService = app.ApplicationServices.GetRequiredService<ITripService>();
     // Synchronize databases and cache 
     lianeService.ForceSyncDatabase()
       .ConfigureAwait(false)

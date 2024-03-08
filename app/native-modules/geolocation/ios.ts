@@ -5,9 +5,10 @@ import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
 import { SubscriptionLike } from "rxjs";
 import DeviceInfo from "react-native-device-info";
-import { LianeGeolocation } from "./index";
+import { GeolocationPermission, LianeGeolocation } from "./index";
 import { Alert, Linking, NativeEventEmitter, Platform, PlatformIOSStatic } from "react-native";
 import { ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
+import { getTotalDuration } from "@/components/trip/trip.ts";
 
 interface GeoWatchOptions {
   useSignificantChanges?: boolean;
@@ -41,12 +42,14 @@ interface GeoPosition {
 }
 
 function createBackgroundHttp(accessToken: string) {
+  const a = `${accessToken}`;
   return new HttpClient(RNAppEnv.baseUrl, AppLogger as any, {
     closeSession: () => {
       return Promise.resolve();
     },
     getAccessToken: () => {
-      return Promise.resolve(accessToken);
+      AppLogger.info("GEOPINGS", "IOS background task http getAccessToken : ", a);
+      return Promise.resolve(a);
     },
     getRefreshToken: () => {
       return Promise.resolve(undefined);
@@ -77,8 +80,8 @@ export class IosService implements LianeGeolocation {
       throw new Error("No access token");
     }
     const http = createBackgroundHttp(accessToken);
-    const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
-    const timeout = tripDuration + 3600 * 1000;
+    const tripDuration = getTotalDuration(wayPoints);
+    const timeout = (tripDuration + 3600) * 1000;
     let preciseTrackingMode = true;
     AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
     setTimeout(() => {
@@ -89,7 +92,7 @@ export class IosService implements LianeGeolocation {
     const onFailedCallback = (error: GeoError) => {
       AppLogger.error("GEOPINGS", "Failed to start geolocation for liane " + lianeId, error);
     };
-    const getDistanceFilter = () => (preciseTrackingMode ? 10 : 500);
+    const getDistanceFilter = () => (preciseTrackingMode ? 10 : 100);
     const switchTrackingMode = async (precise: boolean) => {
       const r = await this.getCurrentGeolocationLianeId();
       if (!r) {
@@ -99,7 +102,7 @@ export class IosService implements LianeGeolocation {
       preciseTrackingMode = precise;
       this.clearWatch();
       const accuracy = precise ? "best" : "nearestTenMeters";
-      AppLogger.info("GEOPINGS", "Switched tracking mode to:", accuracy);
+      AppLogger.info("GEOPINGS", `Switched tracking mode to ${accuracy}`);
       this.watchPosition(onPositionCallback, onFailedCallback, {
         distanceFilter: getDistanceFilter(),
         accuracy,
@@ -107,24 +110,15 @@ export class IosService implements LianeGeolocation {
       });
     };
 
-    let repingTimeout: ReturnType<typeof setTimeout> | undefined;
-    const postPing = async (ping: MemberPing, timestamp?: number) => {
-      await http.postAs(`/event/member_ping`, { body: { ...ping, timestamp: timestamp || ping.timestamp } }).catch(err => {
+    const postPing = async (ping: MemberPing) => {
+      AppLogger.info("GEOPINGS", "Send ping BACKGROUND", ping);
+      await http.postAs(`/event/member_ping`, { body: ping }).catch(err => {
         AppLogger.warn("GEOPINGS", "Could not send ping", err);
         if (isResourceNotFound(err) || isValidationError(err)) {
           AppLogger.info("GEOPINGS", "Stopping service :", err);
           stopTracking();
         }
       });
-
-      // If no position update is received for a moment, keep sending this position
-      // to have a homogeneous behavior with Android phones
-      if (repingTimeout) {
-        clearTimeout(repingTimeout);
-      }
-      repingTimeout = setTimeout(() => {
-        postPing(ping, new Date().getTime());
-      }, 2 * 60 * 1000);
     };
     const onPositionCallback = async (position: GeoPosition) => {
       // Send ping
@@ -139,7 +133,7 @@ export class IosService implements LianeGeolocation {
 
       await postPing(ping);
 
-      const nearWayPointIndex = wayPoints.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= 500);
+      const nearWayPointIndex = wayPoints.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= 5000);
       if (nearWayPointIndex > -1) {
         if (!preciseTrackingMode) {
           // Enable precise tracking
@@ -194,10 +188,22 @@ export class IosService implements LianeGeolocation {
     return false;
   }
 
-  async checkBackgroundGeolocationPermission(): Promise<boolean> {
-    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
-    AppLogger.info("GEOPINGS", `Location ping permission ${access}`);
-    return access === "granted";
+  async checkGeolocationPermission(): Promise<GeolocationPermission> {
+    const background = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
+
+    if (background === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission BACKGROUND`);
+      return GeolocationPermission.Background;
+    }
+
+    const appInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    if (appInUse === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission APP_IN_USE`);
+      return GeolocationPermission.AppInUse;
+    }
+
+    AppLogger.info("GEOPINGS", `Location ping permission DENIED`);
+    return GeolocationPermission.Denied;
   }
 
   async requestBackgroundGeolocationPermission(): Promise<boolean> {
@@ -249,6 +255,7 @@ export class IosService implements LianeGeolocation {
     const val = await this.getCurrentGeolocationLianeId();
     if (val && new Date() > new Date(val.timeOutDate)) {
       // Stop timed-out service
+      AppLogger.warn("GEOPINGS", "StopSendingPings in currentLiane because >  val.timeOutDate", val.liane, new Date(), new Date(val.timeOutDate));
       await this.stopSendingPings();
     }
     return val?.liane;

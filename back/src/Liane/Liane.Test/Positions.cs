@@ -14,13 +14,15 @@ public sealed class Positions
   public static readonly LatLng IspagnacParking = new(44.3722038066219, 3.533528745174408);
   public static readonly LatLng GorgesDuTarnCausses = new(44.36512686514503, 3.414840996265411);
   public static readonly LatLng SaintEnimieParking = new(44.36545637889574, 3.412078320980072);
-  public static readonly LatLng Florac = new(44.31901268309318, 3.578021228313446);
+  public static readonly LatLng Florac = new(44.319013, 3.578021);
+  public static readonly LatLng FloracFormares = new(44.335825,3.5847193);
   public static readonly LatLng SaintChelyDuTarnEnHaut = new(44.338294306952264, 3.381930291652679);
   public static readonly LatLng ChamperbouxEglise = new(44.40842497198885, 3.414583504199982);
   public static readonly LatLng LavalDuTarnEglise = new(44.3533150645425, 3.352039754390717);
   public static readonly LatLng Cocures = new(44.347183574058064, 3.618855178356171);
   public static readonly LatLng LesBondonsParking = new(44.386770849124616, 3.616645038127899);
   public static readonly LatLng LeCrouzet = new(44.37781314454752, 3.623205721378326);
+  public static readonly LatLng RoquesCentreCommercial = new(43.5116467, 1.3693172);
   public static readonly LatLng LaMaleneParking = new(44.30126710025664, 3.320920765399933);
   public static readonly LatLng Rampon = new(44.35559377886476, 3.656352460384369);
   public static readonly LatLng SaintEtienneDuValdonnezParking = new(44.455243806523, 3.561520278453827);

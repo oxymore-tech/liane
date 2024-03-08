@@ -36,7 +36,7 @@ export const LianeDisplayLayer = ({
       url={url}
       key={sourceId}
       maxZoomLevel={14}
-      hitbox={{ width: 64, height: 64 }}
+      hitbox={{ width: 40, height: 40 }}
       onPress={
         onSelect
           ? async f => {

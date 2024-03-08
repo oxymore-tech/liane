@@ -10,10 +10,10 @@ public interface ILianeTrackerCache
 {
    IEnumerable<LianeTracker> Trackers { get; }
 
-   LianeTracker? GetTracker(Ref<Api.Trip.Liane> liane);
+   LianeTracker? GetTracker(Ref<Api.Trip.Trip> liane);
 
-   Task<LianeTracker> GetOrAddTracker(Ref<Api.Trip.Liane> liane, Func<Ref<Api.Trip.Liane>, Task<LianeTracker>> factory);
+   Task<LianeTracker> GetOrAddTracker(Ref<Api.Trip.Trip> liane, Func<Ref<Api.Trip.Trip>, Task<LianeTracker>> factory);
 
-   LianeTracker? RemoveTracker(Ref<Api.Trip.Liane> liane);
+   LianeTracker? RemoveTracker(Ref<Api.Trip.Trip> liane);
 
 }

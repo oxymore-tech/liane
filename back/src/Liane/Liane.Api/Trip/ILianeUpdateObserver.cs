@@ -5,5 +5,5 @@ namespace Liane.Api.Trip;
 
 public interface ILianeUpdateObserver
 {
-  Task Push(Liane liane, Ref<User.User> recipient);
+  Task Push(Trip trip, Ref<Auth.User> recipient);
 }

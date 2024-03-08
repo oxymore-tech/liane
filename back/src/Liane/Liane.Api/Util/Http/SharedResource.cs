@@ -10,6 +10,6 @@ public interface ISharedResource<T> where T : IResourceMember
 
 public interface IResourceMember
 {
-  public Ref<User.User> User { get; }
+  public Ref<Auth.User> User { get; }
 }
   

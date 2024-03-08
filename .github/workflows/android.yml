@@ -130,3 +130,4 @@ jobs:
           track: ${{env.upload_track}}
           status: completed
           inAppUpdatePriority: 5
+          changesNotSentForReview: true

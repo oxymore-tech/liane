@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Pagination;
 
 namespace Liane.Api.Hub;
@@ -21,6 +21,6 @@ public interface IHubClient
   
   Task ReceiveTrackingInfo(TrackingInfo update);
   
-  Task ReceiveLianeUpdate(Trip.Liane liane);
+  Task ReceiveLianeUpdate(Trip.Trip trip);
 
 }

@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 
 namespace Liane.Test;
@@ -8,7 +7,11 @@ public sealed class LabeledPositions
 {
   public static readonly RallyingPoint Mende = new("Mende", "Mende", Positions.Mende, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint Florac = new("Florac", "Florac", Positions.Florac, LocationType.CarpoolArea, "", "48000", "", null, true);
+  public static readonly RallyingPoint FloracFormares = new("Florac_Formares", "Florac_Formares", Positions.FloracFormares, LocationType.CarpoolArea, "", "48000", "", null, true);
   public static readonly RallyingPoint LeCrouzet = new("LeCrouzet", "LeCrouzet", Positions.LeCrouzet, LocationType.CarpoolArea, "", "48000", "", null, true);
+
+  public static readonly RallyingPoint RoquesCentreCommercial = new("bnlc:31458-C-012", "Centre commercial Roques", Positions.RoquesCentreCommercial, LocationType.Supermarket, "",
+    "RoquesCentreCommercial", "", null, true);
 
   public static readonly RallyingPoint GorgesDuTarnCausses =
     new("GDTC", "GorgesDuTarnCausses", Positions.GorgesDuTarnCausses, LocationType.CarpoolArea, "", "48000", "", null, true);
@@ -57,7 +60,7 @@ public sealed class LabeledPositions
 
   public static readonly RallyingPoint LanuejolsParkingEglise =
     new("LanuejolsfakeId", "Lanuejols_Parking_Eglise", Positions.LanuejolsParkingEglise, LocationType.CarpoolArea, "", "48000", "", null, true);
-  
+
   public static readonly RallyingPoint Lavogne =
     new("Lavogne", "Lavogne", Positions.Lavogne, LocationType.CarpoolArea, "", "48000", "", null, true);
 
@@ -68,6 +71,7 @@ public sealed class LabeledPositions
     new("Villefort", "Villefort_Parking_Gare", Positions.VillefortParkingGare, LocationType.CarpoolArea, "", "48000", "", null, true);
 
   public static readonly RallyingPoint Alan = new("Alan", "Alan", Positions.Alan, LocationType.CarpoolArea, "", "31420", "", null, true);
+
   public static readonly RallyingPoint Toulouse = new("Toulouse", "Toulouse", Positions.Toulouse, LocationType.CarpoolArea, "", "31000", "", null, true);
 
   public static readonly RallyingPoint PointisInard = new("mairie:31427", "Mairie de Pointis-Inard", Positions.PointisInard, LocationType.TownHall, "2 rue Saint-Jean-de-Pointis", "31800",
@@ -81,19 +85,22 @@ public sealed class LabeledPositions
 
   public static readonly RallyingPoint MartresTolosane = new("mairie:31324", "Mairie de Martres-Tolosane", Positions.MartresTolosane, LocationType.TownHall, "12 boulevard de la Magdeleine", "31220",
     "Martres-Tolosane", null, true);
-  
+
   public static readonly RallyingPoint Montbrun = new("mairie:48101", "MontbrunMairie de Montbrun", Positions.Montbrun, LocationType.TownHall, "Le Village", "48101",
     "Montbrun", null, true);
-  
-public static readonly RallyingPoint Choizal = new("bnlc:48016-C-002", "Aire de covoiturage du Choizal", Positions.Choizal, LocationType.CarpoolArea, "Croisement D986-D31 CHOIZAL", "48000",
+
+  public static readonly RallyingPoint Choizal = new("bnlc:48016-C-002", "Aire de covoiturage du Choizal", Positions.Choizal, LocationType.CarpoolArea, "Croisement D986-D31 CHOIZAL", "48000",
     "Balsièges", null, true);
 
   public static readonly RallyingPoint LO = new("custom:001", "Living Objects", Positions.LO, LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
+
   public static readonly IImmutableSet<RallyingPoint> RallyingPoints = ImmutableHashSet.Create(
     Mende,
     Lavogne,
     Florac,
+    FloracFormares,
     LeCrouzet,
+    RoquesCentreCommercial,
     GorgesDuTarnCausses,
     Cocures,
     Rampon,

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
@@ -48,7 +47,7 @@ public static class MongoDatabaseExtensions
     return builder.Eq($"{field}.{UnionDiscriminatorConvention.Type}", targetType.Name);
   }
 
-  public static async Task<T?> Get<T>(this IMongoDatabase mongo, string id) where T : class, IIdentity
+  public static async Task<T?> Get<T>(this IMongoDatabase mongo, string id) where T : class, IIdentity<string>
   {
     return await mongo.GetCollection<T>()
       .Find(p => p.Id == id)

@@ -1,7 +1,7 @@
 using System;
 using System.Data;
 using System.Linq;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;

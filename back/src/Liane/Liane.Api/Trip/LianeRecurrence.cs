@@ -4,11 +4,11 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Trip;
 
 public sealed record LianeRecurrence(string? Id,
-  Ref<User.User>? CreatedBy,
+  Ref<Auth.User>? CreatedBy,
   DateTime? CreatedAt,
-  DayOfTheWeekFlag Days,
+  DayOfWeekFlag Days,
   BaseLianeRequest InitialRequest,
-  bool Active = true) : IEntity
+  bool Active = true) : IEntity<string>
 {
   public static LianeRecurrence FromLianeRequest(LianeRequest request)
   {

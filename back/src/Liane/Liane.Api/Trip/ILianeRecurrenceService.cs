@@ -9,7 +9,7 @@ namespace Liane.Api.Trip;
 
 public interface ILianeRecurrenceService : ICrudEntityService<LianeRecurrence>
 {
-  Task Update(Ref<LianeRecurrence> recurrence, DayOfTheWeekFlag days);
+  Task Update(Ref<LianeRecurrence> recurrence, DayOfWeekFlag days);
   Task<ImmutableList<LianeRecurrence>> ListForCurrentUser();
   Task<LianeRecurrence> GetWithResolvedRefs(Ref<LianeRecurrence> recurrence);
   Task ClearForMember(string id);

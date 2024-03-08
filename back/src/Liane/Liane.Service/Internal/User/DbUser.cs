@@ -1,5 +1,5 @@
 using System;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.User;
@@ -15,4 +15,4 @@ public sealed record DbUser(
   DateTime? LastConnection,
   UserStats Stats,
   UserInfo? UserInfo = null
-) : IIdentity;
+) : IIdentity<string>;

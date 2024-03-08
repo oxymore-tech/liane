@@ -10,22 +10,17 @@ public abstract record Ref<T>
   {
   }
 
-  public string Id => this switch
-  {
-    Unresolved u => u.RefId,
-    Resolved r => r.Value.Id!,
-    _ => throw new ArgumentOutOfRangeException()
-  };
-
   public abstract Task<T> Resolve(Func<Ref<T>, Task<T>> resolver);
 
   public abstract void Visit(Action<string> unresolvedVisitor, Action<T> resolvedVisitor);
 
   public static implicit operator string(Ref<T> @ref) => @ref.Id;
 
-  public static implicit operator Ref<T>(string id) => new Unresolved(id);
+#nullable disable
+  public static implicit operator Ref<T>(string id) => id is null ? null : new Unresolved(id);
 
   public static implicit operator Ref<T>(T value) => new Resolved(value);
+#nullable enable
 
   public static explicit operator T?(Ref<T> @ref) => @ref switch
   {
@@ -45,9 +40,10 @@ public abstract record Ref<T>
     return Id.GetHashCode();
   }
 
+  public abstract string Id { get; init; }
   public abstract T? Value { get; init; }
 
-  public sealed record Unresolved(string RefId) : Ref<T>
+  public sealed record Unresolved(string Id) : Ref<T>
   {
     public override async Task<T> Resolve(Func<Ref<T>, Task<T>> resolver)
     {
@@ -73,6 +69,12 @@ public abstract record Ref<T>
 
   public sealed record Resolved(T Value) : Ref<T>
   {
+    public override string Id
+    {
+      get => Value.Id!.ToString()!;
+      init { }
+    }
+
     public override Task<T> Resolve(Func<Ref<T>, Task<T>> resolver)
     {
       return Task.FromResult(Value);

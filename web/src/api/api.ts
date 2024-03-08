@@ -1,5 +1,5 @@
 import { Entity, LianeMember, Ref, User, UTCDateTime, WayPoint } from "@liane/common/src";
-import { PaginatedRequestParams } from "@liane/common";
+import { Identity, PaginatedRequestParams, RallyingPoint, RallyingPointRequest } from "@liane/common";
 
 export type TripRecord = Entity &
   Readonly<{
@@ -16,3 +16,10 @@ export type TripRecordFilterParams = PaginatedRequestParams &
     wayPoint?: string[];
     date?: UTCDateTime;
   }>;
+
+export type RallyingPointStats = {
+  totalTripCount: number;
+  lastTripUsage?: UTCDateTime;
+} & Identity;
+
+export type RallyingPointFullRequest = {} & RallyingPointRequest;

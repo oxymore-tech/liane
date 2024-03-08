@@ -15,7 +15,7 @@ public sealed class EventDispatcher
     this.serviceProvider = serviceProvider;
   }
 
-  public async Task Dispatch(LianeEvent e, Ref<Api.User.User>? sender = null)
+  public async Task Dispatch(LianeEvent e, Ref<Api.Auth.User>? sender = null)
   {
     var eventListeners = serviceProvider.GetServices<IEventListener>();
     foreach (var eventListener in eventListeners)
@@ -24,7 +24,7 @@ public sealed class EventDispatcher
     }
   }
 
-  public async Task DispatchAnswer(Notification.Event e, Answer answer, Ref<Api.User.User>? sender = null)
+  public async Task DispatchAnswer(Notification.Event e, Answer answer, Ref<Api.Auth.User>? sender = null)
   {
     var eventListeners = serviceProvider.GetServices<IEventListener>();
     foreach (var eventListener in eventListeners)

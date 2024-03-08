@@ -10,7 +10,7 @@ namespace Liane.Api.Chat;
 
 public interface IChatService : ICrudEntityService<ConversationGroup>
 {
-  Task AddMember(Ref<ConversationGroup> id, Ref<User.User> user);
+  Task AddMember(Ref<ConversationGroup> id, Ref<Auth.User> user);
 
   /**
    * Remove a member from a group
@@ -18,12 +18,12 @@ public interface IChatService : ICrudEntityService<ConversationGroup>
    * @param user the user to remove
    * @return true if the conversation group has been removed (since only one user remains)
    */
-  Task<bool> RemoveMember(Ref<ConversationGroup> group, Ref<User.User> user);
+  Task<bool> RemoveMember(Ref<ConversationGroup> group, Ref<Auth.User> user);
 
-  Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<User.User> author);
+  Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Auth.User> author);
   Task<PaginatedResponse<ChatMessage>> GetGroupMessages(Pagination pagination, Ref<ConversationGroup> group);
-  Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp);
-  Task ReadConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp);
-  Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user);
+  Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.Auth.User> user, DateTime timestamp);
+  Task ReadConversation(Ref<ConversationGroup> group, Ref<Api.Auth.User> user, DateTime timestamp);
+  Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.Auth.User> user);
   Task Clear(IEnumerable<string> toDelete);
 }

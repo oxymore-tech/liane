@@ -7,15 +7,15 @@ namespace Liane.Web.Internal.Json;
 public static class JsonSerializerSettings
 {
   private static readonly JsonConverter[] Converters =
-  {
+  [
     new TimeOnlyJsonConverter(),
     new RefJsonConverterFactory(),
     new CursorJsonConverter(),
     new JsonStringEnumConverter(),
     new LngLatTupleConverter(),
-    new DayOfTheWeekFlagConverter(),
+    new DayOfWeekFlagConverter(),
     new UnionJsonConverterFactory()
-  };
+  ];
 
   private static readonly JsonNamingPolicy NamingPolicy = JsonNamingPolicy.CamelCase;
 

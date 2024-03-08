@@ -18,7 +18,7 @@ public sealed class PushServiceImpl : IPushService
       .ToImmutableList();
   }
 
-  public async Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
     foreach (var pushService in pushMiddlewares)
     {
@@ -31,7 +31,7 @@ public sealed class PushServiceImpl : IPushService
     return false;
   }
 
-  public async Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification)
+  public async Task<bool> SendNotification(Ref<Api.Auth.User> receiver, Notification notification)
   {
     foreach (var pushService in pushMiddlewares)
     {

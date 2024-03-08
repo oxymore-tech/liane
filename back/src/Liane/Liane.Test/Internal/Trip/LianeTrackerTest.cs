@@ -22,7 +22,7 @@ public sealed class LianeTrackerTest
       new WayPoint(LabeledPositions.QuezacParking, 0,0, DateTime.Now),
     new WayPoint(LabeledPositions.Mende, 0,0, DateTime.Now)
       );
-    var liane = new Api.Trip.Liane("id", "A", DateTime.Now, DateTime.Now, null, waypoints, members, new Driver("A"), LianeState.NotStarted, null);
+    var liane = new Api.Trip.Trip("id", "A", DateTime.Now, DateTime.Now, null, waypoints, members, new Driver("A"), LianeState.NotStarted, null);
 
     var tracker = new LianeTracker(null, liane);
     var firstPointIndexA = tracker.GetFirstWayPoint("A");

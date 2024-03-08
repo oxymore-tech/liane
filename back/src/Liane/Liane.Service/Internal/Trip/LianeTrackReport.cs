@@ -8,7 +8,7 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed record MemberLocationSample
 (
-  DateTime At, int NextPointIndex, TimeSpan Delay, LatLng? Coordinate, LatLng? RawCoordinate, double PointDistance, Ref<Api.User.User> Member
+  DateTime At, int NextPointIndex, TimeSpan Delay, LatLng? Coordinate, LatLng? RawCoordinate, double PointDistance, Ref<Api.Auth.User> Member
 );
 
 public sealed record LianeTrackReport(
@@ -17,4 +17,4 @@ public sealed record LianeTrackReport(
   ImmutableList<Car>? CarLocations,
   DateTime StartedAt,
   DateTime? FinishedAt = null
-): IIdentity;
+): IIdentity<string>;

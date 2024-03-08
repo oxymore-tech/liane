@@ -4,7 +4,7 @@ using System.Linq;
 using Bogus;
 using Liane.Api.Chat;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;
 

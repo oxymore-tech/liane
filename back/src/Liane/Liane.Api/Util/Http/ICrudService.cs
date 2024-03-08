@@ -27,13 +27,13 @@ public interface ICrudService<T> : ICrudService<T, T> where T : class, IIdentity
 {
 }
 
-public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity
+public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity<string>
 {
   Task<bool> Delete(Ref<TOut> reference);
 
-  Task<TOut> Create(TIn entity, Ref<User.User>? owner = null);
+  Task<TOut> Create(TIn entity, Ref<Auth.User>? owner = null);
 }
 
-public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity
+public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity<string>
 {
 }

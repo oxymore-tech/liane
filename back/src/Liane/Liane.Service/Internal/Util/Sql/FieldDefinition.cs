@@ -40,12 +40,16 @@ public abstract record FieldDefinition<T>
 
     throw new ArgumentOutOfRangeException();
   }
-  
+
   internal abstract string ToSql(NamedParams namedParams);
+  internal abstract string RawSql { get; }
+  internal abstract Type ColumnType { get; }
 
   public sealed record Member(MemberInfo MemberInfo) : FieldDefinition<T>
   {
-    internal override string ToSql(NamedParams namedParams) => Mapper.GetColumnName(MemberInfo.Name);
+    internal override string ToSql(NamedParams namedParams) => $"\"{Mapper.GetColumnName(MemberInfo.Name)}\"";
+    internal override string RawSql => MemberInfo.Name;
+    internal override Type ColumnType => ((PropertyInfo)MemberInfo).PropertyType;
   }
 
   public sealed record Expr(string Expression, params object[] Args) : FieldDefinition<T>
@@ -59,11 +63,17 @@ public abstract record FieldDefinition<T>
 
       return Expression;
     }
+
+    internal override string RawSql => Expression;
+    internal override Type ColumnType => typeof(string);
   }
 
   public sealed record Distance(FieldDefinition<T> FieldDefinition, LatLng To) : FieldDefinition<T>
   {
     internal override string ToSql(NamedParams namedParams) =>
       $"ST_DistanceSphere({FieldDefinition.ToSql(namedParams)}, ST_MakePoint({namedParams.Add(To.Lng)},{namedParams.Add(To.Lat)}))";
+
+    internal override string RawSql => ToSql(null!);
+    internal override Type ColumnType => typeof(int);
   }
 }

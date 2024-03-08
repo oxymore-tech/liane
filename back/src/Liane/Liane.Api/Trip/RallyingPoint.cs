@@ -1,3 +1,4 @@
+using System;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 
@@ -13,7 +14,7 @@ public sealed record RallyingPoint(
   string City,
   int? PlaceCount,
   bool IsActive = true
-) : IIdentity;
+) : IIdentity<string>;
 
 public enum LocationType
 {
@@ -26,3 +27,5 @@ public enum LocationType
   AutoStop,
   TownHall
 }
+
+public sealed record RallyingPointStats(string Id, int TotalTripCount, DateTime? LastTripUsage) : IIdentity<string>;

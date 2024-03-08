@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text.Json.Serialization;
+using GeoJSON.Text.Geometry;
 using LngLatTuple = System.Tuple<double, double>;
 
 namespace Liane.Api.Routing;
@@ -80,7 +81,12 @@ public readonly struct LatLng
     return HashCode.Combine(Math.Round(Lat, 6), Math.Round(Lng, 6));
   }
 
-  ///  
+  public Point ToGeoJson()
+  {
+    return new Point(new Position(Lat, Lng));
+  }
+
+  ///
   /// Returns the cross product: vector1.X*vector2.Y - vector1.Y*vector2.X 
   /// 
   ///  The second Vector 

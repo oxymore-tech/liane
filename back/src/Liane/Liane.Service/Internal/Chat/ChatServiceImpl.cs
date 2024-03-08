@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -28,7 +28,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     this.pushService = pushService;
   }
 
-  public async Task AddMember(Ref<ConversationGroup> id, Ref<Api.User.User> user)
+  public async Task AddMember(Ref<ConversationGroup> id, Ref<Api.Auth.User> user)
   {
     await Mongo.GetCollection<ConversationGroup>()
       .UpdateOneAsync(g => g.Id == id.Id,
@@ -36,7 +36,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       );
   }
 
-  public async Task<bool> RemoveMember(Ref<ConversationGroup> id, Ref<Api.User.User> user)
+  public async Task<bool> RemoveMember(Ref<ConversationGroup> id, Ref<Api.Auth.User> user)
   {
     await Mongo.GetCollection<ConversationGroup>()
       .UpdateOneAsync(g => g.Id == id.Id,
@@ -53,7 +53,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       .DeleteOneAsync(g => toDelete.Contains(g.Id!));
   }
 
-  public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
+  public async Task<ConversationGroup> ReadAndGetConversation(Ref<ConversationGroup> group, Ref<Api.Auth.User> user, DateTime timestamp)
   {
     // Retrieve conversation and user's membership data
     var conversationGroup = await Get(group);
@@ -66,7 +66,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
     return conversation with { Members = conversation.Members.Select(m => m with { User = members[m.User.Id] }).ToImmutableList() };
   }
 
-  public async Task ReadConversation(Ref<ConversationGroup> group, Ref<Api.User.User> user, DateTime timestamp)
+  public async Task ReadConversation(Ref<ConversationGroup> group, Ref<Api.Auth.User> user, DateTime timestamp)
   {
     // Retrieve conversation and user's membership data
     var conversationGroup = await Get(group);
@@ -81,7 +81,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       );
   }
 
-  public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.User.User> user)
+  public async Task<ImmutableList<Ref<ConversationGroup>>> GetUnreadConversationsIds(Ref<Api.Auth.User> user)
   {
     // Get conversations ids where user's last read is before the latest message
     var userConversations = await Mongo.GetCollection<ConversationGroup>()
@@ -96,7 +96,7 @@ public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>,
       .Select(c => (Ref<ConversationGroup>)c.Id!).ToImmutableList();
   }
 
-  public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.User.User> author)
+  public async Task<ChatMessage> SaveMessageInGroup(ChatMessage message, string groupId, Ref<Api.Auth.User> author)
   {
     var createdAt = DateTime.UtcNow;
     var sent = message with { Id = ObjectId.GenerateNewId().ToString(), CreatedBy = author.Id, CreatedAt = createdAt };

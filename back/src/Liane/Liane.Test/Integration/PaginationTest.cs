@@ -2,7 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
@@ -84,7 +84,7 @@ public sealed class PaginationTest: BaseIntegrationTest
     Assert.AreEqual(new Cursor.Time(new DateTime(2023, 02, 18).ToUniversalTime(), e5.Id), actual.Next);
   }
 
-  internal sealed record TestEntity(string Id, Ref<User>? CreatedBy, DateTime? CreatedAt) : IEntity;
+  internal sealed record TestEntity(string Id, Ref<User>? CreatedBy, DateTime? CreatedAt) : IEntity<string>;
 
   private IMongoCollection<TestEntity> collection = null!;
 

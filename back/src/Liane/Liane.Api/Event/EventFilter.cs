@@ -6,9 +6,9 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Event;
 
 public sealed record NotificationFilter(
-  Ref<User.User>? Recipient,
-  Ref<User.User>? Sender,
-  Ref<Trip.Liane>? Liane,
+  Ref<Auth.User>? Recipient,
+  Ref<Auth.User>? Sender,
+  Ref<Trip.Trip>? Liane,
   PayloadType? PayloadType
 );
 

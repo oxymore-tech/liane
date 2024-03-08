@@ -1,6 +1,6 @@
 
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using MongoDB.Driver;

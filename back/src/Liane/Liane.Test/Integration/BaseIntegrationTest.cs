@@ -10,8 +10,8 @@ using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
-using Liane.Service.Internal.Liane;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
@@ -101,7 +101,8 @@ public abstract class BaseIntegrationTest
     services.AddService(Moq.Mock.Of<ILianeUpdateObserver>());
     services.AddService(Moq.Mock.Of<ILianeUpdatePushService>());
     services.AddService(Moq.Mock.Of<IImageService>());
-    services.AddService<LianeServiceImpl>();
+    services.AddService<TripServiceImpl>();
+    services.AddService<TripServiceImpl>();
     services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<UserStatServiceImpl>();
@@ -111,9 +112,13 @@ public abstract class BaseIntegrationTest
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();
-    services.AddService<DeleteAccountServiceImpl>();    
+    services.AddService<DeleteAccountServiceImpl>();
     services.AddService<LianeTrackerCache>();
-    services.AddService<NewLianeServiceImpl>();
+
+    services.AddService<LianeFetcher>();
+    services.AddService<LianeMatcher>();
+    services.AddService<LianeServiceImpl>();
+
     services.AddEventListeners();
 
     var databaseSettings = GetDatabaseSettings();

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Mongo.Serialization;
@@ -85,7 +85,7 @@ public static class MongoFactory
         return use;
       });
       BsonSerializer.RegisterSerializer(new DateOnlyBsonSerializer());
-      BsonSerializer.RegisterSerializer(new DayOfTheWeekFlagSerializer());
+      BsonSerializer.RegisterSerializer(new DayOfWeekFlagSerializer());
       BsonSerializer.RegisterSerializer(new TimeOnlyBsonSerializer());
       BsonSerializer.RegisterSerializer(new LatLngBsonSerializer());
       BsonSerializer.RegisterGenericSerializerDefinition(typeof(Ref<>), typeof(RefBsonSerializer<>));

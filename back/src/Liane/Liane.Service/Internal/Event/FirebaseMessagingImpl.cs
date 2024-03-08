@@ -8,7 +8,7 @@ using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Liane.Api.Chat;
 using Liane.Api.Event;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using Notification = Liane.Api.Event.Notification;
@@ -38,7 +38,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
 
   public Priority Priority => Priority.Low;
 
-  public async Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification)
+  public async Task<bool> SendNotification(Ref<Api.Auth.User> receiver, Notification notification)
   {
     var receiverUser = await userService.GetFullUser(receiver);
     if (receiverUser == null)
@@ -65,7 +65,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     return false;
   }
 
-  public async Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
   {
     var receiverUser = await userService.GetFullUser(receiver);
     if (receiverUser.PushToken is null)

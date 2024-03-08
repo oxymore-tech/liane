@@ -5,8 +5,9 @@ import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
-import { LianeGeolocation } from "./index";
+import { GeolocationPermission, LianeGeolocation } from "./index";
 import { ALLOW_LOCATION, ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
+import { getTotalDuration } from "@/components/trip/trip.ts";
 
 export const LocationAlert = {
   inviteToOpenSettings,
@@ -49,8 +50,8 @@ export class AndroidService implements LianeGeolocation {
     if (!token) {
       throw new Error("No access token");
     }
-    const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
-    const timeout = tripDuration + 3600 * 1000;
+    const tripDuration = getTotalDuration(wayPoints);
+    const timeout = (tripDuration + 3600) * 1000;
 
     const nativeConfig = {
       pingConfig: { lianeId, userId: user!.id!, token: token!, url: RNAppEnv.baseUrl },
@@ -104,12 +105,22 @@ export class AndroidService implements LianeGeolocation {
     return false;
   }
 
-  async checkBackgroundGeolocationPermission(): Promise<boolean> {
-    const access = await check(
-      this.Platform.Version >= 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
-    );
-    AppLogger.info("GEOPINGS", `Location ping permission ${access}`);
-    return access === "granted";
+  async checkGeolocationPermission(): Promise<GeolocationPermission> {
+    const background = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
+
+    if (background === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission BACKGROUND`);
+      return GeolocationPermission.Background;
+    }
+
+    const appInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+    if (appInUse === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission APP_IN_USE`);
+      return GeolocationPermission.AppInUse;
+    }
+
+    AppLogger.info("GEOPINGS", `Location ping permission DENIED`);
+    return GeolocationPermission.Denied;
   }
 
   async requestBackgroundGeolocationPermission() {

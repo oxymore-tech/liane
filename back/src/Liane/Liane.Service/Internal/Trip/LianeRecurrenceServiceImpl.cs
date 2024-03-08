@@ -12,18 +12,15 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class LianeRecurrenceServiceImpl : MongoCrudEntityService<LianeRecurrence>, ILianeRecurrenceService
+public class LianeRecurrenceServiceImpl(
+  IMongoDatabase mongo,
+  ICurrentContext currentContext,
+  IRallyingPointService rallyingPointService)
+  : MongoCrudEntityService<LianeRecurrence>(mongo, currentContext), ILianeRecurrenceService
 {
-  private readonly IRallyingPointService rallyingPointService;
-
-  public LianeRecurrenceServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService) : base(mongo, currentContext)
+  public async Task Update(Ref<LianeRecurrence> recurrence, DayOfWeekFlag days)
   {
-    this.rallyingPointService = rallyingPointService;
-  }
-
-  public async Task Update(Ref<LianeRecurrence> recurrence, DayOfTheWeekFlag days)
-  {
-    if (days.IsNever)
+    if (days.IsEmpty())
     {
       await Mongo.GetCollection<LianeRecurrence>().FindOneAndUpdateAsync(r => r.Id == recurrence.Id,
         Builders<LianeRecurrence>.Update.Set(r => r.Active, false)
@@ -82,11 +79,10 @@ public class LianeRecurrenceServiceImpl : MongoCrudEntityService<LianeRecurrence
       .DeleteManyAsync(r => r.CreatedBy == id);
   }
 
-  public async Task<IEnumerable<LianeRecurrence>> GetUpdatableRecurrences(DayOfWeek?day = null)
+  public async Task<IEnumerable<LianeRecurrence>> GetUpdatableRecurrences(DayOfWeek? day = null)
   {
-    var pattern = Enumerable.Repeat('.', 7).ToArray();
-    var targetDay = day ?? DateTime.UtcNow.DayOfWeek;
-    pattern[DayOfTheWeekFlag.IndexOf(targetDay)] = '1';
+    DayOfWeekFlag targetDay = day ?? DateTime.UtcNow.DayOfWeek;
+    var pattern = targetDay.ToString('.');
     var filter = Builders<LianeRecurrence>.Filter.Where(r => r.Active) & Builders<LianeRecurrence>.Filter.Regex(r => r.Days, new BsonRegularExpression(new string(pattern)));
     var recurrences = await Mongo.GetCollection<LianeRecurrence>()
       .FindAsync(filter);

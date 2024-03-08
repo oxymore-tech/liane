@@ -7,23 +7,22 @@ public record RallyingPointRequest(
   string? Id,
   RallyingPoint Point,
   string Comment,
-  Ref<User.User>? CreatedBy,
+  Ref<Auth.User>? CreatedBy,
   DateTime? CreatedAt,
   RallyingPointRequestStatus? Status = null
-) : IEntity;
-
+) : IEntity<string>;
 
 [Union]
 public abstract record RallyingPointRequestStatus
 {
-  public Ref<User.User> By { init; get; }
+  public Ref<Auth.User> By { get; init; }
 
-  private RallyingPointRequestStatus(Ref<User.User> by)
+  private RallyingPointRequestStatus(Ref<Auth.User> by)
   {
     this.By = by;
   }
 
-  public sealed record InReview(Ref<User.User> By) : RallyingPointRequestStatus(By);
-  public sealed record Accepted(Ref<User.User> By) : RallyingPointRequestStatus(By);
-  public sealed record Rejected(string Reason, Ref<User.User> By) : RallyingPointRequestStatus(By);
+  public sealed record InReview(Ref<Auth.User> By) : RallyingPointRequestStatus(By);
+  public sealed record Accepted(Ref<Auth.User> By) : RallyingPointRequestStatus(By);
+  public sealed record Rejected(string Reason, Ref<Auth.User> By) : RallyingPointRequestStatus(By);
 }

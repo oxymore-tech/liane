@@ -31,6 +31,11 @@ export class HttpClient {
     return this.fetchAndCheckAs<T>("GET", uri, options);
   }
 
+  async getFile(uri: string) {
+    const response = await this.fetchAndCheckWithRetry("GET", uri, {});
+    return await response.blob();
+  }
+
   async getAsString(uri: string, options: QueryAsOptions = {}): Promise<string> {
     const response = await this.fetchAndCheckWithRetry("GET", uri, options);
     return await response.text();
@@ -171,16 +176,22 @@ export class HttpClient {
   }
 
   public async getUpdatedAccessToken(forceRefresh?: boolean) {
+    this.logger.info("HTTP", `getUpdatedAccessToken  forceRefresh=${!!forceRefresh}`);
     const accessToken = await this.storage.getAccessToken();
     if (accessToken && !isTokenExpired(accessToken) && !forceRefresh) {
+      this.logger.info("HTTP", "getUpdatedAccessToken : is up to date", accessToken);
       return accessToken;
     }
     if (await this.tryRefreshToken()) {
-      return await this.storage.getAccessToken();
+      const newAccessToken = await this.storage.getAccessToken();
+      this.logger.info("HTTP", "getUpdatedAccessToken : refreshed", newAccessToken);
+      return newAccessToken;
     }
+    this.logger.info("HTTP", "getUpdatedAccessToken : unable to refresh, returns undefined !");
   }
 
   public async tryRefreshToken(): Promise<boolean> {
+    this.logger.info("HTTP", "tryRefreshToken START");
     const refreshToken = await this.storage.getRefreshToken();
     const user = await this.storage.getSession();
     if (!refreshToken || !user) {
@@ -190,7 +201,9 @@ export class HttpClient {
 
     if (this.refreshTokenMutex.isLocked()) {
       // Reject on unlock if this is concurrent refresh so that calling service can retry manually to avoid duplicate requests
+      this.logger.info("HTTP", "tryRefreshToken : concurrent request, waiting for unlock...");
       await this.refreshTokenMutex.waitForUnlock();
+      this.logger.info("HTTP", "tryRefreshToken : concurrent request, unlocked");
       return true;
     } else {
       return await this.refreshTokenMutex.runExclusive(async () => {
@@ -203,6 +216,7 @@ export class HttpClient {
             this.postAs<AuthResponse>("/auth/token", { body: { userId: user.id, refreshToken }, disableRefreshToken: true })
           ]);
           await this.storage.processAuthResponse(res);
+          this.logger.info("HTTP", "tryRefreshToken SUCCESS");
           return true;
         } catch (e) {
           this.logger.error("HTTP", "Error: could not refresh token: ", e?.toString());
@@ -221,6 +235,7 @@ export class HttpClient {
   private async headers(body?: any) {
     const h = new Headers();
     const token = await this.storage.getAccessToken();
+    this.logger.info("HTTP", "read access token in headers", token);
     if (token) {
       h.append("Authorization", `Bearer ${token}`);
     }

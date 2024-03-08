@@ -8,11 +8,11 @@ namespace Liane.Service.Internal.Trip.Geolocation;
 public interface ILianeTrackerService
 {
   const double NearPointDistanceInMeters = 100;
-  Task<LianeTracker> Start(Api.Trip.Liane liane, Action? onReachedDestination = null);
-  Task PushPing(Ref<Api.Trip.Liane> liane, UserPing ping);
+  Task<LianeTracker> Start(Api.Trip.Trip trip, Action? onReachedDestination = null);
+  Task PushPing(Ref<Api.Trip.Trip> liane, UserPing ping);
   Task SyncTrackers();
-  Task<FeatureCollection> GetGeolocationPings(Ref<Api.Trip.Liane> liane);
-  Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Api.Trip.Liane> liane);
-  Task RecreateReport(Ref<Api.Trip.Liane> liane);
+  Task<FeatureCollection> GetGeolocationPings(Ref<Api.Trip.Trip> liane);
+  Task<FeatureCollection> GetGeolocationPingsForCurrentUser(Ref<Api.Trip.Trip> liane);
+  Task RecreateReport(Ref<Api.Trip.Trip> liane);
 
 }
