@@ -25,7 +25,33 @@ services:
       POSTGRES_USER: ${MONGO_USERNAME}
       POSTGRES_PASSWORD: ${MONGO_PASSWORD}
     restart: unless-stopped
-    
+
+  backup:
+    image: docker.io/tiredofit/db-backup
+    depends_on:
+      - mongo
+    volumes:
+      - "/data/${PROJECT}:/backup"
+    environment:
+      # - DEBUG_MODE=TRUE
+      - DEFAULT_BACKUP_INTERVAL=720 # backup 12 hours 12 * 60
+      - DEFAULT_CLEANUP_TIME=1      # clean backups that are older than 1 minute
+      - DEFAULT_CHECKSUM=SHA1
+      - DEFAULT_COMPRESSION=GZ
+      - DB01_TYPE=pgsql
+      - DB01_HOST=postgres
+      - DB01_NAME=jamin
+      - DB01_USER=${MONGO_USERNAME}
+      - DB01_PASS=${MONGO_PASSWORD}
+      - DB01_EXTRA_BACKUP_OPTS=--clean
+      - DB02_TYPE=mongo
+      - DB02_HOST=mongo
+      - DB02_USER=${MONGO_USERNAME}
+      - DB02_PASS=${MONGO_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - default
+
   martin:
     image: ghcr.io/maplibre/martin
     command: [ "--config", "/config.yaml" ]
