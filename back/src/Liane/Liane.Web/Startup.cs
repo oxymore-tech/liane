@@ -212,7 +212,7 @@ public static class Startup
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
-          p => p.WithOrigins("http://localhost:3000")
+          p => p.WithOrigins("http://localhost:3000", "http://localhost:3001")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
