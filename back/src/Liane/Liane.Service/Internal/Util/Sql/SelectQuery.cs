@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Liane.Service.Internal.Util.Sql;
 
-public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, int? InternalSkipValue, ImmutableList<FieldDefinition<T>> InternalOrderBy) : IQuery<T>
+public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, int? InternalSkipValue, ImmutableList<SortDefinition<T>> InternalOrderBy) : IQuery<T>
 {
   public SelectQuery<T> And(Filter<T> other) => this with { Filter = Filter & other };
   public SelectQuery<T> Or(Filter<T> other) => this with { Filter = Filter | other };
@@ -32,7 +32,11 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
 
     if (!InternalOrderBy.IsNullOrEmpty())
     {
-      var orderBy = string.Join(", ", InternalOrderBy.Select(f => f.ToSql(namedParams)));
+      var orderBy = string.Join(", ", InternalOrderBy.Select(s =>
+      {
+        var sql = s.FieldDefinition.ToSql(namedParams);
+        return s.Asc ? sql : $"{sql} DESC";
+      }));
       stringBuilder.Append($"\nORDER BY {orderBy}");
     }
 
@@ -54,6 +58,7 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
   public SelectQuery<T> Take(int? take) => this with { InternalTakeValue = take };
   public SelectQuery<T> Skip(int? skip) => this with { InternalSkipValue = skip };
 
-  public SelectQuery<T> OrderBy(FieldDefinition<T> fieldDefinition) => this with { InternalOrderBy = InternalOrderBy.Add(fieldDefinition) };
-  public SelectQuery<T> OrderBy(Expression<Func<T, object?>> expression) => this with { InternalOrderBy = InternalOrderBy.Add(FieldDefinition<T>.From(expression)) };
+  public SelectQuery<T> OrderBy(FieldDefinition<T> fieldDefinition, bool asc = true) => this with { InternalOrderBy = InternalOrderBy.Add(new SortDefinition<T>(fieldDefinition)) };
+  public SelectQuery<T> OrderBy(Expression<Func<T, object?>> expression, bool asc = true) => this with { InternalOrderBy = InternalOrderBy.Add(FieldDefinition<T>.From(expression)) };
+
 }

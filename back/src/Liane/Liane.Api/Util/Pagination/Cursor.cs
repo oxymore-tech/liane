@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Util.Pagination;
 
@@ -11,6 +12,14 @@ public abstract record Cursor
   private Cursor()
   {
   }
+
+  public Cursor Next<T>(T next) where T : IEntity
+    => this switch
+    {
+      Natural => new Natural(next.Id!.ToString()!),
+      Time => new Time(next.CreatedAt!.Value, next.Id!.ToString()!),
+      _ => throw new ArgumentException($"Bad cursor type :{GetType().Name}")
+    };
 
   public static Cursor From<TCursor>(IEnumerable<object?> values) where TCursor : Cursor
   {
@@ -28,8 +37,9 @@ public abstract record Cursor
         var arg2 = values.Skip(1).First();
         if (arg1 is DateTime time && arg2 is string id) return new Time(time, id);
         break;
-      } 
+      }
     }
+
     throw new ArgumentException($"Bad cursor type :{typeof(TCursor).Name} with arguments [{string.Join(',', values.Select(v => v?.ToString()))}]");
   }
 
@@ -61,6 +71,7 @@ public abstract record Cursor
 
     return new Natural(items[0]);
   }
+
   public static implicit operator Cursor(string raw) => Parse(raw);
 
   public abstract ImmutableList<object?> GetFilterFields();

@@ -94,6 +94,7 @@ public abstract record Filter<T>
   {
     Boolean b => b.Operator == booleanOperator ? new Boolean(booleanOperator, b.Operands.Add(right)) : new Boolean(booleanOperator, ImmutableList.Create(this, right)),
     EmptyFilter => right,
+    _ when right is EmptyFilter => this,
     _ => new Boolean(booleanOperator, ImmutableList.Create(this, right)),
   };
 

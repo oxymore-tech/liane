@@ -2,8 +2,10 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Chat;
 using Liane.Api.Community;
 using Liane.Api.Trip;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Community;
 using Liane.Service.Internal.User;
@@ -295,7 +297,6 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShouldSendAMessageToAJoinedLiane()
   {
-    
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane liane;
     {
@@ -323,12 +324,31 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       var message = await tested.SendMessage(liane, "Hé gamin !");
       Assert.NotNull(message);
     }
-    
+
     // Gugu send a message in the liane
     {
       currentContext.SetCurrentUser(gugu);
       var message = await tested.SendMessage(liane, "J'ai bien reçu ton message \ud83d\ude35\u200d\ud83d\udcab !");
       Assert.NotNull(message);
+      await tested.SendMessage(liane, "2 ème message");
+
+      currentContext.SetCurrentUser(mathilde);
+      await tested.SendMessage(liane, "3 ème message !");
+
+      currentContext.SetCurrentUser(gugu);
+      await tested.SendMessage(liane, "4 ème message");
+    }
+
+    // Jaybee list all messages
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var messages = await tested.GetMessages(liane, new Pagination(null, 1, false));
+      Assert.AreEqual(3, messages.TotalCount);
+      CollectionAssert.AreEquivalent(
+        ImmutableList.Create(
+          new ChatMessage(null, gugu.Id, null, "Oui")
+        ), messages.Data.Select(m => m with { Id = null, CreatedAt = null })
+      );
     }
   }
 

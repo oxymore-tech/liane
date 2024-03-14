@@ -185,11 +185,7 @@ public sealed class NewLianeServiceImpl(
     using var tx = connection.BeginTransaction();
     var userId = currentContext.CurrentUser().Id;
     var lianeId = Guid.Parse(liane.Id);
-    var count = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id AND user_id = @user_id", new { liane_id = lianeId, user_id = userId }, tx);
-    if (count == 0)
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
+    await CheckIsMember(connection, lianeId, userId, tx);
 
     var id = Uuid7.Guid();
     var now = DateTime.UtcNow;
@@ -198,9 +194,39 @@ public sealed class NewLianeServiceImpl(
     return new ChatMessage(id.ToString(), userId, now, message);
   }
 
-  public Task<PaginatedResponse<ChatMessage>> GetMessages(Pagination pagination, Ref<Api.Community.Liane> group)
+  private static async Task CheckIsMember(IDbConnection connection, Guid lianeId, string userId, IDbTransaction tx)
   {
-    throw new NotImplementedException();
+    var count = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id AND user_id = @user_id", new { liane_id = lianeId, user_id = userId }, tx);
+    if (count == 0)
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+  }
+
+  public async Task<PaginatedResponse<ChatMessage>> GetMessages(Ref<Api.Community.Liane> liane, Pagination pagination)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
+
+    var lianeId = Guid.Parse(liane.Id);
+    await CheckIsMember(connection, lianeId, userId, tx);
+
+    var query = Query.Select<LianeMessageDb>()
+      .Where(Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId))
+      .And(pagination.Cursor.ToFilter<LianeMessageDb>())
+      .OrderBy(m => m.Id, pagination.SortAsc)
+      .OrderBy(m => m.CreatedAt)
+      .Take(pagination.Limit + 1);
+
+    var result = await connection.QueryAsync(query, tx);
+
+    var hasNext = result.Count > pagination.Limit;
+    var cursor = hasNext ? pagination.Cursor?.Next(result.Last()) : null;
+    return new PaginatedResponse<ChatMessage>(
+      Math.Min(result.Count, pagination.Limit),
+      cursor,
+      result.Take(pagination.Limit).Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text)).ToImmutableList());
   }
 
   public Task<Api.Community.Liane> ReadAndGetLiane(Ref<Api.Community.Liane> id, Ref<Api.User.User> user, DateTime timestamp)
@@ -317,5 +343,5 @@ public sealed record LianeMessageDb(
   Guid LianeId,
   string Text,
   Ref<Api.User.User> CreatedBy,
-  DateTime CreatedAt
+  DateTime? CreatedAt
 ) : IEntity<Guid>;
