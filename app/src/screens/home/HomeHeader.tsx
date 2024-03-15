@@ -196,7 +196,7 @@ export const MapHeader = ({
                           }}>
                           <AppIcon name={"pin"} color={AppColors.primaryColor} size={18} />
                         </View>
-                        <Pressable onPress={searchPlace}>
+                        <Pressable onPress={searchPlace} style={{ width: "100%" }}>
                           <AppText style={{ fontSize: 16, color: AppColors.primaryColor }}>{"D'où partez-vous?"}</AppText>
                         </Pressable>
                         <Space />
