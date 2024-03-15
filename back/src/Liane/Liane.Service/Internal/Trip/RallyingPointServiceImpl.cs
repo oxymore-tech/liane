@@ -206,12 +206,12 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
 
   public async Task ImportCsv(Stream input)
   {
-    await db.ImportTableAsCsv<RallyingPoint>(input, c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
+    await db.ImportTableAsCsv<RallyingPoint>(input, c => c.IsActive);
   }
 
   public async Task ExportCsv(Stream output, RallyingPointFilter rallyingPointFilter)
   {
     var filter = GetFilter(rallyingPointFilter);
-    await db.ExportTableAsCsv(output, filter, c => c.PropertyInfo.Name != nameof(RallyingPoint.IsActive));
+    await db.ExportTableAsCsv(output, filter, c => c.IsActive);
   }
 }

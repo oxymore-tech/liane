@@ -92,9 +92,9 @@ public abstract record Filter<T>
 
   private Filter<T> Combine(Filter<T> right, BooleanOperator booleanOperator) => this switch
   {
-    Boolean b => b.Operator == booleanOperator ? new Boolean(booleanOperator, b.Operands.Add(right)) : new Boolean(booleanOperator, ImmutableList.Create(this, right)),
     EmptyFilter => right,
     _ when right is EmptyFilter => this,
+    Boolean b => b.Operator == booleanOperator ? new Boolean(booleanOperator, b.Operands.Add(right)) : new Boolean(booleanOperator, ImmutableList.Create(this, right)),
     _ => new Boolean(booleanOperator, ImmutableList.Create(this, right)),
   };
 

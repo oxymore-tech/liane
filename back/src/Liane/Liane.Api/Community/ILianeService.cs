@@ -14,9 +14,11 @@ public interface ILianeService
 
   Task<Liane> Join(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
   Task<bool> Leave(Ref<Liane> liane);
+
+  Task<PaginatedResponse<ChatMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);
+  Task<PaginatedResponse<ChatMessage>> GetMessages(Ref<Liane> liane, Pagination pagination);
   Task<ChatMessage> SendMessage(Ref<Liane> liane, string message);
-  Task<PaginatedResponse<ChatMessage>> GetMessages(Ref<Liane> group, Pagination pagination);
-  
-  Task<Liane> ReadAndGetLiane(Ref<Liane> id, Ref<Api.User.User> user, DateTime timestamp);
-  Task<ImmutableList<Ref<Liane>>> GetUnreadLianes(Ref<Api.User.User> user);
+
+  Task<Liane> ReadAndGetLiane(Ref<Liane> id, Ref<User.User> user, DateTime timestamp);
+  Task<ImmutableList<Ref<Liane>>> GetUnreadLianes(Ref<User.User> user);
 }

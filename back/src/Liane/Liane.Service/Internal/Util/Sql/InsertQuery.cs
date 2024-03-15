@@ -32,7 +32,7 @@ public record InsertQuery<T, TId>(object Parameters, OnConflict? OnConflict = nu
     var stringBuilder = new StringBuilder();
     stringBuilder.Append($"INSERT INTO {Mapper.GetTableName<T>()} ");
 
-    stringBuilder.Append($"({string.Join(", ", columns.Select(c => $"\"{c.ColumnName}\""))}) VALUES ({string.Join(", ", columns.Select(c => $"@{c.PropertyInfo.Name}"))})");
+    stringBuilder.Append($"({string.Join(", ", columns.Select(c => c.ToSql(null!)))}) VALUES ({string.Join(", ", columns.Select(c => $"@{c.RawSql}"))})");
 
     switch (OnConflict)
     {
@@ -42,7 +42,7 @@ public record InsertQuery<T, TId>(object Parameters, OnConflict? OnConflict = nu
       case OnConflict.Update<T> update:
       {
         var indexFields = update.UpdateFields.Select(f => f.ToSql(null!)).ToImmutableHashSet();
-        var updateFields = string.Join(", ", columns.Select(c => c.ColumnName).Where(c => !indexFields.Contains(c)).Select(c => $"{c} = EXCLUDED.{c}"));
+        var updateFields = string.Join(", ", columns.Select(c => c.ToSql(null!)).Where(c => !indexFields.Contains(c)).Select(c => $"{c} = EXCLUDED.{c}"));
 
         stringBuilder.Append($" ON CONFLICT({string.Join(", ", indexFields)}) DO UPDATE SET {updateFields}");
         break;

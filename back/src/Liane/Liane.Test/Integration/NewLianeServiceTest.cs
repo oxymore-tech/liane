@@ -19,7 +19,7 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public sealed class NewLianeServiceImplTest : BaseIntegrationTest
 {
-  private NewLianeServiceImpl tested = null!;
+  private ILianeService tested = null!;
   private MockCurrentContext currentContext = null!;
 
   private DbUser gugu = null!;
@@ -295,7 +295,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldSendAMessageToAJoinedLiane()
+  public async Task ShouldChatInALiane()
   {
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane liane;
@@ -308,6 +308,26 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       liane = await tested.Join(from, to);
     }
 
+    // Mathilde send a message in the liane
+    {
+      currentContext.SetCurrentUser(mathilde);
+      var message = await tested.SendMessage(liane, "Salut JB, ça te dit de covoiturer demain ?");
+      Assert.NotNull(message);
+    }
+
+    // Jaybee list all messages
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
+      Assert.AreEqual(1, messages.TotalCount);
+      CollectionAssert.AreEquivalent(
+        ImmutableList.Create(
+          "Salut JB, ça te dit de covoiturer demain ?"
+        ), messages.Data.Select(m => m.Text)
+      );
+      await tested.SendMessage(liane, "Bonjour Mathilde, je suis partant !");
+    }
+
     // Gugu join JayBee : gugu join the existing liane
     {
       currentContext.SetCurrentUser(gugu);
@@ -318,37 +338,83 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       await tested.Join(from, to);
     }
 
-    // Mathilde send a message in the liane
-    {
-      currentContext.SetCurrentUser(mathilde);
-      var message = await tested.SendMessage(liane, "Hé gamin !");
-      Assert.NotNull(message);
-    }
-
     // Gugu send a message in the liane
     {
       currentContext.SetCurrentUser(gugu);
-      var message = await tested.SendMessage(liane, "J'ai bien reçu ton message \ud83d\ude35\u200d\ud83d\udcab !");
+      var message = await tested.SendMessage(liane, "Bonjour à tous 🚘, vroum !");
       Assert.NotNull(message);
-      await tested.SendMessage(liane, "2 ème message");
+      await tested.SendMessage(liane, "Comment ça marche ici ?");
 
       currentContext.SetCurrentUser(mathilde);
-      await tested.SendMessage(liane, "3 ème message !");
+      await tested.SendMessage(liane, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !");
 
       currentContext.SetCurrentUser(gugu);
-      await tested.SendMessage(liane, "4 ème message");
+      await tested.SendMessage(liane, "Super je dois aller à Mende demain pour 9h30");
     }
 
+    ImmutableList<ChatMessage> allMessages;
     // Jaybee list all messages
     {
       currentContext.SetCurrentUser(jayBee);
-      var messages = await tested.GetMessages(liane, new Pagination(null, 1, false));
-      Assert.AreEqual(3, messages.TotalCount);
+      var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
+      Assert.AreEqual(6, messages.TotalCount);
       CollectionAssert.AreEquivalent(
         ImmutableList.Create(
-          new ChatMessage(null, gugu.Id, null, "Oui")
-        ), messages.Data.Select(m => m with { Id = null, CreatedAt = null })
+          (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
+          (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
+          (gugu.Id, "Comment ça marche ici ?"),
+          (gugu.Id, "Bonjour à tous 🚘, vroum !"),
+          (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
+          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
+        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
       );
+      allMessages = messages.Data;
+    }
+
+    // Gugu list all messages
+    {
+      currentContext.SetCurrentUser(gugu);
+      var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
+      Assert.AreEqual(4, messages.TotalCount);
+      CollectionAssert.AreEquivalent(
+        ImmutableList.Create(
+          (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
+          (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
+          (gugu.Id, "Comment ça marche ici ?"),
+          (gugu.Id, "Bonjour à tous 🚘, vroum !")
+        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+      );
+      Assert.IsNull(messages.Next);
+    }
+
+    // Jaybee list messages with pagination
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var messages = await tested.GetMessages(liane, new Pagination(null, 3, SortAsc: false));
+      Assert.AreEqual(6, messages.TotalCount);
+      CollectionAssert.AreEquivalent(
+        ImmutableList.Create(
+          (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
+          (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
+          (gugu.Id, "Comment ça marche ici ?")
+        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+      );
+      Assert.AreEqual(allMessages[3].ToCursor(), messages.Next);
+    }
+
+    // Jaybee list messages with pagination
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var messages = await tested.GetMessages(liane, new Pagination(allMessages[3].ToCursor(), 3, SortAsc: false));
+      Assert.AreEqual(6, messages.TotalCount);
+      CollectionAssert.AreEquivalent(
+        ImmutableList.Create(
+          (gugu.Id, "Bonjour à tous 🚘, vroum !"),
+          (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
+          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
+        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+      );
+      Assert.IsNull(messages.Next);
     }
   }
 

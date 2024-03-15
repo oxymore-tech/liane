@@ -7,10 +7,19 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Liane.Service.Internal.Util.Sql;
 
-public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, int? InternalSkipValue, ImmutableList<SortDefinition<T>> InternalOrderBy) : IQuery<T>
+public sealed record SelectQuery<T>(
+  ImmutableList<FieldDefinition<T>> Select,
+  Filter<T> Filter,
+  int? InternalTakeValue,
+  int? InternalSkipValue,
+  ImmutableList<SortDefinition<T>> InternalOrderBy
+) : IQuery<T>
 {
   public SelectQuery<T> And(Filter<T> other) => this with { Filter = Filter & other };
+  public SelectQuery<T> And(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => And(Filter<T>.Where(field, op, operand));
+
   public SelectQuery<T> Or(Filter<T> other) => this with { Filter = Filter | other };
+  public SelectQuery<T> Or(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Or(Filter<T>.Where(field, op, operand));
 
   public (string Sql, object? Params) ToSql()
   {
@@ -21,7 +30,7 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
 
     stringBuilder.Append("SELECT ");
 
-    stringBuilder.Append(string.Join(", ", Mapper.GetColumns<T>().Select(c => $"\"{c.ColumnName}\"")));
+    stringBuilder.Append(string.Join(", ", Select.Select(c => c.ToSql(namedParams))));
 
     stringBuilder.Append($" FROM {Mapper.GetTableName<T>()}");
 
@@ -54,11 +63,11 @@ public sealed record SelectQuery<T>(Filter<T> Filter, int? InternalTakeValue, in
   }
 
   public SelectQuery<T> Where(Filter<T> filter) => this with { Filter = Filter & filter };
+  public SelectQuery<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Where(Filter<T>.Where(field, op, operand));
 
   public SelectQuery<T> Take(int? take) => this with { InternalTakeValue = take };
   public SelectQuery<T> Skip(int? skip) => this with { InternalSkipValue = skip };
 
-  public SelectQuery<T> OrderBy(FieldDefinition<T> fieldDefinition, bool asc = true) => this with { InternalOrderBy = InternalOrderBy.Add(new SortDefinition<T>(fieldDefinition)) };
-  public SelectQuery<T> OrderBy(Expression<Func<T, object?>> expression, bool asc = true) => this with { InternalOrderBy = InternalOrderBy.Add(FieldDefinition<T>.From(expression)) };
-
+  public SelectQuery<T> OrderBy(FieldDefinition<T> fieldDefinition, bool asc = true) => this with { InternalOrderBy = InternalOrderBy.Add(new SortDefinition<T>(fieldDefinition, asc)) };
+  public SelectQuery<T> OrderBy(Expression<Func<T, object?>> expression, bool asc = true) => OrderBy(FieldDefinition<T>.From(expression), asc);
 }

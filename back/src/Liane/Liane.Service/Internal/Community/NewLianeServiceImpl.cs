@@ -194,13 +194,18 @@ public sealed class NewLianeServiceImpl(
     return new ChatMessage(id.ToString(), userId, now, message);
   }
 
-  private static async Task CheckIsMember(IDbConnection connection, Guid lianeId, string userId, IDbTransaction tx)
+  private static async Task<LianeMemberDb> CheckIsMember(IDbConnection connection, Guid lianeId, string userId, IDbTransaction tx)
   {
-    var count = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id AND user_id = @user_id", new { liane_id = lianeId, user_id = userId }, tx);
-    if (count == 0)
+    var query = Query.Select<LianeMemberDb>()
+      .Where(l => l.LianeId, ComparisonOperator.Eq, lianeId)
+      .And(l => l.UserId, ComparisonOperator.Eq, userId);
+    var member = await connection.FirstOrDefaultAsync(query, tx);
+    if (member is null)
     {
       throw new UnauthorizedAccessException("User is not part of the liane");
     }
+
+    return member;
   }
 
   public async Task<PaginatedResponse<ChatMessage>> GetMessages(Ref<Api.Community.Liane> liane, Pagination pagination)
@@ -210,23 +215,30 @@ public sealed class NewLianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
 
     var lianeId = Guid.Parse(liane.Id);
-    await CheckIsMember(connection, lianeId, userId, tx);
+    var member = await CheckIsMember(connection, lianeId, userId, tx);
 
+    var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
+                 & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gt, member.JoinedAt);
+    
     var query = Query.Select<LianeMessageDb>()
-      .Where(Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId))
-      .And(pagination.Cursor.ToFilter<LianeMessageDb>())
+      .Where(filter)
+      .And(pagination.ToFilter<LianeMessageDb>())
       .OrderBy(m => m.Id, pagination.SortAsc)
       .OrderBy(m => m.CreatedAt)
       .Take(pagination.Limit + 1);
-
+    
+    var total = await connection.QuerySingleAsync<int>(Query.Count<LianeMessageDb>().Where(filter), tx);
     var result = await connection.QueryAsync(query, tx);
 
     var hasNext = result.Count > pagination.Limit;
-    var cursor = hasNext ? pagination.Cursor?.Next(result.Last()) : null;
+    var cursor = hasNext ? result.Last().ToCursor() : null;
     return new PaginatedResponse<ChatMessage>(
       Math.Min(result.Count, pagination.Limit),
       cursor,
-      result.Take(pagination.Limit).Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text)).ToImmutableList());
+      result.Take(pagination.Limit)
+        .Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
+        .ToImmutableList(),
+      total);
   }
 
   public Task<Api.Community.Liane> ReadAndGetLiane(Ref<Api.Community.Liane> id, Ref<Api.User.User> user, DateTime timestamp)
@@ -279,7 +291,7 @@ public sealed class NewLianeServiceImpl(
     );
   }
 
-  private async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter)
+  private static async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter)
   {
     var lianeDbs = await connection.QueryAsync(Query.Select<LianeDb>().Where(Filter<LianeDb>.Where(l => l.Id, ComparisonOperator.In, lianeFilter)));
     var memberDbs = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter))))

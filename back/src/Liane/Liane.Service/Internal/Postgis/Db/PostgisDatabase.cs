@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
@@ -52,16 +53,19 @@ public sealed class PostgisDatabase : IDisposable
     typeMappers.Add(typeof(T), mapper);
   }
 
-  public async Task ExportTableAsCsv<T>(Stream output, Filter<T>? filter = default, Func<Mapper.ColumnMapping, bool>? columnFilter = default)
+  public async Task ExportTableAsCsv<T>(Stream output, Filter<T>? filter = default, params Expression<Func<T, object?>>[] columnFilter)
   {
-    var columns = Mapper.GetColumns<T>();
-    if (columnFilter is not null)
-    {
-      columns = columns.Where(columnFilter).ToImmutableList();
-    }
+    var ignoreColumns = columnFilter.Select(s => (FieldDefinition<T>)s).ToImmutableHashSet();
+    var columns = Mapper.GetColumns<T>().Where(c => !ignoreColumns.Contains(c)).ToImmutableList();
+
+    var namedParams = new NamedParams();
 
     var selectedValues = string.Join(",",
-      columns.Select(c => typeMappers.TryGetValue(c.PropertyInfo.PropertyType, out var value) ? $"{value.Export(c.ColumnName)} as {c.ColumnName}" : c.ColumnName));
+      columns.Select(c =>
+      {
+        var column = c.ToSql(namedParams);
+        return typeMappers.TryGetValue(c.ColumnType, out var value) ? $"{value.Export(column)} as {column}" : column;
+      }));
     var sql = new StringBuilder($"SELECT {selectedValues} FROM {Mapper.GetTableName<T>()}");
 
     /* TODO manually transform filter as COPY does not support @parameters
@@ -88,16 +92,13 @@ public sealed class PostgisDatabase : IDisposable
     }
   }
 
-  public async Task ImportTableAsCsv<T>(Stream input, Func<Mapper.ColumnMapping, bool>? columnFilter = default)
+  public async Task ImportTableAsCsv<T>(Stream input, params Expression<Func<T, object?>>[] columnFilter)
   {
     await using var connection = await dataSource.OpenConnectionAsync();
     await using var tx = await connection.BeginTransactionAsync();
     var table = Mapper.GetTableName<T>();
-    var columns = Mapper.GetColumns<T>();
-    if (columnFilter is not null)
-    {
-      columns = columns.Where(columnFilter).ToImmutableList();
-    }
+    var filter = columnFilter.Select(s => (FieldDefinition<T>)s).ToImmutableHashSet();
+    var columns = Mapper.GetColumns<T>().Where(c => !filter.Contains(c)).ToImmutableList();
 
     await using (var cmd = connection.CreateCommand())
     {
@@ -107,10 +108,11 @@ public sealed class PostgisDatabase : IDisposable
       await cmd.ExecuteNonQueryAsync();
     }
 
-    foreach (var column in columns.Where(c => typeMappers.ContainsKey(c.PropertyInfo.PropertyType)))
+    var namedParams = new NamedParams();
+    foreach (var column in columns.Where(c => typeMappers.ContainsKey(c.ColumnType)))
     {
       await using var cmd = connection.CreateCommand();
-      cmd.CommandText = $"alter table {table}_import alter column {column.ColumnName} TYPE text;";
+      cmd.CommandText = $"alter table {table}_import alter column {column.ToSql(namedParams)} TYPE text;";
       cmd.Transaction = tx;
       await cmd.ExecuteNonQueryAsync();
     }
@@ -128,7 +130,11 @@ public sealed class PostgisDatabase : IDisposable
 
     await using (var cmd = connection.CreateCommand())
     {
-      var transformedColumns = columns.Select(c => typeMappers.TryGetValue(c.PropertyInfo.PropertyType, out var alteration) ? alteration.Import(c.ColumnName) : c.ColumnName);
+      var transformedColumns = columns.Select(c =>
+      {
+        var columnName = c.ToSql(namedParams);
+        return typeMappers.TryGetValue(c.ColumnType, out var alteration) ? alteration.Import(columnName) : columnName;
+      });
       cmd.CommandText = $"INSERT INTO {table} SELECT {string.Join(",", transformedColumns)} FROM {table}_import ON CONFLICT DO NOTHING";
       cmd.Transaction = tx;
 

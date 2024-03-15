@@ -13,14 +13,6 @@ public abstract record Cursor
   {
   }
 
-  public Cursor Next<T>(T next) where T : IEntity
-    => this switch
-    {
-      Natural => new Natural(next.Id!.ToString()!),
-      Time => new Time(next.CreatedAt!.Value, next.Id!.ToString()!),
-      _ => throw new ArgumentException($"Bad cursor type :{GetType().Name}")
-    };
-
   public static Cursor From<TCursor>(IEnumerable<object?> values) where TCursor : Cursor
   {
     switch (typeof(TCursor))
@@ -98,4 +90,9 @@ public abstract record Cursor
       return new object?[] { Timestamp, Id }.ToImmutableList();
     }
   }
+}
+
+public static class CursorExtensions
+{
+  public static Cursor ToCursor<T>(this T next) where T : IEntity => new Cursor.Time(next.CreatedAt!.Value, next.Id!.ToString()!);
 }
