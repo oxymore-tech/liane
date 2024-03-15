@@ -16,7 +16,7 @@ using LianeRequest = Liane.Api.Community.LianeRequest;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class LianeServiceTest : BaseIntegrationTest
+public sealed class LianeServiceImplTest : BaseIntegrationTest
 {
   private ILianeService tested = null!;
   private MockCurrentContext currentContext = null!;
@@ -317,6 +317,12 @@ public sealed class LianeServiceTest : BaseIntegrationTest
     // Jaybee list all messages
     {
       currentContext.SetCurrentUser(jayBee);
+      {
+        var unread = await tested.GetUnreadLianes();
+        CollectionAssert.AreEquivalent(ImmutableList.Create(
+          (liane.Id, 1)
+        ), unread.Select(l => (l.Key.Id, l.Value)));
+      }
       var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
       Assert.AreEqual(1, messages.TotalCount);
       CollectionAssert.AreEquivalent(
@@ -324,6 +330,10 @@ public sealed class LianeServiceTest : BaseIntegrationTest
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
         ), messages.Data.Select(ToTuple)
       );
+      {
+        var unread = await tested.GetUnreadLianes();
+        Assert.IsEmpty(unread.Select(l => (l.Key.Id, l.Value)));
+      }
       await tested.SendMessage(liane, "Bonjour Mathilde, je suis partant !");
     }
 
@@ -355,6 +365,12 @@ public sealed class LianeServiceTest : BaseIntegrationTest
     // Jaybee list all messages
     {
       currentContext.SetCurrentUser(jayBee);
+      {
+        var unread = await tested.GetUnreadLianes();
+        CollectionAssert.AreEquivalent(ImmutableList.Create(
+          (liane.Id, 5)
+        ), unread.Select(l => (l.Key.Id, l.Value)));
+      }
       var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
       Assert.AreEqual(6, messages.TotalCount);
       CollectionAssert.AreEquivalent(
@@ -424,7 +440,7 @@ public sealed class LianeServiceTest : BaseIntegrationTest
     return await tested.Create(new LianeRequest(null, name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, null, null, null, null));
   }
 
-  private (string User, string Text) ToTuple(LianeMessage message) => message switch
+  private static (string User, string Text) ToTuple(LianeMessage message) => message switch
   {
     LianeMessage.Chat chat => (chat.CreatedBy.Id, chat.Text),
     LianeMessage.Trip trip => (trip.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
@@ -19,6 +18,5 @@ public interface ILianeService
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane, Pagination pagination);
   Task<LianeMessage> SendMessage(Ref<Liane> liane, string message);
 
-  Task<Liane> ReadAndGetLiane(Ref<Liane> id, Ref<User.User> user, DateTime timestamp);
-  Task<ImmutableList<Ref<Liane>>> GetUnreadLianes(Ref<User.User> user);
+  Task<ImmutableDictionary<Ref<Liane>, int>> GetUnreadLianes();
 }

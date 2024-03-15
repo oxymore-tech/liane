@@ -35,7 +35,8 @@ public abstract record Filter<T>
 
   public static Filter<T> Empty => new EmptyFilter();
   public static Filter<T> Regex(Expression<Func<T, object?>> field, object? operand) => new Condition(field, ComparisonOperator.Regex, operand);
-  public static Filter<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => new Condition(field, op, operand);
+  public static Filter<T> Where<TValue>(Expression<Func<T, TValue>> field, ComparisonOperator op, TValue operand) => new Condition(FieldDefinition<T>.From(field), op, operand);
+  public static Filter<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Where<object?>(field, op, operand);
   public static Filter<T> Where(FieldDefinition<T> field, ComparisonOperator op, object? operand) => new Condition(field, op, operand);
 
   public static Filter<T> Near(Expression<Func<T, LatLng?>> func, LatLng point, int radius)
@@ -67,7 +68,7 @@ public abstract record Filter<T>
         ComparisonOperator.Lt => $"{fd} < {operand}",
         ComparisonOperator.Lte => $"{fd} <= {operand}",
         ComparisonOperator.In => Operand is IEnumerable and not string ? $"{fd} = ANY({operand})" : $"{fd} IN ({operand})",
-        ComparisonOperator.Nin => Operand is IEnumerable and not string ?$"NOT {fd} = ANY({operand})" : $"{fd} NOT IN ({operand})",
+        ComparisonOperator.Nin => Operand is IEnumerable and not string ? $"NOT {fd} = ANY({operand})" : $"{fd} NOT IN ({operand})",
         ComparisonOperator.Regex => $"{fd} ~* {operand}",
         _ => throw new ArgumentOutOfRangeException($"Unknown operator {Operator.ToString()}")
       };

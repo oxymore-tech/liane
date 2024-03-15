@@ -211,10 +211,9 @@ public sealed class LianeServiceImpl(
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
-    var userId = currentContext.CurrentUser().Id;
 
     var lianeId = Guid.Parse(liane.Id);
-    var member = await CheckIsMember(connection, lianeId, userId, tx);
+    var member = await MarkAsRead(connection, lianeId, tx);
 
     var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
                  & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gt, member.JoinedAt);
@@ -229,6 +228,8 @@ public sealed class LianeServiceImpl(
     var total = await connection.QuerySingleAsync<int>(Query.Count<LianeMessageDb>().Where(filter), tx);
     var result = await connection.QueryAsync(query, tx);
 
+    tx.Commit();
+
     var hasNext = result.Count > pagination.Limit;
     var cursor = hasNext ? result.Last().ToCursor() : null;
     return new PaginatedResponse<LianeMessage>(
@@ -241,14 +242,39 @@ public sealed class LianeServiceImpl(
       total);
   }
 
-  public Task<Api.Community.Liane> ReadAndGetLiane(Ref<Api.Community.Liane> id, Ref<Api.User.User> user, DateTime timestamp)
+  public async Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
   {
-    throw new NotImplementedException();
+    using var connection = db.NewConnection();
+    var userId = currentContext.CurrentUser().Id;
+    var unread = await connection.QueryAsync<(Guid, int)>("""
+                                                          SELECT m.liane_id, COUNT(msg.id) AS unread
+                                                          FROM liane_member m
+                                                                   LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id
+                                                          WHERE m.user_id = @userId
+                                                            AND (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
+                                                          GROUP BY m.liane_id
+                                                          """,
+      new { userId }
+    );
+    return unread.ToImmutableDictionary(m => (Ref<Api.Community.Liane>)m.Item1.ToString(), m => m.Item2);
   }
 
-  public Task<ImmutableList<Ref<Api.Community.Liane>>> GetUnreadLianes(Ref<Api.User.User> user)
+  private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx)
   {
-    throw new NotImplementedException();
+    var userId = currentContext.CurrentUser().Id;
+
+    var update = Query.Update<LianeMemberDb>()
+      .Set(m => m.LastReadAt, DateTime.UtcNow)
+      .Where(l => l.LianeId, ComparisonOperator.Eq, lianeId)
+      .And(l => l.UserId, ComparisonOperator.Eq, userId);
+    var updated = await connection.UpdateAsync(update, tx);
+
+    if (updated < 1)
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+
+    return await CheckIsMember(connection, lianeId, userId, tx);
   }
 
   /// <summary>
@@ -291,10 +317,10 @@ public sealed class LianeServiceImpl(
     );
   }
 
-  private static async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter)
+  private static async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter, IDbTransaction? tx = null)
   {
-    var lianeDbs = await connection.QueryAsync(Query.Select<LianeDb>().Where(Filter<LianeDb>.Where(l => l.Id, ComparisonOperator.In, lianeFilter)));
-    var memberDbs = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter))))
+    var lianeDbs = await connection.QueryAsync(Query.Select<LianeDb>().Where(Filter<LianeDb>.Where(l => l.Id, ComparisonOperator.In, lianeFilter)), tx);
+    var memberDbs = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter)), tx))
       .GroupBy(lm => lm.LianeId)
       .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
     return lianeDbs.Select(l =>

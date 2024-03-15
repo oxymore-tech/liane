@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Immutable;
-using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 
