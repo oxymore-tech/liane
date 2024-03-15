@@ -2,7 +2,6 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
 using Liane.Api.Community;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
@@ -17,7 +16,7 @@ using LianeRequest = Liane.Api.Community.LianeRequest;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class NewLianeServiceImplTest : BaseIntegrationTest
+public sealed class LianeServiceTest : BaseIntegrationTest
 {
   private ILianeService tested = null!;
   private MockCurrentContext currentContext = null!;
@@ -42,7 +41,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
 
   protected override void Setup(IMongoDatabase db)
   {
-    tested = ServiceProvider.GetRequiredService<NewLianeServiceImpl>();
+    tested = ServiceProvider.GetRequiredService<LianeServiceImpl>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
   }
 
@@ -322,8 +321,8 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       Assert.AreEqual(1, messages.TotalCount);
       CollectionAssert.AreEquivalent(
         ImmutableList.Create(
-          "Salut JB, ça te dit de covoiturer demain ?"
-        ), messages.Data.Select(m => m.Text)
+          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
+        ), messages.Data.Select(ToTuple)
       );
       await tested.SendMessage(liane, "Bonjour Mathilde, je suis partant !");
     }
@@ -352,7 +351,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
       await tested.SendMessage(liane, "Super je dois aller à Mende demain pour 9h30");
     }
 
-    ImmutableList<ChatMessage> allMessages;
+    ImmutableList<LianeMessage> allMessages;
     // Jaybee list all messages
     {
       currentContext.SetCurrentUser(jayBee);
@@ -366,7 +365,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
           (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
-        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+        ), messages.Data.Select(ToTuple)
       );
       allMessages = messages.Data;
     }
@@ -382,7 +381,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
           (gugu.Id, "Comment ça marche ici ?"),
           (gugu.Id, "Bonjour à tous 🚘, vroum !")
-        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+        ), messages.Data.Select(ToTuple)
       );
       Assert.IsNull(messages.Next);
     }
@@ -397,7 +396,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
           (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
           (gugu.Id, "Comment ça marche ici ?")
-        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+        ), messages.Data.Select(ToTuple)
       );
       Assert.AreEqual(allMessages[3].ToCursor(), messages.Next);
     }
@@ -412,7 +411,7 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
           (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
-        ), messages.Data.Select(m => (m.CreatedBy.Id, m.Text))
+        ), messages.Data.Select(ToTuple)
       );
       Assert.IsNull(messages.Next);
     }
@@ -424,4 +423,11 @@ public sealed class NewLianeServiceImplTest : BaseIntegrationTest
     var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfWeekFlag.All));
     return await tested.Create(new LianeRequest(null, name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, null, null, null, null));
   }
+
+  private (string User, string Text) ToTuple(LianeMessage message) => message switch
+  {
+    LianeMessage.Chat chat => (chat.CreatedBy.Id, chat.Text),
+    LianeMessage.Trip trip => (trip.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
+    _ => throw new ArgumentOutOfRangeException(nameof(message))
+  };
 }

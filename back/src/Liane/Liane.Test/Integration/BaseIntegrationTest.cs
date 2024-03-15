@@ -114,7 +114,7 @@ public abstract class BaseIntegrationTest
     services.AddService<MockAutomaticAnswerService>();
     services.AddService<DeleteAccountServiceImpl>();    
     services.AddService<LianeTrackerCache>();
-    services.AddService<NewLianeServiceImpl>();
+    services.AddService<LianeServiceImpl>();
     services.AddEventListeners();
 
     var databaseSettings = GetDatabaseSettings();

@@ -95,7 +95,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
       query = query.OrderBy(rp => rp.Location.Distance(center.Value));
     }
 
-    var total = await connection.CountAsync(Query.Select<RallyingPoint>()
+    var total = await connection.CountAsync(Query.Count<RallyingPoint>()
       .Where(filter));
     var results = await connection.QueryAsync(query);
     return new PaginatedResponse<RallyingPoint>(limit, null, results, (int)total);

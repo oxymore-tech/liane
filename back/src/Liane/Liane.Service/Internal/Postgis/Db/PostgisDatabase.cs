@@ -118,7 +118,8 @@ public sealed class PostgisDatabase : IDisposable
     }
 
     {
-      await using var writer = await connection.BeginTextImportAsync($"COPY {table}_import ({string.Join(",", columns)}) FROM STDOUT (format csv, header, delimiter ',', null '')");
+      await using var writer =
+        await connection.BeginTextImportAsync($"COPY {table}_import ({string.Join(",", columns.Select(c => c.ToSql(namedParams)))}) FROM STDOUT (format csv, header, delimiter ',', null '')");
       using var reader = new StreamReader(input, Encoding.UTF8, true);
       while (await reader.ReadLineAsync() is { } line)
       {

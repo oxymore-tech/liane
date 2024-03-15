@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using GeoJSON.Text.Geometry;
-using Liane.Api.Chat;
 using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -26,7 +25,7 @@ namespace Liane.Service.Internal.Community;
 
 using LianeRawMatch = (Guid, Guid, string, string[], float, LatLng, LatLng, string?, string?);
 
-public sealed class NewLianeServiceImpl(
+public sealed class LianeServiceImpl(
   PostgisDatabase db,
   ICurrentContext currentContext,
   IRoutingService routingService,
@@ -179,7 +178,7 @@ public sealed class NewLianeServiceImpl(
     return true;
   }
 
-  public async Task<ChatMessage> SendMessage(Ref<Api.Community.Liane> liane, string message)
+  public async Task<LianeMessage> SendMessage(Ref<Api.Community.Liane> liane, string message)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -191,7 +190,7 @@ public sealed class NewLianeServiceImpl(
     var now = DateTime.UtcNow;
     await connection.InsertAsync(new LianeMessageDb(id, lianeId, message, userId, now), tx);
     tx.Commit();
-    return new ChatMessage(id.ToString(), userId, now, message);
+    return new LianeMessage.Chat(id.ToString(), userId, now, message);
   }
 
   private static async Task<LianeMemberDb> CheckIsMember(IDbConnection connection, Guid lianeId, string userId, IDbTransaction tx)
@@ -208,7 +207,7 @@ public sealed class NewLianeServiceImpl(
     return member;
   }
 
-  public async Task<PaginatedResponse<ChatMessage>> GetMessages(Ref<Api.Community.Liane> liane, Pagination pagination)
+  public async Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Api.Community.Liane> liane, Pagination pagination)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -219,24 +218,25 @@ public sealed class NewLianeServiceImpl(
 
     var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
                  & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gt, member.JoinedAt);
-    
+
     var query = Query.Select<LianeMessageDb>()
       .Where(filter)
       .And(pagination.ToFilter<LianeMessageDb>())
       .OrderBy(m => m.Id, pagination.SortAsc)
       .OrderBy(m => m.CreatedAt)
       .Take(pagination.Limit + 1);
-    
+
     var total = await connection.QuerySingleAsync<int>(Query.Count<LianeMessageDb>().Where(filter), tx);
     var result = await connection.QueryAsync(query, tx);
 
     var hasNext = result.Count > pagination.Limit;
     var cursor = hasNext ? result.Last().ToCursor() : null;
-    return new PaginatedResponse<ChatMessage>(
+    return new PaginatedResponse<LianeMessage>(
       Math.Min(result.Count, pagination.Limit),
       cursor,
       result.Take(pagination.Limit)
-        .Select(m => new ChatMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
+        .Select(m => new LianeMessage.Chat(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
+        .Cast<LianeMessage>()
         .ToImmutableList(),
       total);
   }
