@@ -124,6 +124,8 @@ const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarPr
 function Home() {
   const { services, user } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
+
   const iconSize = 24;
   return (
     <Tab.Navigator
@@ -144,7 +146,7 @@ function Home() {
       {makeTab(
         "Mes trajets",
         ({ focused }) => {
-          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={notificationCount} />;
+          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={Math.max(notificationCount, notificationHub.length)} />;
         },
         MyTripsScreen,
         { headerShown: false } //TODO generic header ?

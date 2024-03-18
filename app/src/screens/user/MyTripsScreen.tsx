@@ -24,6 +24,8 @@ const Header = () => {
   const { navigation } = useAppNavigation();
   const { services } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
+
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
       {/*<AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />*/}
@@ -37,7 +39,7 @@ const Header = () => {
             navigation.navigate("Notifications");
           }}
         />
-        {notificationCount > 0 && (
+        {Math.max(notificationCount, notificationHub.length) > 0 && (
           <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 8, height: 12, width: 12, position: "absolute", right: 3, top: 0 }} />
         )}
       </View>
