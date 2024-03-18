@@ -25,6 +25,11 @@ export const getTotalDuration = (trip: WayPoint[]) => {
 export const getTotalDistance = (trip: WayPoint[]) => {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 };
+
+export const getOriginalTotalDistance = (liane: LianeMatch) => {
+  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  return wayPoints.length > 1 ? wayPoints[wayPoints.length - 1].distance : 0;
+};
 export const getTripFromLiane = (liane: Liane, user: Ref<User>) => {
   const member = liane.members.find(m => m.user.id === user);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
