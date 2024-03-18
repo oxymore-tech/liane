@@ -28,7 +28,7 @@ export const HomeBottomSheetContainer = (
 
   useEffect(() => {
     if (props.display === "closed") {
-      ref.current?.scrollTo(0);
+      ref.current?.scrollTo(0.2);
     } else if (props.display === "full") {
       ref.current?.scrollTo(1);
     }
@@ -38,7 +38,7 @@ export const HomeBottomSheetContainer = (
       if (s.matches("detail")) {
         ref.current?.scrollTo(0.7);
       } else if (s.matches("match")) {
-        ref.current?.scrollTo(0.35);
+        ref.current?.scrollTo(0.4);
       }
     };
     machine.onTransition(transitionListener);
