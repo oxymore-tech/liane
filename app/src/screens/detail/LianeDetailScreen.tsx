@@ -34,7 +34,7 @@ import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
 // BasePrice of one complete Liane
-const basePrice = 10;
+const basePriceKm = 0.55;
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeJoinRequestDetail">();
@@ -289,7 +289,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
   // Calculate the distance of the complete trip
   const originalTripDistance = Math.ceil(getOriginalTotalDistance(liane) / 1000);
   //We calculate the price of the trip in proportion to the distance
-  const tripPrice = Math.round(((basePrice * userTripDistance) / originalTripDistance) * 100) / 100;
+  const tripPrice = Math.round(((originalTripDistance * basePriceKm * userTripDistance) / originalTripDistance) * 100) / 100;
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
