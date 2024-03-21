@@ -11,6 +11,7 @@ import { Notification } from "@liane/common";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";
 import { AppStyles } from "@/theme/styles";
 import { useQueryUpdater } from "@/components/context/QueryUpdateProvider";
+import { AppLogger } from "@/api/logger";
 
 export const NotificationQueryKey = "notification";
 
@@ -42,6 +43,13 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
           .then(() => {
             // Update local seen state
             queryUpdater.readNotifications(user!.id!);
+          })
+          .catch(e => console.error("NOTIFICATIONS", "Cannot read notifications", e));
+        services.notification
+          .closeNotification()
+          .then(() => {
+            // Update notification state
+            AppLogger.debug("NOTIFICATIONS", "Notifications readed");
           })
           .catch(e => console.error("NOTIFICATIONS", "Cannot read notifications", e));
       });

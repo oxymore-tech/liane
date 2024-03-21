@@ -50,6 +50,8 @@ export interface NotificationService {
 
   initUnreadNotifications(initialCount: Observable<Ref<Notification>[]>): void;
 
+  closeNotification(): Promise<void>;
+
   unreadNotificationCount: Observable<number>;
 }
 
@@ -77,7 +79,12 @@ export abstract class AbstractNotificationService implements NotificationService
     this.unreadNotifications.next(this.unreadNotifications.getValue().filter(n => n !== id));
   };
 
+  protected resetCounter = async () => {
+    this.unreadNotifications.next([]);
+  };
+
   markAsRead = this.decrementCounter;
+  closeNotification = this.resetCounter;
 
   receiveNotification = async (notification: Notification) => this.incrementCounter(notification.id!);
 }
