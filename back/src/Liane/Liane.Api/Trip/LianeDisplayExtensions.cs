@@ -37,7 +37,7 @@ public static class LianeDisplayExtensions
     }
     else
     {
-      waypoints =  lianeMatch.Liane.WayPoints;
+      waypoints =  lianeMatch.Trip.WayPoints;
     }
     return waypoints.SkipWhile(w => w.RallyingPoint.Id! != lianeMatch.Match.Pickup.Id)
       .TakeUntilInclusive(w => w.RallyingPoint.Id! == lianeMatch.Match.Deposit.Id)

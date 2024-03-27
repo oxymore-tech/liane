@@ -24,7 +24,7 @@ public abstract record Match
 public sealed record Delta(int TotalInSeconds, int TotalInMeters, int PickupInSeconds = 0, int PickupInMeters = 0, int DepositInSeconds = 0, int DepositInMeters = 0);
 
 public sealed record LianeMatch(
-  Liane Liane,
+  Trip Trip,
   int FreeSeatsCount,
   DateTime? ReturnTime,
   Match Match
@@ -32,14 +32,14 @@ public sealed record LianeMatch(
 {
   public WayPoint PickupWayPoint => Match switch
   {
-    Match.Exact e => Liane.WayPoints.First(w => w.RallyingPoint.Id == e.Pickup.Id),
+    Match.Exact e => Trip.WayPoints.First(w => w.RallyingPoint.Id == e.Pickup.Id),
     Match.Compatible c => c.WayPoints.First(w => w.RallyingPoint.Id == c.Pickup.Id),
     _ => throw new ArgumentOutOfRangeException(nameof(Match))
   };
 
   public WayPoint DepositWayPoint => Match switch
   {
-    Match.Exact e => Liane.WayPoints.First(w => w.RallyingPoint.Id == e.Deposit.Id),
+    Match.Exact e => Trip.WayPoints.First(w => w.RallyingPoint.Id == e.Deposit.Id),
     Match.Compatible c => c.WayPoints.First(w => w.RallyingPoint.Id == c.Deposit.Id),
     _ => throw new ArgumentOutOfRangeException(nameof(Match))
   };

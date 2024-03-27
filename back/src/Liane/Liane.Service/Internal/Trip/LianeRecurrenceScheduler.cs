@@ -8,12 +8,12 @@ namespace Liane.Service.Internal.Trip;
 
 public sealed class LianeRecurrenceScheduler : CronJobService
 {
-  private readonly ILianeService lianeService;
+  private readonly ITripService tripService;
   private readonly ILianeRecurrenceService lianeRecurrenceService;
 
-  public LianeRecurrenceScheduler(ILogger<LianeRecurrenceScheduler> logger, ILianeService lianeService, ILianeRecurrenceService lianeRecurrenceService) : base(logger, "0 0 * * *", false)
+  public LianeRecurrenceScheduler(ILogger<LianeRecurrenceScheduler> logger, ITripService tripService, ILianeRecurrenceService lianeRecurrenceService) : base(logger, "0 0 * * *", false)
   {
-    this.lianeService = lianeService;
+    this.tripService = tripService;
     this.lianeRecurrenceService = lianeRecurrenceService;
   }
 
@@ -23,7 +23,7 @@ public sealed class LianeRecurrenceScheduler : CronJobService
     var recurrences = await lianeRecurrenceService.GetUpdatableRecurrences();
     foreach (var r in recurrences)
     {
-      await lianeService.CreateFromRecurrence(r, r.CreatedBy);
+      await tripService.CreateFromRecurrence(r, r.CreatedBy);
     }
   }
 }

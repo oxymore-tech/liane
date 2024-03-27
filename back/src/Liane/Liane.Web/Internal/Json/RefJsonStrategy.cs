@@ -41,7 +41,7 @@ internal static class RefJsonStrategy
           }
 
           var asResolved = AsResolvedMethod.MakeGenericMethod(jsonPropertyInfo.PropertyType.GenericTypeArguments[0]);
-          return asResolved.Invoke(null, new[] { value, expectResolved });
+          return asResolved.Invoke(null, [value, expectResolved]);
         };
       }
     };

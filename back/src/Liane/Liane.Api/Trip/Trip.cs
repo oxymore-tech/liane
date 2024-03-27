@@ -46,18 +46,18 @@ public sealed record Driver
 );
 
 public sealed record Recurrence
-  (Ref<LianeRecurrence> Id,  DayOfTheWeekFlag Days);
+  (Ref<LianeRecurrence> Id,  DayOfWeekFlag Days);
 
-public sealed record Liane(
+public sealed record Trip(
   string Id,
   Ref<User.User> CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
-  Ref<Liane>? Return,
+  Ref<Trip>? Return,
   ImmutableList<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,
   Ref<ConversationGroup>? Conversation,
   Recurrence? Recurrence = null
-) : IEntity, ISharedResource<LianeMember>;
+) : IEntity<string>, ISharedResource<LianeMember>;

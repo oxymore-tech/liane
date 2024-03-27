@@ -13,7 +13,7 @@ public abstract record Ref<T>
   public string Id => this switch
   {
     Unresolved u => u.RefId,
-    Resolved r => r.Value.Id!,
+    Resolved r => r.Value.Id!.ToString()!,
     _ => throw new ArgumentOutOfRangeException()
   };
 
@@ -23,9 +23,11 @@ public abstract record Ref<T>
 
   public static implicit operator string(Ref<T> @ref) => @ref.Id;
 
-  public static implicit operator Ref<T>(string id) => new Unresolved(id);
+  #nullable disable
+  public static implicit operator Ref<T>(string id) => id is null ? null : new Unresolved(id);
 
   public static implicit operator Ref<T>(T value) => new Resolved(value);
+  #nullable enable
 
   public static explicit operator T?(Ref<T> @ref) => @ref switch
   {

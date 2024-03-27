@@ -10,13 +10,12 @@ public record RallyingPointRequest(
   Ref<User.User>? CreatedBy,
   DateTime? CreatedAt,
   RallyingPointRequestStatus? Status = null
-) : IEntity;
-
+) : IEntity<string>;
 
 [Union]
 public abstract record RallyingPointRequestStatus
 {
-  public Ref<User.User> By { init; get; }
+  public Ref<User.User> By { get; init; }
 
   private RallyingPointRequestStatus(Ref<User.User> by)
   {

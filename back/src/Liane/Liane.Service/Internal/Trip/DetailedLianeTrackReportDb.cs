@@ -8,4 +8,4 @@ public sealed record DetailedLianeTrackReportDb(
   LianeDb Liane,
   DateTime StartedAt,
   DateTime? FinishedAt
-  ): IIdentity;
+  ): IIdentity<string>;

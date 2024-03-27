@@ -6,7 +6,7 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Trip;
 
 public sealed record DetailedLianeTrackReport(
-  Ref<Liane> Id,
+  Ref<Trip> Id,
   ImmutableList<WayPoint> WayPoints,
   ImmutableList<LianeMember> Members,
   Driver Driver,

@@ -16,10 +16,10 @@ public sealed partial class PostgisServiceImpl
     await connection.InsertAsync(new OngoingTripDb(id, route));
     return new OngoingTripSession(id, db);
   }
-  
-  public async Task<ITripSession> CreateOfflineTrip(string id, LineString route)
+
+  public Task<ITripSession> CreateOfflineTrip(string id, LineString route)
   {
-    return new OfflineTripSession(db, route);
+    return Task.FromResult((ITripSession)new OfflineTripSession(db, route));
   }
 
   private sealed class OngoingTripSession : ITripSession
@@ -35,14 +35,12 @@ public sealed partial class PostgisServiceImpl
 
     public async Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate)
     {
-     
-        using var connection = postgis.NewConnection();
-        var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint, double distance)>(
-          "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point, ST_DistanceSphere(@point::geometry(Point, 4326), geometry) as distance from (select ST_LineLocatePoint(geometry, @point::geometry(Point, 4326)) as fraction, geometry from ongoing_trip where id = @id) as trip",
-          new { id, point = coordinate }
-        );
-        return result;
-    
+      using var connection = postgis.NewConnection();
+      var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint, double distance)>(
+        "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point, ST_DistanceSphere(@point::geometry(Point, 4326), geometry) as distance from (select ST_LineLocatePoint(geometry, @point::geometry(Point, 4326)) as fraction, geometry from ongoing_trip where id = @id) as trip",
+        new { id, point = coordinate }
+      );
+      return result;
     }
 
     public async ValueTask DisposeAsync()
@@ -51,13 +49,13 @@ public sealed partial class PostgisServiceImpl
       await connection.ExecuteAsync("DELETE FROM ongoing_trip WHERE id = @id", new { id });
     }
   }
-  
+
   private sealed class OfflineTripSession : ITripSession
   {
     private readonly IDbConnection connection;
     private readonly LineString route;
 
-    public OfflineTripSession( PostgisDatabase postgis, LineString route)
+    public OfflineTripSession(PostgisDatabase postgis, LineString route)
     {
       this.route = route;
       this.connection = postgis.NewConnection();
@@ -70,7 +68,6 @@ public sealed partial class PostgisServiceImpl
         new { route, point = coordinate }
       );
       return result;
-    
     }
 
     public ValueTask DisposeAsync()

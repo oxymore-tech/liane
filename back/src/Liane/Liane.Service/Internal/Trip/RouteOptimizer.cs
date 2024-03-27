@@ -86,12 +86,12 @@ internal static class RouteOptimizer
 
   internal readonly struct LianeSet
   {
-    public LianeSet(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+    public LianeSet(IEnumerable<Ref<Api.Trip.Trip>> lianes)
     {
       HashKey = string.Join("_", lianes.Select(r => r.Id).Distinct().Order());
     }
 
-    public ImmutableList<Ref<Api.Trip.Liane>> Lianes => HashKey.Split("_").Select(id => (Ref<Api.Trip.Liane>)id).ToImmutableList();
+    public ImmutableList<Ref<Api.Trip.Trip>> Lianes => HashKey.Split("_").Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
     public string HashKey { get; }
 
     public LianeSet Merge(LianeSet other)

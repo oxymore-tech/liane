@@ -9,6 +9,12 @@ namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
+  public static ImmutableList<Ref<T>> AsRef<T>(this string[] input) where T : class, IIdentity
+    => input.Select(r => (Ref<T>)r).ToImmutableList();
+
+  public static string[] Deref<T>(this ImmutableList<Ref<T>> input) where T : class, IIdentity
+    => input.Select(r => r.Id).ToArray();
+
   public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> input, T until) where T : notnull
   {
     bool found;
@@ -40,13 +46,21 @@ public static class EnumerableExtensions
   }
 
   public static IEnumerable<TOut> FilterSelect<T, TOut>(this IEnumerable<T> enumerable, Func<T, TOut?> transformer)
-    where TOut: notnull
+    where TOut : notnull
   {
     return enumerable.Select(transformer)
       .Where(e => e is not null)
       .Select(e => e!);
   }
 
+  public static IEnumerable<TOut> FilterSelect<T, TOut>(this IEnumerable<T> enumerable, Func<T, TOut?> transformer)
+    where TOut : struct
+  {
+    return enumerable.Select(transformer)
+      .Where(e => e is not null)
+      .Select(e => e!.Value);
+  }
+  
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer, bool parallel = false)
   {
     var outs = ImmutableList.CreateBuilder<TOut>();

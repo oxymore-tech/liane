@@ -20,13 +20,13 @@ public interface ITripSession: IAsyncDisposable
 
 public interface IPostgisService
 {
-  Task UpdateGeometry(Api.Trip.Liane liane);
-  Task SyncGeometries(IEnumerable<Api.Trip.Liane> source);
-  Task Clear(IEnumerable<Ref<Api.Trip.Liane>> lianes);
+  Task UpdateGeometry(Api.Trip.Trip trip);
+  Task SyncGeometries(IEnumerable<Api.Trip.Trip> source);
+  Task Clear(IEnumerable<Ref<Api.Trip.Trip>> lianes);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to);
   Task<ITripSession> CreateOngoingTrip(string id, LineString route);
   Task<ITripSession> CreateOfflineTrip(string id, LineString route);
-  Task<ImmutableList<Ref<Api.Trip.Liane>>> ListSearchableLianes();
-  Task<ImmutableList<Ref<Api.Trip.Liane>>> ListOngoingLianes();
+  Task<ImmutableList<Ref<Api.Trip.Trip>>> ListSearchableLianes();
+  Task<ImmutableList<Ref<Api.Trip.Trip>>> ListOngoingLianes();
 }

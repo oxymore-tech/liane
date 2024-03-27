@@ -15,4 +15,4 @@ public sealed record DbUser(
   DateTime? LastConnection,
   UserStats Stats,
   UserInfo? UserInfo = null
-) : IIdentity;
+) : IIdentity<string>;

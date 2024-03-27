@@ -20,7 +20,7 @@ public enum Answer
 }
 
 [Union]
-public abstract record Notification : IEntity
+public abstract record Notification : IEntity<string>
 {
   public abstract string? Id { get; init; }
   public abstract Ref<User.User>? CreatedBy { get; init; }
@@ -95,4 +95,4 @@ public abstract record Notification : IEntity
   }
 }
 
-public sealed record Reminder(Ref<Trip.Liane> Liane, ImmutableList<WayPoint> Trip, bool Driver);
+public sealed record Reminder(Ref<Trip.Trip> Liane, ImmutableList<WayPoint> Trip, bool Driver);

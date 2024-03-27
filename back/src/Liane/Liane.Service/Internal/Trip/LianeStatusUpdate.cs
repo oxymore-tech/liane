@@ -16,7 +16,7 @@ namespace Liane.Service.Internal.Trip;
 public sealed class LianeStatusUpdate : CronJobService
 {
   private readonly IMongoDatabase mongo;
-  private readonly ILianeService lianeService;
+  private readonly ITripService tripService;
   private readonly ILianeUpdateObserver lianeUpdateObserver;
   private readonly ILianeRequestService lianeRequestService;
 
@@ -24,12 +24,12 @@ public sealed class LianeStatusUpdate : CronJobService
   public const int FinishedDelayInMinutes = 5;
   public const int StartedTimeoutInMinutes = 60;
 
-  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ILianeService lianeService,
+  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService,
     ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
     false)
   {
     this.mongo = mongo;
-    this.lianeService = lianeService;
+    this.tripService = tripService;
     this.lianeUpdateObserver = lianeUpdateObserver;
     this.lianeRequestService = lianeRequestService;
   }
@@ -51,11 +51,11 @@ public sealed class LianeStatusUpdate : CronJobService
                  & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limit);
     var canceled = (await mongo.GetCollection<LianeDb>()
         .Find(filter)
-        .Project(l => (Ref<Api.Trip.Liane>)l.Id)
+        .Project(l => (Ref<Api.Trip.Trip>)l.Id)
         .ToListAsync())
       .ToImmutableHashSet();
 
-    await Parallel.ForEachAsync(canceled, async (id, _) => { await lianeService.UpdateState(id, LianeState.Canceled); });
+    await Parallel.ForEachAsync(canceled, async (id, _) => { await tripService.UpdateState(id, LianeState.Canceled); });
     //await postgisService.Clear(canceled.ToImmutableList());
     await lianeRequestService.RejectJoinLianeRequests(canceled);
   }
@@ -83,7 +83,7 @@ public sealed class LianeStatusUpdate : CronJobService
     await Parallel.ForEachAsync(finishedLianes, async (lianeDb, token) =>
     {
       if (token.IsCancellationRequested) return;
-      await lianeService.UpdateState(lianeDb.Id, LianeState.Finished);
+      await tripService.UpdateState(lianeDb.Id, LianeState.Finished);
     });
   }
 
@@ -108,11 +108,11 @@ public sealed class LianeStatusUpdate : CronJobService
     await Parallel.ForEachAsync(activeLianes, async (lianeDb, token) =>
     {
       if (token.IsCancellationRequested) return;
-      await lianeService.UpdateState(lianeDb.Id, LianeState.Started);
+      await tripService.UpdateState(lianeDb.Id, LianeState.Started);
     });
 
     // TODO create ongoing trip here ?
-    var toClear = activeLianes.Select(l => (Ref<Api.Trip.Liane>)l.Id).ToImmutableHashSet();
+    var toClear = activeLianes.Select(l => (Ref<Api.Trip.Trip>)l.Id).ToImmutableHashSet();
     //await postgisService.Clear(toClear);
     await lianeRequestService.RejectJoinLianeRequests(toClear);
   }
@@ -130,7 +130,7 @@ public sealed class LianeStatusUpdate : CronJobService
       if (token.IsCancellationRequested) return;
       foreach (var lianeMember in liane.Members)
       {
-        var resolved = await lianeService.GetForCurrentUser(liane.Id, lianeMember.User);
+        var resolved = await tripService.GetForCurrentUser(liane.Id, lianeMember.User);
         await lianeUpdateObserver.Push(resolved, lianeMember.User);
       }
     });

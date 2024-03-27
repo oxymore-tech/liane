@@ -23,7 +23,7 @@ public sealed record UpdateQuery<T>(Filter<T> Filter, IDictionary<FieldDefinitio
     var sqlFilter = Filter.ToSql(namedParams);
 
     var stringBuilder = new StringBuilder();
-    stringBuilder.Append($"UPDATE {Mapper.GetTableName<T>()}");
+    stringBuilder.Append($"UPDATE {Mapper.GetTableName<T>()} ");
     if (Setters.IsNullOrEmpty())
     {
       throw new ArgumentException("No Setters defined");
@@ -39,5 +39,12 @@ public sealed record UpdateQuery<T>(Filter<T> Filter, IDictionary<FieldDefinitio
     return (stringBuilder.ToString(), namedParams.ToSqlParameters());
   }
 
+  public UpdateQuery<T> Where<TValue>(Expression<Func<T, TValue>> field, ComparisonOperator op, TValue operand) => Where(Filter<T>.Where(field, op, operand));
   public UpdateQuery<T> Where(Filter<T> filter) => this with { Filter = Filter & filter };
+
+  public UpdateQuery<T> And(Filter<T> other) => this with { Filter = Filter & other };
+  public UpdateQuery<T> And(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => And(Filter<T>.Where(field, op, operand));
+
+  public UpdateQuery<T> Or(Filter<T> other) => this with { Filter = Filter | other };
+  public UpdateQuery<T> Or(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Or(Filter<T>.Where(field, op, operand));
 }

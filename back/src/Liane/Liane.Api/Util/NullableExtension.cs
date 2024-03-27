@@ -9,12 +9,19 @@ public static class NullableExtension
   private static readonly NullabilityInfoContext NullabilityInfoContext = new();
   
   public static TTo? GetOrDefault<TFrom, TTo>(this TFrom? from, Func<TFrom, TTo?> selector)
-    where TFrom : class
+    where TFrom : notnull
     where TTo : class
   {
     return from == null ? default : selector(from);
   }
-
+  
+  public static TTo? GetOrDefault<TFrom, TTo>(this TFrom? from, Func<TFrom, TTo?> selector)
+    where TFrom : struct
+    where TTo : class
+  {
+    return from == null ? default : selector(from.Value);
+  }
+  
   public static TTo? GetOrDefault<TFrom, TTo>(this TFrom? from, Func<TFrom, TTo?> selector)
     where TFrom : struct
     where TTo : struct

@@ -14,7 +14,7 @@ public class MatchTest
   public void ShouldExtractMatchingTrip()
   {
 #pragma warning disable CS8625
-    var liane1 = new Api.Trip.Liane(null, null, null, new DateTime(2023, 04, 7, 15, 31, 0), null, new List<WayPoint>
+    var liane1 = new Api.Trip.Trip(null, null, null, new DateTime(2023, 04, 7, 15, 31, 0), null, new List<WayPoint>
     {
       new WayPoint(LabeledPositions.GorgesDuTarnCausses, 0,0, DateTime.Now),
       new WayPoint(LabeledPositions.BalsiegeParkingEglise, 0,0, DateTime.Now),

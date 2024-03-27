@@ -13,4 +13,4 @@ internal sealed record RallyingPointDb(
   string City,
   int? PlaceCount,
   bool IsActive
-) : IIdentity;
+) : IIdentity<string>;

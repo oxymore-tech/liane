@@ -19,57 +19,41 @@ namespace Liane.Service.Internal.Trip.Event;
 
 public sealed class AutomaticAnswerService : IAutomaticAnswerService
 {
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeService lianeService;
+  private readonly ITripService tripService;
   private readonly IUserService userService;
 
-  public AutomaticAnswerService(EventDispatcher eventDispatcher, ILianeService lianeService, IUserService userService)
+  public AutomaticAnswerService(ITripService tripService, IUserService userService)
   {
-    this.eventDispatcher = eventDispatcher;
-    this.lianeService = lianeService;
+    this.tripService = tripService;
     this.userService = userService;
   }
 
   public async Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User> newMember)
   {
-    var liane = await lianeService.Get(joinRequest.Liane);
+    var liane = await tripService.Get(joinRequest.Liane);
     var creator = await userService.GetFullUser(liane.CreatedBy);
     return creator.LastName.Equals("$");
   }
 }
 
-public sealed class LianeRequestServiceImpl : ILianeRequestService
+// ReSharper disable once UnusedType.Global
+// Autodiscovered by DI
+public sealed class LianeRequestServiceImpl(
+  INotificationService notificationService,
+  IRallyingPointService rallyingPointService,
+  ITripService tripService,
+  IUserService userService,
+  ICurrentContext currentContext,
+  EventDispatcher eventDispatcher,
+  ILogger<LianeRequestServiceImpl> logger,
+  IAutomaticAnswerService automaticAnswerService,
+  IMongoDatabase mongoDatabase,
+  IUserStatService userStatService)
+  : ILianeRequestService
 {
-  private readonly INotificationService notificationService;
-  private readonly EventDispatcher eventDispatcher;
-  private readonly IRallyingPointService rallyingPointService;
-  private readonly ILianeService lianeService;
-  private readonly IUserService userService;
-  private readonly ICurrentContext currentContext;
-  private readonly ILogger<LianeRequestServiceImpl> logger;
-  private readonly IAutomaticAnswerService automaticAnswerService;
-  private readonly IMongoDatabase mongoDatabase;
-  private readonly IUserStatService userStatService;
-
-  public LianeRequestServiceImpl(INotificationService notificationService, IRallyingPointService rallyingPointService, ILianeService lianeService, IUserService userService,
-    ICurrentContext currentContext, EventDispatcher eventDispatcher, ILogger<LianeRequestServiceImpl> logger, IAutomaticAnswerService automaticAnswerService, IMongoDatabase mongoDatabase,
-    IUserStatService userStatService)
-  {
-    this.notificationService = notificationService;
-    this.rallyingPointService = rallyingPointService;
-    this.lianeService = lianeService;
-    this.userService = userService;
-    this.currentContext = currentContext;
-    this.eventDispatcher = eventDispatcher;
-    this.logger = logger;
-    this.automaticAnswerService = automaticAnswerService;
-    this.mongoDatabase = mongoDatabase;
-    this.userStatService = userStatService;
-  }
-
   public async Task OnEvent(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User>? sender = null)
   {
-    var liane = await lianeService.Get(joinRequest.Liane);
+    var liane = await tripService.Get(joinRequest.Liane);
     var role = joinRequest.Seats > 0 ? "conducteur" : "passager";
     var member = sender ?? currentContext.CurrentUser().Id;
     if (await automaticAnswerService.TryAcceptRequest(joinRequest, member))
@@ -83,14 +67,14 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
-  private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Liane> lianeRef, Ref<Api.User.User> memberRef, LianeEvent.JoinRequest joinRequest)
+  private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Trip> lianeRef, Ref<Api.User.User> memberRef, LianeEvent.JoinRequest joinRequest)
   {
     var member = new LianeMember(memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, GeolocationLevel: joinRequest.GeolocationLevel);
-    var liane = await lianeService.AddMember(lianeRef, member);
+    var liane = await tripService.AddMember(lianeRef, member);
     await userStatService.IncrementTotalJoinedTrips(memberRef);
     if (joinRequest.TakeReturnTrip)
     {
-      await lianeService.AddMember(liane.Return!, member with { From = joinRequest.To, To = joinRequest.From });
+      await tripService.AddMember(liane.Return!, member with { From = joinRequest.To, To = joinRequest.From });
       await userStatService.IncrementTotalJoinedTrips(memberRef);
     }
 
@@ -99,7 +83,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
   {
-    var liane = await lianeService.Get(joinRequest.Liane);
+    var liane = await tripService.Get(joinRequest.Liane);
     if (liane.State is not (LianeState.Started or LianeState.NotStarted))
     {
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
@@ -138,7 +122,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
     return await Resolve(await notificationService.Get(id));
   }
 
-  public async Task RejectJoinLianeRequests(IEnumerable<Ref<Api.Trip.Liane>> lianes)
+  public async Task RejectJoinLianeRequests(IEnumerable<Ref<Api.Trip.Trip>> lianes)
   {
     var filter =
       Builders<Notification.Event>.Filter.IsInstanceOf<Notification.Event, LianeEvent.JoinRequest>(n => n.Payload)
@@ -167,7 +151,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
     var from = await rallyingPointService.Get(joinRequest.From);
     var to = await rallyingPointService.Get(joinRequest.To);
-    var liane = await lianeService.Get(joinRequest.Liane);
+    var liane = await tripService.Get(joinRequest.Liane);
     var createdBy = await userService.Get(lianeEvent.CreatedBy!);
 
     if (liane.State != LianeState.NotStarted)
@@ -175,7 +159,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
       throw new ConstraintException("This request is linked to a liane with state " + liane.State);
     }
 
-    var match = await lianeService.GetNewTrip(liane, from, to, joinRequest.Seats > 0);
+    var match = await tripService.GetNewTrip(liane, from, to, joinRequest.Seats > 0);
     if (match is null)
     {
       throw new ConstraintException("This request is no longer compatible with target Liane");

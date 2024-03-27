@@ -24,7 +24,7 @@ public sealed record LianeDb(
   Ref<Api.User.User>? CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
-  Ref<Api.Trip.Liane>? Return,
+  Ref<Api.Trip.Trip>? Return,
   ImmutableList<LianeMember> Members,
   Driver Driver,
   LianeState State,
@@ -32,7 +32,7 @@ public sealed record LianeDb(
   ImmutableList<UserPing> Pings,
   Ref<ConversationGroup>? Conversation,
   Ref<LianeRecurrence>? Recurrence = null
-) : IEntity, ISharedResource<LianeMember>
+) : IEntity<string>, ISharedResource<LianeMember>
 {
   [BsonElement] public int TotalSeatCount => Members.Aggregate(0, (sum, v) => sum + v.SeatCount);
 }

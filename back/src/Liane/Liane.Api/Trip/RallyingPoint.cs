@@ -13,7 +13,7 @@ public sealed record RallyingPoint(
   string City,
   int? PlaceCount,
   bool IsActive = true
-) : IIdentity;
+) : IIdentity<string>;
 
 public enum LocationType
 {

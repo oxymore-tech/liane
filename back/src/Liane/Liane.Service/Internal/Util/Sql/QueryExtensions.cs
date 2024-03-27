@@ -11,18 +11,32 @@ namespace Liane.Service.Internal.Util.Sql;
 
 public static class QueryExtensions
 {
-  public static async Task<ImmutableList<T>> QueryAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null) =>
-    (await QueryAsyncInternal(connection, query, transaction)).ToImmutableList();
+  public static Task<ImmutableList<T>> QueryAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null) =>
+    QueryAsync<T>(connection, (IQuery)query, transaction);
 
-  public static async Task<T> GetAsync<T>(this IDbConnection connection, Ref<T> reference, IDbTransaction? transaction = null) where T : class, IIdentity
+  public static async Task<ImmutableList<T>> QueryAsync<T>(this IDbConnection connection, IQuery query, IDbTransaction? transaction = null) =>
+    (await QueryAsyncInternal<T>(connection, query, transaction)).ToImmutableList();
+
+  public static Task<T> QuerySingleAsync<T>(this IDbConnection connection, IQuery query, IDbTransaction? transaction = null)
   {
-    return await FirstOrDefaultAsync(connection, reference, transaction) ?? throw ResourceNotFoundException.For(reference);
+    var (sql, parameters) = query.ToSql();
+    return connection.QuerySingleAsync<T>(sql, parameters, transaction);
   }
 
-  public static Task<T?> FirstOrDefaultAsync<T>(this IDbConnection connection, Ref<T> reference, IDbTransaction? transaction = null) where T : class, IIdentity
+  public static async Task<T> GetAsync<T>(this IDbConnection connection, Ref<T> reference, IDbTransaction? transaction = null) where T : class, IIdentity<string>
+  {
+    return await FirstOrDefaultAsync<T, string>(connection, reference.Id, transaction) ?? throw ResourceNotFoundException.For(reference);
+  }
+
+  public static async Task<T> GetAsync<T, TId>(this IDbConnection connection, TId id, IDbTransaction? transaction = null) where T : class, IIdentity<TId>
+  {
+    return await FirstOrDefaultAsync<T, TId>(connection, id, transaction) ?? throw ResourceNotFoundException.For<T, TId>(id);
+  }
+
+  public static Task<T?> FirstOrDefaultAsync<T, TId>(this IDbConnection connection, TId id, IDbTransaction? transaction = null) where T : class, IIdentity<TId>
   {
     var query = Query.Select<T>()
-      .Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, reference.Id));
+      .Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, id));
     return FirstOrDefaultAsync(connection, query, transaction);
   }
 
@@ -34,9 +48,9 @@ public static class QueryExtensions
 
   public static Task<int> UpdateAsync<T>(this IDbConnection connection, T table, IDbTransaction? transaction = null) where T : IIdentity
   {
-    var setters = Mapper.GetColumns<T>()
-      .Where(p => p.PropertyInfo.Name != nameof(IIdentity.Id))
-      .ToImmutableDictionary(p => (FieldDefinition<T>)p.ColumnName, p => p.PropertyInfo.GetValue(table));
+    var setters = Mapper.GetProperties<T>()
+      .Where(p => p.Name != nameof(IIdentity.Id))
+      .ToImmutableDictionary(p => (FieldDefinition<T>)p.Name, p => p.GetValue(table));
 
     var query = Query.Update<T>()
       .Set(setters)
@@ -58,6 +72,12 @@ public static class QueryExtensions
     return connection.ExecuteAsync(sql, parameters, transaction);
   }
 
+  public static Task<TId> InsertAsync<T, TId>(this IDbConnection connection, InsertQuery<T, TId> query, IDbTransaction? transaction = null) where T : notnull
+  {
+    var (sql, parameters) = query.ToSql();
+    return connection.QuerySingleAsync<TId>(sql, parameters, transaction);
+  }
+
   public static Task<int> InsertMultipleAsync<T>(this IDbConnection connection, IEnumerable<T> entities, IDbTransaction? transaction = null) where T : notnull
   {
     var insert = Query.Insert(entities);
@@ -72,15 +92,20 @@ public static class QueryExtensions
     return connection.ExecuteAsync(sql, parameters, transaction);
   }
 
-  private static Task<IEnumerable<T>> QueryAsyncInternal<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
+  private static Task<IEnumerable<T>> QueryAsyncInternal<T>(this IDbConnection connection, IQuery query, IDbTransaction? transaction = null)
   {
     var (sql, parameters) = query.ToSql();
     return connection.QueryAsync<T>(sql, parameters, transaction);
   }
-  
-  public static Task<long> QueryCountAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
+
+  public static Task<long> CountAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
   {
     var (sql, parameters) = query.ToSql();
-    return connection.QuerySingleAsync<long>($"select count(*) from ({sql}) query", parameters, transaction);
+    return CountAsync(connection, sql, parameters, transaction);
+  }
+
+  public static Task<long> CountAsync(this IDbConnection connection, string sql, object? parameters, IDbTransaction? transaction = null)
+  {
+    return connection.QuerySingleAsync<long>(sql, parameters, transaction);
   }
 }

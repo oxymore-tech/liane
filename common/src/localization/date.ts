@@ -1,4 +1,4 @@
-import { DayOfTheWeekFlag } from "../api";
+import { DayOfWeekFlag } from "../api";
 import { TimeInSeconds } from "../util";
 
 export class Localization {
@@ -80,7 +80,7 @@ export class Localization {
   };
 
   readonly daysList = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-  formatDaysOfTheWeek = (daysOfTheWeek: DayOfTheWeekFlag) => {
+  formatDaysOfTheWeek = (daysOfTheWeek: DayOfWeekFlag) => {
     return this.daysList
       .filter((_day: string, index: number) => daysOfTheWeek?.charAt(index) === "1")
       .map((day: string) => `${day.toLocaleLowerCase()}s`)

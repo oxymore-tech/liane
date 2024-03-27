@@ -93,7 +93,8 @@ export type RallyingPoint = Identity &
 
 export type RallyingPointRequest = { point: Omit<Omit<RallyingPoint, "isActive">, "id">; comment: string } & Entity;
 
-export type DayOfTheWeekFlag = `${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}${"0" | "1"}`; // First index is Monday
+export type DayBoolean = "0" | "1";
+export type DayOfWeekFlag = `${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}`; // First index is Monday
 
 export type LianeRequest = Identity &
   Readonly<{
@@ -102,7 +103,7 @@ export type LianeRequest = Identity &
     availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
-    recurrence: DayOfTheWeekFlag | null;
+    recurrence: DayOfWeekFlag | null;
     geolocationLevel: GeolocationLevel;
     // shareWith: Ref<User>[];
   }>;
@@ -118,7 +119,7 @@ export type Liane = Entity &
     state: LianeState;
     recurrence?: {
       id: string;
-      days: DayOfTheWeekFlag;
+      days: DayOfWeekFlag;
     };
   }>;
 
@@ -146,7 +147,7 @@ export type LianeRecurrence = {
   id: string;
   createdBy: Ref<User>;
   createdAt: UTCDateTime;
-  days: DayOfTheWeekFlag;
+  days: DayOfWeekFlag;
   initialRequest: {
     to: RallyingPoint;
     from: RallyingPoint;

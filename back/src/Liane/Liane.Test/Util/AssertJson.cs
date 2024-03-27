@@ -25,11 +25,12 @@ public static class AssertJson
     {
       var expectedJsonNode = JsonSerializer.Deserialize<JsonNode>(expectedJson, JsonOptions);
       var actualJsonNode = JsonSerializer.Deserialize<JsonNode>(serializeObject, JsonOptions);
-      expectedJsonNode.IsEquivalentTo(actualJsonNode);
+      Assert.IsTrue(expectedJsonNode.IsEquivalentTo(actualJsonNode), "Json asssert failed");
     }
-    catch (AssertionException)
+    catch (Exception)
     {
       Console.Write(serializeObject);
+      throw;
     }
   }
 

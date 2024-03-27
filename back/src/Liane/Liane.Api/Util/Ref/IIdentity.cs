@@ -2,5 +2,12 @@ namespace Liane.Api.Util.Ref;
 
 public interface IIdentity
 {
-    string? Id { get; }
+  object? Id { get; }
+}
+
+public interface IIdentity<out T> : IIdentity
+{
+  object? IIdentity.Id => Id;
+
+  new T? Id { get; }
 }
