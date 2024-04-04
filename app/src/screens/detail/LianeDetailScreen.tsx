@@ -246,7 +246,7 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
   );
 };
 
-const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
+const StartButton = ({ startAction, isDriver }: { startAction: () => Promise<void>; isDriver: boolean }) => {
   const [loading, setLoading] = useState(false);
   return (
     <AppPressableOverlay
@@ -267,17 +267,23 @@ const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
       <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
         {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
         {loading && <ActivityIndicator size="small" color={AppColors.white} />}
-        <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+        <AppText style={{ color: AppColors.white, fontSize: 18 }}>{isDriver ? "Démarrer le trajet" : "Partager sa position"}</AppText>
       </Row>
     </AppPressableOverlay>
   );
 };
 
-const StartingSoonView = (props: { liane: Liane }) => {
+const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
   const status = useLianeStatus(props.liane);
   const { services } = useContext(AppContext);
+
   if (status === "StartingSoon" || (status === "Started" && props.liane.state === "NotStarted")) {
-    return <StartButton startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))} />;
+    return (
+      <StartButton
+        startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))}
+        isDriver={props.isDriver}
+      />
+    );
   } else {
     return null;
   }
@@ -290,9 +296,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
   const originalTripDistance = Math.ceil(getOriginalTotalDistance(liane) / 1000);
   //We calculate the price of the trip in proportion to the distance
   const tripPrice = Math.round(((originalTripDistance * basePriceKm * userTripDistance) / originalTripDistance) * 100) / 100;
-
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
-
   const { user } = useContext(AppContext);
 
   return (
@@ -313,7 +317,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
           <GeolocationSwitch liane={liane.liane} />
         </Row>
       )}
-      {!request && <StartingSoonView liane={liane.liane} />}
+      {!request && <StartingSoonView liane={liane.liane} isDriver={driver.id === user!.id!} />}
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>
