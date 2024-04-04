@@ -196,8 +196,9 @@ export class IosService implements LianeGeolocation {
 
   async checkBackgroundGeolocationPermission(): Promise<boolean> {
     const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
+    const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
     AppLogger.info("GEOPINGS", `Location ping permission ${access}`);
-    return access === "granted";
+    return access === "granted" || accessAppInUse === "granted";
   }
 
   async requestBackgroundGeolocationPermission(): Promise<boolean> {
