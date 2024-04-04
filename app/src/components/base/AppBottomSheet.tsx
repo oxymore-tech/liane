@@ -11,9 +11,13 @@ import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvide
 export const AppBottomSheetHandleHeight = 24;
 
 export interface BottomSheetProps extends PropsWithChildren {
+  // Preset heights for this bottom sheet. I the value is greater than 1, the unit is in pixels,
+  // otherwise the value is considered to be a ratio of the total height.
   stops: number[];
+  // The index of the initial bottom sheet height.
   initialStop?: number;
   margins?: { bottom?: number; right?: number; left?: number };
+  // The upper space from which to consider the bottom sheet as expanded.
   padding?: { top?: number };
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
@@ -26,7 +30,6 @@ export type BottomSheetRefProps = {
 };
 
 export interface BottomSheetObservableMessage {
-  //TODO why?
   expanded: boolean;
   top: number;
 }
@@ -57,9 +60,13 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
 
     const pStops = stops.map(s => getPixelValue(s));
 
+    // Current height of the bottom sheet
     const h = useSharedValue(pStops[currentStop.current]);
 
+    // Context used to retain values while panning the bottom sheet
     const context = useSharedValue({ y: 0 });
+
+    // Store margins as shared values to allow animation
     const margin = useSharedValue({ bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 });
 
     useEffect(() => {
@@ -93,6 +100,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       if (value < pStops[0]) {
         return 0;
       }
+      // Find the closest stop in the current scrolling direction
       for (let i = 1; i < stops.length; i++) {
         const a = value - pStops[i - 1];
         const b = pStops[i] - value;
@@ -115,6 +123,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       scrollTo
     ]);
 
+    // Handle pan gesture and scroll to closest stop
     const gesture = Gesture.Pan()
       .onStart(() => {
         context.value = { y: h.value };
@@ -139,6 +148,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       return StyleSheet.flatten(backgroundStyle).backgroundColor || AppColors.white;
     }, [backgroundStyle]);
 
+    // Animate the expanded bottom sheet background
     const bSheetBgStyle = useAnimatedStyle(() => {
       const backgroundColor = interpolateColor(
         h.value,
@@ -160,6 +170,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       };
     });
 
+    // Animate shadow and elevation
     const bSheetStyle = useAnimatedStyle(() => {
       const shadowColor = interpolateColor(
         h.value,
@@ -173,6 +184,8 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
         width: withTiming(width - margin.value.right - margin.value.left, { duration: 300 }) // withTiming is important as is forces recalculation of the layout
       };
     });
+
+    // Animate the handle
     const handleStyle = useAnimatedStyle(() => {
       const backgroundColor = interpolateColor(
         h.value,
@@ -244,6 +257,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
   }
 );
 
+// Wrapper component to handle scrolling (listview, etc.) inside a bottom sheet
 const WithBottomSheetContext =
   <T,>(WrappedComponent: React.ComponentType<T & ScrollViewProps>) =>
   (props: T & ScrollViewProps) => {
@@ -266,14 +280,13 @@ const WithBottomSheetContext =
       scrollRef.current?.scrollTo(y);
     };
 
-    // Handles pan gestures while bsheet is not expanded
+    // Handles pan gestures while bsheet is not expanded (ie. when pan gesture is caught by the list component)
     const gesture = Gesture.Pan()
       .onStart(event => {
         onStartScroll(-event.translationY);
       })
       .onUpdate(event => {
         const nowExpanded = onScroll(-event.translationY);
-        //console.log("exp", nowExpanded);
         if (nowExpanded && !expandedScrollDelta.value.expanded) {
           expandedScrollDelta.value.expanded = true;
           expandedScrollDelta.value.y = event.translationY;

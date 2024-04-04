@@ -182,9 +182,10 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
       </Column>
     );
   };
+
   const exactResultsCount = showCompatible ? displayedLianes.length - data.length : data.length;
   return (
-    <Column>
+    <View style={{ flex: 1 }}>
       <Column style={styles.headerListStyle}>
         <AppTabs
           items={["Résultats (" + exactResultsCount + ")", "Trajets alternatifs (" + (displayedLianes.length - exactResultsCount) + ")"]}
@@ -211,19 +212,9 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
           />
         </Center>
       )}
-      <AppBottomSheetFlatList
-        /* onScroll={event => {
-          console.debug(JSON.stringify(event.nativeEvent));
-        }}
-        onScrollEndDrag={event => {
-          console.debug(JSON.stringify(event.nativeEvent));
-        }}*/
 
-        data={data}
-        keyExtractor={i => i.lianeMatch.liane.id!}
-        renderItem={renderItem}
-      />
-    </Column>
+      <AppBottomSheetFlatList data={data} keyExtractor={i => i.lianeMatch.liane.id!} renderItem={renderItem} />
+    </View>
   );
 };
 
