@@ -72,12 +72,13 @@ const StepView = ({
               </AppPressableOverlay>
             )}
             {!onCancel && <Space />}
-            <AppPressableOverlay backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={onValidate}>
-              <Row spacing={4} style={{ alignItems: "center" }}>
-                <AppText>{onCancel ? "Oui" : "Valider"}</AppText>
-                <AppIcon size={20} name={"checkmark-outline"} />
-              </Row>
-            </AppPressableOverlay>
+            <AppRoundedButton
+              color={"white"}
+              onPress={onValidate}
+              backgroundColor={AppColorPalettes.orange[400]}
+              text={"Valider"}
+              icon={"checkmark-outline"}
+            />
           </Row>
         </Column>
       )}
@@ -323,7 +324,7 @@ export const LianeMatchDetailView = () => {
         {!userIsMember && (isReturnStep || isSeatsStep || isMessageStep) && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
-              color={"black"}
+              color={"white"}
               //onPress={requestJoin}
               onPress={() => setStep(0)}
               backgroundColor={AppColorPalettes.gray[300]}
