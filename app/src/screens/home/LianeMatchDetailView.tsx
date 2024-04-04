@@ -75,7 +75,7 @@ const StepView = ({
             <AppRoundedButton
               color={"white"}
               onPress={onValidate}
-              backgroundColor={AppColorPalettes.orange[400]}
+              backgroundColor={AppColors.primaryColor}
               text={"Valider"}
               icon={"checkmark-outline"}
             />
