@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Liane.Api.User;
+namespace Liane.Api.Auth;
 
 public interface IDeleteAccountService
 {

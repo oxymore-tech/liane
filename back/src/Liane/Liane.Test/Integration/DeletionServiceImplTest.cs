@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Trip;
 using Liane.Service.Internal.User;

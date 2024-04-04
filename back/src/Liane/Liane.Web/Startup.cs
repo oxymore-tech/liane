@@ -9,6 +9,7 @@ using Liane.Api.Util;
 using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Image;
 using Liane.Service.Internal.Mongo;
@@ -94,6 +95,10 @@ public static class Startup
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<LianeTrackerCache>();
+    
+    services.AddService<LianeFetcher>();
+    services.AddService<LianeMatcher>();
+    services.AddService<LianeServiceImpl>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();

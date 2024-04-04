@@ -16,12 +16,12 @@ public sealed record Car(
   Ref<RallyingPoint> NextPoint,
   long Delay,
   LatLng Position,
-  ImmutableHashSet<Ref<User.User>> Members,
+  ImmutableHashSet<Ref<Auth.User>> Members,
   bool IsMoving
 );
 
 public sealed record TrackedMemberLocation(
-  Ref<User.User> Member,
+  Ref<Auth.User> Member,
   Ref<Trip> Liane,
   DateTime At,
   Ref<RallyingPoint> NextPoint,

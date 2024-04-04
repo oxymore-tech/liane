@@ -9,7 +9,7 @@ namespace Liane.Api.Chat;
 
 public sealed record GroupMemberInfo(
   [property:SerializeAsResolvedRef]
-  Ref<User.User> User,
+  Ref<Auth.User> User,
   DateTime JoinedAt,
   DateTime? LastReadAt = null
 ): IResourceMember;
@@ -17,12 +17,12 @@ public sealed record GroupMemberInfo(
 public sealed record ConversationGroup(
   ImmutableList<GroupMemberInfo> Members,
   string? Id = null,
-  Ref<User.User>? CreatedBy = null,
+  Ref<Auth.User>? CreatedBy = null,
   DateTime? CreatedAt = null,
   DateTime? LastMessageAt = null
 ) : IEntity<string>, ISharedResource<GroupMemberInfo>
 {
-  public static ConversationGroup CreateWithMembers(IEnumerable<Ref<User.User>> members, DateTime joinedAt)
+  public static ConversationGroup CreateWithMembers(IEnumerable<Ref<Auth.User>> members, DateTime joinedAt)
   {
     return new ConversationGroup(members.Select(m => new GroupMemberInfo(m, joinedAt)).ToImmutableList());
   }

@@ -29,7 +29,7 @@ public sealed record Feedback(
 
 public sealed record LianeMember(
   [property:SerializeAsResolvedRef]
-  Ref<User.User> User,
+  Ref<Auth.User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   int SeatCount = -1, // Defaults to a passenger seat
@@ -41,7 +41,7 @@ public sealed record LianeMember(
 
 public sealed record Driver
 (
-  Ref<User.User> User,
+  Ref<Auth.User> User,
   bool CanDrive = true
 );
 
@@ -50,7 +50,7 @@ public sealed record Recurrence
 
 public sealed record Trip(
   string Id,
-  Ref<User.User> CreatedBy,
+  Ref<Auth.User> CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
   Ref<Trip>? Return,

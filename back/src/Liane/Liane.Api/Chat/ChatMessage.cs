@@ -5,7 +5,7 @@ namespace Liane.Api.Chat;
 
 public sealed record ChatMessage(
   string? Id,
-  Ref<User.User> CreatedBy,
+  Ref<Auth.User> CreatedBy,
   DateTime? CreatedAt,
   string Text
 ) : IEntity<string>;

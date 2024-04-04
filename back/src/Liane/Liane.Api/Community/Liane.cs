@@ -7,7 +7,8 @@ namespace Liane.Api.Community;
 
 public sealed record Liane(
   string Id,
-  Ref<User.User> CreatedBy,
+  string Name,
+  Ref<Auth.User> CreatedBy,
   DateTime? CreatedAt,
   ImmutableList<LianeMember> Members
 ) : IEntity<string>, ISharedResource<LianeMember>;

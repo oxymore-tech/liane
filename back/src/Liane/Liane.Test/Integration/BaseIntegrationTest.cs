@@ -112,9 +112,13 @@ public abstract class BaseIntegrationTest
     services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();
-    services.AddService<DeleteAccountServiceImpl>();    
+    services.AddService<DeleteAccountServiceImpl>();
     services.AddService<LianeTrackerCache>();
+
+    services.AddService<LianeFetcher>();
+    services.AddService<LianeMatcher>();
     services.AddService<LianeServiceImpl>();
+
     services.AddEventListeners();
 
     var databaseSettings = GetDatabaseSettings();

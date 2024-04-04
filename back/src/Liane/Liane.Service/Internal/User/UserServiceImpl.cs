@@ -1,7 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
@@ -9,13 +9,13 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
 
-public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User>, IUserService
+public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.Auth.User>, IUserService
 {
   public UserServiceImpl(IMongoDatabase mongo) : base(mongo)
   {
   }
 
-  public override async Task<Api.User.User> Get(Ref<Api.User.User> reference)
+  public override async Task<Api.Auth.User> Get(Ref<Api.Auth.User> reference)
   {
     try
     {
@@ -102,9 +102,9 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats, info.PictureUrl, dbUser.PushToken);
   }
 
-  protected override Task<Api.User.User> MapEntity(DbUser dbUser)
+  protected override Task<Api.Auth.User> MapEntity(DbUser dbUser)
   {
-    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt, FullUser.GetPseudo(dbUser.UserInfo?.FirstName, dbUser.UserInfo?.LastName), dbUser.UserInfo?.Gender ?? Gender.Unspecified,
+    return Task.FromResult(new Api.Auth.User(dbUser.Id, dbUser.CreatedAt, FullUser.GetPseudo(dbUser.UserInfo?.FirstName, dbUser.UserInfo?.LastName), dbUser.UserInfo?.Gender ?? Gender.Unspecified,
       dbUser.UserInfo?.PictureUrl, dbUser.Stats));
   }
 

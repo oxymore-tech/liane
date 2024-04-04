@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Util.Pagination;
@@ -8,10 +7,11 @@ namespace Liane.Api.Community;
 
 public interface ILianeService
 {
-  Task<ImmutableList<LianeMatch>> List();
   Task<LianeRequest> Create(LianeRequest request);
+  Task<ImmutableList<LianeMatch>> List();
 
-  Task<Liane> Join(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
+  Task<Liane> JoinNew(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
+  Task<Liane> Join(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<bool> Leave(Ref<Liane> liane);
 
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);

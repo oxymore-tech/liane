@@ -9,20 +9,20 @@ public abstract record LianeMessage : IEntity<string>
   {
   }
 
-  public abstract Ref<User.User>? CreatedBy { get; init; }
+  public abstract Ref<Auth.User>? CreatedBy { get; init; }
   public abstract DateTime? CreatedAt { get; init; }
   public abstract string? Id { get; init; }
 
   public sealed record Chat(
     string? Id,
-    Ref<User.User> CreatedBy,
+    Ref<Auth.User> CreatedBy,
     DateTime? CreatedAt,
     string Text
   ) : LianeMessage;
 
   public sealed record Trip(
     string? Id,
-    Ref<User.User> CreatedBy,
+    Ref<Auth.User> CreatedBy,
     DateTime? CreatedAt,
     Ref<Trip> ActualTrip
   ) : LianeMessage;

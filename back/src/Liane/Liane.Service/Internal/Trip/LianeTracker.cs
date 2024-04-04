@@ -74,7 +74,7 @@ public sealed class LianeTracker
     return -1;
   }
 
-  public void InsertMemberLocation(Ref<Api.User.User> user, MemberLocationSample data)
+  public void InsertMemberLocation(Ref<Api.Auth.User> user, MemberLocationSample data)
   {
     currentLocationMap.TryGetValue(user.Id, out var bufferedLocations);
     if (bufferedLocations is null)
@@ -97,7 +97,7 @@ public sealed class LianeTracker
     return currentLocation is not null && currentLocation.Count > 0 ? currentLocation.Peek() : null;
   }
 
-  public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.User.User> member)
+  public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.Auth.User> member)
   {
     currentLocationMap.TryGetValue(member.Id, out var lastLocations);
 
@@ -119,7 +119,7 @@ public sealed class LianeTracker
   /// </summary>
   /// <param name="member"></param>
   /// <returns>null if current member does not share its position, a boolean otherwise</returns>
-  public bool? MemberHasArrived(Ref<Api.User.User> member)
+  public bool? MemberHasArrived(Ref<Api.Auth.User> member)
   {
     var currentLocation = GetCurrentLocation(member.Id);
 
@@ -178,7 +178,7 @@ public sealed class LianeTracker
         var lianeMember = Trip.Members.Find(m => m.User.Id == userId)!;
         return userId == Trip.Driver.User.Id || lianeMember.From.Id != Trip.WayPoints[lastLocation.NextPointIndex].RallyingPoint.Id;
       })
-      .Select(entry => (Ref<Api.User.User>)entry.Key).ToImmutableHashSet();
+      .Select(entry => (Ref<Api.Auth.User>)entry.Key).ToImmutableHashSet();
 
     var lastCarPings = currentLocationMap
       .Where(entry => carPassengers.Contains(entry.Key))

@@ -11,20 +11,11 @@ CREATE INDEX IF NOT EXISTS route_geometry_index
 
 CREATE TABLE liane
 (
-  id         UUID        NOT NULL,
-  created_by VARCHAR(24) NOT NULL,
-  created_at TIMESTAMP   NOT NULL,
+  id         UUID         NOT NULL,
+  name       VARCHAR(100) NOT NULL,
+  created_by VARCHAR(24)  NOT NULL,
+  created_at TIMESTAMP    NOT NULL,
   PRIMARY KEY (id)
-);
-
-CREATE TABLE liane_member
-(
-  liane_id     UUID        NOT NULL,
-  user_id      VARCHAR(24) NOT NULL,
-  joined_at    TIMESTAMP   NOT NULL,
-  last_read_at TIMESTAMP,
-  PRIMARY KEY (liane_id, user_id),
-  FOREIGN KEY (liane_id) REFERENCES liane (id)
 );
 
 CREATE TABLE liane_request
@@ -37,12 +28,22 @@ CREATE TABLE liane_request
   week_days      VARCHAR(7)    NOT NULL,
   vacation_start TIMESTAMP,
   vacation_end   TIMESTAMP,
-  liane_id       UUID,
   created_by     VARCHAR(24)   NOT NULL,
   created_at     TIMESTAMP     NOT NULL,
   PRIMARY KEY (id),
-  UNIQUE (way_points, created_by),
-  FOREIGN KEY (liane_id) REFERENCES liane (id)
+  UNIQUE (way_points, created_by)
+);
+
+CREATE TABLE liane_member
+(
+  liane_id         UUID        NOT NULL,
+  user_id          VARCHAR(24) NOT NULL,
+  liane_request_id UUID        NOT NULL,
+  joined_at        TIMESTAMP   NOT NULL,
+  last_read_at     TIMESTAMP,
+  PRIMARY KEY (liane_id, user_id),
+  FOREIGN KEY (liane_id) REFERENCES liane (id),
+  FOREIGN KEY (liane_request_id) REFERENCES liane_request (id)
 );
 
 CREATE TABLE liane_message

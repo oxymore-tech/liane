@@ -8,7 +8,7 @@ public sealed record JoinLianeRequest(
   RallyingPoint From,
   RallyingPoint To,
   Trip.Trip TargetTrip,
-  User.User CreatedBy,
+  Auth.User CreatedBy,
   DateTime? CreatedAt,
   int Seats,
   bool TakeReturnTrip,

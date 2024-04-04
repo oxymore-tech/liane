@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -28,7 +28,7 @@ public sealed class AutomaticAnswerService : IAutomaticAnswerService
     this.userService = userService;
   }
 
-  public async Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User> newMember)
+  public async Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<Api.Auth.User> newMember)
   {
     var liane = await tripService.Get(joinRequest.Liane);
     var creator = await userService.GetFullUser(liane.CreatedBy);
@@ -51,7 +51,7 @@ public sealed class LianeRequestServiceImpl(
   IUserStatService userStatService)
   : ILianeRequestService
 {
-  public async Task OnEvent(LianeEvent.JoinRequest joinRequest, Ref<Api.User.User>? sender = null)
+  public async Task OnEvent(LianeEvent.JoinRequest joinRequest, Ref<Api.Auth.User>? sender = null)
   {
     var liane = await tripService.Get(joinRequest.Liane);
     var role = joinRequest.Seats > 0 ? "conducteur" : "passager";
@@ -67,7 +67,7 @@ public sealed class LianeRequestServiceImpl(
     await notificationService.SendEvent("Nouvelle demande", $"Un nouveau {role} voudrait rejoindre votre Liane.", member, liane.Driver.User, joinRequest, Answer.Accept, Answer.Reject);
   }
 
-  private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Trip> lianeRef, Ref<Api.User.User> memberRef, LianeEvent.JoinRequest joinRequest)
+  private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Trip> lianeRef, Ref<Api.Auth.User> memberRef, LianeEvent.JoinRequest joinRequest)
   {
     var member = new LianeMember(memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, GeolocationLevel: joinRequest.GeolocationLevel);
     var liane = await tripService.AddMember(lianeRef, member);
@@ -81,7 +81,7 @@ public sealed class LianeRequestServiceImpl(
     return new LianeEvent.MemberAccepted(joinRequest.Liane, memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, joinRequest.TakeReturnTrip);
   }
 
-  public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.User.User>? sender = null)
+  public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.Auth.User>? sender = null)
   {
     var liane = await tripService.Get(joinRequest.Liane);
     if (liane.State is not (LianeState.Started or LianeState.NotStarted))

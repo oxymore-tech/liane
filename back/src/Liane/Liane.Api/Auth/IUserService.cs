@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Liane.Api.Util.Http;
 
-namespace Liane.Api.User;
+namespace Liane.Api.Auth;
 
 public interface IUserService : IResourceResolverService<User>
 {

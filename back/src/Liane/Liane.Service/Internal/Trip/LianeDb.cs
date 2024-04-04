@@ -11,7 +11,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace Liane.Service.Internal.Trip;
 
 public sealed record UserPing(
-  Ref<Api.User.User> User,
+  Ref<Api.Auth.User> User,
   DateTime At,
   TimeSpan Delay,
   LatLng? Coordinate
@@ -21,7 +21,7 @@ public sealed record WayPointDb(Ref<RallyingPoint> RallyingPoint, int Duration, 
 
 public sealed record LianeDb(
   string Id,
-  Ref<Api.User.User>? CreatedBy,
+  Ref<Api.Auth.User>? CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
   Ref<Api.Trip.Trip>? Return,

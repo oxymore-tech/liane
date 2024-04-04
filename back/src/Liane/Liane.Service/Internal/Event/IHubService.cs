@@ -1,16 +1,16 @@
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.Event;
 
 public interface IHubService
 {
-  bool IsConnected(Ref<Api.User.User> user);
+  bool IsConnected(Ref<Api.Auth.User> user);
 
-  Task AddConnectedUser(Ref<Api.User.User> user, string connectionId);
+  Task AddConnectedUser(Ref<Api.Auth.User> user, string connectionId);
 
-  Task RemoveUser(Ref<Api.User.User> user, string connectionId);
+  Task RemoveUser(Ref<Api.Auth.User> user, string connectionId);
 
   Task PushUserUpdate(FullUser user);
 }

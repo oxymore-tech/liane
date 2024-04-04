@@ -17,17 +17,17 @@ public interface IPushMiddleware
 {
   Priority Priority { get; }
 
-  Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification);
+  Task<bool> SendNotification(Ref<Api.Auth.User> receiver, Notification notification);
 
-  Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
+  Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
 }
 
 public interface IPushService
 {
-  Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification);
+  Task<bool> SendNotification(Ref<Api.Auth.User> receiver, Notification notification);
 
-  Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
+  Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
 
-  Task SendChatMessage(ImmutableList<Ref<Api.User.User>> receiver, Ref<ConversationGroup> conversation, ChatMessage message) =>
+  Task SendChatMessage(ImmutableList<Ref<Api.Auth.User>> receiver, Ref<ConversationGroup> conversation, ChatMessage message) =>
     Task.WhenAll(receiver.Select(r => SendChatMessage(r, conversation, message)));
 }

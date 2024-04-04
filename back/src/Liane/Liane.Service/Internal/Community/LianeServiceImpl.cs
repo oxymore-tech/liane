@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
 using System.Linq;
@@ -17,19 +16,18 @@ using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
 using UuidExtensions;
 using LianeMatch = Liane.Api.Community.LianeMatch;
-using LianeMember = Liane.Api.Community.LianeMember;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
 
-using LianeRawMatch = (Guid, Guid, string, string[], float, LatLng, LatLng, string?, string?);
-
 public sealed class LianeServiceImpl(
   PostgisDatabase db,
   ICurrentContext currentContext,
   IRoutingService routingService,
-  IRallyingPointService rallyingPointService) : ILianeService
+  IRallyingPointService rallyingPointService,
+  LianeFetcher fetcher,
+  LianeMatcher matcher) : ILianeService
 {
   public async Task<ImmutableList<LianeMatch>> List()
   {
@@ -40,17 +38,19 @@ public sealed class LianeServiceImpl(
       .Where(Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId))
       .OrderBy(r => r.Id));
 
-    var lianes = (await FetchLianes(connection, lianeRequests.FilterSelect(r => r.LianeId)))
-      .ToImmutableDictionary(l => l.Id);
+    var joinedLianeIds = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
+        .Where(Filter<LianeMemberDb>.Where(m => m.UserId, ComparisonOperator.Eq, userId))
+        .OrderBy(r => r.JoinedAt)))
+      .GroupBy(m => m.LianeRequestId)
+      .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId.ToString()).ToImmutableHashSet());
 
+    var lianeRequestsId = lianeRequests.Select(l => l.Id);
     var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
-        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.In, lianeRequests.Select(l => l.Id)))))
+        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.In, lianeRequestsId))))
       .GroupBy(c => c.LianeRequestId)
       .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
 
-    var matches = (await FindMatches(connection, lianeRequests.Select(l => l.Id)))
-      .GroupBy(m => m.Item1)
-      .ToImmutableDictionary(g => g.Key, g => g.Select(m => m).ToImmutableList());
+    var allMatches = await matcher.FindMatches(connection, lianeRequestsId);
 
     return lianeRequests.Select(l =>
     {
@@ -67,12 +67,12 @@ public sealed class LianeServiceImpl(
         l.CreatedBy,
         l.CreatedAt
       );
+      var (joinedLianes, matches) = allMatches.GetValueOrDefault(l.Id, ImmutableList<Match>.Empty)
+        .Split(joinedLianeIds.GetValueOrDefault(l.Id, ImmutableHashSet<string>.Empty));
       return new LianeMatch(
         lianeRequest,
-        l.LianeId?.ToString().GetOrDefault(i => lianes.GetValueOrDefault(i)),
-        matches.GetValueOrDefault(l.Id, ImmutableList<LianeRawMatch>.Empty)
-          .Select(m => new Match(m.Item2.ToString(), m.Item3, m.Item4.AsRef<RallyingPoint>(), m.Item8, m.Item9, m.Item5))
-          .ToImmutableList()
+        joinedLianes,
+        matches
       );
     }).ToImmutableList();
   }
@@ -100,8 +100,7 @@ public sealed class LianeServiceImpl(
     await connection.InsertAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
 
     var now = DateTime.UtcNow;
-    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.VacationStart, request.VacationEnd, null, userId,
-      now);
+    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.VacationStart, request.VacationEnd, userId, now);
     await connection.InsertAsync(lianeRequestDb, tx);
 
     tx.Commit();
@@ -120,7 +119,26 @@ public sealed class LianeServiceImpl(
     );
   }
 
-  public async Task<Api.Community.Liane> Join(Ref<LianeRequest> mine, Ref<LianeRequest> foreign)
+  public async Task<Api.Community.Liane> Join(Ref<LianeRequest> mine, Ref<Api.Community.Liane> liane)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
+    var from = await connection.GetAsync<LianeRequestDb, Guid>(Guid.Parse(mine.Id), tx);
+
+    var userId = currentContext.CurrentUser().Id;
+    var now = DateTime.UtcNow;
+
+    var lianeId = Guid.Parse(liane);
+
+    await connection.InsertAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
+
+    var existingLiane = await fetcher.FetchLiane(connection, lianeId, tx);
+    tx.Commit();
+    return existingLiane;
+  }
+
+  public async Task<Api.Community.Liane> JoinNew(Ref<LianeRequest> mine, Ref<LianeRequest> foreign)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -131,26 +149,15 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var now = DateTime.UtcNow;
 
-    Guid lianeId;
-    if (to.LianeId is null)
-    {
-      lianeId = Uuid7.Guid();
+    var lianeId = Uuid7.Guid();
 
-      await connection.InsertAsync(new LianeDb(lianeId, userId, now), tx);
-      await connection.InsertAsync(new LianeMemberDb(lianeId, userId, now, null), tx);
-      await connection.InsertAsync(new LianeMemberDb(lianeId, to.CreatedBy, now, null), tx);
-      await connection.ExecuteAsync("UPDATE liane_request SET liane_id = @liane_id WHERE id = @from_id OR id = @to_id", new { liane_id = lianeId, from_id = from.Id, to_id = to.Id }, tx);
-    }
-    else
-    {
-      lianeId = to.LianeId.Value;
-      await connection.InsertAsync(new LianeMemberDb(lianeId, userId, now, null), tx);
-      await connection.ExecuteAsync("UPDATE liane_request SET liane_id = @liane_id WHERE id = @from_id OR id = @to_id", new { liane_id = lianeId, from_id = from.Id, to_id = to.Id }, tx);
-    }
+    await connection.InsertAsync(new LianeDb(lianeId, to.Name, userId, now), tx);
+    await connection.InsertAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
+    await connection.InsertAsync(new LianeMemberDb(lianeId, to.Id, to.CreatedBy, now, null), tx);
 
-    var lianeMemberDbs = await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)), tx);
+    var createdLiane = await fetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
-    return new Api.Community.Liane(lianeId.ToString(), userId, now, lianeMemberDbs.Select(m => new LianeMember(m.UserId, m.JoinedAt, m.LastReadAt)).ToImmutableList());
+    return createdLiane;
   }
 
   public async Task<bool> Leave(Ref<Api.Community.Liane> liane)
@@ -164,8 +171,6 @@ public sealed class LianeServiceImpl(
     {
       return false;
     }
-
-    await connection.ExecuteAsync("UPDATE liane_request SET liane_id = NULL WHERE liane_id = @liane_id", new { liane_id = lianeId }, tx);
 
     var rest = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id", new { liane_id = lianeId }, tx);
     if (rest == 0)
@@ -276,76 +281,20 @@ public sealed class LianeServiceImpl(
 
     return await CheckIsMember(connection, lianeId, userId, tx);
   }
-
-  /// <summary>
-  /// Récupère toutes les lianes request en base qui matche entre 2 à 2.<br/>
-  /// Pour que 2 liane_request matchent :
-  /// <ul>
-  ///   <li>il faut que leurs trajets se croisent.</li>
-  ///   <li>avec une intersection dont la longueur est au moins égale à 35% du trajet demandé.</li>
-  ///   <li>que si elle appartienne déjà une liane, ce soit la même.</li>
-  /// </ul> 
-  /// </summary>
-  private static async Task<IEnumerable<LianeRawMatch>> FindMatches(IDbConnection connection, IEnumerable<Guid> lianeRequests, IDbTransaction? tx = null)
-  {
-    return await connection.QueryAsync<LianeRawMatch>("""
-                                                              SELECT liane_request_a.id AS "from",
-                                                                     liane_request_b.id AS liane_request,
-                                                                     liane_request_b.created_by AS "user",
-                                                                     liane_request_b.way_points AS way_points,
-                                                                     st_length(intersection) / a_length AS score,
-                                                                     st_startpoint(intersection) AS pickup,
-                                                                     st_endpoint(intersection) AS deposit,
-                                                                     nearest_rp(st_startpoint(intersection)) AS pickup_point,
-                                                                     nearest_rp(st_endpoint(intersection)) AS deposit_point
-                                                              FROM (
-                                                                      SELECT a.way_points AS a,
-                                                                             b.way_points AS b,
-                                                                             st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                             st_length(a.geometry) AS a_length
-                                                                      FROM route a
-                                                                        INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
-                                                                  ) AS matches
-                                                              INNER JOIN liane_request liane_request_a ON liane_request_a.way_points = a
-                                                              INNER JOIN liane_request liane_request_b ON
-                                                                liane_request_b.way_points = b AND liane_request_b.created_by != liane_request_a.created_by
-                                                              WHERE st_length(intersection) / a_length > 0.3 AND liane_request_a.id = ANY(@liane_requests)
-                                                              ORDER BY st_length(intersection) / a_length DESC, liane_request_a.id;
-                                                      """,
-      new { liane_requests = lianeRequests.ToArray() },
-      tx
-    );
-  }
-
-  private static async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter, IDbTransaction? tx = null)
-  {
-    var lianeDbs = await connection.QueryAsync(Query.Select<LianeDb>().Where(Filter<LianeDb>.Where(l => l.Id, ComparisonOperator.In, lianeFilter)), tx);
-    var memberDbs = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter)), tx))
-      .GroupBy(lm => lm.LianeId)
-      .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
-    return lianeDbs.Select(l =>
-    {
-      var members = memberDbs.GetValueOrDefault(l.Id, ImmutableList<LianeMemberDb>.Empty);
-      return new Api.Community.Liane(
-        l.Id.ToString(),
-        l.CreatedBy,
-        l.CreatedAt,
-        members.Select(m => new LianeMember(m.UserId, m.JoinedAt, m.LastReadAt)).ToImmutableList()
-      );
-    }).ToImmutableList();
-  }
 }
 
 public sealed record LianeMemberDb(
   Guid LianeId,
-  Ref<Api.User.User> UserId,
+  Guid LianeRequestId,
+  Ref<Api.Auth.User> UserId,
   DateTime JoinedAt,
   DateTime? LastReadAt
 );
 
 public sealed record LianeDb(
   Guid Id,
-  Ref<Api.User.User> CreatedBy,
+  string Name,
+  Ref<Api.Auth.User> CreatedBy,
   DateTime CreatedAt
 );
 
@@ -358,8 +307,7 @@ public sealed record LianeRequestDb(
   DayOfWeekFlag WeekDays,
   DateTime? VacationStart,
   DateTime? VacationEnd,
-  Guid? LianeId,
-  Ref<Api.User.User> CreatedBy,
+  Ref<Api.Auth.User> CreatedBy,
   DateTime CreatedAt
 ) : IIdentity<Guid>;
 
@@ -380,6 +328,6 @@ public sealed record LianeMessageDb(
   Guid Id,
   Guid LianeId,
   string Text,
-  Ref<Api.User.User> CreatedBy,
+  Ref<Api.Auth.User> CreatedBy,
   DateTime? CreatedAt
 ) : IEntity<Guid>;

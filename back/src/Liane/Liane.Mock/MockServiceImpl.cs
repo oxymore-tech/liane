@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Bogus;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;

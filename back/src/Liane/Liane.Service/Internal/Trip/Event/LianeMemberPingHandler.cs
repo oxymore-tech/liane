@@ -21,7 +21,7 @@ public sealed class LianeMemberPingHandler(
   ILogger<LianeMemberPingHandler> logger)
   : IEventListener<LianeEvent.MemberPing>
 {
-  public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.User.User>? sender = null)
+  public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.Auth.User>? sender = null)
   {
     var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).UtcDateTime;
     var memberId = sender ?? currentContext.CurrentUser().Id;

@@ -15,10 +15,13 @@ public sealed record LianeRequest(
   ImmutableList<TimeConstraint> TimeConstraints,
   DateTime? VacationStart,
   DateTime? VacationEnd,
-  Ref<User.User>? CreatedBy,
+  Ref<Auth.User>? CreatedBy,
   DateTime? CreatedAt
 ) : IEntity<string>;
 
 public sealed record TimeConstraint(TimeRange When, Ref<RallyingPoint> At, DayOfWeekFlag WeekDays);
 
 public readonly record struct TimeRange(TimeOnly Start, TimeOnly? End);
+
+// TODO isEnabled
+// TODO prendre en compte les contraintes

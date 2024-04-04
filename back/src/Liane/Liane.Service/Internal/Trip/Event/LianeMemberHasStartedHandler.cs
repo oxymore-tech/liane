@@ -14,7 +14,7 @@ public sealed class LianeMemberHasStartedHandler(
   ILianeTrackerService lianeTrackerService)
   : IEventListener<LianeEvent.MemberHasStarted>
 {
-  public async Task OnEvent(LianeEvent.MemberHasStarted e, Ref<Api.User.User>? sender = null)
+  public async Task OnEvent(LianeEvent.MemberHasStarted e, Ref<Api.Auth.User>? sender = null)
   {
     var liane = await tripService.Get(e.Liane);
     await lianeTrackerService.Start(liane);

@@ -4,7 +4,7 @@ namespace Liane.Api.Util.Ref;
 
 public interface IEntity : IIdentity
 {
-  Ref<User.User>? CreatedBy { get; }
+  Ref<Auth.User>? CreatedBy { get; }
   DateTime? CreatedAt { get; }
 }
 

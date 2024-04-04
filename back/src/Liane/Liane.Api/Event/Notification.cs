@@ -8,7 +8,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace Liane.Api.Event;
 
 public sealed record Recipient(
-  Ref<User.User> User,
+  Ref<Auth.User> User,
   DateTime? SeenAt = null,
   Answer? Answer = null
 );
@@ -23,7 +23,7 @@ public enum Answer
 public abstract record Notification : IEntity<string>
 {
   public abstract string? Id { get; init; }
-  public abstract Ref<User.User>? CreatedBy { get; init; }
+  public abstract Ref<Auth.User>? CreatedBy { get; init; }
   public abstract DateTime? CreatedAt { get; init; }
   public abstract ImmutableList<Recipient> Recipients { get; init; }
   public abstract ImmutableHashSet<Answer> Answers { get; init; }
@@ -34,7 +34,7 @@ public abstract record Notification : IEntity<string>
 
   public sealed record Info(
     string? Id,
-    Ref<User.User>? CreatedBy,
+    Ref<Auth.User>? CreatedBy,
     DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
@@ -46,7 +46,7 @@ public abstract record Notification : IEntity<string>
 
   public sealed record NewMessage(
     string? Id,
-    Ref<User.User>? CreatedBy,
+    Ref<Auth.User>? CreatedBy,
     DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
@@ -61,7 +61,7 @@ public abstract record Notification : IEntity<string>
 
   public sealed record Reminder(
     string? Id,
-    Ref<User.User>? CreatedBy,
+    Ref<Auth.User>? CreatedBy,
     DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,
@@ -76,7 +76,7 @@ public abstract record Notification : IEntity<string>
 
   public sealed record Event(
     string? Id,
-    Ref<User.User>? CreatedBy,
+    Ref<Auth.User>? CreatedBy,
     DateTime? CreatedAt,
     ImmutableList<Recipient> Recipients,
     ImmutableHashSet<Answer> Answers,

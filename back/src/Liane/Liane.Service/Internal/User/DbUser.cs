@@ -1,5 +1,5 @@
 using System;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Service.Internal.User;

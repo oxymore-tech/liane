@@ -4,7 +4,7 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Trip;
 
 public sealed record LianeRecurrence(string? Id,
-  Ref<User.User>? CreatedBy,
+  Ref<Auth.User>? CreatedBy,
   DateTime? CreatedAt,
   DayOfWeekFlag Days,
   BaseLianeRequest InitialRequest,

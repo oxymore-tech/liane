@@ -114,7 +114,7 @@ public abstract class MongoCrudEntityService<TIn, TDb, TOut>(IMongoDatabase mong
 {
   protected readonly ICurrentContext CurrentContext = currentContext;
 
-  public async Task<TOut> Create(TIn lianeRequest, Ref<Api.User.User>? ownerId)
+  public async Task<TOut> Create(TIn lianeRequest, Ref<Api.Auth.User>? ownerId)
   {
     var id = lianeRequest.Id ?? ObjectId.GenerateNewId().ToString();
     var createdAt = DateTime.UtcNow;

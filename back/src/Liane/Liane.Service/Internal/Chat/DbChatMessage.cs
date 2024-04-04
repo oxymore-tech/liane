@@ -7,6 +7,6 @@ namespace Liane.Service.Internal.Chat;
 public sealed record DbChatMessage(
   string Id, 
   Ref<ConversationGroup> Group, 
-  Ref<Api.User.User> CreatedBy, 
+  Ref<Api.Auth.User> CreatedBy, 
   DateTime CreatedAt, 
   string Text) : IIdentity<string>;

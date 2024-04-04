@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Amazon.Runtime.Internal.Transform;
 using Liane.Api.Chat;
 using Liane.Api.Event;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 

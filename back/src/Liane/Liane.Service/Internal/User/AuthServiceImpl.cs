@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Microsoft.Extensions.Caching.Memory;
@@ -199,7 +199,7 @@ public sealed class AuthServiceImpl : IAuthService
         .Unset(u => u.RefreshToken));
   }
 
-  public async Task Logout(Ref<Api.User.User> user)
+  public async Task Logout(Ref<Api.Auth.User> user)
   {
     await RevokeRefreshToken(user.Id);
   }

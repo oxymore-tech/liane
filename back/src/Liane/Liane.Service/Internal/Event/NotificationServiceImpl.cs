@@ -28,12 +28,12 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     this.logger = logger;
   }
 
-  public Task<Notification> SendInfo(string title, string message, Ref<Api.User.User> to, string? uri) => Create(
+  public Task<Notification> SendInfo(string title, string message, Ref<Api.Auth.User> to, string? uri) => Create(
     new Notification.Info(
       null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), ImmutableHashSet<Answer>.Empty, title, message, uri)
   );
 
-  public Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
+  public Task<Notification> SendEvent(string title, string message, Ref<Api.Auth.User> createdBy, Ref<Api.Auth.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
     new Notification.Event(
       null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
   );
@@ -129,7 +129,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
   {
     await Parallel.ForEachAsync(ids, async (@ref, _) => await MarkAsRead(@ref));
   }
-  public async Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Api.User.User> userId)
+  public async Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Api.Auth.User> userId)
   {
     var filter = Builders<Notification>.Filter.ElemMatch(n => n.Recipients, r => r.User == userId && r.SeenAt == null);
     var unread = await Mongo.GetCollection<Notification>()

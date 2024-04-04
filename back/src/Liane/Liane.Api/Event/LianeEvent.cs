@@ -31,7 +31,7 @@ public abstract record LianeEvent
   ) : LianeEvent;
   public sealed record MemberAccepted(
     Ref<Trip.Trip> Liane,
-    Ref<User.User> Member,
+    Ref<Auth.User> Member,
     Ref<RallyingPoint> From,
     Ref<RallyingPoint> To,
     int Seats,
@@ -40,7 +40,7 @@ public abstract record LianeEvent
 
   public sealed record MemberRejected(
     Ref<Trip.Trip> Liane,
-    Ref<User.User> Member,
+    Ref<Auth.User> Member,
     Ref<RallyingPoint> From,
     Ref<RallyingPoint> To,
     int Seats,
@@ -50,7 +50,7 @@ public abstract record LianeEvent
 
   public sealed record MemberHasLeft(
     Ref<Trip.Trip> Liane,
-    Ref<User.User> Member
+    Ref<Auth.User> Member
   ) : LianeEvent;
 
   public sealed record MemberPing(
@@ -62,11 +62,11 @@ public abstract record LianeEvent
   
   public sealed record MemberHasCanceled(
     Ref<Trip.Trip> Liane,
-    Ref<User.User> Member
+    Ref<Auth.User> Member
   ) : LianeEvent;
   
   public sealed record MemberHasStarted(
     Ref<Trip.Trip> Liane,
-    Ref<User.User> Member
+    Ref<Auth.User> Member
   ) : LianeEvent;
 }

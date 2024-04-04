@@ -8,7 +8,7 @@ using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;

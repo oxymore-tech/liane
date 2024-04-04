@@ -4,7 +4,7 @@ using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.Image;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 

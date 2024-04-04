@@ -14,7 +14,7 @@ public sealed class LianeMemberRejectedHandler(
   IRallyingPointService rallyingPointService)
   : IEventListener<LianeEvent.MemberRejected>
 {
-  public async Task OnEvent(LianeEvent.MemberRejected e, Ref<Api.User.User>? sender = null)
+  public async Task OnEvent(LianeEvent.MemberRejected e, Ref<Api.Auth.User>? sender = null)
   {
     var destination = await rallyingPointService.Get(e.To);
     await notificationService.SendEvent("Demande déclinée",

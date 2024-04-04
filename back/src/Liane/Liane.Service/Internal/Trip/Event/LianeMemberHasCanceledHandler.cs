@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
 
@@ -17,7 +17,7 @@ public sealed class LianeMemberHasCanceledHandler(
   ICurrentContext currentContext)
   : IEventListener<LianeEvent.MemberHasCanceled>
 {
-  public async Task OnEvent(LianeEvent.MemberHasCanceled e, Ref<Api.User.User>? sender = null)
+  public async Task OnEvent(LianeEvent.MemberHasCanceled e, Ref<Api.Auth.User>? sender = null)
   {
     var liane = await tripService.Get(e.Liane);
     var user = await userService.Get(e.Member);

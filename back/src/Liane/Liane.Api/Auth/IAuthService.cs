@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Liane.Api.Util.Ref;
 
-namespace Liane.Api.User;
+namespace Liane.Api.Auth;
 
 public interface IAuthService
 {

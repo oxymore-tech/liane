@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Liane.Api.Util.Ref;
 
-namespace Liane.Api.User;
+namespace Liane.Api.Auth;
 
 public enum Gender
 {
