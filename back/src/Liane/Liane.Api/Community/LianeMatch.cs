@@ -19,6 +19,7 @@ public abstract record Match
   }
 
   public abstract string Name { get; init; }
+  public abstract DayOfWeekFlag WeekDays { get; init; }
   public abstract Ref<RallyingPoint> Pickup { get; init; }
   public abstract Ref<RallyingPoint> Deposit { get; init; }
   public abstract float Score { get; init; }
@@ -27,6 +28,7 @@ public abstract record Match
     string Name,
     Ref<LianeRequest> LianeRequest,
     Ref<User> User,
+    DayOfWeekFlag WeekDays,
     Ref<RallyingPoint> Pickup,
     Ref<RallyingPoint> Deposit,
     float Score
@@ -36,6 +38,7 @@ public abstract record Match
     string Name,
     Liane Liane,
     ImmutableList<Single> Matches,
+    DayOfWeekFlag WeekDays,
     Ref<RallyingPoint> Pickup,
     Ref<RallyingPoint> Deposit,
     float Score

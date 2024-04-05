@@ -93,6 +93,17 @@ public sealed class LianeServiceImpl(
 
   public async Task<LianeRequest> Create(LianeRequest request)
   {
+    var wayPoints = request.WayPoints.Distinct().ToImmutableList();
+    if (wayPoints.Count <= 1)
+    {
+      throw new ArgumentException("At least 2 waypoints are required");
+    }
+
+    if (request.WeekDays.IsEmpty())
+    {
+      throw new ArgumentException("At least 1 weekday is required");
+    }
+
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
@@ -100,12 +111,6 @@ public sealed class LianeServiceImpl(
     var id = Uuid7.Guid();
 
     await connection.InsertMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
-
-    var wayPoints = request.WayPoints.Distinct().ToImmutableList();
-    if (wayPoints.Count <= 1)
-    {
-      throw new ArgumentException("At least 2 waypoints are required");
-    }
 
     var wayPointsArray = request.WayPoints.Deref();
     var coordinates = (await request.WayPoints.SelectAsync(rallyingPointService.Get))

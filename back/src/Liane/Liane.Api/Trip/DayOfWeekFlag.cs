@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -103,7 +104,14 @@ public readonly struct DayOfWeekFlag
       }
     }
   }
-
+  
+  public static DayOfWeekFlag Parse(BitArray value)
+  {
+    return AllDays.TakeWhile((_, i) => i < value.Length)
+      .Where((_, i) => value[i])
+      .Aggregate(Empty, (current, t) => current | t);
+  }
+  
   public static DayOfWeekFlag Parse(string value)
   {
     return AllDays.TakeWhile((_, i) => i < value.Length)

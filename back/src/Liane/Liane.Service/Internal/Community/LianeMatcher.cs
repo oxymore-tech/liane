@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Util;
 using Match = Liane.Api.Community.Match;
-using LianeRawMatch = (System.Guid, System.Guid, string, string, string[], bool, float, Liane.Api.Routing.LatLng, Liane.Api.Routing.LatLng, string?, string?, System.Guid[]?);
+using LianeRawMatch =
+  (System.Guid, System.Guid, string, string, string[], bool, float, Liane.Api.Trip.DayOfWeekFlag, Liane.Api.Routing.LatLng, Liane.Api.Routing.LatLng, string?, string?, System.Guid[]?);
 
 namespace Liane.Service.Internal.Community;
 
@@ -20,7 +21,7 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
   {
     var rawMatches = (await FindRawMatches(connection, lianeRequestsId))
       .ToImmutableList();
-    var allLianes = rawMatches.FilterSelect(r => r.Item12)
+    var allLianes = rawMatches.FilterSelect(r => r.Item13)
       .SelectMany(r => r)
       .Distinct();
     var lianes = (await fetcher.FetchLianes(connection, allLianes))
@@ -54,6 +55,7 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
                                                                      liane_request_b.way_points AS way_points,
                                                                      liane_request_b.is_enabled AS is_enabled,
                                                                      st_length(intersection) / a_length AS score,
+                                                                     matching_weekdays(liane_request_a.week_days, liane_request_b.week_days) AS week_days,
                                                                      st_startpoint(intersection) AS pickup,
                                                                      st_endpoint(intersection) AS deposit,
                                                                      nearest_rp(st_startpoint(intersection)) AS pickup_point,
@@ -74,7 +76,8 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
                                                               LEFT JOIN liane_member ON
                                                                 liane_request_id = liane_request_b.id
                                                               WHERE
-                                                                st_length(intersection) / a_length > 0.3
+                                                                matching_weekdays(liane_request_a.week_days, liane_request_b.week_days)::integer != 0
+                                                                AND st_length(intersection) / a_length > 0.3
                                                                 AND liane_request_a.id = ANY(@liane_requests)
                                                               ORDER BY st_length(intersection) / a_length DESC, liane_request_a.id
                                                       """,
@@ -85,9 +88,9 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
 
   private static ImmutableList<Match> GroupMatchByLiane(IEnumerable<LianeRawMatch> matches, ImmutableHashSet<Guid> joinedLianeIds, ImmutableDictionary<Guid, Api.Community.Liane> lianes)
     => matches
-      .SelectMany(m => m.Item12 is null
+      .SelectMany(m => m.Item13 is null
         ? ImmutableList.Create(new LianeRawMatchByLiane(null, m))
-        : m.Item12.Select(l => new LianeRawMatchByLiane(l, m)))
+        : m.Item13.Select(l => new LianeRawMatchByLiane(l, m)))
       .Where(ml => ml.Match.Item6 || (ml.Liane is not null && joinedLianeIds.Contains(ml.Liane.Value)))
       .GroupBy(m => m.Liane)
       .SelectMany(g =>
@@ -110,6 +113,7 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
           liane.Name,
           liane,
           groupedMatches,
+          first.WeekDays,
           first.Pickup,
           first.Deposit,
           first.Score));
@@ -135,8 +139,9 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
       match.Item3,
       match.Item2.ToString(),
       match.Item4,
-      match.Item10,
+      match.Item8,
       match.Item11,
+      match.Item12,
       match.Item7
     );
   }

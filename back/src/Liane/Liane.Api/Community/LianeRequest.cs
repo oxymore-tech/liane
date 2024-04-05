@@ -21,5 +21,3 @@ public sealed record LianeRequest(
 public sealed record TimeConstraint(TimeRange When, Ref<RallyingPoint> At, DayOfWeekFlag WeekDays);
 
 public readonly record struct TimeRange(TimeOnly Start, TimeOnly? End);
-
-// TODO prendre en compte les contraintes

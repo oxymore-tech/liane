@@ -1,3 +1,4 @@
+using System.Collections;
 using Liane.Api.Trip;
 using NUnit.Framework;
 
@@ -38,6 +39,14 @@ public sealed class DayOfWeekFlagTest
   public void ShouldParseFromString()
   {
     var actual = DayOfWeekFlag.Parse("1100001");
+    Assert.AreEqual(DayOfWeekFlag.Monday | DayOfWeekFlag.Tuesday | DayOfWeekFlag.Sunday, actual);
+  }
+
+  [Test]
+  public void ShouldParseFromBitArray()
+  {
+    var bitArray = new BitArray(new[] { true, true, false, false, false, false, true });
+    var actual = DayOfWeekFlag.Parse(bitArray);
     Assert.AreEqual(DayOfWeekFlag.Monday | DayOfWeekFlag.Tuesday | DayOfWeekFlag.Sunday, actual);
   }
 }

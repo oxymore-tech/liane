@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Data;
 using Dapper;
 using Liane.Api.Trip;
@@ -18,6 +19,7 @@ internal sealed class DayOfWeekFlagTypeHandler : SqlMapper.TypeHandler<DayOfWeek
     return value switch
     {
       string s => DayOfWeekFlag.Parse(s),
+      BitArray a => DayOfWeekFlag.Parse(a),
       _ => throw new ArgumentOutOfRangeException($"Unable to read from {value.GetType()}")
     };
   }

@@ -83,3 +83,14 @@ WHERE st_distancesphere(rp.location, p) < radius
 ORDER BY st_distancesphere(rp.location, p)
 LIMIT 1;
 $$;
+
+CREATE OR REPLACE FUNCTION matching_weekdays(w1 varchar(7), w2 varchar(7))
+  RETURNS bit(7)
+  immutable
+  strict
+  parallel safe
+  language sql
+AS
+$$
+  SELECT w1::bit(7) & w2::bit(7);
+$$;
