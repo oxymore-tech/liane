@@ -8,15 +8,12 @@ namespace Liane.Web.Internal.Json;
 public sealed class DayOfWeekFlagConverter : JsonConverter<DayOfWeekFlag>
 {
   public override DayOfWeekFlag Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-  {
-    if (reader.TokenType != JsonTokenType.String)
+    => reader.TokenType switch
     {
-      throw new JsonException();
-    }
-
-    var value = reader.GetString()!;
-    return DayOfWeekFlag.Parse(value);
-  }
+      JsonTokenType.Null => default,
+      JsonTokenType.String => DayOfWeekFlag.Parse(reader.GetString()!),
+      _ => throw new JsonException()
+    };
 
   public override void Write(Utf8JsonWriter writer, DayOfWeekFlag value, JsonSerializerOptions options)
   {

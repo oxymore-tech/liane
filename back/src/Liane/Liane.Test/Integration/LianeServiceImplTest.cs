@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,15 +33,6 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   private DbUser bertrand = null!;
   private DbUser samuel = null!;
 
-  private LianeRequest lianeGugu = null!;
-  private LianeRequest lianeJayBee = null!;
-  private LianeRequest lianeMathilde = null!;
-  private LianeRequest lianeSiloe = null!;
-  private LianeRequest lianeGargamel = null!;
-  private LianeRequest lianeCaramelo = null!;
-  private LianeRequest lianeBertrand = null!;
-  private LianeRequest lianeSamuel = null!;
-
   protected override void Setup(IMongoDatabase db)
   {
     tested = ServiceProvider.GetRequiredService<LianeServiceImpl>();
@@ -48,36 +40,44 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [SetUp]
-  public async Task SetupDefaultLianes()
+  public void SetupDefaultUsers()
   {
     gugu = Fakers.FakeDbUsers[0];
-    lianeGugu = await CreateLianeRequest(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
-
     jayBee = Fakers.FakeDbUsers[1];
-    lianeJayBee = await CreateLianeRequest(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
-
     mathilde = Fakers.FakeDbUsers[2];
-    lianeMathilde = await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
-
     siloe = Fakers.FakeDbUsers[3];
-    lianeSiloe = await CreateLianeRequest(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
-
     gargamel = Fakers.FakeDbUsers[4];
-    lianeGargamel = await CreateLianeRequest(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
-
     caramelo = Fakers.FakeDbUsers[5];
-    lianeCaramelo = await CreateLianeRequest(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
-
     bertrand = Fakers.FakeDbUsers[6];
-    lianeBertrand = await CreateLianeRequest(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
-
     samuel = Fakers.FakeDbUsers[7];
-    lianeSamuel = await CreateLianeRequest(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
+  }
+
+  private async Task<(LianeRequest lianeGugu, LianeRequest lianeJayBee, LianeRequest lianeMathilde, LianeRequest lianeSiloe, LianeRequest lianeGargamel, LianeRequest lianeCaramelo, LianeRequest
+    lianeBertrand, LianeRequest lianeSamuel)> SetupDefaultLianes()
+  {
+    var lianeGugu = await CreateLianeRequest(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende);
+    var lianeJayBee = await CreateLianeRequest(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende);
+    var lianeMathilde = await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise);
+    var lianeSiloe = await CreateLianeRequest(siloe, "Bahut", LabeledPositions.IspagnacParking, LabeledPositions.Mende);
+    var lianeGargamel = await CreateLianeRequest(gargamel, "Les stroumpfs", LabeledPositions.Montbrun, LabeledPositions.SaintEnimieParking);
+    var lianeCaramelo = await CreateLianeRequest(caramelo, "Bonbons", LabeledPositions.VillefortParkingGare, LabeledPositions.LanuejolsParkingEglise);
+    var lianeBertrand = await CreateLianeRequest(bertrand, "LO", LabeledPositions.Alan, LabeledPositions.Toulouse);
+    var lianeSamuel = await CreateLianeRequest(samuel, "LO 2", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane);
+    return (lianeGugu,
+      lianeJayBee,
+      lianeMathilde,
+      lianeSiloe,
+      lianeGargamel,
+      lianeCaramelo,
+      lianeBertrand,
+      lianeSamuel);
   }
 
   [Test]
   public async Task GuguShouldMatchLianes()
   {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     currentContext.SetCurrentUser(gugu);
     var actual = await tested.List();
     Assert.AreEqual(1, actual.Count);
@@ -96,6 +96,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task MathildeShouldMatchLianes()
   {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     currentContext.SetCurrentUser(mathilde);
     var actual = await tested.List();
     Assert.AreEqual(1, actual.Count);
@@ -114,9 +116,11 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task MathildeShouldMatchEnabledLianes()
   {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     currentContext.SetCurrentUser(jayBee);
     await tested.SetEnabled(lianeJayBee.Id, false);
-    
+
     currentContext.SetCurrentUser(mathilde);
     var actual = await tested.List();
     Assert.AreEqual(1, actual.Count);
@@ -134,6 +138,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ExactSameLianeRequestShouldMatch()
   {
+    var (_, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     await CreateLianeRequest(gugu, "Pain 2", LabeledPositions.Cocures, LabeledPositions.Mende);
 
     currentContext.SetCurrentUser(gugu);
@@ -151,6 +157,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task GuguShouldJoinANewLianeByJoiningAMatch()
   {
+    var (_, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
@@ -188,13 +196,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task GuguSeeJoinedLianesEvenIfRequestIsDisabled()
   {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
       currentContext.SetCurrentUser(gugu);
       joinedLiane = await tested.JoinNew(lianeGugu, lianeJayBee);
     }
-    
+
     // jaybee disable its liane
     {
       currentContext.SetCurrentUser(jayBee);
@@ -219,10 +229,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         );
     }
   }
-  
+
   [Test]
   public async Task GuguMatchesChangeWhenJaybeeHavedJoinedMathildeLiane()
   {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane exisitingLiane;
     {
@@ -296,6 +308,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task GuguShouldJoinAnExistingLianeByJoiningAMatch()
   {
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
+
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane exisitingLiane;
     {
@@ -323,6 +337,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task WhenTheLastMemberLeaveALianeTheLianeIsDeleted()
   {
+    await SetupDefaultLianes();
+
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane exisitingLiane;
     {
@@ -378,6 +394,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShouldNotSendAMessageToALeftLiane()
   {
+    await SetupDefaultLianes();
+
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane liane;
     {
@@ -410,6 +428,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShouldChatInALiane()
   {
+    await SetupDefaultLianes();
+
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane liane;
     {
@@ -547,11 +567,30 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     }
   }
 
-  private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, params Ref<RallyingPoint>[] wayPoints)
+  [Test]
+  public async Task ShouldMatchLianesWithTimeConstraints()
+  {
+    await SetupDefaultLianes();
+  }
+
+  private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
+    DayOfWeekFlag weekDays = default, TimeOnly? leavesAt = null,
+    TimeOnly? returnsAt = null)
   {
     currentContext.SetCurrentUser(user);
-    var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfWeekFlag.All));
-    return await tested.Create(new LianeRequest(null, name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, true, null, null));
+    var timeConstraints = new List<TimeConstraint>();
+    if (leavesAt.HasValue)
+    {
+      timeConstraints.Add(new TimeConstraint(new TimeRange(leavesAt.Value, null), from, default));
+    }
+
+    if (returnsAt.HasValue)
+    {
+      timeConstraints.Add(new TimeConstraint(new TimeRange(returnsAt.Value, null), to, default));
+    }
+
+    var wayPoints = intermediate is null ? ImmutableList.Create(from, to) : ImmutableList.Create(from, intermediate, to);
+    return await tested.Create(new LianeRequest(null, name, wayPoints, false, true, weekDays, timeConstraints.ToImmutableList(), true, null, null));
   }
 
   private static (string User, string Text) ToTuple(LianeMessage message) => message switch
