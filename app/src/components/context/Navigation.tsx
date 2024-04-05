@@ -34,6 +34,7 @@ import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequest
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithBadge } from "@/components/base/WithBadge";
+import { AppDimensions } from "@/theme/dimensions.ts";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -320,7 +321,7 @@ export const useBottomBarStyle = () => {
     AppStyles.shadow,
     {
       paddingBottom: insets.bottom,
-      minHeight: insets.bottom + 54
+      minHeight: insets.bottom + AppDimensions.bottomTabBarHeight
     }
   ];
 };

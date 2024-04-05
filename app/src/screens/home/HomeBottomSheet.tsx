@@ -3,10 +3,10 @@ import { HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { View } from "react-native";
 import { AppColors } from "@/theme/colors";
+import { AppDimensions } from "@/theme/dimensions.ts";
 
 export const HomeBottomSheetContainer = (
   props: {
@@ -23,7 +23,6 @@ export const HomeBottomSheetContainer = (
 
   const insets = useSafeAreaInsets();
   const { height } = useAppWindowsDimensions();
-  const h = useBottomTabBarHeight();
   const ref = useRef<BottomSheetRefProps>(null);
 
   useEffect(() => {
@@ -52,6 +51,7 @@ export const HomeBottomSheetContainer = (
     return <View />;
   }
 
+  const h = AppDimensions.bottomTabBarHeight;
   const bottomSpace = insets.bottom + h;
 
   let stops: number[];
