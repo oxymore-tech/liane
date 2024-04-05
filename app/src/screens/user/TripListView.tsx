@@ -11,11 +11,11 @@ import {
   StyleSheet,
   View
 } from "react-native";
-import { capitalize, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@liane/common";
+import { capitalize, extractDatePart, JoinRequestDetailed, Liane, Ref, User, UTCDateTime } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
-import { LianeStatusView } from "@/components/trip/LianeStatusView";
+import { TripStatusView } from "@/components/trip/TripStatusView.tsx";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -26,16 +26,16 @@ import { WayPointsView } from "@/components/trip/WayPointsView";
 import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolocationProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
+import { getTripFromJoinRequest, getUserTrip, useTripStatus } from "@/components/trip/trip";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
-export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
+export interface TripSection extends SectionBase<Liane | JoinRequestDetailed> {
   date: string;
 }
 
 export interface TripListViewProps {
-  data: (Liane | JoinLianeRequestDetailed)[];
+  data: (Liane | JoinRequestDetailed)[];
   isFetching?: boolean;
   onRefresh?: () => void;
   reverseSort?: boolean;
@@ -66,16 +66,14 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
   );
 };
 
-const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return (item as JoinLianeRequestDetailed).targetLiane !== undefined;
+const isResolvedJoinLianeRequest = (item: Liane | JoinRequestDetailed): item is JoinRequestDetailed => {
+  return (item as JoinRequestDetailed).targetTrip !== undefined;
 };
 
-const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
+const convertToDateSections = (data: (Liane | JoinRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
   Object.entries(
     data.reduce((tmp, item) => {
-      const departureTime = isResolvedJoinLianeRequest(item)
-        ? getTripFromJoinRequest(item).departureTime
-        : getTripFromLiane(item, member).departureTime;
+      const departureTime = isResolvedJoinLianeRequest(item) ? getTripFromJoinRequest(item).departureTime : getUserTrip(item, member).departureTime;
 
       // Use date for grouping
       const group = extractDatePart(departureTime);
@@ -88,7 +86,7 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], membe
       }
       // add this item to its group
       return tmp;
-    }, {} as { [key: UTCDateTime]: { departureTime: UTCDateTime; item: Liane | JoinLianeRequestDetailed }[] })
+    }, {} as { [key: UTCDateTime]: { departureTime: UTCDateTime; item: Liane | JoinRequestDetailed }[] })
   )
     .map(
       ([group, items]) =>
@@ -105,12 +103,12 @@ const LianeItem = ({ item }: { item: Liane }) => {
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
-  const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
+  const { wayPoints } = useMemo(() => getUserTrip(item, user!.id!), [item, user]);
   const lastDriverLocUpdate = useCarDelay();
   const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
-  const status = useLianeStatus(item);
+  const status = useTripStatus(item);
   return (
     <View>
       <View>
@@ -119,7 +117,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
             <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
             <AppText style={styles.driverText}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
           </Row>
-          {!["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
+          {!["Finished", "Archived", "Canceled"].includes(item.state) && <TripStatusView liane={item} />}
           {/* <Row spacing={8} style={{ flex: 3 }}>
             <AppText style={[styles.geolocText, { color: geolocalisationEnabled ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
               Géolocalisation
@@ -195,7 +193,7 @@ const StartButton = ({ item }: { item: Liane }) => {
       }}
       onPress={() => {
         setLoading(true);
-        services.liane
+        services.trip
           .start(item.id!)
           .then(() => startGeolocationService(item))
           .catch(e => {
@@ -231,7 +229,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
   );
 };
 
-const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
+const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinRequestDetailed, TripSection>) => {
   const isRequest = isResolvedJoinLianeRequest(item);
   if (!isRequest) {
     // @ts-ignore
@@ -270,7 +268,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
   );
 };
 
-const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
+const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinRequestDetailed, TripSection> }) => (
   <View style={styles.header}>
     <AppText style={styles.headerTitle}>{capitalize(AppLocalization.formatMonthDay(new Date(date)))}</AppText>
   </View>

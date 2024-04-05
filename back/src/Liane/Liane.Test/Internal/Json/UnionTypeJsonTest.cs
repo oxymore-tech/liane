@@ -30,37 +30,37 @@ public sealed class UnionTypeJsonTest
   [Test]
   public void ShouldDeserializeLianeEvent()
   {
-    var lianeEvent = new LianeEvent.MemberHasLeft("lianeId1", "augustin");
-    var actual = JsonSerializer.Deserialize<LianeEvent>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\",\"type\":\"MemberHasLeft\"}", options);
+    var lianeEvent = new TripEvent.MemberHasLeft("lianeId1", "augustin");
+    var actual = JsonSerializer.Deserialize<TripEvent>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\",\"type\":\"MemberHasLeft\"}", options);
     Assert.AreEqual(lianeEvent, actual);
   }
 
   [Test]
   public void ShouldFailToDeserializeLianeEventWithMissingTypeInfo()
   {
-    Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<LianeEvent>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options));
+    Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<TripEvent>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options));
   }
 
   [Test]
   public void ShouldDeserializeMemberHasLeft()
   {
-    var lianeEvent = new LianeEvent.MemberHasLeft("lianeId1", "augustin");
-    var actual = JsonSerializer.Deserialize<LianeEvent.MemberHasLeft>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options);
+    var lianeEvent = new TripEvent.MemberHasLeft("lianeId1", "augustin");
+    var actual = JsonSerializer.Deserialize<TripEvent.MemberHasLeft>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options);
     Assert.AreEqual(lianeEvent, actual);
   }
 
   [Test]
   public void ShouldSerializeFromGenericTypeWithTypeInfo()
   {
-    var lianeEvent = new LianeEvent.MemberHasLeft("lianeId1", "augustin");
-    var actual = JsonSerializer.Serialize<LianeEvent>(lianeEvent, options);
+    var lianeEvent = new TripEvent.MemberHasLeft("lianeId1", "augustin");
+    var actual = JsonSerializer.Serialize<TripEvent>(lianeEvent, options);
     Assert.AreEqual("{\"type\":\"MemberHasLeft\",\"liane\":\"lianeId1\",\"member\":\"augustin\"}", actual);
   }
 
   [Test]
   public void ShouldSerializeTypeInfo()
   {
-    var lianeEvent = new LianeEvent.MemberHasLeft("lianeId1", "augustin");
+    var lianeEvent = new TripEvent.MemberHasLeft("lianeId1", "augustin");
     var actual = JsonSerializer.Serialize(lianeEvent, options);
     Assert.AreEqual("{\"type\":\"MemberHasLeft\",\"liane\":\"lianeId1\",\"member\":\"augustin\"}", actual);
   }
@@ -68,7 +68,7 @@ public sealed class UnionTypeJsonTest
   [Test]
   public void ShouldSerializeNotification()
   {
-    var notif = new Notification.Event("id", "userA", DateTime.Parse("2023-05-06T08:08:08Z").ToUniversalTime(), ImmutableList<Recipient>.Empty, ImmutableHashSet<Answer>.Empty, "title", "message", new LianeEvent.MemberAccepted("lianeId1", "augustin", "a", "b", 1, false));
+    var notif = new Notification.Event("id", "userA", DateTime.Parse("2023-05-06T08:08:08Z").ToUniversalTime(), ImmutableList<Recipient>.Empty, ImmutableHashSet<Answer>.Empty, "title", "message", new TripEvent.MemberAccepted("lianeId1", "augustin", "a", "b", 1, false));
     var actual = JsonSerializer.Serialize(notif, options);
     Console.Out.Write(actual);
     Assert.AreEqual("{\"type\":\"Event\",\"id\":\"id\",\"createdBy\":\"userA\",\"createdAt\":\"2023-05-06T08:08:08Z\",\"recipients\":[],\"answers\":[],\"title\":\"title\",\"message\":\"message\",\"payload\":{\"type\":\"MemberAccepted\",\"liane\":\"lianeId1\",\"member\":\"augustin\",\"from\":\"a\",\"to\":\"b\",\"seats\":1,\"takeReturnTrip\":false},\"seenAt\":null,\"uri\":\"liane://liane/lianeId1\"}", actual);

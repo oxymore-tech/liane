@@ -71,7 +71,7 @@ public abstract record Notification : IEntity<string>
     DateTime? SeenAt = null
   ) : Notification
   {
-    public override string? Uri { get; init; } = "liane://liane/" + Payload.Liane.Id;
+    public override string? Uri { get; init; } = "liane://trip/" + Payload.Trip.Id;
   }
 
   public sealed record Event(
@@ -82,17 +82,17 @@ public abstract record Notification : IEntity<string>
     ImmutableHashSet<Answer> Answers,
     string Title,
     string Message,
-    LianeEvent Payload,
+    TripEvent Payload,
     DateTime? SeenAt = null
   ) : Notification
   {
     public override string? Uri { get; init; } = Payload switch
     {
-      LianeEvent.JoinRequest => "liane://join_request/" + Id,
-      LianeEvent.MemberAccepted m => "liane://liane/" + m.Liane.Id,
+      TripEvent.JoinRequest => "liane://join_request/" + Id,
+      TripEvent.MemberAccepted m => "liane://trip/" + m.Trip.Id,
       _ => null
     };
   }
 }
 
-public sealed record Reminder(Ref<Trip.Trip> Liane, ImmutableList<WayPoint> Trip, bool Driver);
+public sealed record Reminder(Ref<Trip.Trip> Trip, ImmutableList<WayPoint> WayPoints, bool Driver);

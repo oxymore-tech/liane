@@ -4,9 +4,9 @@ using Liane.Api.Trip;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class DistanceFromComparer : IComparer<LianeMatch>
+public sealed class DistanceFromComparer : IComparer<TripMatch>
 {
-  public int Compare(LianeMatch? x, LianeMatch? y)
+  public int Compare(TripMatch? x, TripMatch? y)
   {
     if (x is null)
     {

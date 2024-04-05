@@ -6,7 +6,7 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Trip;
 
 public sealed record TrackingInfo(
-  Ref<Trip> Liane,
+  Ref<Trip> Trip,
   Car? Car,
   ImmutableDictionary<string, TrackedMemberLocation> OtherMembers
 );
@@ -22,7 +22,7 @@ public sealed record Car(
 
 public sealed record TrackedMemberLocation(
   Ref<Auth.User> Member,
-  Ref<Trip> Liane,
+  Ref<Trip> Trip,
   DateTime At,
   Ref<RallyingPoint> NextPoint,
   long Delay,

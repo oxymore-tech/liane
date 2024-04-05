@@ -2,8 +2,8 @@ import React, { PropsWithChildren, useContext, useEffect } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { InfiniteData, useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
-import { JoinLianeRequestDetailed, Liane, LianeState, Notification, PaginatedResponse } from "@liane/common";
-import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { JoinRequestDetailed, Trip, TripState, Notification, PaginatedResponse } from "@liane/common";
+import { JoinRequestsQueryKey, TripDetailQueryKey, TripQueryKey } from "@/screens/user/MyTripsScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
 
@@ -20,20 +20,20 @@ export const useQueryUpdater = () => {
   return useContext<IQueryUpdater>(QueryUpdaterContext);
 };
 
-export const FutureStates: LianeState[] = ["NotStarted", "Started"];
+export const FutureStates: TripState[] = ["NotStarted", "Started"];
 
-const updateLianeList = (old: PaginatedResponse<Liane>, liane: Liane) => {
-  const found = old.data.findIndex(l => l.id === liane.id);
-  if (FutureStates.includes(liane.state)) {
+const updateTripList = (old: PaginatedResponse<Trip>, trip: Trip) => {
+  const found = old.data.findIndex(l => l.id === trip.id);
+  if (FutureStates.includes(trip.state)) {
     if (found >= 0) {
-      old.data[found] = liane;
+      old.data[found] = trip;
       return old;
     } else {
-      old.data.unshift(liane);
+      old.data.unshift(trip);
       return { ...old, pageSize: old.pageSize + 1 };
     }
   } else if (found >= 0) {
-    return { ...old, pageSize: old.pageSize - 1, data: old.data.filter(l => l.id !== liane.id) };
+    return { ...old, pageSize: old.pageSize - 1, data: old.data.filter(l => l.id !== trip.id) };
   }
   return old;
 };
@@ -48,8 +48,8 @@ const updateNotificationPages = (old: InfiniteData<PaginatedResponse<Notificatio
   }
 };
 
-const updateJoinRequestsList = (old: PaginatedResponse<JoinLianeRequestDetailed>, liane: Liane) => {
-  const updatedData = old.data.filter(joinRequest => joinRequest.targetLiane.id !== liane.id);
+const updateJoinRequestsList = (old: PaginatedResponse<JoinRequestDetailed>, trip: Trip) => {
+  const updatedData = old.data.filter(joinRequest => joinRequest.targetTrip.id !== trip.id);
   return { pageSize: updatedData.length, data: updatedData };
 };
 
@@ -73,31 +73,31 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
 
   // Update liane local cache
 
-  useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
-    queryClient.setQueryData<PaginatedResponse<JoinLianeRequestDetailed>>(JoinRequestsQueryKey, old => {
+  useSubscription<Trip>(services.realTimeHub.tripUpdates, trip => {
+    queryClient.setQueryData<PaginatedResponse<JoinRequestDetailed>>(JoinRequestsQueryKey, old => {
       if (!old) {
         return { pageSize: 0, data: [] };
       }
-      return updateJoinRequestsList(old, liane);
+      return updateJoinRequestsList(old, trip);
     });
-    queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
+    queryClient.setQueryData<PaginatedResponse<Trip>>(TripQueryKey, old => {
       if (!old) {
-        return { pageSize: 1, data: [liane] };
+        return { pageSize: 1, data: [trip] };
       }
-      return updateLianeList(old, liane);
+      return updateTripList(old, trip);
     });
-    queryClient.setQueryData<Liane>(LianeDetailQueryKey(liane.id!), _ => liane);
-    if (liane.state !== "NotStarted") {
+    queryClient.setQueryData<Trip>(TripDetailQueryKey(trip.id!), _ => trip);
+    if (trip.state !== "NotStarted") {
       // Cancel eventual reminder
-      services.reminder.cancelReminder(liane.id!);
+      services.reminder.cancelReminder(trip.id!);
     }
 
     // Cancel pings if necessary
-    LianeGeolocation.currentLiane().then(async current => {
+    LianeGeolocation.currentTrip().then(async current => {
       if (!current) {
         return;
       }
-      if (current === liane.id && liane.state !== "Started") {
+      if (current === trip.id && trip.state !== "Started") {
         await LianeGeolocation.stopSendingPings();
       }
     });

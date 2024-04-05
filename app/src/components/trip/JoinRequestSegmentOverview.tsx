@@ -1,10 +1,10 @@
 import React from "react";
 import { WayPointsView } from "@/components/trip/WayPointsView";
-import { JoinLianeRequestDetailed } from "@liane/common";
+import { JoinRequestDetailed } from "@liane/common";
 import { getTripFromJoinRequest } from "@/components/trip/trip";
 
 export interface JoinRequestSegmentOverviewProps {
-  request: JoinLianeRequestDetailed;
+  request: JoinRequestDetailed;
 }
 
 export const JoinRequestSegmentOverview = (props: JoinRequestSegmentOverviewProps) => {

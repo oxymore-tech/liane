@@ -8,7 +8,7 @@ namespace Liane.Test.Mock;
 
 public sealed class MockAutomaticAnswerService : IAutomaticAnswerService
 {
-  public Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<User> newMember)
+  public Task<bool> TryAcceptRequest(TripEvent.JoinRequest joinRequest, Ref<User> newMember)
   {
     return Task.FromResult(false);
   }

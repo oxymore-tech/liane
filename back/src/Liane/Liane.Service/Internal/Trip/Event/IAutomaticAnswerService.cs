@@ -6,5 +6,5 @@ namespace Liane.Service.Internal.Trip.Event;
 
 public interface IAutomaticAnswerService
 {
-  Task<bool> TryAcceptRequest(LianeEvent.JoinRequest joinRequest, Ref<Api.Auth.User> newMember);
+  Task<bool> TryAcceptRequest(TripEvent.JoinRequest joinRequest, Ref<Api.Auth.User> newMember);
 }

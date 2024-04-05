@@ -11,39 +11,39 @@ using LngLatTuple = Tuple<double, double>;
 
 internal static class RouteOptimizer
 {
-  public static ImmutableList<LianeSegment> TruncateOverlappingSegments(ImmutableList<LianeSegment> raw)
+  public static ImmutableList<TripSegment> TruncateOverlappingSegments(ImmutableList<TripSegment> raw)
   {
     var cutCoordinate = new LngLatTuple(-1000, -1000);
-    var groupedCoordinates = new Dictionary<LngLatTuple, LianeSet>();
+    var groupedCoordinates = new Dictionary<LngLatTuple, TripSet>();
     var orderedCoordinates = new List<LngLatTuple>();
-    foreach (var lianeSegment in raw)
+    foreach (var tripSegment in raw)
     {
       orderedCoordinates.Add(cutCoordinate);
-      var lianeSet = new LianeSet(lianeSegment.Lianes.ToHashSet());
-      for (var index = 0; index < lianeSegment.Coordinates.Count; index++)
+      var lianeSet = new TripSet(tripSegment.Trips.ToHashSet());
+      for (var index = 0; index < tripSegment.Coordinates.Count; index++)
       {
-        var coordinate = lianeSegment.Coordinates[index];
+        var coordinate = tripSegment.Coordinates[index];
         if (groupedCoordinates.TryGetValue(coordinate, out var currentLianeSet))
         {
           groupedCoordinates[coordinate] = lianeSet.Merge(currentLianeSet);
           if (!orderedCoordinates.Last().Equals(cutCoordinate))
           {
-            if (index < lianeSegment.Coordinates.Count-1) orderedCoordinates.Add(lianeSegment.Coordinates[index+1]);
+            if (index < tripSegment.Coordinates.Count-1) orderedCoordinates.Add(tripSegment.Coordinates[index+1]);
             orderedCoordinates.Add(cutCoordinate);
           }
         }
         else
         {
           groupedCoordinates[coordinate] = lianeSet;
-          if (index > 0 && orderedCoordinates.Last().Equals(cutCoordinate))orderedCoordinates.Add(lianeSegment.Coordinates[index-1]);
+          if (index > 0 && orderedCoordinates.Last().Equals(cutCoordinate))orderedCoordinates.Add(tripSegment.Coordinates[index-1]);
           orderedCoordinates.Add(coordinate);
         }
       }
     }
 
-    var lianeSegments = new List<LianeSegment>();
+    var tripSegments = new List<TripSegment>();
     var coordinates = new List<LngLatTuple>();
-    LianeSet? previousLianeSet = null;
+    TripSet? previousLianeSet = null;
     for (var index = 0; index < orderedCoordinates.Count; index++)
     {
       var coordinate = orderedCoordinates[index];
@@ -52,8 +52,8 @@ internal static class RouteOptimizer
         // Special case the route is already truncated because is crossing another route
         if (previousLianeSet != null)
         {
-          var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-          lianeSegments.Add(lianeSegment);
+          var lianeSegment = new TripSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Trips);
+          tripSegments.Add(lianeSegment);
         }
 
         coordinates.Clear();
@@ -65,8 +65,8 @@ internal static class RouteOptimizer
       if (coordinates.Count > 1 && previousLianeSet != null && currentLianeSet.HashKey != previousLianeSet.Value.HashKey)
       {
         if (index < orderedCoordinates.Count - 1 && !orderedCoordinates[index + 1].Equals(cutCoordinate)) coordinates.Add(orderedCoordinates[index + 1]);
-        var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-        lianeSegments.Add(lianeSegment);
+        var lianeSegment = new TripSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Trips);
+        tripSegments.Add(lianeSegment);
         coordinates.Clear();
       }
 
@@ -76,27 +76,27 @@ internal static class RouteOptimizer
 
     if (coordinates.Count > 1 && previousLianeSet != null)
     {
-      var lianeSegment = new LianeSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Lianes);
-      lianeSegments.Add(lianeSegment);
+      var tripSegment = new TripSegment(coordinates.ToImmutableList(), previousLianeSet.Value.Trips);
+      tripSegments.Add(tripSegment);
     }
 
-    return lianeSegments//.Where(s => s.Coordinates.Count > 1)
+    return tripSegments//.Where(s => s.Coordinates.Count > 1)
       .ToImmutableList();
   }
 
-  internal readonly struct LianeSet
+  internal readonly struct TripSet
   {
-    public LianeSet(IEnumerable<Ref<Api.Trip.Trip>> lianes)
+    public TripSet(IEnumerable<Ref<Api.Trip.Trip>> trips)
     {
-      HashKey = string.Join("_", lianes.Select(r => r.Id).Distinct().Order());
+      HashKey = string.Join("_", trips.Select(r => r.Id).Distinct().Order());
     }
 
-    public ImmutableList<Ref<Api.Trip.Trip>> Lianes => HashKey.Split("_").Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
+    public ImmutableList<Ref<Api.Trip.Trip>> Trips => HashKey.Split("_").Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
     public string HashKey { get; }
 
-    public LianeSet Merge(LianeSet other)
+    public TripSet Merge(TripSet other)
     {
-      return new LianeSet(other.Lianes.Concat(Lianes));
+      return new TripSet(other.Trips.Concat(Trips));
     }
   }
 }

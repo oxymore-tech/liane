@@ -1,4 +1,4 @@
-import { Entity, LianeMember, Ref, User, UTCDateTime, WayPoint } from "@liane/common/src";
+import { Entity, TripMember, Ref, User, UTCDateTime, WayPoint } from "@liane/common/src";
 import { PaginatedRequestParams } from "@liane/common";
 
 export type TripRecord = Entity &
@@ -6,7 +6,7 @@ export type TripRecord = Entity &
     startedAt: UTCDateTime;
     finishedAt?: UTCDateTime;
     wayPoints: WayPoint[];
-    members: LianeMember[];
+    members: TripMember[];
     driver: { user: Ref<User>; canDrive: boolean };
   }>;
 

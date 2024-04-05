@@ -66,7 +66,7 @@ class LocationService : Service() {
           locationObject.put("lng", location.longitude)
           val jsonObject = JSONObject()
           jsonObject.put("type", "MemberPing")
-          jsonObject.put("liane", pingConfig.lianeId)
+          jsonObject.put("trip", pingConfig.tripId)
           jsonObject.put("coordinate", locationObject)
           jsonObject.put("timestamp", location.time)
           if (delay > 0) jsonObject.put("delay", delay)
@@ -82,7 +82,7 @@ class LocationService : Service() {
           val res = this.getResponseCode();
           if (res != 204) Log.d("PING", "Response code was : " + this.getResponseCode().toString())
           if (res == 404 || res == 400) {
-            // Stop service if liane is no longer valid
+            // Stop service if trip is no longer valid
             stopSelf()
           }
           this.disconnect()
@@ -165,7 +165,7 @@ class LocationService : Service() {
 
   private fun createNotification(): Notification {
     val intent = Intent(Intent.ACTION_VIEW)
-    if (::pingConfig.isInitialized) intent.data = Uri.parse("liane://liane/" + pingConfig.lianeId)
+    if (::pingConfig.isInitialized) intent.data = Uri.parse("liane://trip/" + pingConfig.tripId)
     val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     val notificationBuilder =
       NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -194,7 +194,7 @@ class LocationService : Service() {
       try {
         val pingConfigRaw = intent.extras!!.getBundle("pingConfig")!!
         this.pingConfig = PingConfig(
-          lianeId = pingConfigRaw.getString("lianeId")!!,
+          tripId = pingConfigRaw.getString("tripId")!!,
           userId = pingConfigRaw.getString("userId")!!,
           token = pingConfigRaw.getString("token")!!,
           url = pingConfigRaw.getString("url")!!
@@ -222,7 +222,7 @@ class LocationService : Service() {
         mNotificationManager.notify(serviceId, notification)
         lastLocationResult = null
         val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        preferences.edit().putString("lianeId", pingConfig.lianeId).apply()
+        preferences.edit().putString("tripId", pingConfig.tripId).apply()
         startTracking(true)
         Timer().schedule(object : TimerTask() {
           override fun run() {
@@ -244,7 +244,7 @@ class LocationService : Service() {
   override fun onDestroy() {
     updateClient.removeLocationUpdates(locationCallback)
     val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-    preferences.edit().remove("lianeId").apply()
+    preferences.edit().remove("tripId").apply()
     super.onDestroy()
 
   }

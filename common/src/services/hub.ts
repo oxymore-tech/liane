@@ -1,7 +1,7 @@
-import { ChatMessage, ConversationGroup, FullUser, Liane, PaginatedRequestParams, PaginatedResponse, Ref, TrackingInfo, UTCDateTime } from "../api";
+import { ChatMessage, ConversationGroup, FullUser, Trip, PaginatedRequestParams, PaginatedResponse, Ref, TrackingInfo, UTCDateTime } from "../api";
 import { Answer, Notification } from "./notification";
 import { AppLogger } from "../logger";
-import { LianeEvent } from "../event";
+import { TripEvent } from "../event";
 import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
@@ -29,7 +29,7 @@ export interface HubService {
 
   subscribeToNotifications(callback: OnNotificationCallback): SubscriptionLike;
 
-  postEvent(lianeEvent: LianeEvent): Promise<void>;
+  postEvent(lianeEvent: TripEvent): Promise<void>;
 
   postAnswer(notificationId: string, answer: Answer): Promise<void>;
 
@@ -43,7 +43,7 @@ export interface HubService {
 
   unreadConversations: Observable<Ref<ConversationGroup>[]>;
   unreadNotifications: Observable<Ref<Notification>[]>;
-  lianeUpdates: Observable<Liane>;
+  lianeUpdates: Observable<Trip>;
   userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
 }
@@ -64,7 +64,7 @@ export abstract class AbstractHubService implements HubService {
   protected currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
-  lianeUpdates = new Subject<Liane>();
+  lianeUpdates = new Subject<Trip>();
   userUpdates = new Subject<FullUser>();
   unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
   hubState = new Subject<HubState>();
@@ -186,7 +186,7 @@ export abstract class AbstractHubService implements HubService {
     }
   };
 
-  protected receiveLianeUpdate = (liane: Liane) => {
+  protected receiveLianeUpdate = (liane: Trip) => {
     this.lianeUpdates.next(liane);
   };
 
@@ -200,7 +200,7 @@ export abstract class AbstractHubService implements HubService {
 
   abstract joinGroupChat(conversationId: Ref<ConversationGroup>): Promise<ConversationGroup>;
 
-  abstract postEvent(lianeEvent: LianeEvent): Promise<void>;
+  abstract postEvent(lianeEvent: TripEvent): Promise<void>;
 
   abstract postAnswer(notificationId: string, answer: Answer): Promise<void>;
 
@@ -304,7 +304,7 @@ export class HubServiceClient extends AbstractHubService {
     await this.hub.invoke("SendToGroup", message, this.currentConversationId);
   }
 
-  async postEvent(lianeEvent: LianeEvent) {
+  async postEvent(lianeEvent: TripEvent) {
     await this.hub.invoke("PostEvent", lianeEvent);
   }
 

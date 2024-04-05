@@ -19,17 +19,17 @@ public class MatchTest
       new WayPoint(LabeledPositions.GorgesDuTarnCausses, 0,0, DateTime.Now),
       new WayPoint(LabeledPositions.BalsiegeParkingEglise, 0,0, DateTime.Now),
       new WayPoint(LabeledPositions.Mende, 0,0, DateTime.Now)
-    }.ToImmutableList(), null, null, LianeState.NotStarted, null);
+    }.ToImmutableList(), null, null, TripState.NotStarted, null);
 #pragma warning restore CS8625
 
-    var m1 = new LianeMatch(liane1, 2, null, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.ChamperbouxEglise, LabeledPositions.Mende, new List<WayPoint>
+    var m1 = new TripMatch(liane1, 2, null, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.ChamperbouxEglise, LabeledPositions.Mende, new List<WayPoint>
     {
       new WayPoint(LabeledPositions.GorgesDuTarnCausses, 0,0, DateTime.Now),
       new WayPoint(LabeledPositions.ChamperbouxEglise, 0,0, DateTime.Now),
       new WayPoint(LabeledPositions.BalsiegeParkingEglise, 0,0, DateTime.Now),
       new WayPoint(LabeledPositions.Mende, 0,0, DateTime.Now)
     }.ToImmutableList()));
-    var m2 = new LianeMatch(liane1, 1, null,new Api.Trip.Match.Exact(LabeledPositions.GorgesDuTarnCausses, LabeledPositions.BalsiegeParkingEglise));
+    var m2 = new TripMatch(liane1, 1, null,new Api.Trip.Match.Exact(LabeledPositions.GorgesDuTarnCausses, LabeledPositions.BalsiegeParkingEglise));
 
     var matchingTrip1 = m1.GetMatchingTrip();
     var matchingTrip2 = m2.GetMatchingTrip();

@@ -13,7 +13,7 @@ public interface INotificationService : ICrudService<Notification>
 
   Task<Notification> SendInfo(string title, string message, Ref<Auth.User> to, string? uri);
 
-  Task<Notification> SendEvent(string title, string message, Ref<Auth.User> createdBy, Ref<Auth.User> to, LianeEvent lianeEvent, params Answer[] answers);
+  Task<Notification> SendEvent(string title, string message, Ref<Auth.User> createdBy, Ref<Auth.User> to, TripEvent tripEvent, params Answer[] answers);
   
   Task Answer(Ref<Notification> id, Answer answer);
 
@@ -23,5 +23,5 @@ public interface INotificationService : ICrudService<Notification>
 
   Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Auth.User> userId);
 
-  Task CleanNotifications(IEnumerable<Ref<Trip.Trip>> lianes);
+  Task CleanNotifications(IEnumerable<Ref<Trip.Trip>> trips);
 }

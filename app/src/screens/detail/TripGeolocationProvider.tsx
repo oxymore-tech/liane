@@ -1,40 +1,40 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { Liane, TrackingInfo } from "@liane/common";
+import { Trip, TrackingInfo } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
-import { useLianeStatus } from "@/components/trip/trip";
+import { useTripStatus } from "@/components/trip/trip";
 import { LianeGeolocation } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
 import { AppLogger } from "@/api/logger";
 import { useRealtimeDelay } from "@/util/hooks/delay";
 
 export interface TripGeolocation {
-  liane: Liane;
+  trip: Trip;
   isActive: boolean;
   subscribe: (callback: (l: TrackingInfo | null) => void) => SubscriptionLike | undefined;
 }
 // @ts-ignore
 const TripGeolocationContext = createContext<TripGeolocation | undefined>();
-export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & PropsWithChildren) => {
+export const TripGeolocationProvider = ({ trip, children }: { trip: Trip } & PropsWithChildren) => {
   const [geolocRunning, setGeolocRunning] = useState<boolean | undefined>(undefined);
   const { services } = useContext(AppContext);
   const [observable, setObservable] = useState<Observable<TrackingInfo | null> | null>();
   const isFocused = useIsFocused();
-  const lianeStatus = useLianeStatus(liane);
-  const shouldBeActive = isFocused && (lianeStatus === "Started" || lianeStatus === "StartingSoon");
+  const tripStatus = useTripStatus(trip);
+  const shouldBeActive = isFocused && (tripStatus === "Started" || tripStatus === "StartingSoon");
 
   // Check if service is running locally
   useEffect(() => {
     if (shouldBeActive) {
-      LianeGeolocation.currentLiane().then(id => {
-        setGeolocRunning(liane.id! === id);
+      LianeGeolocation.currentTrip().then(id => {
+        setGeolocRunning(trip.id! === id);
       });
     } else {
       setGeolocRunning(false);
     }
-    const sub = LianeGeolocation.watchRunningService(l => setGeolocRunning(l === liane.id!));
+    const sub = LianeGeolocation.watchRunningService(l => setGeolocRunning(l === trip.id!));
     return () => sub.unsubscribe();
-  }, [shouldBeActive, liane.id]);
+  }, [shouldBeActive, trip.id]);
 
   // Observe shared position by other members
   useEffect(() => {
@@ -44,21 +44,21 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
       return;
     }
     const subject = new BehaviorSubject<TrackingInfo | null>(null);
-    const sus = services.realTimeHub.subscribeToTrackingInfo(liane.id!, l => {
+    const sus = services.realTimeHub.subscribeToTrackingInfo(trip.id!, l => {
       subject.next(l);
     });
     setObservable(subject);
     return () => {
       sus.then(s => s.unsubscribe());
     };
-  }, [liane, services.realTimeHub, shouldBeActive]);
+  }, [trip, services.realTimeHub, shouldBeActive]);
 
   if (geolocRunning === undefined) {
     // Return null while fetching informations
     return null;
   }
   const value: TripGeolocation = {
-    liane,
+    trip: trip,
     isActive: geolocRunning,
     subscribe: callback => {
       return observable?.subscribe(callback);

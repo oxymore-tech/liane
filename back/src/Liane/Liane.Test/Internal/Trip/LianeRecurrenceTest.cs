@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Liane.Test.Internal.Trip;
 
-public class LianeRecurrenceTest
+public class TripRecurrenceTest
 {
   [Test]
   public void ShouldEnumerateActiveDays()

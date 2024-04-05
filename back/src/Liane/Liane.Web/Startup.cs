@@ -92,9 +92,9 @@ public static class Startup
     services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
     services.AddService<TripServiceImpl>();
-    services.AddService<LianeRecurrenceServiceImpl>();
-    services.AddService<LianeTrackerServiceImpl>();
-    services.AddService<LianeTrackerCache>();
+    services.AddService<TripRecurrenceServiceImpl>();
+    services.AddService<TripTrackerServiceImpl>();
+    services.AddService<TripTrackerCache>();
     
     services.AddService<LianeFetcher>();
     services.AddService<LianeMatcher>();
@@ -114,9 +114,9 @@ public static class Startup
     services.AddService<MockServiceImpl>();
 
     services.AddSettings<GeneratorSettings>(context);
-    services.AddHostedService<LianeMockGenerator>();
-    services.AddHostedService<LianeStatusUpdate>();
-    services.AddHostedService<LianeRecurrenceScheduler>();
+    services.AddHostedService<TripMockGenerator>();
+    services.AddHostedService<TripStatusUpdate>();
+    services.AddHostedService<TripRecurrenceScheduler>();
 
     services.AddHealthChecks();
   }
@@ -355,7 +355,7 @@ public static class Startup
       .GetAwaiter()
       .GetResult();
     
-    var lianeTrackerService = app.ApplicationServices.GetRequiredService<ILianeTrackerService>();
+    var lianeTrackerService = app.ApplicationServices.GetRequiredService<ITripTrackerService>();
     lianeTrackerService.SyncTrackers()
       .ConfigureAwait(false)
       .GetAwaiter()

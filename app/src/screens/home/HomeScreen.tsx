@@ -195,7 +195,7 @@ const HomeScreen = () => {
   const [m] = useState(() =>
     HomeMapMachine({
       services: {
-        match: ctx => services.liane.match(getSearchFilter(ctx.filter)),
+        match: ctx => services.trip.match(getSearchFilter(ctx.filter)),
         cacheRecentTrip: trip => services.location.cacheRecentTrip(trip).catch(e => console.error(e)),
         cacheRecentPoint: rp => services.location.cacheRecentLocation(rp).catch(e => console.error(e))
       },

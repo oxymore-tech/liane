@@ -1,9 +1,9 @@
 import {
   addSeconds,
-  JoinLianeRequestDetailed,
-  Liane,
+  JoinRequestDetailed,
+  Trip,
   LianeMatch,
-  LianeState,
+  TripState,
   RallyingPoint,
   Ref,
   UnionUtils,
@@ -25,12 +25,12 @@ export const getTotalDuration = (trip: WayPoint[]) => {
 export const getTotalDistance = (trip: WayPoint[]) => {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 };
-export const getTripFromLiane = (liane: Liane, user: Ref<User>) => {
-  const member = liane.members.find(m => m.user.id === user);
-  return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
+export const getUserTrip = (trip: Trip, user: Ref<User>) => {
+  const member = trip.members.find(m => m.user.id === user);
+  return getTrip(trip.departureTime, trip.wayPoints, member?.to, member?.from);
 };
-export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
-  const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetLiane.wayPoints : request.match.wayPoints;
+export const getTripFromJoinRequest = (request: JoinRequestDetailed) => {
+  const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetTrip.wayPoints : request.match.wayPoints;
   const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
   const arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
   const departureTime = wayPoints[departureIndex].eta;
@@ -38,7 +38,7 @@ export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
 };
 
 export const getTripFromMatch = (liane: LianeMatch) => {
-  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.trip.wayPoints : liane.match.wayPoints;
   const departureIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.pickup);
   const arrivalIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.deposit);
   return <UserTripMatch>{
@@ -102,62 +102,62 @@ export const getTripMatch = (to: RallyingPoint, from: RallyingPoint, originalTri
   };
 };
 
-export type LianeStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
+export type TripStatus = TripState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
 
-const getLianeStatus = (liane: Liane, user: Ref<User>): { status: LianeStatus; nextUpdateMillis?: number | undefined } => {
-  if (liane.state === "NotStarted") {
-    const [_, delta] = getTimeForUser(liane, user, "from");
+const getTripStatus = (trip: Trip, user: Ref<User>): { status: TripStatus; nextUpdateMillis?: number | undefined } => {
+  if (trip.state === "NotStarted") {
+    const [, delta] = getTimeForUser(trip, user, "from");
 
     if (delta > 0 && delta <= 120 * 60) {
-      if (liane.members.length > 1) {
+      if (trip.members.length > 1) {
         return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
       }
     } else if (delta <= 0) {
-      const [_, deltaArrival] = getTimeForUser(liane, user, "to");
+      const [, deltaArrival] = getTimeForUser(trip, user, "to");
       if (deltaArrival <= 0) {
         return { status: "Started" };
       } else {
         return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
       }
     }
-    if (liane.members.length < 2) {
-      if (liane.driver.canDrive) {
+    if (trip.members.length < 2) {
+      if (trip.driver.canDrive) {
         return { status: "AwaitingPassengers" };
       } else {
         return { status: "AwaitingDriver" };
       }
     }
   }
-  return { status: liane.state };
+  return { status: trip.state };
 };
-const getTimeForUser = (liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] => {
-  const pointId = liane.members.find(m => m.user.id === user)![type];
-  const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
+const getTimeForUser = (trip: Trip, user: Ref<User>, type: "to" | "from"): [Date, number] => {
+  const pointId = trip.members.find(m => m.user.id === user)![type];
+  const time = new Date(trip.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
   // @ts-ignore
   const delta = (time - new Date()) / 1000;
   return [time, delta];
 };
 
-export const useLianeStatus = (liane: Liane | undefined): LianeStatus | undefined => {
+export const useTripStatus = (trip: Trip | undefined): TripStatus | undefined => {
   const { user } = useContext(AppContext);
   const userId = user!.id!;
 
-  const [status, setStatus] = useState(liane ? getLianeStatus(liane, userId) : undefined);
+  const [status, setStatus] = useState(trip ? getTripStatus(trip, userId) : undefined);
 
   useEffect(() => {
-    if (!liane) {
+    if (!trip) {
       return;
     }
-    setStatus(getLianeStatus(liane, userId));
-  }, [liane, userId]);
+    setStatus(getTripStatus(trip, userId));
+  }, [trip, userId]);
   useEffect(() => {
-    if (liane && status?.nextUpdateMillis !== undefined) {
+    if (trip && status?.nextUpdateMillis !== undefined) {
       const timeout = setTimeout(() => {
-        setStatus(getLianeStatus(liane, userId));
+        setStatus(getTripStatus(trip, userId));
       }, status.nextUpdateMillis);
       return () => clearTimeout(timeout);
     }
-  }, [status?.nextUpdateMillis, liane, userId]);
+  }, [status?.nextUpdateMillis, trip, userId]);
 
   return status?.status;
 };

@@ -31,13 +31,13 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    var liane = await tripService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
+    var liane = await tripService.Create(new TripRequest(DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
 
     CurrentContext.SetCurrentUser(userB);
-    var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
+    var joinRequest = new TripEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
     await eventDispatcher.Dispatch(joinRequest);
 
-    var notifications = await notificationService.List(new NotificationFilter(userA.Id, null, liane.Id, new PayloadType.Event<LianeEvent.JoinRequest>()), new Pagination());
+    var notifications = await notificationService.List(new NotificationFilter(userA.Id, null, liane.Id, new PayloadType.Event<TripEvent.JoinRequest>()), new Pagination());
 
     Assert.AreEqual(notifications.Data.Count, 1);
 
@@ -50,5 +50,4 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
 
     CollectionAssert.AreEquivalent(actual.Members.Select(m => m.User.Id), ImmutableList.Create(userA.Id, userB.Id));
   }
-
 }

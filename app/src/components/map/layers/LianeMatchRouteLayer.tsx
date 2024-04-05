@@ -26,15 +26,15 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
     const trip = getTripMatch(
       toPoint,
       fromPoint,
-      match.liane.wayPoints,
-      match.liane.departureTime,
-      isCompatibleMatch ? match.match.wayPoints : match.liane.wayPoints
+      match.trip.wayPoints,
+      match.trip.departureTime,
+      isCompatibleMatch ? match.match.wayPoints : match.trip.wayPoints
     );
     return trip.wayPoints; //.slice(trip.departureIndex, trip.arrivalIndex + 1);
   }, [fromPoint, match, toPoint]);
 
   //console.log(to, from, wayPoints);
-  const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.liane.id!], () => {
+  const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.trip.id!], () => {
     const wp = [...(isSamePickup ? [] : [from!.location]), ...wayPoints.map(w => w.rallyingPoint.location), ...(isSameDeposit ? [] : [to!.location])];
 
     return services.routing.getRoute(wp);
@@ -152,5 +152,5 @@ export const RouteLayer = ({
 };
 export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFeatures?: FeatureCollection; match: LianeMatch }) => {
   const { wayPoints } = useMemo(() => getTripFromMatch(match), [match]);
-  return <RouteLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={match.liane.id} />;
+  return <RouteLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={match.trip.id} />;
 };

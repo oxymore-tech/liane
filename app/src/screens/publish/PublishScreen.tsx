@@ -33,7 +33,7 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 import { CreatePublishLianeMachine, PublishLianeContext } from "@/screens/publish/StateMachine";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { SelectOnMapView } from "@/screens/publish/SelectOnMapView";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { TripQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
@@ -62,7 +62,7 @@ export const PublishScreen = () => {
   const [m] = useState(() =>
     CreatePublishLianeMachine(async ctx => {
       const geolocationLevel = await AppStorage.getSetting("geolocation");
-      const liane = await services.liane.post({
+      const liane = await services.trip.post({
         to: ctx.request.to!.id!,
         from: ctx.request.from!.id!,
         departureTime: ctx.request.departureTime!.toISOString(),
@@ -72,7 +72,7 @@ export const PublishScreen = () => {
         geolocationLevel: geolocationLevel || "None"
       });
 
-      await queryClient.invalidateQueries(LianeQueryKey);
+      await queryClient.invalidateQueries(TripQueryKey);
       await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
       return liane;
     }, route.params?.initialValue)

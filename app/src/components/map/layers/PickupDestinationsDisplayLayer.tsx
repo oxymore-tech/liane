@@ -23,7 +23,7 @@ export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, po
   }, [dateArg, point, type]);
 
   const controller = useAppMapViewController();
-  const url = RNAppEnv.lianeFilteredTilesUrl + "?" + dateArg + `&${type}=` + point;
+  const url = `${RNAppEnv.lianeFilteredTilesUrl}?${dateArg}&${type}=${point}`;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (

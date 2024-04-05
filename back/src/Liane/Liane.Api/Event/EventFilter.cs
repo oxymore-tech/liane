@@ -23,7 +23,7 @@ public abstract record PayloadType
       return (PayloadType)Activator.CreateInstance(payloadType)!;
     }
 
-    var lianeEventType = type.MatchSubType<LianeEvent>();
+    var lianeEventType = type.MatchSubType<TripEvent>();
     if (lianeEventType is null)
     {
       throw new ValidationException(nameof(type), ValidationMessage.UnknownValue);
@@ -42,7 +42,7 @@ public abstract record PayloadType
     public virtual Type? SubType => null;
   }
 
-  public sealed record Event<T> : Event where T : LianeEvent
+  public sealed record Event<T> : Event where T : TripEvent
   {
     public override Type SubType => typeof(T);
   }

@@ -38,7 +38,7 @@ const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
       </>
     );
   },
-  (repository, params, cursor) => repository.liane.list(["Archived", "Canceled"], { cursor, limit: 10, asc: false }),
+  (repository, params, cursor) => repository.trip.list(["Archived", "Canceled"], { cursor, limit: 10, asc: false }),
   LianeHistoryQueryKey,
   NoHistoryView
 );

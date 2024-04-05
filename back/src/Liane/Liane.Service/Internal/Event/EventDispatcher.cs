@@ -15,7 +15,7 @@ public sealed class EventDispatcher
     this.serviceProvider = serviceProvider;
   }
 
-  public async Task Dispatch(LianeEvent e, Ref<Api.Auth.User>? sender = null)
+  public async Task Dispatch(TripEvent e, Ref<Api.Auth.User>? sender = null)
   {
     var eventListeners = serviceProvider.GetServices<IEventListener>();
     foreach (var eventListener in eventListeners)

@@ -101,10 +101,10 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   const formattedData = useMemo(() => {
     const matches = (state.context.matches ?? []).map(item => {
       const lianeIsExactMatch = UnionUtils.isInstanceOf(item.match, "Exact");
-      const wayPoints = lianeIsExactMatch ? item.liane.wayPoints : item.match.wayPoints;
+      const wayPoints = lianeIsExactMatch ? item.trip.wayPoints : item.match.wayPoints;
       const fromPoint = getPoint(item, "pickup");
       const toPoint = getPoint(item, "deposit");
-      const trip = getTrip(item.liane.departureTime, wayPoints, toPoint.id, fromPoint.id);
+      const trip = getTrip(item.trip.departureTime, wayPoints, toPoint.id, fromPoint.id);
       const tripDuration = getTotalDuration(trip.wayPoints);
       return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration, returnTime: item.returnTime };
     });
@@ -124,7 +124,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   }, [showCompatible, JSON.stringify(formattedData)]);
   useEffect(() => {
     const d = showCompatible ? formattedData[1] : formattedData[0];
-    machine.send("DISPLAY", { data: d.map(item => item.lianeMatch.liane.id) });
+    machine.send("DISPLAY", { data: d.map(item => item.lianeMatch.trip.id) });
   }, [showCompatible, JSON.stringify(formattedData)]);
 
   if (state.matches({ match: "failed" })) {
@@ -146,9 +146,9 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   }
 
   const renderItem = ({ item }: { item: { lianeMatch: LianeMatch; trip: UserTrip; returnTime: UTCDateTime } }) => {
-    const driver = item.lianeMatch.liane.members.find((l: LianeMember) => l.user.id === item.lianeMatch.liane.driver.user)!.user;
+    const driver = item.lianeMatch.trip.members.find((l: LianeMember) => l.user.id === item.lianeMatch.trip.driver.user)!.user;
     const duration = AppLocalization.formatDuration(getTotalDuration(item.trip.wayPoints.slice(1)));
-    const userIsMember = !!item.lianeMatch.liane.members.find(m => m.user.id === user!.id);
+    const userIsMember = !!item.lianeMatch.trip.members.find(m => m.user.id === user!.id);
     return (
       <Column>
         <View style={{ margin: 12 }}>
@@ -158,7 +158,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
             backgroundStyle={styles.itemBackgroundStyle}
             onPress={() => {
               if (userIsMember) {
-                navigation.navigate("LianeDetail", { liane: item.lianeMatch.liane });
+                navigation.navigate("LianeDetail", { liane: item.lianeMatch.trip });
               } else {
                 machine.send("DETAIL", { data: item.lianeMatch });
               }

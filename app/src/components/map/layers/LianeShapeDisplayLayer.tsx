@@ -5,16 +5,16 @@ import React from "react";
 
 export const LianeShapeDisplayLayer = ({
   loading = false,
-  lianeDisplay,
+  tripDisplay,
   useWidth,
-  lianeId = null
+  tripId = null
 }: {
   loading?: boolean;
-  lianeDisplay: FeatureCollection | undefined;
+  tripDisplay: FeatureCollection | undefined;
   useWidth?: number | undefined;
-  lianeId?: string | undefined | null;
+  tripId?: string | undefined | null;
 }) => {
-  const features = lianeDisplay || {
+  const features = tripDisplay || {
     type: "FeatureCollection",
     features: []
   };
@@ -22,12 +22,12 @@ export const LianeShapeDisplayLayer = ({
     <MapLibreGL.ShapeSource id="segments" shape={features}>
       <MapLibreGL.LineLayer
         aboveLayerID="Highway"
-        id="lianeLayer"
+        id="tripLayer"
         /* @ts-ignore */
-        filter={lianeId ? ["in", lianeId, ["get", "lianes"]] : undefined}
+        filter={tripId ? ["in", tripId, ["get", "trips"]] : undefined}
         style={{
           lineColor: loading ? AppColorPalettes.gray[400] : AppColors.darkBlue,
-          lineWidth: useWidth ? useWidth : ["step", ["length", ["get", "lianes"]], 1, 2, 2, 3, 3, 4, 4, 5, 5]
+          lineWidth: useWidth ? useWidth : ["step", ["length", ["get", "trips"]], 1, 2, 2, 3, 3, 4, 4, 5, 5]
         }}
       />
     </MapLibreGL.ShapeSource>

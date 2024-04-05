@@ -36,7 +36,7 @@ class BackgroundGeolocationModule(context: ReactApplicationContext?) : ReactCont
       promise.resolve(null)
     } else {
       val preferences = PreferenceManager.getDefaultSharedPreferences(reactApplicationContext)
-      val found = preferences.getString("lianeId", null)
+      val found = preferences.getString("tripId", null)
       promise.resolve(found)
     }
   }

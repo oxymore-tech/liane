@@ -7,11 +7,11 @@ import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 
-export interface LianeGeolocation {
-  startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void>;
+export interface TripGeolocation {
+  startSendingPings(tripId: string, wayPoints: WayPoint[]): Promise<void>;
   stopSendingPings(): Promise<void>;
   requestEnableGPS(): Promise<void>;
-  currentLiane(): Promise<string | undefined>;
+  currentTrip(): Promise<string | undefined>;
   watchRunningService(callback: (running: string | undefined) => void): SubscriptionLike;
   checkAndRequestLocationPermission(): Promise<boolean>;
   requestBackgroundGeolocationPermission(): Promise<boolean>;
@@ -20,4 +20,4 @@ export interface LianeGeolocation {
 
 const httpClient = new HttpClient(RNAppEnv.baseUrl, AppLogger as any, AppStorage);
 
-export default (Platform.OS === "ios" ? new IosService(httpClient) : new AndroidService(httpClient)) as LianeGeolocation;
+export default (Platform.OS === "ios" ? new IosService(httpClient) : new AndroidService(httpClient)) as TripGeolocation;

@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Bogus;
+using Liane.Api.Auth;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Auth;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;
@@ -14,21 +14,9 @@ using MongoDB.Driver;
 
 namespace Liane.Mock;
 
-public sealed class MockServiceImpl : IMockService
+public sealed class MockServiceImpl(ITripService tripService, IUserService userService, IMongoDatabase mongoDatabase, IRallyingPointService rallyingPointService)
+  : IMockService
 {
-  private readonly ITripService tripService;
-  private readonly IUserService userService;
-  private readonly IRallyingPointService rallyingPointService;
-  private readonly IMongoDatabase mongoDatabase;
-
-  public MockServiceImpl(ITripService tripService, IUserService userService, IMongoDatabase mongoDatabase, IRallyingPointService rallyingPointService)
-  {
-    this.tripService = tripService;
-    this.userService = userService;
-    this.mongoDatabase = mongoDatabase;
-    this.rallyingPointService = rallyingPointService;
-  }
-
   private static Faker<DbUser> DbUserFaker => new Faker<DbUser>()
     .CustomInstantiator(f => new DbUser(
         ObjectId.GenerateNewId().ToString()!,
@@ -41,9 +29,9 @@ public sealed class MockServiceImpl : IMockService
 
   private const int DefaultRadius = 5_000;
 
-  private static Faker<LianeRequest> CreateLianeFaker(IEnumerable<RallyingPoint> departureSet, IEnumerable<RallyingPoint> destinationSet, DateTime startDay)
+  private static Faker<TripRequest> CreateLianeFaker(IEnumerable<RallyingPoint> departureSet, IEnumerable<RallyingPoint> destinationSet, DateTime startDay)
   {
-    return new Faker<LianeRequest>()
+    return new Faker<TripRequest>()
       .CustomInstantiator(f =>
       {
         // Get a random number of offered (driver search) or required (passenger) seats
@@ -55,7 +43,7 @@ public sealed class MockServiceImpl : IMockService
         var from = f.PickRandom(departureSet);
         var to = f.PickRandom(destinationSet.Where(d => d != from));
 
-        return new LianeRequest(null, departure, returnTrip, seatCount, from, to);
+        return new TripRequest(departure, returnTrip, seatCount, from, to);
       });
   }
 
@@ -66,7 +54,7 @@ public sealed class MockServiceImpl : IMockService
     return await userService.Get(dbUser.Id);
   }
 
-  public async Task<ImmutableList<Api.Trip.Trip>> GenerateLianes(int count, LatLng from, LatLng? to, int? radius)
+  public async Task<ImmutableList<Trip>> GenerateTrips(int count, LatLng from, LatLng? to, int? radius)
   {
     var user = await GenerateUser();
 
@@ -74,10 +62,10 @@ public sealed class MockServiceImpl : IMockService
 
     if (departureSet.IsEmpty || arrivalSet.IsEmpty)
     {
-      throw new ArgumentException($"Not enough rallying points found ({from.Lat}, {from.Lng}) to generates lianes");
+      throw new ArgumentException($"Not enough rallying points found ({from.Lat}, {from.Lng}) to generates trips");
     }
 
-    var lianes = new List<Api.Trip.Trip>();
+    var trips = new List<Trip>();
 
     var numberOfDays = 2;
     var eachDay = (int)Math.Ceiling((double)count / numberOfDays);
@@ -85,25 +73,25 @@ public sealed class MockServiceImpl : IMockService
     {
       var day = DateTime.Today.AddDays(i + 1);
       var inOneWay = eachDay / 2;
-      lianes.AddRange(await GenerateFakeLianesInOneWay(departureSet, arrivalSet, inOneWay, user, day));
-      lianes.AddRange(await GenerateFakeLianesInOneWay(arrivalSet, departureSet, inOneWay, user, day));
+      trips.AddRange(await GenerateFakeTripsInOneWay(departureSet, arrivalSet, inOneWay, user, day));
+      trips.AddRange(await GenerateFakeTripsInOneWay(arrivalSet, departureSet, inOneWay, user, day));
     }
 
-    return lianes.ToImmutableList();
+    return trips.ToImmutableList();
   }
 
-  private async Task<List<Api.Trip.Trip>> GenerateFakeLianesInOneWay(ImmutableList<RallyingPoint> departureSet, ImmutableList<RallyingPoint> arrivalSet, int count, User user, DateTime day)
+  private async Task<List<Trip>> GenerateFakeTripsInOneWay(ImmutableList<RallyingPoint> departureSet, ImmutableList<RallyingPoint> arrivalSet, int count, User user, DateTime day)
   {
-    var lianes = new List<Api.Trip.Trip>();
+    var trips = new List<Trip>();
 
     var faker = CreateLianeFaker(departureSet, arrivalSet, day);
     foreach (var lianeRequest in faker.Generate(count))
     {
       var liane = await tripService.Create(lianeRequest, user.Id!);
-      lianes.Add(liane);
+      trips.Add(liane);
     }
 
-    return lianes;
+    return trips;
   }
 
   private async Task<(ImmutableList<RallyingPoint>, ImmutableList<RallyingPoint>)> GetRallyingPoints(LatLng from, LatLng? to, int? radius)
@@ -117,7 +105,9 @@ public sealed class MockServiceImpl : IMockService
       var arrivalSet = rallyingPoints.Data.Skip(half).Take(half).ToImmutableList();
 
       return (departureSet, arrivalSet);
-    } else {
+    }
+    else
+    {
       var departureSet = await rallyingPointService.List(RallyingPointFilter.Create(from, radius, limit: 50));
       var arrivalSet = await rallyingPointService.List(RallyingPointFilter.Create(to.Value, radius, limit: 50));
       return (departureSet.Data, arrivalSet.Data);

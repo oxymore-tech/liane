@@ -1,6 +1,6 @@
 import { ConversationGroup, PaginatedResponse, Ref, User, UTCDateTime } from "../api";
 import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
-import { LianeEvent } from "../event";
+import { TripEvent } from "../event";
 import { HttpClient } from "./http";
 import { IUnion } from "../union";
 
@@ -36,7 +36,7 @@ export type NewMessage = Readonly<{
 }> &
   AbstractNotification<"NewMessage">;
 
-export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
+export type Event<T extends TripEvent = TripEvent> = Readonly<{
   payload: T;
 }> &
   AbstractNotification<"Event">;

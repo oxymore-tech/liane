@@ -15,15 +15,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Hubs;
 
-public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdatePushService, ILianeUpdateObserver
+public sealed class HubServiceImpl : IHubService, IPushMiddleware, ITripUpdatePushService, ITripUpdateObserver
 {
   private readonly IHubContext<ChatHub, IHubClient> hubContext;
   private readonly ILogger<HubServiceImpl> logger;
   private readonly IUserService userService;
-  private readonly ILianeTrackerCache trackerCache;
+  private readonly ITripTrackerCache trackerCache;
   private MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
 
-  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ILianeTrackerCache trackerCache)
+  public HubServiceImpl(IHubContext<ChatHub, IHubClient> hubContext, ILogger<HubServiceImpl> logger, IUserService userService, ITripTrackerCache trackerCache)
   {
     this.hubContext = hubContext;
     this.logger = logger;
@@ -108,9 +108,9 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
     return Task.CompletedTask;
   }
 
-  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Api.Trip.Trip> liane)
+  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Api.Trip.Trip> trip)
   {
-    var lastValue = trackerCache.GetTracker(liane)?.GetTrackingInfo();
+    var lastValue = trackerCache.GetTracker(trip)?.GetTrackingInfo();
     return Task.FromResult(lastValue);
   }
 
@@ -134,7 +134,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
     if (connectionId is not null)
     {
       logger.LogInformation("Pushing liane update to {user} : {update}", recipient, trip);
-      await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(trip);
+      await hubContext.Clients.Client(connectionId).ReceiveTripUpdate(trip);
     }
   }
   

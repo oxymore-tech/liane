@@ -3,7 +3,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public record BaseLianeRequest(
+public record BaseTripRequest(
   DateTime DepartureTime,
   DateTime? ReturnTime,
   int AvailableSeats,
@@ -12,8 +12,7 @@ public record BaseLianeRequest(
   GeolocationLevel GeolocationLevel
 );
 
-public sealed record LianeRequest(
-  string? Id,
+public sealed record TripRequest(
   DateTime DepartureTime,
   DateTime? ReturnTime,
   int AvailableSeats,
@@ -21,4 +20,4 @@ public sealed record LianeRequest(
   Ref<RallyingPoint> To,
   DayOfWeekFlag? Recurrence = null,
   GeolocationLevel GeolocationLevel = GeolocationLevel.None
-) : BaseLianeRequest(DepartureTime, ReturnTime, AvailableSeats, From, To, GeolocationLevel), IIdentity<string>;
+) : BaseTripRequest(DepartureTime, ReturnTime, AvailableSeats, From, To, GeolocationLevel);

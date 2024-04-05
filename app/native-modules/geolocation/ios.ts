@@ -5,7 +5,7 @@ import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
 import { SubscriptionLike } from "rxjs";
 import DeviceInfo from "react-native-device-info";
-import { LianeGeolocation } from "./index";
+import { TripGeolocation } from "./index";
 import { Alert, Linking, NativeEventEmitter, Platform, PlatformIOSStatic } from "react-native";
 import { ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
 
@@ -60,7 +60,7 @@ function createBackgroundHttp(accessToken: string) {
   });
 }
 
-export class IosService implements LianeGeolocation {
+export class IosService implements TripGeolocation {
   private IosNativeModule = RNLianeGeolocation as {
     requestAuthorization(authorizationLevel: "always" | "whenInUse"): Promise<"disabled" | "granted" | "denied" | "restricted">;
     startObserving(options: GeoWatchOptions): void;
@@ -132,7 +132,7 @@ export class IosService implements LianeGeolocation {
       const coordinate = { lat: position.latitude, lng: position.longitude };
       const ping: MemberPing = {
         type: "MemberPing",
-        liane: lianeId,
+        trip: lianeId,
         coordinate,
         timestamp: Math.trunc(position.timestamp)
       };
@@ -163,7 +163,7 @@ export class IosService implements LianeGeolocation {
     };
 
     this.updateCurrentGeolocationLianeId({
-      liane: lianeId,
+      trip: lianeId,
       timeOutDate: new Date(new Date().getTime() + timeout).toISOString()
     });
     this.watchPosition(onPositionCallback, onFailedCallback, {
@@ -245,7 +245,7 @@ export class IosService implements LianeGeolocation {
       .then(() => running.next(val?.liane))
       .catch(e => AppLogger.warn("GEOPINGS", "Could not persist liane id", e));
   };
-  currentLiane = async () => {
+  currentTrip = async () => {
     const val = await this.getCurrentGeolocationLianeId();
     if (val && new Date() > new Date(val.timeOutDate)) {
       // Stop timed-out service

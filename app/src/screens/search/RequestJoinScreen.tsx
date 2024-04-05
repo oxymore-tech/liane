@@ -33,13 +33,13 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =
     request.seats > 0 ? `Conducteur (${Math.abs(request.seats)} place${plural})` : Math.abs(request.seats) + " passager" + plural;
-  const dateTime = `${AppLocalization.formatMonthDay(new Date(request.targetLiane.departureTime))} à ${AppLocalization.formatTime(
-    new Date(request.targetLiane.departureTime)
+  const dateTime = `${AppLocalization.formatMonthDay(new Date(request.targetTrip.departureTime))} à ${AppLocalization.formatTime(
+    new Date(request.targetTrip.departureTime)
   )}`;
   const fromPoint = exactMatch ? request.from : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.pickup)!.rallyingPoint;
   const toPoint = exactMatch ? request.to : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.deposit)!.rallyingPoint;
 
-  const wayPoints = exactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const wayPoints = exactMatch ? request.targetTrip.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
     const geolocationLevel = await AppStorage.getSetting("geolocation");
     const unresolvedRequest: JoinRequest = {
@@ -48,12 +48,12 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
       message,
       seats: request.seats,
       takeReturnTrip: request.takeReturnTrip,
-      liane: request.targetLiane.id!,
+      trip: request.targetTrip.id!,
       to: toPoint.id!,
       geolocationLevel
     };
     const r = { ...unresolvedRequest, message: message };
-    await services.liane.join(r);
+    await services.trip.join(r);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
     // @ts-ignore
     navigation.navigate("Home", { screen: "Mes trajets" });
@@ -68,8 +68,8 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     <LianeMatchView
       from={fromPoint}
       to={request.to}
-      departureTime={request.targetLiane.departureTime}
-      originalTrip={request.targetLiane.wayPoints}
+      departureTime={request.targetTrip.departureTime}
+      originalTrip={request.targetTrip.wayPoints}
       newTrip={wayPoints}
       showAsSegment={true}
     />

@@ -206,7 +206,7 @@ const Page3 = (props: { next: () => void; prev: () => void }) => {
   const confirm = async () => {
     if (route.params?.lianeId) {
       setLoading(true);
-      await services.liane.setTracked(route.params.lianeId, trackedLevel);
+      await services.trip.setTracked(route.params.lianeId, trackedLevel);
     }
     props.next();
     setLoading(false);

@@ -9,14 +9,14 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Answer, Compatible, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
+import { Answer, Compatible, getBoundingBox, getMapStyleUrl, JoinRequestDetailed, UnionUtils } from "@liane/common";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppLocalization } from "@/api/i18n";
 import { TripCard } from "@/components/TripCard";
 import { useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { JoinRequestsQueryKey, TripQueryKey } from "@/screens/user/MyTripsScreen";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { WayPointDisplay, WayPointDisplayType } from "@/components/map/markers/WayPointDisplay";
 import { RouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
@@ -40,7 +40,7 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
     }
     await services.realTimeHub.postAnswer(requestId!, Answer.Accept);
     await queryClient.invalidateQueries(NotificationQueryKey);
-    await queryClient.invalidateQueries(LianeQueryKey);
+    await queryClient.invalidateQueries(TripQueryKey);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
     navigation.goBack();
   };
@@ -83,14 +83,14 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   );
 }, "");
 
-const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
+const DetailedRequestView = WithFetchResource<JoinRequestDetailed>(
   ({ data }) => {
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
     const reqIsExactMatch = UnionUtils.isInstanceOf(data.match, "Exact");
-    const wayPoints = reqIsExactMatch ? data.targetLiane.wayPoints : data.match.wayPoints;
-    const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetLiane.departureTime))} à ${AppLocalization.formatTime(
-      new Date(data.targetLiane.departureTime)
+    const wayPoints = reqIsExactMatch ? data.targetTrip.wayPoints : data.match.wayPoints;
+    const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetTrip.departureTime))} à ${AppLocalization.formatTime(
+      new Date(data.targetTrip.departureTime)
     )}`;
     const headerDate = (
       <Row spacing={8}>
@@ -102,8 +102,8 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
       <LianeMatchView
         from={data.from}
         to={data.to}
-        departureTime={data.targetLiane.departureTime}
-        originalTrip={data.targetLiane.wayPoints}
+        departureTime={data.targetTrip.departureTime}
+        originalTrip={data.targetTrip.wayPoints}
         newTrip={wayPoints}
       />
     );
@@ -132,7 +132,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
               : "Le trajet sera rallongé de " + AppLocalization.formatDuration((data.match as Compatible).delta.totalInSeconds)}
           </AppText>
         </Row>
-        {data.seats > 0 && !data.targetLiane.driver.canDrive && (
+        {data.seats > 0 && !data.targetTrip.driver.canDrive && (
           <Row spacing={16} style={{ alignItems: "center" }}>
             <AppIcon name={"car-check-mark"} />
             <AppText numberOfLines={2} style={{ fontSize: 14 }}>
@@ -144,16 +144,16 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
     );
   },
   (repository, params) => {
-    return repository.liane.getDetailedJoinRequest(params.request.id);
+    return repository.trip.getDetailedJoinRequest(params.request.id);
   },
   params => DetailedRequestQueryKey + params.request.id
 );
 
 const DetailedRequestQueryKey = "DetailedRequestQueryKey";
 
-const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
+const TripOverview = ({ request }: { request: JoinRequestDetailed }) => {
   const reqIsExactMatch = UnionUtils.isInstanceOf(request.match, "Exact");
-  const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const wayPoints = reqIsExactMatch ? request.targetTrip.wayPoints : request.match.wayPoints;
   const boundingBox = getBoundingBox(
     wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]),
     24
@@ -181,7 +181,7 @@ const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
         }
         return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
       })}
-      <RouteLayer wayPoints={request.targetLiane.wayPoints} />
+      <RouteLayer wayPoints={request.targetTrip.wayPoints} />
       {!reqIsExactMatch && <RouteLayer wayPoints={request.match.wayPoints} id={"alternative"} style={{ lineDasharray: [3, 2] }} />}
     </MapLibreGL.MapView>
   );

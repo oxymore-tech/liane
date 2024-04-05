@@ -7,7 +7,7 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { getTripFromLiane } from "@/components/trip/trip";
+import { getUserTrip } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { useAppNavigation } from "@/components/context/routing";
@@ -22,7 +22,7 @@ export const startGeolocationService = async (liane: Liane, force: boolean = fal
     LianeGeolocation.requestEnableGPS()
       .then(async () => {
         try {
-          const trip = getTripFromLiane(liane, user!.id!);
+          const trip = getUserTrip(liane, user!.id!);
           await LianeGeolocation.startSendingPings(liane.id!, trip.wayPoints);
         } catch (e) {
           AppLogger.error("GEOLOC", e);
@@ -59,13 +59,13 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     }
 
     setTracked(undefined);
-    if (geoloc === undefined || geoloc.liane.id !== match.id || match.state !== "Started") {
-      services.liane
+    if (geoloc === undefined || geoloc.trip.id !== match.id || match.state !== "Started") {
+      services.trip
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => setTracked(enabled))
         .catch(() => setTracked(oldValue));
     } else if (!geoloc.isActive) {
-      services.liane
+      services.trip
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => {
           setTracked(enabled);
@@ -86,7 +86,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
           onPress: async () => {
             // Cancel ongoing geolocation
             await LianeGeolocation.stopSendingPings();
-            services.liane
+            services.trip
               .setTracked(match.id!, enabled ? "Shared" : "None")
               .then(() => setTracked(enabled))
               .catch(() => setTracked(oldValue));
@@ -100,7 +100,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     return null;
   }
 
-  const isTrackedLive = isTracked && (!geoloc?.liane || geoloc.liane.id === match.id);
+  const isTrackedLive = isTracked && (!geoloc?.trip || geoloc.trip.id === match.id);
   return (
     <Row spacing={8}>
       {isTracked !== undefined && (

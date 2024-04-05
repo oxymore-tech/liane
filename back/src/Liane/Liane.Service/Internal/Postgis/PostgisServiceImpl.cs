@@ -14,19 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Postgis;
 
-public sealed partial class PostgisServiceImpl : IPostgisService
+public sealed partial class PostgisServiceImpl(PostgisDatabase db, ILogger<PostgisServiceImpl> logger, IRoutingService routingService) : IPostgisService
 {
-  private readonly PostgisDatabase db;
-  private readonly ILogger<PostgisServiceImpl> logger;
-  private readonly IRoutingService routingService;
-
-  public PostgisServiceImpl(PostgisDatabase db, ILogger<PostgisServiceImpl> logger, IRoutingService routingService)
-  {
-    this.db = db;
-    this.logger = logger;
-    this.routingService = routingService;
-  }
-
   public async Task UpdateGeometry(Api.Trip.Trip trip)
   {
     using var connection = db.NewConnection();
@@ -63,7 +52,7 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     tx.Commit();
   }
 
-  public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListSearchableLianes()
+  public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListSearchableTrips()
   {
     using var connection = db.NewConnection();
     var results = await connection.QueryAsync<string>(
@@ -71,7 +60,7 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     return results.Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
   }
 
-  public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListOngoingLianes()
+  public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListOngoingTrips()
   {
     using var connection = db.NewConnection();
     var results = await connection.QueryAsync<string>(
@@ -79,7 +68,7 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     return results.Select(id => (Ref<Api.Trip.Trip>)id).ToImmutableList();
   }
 
-  public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to)
+  public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingTrips(Route targetRoute, DateTime from, DateTime to)
   {
     using var connection = db.NewConnection();
     var candidates = await connection.QueryAsync<LianeMatchCandidate>(
@@ -88,7 +77,7 @@ public sealed partial class PostgisServiceImpl : IPostgisService
     return candidates.ToImmutableList();
   }
 
-  public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to)
+  public async Task<ImmutableList<LianeMatchCandidate>> GetMatchingTrips(LatLng pickup, LatLng deposit, DateTime from, DateTime to)
   {
     using var connection = db.NewConnection();
     var candidates = await connection.QueryAsync<LianeMatchCandidate>(

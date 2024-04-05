@@ -1,12 +1,12 @@
 import { LianeMatch } from "@liane/common";
 import { Row } from "@/components/base/AppLayout";
 import React from "react";
-import { LianeStatusView } from "@/components/trip/LianeStatusView";
+import { TripStatusView } from "@/components/trip/TripStatusView.tsx";
 
 export const LianeStatusRow = ({ liane }: { liane: LianeMatch }) => {
   return (
     <Row style={{ marginHorizontal: 24, marginVertical: 4, alignItems: "center" }}>
-      <LianeStatusView liane={liane.liane} />
+      <TripStatusView liane={liane.trip} />
     </Row>
   );
 };

@@ -28,10 +28,10 @@ public sealed class ChatHub : Hub<IHubClient>
   private readonly IHubService hubService;
   private readonly INotificationService notificationService;
   private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeUpdatePushService lianeUpdatePushService;
+  private readonly ITripUpdatePushService tripUpdatePushService;
 
   public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService,
-    EventDispatcher eventDispatcher, ILianeUpdatePushService lianeUpdatePushService)
+    EventDispatcher eventDispatcher, ITripUpdatePushService tripUpdatePushService)
   {
     this.logger = logger;
     this.chatService = chatService;
@@ -40,12 +40,12 @@ public sealed class ChatHub : Hub<IHubClient>
     this.hubService = hubService;
     this.notificationService = notificationService;
     this.eventDispatcher = eventDispatcher;
-    this.lianeUpdatePushService = lianeUpdatePushService;
+    this.tripUpdatePushService = tripUpdatePushService;
   }
 
-  public async Task PostEvent(LianeEvent lianeEvent)
+  public async Task PostEvent(TripEvent tripEvent)
   {
-    await eventDispatcher.Dispatch(lianeEvent);
+    await eventDispatcher.Dispatch(tripEvent);
   }
 
   public async Task PostAnswer(string notificationId, Answer answer)
@@ -119,7 +119,7 @@ public sealed class ChatHub : Hub<IHubClient>
 
   public async Task<TrackingInfo?> GetLastTrackingInfo(string lianeId)
   {
-    return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
+    return await tripUpdatePushService.GetLastTrackingInfo(lianeId);
   }
 
   public async Task ReadNotifications(IEnumerable<Ref<Notification>> notifications)

@@ -59,7 +59,7 @@ describe.sequential("Joining a trip", () => {
         targetTime: { dateTime: new Date().toISOString(), direction: "Departure" },
         availableSeats: -1
       });
-      const matchedTripsIds = results.lianeMatches.map(m => m.liane.id!);
+      const matchedTripsIds = results.lianeMatches.map(m => m.trip.id!);
       expect(matchedTripsIds).toContain(tripId!);
     });
   });
@@ -67,7 +67,7 @@ describe.sequential("Joining a trip", () => {
     test("Should be sent by B", async () => {
       const currentUser = users[1];
       await currentUser.services.liane.join({
-        liane: tripId!,
+        trip: tripId!,
         from: pickup,
         to: destination,
         seats: -1,
@@ -86,7 +86,7 @@ describe.sequential("Joining a trip", () => {
         const currentUser = users[0];
         currentUser.services.hub.subscribeToNotifications(n => {
           if (UnionUtils.isInstanceOf(n, "Event") && UnionUtils.isInstanceOf(n.payload, "JoinRequest")) {
-            expect(n.payload.liane).toEqual(tripId!);
+            expect(n.payload.trip).toEqual(tripId!);
             done();
           }
         });
@@ -102,7 +102,7 @@ describe.sequential("Joining a trip", () => {
         const currentUser = users[1];
         currentUser.services.hub.subscribeToNotifications(n => {
           if (UnionUtils.isInstanceOf(n, "Event") && UnionUtils.isInstanceOf(n.payload, "MemberAccepted")) {
-            expect(n.payload.liane).toEqual(tripId!);
+            expect(n.payload.trip).toEqual(tripId!);
             done();
           }
         });
@@ -172,7 +172,7 @@ describe.sequential("Joining a trip", () => {
               return () =>
                 sleep(50).then(() =>
                   driver.services.event.sendPing({
-                    liane: tripId!,
+                    trip: tripId!,
                     timestamp: new Date().getTime(),
                     coordinate,
                     type: "MemberPing"
@@ -185,7 +185,7 @@ describe.sequential("Joining a trip", () => {
               return () =>
                 sleep(50).then(() =>
                   passenger.services.event.sendPing({
-                    liane: tripId!,
+                    trip: tripId!,
                     timestamp: new Date().getTime(),
                     coordinate,
                     type: "MemberPing"

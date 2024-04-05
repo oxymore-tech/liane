@@ -1,12 +1,12 @@
-import { GeolocationLevel, LatLng, Liane, RallyingPoint, Ref, User } from "./api";
+import { GeolocationLevel, LatLng, Trip, RallyingPoint, Ref, User } from "./api";
 import { TimeInSeconds } from "./util";
 import { IUnion } from "./union";
 
-export type LianeEvent = JoinRequest | MemberAccepted | MemberRejected | MemberHasLeft | MemberPing;
+export type TripEvent = JoinRequest | MemberAccepted | MemberRejected | MemberHasLeft | MemberPing;
 
 export type JoinRequest = Readonly<
   {
-    liane: Ref<Liane>;
+    trip: Ref<Trip>;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
     seats: number;
@@ -18,7 +18,7 @@ export type JoinRequest = Readonly<
 
 export type MemberAccepted = Readonly<
   {
-    liane: Ref<Liane>;
+    trip: Ref<Trip>;
     member: Ref<User>;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
@@ -29,7 +29,7 @@ export type MemberAccepted = Readonly<
 
 export type MemberRejected = Readonly<
   {
-    liane: Ref<Liane>;
+    trip: Ref<Trip>;
     member: Ref<User>;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
@@ -41,13 +41,13 @@ export type MemberRejected = Readonly<
 
 export type MemberHasLeft = Readonly<
   {
-    liane: Ref<Liane>;
+    trip: Ref<Trip>;
   } & IUnion<"MemberHasLeft">
 >;
 
 export type MemberPing = Readonly<
   {
-    liane: Ref<Liane>;
+    trip: Ref<Trip>;
     timestamp: number;
   } & (
     | { delay: TimeInSeconds; coordinate?: LatLng }

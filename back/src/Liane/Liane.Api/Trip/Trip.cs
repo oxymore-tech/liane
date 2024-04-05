@@ -7,7 +7,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public enum LianeState
+public enum TripState
 {
   NotStarted,
   Started,
@@ -27,7 +27,7 @@ public sealed record Feedback(
   string? Comment = null
 );
 
-public sealed record LianeMember(
+public sealed record TripMember(
   [property:SerializeAsResolvedRef]
   Ref<Auth.User> User,
   Ref<RallyingPoint> From,
@@ -46,7 +46,7 @@ public sealed record Driver
 );
 
 public sealed record Recurrence
-  (Ref<LianeRecurrence> Id,  DayOfWeekFlag Days);
+  (Ref<TripRecurrence> Id,  DayOfWeekFlag Days);
 
 public sealed record Trip(
   string Id,
@@ -55,9 +55,9 @@ public sealed record Trip(
   DateTime DepartureTime,
   Ref<Trip>? Return,
   ImmutableList<WayPoint> WayPoints,
-  ImmutableList<LianeMember> Members,
+  ImmutableList<TripMember> Members,
   Driver Driver,
-  LianeState State,
+  TripState State,
   Ref<ConversationGroup>? Conversation,
   Recurrence? Recurrence = null
-) : IEntity<string>, ISharedResource<LianeMember>;
+) : IEntity<string>, ISharedResource<TripMember>;

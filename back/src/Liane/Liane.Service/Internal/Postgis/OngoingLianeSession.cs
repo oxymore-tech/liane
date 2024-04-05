@@ -22,17 +22,8 @@ public sealed partial class PostgisServiceImpl
     return Task.FromResult((ITripSession)new OfflineTripSession(db, route));
   }
 
-  private sealed class OngoingTripSession : ITripSession
+  private sealed class OngoingTripSession(string id, PostgisDatabase postgis) : ITripSession
   {
-    private readonly string id;
-    private readonly PostgisDatabase postgis;
-
-    public OngoingTripSession(string id, PostgisDatabase postgis)
-    {
-      this.id = id;
-      this.postgis = postgis;
-    }
-
     public async Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate)
     {
       using var connection = postgis.NewConnection();
@@ -46,26 +37,19 @@ public sealed partial class PostgisServiceImpl
     public async ValueTask DisposeAsync()
     {
       using var connection = postgis.NewConnection();
-      await connection.ExecuteAsync("DELETE FROM ongoing_trip WHERE id = @id", new { id });
+      await connection.ExecuteAsync("DELETE FROM ongoing_trip WHERE id = @id", new { id = id });
     }
   }
 
-  private sealed class OfflineTripSession : ITripSession
+  private sealed class OfflineTripSession(PostgisDatabase postgis, LineString route) : ITripSession
   {
-    private readonly IDbConnection connection;
-    private readonly LineString route;
-
-    public OfflineTripSession(PostgisDatabase postgis, LineString route)
-    {
-      this.route = route;
-      this.connection = postgis.NewConnection();
-    }
+    private readonly IDbConnection connection = postgis.NewConnection();
 
     public async Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate)
     {
       var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint, double distance)>(
         "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point, ST_DistanceSphere(@point::geometry(Point, 4326), geometry) as distance from (select ST_LineLocatePoint(@route::geometry(LineString, 4326), @point::geometry(Point, 4326)) as fraction, @route::geometry(LineString, 4326) as geometry) as trip",
-        new { route, point = coordinate }
+        new { route = route, point = coordinate }
       );
       return result;
     }

@@ -1,0 +1,130 @@
+using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Liane.Api.Event;
+using Liane.Api.Trip;
+using Liane.Api.Util;
+using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Mongo;
+using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
+
+namespace Liane.Service.Internal.Trip;
+
+public sealed class TripStatusUpdate(
+  ILogger<TripStatusUpdate> logger,
+  IMongoDatabase mongo,
+  ITripService tripService,
+  ITripUpdateObserver tripUpdateObserver,
+  IJoinRequestService joinRequestService)
+  : CronJobService(logger, "* * * * *",
+    false)
+{
+  private const int StartedDelayInMinutes = 5;
+  public const int FinishedDelayInMinutes = 5;
+  private const int StartedTimeoutInMinutes = 60;
+
+  protected override Task DoWork(CancellationToken cancellationToken) => Update(DateTime.UtcNow);
+
+  public async Task Update(DateTime from)
+  {
+    await CancelLianes(from);
+    //await StartLianes(from);
+    await FinishLianes(from);
+    //await RealtimeUpdate(from);
+  }
+
+  private async Task CancelLianes(DateTime from)
+  {
+    var limit = from;
+    var filter = Builders<TripDb>.Filter.Where(l => l.State == TripState.NotStarted && (l.Members.Count == 1 || !l.Driver.CanDrive))
+                 & !Builders<TripDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limit);
+    var canceled = (await mongo.GetCollection<TripDb>()
+        .Find(filter)
+        .Project(l => (Ref<Api.Trip.Trip>)l.Id)
+        .ToListAsync())
+      .ToImmutableHashSet();
+
+    await Parallel.ForEachAsync(canceled, async (id, _) => { await tripService.UpdateState(id, TripState.Canceled); });
+    //await postgisService.Clear(canceled.ToImmutableList());
+    await joinRequestService.RejectJoinRequests(canceled);
+  }
+
+  private async Task FinishLianes(DateTime from)
+  {
+    var limitNotStarted = from.AddMinutes(-FinishedDelayInMinutes);
+    var limitStarted = from.AddMinutes(-StartedTimeoutInMinutes);
+    var filterNotStarted = Builders<TripDb>.Filter.Where(l => l.State == TripState.NotStarted)
+                           & Builders<TripDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
+                           & !Builders<TripDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitNotStarted);
+    var filterTimedOut = Builders<TripDb>.Filter.Where(l => l.State == TripState.Started)
+                         & !Builders<TripDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitStarted)
+                         & !Builders<TripDb>.Filter.ElemMatch(l => l.Pings, w => w.At > limitStarted);
+
+    var finishedLianes = await mongo.GetCollection<TripDb>()
+      .Find(filterNotStarted | filterTimedOut)
+      .ToListAsync();
+
+    if (finishedLianes.Count == 0)
+    {
+      return;
+    }
+
+    await Parallel.ForEachAsync(finishedLianes, async (lianeDb, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      await tripService.UpdateState(lianeDb.Id, TripState.Finished);
+    });
+  }
+
+  private async Task StartLianes(DateTime from)
+  {
+    var limit = from.AddMinutes(StartedDelayInMinutes);
+    var filter = Builders<TripDb>.Filter.Where(l => l.State == TripState.NotStarted)
+                 & Builders<TripDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
+                 & (
+                   Builders<TripDb>.Filter.Where(l => l.DepartureTime <= limit)
+                   & Builders<TripDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from)
+                 );
+    var activeLianes = await mongo.GetCollection<TripDb>()
+      .Find(filter)
+      .ToListAsync();
+
+    if (activeLianes.Count == 0)
+    {
+      return;
+    }
+
+    await Parallel.ForEachAsync(activeLianes, async (lianeDb, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      await tripService.UpdateState(lianeDb.Id, TripState.Started);
+    });
+
+    // TODO create ongoing trip here ?
+    var toClear = activeLianes.Select(l => (Ref<Api.Trip.Trip>)l.Id).ToImmutableHashSet();
+    //await postgisService.Clear(toClear);
+    await joinRequestService.RejectJoinRequests(toClear);
+  }
+
+  private async Task RealtimeUpdate(DateTime from)
+  {
+    var limit = from.AddMinutes(StartedDelayInMinutes);
+    var filter = Builders<TripDb>.Filter.Where(l => l.State == TripState.Started)
+                 & Builders<TripDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= limit);
+    var withStartingSoonWaypoint = await mongo.GetCollection<TripDb>()
+      .Find(filter)
+      .ToListAsync();
+    await Parallel.ForEachAsync(withStartingSoonWaypoint, async (liane, token) =>
+    {
+      if (token.IsCancellationRequested) return;
+      foreach (var lianeMember in liane.Members)
+      {
+        var resolved = await tripService.GetForCurrentUser(liane.Id, lianeMember.User);
+        await tripUpdateObserver.Push(resolved, lianeMember.User);
+      }
+    });
+  }
+}

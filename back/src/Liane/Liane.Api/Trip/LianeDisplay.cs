@@ -7,6 +7,6 @@ namespace Liane.Api.Trip;
 
 using LngLatTuple = Tuple<double, double>;
 
-public sealed record LianeSegment(ImmutableList<LngLatTuple> Coordinates, ImmutableList<Ref<Trip>> Lianes);
+public sealed record TripSegment(ImmutableList<LngLatTuple> Coordinates, ImmutableList<Ref<Trip>> Trips);
 
-public sealed record LianeMatchDisplay(FeatureCollection Features, ImmutableList<LianeMatch> LianeMatches);
+public sealed record LianeMatchDisplay(FeatureCollection Features, ImmutableList<TripMatch> LianeMatches);

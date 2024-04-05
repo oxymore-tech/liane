@@ -26,7 +26,7 @@ export const LianeDisplayLayer = ({
   }, [dateArg]);
 
   const controller = useAppMapViewController();
-  const url = RNAppEnv.lianeTilesUrl + "?" + dateArg;
+  const url = `${RNAppEnv.lianeTilesUrl}?${dateArg}`;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
 

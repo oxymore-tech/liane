@@ -38,7 +38,7 @@ public class RouteOptimizerTest
       
     );
     
-    var raw = ImmutableList.Create(new LianeSegment(s1, ImmutableList.Create<Ref<Api.Trip.Trip>>("a")), new LianeSegment(s2, ImmutableList.Create<Ref<Api.Trip.Trip>>("b", "c")));
+    var raw = ImmutableList.Create(new TripSegment(s1, ImmutableList.Create<Ref<Api.Trip.Trip>>("a")), new TripSegment(s2, ImmutableList.Create<Ref<Api.Trip.Trip>>("b", "c")));
 
     var result = RouteOptimizer.TruncateOverlappingSegments(raw);
                Assert.AreEqual(4, result.Count);

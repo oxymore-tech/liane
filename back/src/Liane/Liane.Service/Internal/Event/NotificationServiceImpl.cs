@@ -33,9 +33,9 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
       null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), ImmutableHashSet<Answer>.Empty, title, message, uri)
   );
 
-  public Task<Notification> SendEvent(string title, string message, Ref<Api.Auth.User> createdBy, Ref<Api.Auth.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
+  public Task<Notification> SendEvent(string title, string message, Ref<Api.Auth.User> createdBy, Ref<Api.Auth.User> to, TripEvent tripEvent, params Answer[] answers) => Create(
     new Notification.Event(
-      null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
+      null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, tripEvent)
   );
   
   public new async Task<Notification> Create(Notification obj)
@@ -87,10 +87,10 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     return await Collection.PaginateTime(pagination, r => r.CreatedAt, filter, false);
   }
 
-  public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Trip>> lianes)
+  public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Trip>> trips)
   {
     return Mongo.GetCollection<Notification>()
-      .DeleteManyAsync(Builders<Notification>.Filter.In("Payload.Liane", lianes));
+      .DeleteManyAsync(Builders<Notification>.Filter.In("Payload.Liane", trips));
   }
 
   private static FilterDefinition<Notification> BuildTypeFilter(PayloadType payloadType) => payloadType switch

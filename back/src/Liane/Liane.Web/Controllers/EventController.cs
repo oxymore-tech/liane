@@ -14,24 +14,24 @@ namespace Liane.Web.Controllers;
 public sealed class EventController : ControllerBase
 {
   private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeRequestService lianeRequestService;
+  private readonly IJoinRequestService joinRequestService;
 
-  public EventController(ILianeRequestService lianeRequestService, EventDispatcher eventDispatcher)
+  public EventController(IJoinRequestService joinRequestService, EventDispatcher eventDispatcher)
   {
-    this.lianeRequestService = lianeRequestService;
+    this.joinRequestService = joinRequestService;
     this.eventDispatcher = eventDispatcher;
   }
 
   [HttpPost("join_request")]
   [DebugRequest]
-  public async Task<IActionResult> Create([FromBody] LianeEvent.JoinRequest lianeEvent)
+  public async Task<IActionResult> Create([FromBody] TripEvent.JoinRequest lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
     return NoContent();
   }
   
   [HttpPost("member_ping")]
-  public async Task<IActionResult> Create([FromBody] LianeEvent.MemberPing lianeEvent)
+  public async Task<IActionResult> Create([FromBody] TripEvent.MemberPing lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
     return NoContent();
@@ -39,20 +39,20 @@ public sealed class EventController : ControllerBase
 
 
   [HttpGet("join_request")]
-  public async Task<PaginatedResponse<JoinLianeRequest>> ListJoinRequest([FromQuery] Pagination pagination)
+  public async Task<PaginatedResponse<JoinTripRequest>> ListJoinRequest([FromQuery] Pagination pagination)
   {
-    return await lianeRequestService.List(pagination);
+    return await joinRequestService.List(pagination);
   }
 
   [HttpGet("join_request/{id}")]
-  public async Task<JoinLianeRequest> GetJoinRequest([FromRoute] string id)
+  public async Task<JoinTripRequest> GetJoinRequest([FromRoute] string id)
   {
-    return await lianeRequestService.Get(id);
+    return await joinRequestService.Get(id);
   }
 
   [HttpDelete("join_request/{id}")]
   public async Task Delete([FromRoute] string id)
   {
-    await lianeRequestService.Delete(id);
+    await joinRequestService.Delete(id);
   }
 }

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Routing;
@@ -71,7 +70,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var createdLianes = new List<Api.Trip.Trip>();
     for (var i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.TripRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
       createdLianes.Add(await testedService.Create(lianeRequest, userA));
     }
 
@@ -110,14 +109,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("Cboux_Eglise", ((Match.Compatible)compatible).Deposit.Id);
   }
 
-  private async Task<Api.Trip.Trip> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
-  {
-    var departureTime = DateTime.UtcNow.AddHours(9);
-    currentContext.SetCurrentUser(userA);
-    return await testedService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
-  }
-
-  public static LianeRequest[] CreateBaseLianeRequests()
+  public static TripRequest[] CreateBaseLianeRequests()
   {
     var tomorrow = DateTime.Now.AddDays(1);
     // Create fake Liane in database
@@ -128,10 +120,10 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
       (LabeledPositions.LavalDuTarnEglise, LabeledPositions.Mende),
       (LabeledPositions.VillefortParkingGare, LabeledPositions.Mende),
     };
-    var requests = new LianeRequest[baseLianes.Length];
+    var requests = new TripRequest[baseLianes.Length];
     for (var i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.TripRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
       requests[i] = lianeRequest;
     }
 
@@ -210,8 +202,8 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var userB = Fakers.FakeDbUsers[1];
     const int lianesACount = 3;
     const int lianesBCount = 1;
-    var lianesA = Fakers.LianeRequestFaker.Generate(lianesACount);
-    var lianeB = Fakers.LianeRequestFaker.Generate();
+    var lianesA = Fakers.TripRequestFaker.Generate(lianesACount);
+    var lianeB = Fakers.TripRequestFaker.Generate();
 
     await testedService.Create(lianeB, userB.Id);
     foreach (var l in lianesA)
@@ -220,10 +212,10 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     }
 
     currentContext.SetCurrentUser(userA);
-    var resultsA = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
+    var resultsA = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination());
 
     currentContext.SetCurrentUser(userB);
-    var resultsB = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
+    var resultsB = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination());
 
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
@@ -235,13 +227,13 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0].Id;
     var userB = Fakers.FakeDbUsers[1].Id;
-    var lianeA = Fakers.LianeRequestFaker.Generate();
+    var lianeA = Fakers.TripRequestFaker.Generate();
     var createdLiane = await testedService.Create(lianeA, userA);
 
     var resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.NotNull(resolvedLianeA);
 
-    await testedService.AddMember(createdLiane, new LianeMember(userB, lianeA.From, lianeA.To));
+    await testedService.AddMember(createdLiane, new TripMember(userB, lianeA.From, lianeA.To));
 
     resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.AreEqual(createdLiane.Members.Count + 1, resolvedLianeA.Members.Count);
@@ -257,12 +249,13 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var created = new List<Api.Trip.Trip>();
     for (var i = 0; i < total; i++)
     {
-      var lianeA = Fakers.LianeRequestFaker.Generate();
+      var lianeA = Fakers.TripRequestFaker.Generate();
       created.Add(await testedService.Create(lianeA, userA.Id));
     }
+
     created = created.OrderByDescending(l => l.DepartureTime).ToList();
 
-    var firstPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
+    var firstPage = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
     Assert.AreEqual(20, firstPage.TotalCount);
     Assert.AreEqual(pageSize, firstPage.Data.Count);
     Assert.AreEqual(0, created.FindIndex(l => l.Id == firstPage.Data.First().Id));
@@ -270,8 +263,8 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     Assert.NotNull(firstPage.Next);
     var cursorId = (firstPage.Next as Cursor.Time)!.Id;
     Assert.AreEqual(10, created.FindIndex(l => l.Id == cursorId));
-    
-    var lastPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
+
+    var lastPage = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
     Assert.AreEqual(pageSize, lastPage.Data.Count);
     Assert.AreEqual(10, created.FindIndex(l => l.Id == lastPage.Data.First().Id));
     Assert.AreEqual(19, created.FindIndex(l => l.Id == lastPage.Data.Last().Id));
@@ -286,7 +279,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var augustin = Fakers.FakeDbUsers[0].Id;
     currentContext.SetAllowPastResourceCreation(true);
     var departureTime = DateTime.Parse("2023-08-08T08:08:00Z");
-    var liane = await testedService.Create(new LianeRequest(null, departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    var liane = await testedService.Create(new TripRequest(departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
     var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(departureTime.AddHours(1), Direction.Arrival)),
       new Pagination());
 
@@ -310,7 +303,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var bertrand = Fakers.FakeDbUsers[1];
 
     currentContext.SetCurrentUser(samuel);
-    var liane = await testedService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
+    var liane = await testedService.Create(new TripRequest(DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
 
     currentContext.SetCurrentUser(bertrand);
     var actual = await testedService.Match(
@@ -329,5 +322,4 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("mairie:31324", compatible.Pickup.Id);
     Assert.AreEqual("mairie:31557", compatible.Deposit.Id);
   }
-
 }

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, useQueryClient, UseQueryResult } from "react-query";
-import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
+import { JoinRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
@@ -50,11 +50,11 @@ const MyTripsScreen = () => {
 
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
-    { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
+    { queryKey: JoinRequestsQueryKey, queryFn: () => services.trip.listJoinRequests() },
     {
-      queryKey: LianeQueryKey,
+      queryKey: TripQueryKey,
       queryFn: async () => {
-        const lianes = await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
+        const lianes = await services.trip.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
         await services.reminder.syncReminders(lianes.data);
         return lianes;
       }
@@ -63,7 +63,7 @@ const MyTripsScreen = () => {
   const [selectedTab, setSelectedTab] = useState(0);
 
   const isFetchingFutureLianes = queryClient.isFetching({
-    predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
+    predicate: query => query.queryKey === TripQueryKey || query.queryKey === JoinRequestsQueryKey
   });
   useEffect(() => {
     if (isFetchingFutureLianes) {
@@ -82,23 +82,23 @@ const MyTripsScreen = () => {
 
   // Cancel pings if necessary
   useEffect(() => {
-    LianeGeolocation.currentLiane().then(async current => {
+    LianeGeolocation.currentTrip().then(async current => {
       if (!current) {
         return;
       }
-      const liane = await services.liane.get(current);
+      const liane = await services.trip.get(current);
       if (liane.state !== "Started") {
         await LianeGeolocation.stopSendingPings();
       }
     });
-  }, [services.liane]);
+  }, [services.trip]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;
   const isFetching = queriesData.some(q => q.isFetching);
 
   // Create section list from a list of Liane objects
-  const data: (JoinLianeRequestDetailed | Liane)[] = useMemo(() => {
+  const data: (JoinRequestDetailed | Liane)[] = useMemo(() => {
     if (queriesData[0].data && queriesData[1].data) {
       return [...queriesData[0].data!.data, ...queriesData[1].data!.data];
     }
@@ -185,7 +185,7 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
       </>
     );
   },
-  (repository, params, cursor) => repository.liane.list(["Finished", "Archived"], { cursor, limit: 10, asc: false }),
+  (repository, params, cursor) => repository.trip.list(["Finished", "Archived"], { cursor, limit: 10, asc: false }),
   LianePastQueryKey,
   NoRecentTrip
 );
@@ -212,8 +212,8 @@ const styles = StyleSheet.create({
   }
 });
 
-export const LianeQueryKey = "getLianes";
-export const LianeDetailQueryKey = (id: Ref<Liane>) => ["liane", id];
+export const TripQueryKey = "getLianes";
+export const TripDetailQueryKey = (id: Ref<Liane>) => ["liane", id];
 export const JoinRequestsQueryKey = "getJoinRequests";
 export const JoinRequestDetailQueryKey = (id: Ref<Liane>) => ["join_request", id];
 export default MyTripsScreen;

@@ -1,5 +1,5 @@
 import notifee, { Event, EventType } from "@notifee/react-native";
-import { FullUser, HttpClient, LianeServiceClient, Notification } from "@liane/common";
+import { FullUser, HttpClient, TripServiceClient, Notification } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Linking, Platform } from "react-native";
 import { AppLogger } from "@/api/logger";
@@ -33,12 +33,12 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 }
 
 const pressActionMap = {
-  loc: async (lianeId: string) => {
+  loc: async (tripId: string) => {
     const logger = AppLogger as any;
     const http = new HttpClient(RNAppEnv.baseUrl, logger, AppStorage);
-    const lianeService = new LianeServiceClient(http);
-    const liane = await lianeService.get(lianeId);
-    await lianeService.start(liane.id!).then(() => startGeolocationService(liane));
+    const tripService = new TripServiceClient(http);
+    const trip = await tripService.get(tripId);
+    await tripService.start(trip.id!).then(() => startGeolocationService(trip));
   }
 } as const;
 
@@ -52,7 +52,7 @@ const openNotification = async ({ type, detail }: Event) => {
     } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
       if (pressAction.id === "loc") {
         // start sending pings
-        await pressActionMap.loc(notification.data.liane as string);
+        await pressActionMap.loc(notification.data.trip as string);
       } else {
         await Linking.openURL(<string>notification.data.uri);
       }
@@ -164,7 +164,7 @@ export const checkInitialNotification = async (): Promise<string | undefined | n
     if (n.notification.data?.uri) {
       if (n.pressAction.id === "loc") {
         // start sending pings
-        await pressActionMap.loc(n.notification.data.liane as string);
+        await pressActionMap.loc(n.notification.data.trip as string);
         return undefined;
       } else {
         return <string>n.notification.data?.uri;

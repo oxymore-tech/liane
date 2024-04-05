@@ -5,7 +5,7 @@ import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
-import { LianeGeolocation } from "./index";
+import { TripGeolocation } from "./index";
 import { ALLOW_LOCATION, ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
 
 export const LocationAlert = {
@@ -17,7 +17,7 @@ export const LocationAlert = {
 };
 
 type BackgroundGeolocationServiceConfig = {
-  pingConfig: { url: string; token: string; userId: string; lianeId: string };
+  pingConfig: { url: string; token: string; userId: string; tripId: string };
   geolocationConfig?: {
     interval: number;
     nearWayPointRadius: number;
@@ -27,7 +27,7 @@ type BackgroundGeolocationServiceConfig = {
   timeout: number;
 };
 
-export class AndroidService implements LianeGeolocation {
+export class AndroidService implements TripGeolocation {
   private AndroidNativeModule = RNLianeGeolocation as {
     startService(config: BackgroundGeolocationServiceConfig): Promise<void>;
     stopService(): Promise<void>;
@@ -42,7 +42,7 @@ export class AndroidService implements LianeGeolocation {
     console.log("AndroidService constructor", this.AndroidNativeModule);
   }
 
-  async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
+  async startSendingPings(tripId: string, wayPoints: WayPoint[]): Promise<void> {
     const user = await AppStorage.getUser();
     // Refresh token here to avoid issues
     const token = await this.httpClient.getUpdatedAccessToken(true);
@@ -53,7 +53,7 @@ export class AndroidService implements LianeGeolocation {
     const timeout = tripDuration + 3600 * 1000;
 
     const nativeConfig = {
-      pingConfig: { lianeId, userId: user!.id!, token: token!, url: RNAppEnv.baseUrl },
+      pingConfig: { tripId, userId: user!.id!, token: token!, url: RNAppEnv.baseUrl },
       timeout,
       geolocationConfig: {
         interval: 90,
@@ -66,14 +66,14 @@ export class AndroidService implements LianeGeolocation {
         .join(";")
     };
 
-    return this.AndroidNativeModule.startService(nativeConfig).then(() => running.next(nativeConfig.pingConfig.lianeId));
+    return this.AndroidNativeModule.startService(nativeConfig).then(() => running.next(nativeConfig.pingConfig.tripId));
   }
 
   stopSendingPings = () => {
     return this.AndroidNativeModule.stopService().then(() => running.next(undefined));
   };
   requestEnableGPS = this.AndroidNativeModule.enableLocation;
-  currentLiane = this.AndroidNativeModule.current;
+  currentTrip = this.AndroidNativeModule.current;
   watchRunningService = (callback: (running: string | undefined) => void) => running.subscribe(callback);
 
   async checkAndRequestLocationPermission(): Promise<boolean> {

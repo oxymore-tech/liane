@@ -9,24 +9,24 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public interface ITripService : ICrudEntityService<LianeRequest, Trip>
+public interface ITripService : ICrudEntityService<TripRequest, Trip>
 {
-  Task<PaginatedResponse<Trip>> List(LianeFilter filter, Pagination pagination, CancellationToken cancellationToken = default);
-  Task<Trip> AddMember(Ref<Trip> trip, LianeMember newMember);
+  Task<PaginatedResponse<Trip>> List(TripFilter filter, Pagination pagination, CancellationToken cancellationToken = default);
+  Task<Trip> AddMember(Ref<Trip> trip, TripMember newMember);
   Task<Trip?> RemoveMember(Ref<Trip> trip, Ref<Auth.User> member);
   Task CancelAllTrips(Ref<Auth.User> member);
   Task<Match?> GetNewTrip(Ref<Trip> trip, RallyingPoint from, RallyingPoint to, bool isDriverSegment);
-  Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
+  Task<PaginatedResponse<TripMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
-  Task UpdateState(Ref<Trip> trip, LianeState state);
+  Task UpdateState(Ref<Trip> trip, TripState state);
   Task UpdateFeedback(Ref<Trip> trip, Feedback feedback);
   Task<string> GetContact(Ref<Trip> id, Ref<Auth.User> requester, Ref<Auth.User> member);
   Task<Trip> UpdateDepartureTime(Ref<Trip> trip, DateTime departureTime);
-  Task RemoveRecurrence(Ref<LianeRecurrence> recurrence);
-  Task<ImmutableList<Trip>> CreateFromRecurrence(Ref<LianeRecurrence> recurrence, Ref<Auth.User>? owner = null, int daysAhead = 7);
+  Task RemoveRecurrence(Ref<TripRecurrence> recurrence);
+  Task<ImmutableList<Trip>> CreateFromRecurrence(Ref<TripRecurrence> recurrence, Ref<Auth.User>? owner = null, int daysAhead = 7);
   Task<Trip> GetForCurrentUser(Ref<Trip> l, Ref<Auth.User>? user = null);
-  Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter);
-  Task<DetailedLianeTrackReport> GetTripRecord(string id);
+  Task<PaginatedResponse<DetailedTripTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter);
+  Task<DetailedTripTrackReport> GetTripRecord(string id);
   Task<FeatureCollection> GetRawGeolocationPings(Ref<Trip> trip);
   Task ForceSyncDatabase();
   Task UpdateGeolocationSetting(Ref<Trip> trip, GeolocationLevel level);
