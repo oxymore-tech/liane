@@ -112,6 +112,26 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
+  public async Task MathildeShouldMatchEnabledLianes()
+  {
+    currentContext.SetCurrentUser(jayBee);
+    await tested.SetEnabled(lianeJayBee.Id, false);
+    
+    currentContext.SetCurrentUser(mathilde);
+    var actual = await tested.List();
+    Assert.AreEqual(1, actual.Count);
+
+    var lianeMatch = actual[0];
+    Assert.AreEqual(lianeMathilde.WayPoints.Select(p => (Ref<RallyingPoint>)p.Id), lianeMatch.LianeRequest.WayPoints);
+
+    lianeMatch.Matches
+      .AssertDeepEqual(
+        new Match.Single("Bahut", lianeSiloe.Id, siloe.Id, LabeledPositions.IspagnacParking.AsRef(), LabeledPositions.BalsiegeParkingEglise.AsRef(), 0.61637884f),
+        new Match.Single("Boulot", lianeGugu.Id, gugu.Id, LabeledPositions.QuezacParking.AsRef(), LabeledPositions.BalsiegeParkingEglise.AsRef(), 0.5739291f)
+      );
+  }
+
+  [Test]
   public async Task ExactSameLianeRequestShouldMatch()
   {
     await CreateLianeRequest(gugu, "Pain 2", LabeledPositions.Cocures, LabeledPositions.Mende);
@@ -165,6 +185,41 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     }
   }
 
+  [Test]
+  public async Task GuguSeeJoinedLianesEvenIfRequestIsDisabled()
+  {
+    // Gugu join JayBee : a new liane is created
+    Api.Community.Liane joinedLiane;
+    {
+      currentContext.SetCurrentUser(gugu);
+      joinedLiane = await tested.JoinNew(lianeGugu, lianeJayBee);
+    }
+    
+    // jaybee disable its liane
+    {
+      currentContext.SetCurrentUser(jayBee);
+      await tested.SetEnabled(lianeJayBee.Id, false);
+    }
+
+    // Gugu liane request is attached to the liane
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+
+      list[0].JoindedLianes
+        .AssertDeepEqual(
+          new Match.Group("Pain", joinedLiane,
+            ImmutableList.Create(new Match.Single("Pain", lianeJayBee.Id, jayBee.Id, LabeledPositions.QuezacParking.AsRef(), LabeledPositions.Mende.AsRef(), 0.77242357f)),
+            LabeledPositions.QuezacParking.AsRef(), LabeledPositions.Mende.AsRef(), 0.77242357f)
+        );
+      list[0].Matches
+        .AssertDeepEqual(
+          new Match.Single("Bahut", lianeSiloe.Id, siloe.Id, LabeledPositions.QuezacParking.AsRef(), LabeledPositions.Mende.AsRef(), 0.77242357f),
+          new Match.Single("Alodr", lianeMathilde.Id, mathilde.Id, LabeledPositions.QuezacParking.AsRef(), LabeledPositions.BalsiegeParkingEglise.AsRef(), 0.5349006f)
+        );
+    }
+  }
+  
   [Test]
   public async Task GuguMatchesChangeWhenJaybeeHavedJoinedMathildeLiane()
   {
@@ -496,7 +551,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     currentContext.SetCurrentUser(user);
     var timeConstraints = ImmutableList.Create(new TimeConstraint(new TimeRange(new TimeOnly(8, 0), null), wayPoints[0], DayOfWeekFlag.All));
-    return await tested.Create(new LianeRequest(null, name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, null, null, null, null));
+    return await tested.Create(new LianeRequest(null, name, wayPoints.ToImmutableList(), false, true, DayOfWeekFlag.All, timeConstraints, true, null, null));
   }
 
   private static (string User, string Text) ToTuple(LianeMessage message) => message switch

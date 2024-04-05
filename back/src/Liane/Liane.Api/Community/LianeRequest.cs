@@ -13,8 +13,7 @@ public sealed record LianeRequest(
   bool CanDrive,
   DayOfWeekFlag WeekDays,
   ImmutableList<TimeConstraint> TimeConstraints,
-  DateTime? VacationStart,
-  DateTime? VacationEnd,
+  bool IsEnabled,
   Ref<Auth.User>? CreatedBy,
   DateTime? CreatedAt
 ) : IEntity<string>;
@@ -23,5 +22,4 @@ public sealed record TimeConstraint(TimeRange When, Ref<RallyingPoint> At, DayOf
 
 public readonly record struct TimeRange(TimeOnly Start, TimeOnly? End);
 
-// TODO isEnabled
 // TODO prendre en compte les contraintes

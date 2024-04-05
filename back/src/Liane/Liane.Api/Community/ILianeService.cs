@@ -8,6 +8,7 @@ namespace Liane.Api.Community;
 public interface ILianeService
 {
   Task<LianeRequest> Create(LianeRequest request);
+  Task SetEnabled(Ref<LianeRequest> id, bool isEnabled);
   Task<ImmutableList<LianeMatch>> List();
 
   Task<Liane> JoinNew(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);

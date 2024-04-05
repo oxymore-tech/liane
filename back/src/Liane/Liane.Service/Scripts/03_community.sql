@@ -20,16 +20,15 @@ CREATE TABLE liane
 
 CREATE TABLE liane_request
 (
-  id             UUID          NOT NULL,
-  name           VARCHAR(100)  NOT NULL,
-  way_points     VARCHAR(24)[] NOT NULL,
-  round_trip     BOOLEAN       NOT NULL,
-  can_drive      BOOLEAN       NOT NULL,
-  week_days      VARCHAR(7)    NOT NULL,
-  vacation_start TIMESTAMP,
-  vacation_end   TIMESTAMP,
-  created_by     VARCHAR(24)   NOT NULL,
-  created_at     TIMESTAMP     NOT NULL,
+  id         UUID          NOT NULL,
+  name       VARCHAR(100)  NOT NULL,
+  way_points VARCHAR(24)[] NOT NULL,
+  round_trip BOOLEAN       NOT NULL,
+  can_drive  BOOLEAN       NOT NULL,
+  week_days  VARCHAR(7)    NOT NULL,
+  is_enabled BOOLEAN       NOT NULL,
+  created_by VARCHAR(24)   NOT NULL,
+  created_at TIMESTAMP     NOT NULL,
   PRIMARY KEY (id),
   UNIQUE (way_points, created_by)
 );

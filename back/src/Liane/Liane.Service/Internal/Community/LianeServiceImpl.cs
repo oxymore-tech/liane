@@ -17,7 +17,6 @@ using Liane.Service.Internal.Util.Sql;
 using UuidExtensions;
 using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
-using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
 
@@ -29,6 +28,23 @@ public sealed class LianeServiceImpl(
   LianeFetcher fetcher,
   LianeMatcher matcher) : ILianeService
 {
+  public async Task SetEnabled(Ref<LianeRequest> id, bool isEnabled)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+    var lianeRequestId = Guid.Parse(id);
+
+    var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
+      .Set(r => r.IsEnabled, isEnabled)
+      .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
+      .And(r => r.CreatedBy, ComparisonOperator.Eq, userId));
+
+    if (updated == 0)
+    {
+      throw new UnauthorizedAccessException("User is not the owner of the liane request");
+    }
+  }
+
   public async Task<ImmutableList<LianeMatch>> List()
   {
     var userId = currentContext.CurrentUser().Id;
@@ -42,7 +58,7 @@ public sealed class LianeServiceImpl(
         .Where(Filter<LianeMemberDb>.Where(m => m.UserId, ComparisonOperator.Eq, userId))
         .OrderBy(r => r.JoinedAt)))
       .GroupBy(m => m.LianeRequestId)
-      .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId.ToString()).ToImmutableHashSet());
+      .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId).ToImmutableHashSet());
 
     var lianeRequestsId = lianeRequests.Select(l => l.Id);
     var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
@@ -50,7 +66,7 @@ public sealed class LianeServiceImpl(
       .GroupBy(c => c.LianeRequestId)
       .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
 
-    var allMatches = await matcher.FindMatches(connection, lianeRequestsId);
+    var matches = await matcher.FindMatches(connection, lianeRequestsId, joinedLianeIds);
 
     return lianeRequests.Select(l =>
     {
@@ -62,17 +78,15 @@ public sealed class LianeServiceImpl(
         l.CanDrive,
         l.WeekDays,
         constraints.GetValueOrDefault(l.Id, ImmutableList<TimeConstraint>.Empty),
-        l.VacationStart,
-        l.VacationEnd,
+        l.IsEnabled,
         l.CreatedBy,
         l.CreatedAt
       );
-      var (joinedLianes, matches) = allMatches.GetValueOrDefault(l.Id, ImmutableList<Match>.Empty)
-        .Split(joinedLianeIds.GetValueOrDefault(l.Id, ImmutableHashSet<string>.Empty));
+      var result = matches.GetValueOrDefault(l.Id, LianeMatcherResult.Empty);
       return new LianeMatch(
         lianeRequest,
-        joinedLianes,
-        matches
+        result.JoindedLianes,
+        result.Matches
       );
     }).ToImmutableList();
   }
@@ -100,7 +114,7 @@ public sealed class LianeServiceImpl(
     await connection.InsertAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
 
     var now = DateTime.UtcNow;
-    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.VacationStart, request.VacationEnd, userId, now);
+    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.IsEnabled, userId, now);
     await connection.InsertAsync(lianeRequestDb, tx);
 
     tx.Commit();
@@ -112,8 +126,7 @@ public sealed class LianeServiceImpl(
       lianeRequestDb.CanDrive,
       lianeRequestDb.WeekDays,
       request.TimeConstraints,
-      lianeRequestDb.VacationStart,
-      lianeRequestDb.VacationEnd,
+      lianeRequestDb.IsEnabled,
       lianeRequestDb.CreatedBy,
       lianeRequestDb.CreatedAt
     );
@@ -305,8 +318,7 @@ public sealed record LianeRequestDb(
   bool RoundTrip,
   bool CanDrive,
   DayOfWeekFlag WeekDays,
-  DateTime? VacationStart,
-  DateTime? VacationEnd,
+  bool IsEnabled,
   Ref<Api.Auth.User> CreatedBy,
   DateTime CreatedAt
 ) : IIdentity<Guid>;

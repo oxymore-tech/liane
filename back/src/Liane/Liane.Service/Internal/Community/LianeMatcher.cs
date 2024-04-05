@@ -7,24 +7,32 @@ using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Util;
 using Match = Liane.Api.Community.Match;
-using LianeRawMatch = (System.Guid, System.Guid, string, string, string[], float, Liane.Api.Routing.LatLng, Liane.Api.Routing.LatLng, string?, string?, System.Guid[]?);
+using LianeRawMatch = (System.Guid, System.Guid, string, string, string[], bool, float, Liane.Api.Routing.LatLng, Liane.Api.Routing.LatLng, string?, string?, System.Guid[]?);
 
 namespace Liane.Service.Internal.Community;
 
 public sealed class LianeMatcher(LianeFetcher fetcher)
 {
-  public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> lianeRequestsId)
+  public async Task<ImmutableDictionary<Guid, LianeMatcherResult>> FindMatches(
+    IDbConnection connection,
+    IEnumerable<Guid> lianeRequestsId,
+    ImmutableDictionary<Guid, ImmutableHashSet<Guid>> joinedLianeIds)
   {
     var rawMatches = (await FindRawMatches(connection, lianeRequestsId))
       .ToImmutableList();
-    var allLianes = rawMatches.FilterSelect(r => r.Item11)
+    var allLianes = rawMatches.FilterSelect(r => r.Item12)
       .SelectMany(r => r)
       .Distinct();
     var lianes = (await fetcher.FetchLianes(connection, allLianes))
-      .ToImmutableDictionary(l => l.Id);
+      .ToImmutableDictionary(l => Guid.Parse(l.Id));
     return rawMatches
       .GroupBy(m => m.Item1)
-      .ToImmutableDictionary(g => g.Key, g => GroupMatchByLiane(g, lianes));
+      .ToImmutableDictionary(g => g.Key, g =>
+      {
+        var joinedLianesIds = joinedLianeIds.GetValueOrDefault(g.Key, ImmutableHashSet<Guid>.Empty);
+        return GroupMatchByLiane(g, joinedLianesIds, lianes)
+          .Split(joinedLianesIds);
+      });
   }
 
   /// <summary>
@@ -44,6 +52,7 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
                                                                      liane_request_b.name AS name,
                                                                      liane_request_b.created_by AS "user",
                                                                      liane_request_b.way_points AS way_points,
+                                                                     liane_request_b.is_enabled AS is_enabled,
                                                                      st_length(intersection) / a_length AS score,
                                                                      st_startpoint(intersection) AS pickup,
                                                                      st_endpoint(intersection) AS deposit,
@@ -74,10 +83,12 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
     );
   }
 
-  private static ImmutableList<Match> GroupMatchByLiane(IEnumerable<LianeRawMatch> matches, ImmutableDictionary<string, Api.Community.Liane> lianes)
-    => matches.SelectMany(m => m.Item11 is null
+  private static ImmutableList<Match> GroupMatchByLiane(IEnumerable<LianeRawMatch> matches, ImmutableHashSet<Guid> joinedLianeIds, ImmutableDictionary<Guid, Api.Community.Liane> lianes)
+    => matches
+      .SelectMany(m => m.Item12 is null
         ? ImmutableList.Create(new LianeRawMatchByLiane(null, m))
-        : m.Item11.Select(l => new LianeRawMatchByLiane(l, m)))
+        : m.Item12.Select(l => new LianeRawMatchByLiane(l, m)))
+      .Where(ml => ml.Match.Item6 || (ml.Liane is not null && joinedLianeIds.Contains(ml.Liane.Value)))
       .GroupBy(m => m.Liane)
       .SelectMany(g =>
       {
@@ -88,7 +99,7 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
 
         var groupedMatches = g.Select(m => ToSingleMatch(m.Match))
           .ToImmutableList();
-        var liane = lianes.GetValueOrDefault(g.Key!.ToString()!);
+        var liane = lianes.GetValueOrDefault(g.Key!.Value);
         if (liane is null)
         {
           return ImmutableList<Match>.Empty;
@@ -124,22 +135,23 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
       match.Item3,
       match.Item2.ToString(),
       match.Item4,
-      match.Item9,
       match.Item10,
-      match.Item6
+      match.Item11,
+      match.Item7
     );
   }
 }
 
 public static class LianeMatcherExtensions
 {
-  public static (ImmutableList<Match.Group>, ImmutableList<Match>) Split(this IEnumerable<Match> allMatches, ImmutableHashSet<string> joinedLianesIds)
+  public static LianeMatcherResult Split(this IEnumerable<Match> allMatches, ImmutableHashSet<Guid> joinedLianesIds)
   {
+    var set = joinedLianesIds.Select(i => i.ToString()).ToImmutableHashSet();
     var joinedLianes = new List<Match.Group>();
     var matches = new List<Match>();
     foreach (var match in allMatches)
     {
-      if (match is Match.Group group && joinedLianesIds.Contains(group.Liane.Id))
+      if (match is Match.Group group && set.Contains(group.Liane.Id))
       {
         joinedLianes.Add(group);
       }
@@ -149,7 +161,7 @@ public static class LianeMatcherExtensions
       }
     }
 
-    return (joinedLianes.ToImmutableList(), matches.ToImmutableList());
+    return new LianeMatcherResult(joinedLianes.ToImmutableList(), matches.ToImmutableList());
   }
 }
 
