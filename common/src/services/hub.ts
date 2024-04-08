@@ -321,7 +321,7 @@ export class HubServiceClient extends AbstractHubService {
     return {
       closed: this.onReceiveLocationUpdateCallback !== callback,
       unsubscribe: async () => {
-        this.onReceiveLatestMessagesCallback = null;
+        this.onReceiveLocationUpdateCallback = undefined;
       }
     };
   }
