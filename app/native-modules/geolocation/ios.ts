@@ -8,6 +8,7 @@ import DeviceInfo from "react-native-device-info";
 import { LianeGeolocation } from "./index";
 import { Alert, Linking, NativeEventEmitter, Platform, PlatformIOSStatic } from "react-native";
 import { ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
+import { getTotalDuration } from "@/components/trip/trip.ts";
 
 interface GeoWatchOptions {
   useSignificantChanges?: boolean;
@@ -77,8 +78,8 @@ export class IosService implements LianeGeolocation {
       throw new Error("No access token");
     }
     const http = createBackgroundHttp(accessToken);
-    const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
-    const timeout = tripDuration + 3600 * 1000;
+    const tripDuration = getTotalDuration(wayPoints);
+    const timeout = (tripDuration + 3600) * 1000;
     let preciseTrackingMode = true;
     AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
     setTimeout(() => {

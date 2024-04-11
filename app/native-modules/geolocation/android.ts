@@ -7,6 +7,7 @@ import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
 import { LianeGeolocation } from "./index";
 import { ALLOW_LOCATION, ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
+import { getTotalDuration } from "@/components/trip/trip.ts";
 
 export const LocationAlert = {
   inviteToOpenSettings,
@@ -49,8 +50,8 @@ export class AndroidService implements LianeGeolocation {
     if (!token) {
       throw new Error("No access token");
     }
-    const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
-    const timeout = tripDuration + 3600 * 1000;
+    const tripDuration = getTotalDuration(wayPoints);
+    const timeout = (tripDuration + 3600) * 1000;
 
     const nativeConfig = {
       pingConfig: { lianeId, userId: user!.id!, token: token!, url: RNAppEnv.baseUrl },
