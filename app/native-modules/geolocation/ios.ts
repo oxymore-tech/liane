@@ -188,7 +188,8 @@ export class IosService implements LianeGeolocation {
   async checkBackgroundGeolocationPermission(): Promise<boolean> {
     const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
     const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    AppLogger.info("GEOPINGS", `Location ping permission ${access}`);
+    AppLogger.info("GEOPINGS", `Location ping permission Background ${access}`);
+    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
     return access === "granted" || accessAppInUse === "granted";
   }
 
@@ -241,6 +242,7 @@ export class IosService implements LianeGeolocation {
     const val = await this.getCurrentGeolocationLianeId();
     if (val && new Date() > new Date(val.timeOutDate)) {
       // Stop timed-out service
+      AppLogger.warn("GEOPINGS", "StopSendingPings in currentLiane because >  val.timeOutDate", val.liane, new Date(), new Date(val.timeOutDate));
       await this.stopSendingPings();
     }
     return val?.liane;
