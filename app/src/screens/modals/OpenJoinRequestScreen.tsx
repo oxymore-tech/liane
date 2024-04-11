@@ -76,13 +76,13 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
         <AppRoundedButton
-          color={defaultTextColor(AppColors.white)}
-          onPress={refuseRequest}
+          color={inProgress ? defaultTextColor(AppColors.secondaryColor) : defaultTextColor(AppColors.white)}
+          onPress={inProgress ? undefined : refuseRequest}
           backgroundColor={AppColorPalettes.gray[400]}
           text={"Refuser"}
         />
         <AppRoundedButton
-          color={defaultTextColor(AppColors.primaryColor)}
+          color={inProgress ? defaultTextColor(AppColors.secondaryColor) : defaultTextColor(AppColors.primaryColor)}
           onPress={inProgress ? undefined : acceptRequest}
           backgroundColor={AppColors.primaryColor}
           text={"Accepter"}

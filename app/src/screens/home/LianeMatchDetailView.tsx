@@ -312,7 +312,7 @@ export const LianeMatchDetailView = () => {
         {!userIsMember && !isReturnStep && !isSeatsStep && !isMessageStep && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
-              color={defaultTextColor(AppColors.primaryColor)}
+              color={inProgress ? defaultTextColor(AppColors.secondaryColor) : defaultTextColor(AppColors.primaryColor)}
               //onPress={requestJoin}
               onPress={
                 step === 0
