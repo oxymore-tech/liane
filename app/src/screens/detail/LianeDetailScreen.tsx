@@ -145,7 +145,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             return <WayPointDisplay key={w.rallyingPoint.id} rallyingPoint={w.rallyingPoint} type={type} />;
           })}
 
-          {driver && tripMatch && trackingInfo?.car && <LocationMarker user={driver} info={trackingInfo?.car} />}
+          {driver && tripMatch && trackingInfo?.car && <LocationMarker isCar={true} user={driver} info={trackingInfo?.car} />}
           {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
         </AppMapView>
 
