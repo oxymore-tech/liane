@@ -132,30 +132,35 @@ export const LianeMatchDetailView = () => {
   const [step, setStep] = useState(0);
   const [firstEdit, setFirstEdit] = useState(true);
   const [takeReturnTrip, setTakeReturnTrip] = useState(false);
+  const [inProgress, setProgress] = useState(false);
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
 
   const userIsMember = liane.liane.members.findIndex(m => m.user.id === user!.id) >= 0;
   const requestJoin = async () => {
-    const geolocationLevel = await AppStorage.getSetting("geolocation");
-    const unresolvedRequest: JoinRequest = {
-      type: "JoinRequest",
-      from: fromPoint.id!,
-      message,
-      seats: seats,
-      liane: liane.liane.id!,
-      takeReturnTrip,
-      to: toPoint.id!,
-      geolocationLevel: geolocationLevel || "None"
-    };
+    if (!inProgress) {
+      setProgress(true);
+      const geolocationLevel = await AppStorage.getSetting("geolocation");
+      const unresolvedRequest: JoinRequest = {
+        type: "JoinRequest",
+        from: fromPoint.id!,
+        message,
+        seats: seats,
+        liane: liane.liane.id!,
+        takeReturnTrip,
+        to: toPoint.id!,
+        geolocationLevel: geolocationLevel || "None"
+      };
 
-    const r = { ...unresolvedRequest, message: message };
-    await services.liane.join(r);
-    await queryClient.invalidateQueries(JoinRequestsQueryKey);
-    // setModalVisible(false);
-    machine.send(["BACK", "BACK", "BACK"]);
-    //@ts-ignore
-    navigation.navigate("Home", { screen: "Mes trajets" });
+      const r = { ...unresolvedRequest, message: message };
+      await services.liane.join(r);
+      await queryClient.invalidateQueries(JoinRequestsQueryKey);
+      // setModalVisible(false);
+      machine.send(["BACK", "BACK", "BACK"]);
+      //@ts-ignore
+      navigation.navigate("Home", { screen: "Mes trajets" });
+      setProgress(false);
+    }
   };
   const isReturnStep = step === 2 && !!liane.returnTime;
   const isSeatsStep = step === 1 && liane.freeSeatsCount > 1;
@@ -307,7 +312,7 @@ export const LianeMatchDetailView = () => {
         {!userIsMember && !isReturnStep && !isSeatsStep && !isMessageStep && (
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <AppRoundedButton
-              color={defaultTextColor(AppColors.primaryColor)}
+              color={inProgress ? defaultTextColor(AppColors.secondaryColor) : defaultTextColor(AppColors.primaryColor)}
               //onPress={requestJoin}
               onPress={
                 step === 0
