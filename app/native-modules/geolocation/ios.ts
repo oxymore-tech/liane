@@ -107,7 +107,6 @@ export class IosService implements LianeGeolocation {
       });
     };
 
-    let repingTimeout: ReturnType<typeof setTimeout> | undefined;
     const postPing = async (ping: MemberPing, timestamp?: number) => {
       await http.postAs(`/event/member_ping`, { body: { ...ping, timestamp: timestamp || ping.timestamp } }).catch(err => {
         AppLogger.warn("GEOPINGS", "Could not send ping", err);
@@ -116,15 +115,6 @@ export class IosService implements LianeGeolocation {
           stopTracking();
         }
       });
-
-      // If no position update is received for a moment, keep sending this position
-      // to have a homogeneous behavior with Android phones
-      if (repingTimeout) {
-        clearTimeout(repingTimeout);
-      }
-      repingTimeout = setTimeout(() => {
-        postPing(ping, new Date().getTime());
-      }, 2 * 60 * 1000);
     };
     const onPositionCallback = async (position: GeoPosition) => {
       // Send ping
