@@ -56,7 +56,11 @@ public abstract record Notification : IEntity
     DateTime? SeenAt = null
   ) : Notification
   {
-    public override string? Uri { get; init; } = "liane://chat/" + Conversation.Id;
+    public override string? Uri
+    {
+      get => "liane://chat/" + Conversation.Id;
+      init { }
+    }
   }
 
   public sealed record Reminder(
@@ -71,7 +75,11 @@ public abstract record Notification : IEntity
     DateTime? SeenAt = null
   ) : Notification
   {
-    public override string? Uri { get; init; } = "liane://liane/" + Payload.Liane.Id;
+    public override string? Uri
+    {
+      get => "liane://liane/" + Payload.Liane.Id;
+      init { }
+    }
   }
 
   public sealed record Event(
@@ -86,12 +94,16 @@ public abstract record Notification : IEntity
     DateTime? SeenAt = null
   ) : Notification
   {
-    public override string? Uri { get; init; } = Payload switch
+    public override string? Uri
     {
-      LianeEvent.JoinRequest => "liane://join_request/" + Id,
-      LianeEvent.MemberAccepted m => "liane://liane/" + m.Liane.Id,
-      _ => null
-    };
+      get => Payload switch
+      {
+        LianeEvent.JoinRequest => "liane://join_request/" + Id,
+        LianeEvent.MemberAccepted m => "liane://liane/" + m.Liane.Id,
+        _ => null
+      };
+      init { }
+    }
   }
 }
 
