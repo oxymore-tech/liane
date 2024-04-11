@@ -47,7 +47,7 @@ public sealed class LianeMemberPingHandler(IMongoDatabase db, ICurrentContext cu
     }
     catch (Exception err)
     {
-      logger.LogWarning($"Unable to push ping for '{liane.Id}' : {ping}", err);
+      logger.LogWarning(err, "Unable to push ping for '{0}' : {1}", liane.Id, ping);
     }
   }
 }
