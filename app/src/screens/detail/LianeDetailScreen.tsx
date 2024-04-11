@@ -130,7 +130,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           {match && <LianeMatchUserRouteLayer match={match} />}
 
           {notInCar.map(p => (
-            <LocationMarker key={p.user.id} user={p.user} info={p.info} />
+            <LocationMarker key={p.user.id} user={p.user} info={p.info} isCar={false} />
           ))}
 
           {tripMatch?.wayPoints.map((w, i) => {
