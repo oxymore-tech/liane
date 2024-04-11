@@ -23,7 +23,7 @@ using NUnit.Framework;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public class LianeTrackerTest : BaseIntegrationTest
+public sealed class LianeTrackerTest : BaseIntegrationTest
 {
   private static (Api.Trip.Liane liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
   {
@@ -305,7 +305,7 @@ public class LianeTrackerTest : BaseIntegrationTest
     // brutus : 654e2de81435035edcef9b7f
 
     // car : 44.485822, 3.45858 -> 287 seconds
-    
+
     // Attention : ce test case provient de données réelles, mais les pings de brutus ne sont pas consistants ce qui cause des erreurs d'interprétations:
     // IOS (brutus) envoie plusieurs fois la coordonnées du début pendant tout le trajet (entrelacées avec les bonnes coordonnées) à cause d'un bug dans la fonction reping (ios.ts)
 
@@ -317,6 +317,25 @@ public class LianeTrackerTest : BaseIntegrationTest
       OtherMembers = actual.OtherMembers.ToImmutableDictionary(m => userMapping[m.Key].Id, m => m.Value with { Member = userMapping[m.Value.Member] })
     };
     AssertJson.AreEqual("Geolocation/16_12_2023-expected-12_22.json", unmappedActual);
+  }
+
+  [Test]
+  public async Task Trip_qui_se_trouve_deja_a_destination()
+  {
+    var (tracker, userMapping) = await SetupTrackerAt("Geolocation/Trip_qui_se_trouve_deja_a_destination.json");
+
+    // Départ : Roques
+    // Arrivée : LivingObjects
+
+    // driver thibauls : 6617e60b606952ceee7ee2aa
+    // augustin : ba3
+
+    // thibault se trouve déjà à destination
+    //await lianeTrackerService.PushPing("6617e60b606952ceee7ee2aa", new UserPing("65f2cbd9e94a0516ac1e6dac", DateTime.Parse("2024-04-11T13:03:00+1"), TimeSpan.Zero, new LatLng(3.4845875, 44.3378072)));
+
+    var actual = tracker.GetTrackingInfo();
+
+    Assert.AreEqual("custom:001", actual.Car?.NextPoint.Id);
   }
 
 

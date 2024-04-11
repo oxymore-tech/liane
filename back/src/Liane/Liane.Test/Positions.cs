@@ -21,6 +21,7 @@ public sealed class Positions
   public static readonly LatLng Cocures = new(44.347183574058064, 3.618855178356171);
   public static readonly LatLng LesBondonsParking = new(44.386770849124616, 3.616645038127899);
   public static readonly LatLng LeCrouzet = new(44.37781314454752, 3.623205721378326);
+  public static readonly LatLng RoquesCentreCommercial = new(43.5116467, 1.3693172);
   public static readonly LatLng LaMaleneParking = new(44.30126710025664, 3.320920765399933);
   public static readonly LatLng Rampon = new(44.35559377886476, 3.656352460384369);
   public static readonly LatLng SaintEtienneDuValdonnezParking = new(44.455243806523, 3.561520278453827);

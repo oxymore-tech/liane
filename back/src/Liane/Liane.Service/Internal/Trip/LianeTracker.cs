@@ -104,7 +104,7 @@ public sealed class LianeTracker
     var currentLocation = lastLocations?.Peek();
     if (currentLocation is null) return null;
     var isMoving = IsMoving(currentLocation, lastLocations);
-    return new TrackedMemberLocation(member, Liane, currentLocation.At, Liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds,
+    return new TrackedMemberLocation(member, Liane, currentLocation.At, Liane.GetWayPoint(currentLocation.NextPointIndex).RallyingPoint, (long)currentLocation.Delay.TotalSeconds,
       currentLocation.RawCoordinate, isMoving);
   }
 
@@ -176,7 +176,7 @@ public sealed class LianeTracker
         var userId = entry.Key;
         var lastLocation = entry.Value.Peek()!;
         var lianeMember = Liane.Members.Find(m => m.User.Id == userId)!;
-        return userId == Liane.Driver.User.Id || lianeMember.From.Id != Liane.WayPoints[lastLocation.NextPointIndex].RallyingPoint.Id;
+        return userId == Liane.Driver.User.Id || lianeMember.From.Id != Liane.GetWayPoint(lastLocation.NextPointIndex).RallyingPoint.Id;
       })
       .Select(entry => (Ref<Api.User.User>)entry.Key).ToImmutableHashSet();
 
@@ -188,12 +188,11 @@ public sealed class LianeTracker
       .ToImmutableList();
 
     var carPosition = lastCarPings.FirstOrDefault();
-
-
+    
     var car = carPosition?.Coordinate is not null
       ? new Car(
         carPosition.At,
-        Liane.WayPoints[carPosition.NextPointIndex].RallyingPoint,
+        Liane.GetWayPoint(carPosition.NextPointIndex).RallyingPoint,
         (long)carPosition.Delay.TotalSeconds,
         carPosition.Coordinate.Value,
         carPassengers,

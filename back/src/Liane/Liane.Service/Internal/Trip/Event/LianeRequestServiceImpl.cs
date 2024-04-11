@@ -172,7 +172,7 @@ public sealed class LianeRequestServiceImpl : ILianeRequestService
 
     if (liane.State != LianeState.NotStarted)
     {
-      throw new ConstraintException("This request is linked to a liane with state " + liane.State);
+      throw new ConstraintException($"This request is linked to a liane {liane.Id} with state {liane.State}");
     }
 
     var match = await lianeService.GetNewTrip(liane, from, to, joinRequest.Seats > 0);

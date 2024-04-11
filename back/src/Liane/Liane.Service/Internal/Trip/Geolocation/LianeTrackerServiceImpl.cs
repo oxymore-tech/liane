@@ -87,7 +87,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
     var currentLocation = tracker.GetCurrentLocation(ping.User.Id);
     var nextPointIndex = currentLocation?.NextPointIndex ?? tracker.GetFirstWayPoint(ping.User.Id);
-
+    
     if (ping.Coordinate is null)
     {
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User));
@@ -99,7 +99,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     // If too far away from route, skip
     if (locationOnRoute.distance > ILianeTrackerService.NearPointDistanceInMeters)
     {
-      var nextPoint = tracker.Liane.WayPoints[nextPointIndex].RallyingPoint;
+      var nextPoint = tracker.Liane.GetWayPoint(nextPointIndex).RallyingPoint;
       var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
       var computedLocation = await osrmService.Nearest(ping.Coordinate.Value) ?? ping.Coordinate.Value;
       var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
@@ -109,7 +109,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     }
     else
     {
-      var nextPoint = tracker.Liane.WayPoints[nextPointIndex].RallyingPoint;
+      var nextPoint = tracker.Liane.GetWayPoint(nextPointIndex).RallyingPoint;
       var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
       var wayPointInRange = nextPointDistance <= ILianeTrackerService.NearPointDistanceInMeters;
       var pingNextPointIndex = nextPointIndex;
@@ -155,7 +155,6 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
   }
-
 
   public async Task PushPing(Ref<Api.Trip.Liane> liane, UserPing ping)
   {
