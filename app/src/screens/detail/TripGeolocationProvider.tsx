@@ -1,5 +1,5 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { Liane, TrackingInfo } from "@liane/common";
+import { Car, Liane, TrackingInfo } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
 import { useLianeStatus } from "@/components/trip/trip";
@@ -86,5 +86,8 @@ export const useTrackingInfo = () => {
 export const useCarDelay = () => {
   const lastLocUpdate = useTrackingInfo();
   const delay = useRealtimeDelay(lastLocUpdate?.car);
-  return lastLocUpdate?.car ? { ...lastLocUpdate.car, delay } : null;
+  if (!lastLocUpdate) {
+    return;
+  }
+  return { ...lastLocUpdate.car, delay } as Car;
 };

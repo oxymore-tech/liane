@@ -106,8 +106,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
-  const lastDriverLocUpdate = useCarDelay();
-  const nextWayPoint = lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined;
+  const carLocation = useCarDelay();
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
   const status = useLianeStatus(item);
@@ -136,7 +135,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
         </Row>
 
         <View style={styles.lianeContainer}>
-          <WayPointsView wayPoints={wayPoints} nextWayPoint={nextWayPoint} />
+          <WayPointsView wayPoints={wayPoints} carLocation={carLocation} />
         </View>
       </View>
 

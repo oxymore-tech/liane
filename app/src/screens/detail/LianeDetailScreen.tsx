@@ -205,15 +205,11 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
     [props.liane, user?.id]
   );
   const lastDriverLocUpdate = useCarDelay();
-
   return (
     <Column spacing={4} style={styles.flex}>
       <AppText style={styles.date}>{date}</AppText>
       <Row spacing={8} style={styles.flex}>
-        <WayPointsView
-          wayPoints={wayPoints}
-          nextWayPoint={lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined}
-        />
+        <WayPointsView wayPoints={wayPoints} carLocation={lastDriverLocUpdate} />
         <View style={{ flexGrow: 1, flexShrink: 1 }} />
         <Column style={{ justifyContent: "space-evenly", flexShrink: 0 }}>
           {wayPoints.map(w => (
