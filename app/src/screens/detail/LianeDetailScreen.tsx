@@ -5,7 +5,7 @@ import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, B
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch } from "@liane/common";
-import { getOriginalTotalDistance, getTotalDistance, getTripFromLiane, getTripFromMatch, useLianeStatus } from "@/components/trip/trip";
+import { getTotalDistance, getTripFromLiane, getTripFromMatch, getLianeCostContribution, useLianeStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -33,8 +33,6 @@ import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
-// BasePrice of one complete Liane
-const basePriceKm = 0.55;
 export const LianeJoinRequestDetailScreen = () => {
   const { services } = useContext(AppContext);
   const { route } = useAppNavigation<"LianeJoinRequestDetail">();
@@ -286,12 +284,10 @@ const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
 };
 const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
-
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
-  // Calculate the distance of the complete trip
-  const originalTripDistance = Math.ceil(getOriginalTotalDistance(liane) / 1000);
-  //We calculate the price of the trip in proportion to the distance
-  const tripPrice = Math.round(((originalTripDistance * basePriceKm * userTripDistance) / originalTripDistance) * 100) / 100;
+
+  const tripPrice = getLianeCostContribution(liane.liane);
+
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
   const { user } = useContext(AppContext);
 
@@ -349,15 +345,13 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
               <Row key={member.user.id}>
                 <AppText style={styles.infoTravel}>{member.user.pseudo}</AppText>
                 <View style={styles.horizontalLine} />
-                <AppText style={styles.infoTravel}>{tripPrice.toFixed(2)} €</AppText>
+                <AppText style={styles.infoTravel}>{tripPrice.byMembers[member.user.id!].toFixed(2)} €</AppText>
               </Row>
             ))}
           <Row style={{ marginTop: 12 }}>
             <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>Total</AppText>
             <View style={styles.horizontalLine} />
-            <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>
-              {(liane.liane.members.filter(member => member.user.id !== liane.liane.driver.user).length * tripPrice).toFixed(2)} €
-            </AppText>
+            <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>{tripPrice.total.toFixed(2)} €</AppText>
           </Row>
         </Column>
       </Row>
