@@ -224,6 +224,8 @@ export class HubServiceClient extends AbstractHubService {
           const token = await this.http.getUpdatedAccessToken();
           if (!token) {
             this.logger.warn("HUB", "Bizarre bizarre token is empty", token);
+            await this.http.post("/auth/logout");
+            await this.storage.clearStorage();
           }
           return token!;
         }
