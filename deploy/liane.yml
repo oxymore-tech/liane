@@ -39,7 +39,7 @@ services:
       - DEFAULT_CHECKSUM=SHA1
       - DEFAULT_COMPRESSION=GZ
       - DB01_TYPE=pgsql
-      - DB01_HOST=postgres
+      - DB01_HOST=postgis
       - DB01_NAME=jamin
       - DB01_USER=${MONGO_USERNAME}
       - DB01_PASS=${MONGO_PASSWORD}
