@@ -114,6 +114,12 @@ export class AndroidService implements LianeGeolocation {
     return access === "granted" || accessAppInUse === "granted";
   }
 
+  async checkAppInUseGeolocationPermission(): Promise<boolean> {
+    const accessAppInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
+    return accessAppInUse === "granted";
+  }
+
   async requestBackgroundGeolocationPermission() {
     if (this.Platform.Version <= 29) {
       const status = await request(

@@ -43,7 +43,7 @@ export const CreateAppServices = (): AppServices => ({
   reminder: new ReminderService(AppStorage, logger),
   rallyingPoint: new RallyingPointClient(http),
   realTimeHub: new HubServiceClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage, http),
-  location: new ReactNativeLocationService(RNAppEnv, AppStorage, DEFAULT_TLS),
+  location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
   notification: new NotificationServiceClient(http)
 });
