@@ -3,6 +3,7 @@ import { AppStorage } from "../storage";
 import { AppEnv } from "../env";
 import { Feature, Geometry, Point } from "geojson";
 import { BoundingBox } from "../util";
+import { HttpClient } from "./http";
 
 export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
 export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };
@@ -48,6 +49,7 @@ export interface LocationService {
     type: "FeatureCollection";
     features: Array<SearchedLocationSuggestion>;
   }>;
+  postPing(ping: MemberPing, timestamp?: number): Promise<void>;
 }
 
 export type Trip = {
@@ -68,7 +70,12 @@ const lastKnownLocationKey = "last_known_loc";
 export abstract class AbstractLocationService implements LocationService {
   private lastKnownLocation: LatLng;
 
-  protected constructor(private env: AppEnv, private storage: AppStorage, defaultLocation: LatLng) {
+  protected constructor(
+    private env: AppEnv,
+    private storage: AppStorage,
+    private http: HttpClient,
+    defaultLocation: LatLng
+  ) {
     this.lastKnownLocation = defaultLocation;
     this.storage.retrieveAsync<LatLng>(lastKnownLocationKey).then(res => {
       if (res) {
@@ -192,6 +199,15 @@ export abstract class AbstractLocationService implements LocationService {
     this.lastKnownLocation = await this.currentLocationImpl();
     await this.storage.storeAsync<LatLng>(lastKnownLocationKey, this.lastKnownLocation);
     return this.lastKnownLocation;
+  };
+
+  postPing = async (ping: MemberPing, timestamp?: number): Promise<void> => {
+    await this.http.postAs(`/event/member_ping`, { body: { ...ping, timestamp: timestamp || ping.timestamp } }).catch(err => {
+      AppLogger.warn("GEOPINGS", "Could not send ping", err);
+      if (isResourceNotFound(err) || isValidationError(err)) {
+        AppLogger.info("GEOPINGS", "Stopping service :", err);
+      }
+    });
   };
 
   abstract currentLocationImpl(): Promise<LatLng>;
