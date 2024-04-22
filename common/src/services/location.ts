@@ -204,9 +204,8 @@ export abstract class AbstractLocationService implements LocationService {
 
   postPing = async (ping: MemberPing, timestamp?: number): Promise<void> => {
     await this.http.postAs(`/event/member_ping`, { body: { ...ping, timestamp: timestamp || ping.timestamp } }).catch(err => {
-      AppLogger.warn("GEOPINGS", "Could not send ping", err);
       if (isResourceNotFound(err) || isValidationError(err)) {
-        AppLogger.info("GEOPINGS", "Stopping service :", err);
+        throw new Error("API returned error " + err);
       }
     });
   };
