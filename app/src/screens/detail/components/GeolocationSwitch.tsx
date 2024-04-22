@@ -122,7 +122,9 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
       Alert.alert("Arrêter la géolocalisation ?", "Vous pourrez relancer le partage en réappuyant sur ce bouton.", [
         {
           text: "Annuler",
-          onPress: () => {},
+          onPress: () => {
+            setTracked(oldValue);
+          },
           style: "cancel"
         },
         {
