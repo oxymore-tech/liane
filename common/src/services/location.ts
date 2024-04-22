@@ -5,6 +5,7 @@ import { Feature, Geometry, Point } from "geojson";
 import { BoundingBox } from "../util";
 import { HttpClient } from "./http";
 import { MemberPing } from "../event";
+import { isResourceNotFound, isValidationError } from "../exception";
 
 export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
 export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };
