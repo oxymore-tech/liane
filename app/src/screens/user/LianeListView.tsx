@@ -30,9 +30,7 @@ import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/comp
 import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
-export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {
-  date: string;
-}
+export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {}
 
 export interface LianeListViewProps {
   data: (Liane | JoinLianeRequestDetailed)[];
@@ -52,7 +50,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
   }, [data, userId, reverseSort]);
   return (
     <SectionList
-      style={{ flex: 1, padding }}
+      style={{ flex: 1 }}
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
       showsVerticalScrollIndicator={false}
@@ -60,7 +58,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
       keyExtractor={item => item.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
-      renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? bottom : 24 }} />}
+      renderSectionHeader={renderSectionHeader}
     />
   );
 };
@@ -70,33 +68,12 @@ const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): ite
 };
 
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
-  Object.entries(
-    data.reduce((tmp, item) => {
-      const departureTime = isResolvedJoinLianeRequest(item)
-        ? getTripFromJoinRequest(item).departureTime
-        : getTripFromLiane(item, member).departureTime;
-
-      // Use date for grouping
-      const group = extractDatePart(departureTime);
-
-      // Add item to this group (or create the group)
-      if (!tmp[group]) {
-        tmp[group] = [{ departureTime, item }];
-      } else {
-        tmp[group].unshift({ departureTime, item });
-      }
-      // add this item to its group
-      return tmp;
-    }, {} as { [key: UTCDateTime]: { departureTime: UTCDateTime; item: Liane | JoinLianeRequestDetailed }[] })
-  )
-    .map(
-      ([group, items]) =>
-        ({
-          date: group,
-          data: items.sort((a, b) => a.departureTime.localeCompare(b.departureTime)).map(i => i.item)
-        } as TripSection)
-    )
-    .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
+  data.map(
+    item =>
+      ({
+        data: [item]
+      } as TripSection)
+  );
 
 const LianeItem = ({ item }: { item: Liane }) => {
   const { navigation } = useAppNavigation();
@@ -278,6 +255,10 @@ const relaunchLiane = (liane: Liane, driver: User) => {
   }
 };
 
+const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
+  <View style={styles.header} />
+);
+
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
@@ -289,6 +270,7 @@ const styles = StyleSheet.create({
   header: {
     padding: 6,
     paddingBottom: 12,
+    height: 32,
     backgroundColor: AppColors.lightGrayBackground
   },
   headerTitle: {
