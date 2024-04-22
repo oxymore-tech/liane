@@ -4,6 +4,7 @@ import { AppEnv } from "../env";
 import { Feature, Geometry, Point } from "geojson";
 import { BoundingBox } from "../util";
 import { HttpClient } from "./http";
+import { MemberPing } from "../event";
 
 export type SearchedLocation = RallyingPointSearchedLocation | SearchedLocationSuggestion;
 export type RallyingPointSearchedLocation = Feature<Point, RallyingPoint> & { place_type: ["rallying_point"] };

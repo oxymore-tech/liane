@@ -54,9 +54,10 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
   }, [focused]);
 
   useEffect(() => {
+    var intervalId: NodeJS.Timeout | undefined = undefined;
     LianeGeolocation.checkAppInUseGeolocationPermission().then(appInUseGranted => {
-      if (appInUseGranted && geoloc.isActive) {
-        const intervalId = setInterval(() => {
+      if (appInUseGranted && geoloc?.isActive) {
+        intervalId = setInterval(() => {
           GetLocation.getCurrentPosition({
             enableHighAccuracy: true,
             timeout: 15000
