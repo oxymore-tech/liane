@@ -1,4 +1,4 @@
-import { Liane } from "@liane/common";
+import { Liane, MemberPing } from "@liane/common";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
 import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
@@ -12,6 +12,7 @@ import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { useAppNavigation } from "@/components/context/routing";
 import { useIsFocused } from "@react-navigation/native";
+import GetLocation from "react-native-get-location";
 
 export const startGeolocationService = async (liane: Liane, force: boolean = false) => {
   const user = await AppStorage.getUser();
@@ -34,6 +35,7 @@ export const startGeolocationService = async (liane: Liane, force: boolean = fal
       });
   }
 };
+
 export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
   const { user } = useContext(AppContext);
   const geoloc = useTripGeolocation();
@@ -50,6 +52,48 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     }
     LianeGeolocation.checkBackgroundGeolocationPermission().then(p => setGeolocPermission(p));
   }, [focused]);
+
+  useEffect(() => {
+    LianeGeolocation.checkAppInUseGeolocationPermission().then(appInUseGranted => {
+      if (appInUseGranted && geoloc.isActive) {
+        const intervalId = setInterval(() => {
+          GetLocation.getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: 15000
+          })
+            .then(location => {
+              calledWhenLocationChanges(location);
+            })
+            .catch(error => {
+              const { code, message } = error;
+              console.warn(code, message);
+            });
+        }, 10000);
+      }
+    });
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []);
+
+  const calledWhenLocationChanges = async (newLocation: { latitude: number; longitude: number; time: number }) => {
+    try {
+      const coordinate: { lat: number; lng: number } = { lat: newLocation.latitude, lng: newLocation.longitude };
+      const ping: MemberPing = {
+        type: "MemberPing",
+        liane: match.id as string,
+        coordinate,
+        timestamp: Math.trunc(newLocation.time)
+      };
+
+      await services.location.postPing(ping);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const setGeolocalisationEnabled = async (enabled: boolean) => {
     const oldValue = isTracked;
