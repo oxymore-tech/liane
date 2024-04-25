@@ -105,19 +105,27 @@ export class AndroidService implements LianeGeolocation {
     return false;
   }
 
-  async checkBackgroundGeolocationPermission(): Promise<boolean> {
+  async checkGeolocationPermission(): Promise<boolean> {
     const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
     const accessAppInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
 
-    AppLogger.info("GEOPINGS", `Location ping permission background ${access}`);
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
+    AppLogger.info("GEOPINGS", `Location permission global ${access === "granted" || accessAppInUse === "granted"}`);
     return access === "granted" || accessAppInUse === "granted";
   }
 
+  async checkBackgroundGeolocationPermission(): Promise<boolean> {
+    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
+
+    AppLogger.info("GEOPINGS", `Location ping permission background ${access}`);
+    return access === "granted";
+  }
+
   async checkAppInUseGeolocationPermission(): Promise<boolean> {
+    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
     const accessAppInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
-    return accessAppInUse === "granted";
+
+    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${access !== "granted" && accessAppInUse === "granted"}`);
+    return access !== "granted" && accessAppInUse === "granted";
   }
 
   async requestBackgroundGeolocationPermission() {

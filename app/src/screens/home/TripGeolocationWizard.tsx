@@ -108,7 +108,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
     );
 
   const authorize = async () => {
-    if (await LianeGeolocation.checkBackgroundGeolocationPermission()) {
+    if (await LianeGeolocation.checkGeolocationPermission()) {
       props.next(true);
 
       return;

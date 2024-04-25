@@ -15,6 +15,7 @@ export interface LianeGeolocation {
   watchRunningService(callback: (running: string | undefined) => void): SubscriptionLike;
   checkAndRequestLocationPermission(): Promise<boolean>;
   requestBackgroundGeolocationPermission(): Promise<boolean>;
+  checkGeolocationPermission(): Promise<boolean>;
   checkBackgroundGeolocationPermission(): Promise<boolean>;
   checkAppInUseGeolocationPermission(): Promise<boolean>;
 }

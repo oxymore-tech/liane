@@ -45,22 +45,24 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
   const { navigation } = useAppNavigation();
 
   const [geolocPermission, setGeolocPermission] = useState<boolean | null>(null);
+  const [geolocBackgroundPermission, setGeolocBackgroundPermission] = useState<boolean | null>(null);
+  var intervalId: NodeJS.Timeout | undefined = undefined;
   const focused = useIsFocused();
   useEffect(() => {
     if (!focused) {
       return;
     }
-    LianeGeolocation.checkBackgroundGeolocationPermission().then(p => setGeolocPermission(p));
+    LianeGeolocation.checkGeolocationPermission().then(p => setGeolocPermission(p));
+    LianeGeolocation.checkBackgroundGeolocationPermission().then(p => setGeolocBackgroundPermission(p));
   }, [focused]);
 
   useEffect(() => {
-    var intervalId: NodeJS.Timeout | undefined = undefined;
     LianeGeolocation.checkAppInUseGeolocationPermission().then(appInUseGranted => {
-      if (appInUseGranted && geoloc?.isActive) {
+      if (appInUseGranted && isTracked && !intervalId) {
         intervalId = setInterval(() => {
           GetLocation.getCurrentPosition({
             enableHighAccuracy: true,
-            timeout: 15000
+            timeout: 8000
           })
             .then(location => {
               calledWhenLocationChanges(location);
@@ -72,13 +74,14 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
         }, 10000);
       }
     });
+    });
 
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
       }
     };
-  }, []);
+  }, [isTracked]);
 
   const calledWhenLocationChanges = async (newLocation: { latitude: number; longitude: number; time: number }) => {
     try {
@@ -89,7 +92,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
         coordinate,
         timestamp: Math.trunc(newLocation.time)
       };
-
+      AppLogger.debug("GEOPINGS", "Send ping  APPINUSE");
       await services.location.postPing(ping);
     } catch (error) {
       console.error(error);
@@ -114,7 +117,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => {
           setTracked(enabled);
-          if (enabled) {
+          if (enabled && geolocBackgroundPermission) {
             startGeolocationService(match, true);
           }
         })

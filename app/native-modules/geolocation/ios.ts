@@ -188,18 +188,27 @@ export class IosService implements LianeGeolocation {
     return false;
   }
 
-  async checkBackgroundGeolocationPermission(): Promise<boolean> {
+  async checkGeolocationPermission(): Promise<boolean> {
     const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
     const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    AppLogger.info("GEOPINGS", `Location ping permission Background ${access}`);
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
+
+    AppLogger.info("GEOPINGS", `Location permission global ${access === "granted" || accessAppInUse === "granted"}`);
     return access === "granted" || accessAppInUse === "granted";
   }
 
+  async checkBackgroundGeolocationPermission(): Promise<boolean> {
+    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
+
+    AppLogger.info("GEOPINGS", `Location ping permission Background ${access}`);
+    return access === "granted";
+  }
+
   async checkAppInUseGeolocationPermission(): Promise<boolean> {
+    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
     const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
-    return accessAppInUse === "granted";
+
+    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${access !== "granted" && accessAppInUse === "granted"}`);
+    return access !== "granted" && accessAppInUse === "granted";
   }
 
   async requestBackgroundGeolocationPermission(): Promise<boolean> {
