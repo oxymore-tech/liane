@@ -42,12 +42,14 @@ interface GeoPosition {
 }
 
 function createBackgroundHttp(accessToken: string) {
+  const a = `${accessToken}`;
   return new HttpClient(RNAppEnv.baseUrl, AppLogger as any, {
     closeSession: () => {
       return Promise.resolve();
     },
     getAccessToken: () => {
-      return Promise.resolve(accessToken);
+      AppLogger.info("GEOPINGS", "IOS background task http getAccessToken : ", a);
+      return Promise.resolve(a);
     },
     getRefreshToken: () => {
       return Promise.resolve(undefined);
@@ -108,8 +110,9 @@ export class IosService implements LianeGeolocation {
       });
     };
 
-    const postPing = async (ping: MemberPing, timestamp?: number) => {
-      await http.postAs(`/event/member_ping`, { body: { ...ping, timestamp: timestamp || ping.timestamp } }).catch(err => {
+    const postPing = async (ping: MemberPing) => {
+      AppLogger.info("GEOPINGS", "Send ping BACKGROUND", ping);
+      await http.postAs(`/event/member_ping`, { body: ping }).catch(err => {
         AppLogger.warn("GEOPINGS", "Could not send ping", err);
         if (isResourceNotFound(err) || isValidationError(err)) {
           AppLogger.info("GEOPINGS", "Stopping service :", err);

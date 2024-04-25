@@ -230,6 +230,7 @@ export class HttpClient {
   private async headers(body?: any) {
     const h = new Headers();
     const token = await this.storage.getAccessToken();
+    this.logger.info("HTTP", "read access token in headers", token);
     if (token) {
       h.append("Authorization", `Bearer ${token}`);
     }
