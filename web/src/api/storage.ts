@@ -26,7 +26,6 @@ export class LocalStorageImpl implements AppStorage {
       return Promise.resolve(storageSource.clear());
     });
     return Promise.all(res).then();
-
   }
 
   getAccessToken(): Promise<string | undefined> {

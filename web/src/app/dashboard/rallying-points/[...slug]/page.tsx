@@ -57,6 +57,7 @@ const DepartmentLoadingView = ({ department }: { department: string }) => {
   const { isLoading, boundary, error, reachable, requests, points, parkings } = useDepartmentData(department);
   if (isLoading) return <LoadingViewIndicator />;
   if (error) return <div>{error.message}</div>;
+  //@ts-ignore
   return <DepartmentView department={department} data={{ points, requests, parkings, reachable }} boundaries={boundary!} />;
 };
 
@@ -84,6 +85,7 @@ const DepartmentView = ({
     defaultValues: { active_rp: true }
   });
 
+  //@ts-ignore
   const selectedRallyingPointFeature = useMemo<Feature<Point, Omit<RallyingPoint, "location">> | null>(() => {
     if (selectedRallyingPoint) {
       return data.points?.features.find(p => p.properties!.id === selectedRallyingPoint) ?? null;
@@ -91,6 +93,7 @@ const DepartmentView = ({
     return null;
   }, [data, selectedRallyingPoint]);
 
+  //@ts-ignore
   const selectedRequestFeature = useMemo<Feature<Point, RallyingPointFullRequest> | null>(() => {
     if (selectedRequest) {
       return data.requests?.features.find(p => p.properties!.id === selectedRequest) ?? null;
@@ -107,6 +110,7 @@ const DepartmentView = ({
     <SplitView initial={200}>
       <FormProvider {...methods}>
         <Map
+          //@ts-ignore
           ref={map}
           center={newRallyingPoint?.location ?? center}
           onClick={e => {

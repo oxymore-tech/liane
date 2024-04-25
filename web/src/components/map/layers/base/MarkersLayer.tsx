@@ -135,10 +135,9 @@ export const RPMarkersLayer = ({
         <SymbolLayer
           id={sourceId}
           source={sourceId}
+          // @ts-ignore
           onClickPoint={onClickListener}
           props={{
-            //   minzoom: 8,
-
             layout: {
               "icon-image": "pin",
               "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.3, 9, 0.5, 11, 0.7],

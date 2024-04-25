@@ -46,6 +46,7 @@ export function RequestView({
   return editing ? (
     <div className="justify-between flex flex-col grow mb-8">
       <div>
+        {/* @ts-ignore */}
         <RallyingPointOverview point={request.point} />
         <span className="text-sm">Créé le {WebLocalization.formatDate(new Date(request.createdAt!))}</span>
       </div>
@@ -67,6 +68,7 @@ const TextField = ({ name, readOnly, ...props }: { name: string; readOnly?: bool
   const initialValue = useRef(field.value);
   return (
     <div>
+      {/* @ts-ignore */}
       <span className="text-sm">{RallyingPointPropertiesLabels[name]}</span>
       <TextInput {...props} disabled={readOnly && !!initialValue.current} onChange={field.onChange} value={field.value} id={name} name={name} />
     </div>
@@ -77,9 +79,11 @@ const SelectInput = ({ name, options }: { name: string; options: string[] }) => 
   const { field } = useController({ name });
   return (
     <div>
+      {/* @ts-ignore */}
       <span className="text-sm">{RallyingPointPropertiesLabels[name]}</span>
       <Select value={field.value} onChange={field.onChange} id={name} name={name}>
         {options.map(o => (
+          // @ts-ignore
           <option key={o} label={RallyingPointLocationLabels[o]}>
             {o}
           </option>

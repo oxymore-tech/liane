@@ -36,14 +36,7 @@ export class PointsAdminServiceClient extends RallyingPointClient implements Poi
   }
 
   getDepartmentRequestsAsGeoJson(department: string) {
-    return this.http.get<
-      FeatureCollection<
-        Point,
-        {
-          id: string;
-        }
-      >
-    >(`/rallying_point/request/department/${department}`);
+    return this.http.get<FeatureCollection<Point, RallyingPointFullRequest>>(`/rallying_point/request/department/${department}`);
   }
 
   exportCsv() {
