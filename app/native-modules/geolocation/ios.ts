@@ -8,6 +8,7 @@ import DeviceInfo from "react-native-device-info";
 import { LianeGeolocation } from "./index";
 import { Alert, Linking, NativeEventEmitter, Platform, PlatformIOSStatic } from "react-native";
 import { ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
+import { getTotalDuration } from "@/components/trip/trip.ts";
 
 interface GeoWatchOptions {
   useSignificantChanges?: boolean;
@@ -41,12 +42,14 @@ interface GeoPosition {
 }
 
 function createBackgroundHttp(accessToken: string) {
+  const a = `${accessToken}`;
   return new HttpClient(RNAppEnv.baseUrl, AppLogger as any, {
     closeSession: () => {
       return Promise.resolve();
     },
     getAccessToken: () => {
-      return Promise.resolve(accessToken);
+      AppLogger.info("GEOPINGS", "IOS background task http getAccessToken : ", a);
+      return Promise.resolve(a);
     },
     getRefreshToken: () => {
       return Promise.resolve(undefined);
@@ -77,8 +80,8 @@ export class IosService implements LianeGeolocation {
       throw new Error("No access token");
     }
     const http = createBackgroundHttp(accessToken);
-    const tripDuration = new Date(wayPoints[wayPoints.length - 1].eta).getTime() - new Date().getTime();
-    const timeout = tripDuration + 3600 * 1000;
+    const tripDuration = getTotalDuration(wayPoints);
+    const timeout = (tripDuration + 3600) * 1000;
     let preciseTrackingMode = true;
     AppLogger.debug("GEOPINGS", `tracking timeout = ${timeout} ms`);
     setTimeout(() => {
@@ -107,26 +110,17 @@ export class IosService implements LianeGeolocation {
       });
     };
 
-    let repingTimeout: ReturnType<typeof setTimeout> | undefined;
-    const postPing = async (ping: MemberPing, timestamp?: number) => {
-      await http.postAs(`/event/member_ping`, { body: { ...ping, timestamp: timestamp || ping.timestamp } }).catch(err => {
+    const postPing = async (ping: MemberPing) => {
+      AppLogger.info("GEOPINGS", "Send ping BACKGROUND", ping);
+      await http.postAs(`/event/member_ping`, { body: ping }).catch(err => {
         AppLogger.warn("GEOPINGS", "Could not send ping", err);
         if (isResourceNotFound(err) || isValidationError(err)) {
           AppLogger.info("GEOPINGS", "Stopping service :", err);
           stopTracking();
         }
       });
-
-      // If no position update is received for a moment, keep sending this position
-      // to have a homogeneous behavior with Android phones
-      repingTimeout = setTimeout(() => {
-        postPing(ping, new Date().getTime());
-      }, 2 * 60 * 1000);
     };
     const onPositionCallback = async (position: GeoPosition) => {
-      if (repingTimeout) {
-        clearTimeout(repingTimeout);
-      }
       // Send ping
       AppLogger.debug("GEOPINGS", "Position tracked", position);
       const coordinate = { lat: position.latitude, lng: position.longitude };
@@ -196,8 +190,16 @@ export class IosService implements LianeGeolocation {
 
   async checkBackgroundGeolocationPermission(): Promise<boolean> {
     const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
-    AppLogger.info("GEOPINGS", `Location ping permission ${access}`);
-    return access === "granted";
+    const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    AppLogger.info("GEOPINGS", `Location ping permission Background ${access}`);
+    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
+    return access === "granted" || accessAppInUse === "granted";
+  }
+
+  async checkAppInUseGeolocationPermission(): Promise<boolean> {
+    const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
+    return accessAppInUse === "granted";
   }
 
   async requestBackgroundGeolocationPermission(): Promise<boolean> {
@@ -249,6 +251,7 @@ export class IosService implements LianeGeolocation {
     const val = await this.getCurrentGeolocationLianeId();
     if (val && new Date() > new Date(val.timeOutDate)) {
       // Stop timed-out service
+      AppLogger.warn("GEOPINGS", "StopSendingPings in currentLiane because >  val.timeOutDate", val.liane, new Date(), new Date(val.timeOutDate));
       await this.stopSendingPings();
     }
     return val?.liane;

@@ -12,21 +12,9 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip.Event;
 
-public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPing>
+public sealed class LianeMemberPingHandler(IMongoDatabase db, ICurrentContext currentContext, ILianeTrackerService lianeTrackerService, ILogger<LianeMemberPingHandler> logger)
+  : IEventListener<LianeEvent.MemberPing>
 {
-  private readonly IMongoDatabase mongo;
-  private readonly ILianeTrackerService lianeTrackerService;
-  private readonly ICurrentContext currentContext;
-  private readonly ILogger<LianeMemberPingHandler> logger;
-
-  public LianeMemberPingHandler(IMongoDatabase db, ICurrentContext currentContext, ILianeTrackerService lianeTrackerService, ILogger<LianeMemberPingHandler> logger)
-  {
-    mongo = db; 
-    this.currentContext = currentContext;
-    this.lianeTrackerService = lianeTrackerService;
-    this.logger = logger;
-  }
-
   public async Task OnEvent(LianeEvent.MemberPing e, Ref<Api.User.User>? sender = null)
   {
     var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).UtcDateTime;
@@ -37,7 +25,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
                    Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started))
                  & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == memberId);
 
-    var liane = await mongo.GetCollection<LianeDb>()
+    var liane = await db.GetCollection<LianeDb>()
       .FindOneAndUpdateAsync(filter,
         Builders<LianeDb>.Update.AddToSet(l => l.Pings, ping),
         new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
@@ -59,7 +47,7 @@ public sealed class LianeMemberPingHandler : IEventListener<LianeEvent.MemberPin
     }
     catch (Exception err)
     {
-      logger.LogWarning($"No tracker found for liane {liane.Id}");
+      logger.LogWarning(err, "Unable to push ping for '{0}' : {1}", liane.Id, ping);
     }
   }
 }

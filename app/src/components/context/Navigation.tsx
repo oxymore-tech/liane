@@ -10,7 +10,7 @@ import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
-import { NavigationState, ParamListBase, PartialState, Route } from "@react-navigation/native";
+import { NavigationState, ParamListBase, PartialState, Route, useNavigation } from "@react-navigation/native";
 import { Row } from "@/components/base/AppLayout";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useObservable } from "@/util/hooks/subscription";
@@ -34,6 +34,7 @@ import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequest
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithBadge } from "@/components/base/WithBadge";
+import { useEffect } from "react";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -122,9 +123,23 @@ const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarPr
   );
 };
 function Home() {
-  const { services, user } = useContext(AppContext);
+  const { services, user, refreshUser } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
+
   const iconSize = 24;
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("state", e => {
+      //Security to ensure that we always have a token
+      refreshUser();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   return (
     <Tab.Navigator
       tabBar={ButtonTabBar}
@@ -144,7 +159,7 @@ function Home() {
       {makeTab(
         "Mes trajets",
         ({ focused }) => {
-          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={notificationCount} />;
+          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={Math.max(notificationCount, notificationHub.length)} />;
         },
         MyTripsScreen,
         { headerShown: false } //TODO generic header ?

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
@@ -13,15 +13,15 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="CsvHelper" Version="30.0.1" />
-        <PackageReference Include="Dapper" Version="2.1.21" />
-        <PackageReference Include="dbup-postgresql" Version="5.0.37" />
-        <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
-        <PackageReference Include="GeoJSON.Text" Version="1.0.1" />
+        <PackageReference Include="Dapper" Version="2.1.28" />
+        <PackageReference Include="dbup-postgresql" Version="5.0.40" />
+        <PackageReference Include="FirebaseAdmin" Version="2.4.0" />
+        <PackageReference Include="GeoJSON.Text" Version="1.0.2" />
         <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
-        <PackageReference Include="NodaTime" Version="3.1.9" />
-        <PackageReference Include="Npgsql" Version="7.0.4" />
-        <PackageReference Include="Npgsql.GeoJSON" Version="7.0.4" />
-        <PackageReference Include="Twilio" Version="6.2.4" />
+        <PackageReference Include="Npgsql" Version="7.0.6" />
+        <PackageReference Include="Npgsql.GeoJSON" Version="7.0.6" />
+        <PackageReference Include="Twilio" Version="6.16.1" />
+        <PackageReference Include="NodaTime" Version="3.1.11" />
     </ItemGroup>
 
     <ItemGroup>

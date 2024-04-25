@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
@@ -22,14 +23,14 @@ public enum GeolocationLevel
   Hidden,
   Shared
 }
+
 public sealed record Feedback(
   bool Canceled = false,
   string? Comment = null
 );
 
 public sealed record LianeMember(
-  [property:SerializeAsResolvedRef]
-  Ref<User.User> User,
+  [property: SerializeAsResolvedRef] Ref<User.User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   int SeatCount = -1, // Defaults to a passenger seat
@@ -39,14 +40,12 @@ public sealed record LianeMember(
   DateTime? Cancellation = null
 ) : IResourceMember;
 
-public sealed record Driver
-(
+public sealed record Driver(
   Ref<User.User> User,
   bool CanDrive = true
 );
 
-public sealed record Recurrence
-  (Ref<LianeRecurrence> Id,  DayOfTheWeekFlag Days);
+public sealed record Recurrence(Ref<LianeRecurrence> Id, DayOfTheWeekFlag Days);
 
 public sealed record Liane(
   string Id,
@@ -60,4 +59,15 @@ public sealed record Liane(
   LianeState State,
   Ref<ConversationGroup>? Conversation,
   Recurrence? Recurrence = null
-) : IEntity, ISharedResource<LianeMember>;
+) : IEntity, ISharedResource<LianeMember>
+{
+  public WayPoint GetWayPoint(int nextPointIndex)
+  {
+    if (nextPointIndex < 0 || nextPointIndex > WayPoints.Count - 1)
+    {
+      return WayPoints.Last();
+    }
+
+    return WayPoints[nextPointIndex];
+  }
+}

@@ -28,7 +28,7 @@ export const HomeBottomSheetContainer = (
 
   useEffect(() => {
     if (props.display === "closed") {
-      ref.current?.scrollTo(0);
+      ref.current?.scrollTo(0.2);
     } else if (props.display === "full") {
       ref.current?.scrollTo(1);
     }
@@ -38,7 +38,7 @@ export const HomeBottomSheetContainer = (
       if (s.matches("detail")) {
         ref.current?.scrollTo(0.7);
       } else if (s.matches("match")) {
-        ref.current?.scrollTo(0.35);
+        ref.current?.scrollTo(0.4);
       }
     };
     machine.onTransition(transitionListener);
@@ -52,7 +52,7 @@ export const HomeBottomSheetContainer = (
     return <View />;
   }
 
-  const bottomSpace = insets.bottom + h / 2;
+  const bottomSpace = insets.bottom + h;
 
   let stops: number[];
   let paddingTop: number;
@@ -88,9 +88,8 @@ export const HomeBottomSheetContainer = (
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24
       }}
-      margins={{ right: isMapState ? 24 : 0, left: isMapState ? 24 : 0, bottom: isMapState ? bottomSpace : 0 }}>
+      margins={{ right: isMapState ? 24 : 0, left: isMapState ? 24 : 0, bottom: bottomSpace }}>
       {props.children}
-      {/*<View style={{ height: h / 2 }} />*/}
     </AppBottomSheet>
   );
 };

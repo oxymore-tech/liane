@@ -1,7 +1,7 @@
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
 import { useAppNavigation } from "@/components/context/routing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -30,27 +30,36 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
   const requestId = typeof route.params.request === "string" ? route.params.request : route.params.request.id;
   const queryClient = useQueryClient();
   const readNotification = useRef<Promise<void> | undefined>();
+  const [inProgress, setProgress] = useState(false);
 
   useEffect(() => {
     readNotification.current = services.notification.markAsRead(requestId!);
   }, [requestId, services.notification]);
   const acceptRequest = async () => {
-    if (readNotification.current) {
-      await readNotification.current;
+    if (!inProgress) {
+      setProgress(true);
+      if (readNotification.current) {
+        await readNotification.current;
+      }
+      await services.realTimeHub.postAnswer(requestId!, Answer.Accept);
+      await queryClient.invalidateQueries(NotificationQueryKey);
+      await queryClient.invalidateQueries(LianeQueryKey);
+      await queryClient.invalidateQueries(JoinRequestsQueryKey);
+      navigation.goBack();
+      setProgress(false);
     }
-    await services.realTimeHub.postAnswer(requestId!, Answer.Accept);
-    await queryClient.invalidateQueries(NotificationQueryKey);
-    await queryClient.invalidateQueries(LianeQueryKey);
-    await queryClient.invalidateQueries(JoinRequestsQueryKey);
-    navigation.goBack();
   };
   const refuseRequest = async () => {
-    if (readNotification.current) {
-      await readNotification.current;
+    if (!inProgress) {
+      setProgress(true);
+      if (readNotification.current) {
+        await readNotification.current;
+      }
+      await services.realTimeHub.postAnswer(requestId!, Answer.Reject);
+      await queryClient.invalidateQueries(NotificationQueryKey);
+      navigation.goBack();
+      setProgress(false);
     }
-    await services.realTimeHub.postAnswer(requestId!, Answer.Reject);
-    await queryClient.invalidateQueries(NotificationQueryKey);
-    navigation.goBack();
   };
   return (
     <ScrollView style={{ flexGrow: 1, flex: 1, marginBottom: insets.bottom }}>
@@ -67,14 +76,14 @@ export const OpenJoinRequestScreen = WithFullscreenModal(() => {
 
       <Row style={{ alignItems: "flex-end", justifyContent: "flex-end", paddingHorizontal: 8 }} spacing={8}>
         <AppRoundedButton
-          color={defaultTextColor(AppColors.white)}
-          onPress={refuseRequest}
+          color={inProgress ? defaultTextColor(AppColors.secondaryColor) : defaultTextColor(AppColors.white)}
+          onPress={inProgress ? undefined : refuseRequest}
           backgroundColor={AppColorPalettes.gray[400]}
           text={"Refuser"}
         />
         <AppRoundedButton
-          color={defaultTextColor(AppColors.primaryColor)}
-          onPress={acceptRequest}
+          color={inProgress ? defaultTextColor(AppColors.secondaryColor) : defaultTextColor(AppColors.primaryColor)}
+          onPress={inProgress ? undefined : acceptRequest}
           backgroundColor={AppColors.primaryColor}
           text={"Accepter"}
         />

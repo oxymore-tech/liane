@@ -221,7 +221,11 @@ export class HubServiceClient extends AbstractHubService {
     this.hub = new HubConnectionBuilder()
       .withUrl(`${baseUrl}/hub`, {
         accessTokenFactory: async () => {
-          return (await this.http.getUpdatedAccessToken())!;
+          const token = await this.http.getUpdatedAccessToken();
+          if (!token) {
+            this.logger.warn("HUB", "Bizarre bizarre token is empty", token);
+          }
+          return token!;
         }
       })
       .configureLogging(LogLevel.Debug)
@@ -317,7 +321,7 @@ export class HubServiceClient extends AbstractHubService {
     return {
       closed: this.onReceiveLocationUpdateCallback !== callback,
       unsubscribe: async () => {
-        this.onReceiveLatestMessagesCallback = null;
+        this.onReceiveLocationUpdateCallback = undefined;
       }
     };
   }

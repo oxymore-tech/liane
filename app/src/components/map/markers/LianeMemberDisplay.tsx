@@ -1,6 +1,6 @@
 import { LatLng, User } from "@liane/common";
 import { StyleSheet, Text, View } from "react-native";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import React from "react";
 import { MarkerView, useAppMapViewController } from "../AppMapView";
@@ -9,9 +9,11 @@ import Svg, { Path } from "react-native-svg";
 import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
 import { AppLocalization } from "@/api/i18n";
 import { useSubscriptionValue } from "@/util/hooks/subscription";
+import Car from "@/assets/images/car.svg";
 
 export const LianeMemberDisplay = ({
   location,
+  isCar,
   user,
   active = true,
   size = 32,
@@ -22,6 +24,7 @@ export const LianeMemberDisplay = ({
 }: // showIcon = true
 {
   location: LatLng;
+  isCar: boolean;
   user: User;
   active?: boolean;
   size?: number;
@@ -53,7 +56,7 @@ export const LianeMemberDisplay = ({
                 styles.userPictureContainer,
                 { borderRadius: size, width: size, height: size, borderColor: active ? AppColors.primaryColor : AppColorPalettes.gray[400] }
               ]}>
-              <UserPicture url={user.pictureUrl} id={user.id} size={size - 8} />
+              {isCar ? <Car width={size - 8} height={size - 8} /> : <UserPicture url={user.pictureUrl} id={user.id} size={size - 8} />}
             </View>
           </View>
         }

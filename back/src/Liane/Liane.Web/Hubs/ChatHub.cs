@@ -99,6 +99,7 @@ public sealed class ChatHub : Hub<IHubClient>
       // Throw if user does not exist (ex: account was deleted but a token is still in use)
       throw new UnauthorizedAccessException();
     }
+
     await Clients.Caller.Me(user);
     // Send latest unread notifications count and conversations 
     var unreadConversationsIds = await chatService.GetUnreadConversationsIds(userId);
@@ -110,6 +111,7 @@ public sealed class ChatHub : Hub<IHubClient>
   {
     var now = DateTime.Now;
     var userId = currentContext.CurrentUser().Id;
+    logger.LogInformation(exception, "User '{user}' disconnect from hub", userId);
     await hubService.RemoveUser(userId, Context.ConnectionId);
     await base.OnDisconnectedAsync(exception);
     await userService.UpdateLastConnection(userId, now);

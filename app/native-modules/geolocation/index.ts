@@ -16,6 +16,7 @@ export interface LianeGeolocation {
   checkAndRequestLocationPermission(): Promise<boolean>;
   requestBackgroundGeolocationPermission(): Promise<boolean>;
   checkBackgroundGeolocationPermission(): Promise<boolean>;
+  checkAppInUseGeolocationPermission(): Promise<boolean>;
 }
 
 const httpClient = new HttpClient(RNAppEnv.baseUrl, AppLogger as any, AppStorage);

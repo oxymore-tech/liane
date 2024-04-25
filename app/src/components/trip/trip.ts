@@ -3,6 +3,7 @@ import {
   JoinLianeRequestDetailed,
   Liane,
   LianeMatch,
+  LianeMember,
   LianeState,
   RallyingPoint,
   Ref,
@@ -22,13 +23,49 @@ export type UserTrip = {
 export const getTotalDuration = (trip: WayPoint[]) => {
   return trip.map(w => w.duration).reduce((d, acc) => d + acc, 0);
 };
+
 export const getTotalDistance = (trip: WayPoint[]) => {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 };
+
+export function getMemberTrip(liane: Liane, member: LianeMember) {
+  const departureIndex = liane.wayPoints.findIndex(p => p.rallyingPoint.id === member.from);
+  const arrivalIndex = liane.wayPoints.findIndex(p => p.rallyingPoint.id === member.to);
+  return liane.wayPoints.slice(departureIndex, arrivalIndex + 1);
+}
+
+export function getLianeCostContribution(liane: Liane) {
+  const totalDistance = getTotalDistance(liane.wayPoints) / 1000;
+  const baseKmPrice = 0.3;
+  const cost = Math.round(totalDistance * baseKmPrice);
+  const byMembers = Object.fromEntries(
+    liane.members.map(m => {
+      const memberTrip = getMemberTrip(liane, m);
+      const memberDistance = getTotalDistance(memberTrip) / 1000;
+      const memberRatio = Math.ceil(totalDistance / memberDistance);
+      return [m.user.id!, Math.round(memberRatio * cost)];
+    })
+  );
+  const effectiveTotal = Object.values(byMembers).reduce((acc, v) => acc + v, 0);
+  const priceDiscountRatio = effectiveTotal / cost;
+  const byMembersWithDiscount = Object.fromEntries(Object.entries(byMembers).map(([userId, price]) => [userId, price / priceDiscountRatio]));
+  const total = Object.entries(byMembersWithDiscount)
+    .filter(([userId, _]) => userId !== liane.driver.user)
+    .map(([_, price]) => price)
+    .reduce((acc, v) => acc + v, 0);
+  return { cost, total, byMembers: byMembersWithDiscount };
+}
+
+export const getOriginalTotalDistance = (liane: LianeMatch) => {
+  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  return wayPoints.length > 1 ? wayPoints[wayPoints.length - 1].distance : 0;
+};
+
 export const getTripFromLiane = (liane: Liane, user: Ref<User>) => {
   const member = liane.members.find(m => m.user.id === user);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
 };
+
 export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
   const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetLiane.wayPoints : request.match.wayPoints;
   const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);

@@ -8,26 +8,17 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Util;
-using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Event;
 
-public sealed class NotificationServiceImpl : MongoCrudService<Notification>, INotificationService
+public sealed class NotificationServiceImpl(
+  IMongoDatabase mongo,
+  ICurrentContext currentContext,
+  IPushService pushService,
+  EventDispatcher eventDispatcher
+) : MongoCrudService<Notification>(mongo), INotificationService
 {
-  private readonly ICurrentContext currentContext;
-  private readonly IPushService pushService;
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILogger<NotificationServiceImpl> logger;
-
-  public NotificationServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IPushService pushService, EventDispatcher eventDispatcher, ILogger<NotificationServiceImpl> logger) : base(mongo)
-  {
-    this.currentContext = currentContext;
-    this.pushService = pushService;
-    this.eventDispatcher = eventDispatcher;
-    this.logger = logger;
-  }
-
   public Task<Notification> SendInfo(string title, string message, Ref<Api.User.User> to, string? uri) => Create(
     new Notification.Info(
       null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), ImmutableHashSet<Answer>.Empty, title, message, uri)
@@ -35,9 +26,9 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
 
   public Task<Notification> SendEvent(string title, string message, Ref<Api.User.User> createdBy, Ref<Api.User.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
     new Notification.Event(
-      null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to, null)), answers.ToImmutableHashSet(), title, message, lianeEvent)
+      null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), answers.ToImmutableHashSet(), title, message, lianeEvent)
   );
-  
+
   public new async Task<Notification> Create(Notification obj)
   {
     if (obj.Recipients.IsEmpty)
@@ -59,16 +50,17 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
     var filter = Builders<Notification>.Filter.Empty;
     if (notificationFilter.Recipient is not null)
     {
-      filter &= 
+      filter &=
         Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient) &
         // Filter unseen notifications or those just sent today
         (Builders<Notification>.Filter.Where(n => n.CreatedAt > DateTime.UtcNow.Date) |
-        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.SeenAt == null)
-        | (
-          Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.Answer == null)
-          & Builders<Notification>.Filter.SizeGt(r => r.Answers, 0)
-        ));
+         Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.SeenAt == null)
+         | (
+           Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.Answer == null)
+           & Builders<Notification>.Filter.SizeGt(r => r.Answers, 0)
+         ));
     }
+
     if (notificationFilter.Sender is not null)
     {
       filter &= Builders<Notification>.Filter.Eq(r => r.CreatedBy, notificationFilter.Sender);
@@ -129,6 +121,7 @@ public sealed class NotificationServiceImpl : MongoCrudService<Notification>, IN
   {
     await Parallel.ForEachAsync(ids, async (@ref, _) => await MarkAsRead(@ref));
   }
+
   public async Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Api.User.User> userId)
   {
     var filter = Builders<Notification>.Filter.ElemMatch(n => n.Recipients, r => r.User == userId && r.SeenAt == null);

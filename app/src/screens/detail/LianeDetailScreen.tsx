@@ -5,7 +5,7 @@ import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, B
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch } from "@liane/common";
-import { getTotalDistance, getTripFromLiane, getTripFromMatch, useLianeStatus } from "@/components/trip/trip";
+import { getTotalDistance, getTripFromLiane, getTripFromMatch, getLianeCostContribution, useLianeStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -128,7 +128,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           {match && <LianeMatchUserRouteLayer match={match} />}
 
           {notInCar.map(p => (
-            <LocationMarker key={p.user.id} user={p.user} info={p.info} />
+            <LocationMarker key={p.user.id} user={p.user} info={p.info} isCar={false} />
           ))}
 
           {tripMatch?.wayPoints.map((w, i) => {
@@ -143,7 +143,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
             return <WayPointDisplay key={w.rallyingPoint.id} rallyingPoint={w.rallyingPoint} type={type} />;
           })}
 
-          {driver && tripMatch && trackingInfo?.car && <LocationMarker user={driver} info={trackingInfo?.car} />}
+          {driver && tripMatch && trackingInfo?.car && <LocationMarker isCar={true} user={driver} info={trackingInfo?.car} />}
           {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
         </AppMapView>
 
@@ -203,15 +203,11 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
     [props.liane, user?.id]
   );
   const lastDriverLocUpdate = useCarDelay();
-
   return (
     <Column spacing={4} style={styles.flex}>
       <AppText style={styles.date}>{date}</AppText>
       <Row spacing={8} style={styles.flex}>
-        <WayPointsView
-          wayPoints={wayPoints}
-          nextWayPoint={lastDriverLocUpdate ? { id: lastDriverLocUpdate.nextPoint, delay: lastDriverLocUpdate.delay } : undefined}
-        />
+        <WayPointsView wayPoints={wayPoints} carLocation={lastDriverLocUpdate} />
         <View style={{ flexGrow: 1, flexShrink: 1 }} />
         <Column style={{ justifyContent: "space-evenly", flexShrink: 0 }}>
           {wayPoints.map(w => (
@@ -244,7 +240,7 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
   );
 };
 
-const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
+const StartButton = ({ startAction, isDriver }: { startAction: () => Promise<void>; isDriver: boolean }) => {
   const [loading, setLoading] = useState(false);
   return (
     <AppPressableOverlay
@@ -265,28 +261,33 @@ const StartButton = ({ startAction }: { startAction: () => Promise<void> }) => {
       <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
         {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
         {loading && <ActivityIndicator size="small" color={AppColors.white} />}
-        <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+        <AppText style={{ color: AppColors.white, fontSize: 18 }}>{isDriver ? "Démarrer le trajet" : "Partager sa position"}</AppText>
       </Row>
     </AppPressableOverlay>
   );
 };
 
-const StartingSoonView = (props: { liane: Liane }) => {
+const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
   const status = useLianeStatus(props.liane);
   const { services } = useContext(AppContext);
   if (status === "StartingSoon" || (status === "Started" && props.liane.state === "NotStarted")) {
-    return <StartButton startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))} />;
+    return (
+      <StartButton
+        startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))}
+        isDriver={props.isDriver}
+      />
+    );
   } else {
     return null;
   }
 };
 const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; request?: string | undefined }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
+  const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
 
-  const tripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000) + " km";
+  const tripPrice = getLianeCostContribution(liane.liane);
 
   const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
-
   const { user } = useContext(AppContext);
 
   return (
@@ -307,7 +308,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
           <GeolocationSwitch liane={liane.liane} />
         </Row>
       )}
-      {!request && <StartingSoonView liane={liane.liane} />}
+      {!request && <StartingSoonView liane={liane.liane} isDriver={driver.id === user!.id!} />}
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>
@@ -322,7 +323,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
             )}
           </Row>
           <Row>
-            <InfoItem icon={"twisting-arrow"} value={tripDistance} />
+            <InfoItem icon={"twisting-arrow"} value={userTripDistance + " km"} />
           </Row>
           <Row>
             <InfoItem
@@ -343,15 +344,13 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
               <Row key={member.user.id}>
                 <AppText style={styles.infoTravel}>{member.user.pseudo}</AppText>
                 <View style={styles.horizontalLine} />
-                <AppText style={styles.infoTravel}>10 €</AppText>
+                <AppText style={styles.infoTravel}>{tripPrice.byMembers[member.user.id!].toFixed(2)} €</AppText>
               </Row>
             ))}
           <Row style={{ marginTop: 12 }}>
             <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>Total</AppText>
             <View style={styles.horizontalLine} />
-            <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>
-              {liane.liane.members.filter(member => member.user.id !== liane.liane.driver.user).length * 10} €
-            </AppText>
+            <AppText style={[styles.infoTravel, { fontWeight: "bold", color: AppColors.fontColor }]}>{tripPrice.total.toFixed(2)} €</AppText>
           </Row>
         </Column>
       </Row>

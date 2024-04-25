@@ -212,7 +212,7 @@ public static class Startup
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
-          p => p.WithOrigins("http://localhost:3000")
+          p => p.WithOrigins("http://localhost:3000", "http://localhost:3001")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
@@ -299,7 +299,7 @@ public static class Startup
   private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
   {
     app.UseOpenApi();
-    app.UseSwaggerUi3();
+    app.UseSwaggerUi();
     app.UseCors("AllowLocal");
 
     var env = context.HostingEnvironment;

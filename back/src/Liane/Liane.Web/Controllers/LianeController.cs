@@ -23,25 +23,15 @@ namespace Liane.Web.Controllers;
 [Route("api/liane")]
 [ApiController]
 [RequiresAuth]
-public sealed class LianeController : ControllerBase
+public sealed class LianeController(
+  ILianeService lianeService,
+  ICurrentContext currentContext,
+  IMockService mockService,
+  EventDispatcher eventDispatcher,
+  ILianeRecurrenceService lianeRecurrenceService,
+  ILianeTrackerService lianeTrackerService)
+  : ControllerBase
 {
-  private readonly ILianeService lianeService;
-  private readonly ICurrentContext currentContext;
-  private readonly IMockService mockService;
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeRecurrenceService lianeRecurrenceService;
-  private readonly ILianeTrackerService lianeTrackerService;
-
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService, ILianeTrackerService lianeTrackerService)
-  {
-    this.lianeService = lianeService;
-    this.currentContext = currentContext;
-    this.mockService = mockService;
-    this.eventDispatcher = eventDispatcher;
-    this.lianeRecurrenceService = lianeRecurrenceService;
-    this.lianeTrackerService = lianeTrackerService;
-  }
-
   [HttpGet("{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
   public async Task<Api.Trip.Liane> Get([FromRoute] string id)

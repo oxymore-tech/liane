@@ -8,6 +8,7 @@ export class LocalStorageImpl implements AppStorage {
   async storeSession(authUser?: AuthUser | undefined): Promise<void> {
     await this.storeAsync("userSession", authUser);
   }
+
   clearStorage(sources?: ("session" | "local" | "dbcache")[]): Promise<void> {
     const res = (sources || ["local"]).map(s => {
       let storageSource;
@@ -25,6 +26,7 @@ export class LocalStorageImpl implements AppStorage {
       return Promise.resolve(storageSource.clear());
     });
     return Promise.all(res).then();
+
   }
 
   getAccessToken(): Promise<string | undefined> {
@@ -45,6 +47,7 @@ export class LocalStorageImpl implements AppStorage {
     await this.storeAsync("userSession", authResponse.user);
     return Promise.resolve(authResponse.user);
   }
+
   getUser(): Promise<FullUser | undefined> {
     return this.retrieveAsync("user");
   }
@@ -85,6 +88,7 @@ export class LocalStorageImpl implements AppStorage {
   async storeUser(user?: FullUser): Promise<void> {
     await this.storeAsync("user", user);
   }
+
   closeSession(): Promise<void> {
     return this.clearStorage();
   }
