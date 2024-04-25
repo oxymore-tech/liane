@@ -110,13 +110,12 @@ const Edition = ({ point, setEditing, refresh }: Props & { setEditing: (e: boole
       <div className="flex flex-row gap-2">
         <ButtonWithLoadingAction
           action={methods.handleSubmit(
-            point => {
+            p => {
               let action: () => Promise<RallyingPoint>;
               if (isExistingRallyingPoint(point)) {
-                action = () => rallyingPoint.update(point.id!, point);
+                action = () => rallyingPoint.update(point.id!, p);
               } else {
-                //TODO in submit + add location
-                action = () => rallyingPoint.create(point);
+                action = () => rallyingPoint.create(p);
               }
               return action()
                 .then(res => refresh(res.id!, res))
@@ -149,7 +148,9 @@ const RallyingPointOverview = ({ point }: { point: RallyingPoint }) => {
       <Table.Body className="divide-y">
         <Table.Row key={point.id!} className="bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer">
           {Object.keys(RallyingPointPropertiesLabels).map(key => (
-            <Table.Cell key={key}> {point[key as keyof RallyingPoint]?.toString()}</Table.Cell>
+            <Table.Cell key={key}>
+              {key === "location" ? `${point.location.lat};${point.location.lng}` : point[key as keyof RallyingPoint]?.toString()}
+            </Table.Cell>
           ))}
         </Table.Row>
       </Table.Body>

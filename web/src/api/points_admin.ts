@@ -1,4 +1,4 @@
-import { HttpClient, RallyingPoint, RallyingPointClient } from "@liane/common";
+import { HttpClient, RallyingPoint, RallyingPointClient, SessionProvider } from "@liane/common";
 import { FeatureCollection, Point } from "geojson";
 import { RallyingPointFullRequest, RallyingPointStats } from "@/api/api";
 import { NodeAppEnv } from "@/api/env";
@@ -14,7 +14,10 @@ export interface PointsAdminService {
   delete(id: string): Promise<void>;
 }
 export class PointsAdminServiceClient extends RallyingPointClient implements PointsAdminService {
-  constructor(http: HttpClient) {
+  constructor(
+    http: HttpClient,
+    private readonly storage: SessionProvider
+  ) {
     super(http);
   }
 
@@ -52,9 +55,10 @@ export class PointsAdminServiceClient extends RallyingPointClient implements Poi
   }
 
   async importCsv(csv: string): Promise<void> {
+    // TODO should be formData
     const response = await fetch(NodeAppEnv.baseUrl + "/rallying_point/import", {
       method: "POST",
-      headers: { "Content-Type": "text/csv" },
+      headers: { "Content-Type": "text/csv", Authorization: "Bearer " + (await this.storage.getAccessToken()) },
       body: csv
     });
     if (response.status === 200) {

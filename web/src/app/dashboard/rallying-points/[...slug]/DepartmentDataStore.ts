@@ -44,6 +44,7 @@ export const useDepartmentData = (department: string) => {
   useEffect(() => {
     if ([points, parkings].every(r => !!r)) {
       (async () => {
+        if (points!.features.length < 1) return featureCollection([]);
         const unionReachable = union(featureCollection(points!.features.map(f => circle(f, 0.5))))!;
         console.log(parkings!.features.length);
         const filteredParkings = filterParkings(parkings!, points);

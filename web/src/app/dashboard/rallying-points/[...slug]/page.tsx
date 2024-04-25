@@ -117,7 +117,18 @@ const DepartmentView = ({
             }
           }}>
           <ControlPanel>
-            <AreaSelectionControl targetLayers={[]} onSelectFeatures={() => {}} onHoverFeatureStateChanged={() => {}} />
+            <AreaSelectionControl
+              targetLayers={["rallying_points"]}
+              onSelectFeatures={f => {
+                console.debug(f.length, f);
+                /* TODO f.forEach(selected => {
+                  map.current?.setFeatureState({ source: "rallying_points", id: selected.id }, { selected: true });
+                });*/
+              }}
+              onHoverFeatureStateChanged={(f, hovered) => {
+                console.debug(f, hovered);
+              }}
+            />
             <ControlPanelButton
               label="Importer des points"
               onClick={() => {
@@ -392,7 +403,7 @@ const LegendView = () => {
           <ItemLegend name="active_rp" label="Points actifs" />
           <ItemLegend name="inactive_rp" label="Points inactifs" />
         </div>
-        <ItemLegend name="requested_rp" label="Requêtes" />
+        {/*TODO <ItemLegend name="requested_rp" label="Requêtes" />*/}
         <div className="flex flex-row">
           <ItemLegend name="parking_suggestions" label="Parkings :" />
           <div className="px-4 flex flex-row ">
