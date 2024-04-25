@@ -31,6 +31,11 @@ export class HttpClient {
     return this.fetchAndCheckAs<T>("GET", uri, options);
   }
 
+  async getFile(uri: string) {
+    const response = await this.fetchAndCheckWithRetry("GET", uri, {});
+    return await response.blob();
+  }
+
   async getAsString(uri: string, options: QueryAsOptions = {}): Promise<string> {
     const response = await this.fetchAndCheckWithRetry("GET", uri, options);
     return await response.text();

@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
@@ -170,11 +173,10 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
   public async Task SetActive(IEnumerable<Ref<RallyingPoint>> points, bool active)
   {
     using var connection = db.NewConnection();
-    var field = FieldDefinition<RallyingPoint>.From(r => r.IsActive);
     await connection.UpdateAsync(new UpdateQuery<RallyingPoint>(
-      Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points),
-      new Dictionary<FieldDefinition<RallyingPoint>, object?> { { field, active } }
-    ));
+      Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points))
+      .Set(r => r.IsActive, active)
+    );
   }
 
   public Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points)
@@ -189,6 +191,28 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return DeleteMany(filter);
   }
 
+  public async Task<RallyingPointStats> GetStats(Ref<RallyingPoint> point)
+  {
+    try
+    {
+      using var connection = db.NewConnection();
+      return await connection.GetAsync((Ref<RallyingPointStats>)point.Id);
+    }
+    catch (ResourceNotFoundException e)
+    {
+      return new RallyingPointStats(point.Id, 0, null);
+    }
+  }
+
+  public async Task<FeatureCollection> GetDepartment(string n)
+  {
+    using var connection = db.NewConnection();
+    var filter = Filter<RallyingPoint>.Where(r => r.ZipCode, ComparisonOperator.Like, $"{n}___");
+    var query = Query.Select<RallyingPoint>()
+      .Where(filter);
+    return await connection.QueryGeoJsonAsync(query);
+  }
+
   private async Task<int> DeleteMany(Filter<RallyingPoint> filter)
   {
     using var connection = db.NewConnection();
@@ -197,6 +221,27 @@ public sealed class RallyingPointServiceImpl : IRallyingPointService
     return await connection.DeleteAsync(filter & usedPointsFilter);
   }
 
+  public async Task UpdateStats(Ref<RallyingPoint> point, DateTime lastUsage, int incUsageCount = 1)
+  {
+    using var connection = db.NewConnection();
+    await connection.UpdateAsync(new UpdateQuery<RallyingPointStats>(Filter<RallyingPointStats>.Where(r => r.Id, ComparisonOperator.Eq, point.Id))
+      .Set(r => r.LastTripUsage, lastUsage)
+      .Increment(r => r.TotalTripCount, incUsageCount)
+    );
+  }
+
+  public async Task UpdateStats(IEnumerable<Ref<RallyingPoint>> points, DateTime lastUsage, int incUsageCount = 1)
+  {
+    using var connection = db.NewConnection();
+    using var transaction = connection.BeginTransaction();
+    foreach (var point in points)
+    {
+      await connection.UpdateAsync(new UpdateQuery<RallyingPointStats>(Filter<RallyingPointStats>.Where(r => r.Id, ComparisonOperator.Eq, point.Id))
+          .Set(r => r.LastTripUsage, lastUsage)
+          .Increment(r => r.TotalTripCount, incUsageCount)
+        , transaction);
+    }
+  }
   public async Task Insert(IEnumerable<RallyingPoint> rallyingPoints, bool clearAll = false)
   {
     using var connection = db.NewConnection();

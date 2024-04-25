@@ -27,15 +27,16 @@ export const useLayer = <TLayer extends SupportedLayers>(
 ) => {
   const map = useMapContext();
 
+  // console.debug("create", id);
   useEffect(() => {
-    console.log("update", id);
+    // console.debug("update", id);
     const add = () => {
       //  console.log("should abort render", !map.current, !!map.current?.getLayer(id), !map.current?.getSource(source));
       if (map.current && map.current?.getSource(source)) {
         if (map.current?.getLayer(id)) {
           map.current?.removeLayer(id);
         }
-        console.debug("add layer", id);
+        //console.debug("add layer", id);
         map.current?.addLayer(
           {
             ...props,
@@ -59,7 +60,7 @@ export const useLayer = <TLayer extends SupportedLayers>(
     });
 
     return () => {
-      console.debug("remove", id, map.current?.loaded());
+      // console.debug("remove", id, map.current?.loaded());
       if (!map.current?.getLayer(id)) return;
       if (map.current?.loaded()) map.current?.removeLayer(id);
       else map.current?.once("load", () => map.current?.removeLayer(id));

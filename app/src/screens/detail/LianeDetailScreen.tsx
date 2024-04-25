@@ -270,7 +270,6 @@ const StartButton = ({ startAction, isDriver }: { startAction: () => Promise<voi
 const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
   const status = useLianeStatus(props.liane);
   const { services } = useContext(AppContext);
-
   if (status === "StartingSoon" || (status === "Started" && props.liane.state === "NotStarted")) {
     return (
       <StartButton

@@ -94,6 +94,7 @@ public abstract record Notification : IEntity
     DateTime? SeenAt = null
   ) : Notification
   {
+
     public override string? Uri
     {
       get => Payload switch

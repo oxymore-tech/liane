@@ -1,3 +1,4 @@
+using System;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 
@@ -26,3 +27,5 @@ public enum LocationType
   AutoStop,
   TownHall
 }
+
+public sealed record RallyingPointStats(string Id, int TotalTripCount, DateTime? LastTripUsage): IIdentity;

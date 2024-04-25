@@ -43,7 +43,7 @@ export interface LianeService {
   getProof(id: string): Promise<FeatureCollection>;
 }
 export class LianeServiceClient implements LianeService {
-  constructor(private http: HttpClient) {}
+  constructor(protected http: HttpClient) {}
 
   async setTracked(id: string, level: GeolocationLevel): Promise<void> {
     await this.http.patch(`/liane/${id}/geolocation`, { body: level });
