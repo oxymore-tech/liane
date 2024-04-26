@@ -92,7 +92,7 @@ export class IosService implements LianeGeolocation {
     const onFailedCallback = (error: GeoError) => {
       AppLogger.error("GEOPINGS", "Failed to start geolocation for liane " + lianeId, error);
     };
-    const getDistanceFilter = () => (preciseTrackingMode ? 10 : 500);
+    const getDistanceFilter = () => (preciseTrackingMode ? 10 : 100);
     const switchTrackingMode = async (precise: boolean) => {
       const r = await this.getCurrentGeolocationLianeId();
       if (!r) {
@@ -102,7 +102,7 @@ export class IosService implements LianeGeolocation {
       preciseTrackingMode = precise;
       this.clearWatch();
       const accuracy = precise ? "best" : "nearestTenMeters";
-      AppLogger.info("GEOPINGS", "Switched tracking mode to:", accuracy);
+      AppLogger.info("GEOPINGS", `Switched tracking mode to ${accuracy}`);
       this.watchPosition(onPositionCallback, onFailedCallback, {
         distanceFilter: getDistanceFilter(),
         accuracy,
@@ -133,7 +133,7 @@ export class IosService implements LianeGeolocation {
 
       await postPing(ping);
 
-      const nearWayPointIndex = wayPoints.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= 500);
+      const nearWayPointIndex = wayPoints.findIndex(w => distance(coordinate, w.rallyingPoint.location) <= 5000);
       if (nearWayPointIndex > -1) {
         if (!preciseTrackingMode) {
           // Enable precise tracking
