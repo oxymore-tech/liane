@@ -36,7 +36,6 @@ export class ReminderService {
     await notifee.cancelTriggerNotification(lianeId);
   }
 
-
   async createReminder(lianeId: string, departureLocationLabel: string, departureTime: Date) {
     const timestamp = departureTime.getTime() - 1000 * 60 * 5;
     const departure = `${AppLocalization.formatDateTime(departureTime)}`;
