@@ -229,13 +229,24 @@ export class HubServiceClient extends AbstractHubService {
         }
       })
       .configureLogging(LogLevel.Debug)
-      .withAutomaticReconnect()
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: _ => {
+          return 5000;
+        }
+      })
       .build();
 
+    this.logger.debug("HUB", `keepAliveIntervalInMilliseconds = ${this.hub.keepAliveIntervalInMilliseconds}ms`);
+    this.logger.debug("HUB", `serverTimeoutInMilliseconds = ${this.hub.serverTimeoutInMilliseconds}ms`);
+
     this.hub.onreconnecting(() => {
+      this.logger.debug("HUB", "Reconnecting");
       this.hubState.next("reconnecting");
     });
-    this.hub.onreconnected(() => this.hubState.next("online"));
+    this.hub.onreconnected(() => {
+      this.logger.debug("HUB", "Reconnected");
+      this.hubState.next("online");
+    });
     this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
     this.hub.on("ReceiveMessage", this.receiveMessage);
     this.hub.on("Me", async (next: FullUser) => {
@@ -251,6 +262,8 @@ export class HubServiceClient extends AbstractHubService {
       this.hubState.next("offline");
       if (err) {
         this.logger.debug("HUB", "Connection closed with error : ", err);
+      } else {
+        this.logger.debug("HUB", "Connection closed without error");
       }
     });
   }

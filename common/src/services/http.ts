@@ -176,7 +176,7 @@ export class HttpClient {
   }
 
   public async getUpdatedAccessToken(forceRefresh?: boolean) {
-    this.logger.info("HTTP", "getUpdatedAccessToken");
+    this.logger.info("HTTP", `getUpdatedAccessToken  forceRefresh=${!!forceRefresh}`);
     const accessToken = await this.storage.getAccessToken();
     if (accessToken && !isTokenExpired(accessToken) && !forceRefresh) {
       this.logger.info("HTTP", "getUpdatedAccessToken : is up to date", accessToken);

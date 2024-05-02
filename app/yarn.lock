@@ -1581,7 +1581,7 @@
 "@liane/common@file:../common":
   version "0.0.1"
   dependencies:
-    "@microsoft/signalr" "^7.0.14"
+    "@microsoft/signalr" "^8.0.0"
     "@turf/distance" "^7.0.0-alpha.2"
     "@turf/helpers" "^7.0.0-alpha.2"
     async-mutex "^0.4.0"
@@ -1619,17 +1619,6 @@
     "@types/node" "^18.11.18"
     debounce "^1.2.0"
     deprecated-react-native-prop-types "^4.1.0"
-
-"@microsoft/signalr@^7.0.14":
-  version "7.0.14"
-  resolved "https://registry.yarnpkg.com/@microsoft/signalr/-/signalr-7.0.14.tgz#97551d68f09bb0ae063ffec738f7398f29d297ff"
-  integrity sha512-dnS7gSJF5LxByZwJaj82+F1K755ya7ttPT+JnSeCBef3sL8p8FBkHePXphK8NSuOquIb7vsphXWa28A+L2SPpw==
-  dependencies:
-    abort-controller "^3.0.0"
-    eventsource "^2.0.2"
-    fetch-cookie "^2.0.3"
-    node-fetch "^2.6.7"
-    ws "^7.4.5"
 
 "@microsoft/signalr@^8.0.0":
   version "8.0.0"
