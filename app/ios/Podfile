@@ -59,6 +59,13 @@ target 'liane' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+    
+    # Fix Xcode 15 bug
+    system("if [ "$XCODE_VERSION_MAJOR" = "1500" ]; then
+              echo "Remove signature files (Xcode 15 workaround)"
+              find "$BUILD_DIR/\${CONFIGURATION}-iphoneos" -name "*.signature" -type f | xargs -r rm
+            fi")
+    
   end
 end
 
