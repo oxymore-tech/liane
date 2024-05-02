@@ -155,8 +155,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
   }
-
-
+  
   public async Task PushPing(Ref<Api.Trip.Trip> liane, UserPing ping)
   {
     var tracker = trackerCache.GetTracker(liane);
