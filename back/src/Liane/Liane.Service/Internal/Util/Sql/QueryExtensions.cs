@@ -128,18 +128,4 @@ public static class QueryExtensions
       });
       return new FeatureCollection(transformedFeatures.ToList());
   }
-
-  public static async Task<FeatureCollection> QueryGeoJsonAsync<T>(this IDbConnection connection, IQuery<T> query, IDbTransaction? transaction = null)
-  {
-    var (sql, parameters) = query.ToSql();
-      sql = $"SELECT json_build_object('type', 'FeatureCollection','features', coalesce(json_agg(ST_AsGeoJSON(t.*)::json), '[]'::json)) FROM ({sql}) AS t";
-      var strResult = await connection.QuerySingleAsync<string>(sql, parameters, transaction);
-      var result = JsonSerializer.Deserialize<FeatureCollection>(strResult) ?? new FeatureCollection();
-      var transformedFeatures = result.Features.Select(f =>
-      {
-       return new Feature(f.Geometry, f.Properties.Select(entry => (entry.Key.NormalizeToCamelCase(), entry.Value))
-          .ToImmutableDictionary(entry => entry.Item1, entry => entry.Item2), f.Id);
-      });
-      return new FeatureCollection(transformedFeatures.ToList());
-  }
 }
