@@ -13,6 +13,7 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { GeolocationLevel } from "@liane/common";
+import { GeolocationPermission } from "../../../native-modules/geolocation";
 
 export const TripGeolocationWizard = WithFullscreenModal(
   () => {
@@ -25,7 +26,8 @@ export const TripGeolocationWizard = WithFullscreenModal(
       if (appState !== "active") {
         return;
       }
-      LianeGeolocation.checkBackgroundGeolocationPermission().then(allowed => {
+      LianeGeolocation.checkGeolocationPermission().then(permission => {
+        const allowed = permission === GeolocationPermission.Background;
         AppStorage.getSetting("geolocation")
           .then(setting => {
             //console.log("setting", setting);

@@ -5,7 +5,7 @@ import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
-import { LianeGeolocation } from "./index";
+import { GeolocationPermission, LianeGeolocation } from "./index";
 import { ALLOW_LOCATION, ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
 import { getTotalDuration } from "@/components/trip/trip.ts";
 
@@ -105,27 +105,22 @@ export class AndroidService implements LianeGeolocation {
     return false;
   }
 
-  async checkGeolocationPermission(): Promise<boolean> {
-    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
-    const accessAppInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+  async checkGeolocationPermission(): Promise<GeolocationPermission> {
+    const background = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
 
-    AppLogger.info("GEOPINGS", `Location permission global ${access === "granted" || accessAppInUse === "granted"}`);
-    return access === "granted" || accessAppInUse === "granted";
-  }
+    if (background === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission BACKGROUND`);
+      return GeolocationPermission.Background;
+    }
 
-  async checkBackgroundGeolocationPermission(): Promise<boolean> {
-    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
+    const appInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+    if (appInUse === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission APP_IN_USE`);
+      return GeolocationPermission.AppInUse;
+    }
 
-    AppLogger.info("GEOPINGS", `Location ping permission background ${access}`);
-    return access === "granted";
-  }
-
-  async checkAppInUseGeolocationPermission(): Promise<boolean> {
-    const access = await check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION);
-    const accessAppInUse = await check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${access !== "granted" && accessAppInUse === "granted"}`);
-    return access !== "granted" && accessAppInUse === "granted";
+    AppLogger.info("GEOPINGS", `Location ping permission DENIED`);
+    return GeolocationPermission.Denied;
   }
 
   async requestBackgroundGeolocationPermission() {

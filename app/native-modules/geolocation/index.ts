@@ -7,6 +7,12 @@ import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 
+export enum GeolocationPermission {
+  Denied,
+  AppInUse,
+  Background
+}
+
 export interface LianeGeolocation {
   startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void>;
   stopSendingPings(): Promise<void>;
@@ -15,9 +21,7 @@ export interface LianeGeolocation {
   watchRunningService(callback: (running: string | undefined) => void): SubscriptionLike;
   checkAndRequestLocationPermission(): Promise<boolean>;
   requestBackgroundGeolocationPermission(): Promise<boolean>;
-  checkGeolocationPermission(): Promise<boolean>;
-  checkBackgroundGeolocationPermission(): Promise<boolean>;
-  checkAppInUseGeolocationPermission(): Promise<boolean>;
+  checkGeolocationPermission(): Promise<GeolocationPermission>;
 }
 
 const httpClient = new HttpClient(RNAppEnv.baseUrl, AppLogger as any, AppStorage);

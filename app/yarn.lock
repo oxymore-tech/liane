@@ -2317,12 +2317,12 @@
     tslib "^2.6.2"
 
 "@turf/distance@^7.0.0-alpha.2":
-  version "7.0.0-alpha.114"
-  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.0.0-alpha.114.tgz#4f3c7a1881be560fe2fd9cefba5fb5e37f15e505"
-  integrity sha512-p8BM3y8DLbn3NSH65LeiWc9bzFdkFxKdUVzgjID6C9vyZsKk0tFXb7XDXK/vJgDVCeFdjgjfygjP2Zs6+rBJqw==
+  version "7.0.0-alpha.115"
+  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.0.0-alpha.115.tgz#32cc46d444df9d99049e9f47be8fd065df681519"
+  integrity sha512-hvZWdPnTZi2j7RTkL+Iz0clktq5I92lm2ZL22xrraCqNflksZLR7RF85gmsFVueB27QSp6fwo5X0LxRKlW+tkQ==
   dependencies:
-    "@turf/helpers" "^7.0.0-alpha.114+e0bdd0add"
-    "@turf/invariant" "^7.0.0-alpha.114+e0bdd0add"
+    "@turf/helpers" "^7.0.0-alpha.115+c76e6e96e"
+    "@turf/invariant" "^7.0.0-alpha.115+c76e6e96e"
     tslib "^2.6.2"
 
 "@turf/envelope@^7.0.0-alpha.110":
@@ -2356,10 +2356,18 @@
     deep-equal "^2.2.3"
     tslib "^2.6.2"
 
-"@turf/helpers@^7.0.0-alpha.111+08576cb50", "@turf/helpers@^7.0.0-alpha.114+e0bdd0add", "@turf/helpers@^7.0.0-alpha.2":
+"@turf/helpers@^7.0.0-alpha.111+08576cb50":
   version "7.0.0-alpha.114"
   resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.0.0-alpha.114.tgz#03158ecd04c147165725c2e3994bb7190c23041c"
   integrity sha512-hqoARkwAaFMK/8wOWDQhmvIxjUL2l9jUhn1GUzW3fsumImPxuHoJZbIZhiHjE7ceQngveCeUCtkiKw89lekN8w==
+  dependencies:
+    deep-equal "^2.2.3"
+    tslib "^2.6.2"
+
+"@turf/helpers@^7.0.0-alpha.115+c76e6e96e", "@turf/helpers@^7.0.0-alpha.2":
+  version "7.0.0-alpha.115"
+  resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.0.0-alpha.115.tgz#90c0f1e1e9374077a2da9f9d9b3b5acf44050e75"
+  integrity sha512-wXvGiDfDmpJThzsDtxmR9Mgv/rLNZmZe8a1n3S9PrNkUNbYO+6JKp6ZOeb7Erm1AZRsHvXN7SR8GKzToYugugA==
   dependencies:
     deep-equal "^2.2.3"
     tslib "^2.6.2"
@@ -2379,12 +2387,12 @@
     "@turf/helpers" "^7.0.0-alpha.111+08576cb50"
     tslib "^2.6.2"
 
-"@turf/invariant@^7.0.0-alpha.114+e0bdd0add":
-  version "7.0.0-alpha.114"
-  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-7.0.0-alpha.114.tgz#184ab4a6021839b9953b497e0aa28267947cbedb"
-  integrity sha512-d6KGoItyg2FFj6JSXlS23Ymvt6YA3DwAbpTwKiHCkrDP5UtHQwli+yYvmY/Bo2eC3HyDAgk/YTutmv3mNiWaJA==
+"@turf/invariant@^7.0.0-alpha.115+c76e6e96e":
+  version "7.0.0-alpha.115"
+  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-7.0.0-alpha.115.tgz#4bbf7dc3e90c11390127ae2350fe32cb0820fcba"
+  integrity sha512-OotxjtmGo+sVOPJYGiXEWdqz8trI/UQHbL3ciXfUxBVPOkTi7oGby7niLg+EZ0TKHt/Dcl/2WgA33zZmqKSquA==
   dependencies:
-    "@turf/helpers" "^7.0.0-alpha.114+e0bdd0add"
+    "@turf/helpers" "^7.0.0-alpha.115+c76e6e96e"
     tslib "^2.6.2"
 
 "@turf/length@6.5.0":
@@ -7697,9 +7705,9 @@ toidentifier@1.0.1:
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
 tough-cookie@^4.0.0:
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-4.1.3.tgz#97b9adb0728b42280aa3d814b6b999b2ff0318bf"
-  integrity sha512-aX/y5pVRkfRnfmuX+OdbSdXvPe6ieKX/G2s7e98f4poJHnqH3281gDPm/metm6E/WRamfx7WC4HUqkWHfQHprw==
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-4.1.4.tgz#945f1461b45b5a8c76821c33ea49c3ac192c1b36"
+  integrity sha512-Loo5UUvLD9ScZ6jh8beX1T6sO1w2/MpCRpEP7V280GKMVUQ0Jzar2U3UJPsrdbziLEMMhu3Ujnq//rhiFuIeag==
   dependencies:
     psl "^1.1.33"
     punycode "^2.1.1"

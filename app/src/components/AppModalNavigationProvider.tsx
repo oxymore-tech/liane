@@ -5,6 +5,7 @@ import { RootNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppStorage } from "@/api/storage";
 import { UnionUtils } from "@liane/common";
+import { GeolocationPermission } from "../../native-modules/geolocation";
 
 export interface IAppModalNavigation {
   showTutorial: (as: "passenger" | "driver", lianeId?: string) => void;
@@ -21,7 +22,8 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
       return;
     }
     AppStorage.getSetting("geolocation").then(async setting => {
-      const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkGeolocationPermission());
+      const geolocationPermission = await LianeGeolocation.checkGeolocationPermission();
+      const mismatchedPermissions = !!setting && setting !== "None" && geolocationPermission === GeolocationPermission.Denied;
       if (mismatchedPermissions) {
         // Permissions don't match saved settings, so show again
 
