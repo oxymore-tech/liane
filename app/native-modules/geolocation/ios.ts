@@ -5,7 +5,7 @@ import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
 import { SubscriptionLike } from "rxjs";
 import DeviceInfo from "react-native-device-info";
-import { LianeGeolocation } from "./index";
+import { GeolocationPermission, LianeGeolocation } from "./index";
 import { Alert, Linking, NativeEventEmitter, Platform, PlatformIOSStatic } from "react-native";
 import { ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
 import { getTotalDuration } from "@/components/trip/trip.ts";
@@ -188,18 +188,22 @@ export class IosService implements LianeGeolocation {
     return false;
   }
 
-  async checkBackgroundGeolocationPermission(): Promise<boolean> {
-    const access = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
-    const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    AppLogger.info("GEOPINGS", `Location ping permission Background ${access}`);
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
-    return access === "granted" || accessAppInUse === "granted";
-  }
+  async checkGeolocationPermission(): Promise<GeolocationPermission> {
+    const background = await check(PERMISSIONS.IOS.LOCATION_ALWAYS);
 
-  async checkAppInUseGeolocationPermission(): Promise<boolean> {
-    const accessAppInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-    AppLogger.info("GEOPINGS", `Location ping permission AppInUse ${accessAppInUse}`);
-    return accessAppInUse === "granted";
+    if (background === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission BACKGROUND`);
+      return GeolocationPermission.Background;
+    }
+
+    const appInUse = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    if (appInUse === "granted") {
+      AppLogger.info("GEOPINGS", `Location ping permission APP_IN_USE`);
+      return GeolocationPermission.AppInUse;
+    }
+
+    AppLogger.info("GEOPINGS", `Location ping permission DENIED`);
+    return GeolocationPermission.Denied;
   }
 
   async requestBackgroundGeolocationPermission(): Promise<boolean> {
