@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { DayOfTheWeekFlag } from "@liane/common";
+import { DayOfWeekFlag } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 
 import { Row } from "@/components/base/AppLayout";
@@ -16,8 +16,8 @@ export const DayOfTheWeekPicker = ({
   daysSize,
   borderBottomDisplayed = false
 }: {
-  selectedDays: DayOfTheWeekFlag | null;
-  onChangeDays: (daysOfTheWeek: DayOfTheWeekFlag) => void;
+  selectedDays: DayOfWeekFlag | null;
+  onChangeDays: (daysOfTheWeek: DayOfWeekFlag) => void;
   fontSize?: number;
   daysSize?: number;
   borderBottomDisplayed?: boolean;
@@ -52,7 +52,7 @@ export const DayOfTheWeekPicker = ({
   );
 };
 
-const selectDate = (dayIndex: number, onChangeDays: (daysOfTheWeek: DayOfTheWeekFlag) => void, selectedDays: DayOfTheWeekFlag) => {
+const selectDate = (dayIndex: number, onChangeDays: (daysOfTheWeek: DayOfWeekFlag) => void, selectedDays: DayOfWeekFlag) => {
   // Set default value if selectedDays are null
   const currentSelectedDays = selectedDays ?? "0000000";
   let newSelectedDays = "";
@@ -62,7 +62,7 @@ const selectDate = (dayIndex: number, onChangeDays: (daysOfTheWeek: DayOfTheWeek
     newSelectedDays += index === dayIndex ? replaceSelectedDay(currentSelectedDays.charAt(index)) : currentSelectedDays.charAt(index);
   });
 
-  onChangeDays(newSelectedDays as DayOfTheWeekFlag);
+  onChangeDays(newSelectedDays as DayOfWeekFlag);
 };
 
 const replaceSelectedDay = (selectedDay: string) => {

@@ -1,14 +1,6 @@
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 import React from "react";
-import {
-  createStateSequence,
-  CreateSubmittingState,
-  DayOfTheWeekFlag,
-  Liane,
-  RallyingPoint,
-  ServiceDoneEvent,
-  SubmittingEvents
-} from "@liane/common";
+import { createStateSequence, CreateSubmittingState, DayOfWeekFlag, Liane, RallyingPoint, ServiceDoneEvent, SubmittingEvents } from "@liane/common";
 
 export const PublishStateSequence = ["trip", "date", "vehicle"] as const;
 
@@ -28,7 +20,7 @@ export type InternalLianeRequest = {
   departureTime: Date;
   availableSeats: number;
   returnTime: Date | null | undefined;
-  recurrence: DayOfTheWeekFlag | null;
+  recurrence: DayOfWeekFlag | null;
 };
 
 export type PublishContext = {

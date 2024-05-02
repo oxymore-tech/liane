@@ -37,7 +37,7 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { DayOfTheWeekFlag, getFirstFutureDate } from "@liane/common";
+import { DayOfWeekFlag, getFirstFutureDate } from "@liane/common";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
@@ -276,13 +276,13 @@ const DateStepView = ({
   onChange,
   initialValue,
   onRequestEdit
-}: StepProps<{ date: Date | undefined; recurrence: DayOfTheWeekFlag | null | undefined }>) => {
+}: StepProps<{ date: Date | undefined; recurrence: DayOfWeekFlag | null | undefined }>) => {
   const optionsRecurrentLiane = ["Date unique", "Trajet régulier"];
   const initialMinDate = new Date(new Date().getTime() + 60000);
 
   const [date, setDate] = useState(initialMinDate);
   const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfTheWeekFlag>(initialValue?.recurrence ?? "0000000");
+  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(initialValue?.recurrence ?? "0000000");
 
   const cannotValidate = isRecurrent && daysOfTheWeek === "0000000";
   return (

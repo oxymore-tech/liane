@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { DayOfTheWeekFlag, getPoint, Liane, LianeMatch } from "@liane/common";
+import { DayOfWeekFlag, getPoint, Liane, LianeMatch } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -269,7 +269,7 @@ const updateRecurrence = async (
   services: AppServices,
   queryClient: QueryClient,
   liane: Liane,
-  daysOfTheWeek: DayOfTheWeekFlag,
+  daysOfTheWeek: DayOfWeekFlag,
   setRecurrenceModalVisible: (v: boolean) => void
 ) => {
   await services.liane.updateRecurrence(liane.recurrence!.id!, daysOfTheWeek);
