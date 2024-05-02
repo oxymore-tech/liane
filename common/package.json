@@ -17,7 +17,7 @@
     "test": "vitest --run"
   },
   "dependencies": {
-    "@microsoft/signalr": "^8.0.0",
+    "@microsoft/signalr": "^7.0.14",
     "@turf/distance": "^7.0.0-alpha.2",
     "@turf/helpers": "^7.0.0-alpha.2",
     "async-mutex": "^0.4.0",
