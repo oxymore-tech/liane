@@ -238,7 +238,7 @@ export type Compatible = {
 export type Match = Exact | Compatible;
 
 export type LianeMatch = Readonly<{
-  liane: Liane;
+  trip: Liane;
   //   wayPoints: WayPoint[];
   match: Match;
   returnTime?: UTCDateTime;
@@ -246,7 +246,7 @@ export type LianeMatch = Readonly<{
 }>;
 
 export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): RallyingPoint => {
-  const wp = UnionUtils.isInstanceOf(match.match, "Exact") ? match.liane.wayPoints : match.match.wayPoints;
+  const wp = UnionUtils.isInstanceOf(match.match, "Exact") ? match.trip.wayPoints : match.match.wayPoints;
   return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
 

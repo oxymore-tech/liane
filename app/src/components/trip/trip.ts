@@ -57,7 +57,7 @@ export function getLianeCostContribution(liane: Liane) {
 }
 
 export const getOriginalTotalDistance = (liane: LianeMatch) => {
-  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.trip.wayPoints : liane.match.wayPoints;
   return wayPoints.length > 1 ? wayPoints[wayPoints.length - 1].distance : 0;
 };
 
@@ -75,7 +75,7 @@ export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
 };
 
 export const getTripFromMatch = (liane: LianeMatch) => {
-  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.liane.wayPoints : liane.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf(liane.match, "Exact") ? liane.trip.wayPoints : liane.match.wayPoints;
   const departureIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.pickup);
   const arrivalIndex = wayPoints.findIndex(p => p.rallyingPoint.id === liane.match.deposit);
   return <UserTripMatch>{

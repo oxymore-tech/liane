@@ -6,7 +6,7 @@ import { LianeStatusView } from "@/components/trip/LianeStatusView";
 export const LianeStatusRow = ({ liane }: { liane: LianeMatch }) => {
   return (
     <Row style={{ marginHorizontal: 24, marginVertical: 4, alignItems: "center" }}>
-      <LianeStatusView liane={liane.liane} />
+      <LianeStatusView liane={liane.trip} />
     </Row>
   );
 };

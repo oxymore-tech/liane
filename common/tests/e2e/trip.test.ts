@@ -40,6 +40,7 @@ describe.sequential("Joining a trip", () => {
       const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
       expect(tripList.data.length).toBe(2);
       expect(tripList.data[0]).toEqual(posted);
+      console.log("Trip created", posted);
       tripId = posted.id!;
     });
   });
@@ -59,7 +60,8 @@ describe.sequential("Joining a trip", () => {
         targetTime: { dateTime: new Date().toISOString(), direction: "Departure" },
         availableSeats: -1
       });
-      const matchedTripsIds = results.lianeMatches.map(m => m.liane.id!);
+
+      const matchedTripsIds = results.lianeMatches.map(m => m.trip.id!);
       expect(matchedTripsIds).toContain(tripId!);
     });
   });

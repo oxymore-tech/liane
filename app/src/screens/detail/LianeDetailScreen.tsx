@@ -44,7 +44,7 @@ export const LianeJoinRequestDetailScreen = () => {
       return lianeParam;
     }
   });
-  const match = useMemo(() => (request ? { liane: request.targetLiane, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
+  const match = useMemo(() => (request ? { trip: request.targetLiane, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
 
   return <LianeDetailPage match={match} request={request} />;
 };
@@ -104,9 +104,9 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
     return bbox;
-  }, [match?.liane.id, bSheetTop, insetsTop, height]);
+  }, [match?.trip.id, bSheetTop, insetsTop, height]);
 
-  const driver = useMemo(() => match?.liane.members.find(m => m.user.id === match?.liane.driver.user)!.user, [match]);
+  const driver = useMemo(() => match?.trip.members.find(m => m.user.id === match?.trip.driver.user)!.user, [match]);
   const trackingInfo = useTrackingInfo();
   const notInCar = useMemo(() => {
     if (!trackingInfo?.otherMembers || !match) {
@@ -116,7 +116,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
     return members
       .map(m => {
         const info = trackingInfo.otherMembers[m];
-        return { user: match.liane.members.find(lm => lm.user.id === m)!.user, info: { ...info, position: info.location! } };
+        return { user: match.trip.members.find(lm => lm.user.id === m)!.user, info: { ...info, position: info.location! } };
       })
       .filter(m => !!m.info.position);
   }, [trackingInfo, match]);
@@ -144,7 +144,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           })}
 
           {driver && tripMatch && trackingInfo?.car && <LocationMarker isCar={true} user={driver} info={trackingInfo?.car} />}
-          {match && ["Finished", "Archived"].includes(match.liane.state) && <LianeProofDisplay id={match.liane.id!} />}
+          {match && ["Finished", "Archived"].includes(match.trip.state) && <LianeProofDisplay id={match.trip.id!} />}
         </AppMapView>
 
         <AppBottomSheet
@@ -167,12 +167,12 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           {!match && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
         </AppBottomSheet>
 
-        {!!match?.liane.conversation && match?.liane.state !== "Archived" && match?.liane.state !== "Canceled" && (
+        {!!match?.trip.conversation && match?.trip.state !== "Archived" && match?.trip.state !== "Canceled" && (
           <Pressable
-            onPress={() => navigation.navigate("Chat", { conversationId: match?.liane.conversation, liane: match?.liane })}
+            onPress={() => navigation.navigate("Chat", { conversationId: match?.trip.conversation, liane: match?.trip })}
             style={[styles.chatButton, styles.mapOverlay, AppStyles.shadow]}>
             <AppIcon name={"message-circle-outline"} size={36} color={AppColors.secondaryColor} />
-            {unread?.includes(match?.liane.conversation) && <View style={styles.chatBadge} />}
+            {unread?.includes(match?.trip.conversation) && <View style={styles.chatBadge} />}
           </Pressable>
         )}
         <FloatingBackButton onPress={navigation.goBack} />
@@ -181,16 +181,16 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
   );
 };
 
-const toLianeMatch = (liane: Liane, memberId: string): LianeMatch => {
-  const m = liane.members.find(m => m.user.id === memberId)!;
+const toLianeMatch = (trip: Liane, memberId: string): LianeMatch => {
+  const m = trip.members.find(m => m.user.id === memberId)!;
   return {
-    liane,
+    trip,
     match: {
       type: "Exact",
-      pickup: liane.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id!,
-      deposit: liane.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
+      pickup: trip.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id!,
+      deposit: trip.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
     },
-    freeSeatsCount: liane.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
+    freeSeatsCount: trip.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
   };
 };
 
@@ -285,9 +285,9 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
 
-  const tripPrice = getLianeCostContribution(liane.liane);
+  const tripPrice = getLianeCostContribution(liane.trip);
 
-  const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
+  const driver = liane.trip.members.find(m => m.user.id === liane.trip.driver.user)!.user;
   const { user } = useContext(AppContext);
 
   return (
@@ -299,21 +299,21 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
             <AppText style={styles.driverText}>{driver.id === user!.id! ? "Moi" : driver.pseudo}</AppText>
           </Row>
         </Row>
-        <LianeWithDateView liane={liane.liane} />
+        <LianeWithDateView liane={liane.trip} />
       </View>
 
-      {!["Finished", "Archived", "Canceled"].includes(liane.liane.state) && !request && (
+      {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && !request && (
         <Row style={styles.statusLianeContainer}>
-          <LianeStatusView liane={liane.liane} />
-          <GeolocationSwitch liane={liane.liane} />
+          <LianeStatusView liane={liane.trip} />
+          <GeolocationSwitch liane={liane.trip} />
         </Row>
       )}
-      {!request && <StartingSoonView liane={liane.liane} isDriver={driver.id === user!.id!} />}
+      {!request && <StartingSoonView liane={liane.trip} isDriver={driver.id === user!.id!} />}
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>
           <Row>
-            {liane.liane.recurrence?.id ? (
+            {liane.trip.recurrence?.id ? (
               <InfoItem icon={"sync-outline"} value={"Trajet régulier"} />
             ) : (
               <Row style={AppStyles.center}>
@@ -338,8 +338,8 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
         </Column>
 
         <Column style={{ flex: 1 }}>
-          {liane.liane.members
-            .filter(member => member.user.id !== liane.liane.driver.user)
+          {liane.trip.members
+            .filter(member => member.user.id !== liane.trip.driver.user)
             .map(member => (
               <Row key={member.user.id}>
                 <AppText style={styles.infoTravel}>{member.user.pseudo}</AppText>

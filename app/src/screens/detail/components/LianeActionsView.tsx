@@ -20,7 +20,7 @@ import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
 export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
-  const liane = match.liane;
+  const liane = match.trip;
   const { user, services } = useContext(AppContext);
   //const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
   const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
@@ -286,8 +286,8 @@ const updateRecurrence = async (
 const relaunchLiane = (navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>, match: LianeMatch) => {
   const fromPoint = getPoint(match, "pickup");
   const toPoint = getPoint(match, "deposit");
-  const availableSeats = match.liane.members.find(m => m.user.id === match.liane.driver.user)!.seatCount;
-  navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint, recurrence: match.liane.recurrence?.days, availableSeats } });
+  const availableSeats = match.trip.members.find(m => m.user.id === match.trip.driver.user)!.seatCount;
+  navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint, recurrence: match.trip.recurrence?.days, availableSeats } });
 };
 
 const deleteLiane = (
