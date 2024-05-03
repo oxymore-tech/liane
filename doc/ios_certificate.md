@@ -3,6 +3,7 @@
 ```bash
 export IOS_HOME=/home/agjini/Dropbox/gjini.co/app_store/liane/ios/
 ```
+## **_Attention il faut les 2 étapes au même moment (car le fichier provision depend du premier certificate)_**
 
 # Generate a distribution certificate (P12)
 
@@ -35,10 +36,18 @@ And store result in github secret `IOS_P12_BASE64`
 
 Generate a new provision profile on https://developer.apple.com/account, output to `provision_liane.mobileprovision`
 
+![img.png](img.png)
+
 __Be sure to link with the App ID and the new generated distribution certificate__
+
+![img_1.png](img_1.png)
 
 Export to base 64 for githubaction secret :
 
 ```bash
 openssl base64 < provision_liane.mobileprovision | tr -d '\n' | tee provision_liane.mobileprovision.base64.txt
 ```
+
+Et après mettre à jour le sercret `IOS_MOBILE_PROVISION_BASE64` sur github :
+
+![img_2.png](img_2.png)
