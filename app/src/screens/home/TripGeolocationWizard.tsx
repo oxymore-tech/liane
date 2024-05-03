@@ -27,7 +27,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
         return;
       }
       LianeGeolocation.checkGeolocationPermission().then(permission => {
-        const allowed = permission === GeolocationPermission.Background;
+        const allowed = permission !== GeolocationPermission.Denied;
         AppStorage.getSetting("geolocation")
           .then(setting => {
             //console.log("setting", setting);
