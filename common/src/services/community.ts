@@ -21,7 +21,7 @@ export type CoLianeRequest = Entity & {
 export type CoLianeMatch = {
   lianeRequest: CoLianeRequest;
   joindedLianes: MatchGroup[];
-  matches: Match[];
+  matches: CoMatch[];
 };
 
 export type MatchSingle = {
@@ -56,7 +56,7 @@ export type CoLianeMember = {
   lastReadAt?: UTCDateTime;
 };
 
-export type Match = MatchSingle | MatchGroup;
+export type CoMatch = MatchSingle | MatchGroup;
 
 export type MessageContentText = { type: "text"; value: string };
 export type MessageContentTrip = { type: "trip"; value: Ref<Liane> };
