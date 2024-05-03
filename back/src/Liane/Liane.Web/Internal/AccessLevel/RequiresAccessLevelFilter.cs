@@ -11,26 +11,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.AccessLevel;
 
-public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
+public sealed class RequiresAccessLevelFilter(
+  IServiceProvider serviceProvider,
+  ICurrentContext currentContext,
+  IAccessLevelContextFactory accessorProvider,
+  ResourceAccessLevel accessLevel,
+  Type resourceType,
+  string resourceIdentifier)
+  : IAsyncAuthorizationFilter
 {
-  private readonly IAccessLevelContextFactory accessorProvider;
-  private readonly IServiceProvider serviceProvider;
-  private readonly Type resourceType;
-  private readonly ResourceAccessLevel accessLevel;
-  private readonly string resourceIdentifier;
-  private readonly ICurrentContext currentContext;
-
-  public RequiresAccessLevelFilter(IServiceProvider serviceProvider, ICurrentContext currentContext, IAccessLevelContextFactory accessorProvider, ResourceAccessLevel accessLevel, Type resourceType,
-    string resourceIdentifier)
-  {
-    this.serviceProvider = serviceProvider;
-    this.accessorProvider = accessorProvider;
-    this.resourceIdentifier = resourceIdentifier;
-    this.resourceType = resourceType;
-    this.accessLevel = accessLevel;
-    this.currentContext = currentContext;
-  }
-
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
   {
     try
@@ -48,10 +37,9 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
       // Get access level context factory and generate context object for given access level and user
       var method = accessorProvider.GetType().GetMethod(nameof(IAccessLevelContextFactory.NewAccessLevelContext))!.MakeGenericMethod(internalResourceType);
 
-      var accessLevelContext = method.Invoke(accessorProvider, new object[]
-      {
+      var accessLevelContext = method.Invoke(accessorProvider, [
         accessLevel, currentContext.CurrentUser()
-      })!;
+      ])!;
 
       // Get resource id in current route 
       var resourceId = context.HttpContext.GetRouteData().Values[resourceIdentifier]?.ToString();
@@ -69,7 +57,7 @@ public sealed class RequiresAccessLevelFilter : IAsyncAuthorizationFilter
 
         // Check if access level requirements are fulfilled   
         var getIfMatchesMethod = internalResolverInterface.GetMethod("GetIfMatches")!;
-        dynamic task = getIfMatchesMethod.Invoke(resolver, new[] { resourceId, filter })!;
+        dynamic task = getIfMatchesMethod.Invoke(resolver, [resourceId, filter])!;
 
         var result = await task;
         context.HttpContext.Items[CurrentContextImpl.CurrentResourceName] = result;

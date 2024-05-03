@@ -4,20 +4,14 @@ using Dapper;
 
 namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-public record struct Json<T>(T Value)
+public sealed class JsonTypeHandler<T>(JsonSerializerOptions options) : SqlMapper.TypeHandler<T>
 {
-  public static implicit operator T(Json<T> json) => json.Value;
-  public static implicit operator Json<T>(T value) => new(value);
-}
-
-public sealed class JsonTypeHandler<T>(JsonSerializerOptions options) : SqlMapper.TypeHandler<Json<T>>
-{
-  public override void SetValue(IDbDataParameter parameter, Json<T> value)
+  public override void SetValue(IDbDataParameter parameter, T? value)
   {
-    parameter.Value = JsonSerializer.SerializeToDocument(value.Value, options);
+    parameter.Value = JsonSerializer.SerializeToDocument(value, options);
   }
 
-  public override Json<T> Parse(object value)
+  public override T Parse(object value)
   {
     return JsonSerializer.Deserialize<T>(value.ToString()!, options)!;
   }

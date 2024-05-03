@@ -602,10 +602,10 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     return await tested.Create(new LianeRequest(null, name, wayPoints, false, true, weekDays, timeConstraints.ToImmutableList(), true, null, null));
   }
 
-  private static (string User, string Text) ToTuple(LianeMessage message) => message switch
+  private static (string User, string Text) ToTuple(LianeMessage message) => message.Content switch
   {
-    LianeMessage.Chat chat => (chat.CreatedBy.Id, chat.Text),
-    LianeMessage.Trip trip => (trip.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
+    MessageContent.Text t => (message.CreatedBy.Id, t.Value),
+    MessageContent.LaunchTrip => (message.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
     _ => throw new ArgumentOutOfRangeException(nameof(message))
   };
 }

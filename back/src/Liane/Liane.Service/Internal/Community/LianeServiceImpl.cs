@@ -201,7 +201,7 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  public async Task<LianeMessage> SendMessage(Ref<Api.Community.Liane> liane, string message)
+  public async Task<LianeMessage> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -211,9 +211,9 @@ public sealed class LianeServiceImpl(
 
     var id = Uuid7.Guid();
     var now = DateTime.UtcNow;
-    await connection.InsertAsync(new LianeMessageDb(id, lianeId, message, userId, now), tx);
+    await connection.InsertAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
     tx.Commit();
-    return new LianeMessage.Chat(id.ToString(), userId, now, message);
+    return new LianeMessage(id.ToString(), userId, now, content);
   }
 
   private static async Task<LianeMemberDb> CheckIsMember(IDbConnection connection, Guid lianeId, string userId, IDbTransaction tx)
@@ -259,8 +259,7 @@ public sealed class LianeServiceImpl(
       Math.Min(result.Count, pagination.Limit),
       cursor,
       result.Take(pagination.Limit)
-        .Select(m => new LianeMessage.Chat(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Text))
-        .Cast<LianeMessage>()
+        .Select(m => new LianeMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Content))
         .ToImmutableList(),
       total);
   }
@@ -344,7 +343,7 @@ public sealed record RouteDb(
 public sealed record LianeMessageDb(
   Guid Id,
   Guid LianeId,
-  string Text,
+  MessageContent Content,
   Ref<Api.Auth.User> CreatedBy,
   DateTime? CreatedAt
 ) : IEntity<Guid>;

@@ -17,7 +17,7 @@ public interface ILianeService
 
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane, Pagination pagination);
-  Task<LianeMessage> SendMessage(Ref<Liane> liane, string message);
+  Task<LianeMessage> SendMessage(Ref<Liane> liane, MessageContent content);
 
   Task<ImmutableDictionary<Ref<Liane>, int>> GetUnreadLianes();
 }

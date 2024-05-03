@@ -6,8 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Postgis.Db.Copy;
@@ -24,7 +26,7 @@ public sealed class PostgisDatabase : IDisposable
   private readonly NpgsqlDataSource dataSource;
   private readonly Dictionary<Type, ICopyTypeMapper> typeMappers = new();
 
-  public PostgisDatabase(DatabaseSettings settings, ILoggerFactory loggerFactory)
+  public PostgisDatabase(DatabaseSettings settings, ILoggerFactory loggerFactory, JsonSerializerOptions jsonSerializerOptions)
   {
     this.settings = settings;
     SqlMapper.AddTypeHandler(new DayOfWeekFlagTypeHandler());
@@ -34,6 +36,7 @@ public sealed class PostgisDatabase : IDisposable
     SqlMapper.AddTypeHandler(new TimeOnlyHandler());
     SqlMapper.AddTypeHandler(new RefTypeHandler<RallyingPoint>());
     SqlMapper.AddTypeHandler(new RefTypeHandler<Api.Auth.User>());
+    SqlMapper.AddTypeHandler(new JsonTypeHandler<MessageContent>(jsonSerializerOptions));
     SqlMapper.TypeMapProvider = t => new SnakeCaseTypeMap(t);
     AddCopyTypeMapper<LatLng>(new LatLngCopyTypeMapper());
     var connectionString = NewConnectionString();

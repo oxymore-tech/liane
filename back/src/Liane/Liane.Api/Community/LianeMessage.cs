@@ -1,29 +1,26 @@
 using System;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Community;
 
-public abstract record LianeMessage : IEntity<string>
+public sealed record LianeMessage(
+  string Id,
+  Ref<User> CreatedBy,
+  DateTime? CreatedAt,
+  MessageContent Content
+) : IEntity<string>;
+
+[Union]
+public abstract record MessageContent
 {
-  private LianeMessage()
+  private MessageContent()
   {
   }
 
-  public abstract Ref<Auth.User>? CreatedBy { get; init; }
-  public abstract DateTime? CreatedAt { get; init; }
-  public abstract string? Id { get; init; }
+  public static implicit operator MessageContent(string value) => new Text(value);
 
-  public sealed record Chat(
-    string? Id,
-    Ref<Auth.User> CreatedBy,
-    DateTime? CreatedAt,
-    string Text
-  ) : LianeMessage;
+  public sealed record Text(string Value) : MessageContent;
 
-  public sealed record Trip(
-    string? Id,
-    Ref<Auth.User> CreatedBy,
-    DateTime? CreatedAt,
-    Ref<Trip> ActualTrip
-  ) : LianeMessage;
+  public sealed record LaunchTrip(Ref<Trip.Trip> Trip) : MessageContent;
 }
