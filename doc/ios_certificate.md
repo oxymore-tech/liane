@@ -18,15 +18,18 @@ Transform to PKCS12 format (required by apple tool) :
 
 ```bash
 openssl x509 -in ios_distribution.cer -inform DER -out ios_distribution.pem -outform PEM
-
 openssl pkcs12 -export -legacy -out ios_distribution.p12 -inkey ios_distribution_pk.key -in ios_distribution.pem
 ```
+
+Mettre le bon mot de passe 'Apple distribution certificate password'
 
 Export to base 64 for githubaction secret :
 
 ```bash
 openssl base64 < ios_distribution.p12 | tr -d '\n' | tee ios_distribution.base64.txt
 ```
+
+And store result in github secret `IOS_P12_BASE64`
 
 # Update a provision profile
 
