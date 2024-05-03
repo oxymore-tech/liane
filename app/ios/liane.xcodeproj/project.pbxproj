@@ -441,7 +441,7 @@
 			name = "Fix xcode 15 bug for mapbox signature";
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$XCODE_VERSION_MAJOR\" = \"1500\" ]; then\n  echo \"Remove signature files (Xcode 15 workaround)\"\n\n  rm -f \"$BUILD_DIR/Release-iphoneos/*.signature\"\nfi\n";
+			shellScript = "if [ \"$XCODE_VERSION_MAJOR\" = \"1500\" ]; then\n  echo \"Remove signature files (Xcode 15 workaround)\"\n\n  rm -f \"$BUILD_DIR/Release-iphoneos/maplibre-react-native/Mapbox.xcframework-ios.signature\"\nfi\n";
 		};
 		C863AF7EA2538922B9B1EBB8 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
