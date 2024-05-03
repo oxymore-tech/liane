@@ -213,7 +213,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
         </Center>
       )}
 
-      <AppBottomSheetFlatList data={data} keyExtractor={i => i.lianeMatch.liane.id!} renderItem={renderItem} />
+      <AppBottomSheetFlatList data={data} keyExtractor={i => i.lianeMatch.trip.id!} renderItem={renderItem} />
     </View>
   );
 };

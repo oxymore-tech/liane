@@ -118,11 +118,11 @@ export const LianeMatchDetailView = () => {
 
   const fromPoint = getPoint(liane, "pickup");
   const toPoint = getPoint(liane, "deposit");
-  const wayPoints = lianeIsExactMatch ? liane.liane.wayPoints : liane.match.wayPoints;
+  const wayPoints = lianeIsExactMatch ? liane.trip.wayPoints : liane.match.wayPoints;
 
-  const tripMatch = getTripMatch(toPoint, fromPoint, liane.liane.wayPoints, liane.liane.departureTime, wayPoints);
+  const tripMatch = getTripMatch(toPoint, fromPoint, liane.trip.wayPoints, liane.trip.departureTime, wayPoints);
 
-  const formattedDepartureTime = capitalize(AppLocalization.formatMonthDay(new Date(liane.liane.departureTime)));
+  const formattedDepartureTime = capitalize(AppLocalization.formatMonthDay(new Date(liane.trip.departureTime)));
 
   const currentTrip = tripMatch.wayPoints.slice(tripMatch.departureIndex, tripMatch.arrivalIndex + 1);
   const tripDuration = AppLocalization.formatDuration(getTotalDuration(currentTrip.slice(1)));
@@ -134,9 +134,9 @@ export const LianeMatchDetailView = () => {
   const [takeReturnTrip, setTakeReturnTrip] = useState(false);
   const [inProgress, setProgress] = useState(false);
 
-  const driver = liane.liane.members.find(m => m.user.id === liane.liane.driver.user)!.user;
+  const driver = liane.trip.members.find(m => m.user.id === liane.trip.driver.user)!.user;
 
-  const userIsMember = liane.liane.members.findIndex(m => m.user.id === user!.id) >= 0;
+  const userIsMember = liane.trip.members.findIndex(m => m.user.id === user!.id) >= 0;
   const requestJoin = async () => {
     if (!inProgress) {
       setProgress(true);
@@ -146,7 +146,7 @@ export const LianeMatchDetailView = () => {
         from: fromPoint.id!,
         message,
         seats: seats,
-        liane: liane.liane.id!,
+        liane: liane.trip.id!,
         takeReturnTrip,
         to: toPoint.id!,
         geolocationLevel: geolocationLevel || "None"
@@ -195,7 +195,7 @@ export const LianeMatchDetailView = () => {
           />
         </Column>
 
-        {liane.liane.driver.canDrive && step === 0 && (
+        {liane.trip.driver.canDrive && step === 0 && (
           <Animated.View exiting={SlideOutLeft}>
             <DriverInfo user={driver} />
           </Animated.View>

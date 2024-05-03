@@ -38,10 +38,7 @@ export class AndroidService implements LianeGeolocation {
   };
   private Platform = Platform as PlatformAndroidStatic;
 
-  constructor(private httpClient: HttpClient) {
-    console.log("AndroidService constructor");
-    console.log("AndroidService constructor", this.AndroidNativeModule);
-  }
+  constructor(private httpClient: HttpClient) {}
 
   async startSendingPings(lianeId: string, wayPoints: WayPoint[]): Promise<void> {
     const user = await AppStorage.getUser();

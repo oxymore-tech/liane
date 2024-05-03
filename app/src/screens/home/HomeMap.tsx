@@ -50,7 +50,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         const filterSet = matchDisplayData?.[1];
         let matches = state.context.matches!;
         if (filterSet) {
-          matches = matches.filter(m => filterSet.has(m.liane.id!));
+          matches = matches.filter(m => filterSet.has(m.trip.id!));
         }
         return matches!.map(m => getPoint(m, "pickup"));
       }
@@ -62,7 +62,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         const filterSet = matchDisplayData?.[1];
         let matches = state.context.matches!;
         if (filterSet) {
-          matches = matches.filter(m => filterSet.has(m.liane.id!));
+          matches = matches.filter(m => filterSet.has(m.trip.id!));
         }
         return matches.map(m => getPoint(m, "deposit"));
       }
@@ -232,7 +232,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
           />
         )}
         {(isMatchState || isDetailState) && (
-          <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.liane.id : null} />
+          <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.trip.id : null} />
         )}
         {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
           <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
