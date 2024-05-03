@@ -23,7 +23,7 @@ describe.sequential("Liane as a community", () => {
   describe("User A", () => {
     test("Should create new liane request", async () => {
       const currentUser = users[0];
-      const posted = await currentUser.services.community.create({
+      await currentUser.services.community.create({
         name: "Boulot",
         wayPoints: [pickup, destination],
         roundTrip: false,
