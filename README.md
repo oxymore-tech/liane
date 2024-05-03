@@ -64,3 +64,8 @@ Ensuite lancez les 3 modules de lianes :
 - [Backend](back/README.md)
 - [Application mobile](app/README.md)
 - [Application web](web/README.md)
+
+# Trouble shooting :scream:
+
+Manage IOS certificates and provisioning profiles :
+[doc/ios_certificate.md](doc/ios_certificate.md)

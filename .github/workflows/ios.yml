@@ -79,6 +79,11 @@ jobs:
         working-directory: ./app
         run: yarn lint
         
+      - name: Select Xcode 14
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 14
+        
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1
         with:
@@ -98,9 +103,6 @@ jobs:
 
       - name: Install Pods
         run: cd app/ios && NO_FLIPPER=1 pod install --repo-update && cd ../..
-        
-      - name: Fix MapBox issue in XCode 15
-        run: if [ "$XCODE_VERSION_MAJOR" = "1500" ]; then echo "Remove signature files (Xcode 15 workaround)"; rm "$BUILD_DIR/Release-iphoneos/Mapbox.xcframework-ios.signature"; fi
 
       - name: Update build number
         run: |
