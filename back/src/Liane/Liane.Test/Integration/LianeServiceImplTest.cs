@@ -604,8 +604,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   private static (string User, string Text) ToTuple(LianeMessage message) => message.Content switch
   {
-    MessageContent.Text t => (message.CreatedBy.Id, t.Value),
-    MessageContent.LaunchTrip => (message.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
+    MessageContent.Text text => (message.CreatedBy.Id, text.Value),
+    MessageContent.Trip => (message.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
     _ => throw new ArgumentOutOfRangeException(nameof(message))
   };
 }

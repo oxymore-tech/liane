@@ -1,6 +1,16 @@
 import { LocalStorageImpl } from "../mocks/storage";
 import { ConsoleAppLogger } from "../mocks/logger";
-import { AppStorage, AuthServiceClient, EventServiceClient, HttpClient, HubServiceClient, LianeServiceClient, Ref, User } from "../../../src";
+import {
+  AppStorage,
+  AuthServiceClient,
+  CommunityServiceClient,
+  EventServiceClient,
+  HttpClient,
+  HubServiceClient,
+  LianeServiceClient,
+  Ref,
+  User
+} from "../../../src";
 import { TestEnv } from "./environment";
 import { LoginActor } from "../actors/login";
 
@@ -13,8 +23,9 @@ export const CreateServices = (storage?: AppStorage) => {
   const hub = new HubServiceClient(`${TestEnv.API_URL}/api`, logger, storage, http);
   const signUpActor = new LoginActor(auth);
   const liane = new LianeServiceClient(http);
+  const community = new CommunityServiceClient(http);
   const event = new EventServiceClient(http);
-  return { liane, storage, logger, http, auth, signUpActor, hub, event, retryStrategy };
+  return { liane, community, storage, logger, http, auth, signUpActor, hub, event, retryStrategy };
 };
 
 export type UserContext = {

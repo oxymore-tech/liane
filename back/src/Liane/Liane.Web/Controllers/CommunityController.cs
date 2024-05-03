@@ -17,60 +17,60 @@ namespace Liane.Web.Controllers;
 public sealed class CommunityController(ILianeService lianeService)
   : ControllerBase
 {
-  [HttpGet("/liane")]
+  [HttpGet("liane")]
   public Task<ImmutableList<LianeMatch>> List()
   {
     return lianeService.List();
   }
 
-  [HttpPost("/liane")]
+  [HttpPost("liane")]
   public async Task<LianeRequest> Create([FromBody] LianeRequest request)
   {
     return await lianeService.Create(request);
   }
 
-  [HttpPost("/liane/{id}/{enabled}")]
+  [HttpPost("liane/{id}/{enabled}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRequest))]
   public Task Create(string id, bool enabled)
   {
     return lianeService.SetEnabled(id, enabled);
   }
 
-  [HttpPost("/liane/{id}/join_new/{lianeRequest}")]
+  [HttpPost("liane/{id}/join_new/{lianeRequest}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRequest))]
   public Task<Api.Community.Liane> JoinNew(string id, string lianeRequest)
   {
     return lianeService.JoinNew(id, lianeRequest);
   }
 
-  [HttpPost("/liane/{id}/join/{liane}")]
+  [HttpPost("liane/{id}/join/{liane}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRequest))]
   public Task<Api.Community.Liane> Join(string id, string liane)
   {
     return lianeService.Join(id, liane);
   }
 
-  [HttpPost("/liane/{id}/leave")]
+  [HttpPost("liane/{id}/leave")]
   public Task<bool> Leave(string id)
   {
     return lianeService.Leave(id);
   }
 
-  [HttpGet("/liane/{id}/message")]
+  [HttpGet("liane/{id}/message")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Community.Liane))]
   public Task<PaginatedResponse<LianeMessage>> GetMessages(string id, [FromQuery] Pagination pagination)
   {
     return lianeService.GetMessages(id, pagination);
   }
 
-  [HttpPost("/liane/{id}/message")]
+  [HttpPost("liane/{id}/message")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Community.Liane))]
   public Task<LianeMessage> SendMessage(string id, [FromBody] MessageContent content)
   {
     return lianeService.SendMessage(id, content);
   }
 
-  [HttpGet("/liane/unread")]
+  [HttpGet("liane/unread")]
   public Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
   {
     return lianeService.GetUnreadLianes();

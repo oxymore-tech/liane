@@ -2,21 +2,22 @@ import { TimeInSeconds } from "./util";
 import { FeatureCollection } from "geojson";
 import { IUnion, UnionUtils } from "./union";
 
-export type Identity = Readonly<{
+export type Identity = {
   id?: string;
-}>;
+};
 
-export type Entity = Identity &
-  Readonly<{
-    createdBy?: Ref<User>;
-    createdAt?: UTCDateTime;
-  }>;
+export type Entity = Identity & {
+  createdBy?: Ref<User>;
+  createdAt?: UTCDateTime;
+};
 
 // @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type Ref<T extends Identity> = string;
 
-export type WithResolvedRef<Key extends string, TRef extends Identity, T extends { [k in Key]: Ref<TRef> }> = Omit<T, Key> & { [k in Key]: TRef };
+export type Resolved<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]: T[P] extends Ref<infer U> ? U : T[P];
+};
 
 export type AuthUser = Readonly<{
   id: string;
@@ -193,15 +194,15 @@ export type TypedMessage = Readonly<
   } & ChatMessage
 >;
 
-export type PaginatedResponse<T> = Readonly<{
+export type PaginatedResponse<T> = {
   pageSize: number;
   data: T[];
   next?: string;
   totalCount?: number | null;
-}>;
+};
 
 export type PaginatedRequestParams = {
-  cursor: string | undefined;
+  cursor?: string;
   limit: number;
   asc?: boolean;
 };

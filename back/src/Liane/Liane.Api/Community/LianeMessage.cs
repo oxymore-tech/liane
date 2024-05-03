@@ -1,6 +1,7 @@
 using System;
 using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
+using ApiTrip = Liane.Api.Trip.Trip;
 
 namespace Liane.Api.Community;
 
@@ -22,5 +23,5 @@ public abstract record MessageContent
 
   public sealed record Text(string Value) : MessageContent;
 
-  public sealed record LaunchTrip(Ref<Trip.Trip> Trip) : MessageContent;
+  public sealed record Trip(Ref<ApiTrip> Value) : MessageContent;
 }
