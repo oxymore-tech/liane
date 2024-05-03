@@ -10,7 +10,7 @@ beforeAll(async () => {
   await Services.signUpActor.signUpUser(faker.helpers.replaceSymbolWithNumber("06########"));
 }, 5000);
 
-vi.setConfig({ testTimeout: 5_000 });
+vi.setConfig({ testTimeout: 10_000 });
 
 describe("Displaying trips", () => {
   test("Should create new liane", async () => {

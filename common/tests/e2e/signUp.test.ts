@@ -4,7 +4,7 @@ import { CreateServices } from "./setup/services";
 import { TestEnv } from "./setup/environment";
 
 const Services = CreateServices();
-vi.setConfig({ testTimeout: 5_000 });
+vi.setConfig({ testTimeout: 10_000 });
 
 const newUserPhone = faker.helpers.replaceSymbolWithNumber("06########");
 

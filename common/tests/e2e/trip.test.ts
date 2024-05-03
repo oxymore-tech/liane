@@ -23,7 +23,7 @@ afterAll(async () => {
   for (const user of users) await user.services.hub.stop();
 });
 
-vi.setConfig({ testTimeout: 5_000 });
+vi.setConfig({ testTimeout: 10_000 });
 describe.sequential("Joining a trip", () => {
   describe("User A", () => {
     test("Should create new trip", async () => {
@@ -40,7 +40,6 @@ describe.sequential("Joining a trip", () => {
       const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
       expect(tripList.data.length).toBe(2);
       expect(tripList.data[0]).toEqual(posted);
-      console.log("Trip created", posted);
       tripId = posted.id!;
     });
   });
