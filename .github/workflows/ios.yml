@@ -133,3 +133,10 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+    
+      - name: Archive runner full logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runner.log
+          path: /Users/runner/Library/Logs/gym/liane-liane.log
