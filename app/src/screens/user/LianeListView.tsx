@@ -2,6 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   SectionBase,
@@ -29,6 +30,8 @@ import { startGeolocationService } from "@/screens/detail/components/Geolocation
 import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
+import Eye from "@/assets/images/eye-fill.svg";
+import EyeOff from "@/assets/images/eye-off-fill.svg";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {}
 
@@ -50,7 +53,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
   }, [data, userId, reverseSort]);
   return (
     <SectionList
-      style={{ flex: 1 }}
+      style={{ flex: 1, marginLeft: 20, marginRight: 20, overflow: "visible" }}
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
       showsVerticalScrollIndicator={false}
@@ -86,28 +89,26 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
   const status = useLianeStatus(item);
+  const LianeStatucActivate = false;
   return (
     <View>
       <View>
         <Row style={styles.driverContainer}>
           <Row spacing={8} style={{ flex: 4 }}>
-            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
-            <AppText style={styles.driverText}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
+            <View
+              style={{
+                height: 48,
+                width: 48,
+                backgroundColor: LianeStatucActivate ? "#F25757" : "#979797",
+                marginLeft: -30,
+                borderRadius: 16,
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+              {LianeStatucActivate ? <Eye width={20} height={20} /> : <EyeOff width={20} height={20} />}
+            </View>
           </Row>
-          {!["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
-          {/* <Row spacing={8} style={{ flex: 3 }}>
-            <AppText style={[styles.geolocText, { color: geolocalisationEnabled ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
-              Géolocalisation
-            </AppText>
-            <Switch
-              style={styles.geolocSwitch}
-              trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
-              thumbColor={geolocalisationEnabled ? AppColors.primaryColor : AppColors.grayBackground}
-              ios_backgroundColor={AppColors.grayBackground}
-              value={geolocalisationEnabled}
-              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}
-            />
-          </Row>*/}
+          {!["Finished", "Archived", "Canceled"].includes(item.state)}
         </Row>
 
         <View style={styles.lianeContainer}>
@@ -207,61 +208,18 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 };
 
 const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
-  const isRequest = isResolvedJoinLianeRequest(item);
-  if (!isRequest) {
-    // @ts-ignore
-    return renderLianeItem({ item, index, section });
-  }
-
-  // else render join request
-  const { navigation } = useAppNavigation();
-  const driver = useMemo(() => item.targetLiane.members.find(l => l.user.id === item.targetLiane.driver.user)!.user, [item]);
-  return (
-    <Pressable
-      onPress={() => navigation.navigate({ name: "LianeJoinRequestDetail", params: { request: item } })}
-      style={[
-        styles.item,
-        styles.grayBorder,
-        index === section.data.length - 1 ? styles.itemLast : {},
-        index === 0 ? styles.itemFirst : {},
-        styles.disabledItem
-      ]}>
-      <View>
-        <Row style={styles.driverContainer}>
-          <Row spacing={8} style={{ flex: 4 }}>
-            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
-            <AppText style={styles.driverText}>{driver.pseudo}</AppText>
-          </Row>
-          <AppText style={{ color: AppColorPalettes.gray[500], fontWeight: "500", fontStyle: "italic", paddingHorizontal: 6, paddingVertical: 6 }}>
-            En attente de validation
-          </AppText>
-        </Row>
-        <View style={styles.lianeContainer}>
-          <JoinRequestSegmentOverview request={item} />
-        </View>
-      </View>
-      <View style={{ height: 24 }} />
-    </Pressable>
-  );
+  console.log(" ############################ LIANE", item);
+  // @ts-ignore
+  return renderLianeItem({ item, index, section });
 };
 
-const relaunchLiane = (liane: Liane, driver: User) => {
-  if (liane.driver.user === driver.id) {
-    // CASE Driver
-    // TODO: new screen or modal to give choice of passengers to send notif, then navigate to publish screen pre-filled
-  } else {
-    // CASE Passenger
-    // TODO: Send proposition to driver to join existing Liane or create a new one if no path already exists
-  }
-};
-
-const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
+const renderSectionHeader = ({ section: {} }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
   <View style={styles.header} />
 );
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: 26,
     height: "100%"
   },
   grayBorder: {

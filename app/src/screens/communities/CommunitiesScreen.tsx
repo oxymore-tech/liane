@@ -156,7 +156,7 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
   ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
     return (
       <>
-        <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
+        <LianeListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
         {isFetchingNextPage && (
           <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
             <ActivityIndicator style={AppStyles.center} color={AppColors.primaryColor} size="large" />
