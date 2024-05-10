@@ -122,9 +122,13 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
 
     let text;
     if (Platform.OS === "ios" && parseInt(Platform.Version, 10) >= 13) {
-      text = ['Appuyez sur "Continuer"', 'Allez dans "Position"', 'Sélectionnez "Toujours" dans la liste des autorisations"'];
+      text = [
+        'Appuyez sur "Continuer"',
+        'Allez dans "Position"',
+        'Sélectionnez "Toujours" ou "Lorsque l\'app est active" dans la liste des autorisations"'
+      ];
     } else if (Platform.OS === "ios" && parseInt(Platform.Version, 10) < 13) {
-      text = ['Appuyez sur "Continuer"', 'Sélectionnez "Toujours" dans la liste des autorisations"'];
+      text = ['Appuyez sur "Continuer"', 'Sélectionnez "Toujours" ou "Lorsque l\'app est active" dans la liste des autorisations"'];
     } else if (Platform.OS === "android" && Platform.Version === 29) {
       text = ['Appuyez sur "Continuer"', 'Sélectionnez "Toujours autoriser" dans la liste des autorisations'];
     } else if (Platform.OS === "android" && Platform.Version > 29) {
@@ -136,7 +140,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
       ];
     }
     if (text) {
-      Alert.alert("Autoriser la géolocalisation en arrière-plan", text.map((item, i) => i + 1 + ". " + item).join("\n"), [
+      Alert.alert("Autoriser la géolocalisation", text.map((item, i) => i + 1 + ". " + item).join("\n"), [
         {
           text: "Continuer",
           onPress: () => {
