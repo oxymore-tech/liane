@@ -12,7 +12,7 @@ import {
   StyleSheet,
   View
 } from "react-native";
-import { capitalize, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@liane/common";
+import { capitalize, DayOfTheWeekFlag, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime, WayPoint } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -89,26 +89,47 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
   const status = useLianeStatus(item);
-  const LianeStatucActivate = false;
+
+  // TODO ajouter de vrais données
+  const daysReccurence = extractDays(item.recurrence?.days);
+  const LianeStatucActivate = true;
+  const { to, from, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
+  console.log("to", item);
+  const date = new Date(item.departureTime);
+  const options = { timeZone: "Europe/Paris", hour12: false, hour: "2-digit", minute: "2-digit" };
+  const localeTime = date.toLocaleTimeString("fr-FR", options as any);
+
   return (
     <View>
       <View>
         <Row style={styles.driverContainer}>
-          <Row spacing={8} style={{ flex: 4 }}>
-            <View
-              style={{
-                height: 48,
-                width: 48,
-                backgroundColor: LianeStatucActivate ? "#F25757" : "#979797",
-                marginLeft: -30,
-                borderRadius: 16,
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
-              {LianeStatucActivate ? <Eye width={20} height={20} /> : <EyeOff width={20} height={20} />}
+          <Row spacing={8} style={{}}>
+            <View style={styles.headerContainer}>
+              <View
+                style={{
+                  height: 48,
+                  width: 48,
+                  backgroundColor: LianeStatucActivate ? AppColors.primaryColor : "#979797",
+                  marginLeft: -16,
+                  marginTop: 10,
+                  borderRadius: 16,
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                {LianeStatucActivate ? <Eye width={20} height={20} /> : <EyeOff width={20} height={20} />}
+              </View>
+              <View style={{ padding: 10 }}>
+                <AppText
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    flexShrink: 1,
+                    lineHeight: 27
+                  }}>{`${from?.rallyingPoint?.label} ➔ ${to?.rallyingPoint?.label}`}</AppText>
+                <AppText>{`${daysReccurence} ${localeTime}`}</AppText>
+              </View>
             </View>
           </Row>
-          {!["Finished", "Archived", "Canceled"].includes(item.state)}
         </Row>
 
         <View style={styles.lianeContainer}>
@@ -187,6 +208,47 @@ const StartButton = ({ item }: { item: Liane }) => {
     </AppPressableOverlay>
   );
 };
+const extractData = (wayPoints: WayPoint[]) => {
+  //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
+  const from = wayPoints[0];
+  const to = wayPoints[wayPoints.length - 1];
+  const steps = wayPoints.slice(1, -1);
+
+  return {
+    from,
+    to,
+    steps
+  };
+};
+
+const extractDays = (days: DayOfTheWeekFlag | undefined) => {
+  let daysString = "";
+  if (days) {
+    if (days[0] == "1") {
+      daysString += " Lundi";
+    }
+    if (days[1] == "1") {
+      daysString += " Mardi";
+    }
+    if (days[2] == "1") {
+      daysString += " Mercredi";
+    }
+    if (days[3] == "1") {
+      daysString += " Jeudi";
+    }
+    if (days[4] == "1") {
+      daysString += " Vendredi";
+    }
+    if (days[5] == "1") {
+      daysString += " Samedi";
+    }
+    if (days[6] == "1") {
+      daysString += " Dimanche";
+    }
+  }
+  return daysString;
+};
+
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
   const { navigation } = useAppNavigation();
 
@@ -256,12 +318,29 @@ const styles = StyleSheet.create({
   driverContainer: {
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8
+    marginBottom: 8,
+    backgroundColor: AppColors.backgroundColor
   },
   driverText: {
     fontSize: 16,
     fontWeight: "500",
     alignSelf: "center"
+  },
+  headerContainer: {
+    backgroundColor: AppColors.backgroundColor,
+    height: 71,
+    width: "114%",
+    maxWidth: "114%",
+    marginLeft: "-7%",
+    marginTop: -8,
+    borderRadius: 8,
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: AppColors.grayBackground
+  },
+  informatioContainer: {
+    fontSize: 16,
+    fontWeight: "500"
   },
   geolocText: {
     marginBottom: -2,
