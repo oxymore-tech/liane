@@ -155,7 +155,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
   return (
     <View style={{ alignItems: "center", flex: 1 }}>
       <AppText numberOfLines={3} style={{ fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>
-        Autoriser l'accès à votre position offre de nombreux avantages
+        Autoriser l'accès à votre position lorsque l'application est fermée, offre de nombreux avantages
       </AppText>
       <Column style={{ width: "100%", marginVertical: 32, paddingHorizontal: 16 }} spacing={24}>
         {items.map(item => {
