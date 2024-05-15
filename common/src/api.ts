@@ -261,7 +261,7 @@ export type JoinLianeRequestDetailed = Readonly<
   {
     from: RallyingPoint;
     to: RallyingPoint;
-    targetLiane: Liane;
+    targetTrip: Liane;
     seats: number;
     takeReturnTrip: boolean;
     message: string;
