@@ -67,7 +67,7 @@ export const getTripFromLiane = (liane: Liane, user: Ref<User>) => {
 };
 
 export const getTripFromJoinRequest = (request: JoinLianeRequestDetailed) => {
-  const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetTrip.wayPoints : request.match.wayPoints;
   const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
   const arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
   const departureTime = wayPoints[departureIndex].eta;

@@ -2306,12 +2306,12 @@
     tslib "^2.6.2"
 
 "@turf/distance@^7.0.0-alpha.2":
-  version "7.0.0-alpha.115"
-  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.0.0-alpha.115.tgz#32cc46d444df9d99049e9f47be8fd065df681519"
-  integrity sha512-hvZWdPnTZi2j7RTkL+Iz0clktq5I92lm2ZL22xrraCqNflksZLR7RF85gmsFVueB27QSp6fwo5X0LxRKlW+tkQ==
+  version "7.0.0-alpha.116"
+  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.0.0-alpha.116.tgz#02177a95949de5aa82105c1ee26615c56e98733e"
+  integrity sha512-a0IJRNkJ3+6bICVKAYOZ2b3IEJcjmScTzYTBibbKB4PhtrNgJht9xvwfhO5sz159tcfhusuqDDe4TrqbBC2C6Q==
   dependencies:
-    "@turf/helpers" "^7.0.0-alpha.115+c76e6e96e"
-    "@turf/invariant" "^7.0.0-alpha.115+c76e6e96e"
+    "@turf/helpers" "^7.0.0-alpha.116+ce335a037"
+    "@turf/invariant" "^7.0.0-alpha.116+ce335a037"
     tslib "^2.6.2"
 
 "@turf/envelope@^7.0.0-alpha.110":
@@ -2353,10 +2353,10 @@
     deep-equal "^2.2.3"
     tslib "^2.6.2"
 
-"@turf/helpers@^7.0.0-alpha.115+c76e6e96e", "@turf/helpers@^7.0.0-alpha.2":
-  version "7.0.0-alpha.115"
-  resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.0.0-alpha.115.tgz#90c0f1e1e9374077a2da9f9d9b3b5acf44050e75"
-  integrity sha512-wXvGiDfDmpJThzsDtxmR9Mgv/rLNZmZe8a1n3S9PrNkUNbYO+6JKp6ZOeb7Erm1AZRsHvXN7SR8GKzToYugugA==
+"@turf/helpers@^7.0.0-alpha.116+ce335a037", "@turf/helpers@^7.0.0-alpha.2":
+  version "7.0.0-alpha.116"
+  resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.0.0-alpha.116.tgz#d9807aa858e0373475b8de155c3de6e242f44fd7"
+  integrity sha512-lBgYicZrgX0s/TqTmE5AjsLSqEgI5dsNwBp6O9xaTNVBoPz/vIbaaB9R/sepCL5pLW1BHDWBswVSTUPYSoHCrQ==
   dependencies:
     deep-equal "^2.2.3"
     tslib "^2.6.2"
@@ -2376,12 +2376,12 @@
     "@turf/helpers" "^7.0.0-alpha.111+08576cb50"
     tslib "^2.6.2"
 
-"@turf/invariant@^7.0.0-alpha.115+c76e6e96e":
-  version "7.0.0-alpha.115"
-  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-7.0.0-alpha.115.tgz#4bbf7dc3e90c11390127ae2350fe32cb0820fcba"
-  integrity sha512-OotxjtmGo+sVOPJYGiXEWdqz8trI/UQHbL3ciXfUxBVPOkTi7oGby7niLg+EZ0TKHt/Dcl/2WgA33zZmqKSquA==
+"@turf/invariant@^7.0.0-alpha.116+ce335a037":
+  version "7.0.0-alpha.116"
+  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-7.0.0-alpha.116.tgz#47b9e60e92edabf57565e0701ceb004da90e3aff"
+  integrity sha512-VoUIaW5wjhkPVPniiAR19A8KJXb350iHRo+KAN4VMOlY21x0ibvNc1aa7s/fKzfWfhkG0u63yDbuS2j/bNtdIQ==
   dependencies:
-    "@turf/helpers" "^7.0.0-alpha.115+c76e6e96e"
+    "@turf/helpers" "^7.0.0-alpha.116+ce335a037"
     tslib "^2.6.2"
 
 "@turf/length@6.5.0":

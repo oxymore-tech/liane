@@ -97,9 +97,9 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
     const reqIsExactMatch = UnionUtils.isInstanceOf(data.match, "Exact");
-    const wayPoints = reqIsExactMatch ? data.targetLiane.wayPoints : data.match.wayPoints;
-    const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetLiane.departureTime))} à ${AppLocalization.formatTime(
-      new Date(data.targetLiane.departureTime)
+    const wayPoints = reqIsExactMatch ? data.targetTrip.wayPoints : data.match.wayPoints;
+    const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetTrip.departureTime))} à ${AppLocalization.formatTime(
+      new Date(data.targetTrip.departureTime)
     )}`;
     const headerDate = (
       <Row spacing={8}>
@@ -111,8 +111,8 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
       <LianeMatchView
         from={data.from}
         to={data.to}
-        departureTime={data.targetLiane.departureTime}
-        originalTrip={data.targetLiane.wayPoints}
+        departureTime={data.targetTrip.departureTime}
+        originalTrip={data.targetTrip.wayPoints}
         newTrip={wayPoints}
       />
     );
@@ -141,7 +141,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
               : "Le trajet sera rallongé de " + AppLocalization.formatDuration((data.match as Compatible).delta.totalInSeconds)}
           </AppText>
         </Row>
-        {data.seats > 0 && !data.targetLiane.driver.canDrive && (
+        {data.seats > 0 && !data.targetTrip.driver.canDrive && (
           <Row spacing={16} style={{ alignItems: "center" }}>
             <AppIcon name={"car-check-mark"} />
             <AppText numberOfLines={2} style={{ fontSize: 14 }}>
@@ -162,7 +162,7 @@ const DetailedRequestQueryKey = "DetailedRequestQueryKey";
 
 const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
   const reqIsExactMatch = UnionUtils.isInstanceOf(request.match, "Exact");
-  const wayPoints = reqIsExactMatch ? request.targetLiane.wayPoints : request.match.wayPoints;
+  const wayPoints = reqIsExactMatch ? request.targetTrip.wayPoints : request.match.wayPoints;
   const boundingBox = getBoundingBox(
     wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]),
     24
@@ -190,7 +190,7 @@ const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
         }
         return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
       })}
-      <RouteLayer wayPoints={request.targetLiane.wayPoints} />
+      <RouteLayer wayPoints={request.targetTrip.wayPoints} />
       {!reqIsExactMatch && <RouteLayer wayPoints={request.match.wayPoints} id={"alternative"} style={{ lineDasharray: [3, 2] }} />}
     </MapLibreGL.MapView>
   );

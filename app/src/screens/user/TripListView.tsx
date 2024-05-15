@@ -67,7 +67,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
 };
 
 const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return (item as JoinLianeRequestDetailed).targetLiane !== undefined;
+  return (item as JoinLianeRequestDetailed).targetTrip !== undefined;
 };
 
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
@@ -239,7 +239,7 @@ const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | 
 
   // else render join request
   const { navigation } = useAppNavigation();
-  const driver = useMemo(() => item.targetLiane.members.find(l => l.user.id === item.targetLiane.driver.user)!.user, [item]);
+  const driver = useMemo(() => item.targetTrip.members.find(l => l.user.id === item.targetTrip.driver.user)!.user, [item]);
   return (
     <Pressable
       onPress={() => navigation.navigate({ name: "LianeJoinRequestDetail", params: { request: item } })}

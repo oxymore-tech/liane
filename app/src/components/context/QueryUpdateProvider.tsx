@@ -49,7 +49,7 @@ const updateNotificationPages = (old: InfiniteData<PaginatedResponse<Notificatio
 };
 
 const updateJoinRequestsList = (old: PaginatedResponse<JoinLianeRequestDetailed>, liane: Liane) => {
-  const updatedData = old.data.filter(joinRequest => joinRequest.targetLiane.id !== liane.id);
+  const updatedData = old.data.filter(joinRequest => joinRequest.targetTrip.id !== liane.id);
   return { pageSize: updatedData.length, data: updatedData };
 };
 

@@ -44,7 +44,7 @@ export const LianeJoinRequestDetailScreen = () => {
       return lianeParam;
     }
   });
-  const match = useMemo(() => (request ? { trip: request.targetLiane, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
+  const match = useMemo(() => (request ? { trip: request.targetTrip, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
 
   return <LianeDetailPage match={match} request={request} />;
 };
