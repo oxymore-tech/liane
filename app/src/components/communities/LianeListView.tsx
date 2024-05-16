@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
-import { RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { JoinLianeRequestDetailed, Liane, Ref, User, WayPoint } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -16,6 +16,7 @@ import EyeOff from "@/assets/images/eye-off-fill.svg";
 import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
 import { GroupsView } from "@/components/communities/GroupsView";
+import { AppLogger } from "@/api/logger";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {}
 
@@ -63,16 +64,11 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], membe
   );
 
 const LianeItem = ({ item }: { item: Liane }) => {
-  const { navigation } = useAppNavigation();
   const { services, user } = useContext(AppContext);
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
-  const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
-  const carLocation = useCarDelay();
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
-  const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
-  const status = useLianeStatus(item);
 
   // TODO ajouter de vrais données
   const daysReccurence = extractDays(item.recurrence?.days);
@@ -82,12 +78,19 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const options = { timeZone: "Europe/Paris", hour12: false, hour: "2-digit", minute: "2-digit" };
   const localeTime = date.toLocaleTimeString("fr-FR", options as any);
   const [myGroups, setMyGroups] = useState<GroupeCovoiturage[] | null>(null);
+  const [otherGroups, setOtherGroups] = useState<GroupeCovoiturage[] | null>(null);
+  const { navigation } = useAppNavigation();
+
+  const deleteLiane = () => {
+    AppLogger.debug("COMMUNITIES", "Delete Liane", item.id);
+  };
 
   useEffect(() => {
     const lianeGroups = trierGroupesParAppartenance(groups, 3);
     console.log("#### MYgroups", lianeGroups.myGroups);
 
     setMyGroups(lianeGroups.myGroups);
+    setOtherGroups(lianeGroups.otherGroups);
   }, [groups]);
 
   return (
@@ -149,7 +152,9 @@ const LianeItem = ({ item }: { item: Liane }) => {
 
       {groups && (
         <Row style={{ flex: 1, alignItems: "center", marginTop: 20, marginBottom: 20, marginLeft: 5 }} spacing={8}>
-          <Row style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          <Pressable
+            style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}
+            onPress={() => navigation.navigate("ListGroups", { groups: otherGroups ?? [] })}>
             <Row>
               <View style={styles.notificationDotContainer}>
                 <View style={styles.notificationDot} />
@@ -173,13 +178,14 @@ const LianeItem = ({ item }: { item: Liane }) => {
                 <AppIcon name={"arrow-right"} />
               </View>
             </Row>
-          </Row>
+          </Pressable>
         </Row>
       )}
       {groups && (
-        <Row
+        <Pressable
           style={{
             flex: 1,
+            flexDirection: "row",
             alignItems: "center",
             paddingTop: 20,
             marginBottom: 20,
@@ -187,7 +193,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
             paddingLeft: 8,
             borderTopColor: AppColors.grayBackground
           }}
-          spacing={8}>
+          onPress={deleteLiane}>
           <AppIcon name={"trash"} />
           <AppText
             style={{
@@ -199,7 +205,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
             }}>
             Supprimer cette liane
           </AppText>
-        </Row>
+        </Pressable>
       )}
     </View>
   );

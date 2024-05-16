@@ -35,6 +35,7 @@ export type NavigationParamList = {
   Notifications: undefined;
   RallyingPointRequests: undefined;
   CommunitiesDetails: { group: GroupeCovoiturage };
+  ListGroups: { groups: GroupeCovoiturage[] };
 };
 
 export const NavigationScreenTitles = {
