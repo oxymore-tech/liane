@@ -195,6 +195,31 @@ const LianeItem = ({ item }: { item: Liane }) => {
           </Row>
         </Row>
       )}
+      {groups && (
+        <Row
+          style={{
+            flex: 1,
+            alignItems: "center",
+            paddingTop: 20,
+            marginBottom: 20,
+            borderTopWidth: 1,
+            paddingLeft: 8,
+            borderTopColor: AppColors.grayBackground
+          }}
+          spacing={8}>
+          <AppIcon name={"trash"} />
+          <AppText
+            style={{
+              fontSize: 14,
+              fontWeight: "600",
+              lineHeight: 23,
+              color: "#7B0000",
+              marginLeft: 5
+            }}>
+            Supprimer cette liane
+          </AppText>
+        </Row>
+      )}
     </View>
   );
 };
