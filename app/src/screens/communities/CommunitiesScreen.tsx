@@ -8,7 +8,7 @@ import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
-import { LianeListView } from "@/screens/user/LianeListView";
+import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";

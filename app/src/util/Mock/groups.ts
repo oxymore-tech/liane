@@ -18,6 +18,7 @@ export type GroupeCovoiturage = {
   demandeNouveauGroupe: boolean;
   admin: boolean;
   recurrence: DayOfTheWeekFlag;
+  conversationId: string;
 };
 
 // Objets de test
@@ -27,6 +28,7 @@ const groupe1: GroupeCovoiturage = {
   arrivee: "Bureau",
   heureDepart: "08:00",
   recurrence: "0100010",
+  conversationId: "ezffezefezgze",
   covoitureurs: [
     { id: 1, nom: "Dupont", prenom: "Jean", photo: "url_photo_jean" },
     { id: 2, nom: "Durand", prenom: "Marie", photo: "url_photo_marie" }
@@ -49,6 +51,7 @@ const groupe2: GroupeCovoiturage = {
     { id: 4, nom: "Lefebvre", prenom: "Sophie", photo: "url_photo_sophie" }
     // Ajoutez d'autres covoitureurs au besoin
   ],
+  conversationId: "ezffezefezgze",
   nomGroupe: "Sortie shopping",
   nouveauxMessages: false,
   demandeNouveauGroupe: false,
@@ -67,6 +70,7 @@ const groupe3: GroupeCovoiturage = {
     { id: 3, nom: "Martin", prenom: "Pierre", photo: "url_photo_pierre" }
     // Ajoutez d'autres covoitureurs au besoin
   ],
+  conversationId: "ezffezefezgze",
   nomGroupe: "Retour du travail",
   nouveauxMessages: true,
   demandeNouveauGroupe: false,

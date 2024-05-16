@@ -16,7 +16,8 @@ export const LoggerNamespaces = [
   "GEOPINGS",
   "GEOLOC",
   "DEEP_LINKING",
-  "RALLYING_POINT"
+  "RALLYING_POINT",
+  "COMMUNITIES"
 ] as const;
 
 export type LoggerNamespace = (typeof LoggerNamespaces)[number];

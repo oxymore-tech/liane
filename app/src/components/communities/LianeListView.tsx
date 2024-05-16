@@ -1,40 +1,21 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  RefreshControl,
-  SectionBase,
-  SectionList,
-  SectionListData,
-  SectionListRenderItemInfo,
-  StyleSheet,
-  View
-} from "react-native";
-import { capitalize, DayOfTheWeekFlag, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime, WayPoint } from "@liane/common";
-import { AppLocalization } from "@/api/i18n";
+import { RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
+import { JoinLianeRequestDetailed, Liane, Ref, User, WayPoint } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
-import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { UserPicture } from "@/components/UserPicture";
-import { JoinRequestSegmentOverview } from "@/components/trip/JoinRequestSegmentOverview";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { WayPointsView } from "@/components/trip/WayPointsView";
 import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolocationProvider";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
+import { getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
 import { useObservable } from "@/util/hooks/subscription";
-import { AppLogger } from "@/api/logger";
 import Eye from "@/assets/images/eye-fill.svg";
 import EyeOff from "@/assets/images/eye-off-fill.svg";
 import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
-import { GroupsView } from "@/components/trip/GroupsView";
+import { GroupsView } from "@/components/communities/GroupsView";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {}
 

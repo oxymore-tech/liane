@@ -11,6 +11,7 @@ import { JoinLianeRequestDetailed, Liane, Event, Notification, JoinRequest, User
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
+import { GroupeCovoiturage } from "@/util/Mock/groups";
 
 export const HOME_TRIPS = "Mes trajets";
 export type NavigationParamList = {
@@ -21,6 +22,7 @@ export type NavigationParamList = {
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
+  CommunitiesChat: { conversationId: string; group?: GroupeCovoiturage };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
@@ -32,6 +34,7 @@ export type NavigationParamList = {
   //OpenValidateTrip: { liane: Liane };
   Notifications: undefined;
   RallyingPointRequests: undefined;
+  CommunitiesDetails: { group: GroupeCovoiturage };
 };
 
 export const NavigationScreenTitles = {

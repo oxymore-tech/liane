@@ -1,17 +1,21 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { GroupeCovoiturage } from "@/util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
 import { AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
+import { Liane } from "@liane/common";
+import { useAppNavigation } from "@/components/context/routing";
+import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
+import { TripSection } from "@/screens/user/TripListView";
 
 export interface GroupsViewProps {
   group: GroupeCovoiturage;
 }
 
-export const GroupsView = ({ group }: GroupsViewProps) => {
+const RenderGroupsView = ({ group }: GroupsViewProps) => {
   return (
     <Row style={{ alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: AppColors.grayBackground }} spacing={8}>
       <View style={{ flexGrow: 1, flexShrink: 1 }}>
@@ -61,6 +65,16 @@ export const GroupsView = ({ group }: GroupsViewProps) => {
         </View>
       </View>
     </Row>
+  );
+};
+
+export const GroupsView = ({ group }: GroupsViewProps) => {
+  const { navigation } = useAppNavigation();
+
+  return (
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { conversationId: group.conversationId, group: group })}>
+      <RenderGroupsView group={group} />
+    </Pressable>
   );
 };
 

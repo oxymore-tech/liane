@@ -17,6 +17,9 @@ import Seat from "@/assets/icons/seat.svg";
 import ArrowSwitch from "@/assets/icons/arrow-switch.svg";
 import ArrowRight from "@/assets/icons/arrow-ios-right.svg";
 import Trash from "@/assets/icons/trash.svg";
+import Info from "@/assets/icons/info.svg";
+import Book from "@/assets/icons/book-fill.svg";
+import Cloud from "@/assets/icons/cloud.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes } from "@/theme/colors";
@@ -64,6 +67,12 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <ArrowRight {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "trash":
       return <Trash {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "info":
+      return <Info {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "book":
+      return <Book {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "cloud":
+      return <Cloud {...props} opacity={opacity} width={size} height={size} fill={color} />;
     default:
       return <Icon {...props} opacity={opacity} name={name} width={size} height={size} fill={color} />;
   }
@@ -152,6 +161,7 @@ const EvaIconsNames = [
   "close-square",
   "cloud-download",
   "cloud-upload",
+  "cloud",
   "code-download",
   "code",
   "collapse",
