@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -32,6 +32,9 @@ import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 import Eye from "@/assets/images/eye-fill.svg";
 import EyeOff from "@/assets/images/eye-off-fill.svg";
+import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
+import { extractDays } from "@/util/hooks/days";
+import { GroupsView } from "@/components/trip/GroupsView";
 
 export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {}
 
@@ -94,10 +97,17 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const daysReccurence = extractDays(item.recurrence?.days);
   const LianeStatucActivate = true;
   const { to, from, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
-  console.log("to", item);
   const date = new Date(item.departureTime);
   const options = { timeZone: "Europe/Paris", hour12: false, hour: "2-digit", minute: "2-digit" };
   const localeTime = date.toLocaleTimeString("fr-FR", options as any);
+  const [myGroups, setMyGroups] = useState<GroupeCovoiturage[] | null>(null);
+
+  useEffect(() => {
+    const lianeGroups = trierGroupesParAppartenance(groups, 3);
+    console.log("#### MYgroups", lianeGroups.myGroups);
+
+    setMyGroups(lianeGroups.myGroups);
+  }, [groups]);
 
   return (
     <View>
@@ -124,90 +134,71 @@ const LianeItem = ({ item }: { item: Liane }) => {
                     fontSize: 16,
                     fontWeight: "600",
                     flexShrink: 1,
-                    lineHeight: 27
+                    lineHeight: 27,
+                    color: "black"
                   }}>{`${from?.rallyingPoint?.label} ➔ ${to?.rallyingPoint?.label}`}</AppText>
-                <AppText>{`${daysReccurence} ${localeTime}`}</AppText>
+                <AppText
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "400",
+                    flexShrink: 1,
+                    lineHeight: 16,
+                    color: "black"
+                  }}>{`${daysReccurence} ${localeTime}`}</AppText>
               </View>
             </View>
           </Row>
         </Row>
 
         <View style={styles.lianeContainer}>
-          <WayPointsView wayPoints={wayPoints} carLocation={carLocation} />
+          {myGroups &&
+            myGroups.map((group, index) => {
+              return (
+                <View
+                  style={{
+                    backgroundColor: AppColors.backgroundColor,
+                    width: "100%"
+                  }}>
+                  <GroupsView key={index} group={group} />
+                </View>
+              );
+            })}
         </View>
       </View>
 
-      {!["Finished", "Archived", "Canceled"].includes(item.state) && (
-        <Row style={styles.infoRowContainer} spacing={8}>
-          <Row style={{ alignItems: "center" }}>
-            <AppIcon name={"navigation-2-outline"} color={geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor} size={16} />
-            <AppText style={{ color: geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor }}>
-              Géolocalisation {geolocationDisabled ? "désactivée" : "activée"}
-            </AppText>
-          </Row>
-
-          <Row style={styles.statusRowContainer} spacing={8}>
-            {["NotStarted", "Started"].includes(item.state) && (
-              <Row style={{ position: "absolute", right: 42 }}>
-                {item.members
-                  .filter(m => m.user.id !== driver.id)
-                  .map((m, i) => (
-                    <View
-                      key={m.user.id}
-                      style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
-                      <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                    </View>
-                  ))}
-              </Row>
-            )}
-
-            {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
-              <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
-                <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
-                {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
-              </Pressable>
-            )}
+      {groups && (
+        <Row style={{ flex: 1, alignItems: "center", marginTop: 20, marginBottom: 20, marginLeft: 5 }} spacing={8}>
+          <Row style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <Row>
+              <View style={styles.notificationDotContainer}>
+                <View style={styles.notificationDot} />
+              </View>
+              <AppText
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  lineHeight: 23,
+                  color: AppColors.orange,
+                  marginLeft: 5
+                }}>
+                {`Voir les ${myGroups?.length}`} groupes disponibles
+              </AppText>
+            </Row>
+            <Row>
+              <View
+                style={{
+                  marginRight: 10
+                }}>
+                <AppIcon name={"arrow-right"} />
+              </View>
+            </Row>
           </Row>
         </Row>
       )}
-      {status === "StartingSoon" && <View style={{ height: 44 }} />}
-      {status === "StartingSoon" || (status === "Started" && item.state === "NotStarted" && <StartButton item={item} />)}
     </View>
   );
 };
 
-const StartButton = ({ item }: { item: Liane }) => {
-  const [loading, setLoading] = useState(false);
-  const { services } = useContext(AppContext);
-  return (
-    <AppPressableOverlay
-      backgroundStyle={{
-        position: "absolute",
-        bottom: 0,
-        left: -16,
-        right: -16,
-        backgroundColor: AppColors.primaryColor,
-        borderBottomRightRadius: 16,
-        borderBottomLeftRadius: 16
-      }}
-      onPress={() => {
-        setLoading(true);
-        services.liane
-          .start(item.id!)
-          .then(() => startGeolocationService(item))
-          .catch(e => {
-            AppLogger.error("GEOPINGS", e);
-          })
-          .finally(() => setLoading(false));
-      }}>
-      <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
-        {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
-        {loading && <ActivityIndicator size="small" color={AppColors.white} />}
-        <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
-      </Row>
-    </AppPressableOverlay>
-  );
-};
 const extractData = (wayPoints: WayPoint[]) => {
   //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
   const from = wayPoints[0];
@@ -221,55 +212,36 @@ const extractData = (wayPoints: WayPoint[]) => {
   };
 };
 
-const extractDays = (days: DayOfTheWeekFlag | undefined) => {
-  let daysString = "";
-  if (days) {
-    if (days[0] == "1") {
-      daysString += " Lundi";
-    }
-    if (days[1] == "1") {
-      daysString += " Mardi";
-    }
-    if (days[2] == "1") {
-      daysString += " Mercredi";
-    }
-    if (days[3] == "1") {
-      daysString += " Jeudi";
-    }
-    if (days[4] == "1") {
-      daysString += " Vendredi";
-    }
-    if (days[5] == "1") {
-      daysString += " Samedi";
-    }
-    if (days[6] == "1") {
-      daysString += " Dimanche";
-    }
-  }
-  return daysString;
+const trierGroupesParAppartenance = (
+  groupes: GroupeCovoiturage[],
+  idUtilisateur: number
+): { myGroups: GroupeCovoiturage[]; otherGroups: GroupeCovoiturage[] } => {
+  // Filtre les groupes pour ne conserver que ceux auxquels l'utilisateur appartient
+  return {
+    myGroups: groupes.filter(groupe => {
+      // Vérifie si l'identifiant de l'utilisateur est présent parmi les covoitureurs du groupe
+      return groupe.covoitureurs.some(covoitureur => covoitureur.id === idUtilisateur);
+    }),
+    otherGroups: groupes.filter(groupe => {
+      // Vérifie si l'identifiant de l'utilisateur est présent parmi les covoitureurs du groupe
+      return groupe.covoitureurs.some(covoitureur => covoitureur.id !== idUtilisateur);
+    })
+  };
 };
 
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
   const { navigation } = useAppNavigation();
 
   return (
-    <Pressable
-      style={[
-        styles.item,
-        styles.grayBorder,
-        item.members.length > 1 ? {} : styles.disabledItem,
-        index === section.data.length - 1 ? styles.itemLast : {},
-        index === 0 ? styles.itemFirst : {}
-      ]}
-      onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
+    <View style={[styles.item, styles.grayBorder, styles.itemLast]}>
       <TripGeolocationProvider liane={item}>
         <LianeItem item={item} />
       </TripGeolocationProvider>
-    </Pressable>
+    </View>
   );
 };
 
-const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | JoinLianeRequestDetailed, TripSection>) => {
+const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | any, TripSection>) => {
   console.log(" ############################ LIANE", item);
   // @ts-ignore
   return renderLianeItem({ item, index, section });
@@ -300,9 +272,8 @@ const styles = StyleSheet.create({
   disabledItem: { backgroundColor: WithAlpha(AppColors.white, 0.7) },
   item: {
     paddingVertical: 8,
-    paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.backgroundColor,
     borderBottomWidth: 1
   },
   itemFirst: {
@@ -329,9 +300,9 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: AppColors.backgroundColor,
     height: 71,
-    width: "114%",
-    maxWidth: "114%",
-    marginLeft: "-7%",
+    width: "104%",
+    maxWidth: "104%",
+    marginLeft: "-2%",
     marginTop: -8,
     borderRadius: 8,
     flexDirection: "row",
@@ -350,8 +321,7 @@ const styles = StyleSheet.create({
     marginBottom: -4
   },
   lianeContainer: {
-    flexGrow: 1,
-    marginRight: 40
+    flexGrow: 1
   },
   chatButton: {
     alignItems: "flex-end",
@@ -383,8 +353,8 @@ const styles = StyleSheet.create({
   infoRowContainer: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 2
+    marginTop: 15,
+    marginBottom: 15
   },
   infoContainer: {
     paddingHorizontal: 4
@@ -425,5 +395,16 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     top: -16
+  },
+  notificationDotContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8 // Espace entre le texte et le point de notification
+  },
+  notificationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 6,
+    backgroundColor: AppColors.orange
   }
 });

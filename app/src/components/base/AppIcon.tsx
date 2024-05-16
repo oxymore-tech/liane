@@ -15,6 +15,7 @@ import PositionOff from "@/assets/icons/position-off.svg";
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 import Seat from "@/assets/icons/seat.svg";
 import ArrowSwitch from "@/assets/icons/arrow-switch.svg";
+import ArrowRight from "@/assets/icons/arrow-ios-right.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes } from "@/theme/colors";
@@ -58,6 +59,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <Seat {...props} />;
     case "arrow-switch":
       return <ArrowSwitch {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "arrow-right":
+      return <ArrowRight {...props} opacity={opacity} width={size} height={size} fill={color} />;
     default:
       return <Icon {...props} opacity={opacity} name={name} width={size} height={size} fill={color} />;
   }
