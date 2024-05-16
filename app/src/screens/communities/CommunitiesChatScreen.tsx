@@ -82,8 +82,6 @@ export const CommunitiesChatScreen = () => {
   const [showMoreModal, setShowMoreModal] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  console.log("##################", route.params);
-
   const membersNames = useMemo(
     () =>
       conversation

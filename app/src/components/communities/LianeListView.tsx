@@ -87,7 +87,6 @@ const LianeItem = ({ item }: { item: Liane }) => {
 
   useEffect(() => {
     const lianeGroups = trierGroupesParAppartenance(groups, 3);
-    console.log("#### MYgroups", lianeGroups.myGroups);
 
     setMyGroups(lianeGroups.myGroups);
     setOtherGroups(lianeGroups.otherGroups);
@@ -254,7 +253,6 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
 };
 
 const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | any, TripSection>) => {
-  console.log(" ############################ LIANE", item);
   // @ts-ignore
   return renderLianeItem({ item, index, section });
 };
