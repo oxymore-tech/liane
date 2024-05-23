@@ -7,12 +7,14 @@ import {
   LianeServiceClient,
   NotificationService,
   NotificationServiceClient,
+  CommunityServiceClient,
   RallyingPointClient,
   RallyingPointService,
   RoutingService,
   RoutingServiceClient,
   HubServiceClient,
   LocationService,
+  CommunityService,
   DEFAULT_TLS,
   AppLogger
 } from "@liane/common";
@@ -32,6 +34,7 @@ export type AppServices = {
   routing: RoutingService;
   notification: NotificationService;
   reminder: ReminderService;
+  community: CommunityService;
 };
 
 const http = new HttpClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage);
@@ -45,5 +48,6 @@ export const CreateAppServices = (): AppServices => ({
   realTimeHub: new HubServiceClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage, http),
   location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
-  notification: new NotificationServiceClient(http)
+  notification: new NotificationServiceClient(http),
+  community: new CommunityServiceClient(http)
 });

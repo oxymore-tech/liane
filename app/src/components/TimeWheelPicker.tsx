@@ -106,7 +106,7 @@ export const TimeWheelPicker = ({
           visibleRest={1}
         />
 
-        <AppText style={styles.hourStyle}>heure</AppText>
+        <AppText style={styles.hourStyle}>:</AppText>
 
         <WheelPicker
           selectedIndex={minute / minuteStep}

@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
-  FadeInDown,
+  FadeOut,
   FadeOutLeft,
   FadeOutRight,
   SlideInDown,
@@ -22,28 +22,25 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { DatePagerSelector } from "@/components/DatePagerSelector";
-import { AppToggle } from "@/components/base/AppOptionToggle";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { SeatsForm } from "@/components/forms/SeatsForm";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 
-import { CreatePublishLianeMachine, PublishLianeContext } from "@/screens/publish/StateMachine";
+import { CreatePublishLianeMachine, PublishLianeContext, PublishStateCount, TimeIntervalConstraint } from "@/screens/publish/StateMachine";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { SelectOnMapView } from "@/screens/publish/SelectOnMapView";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { DayOfWeekFlag, getFirstFutureDate } from "@liane/common";
-import { TimeWheelPicker } from "@/components/TimeWheelPicker";
+import { DayOfWeekFlag, TimeConstraint } from "@liane/common";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { HOME_TRIPS, useAppNavigation } from "@/components/context/routing";
-import { AppStorage } from "@/api/storage";
 import { AppLocalization } from "@/api/i18n";
+import { AppTextInput } from "@/components/base/AppTextInput.tsx";
+import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 
 interface StepProps<T> {
   editable: boolean;
@@ -61,15 +58,24 @@ export const PublishScreen = () => {
 
   const [m] = useState(() =>
     CreatePublishLianeMachine(async ctx => {
-      const geolocationLevel = await AppStorage.getSetting("geolocation");
-      const liane = await services.liane.post({
-        to: ctx.request.to!.id!,
-        from: ctx.request.from!.id!,
-        departureTime: ctx.request.departureTime!.toISOString(),
-        availableSeats: ctx.request.availableSeats!,
-        returnTime: ctx.request.returnTime?.toISOString(),
-        recurrence: ctx.request.recurrence || null,
-        geolocationLevel: geolocationLevel || "None"
+      // Compute time constraint
+      const timeConstraints: TimeConstraint[] = [];
+      if (ctx.request.departureConstraints?.arriveBefore || ctx.request.departureConstraints?.leaveAfter) {
+        let end = ctx.request.departureConstraints?.arriveBefore;
+        const tEnd = end ? { hour: end.getHours(), minute: end.getMinutes() } : { hour: 23, minute: 59 };
+        let start = ctx.request.departureConstraints?.leaveAfter;
+        const tStart = start ? { hour: start.getHours(), minute: start.getMinutes() } : { hour: 0, minute: 0 };
+        timeConstraints.push({ when: { start: tStart, end: tEnd }, at: ctx.request.from!.id! });
+      }
+
+      const liane = await services.community.create({
+        wayPoints: [ctx.request.from!.id!, ctx.request.to!.id!],
+        roundTrip: !!ctx.request.returnConstraints,
+        canDrive: ctx.request.availableSeats! > 0,
+        weekDays: ctx.request.recurrence!,
+        isEnabled: true,
+        timeConstraints,
+        name: ctx.request.name || ""
       });
 
       await queryClient.invalidateQueries(LianeQueryKey);
@@ -109,9 +115,11 @@ export const PublishScreenView = () => {
   const [state] = useActor(machine);
 
   const isTripStep = state.matches("trip");
-  const isDateStep = state.matches("date");
+  const isDateStep = state.matches("days");
+  const isTimeStep = state.matches("time");
   const isVehicleStep = state.matches("vehicle");
   const isReturnStep = state.matches("return");
+  const isNameStep = state.matches("name");
   const isOverviewStep = state.matches("overview");
   const isSubmittingStep = state.matches("submitting");
 
@@ -122,18 +130,20 @@ export const PublishScreenView = () => {
   const { width } = useWindowDimensions();
   const stepperIndicatorStyle = useAnimatedStyle(() => {
     return {
-      width: withTiming((step.value * width) / 3, { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
+      width: withTiming((step.value * width) / PublishStateCount, { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
     };
   }, []);
 
   const nextStep = (target: number) => {
-    step.value = Math.min(3, Math.max(target, step.value));
+    step.value = Math.min(PublishStateCount, Math.max(target, step.value));
   };
 
   const offsetsTop = {
     dateStep: insets.top + 172 - 24,
-    vehicleStep: insets.top + 172 - 24 * 2 + 80,
-    returnStep: insets.top + 172 - 24 * 3 + 80 * 2
+    timeStep: insets.top + 172 - 24 * 2 + 80,
+    vehicleStep: insets.top + 172 - 24 * 3 + 80 * 2,
+    returnStep: insets.top + 172 - 24 * 4 + 80 * 3,
+    nameStep: insets.top + 172 - 24 * 5 + 80 * 4
   };
 
   if (state.matches("map")) {
@@ -158,7 +168,27 @@ export const PublishScreenView = () => {
     <Column style={{ flex: 1, backgroundColor: AppColors.white, paddingBottom: insets.bottom }}>
       <PageHeader title={"Créer une Liane"} navigation={navigation} />
 
-      {(isOverviewStep || isSubmittingStep || isReturnStep) && (
+      {(isOverviewStep || isSubmittingStep || isNameStep) && (
+        <Animated.View
+          exiting={SlideOutLeft.duration(20)}
+          entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+          style={[
+            styles.footerContainer,
+            { marginTop: isNameStep ? offsetsTop.nameStep + 62 : offsetsTop.nameStep + 48 },
+            !isNameStep ? styles.compactedStepStyle : null,
+            !isNameStep ? AppStyles.shadow : null
+          ]}>
+          <NameStepView
+            editable={isNameStep}
+            animationType={state.context.request.returnConstraints === undefined ? "firstEntrance" : "ease"}
+            onRequestEdit={() => machine.send("NAME", { data: { name: null } })}
+            onChange={v => machine.send("UPDATE", { data: { name: v } })}
+            initialValue={state.context.request.name}
+          />
+        </Animated.View>
+      )}
+
+      {(isOverviewStep || isSubmittingStep || isReturnStep || isNameStep) && (
         <Animated.View
           exiting={SlideOutLeft.duration(20)}
           entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
@@ -169,17 +199,16 @@ export const PublishScreenView = () => {
             !isReturnStep ? AppStyles.shadow : null
           ]}>
           <ReturnStepView
-            after={state.context.request.departureTime!}
             editable={isReturnStep}
-            animationType={state.context.request.returnTime === undefined ? "firstEntrance" : "ease"}
+            animationType={state.context.request.returnConstraints === undefined ? "firstEntrance" : "ease"}
             onRequestEdit={() => machine.send("RETURN", { data: { returnTime: null } })}
             onChange={v => machine.send("UPDATE", { data: { returnTime: v } })}
-            initialValue={state.context.request.returnTime}
+            initialValue={state.context.request.returnConstraints}
           />
         </Animated.View>
       )}
 
-      {!isTripStep && !isDateStep && (
+      {!isTripStep && !isDateStep && !isTimeStep && (
         <Animated.View
           exiting={SlideOutLeft.duration(20)}
           entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
@@ -196,6 +225,29 @@ export const PublishScreenView = () => {
             onRequestEdit={() => machine.send("EDIT", { data: "vehicle" })}
             onChange={d => {
               machine.send("NEXT", { data: { availableSeats: d } });
+              nextStep(4);
+            }}
+          />
+        </Animated.View>
+      )}
+
+      {!isTripStep && !isDateStep && (
+        <Animated.View
+          exiting={SlideOutLeft.duration(20)}
+          entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+          style={[
+            styles.footerContainer,
+            { marginTop: isTimeStep ? offsetsTop.timeStep + 62 : offsetsTop.timeStep + 48 },
+            !isTimeStep ? styles.compactedStepStyle : null,
+            !isTimeStep ? AppStyles.shadow : null
+          ]}>
+          <TimeStepView
+            animationType={step.value < PublishStateCount ? "firstEntrance" : "ease"}
+            editable={isTimeStep}
+            initialValue={state.context.request.departureConstraints}
+            onRequestEdit={() => machine.send("EDIT", { data: "time" })}
+            onChange={d => {
+              machine.send("NEXT", { data: { departureConstraints: d } });
               nextStep(3);
             }}
           />
@@ -212,13 +264,13 @@ export const PublishScreenView = () => {
             !isDateStep ? styles.compactedStepStyle : null,
             !isDateStep ? AppStyles.shadow : null
           ]}>
-          <DateStepView
-            animationType={step.value < 3 ? "firstEntrance" : "ease"}
+          <DaysStepView
+            animationType={step.value < PublishStateCount ? "firstEntrance" : "ease"}
             editable={isDateStep}
-            initialValue={{ date: state.context.request.departureTime, recurrence: state.context.request.recurrence }}
-            onRequestEdit={() => machine.send("EDIT", { data: "date" })}
+            initialValue={{ recurrence: state.context.request.recurrence }}
+            onRequestEdit={() => machine.send("EDIT", { data: "days" })}
             onChange={data => {
-              machine.send("NEXT", { data: { departureTime: data.date, recurrence: data.recurrence } });
+              machine.send("NEXT", { data: { recurrence: data.recurrence } });
               nextStep(2);
             }}
           />
@@ -271,35 +323,28 @@ export const PublishScreenView = () => {
   );
 };
 
-const DateStepView = ({
-  editable,
-  onChange,
-  initialValue,
-  onRequestEdit
-}: StepProps<{ date: Date | undefined; recurrence: DayOfWeekFlag | null | undefined }>) => {
-  const optionsRecurrentLiane = ["Date unique", "Trajet régulier"];
-  const initialMinDate = new Date(new Date().getTime() + 60000);
+const DaysStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<{ recurrence: DayOfWeekFlag | null | undefined }>) => {
+  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(initialValue?.recurrence ?? "1111111");
 
-  const [date, setDate] = useState(initialMinDate);
-  const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(initialValue?.recurrence ?? "0000000");
+  const daysMessage = useMemo(() => {
+    if (daysOfTheWeek === "0000000") {
+      return null;
+    } else if (daysOfTheWeek === "1111111") {
+      return "Tous les jours";
+    } else {
+      return "Les " + AppLocalization.formatDaysOfTheWeek(daysOfTheWeek);
+    }
+  }, [daysOfTheWeek]);
 
-  const cannotValidate = isRecurrent && daysOfTheWeek === "0000000";
+  const cannotValidate = daysOfTheWeek === "0000000";
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       {!editable && (
         <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
           <Row style={styles.stepResumeContainer} spacing={8}>
-            {isRecurrent ? (
-              <Row style={{ flexShrink: 1, flexGrow: 1 }}>
-                <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>
-                  Les {AppLocalization.formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
-                </AppText>
-                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {AppLocalization.formatTime(date)}</AppText>
-              </Row>
-            ) : (
-              <AppText style={styles.stepResume}>Départ {AppLocalization.toRelativeTimeString(date, AppLocalization.formatShortMonthDay)}</AppText>
-            )}
+            <Row style={{ flexShrink: 1, flexGrow: 1 }}>
+              <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>{daysMessage}</AppText>
+            </Row>
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>
         </Animated.View>
@@ -307,39 +352,22 @@ const DateStepView = ({
 
       <Column spacing={8}>
         {editable && (
-          <Center style={{ marginTop: 12 }}>
-            <AppToggle
-              defaultSelectedValue={optionsRecurrentLiane[isRecurrent ? 1 : 0]}
-              options={optionsRecurrentLiane}
-              selectionColor={AppColors.primaryColor}
-              onSelectValue={(option: string) => {
-                setIsRecurrent(option !== optionsRecurrentLiane[0]);
-              }}
-            />
-          </Center>
-        )}
-
-        {editable && !isRecurrent && (
-          <Animated.View
-            style={{ paddingTop: 10 }}
-            exiting={FadeOutLeft.delay(40).duration(150)}
-            entering={SlideInLeft.delay(550).duration(300).springify().damping(20)}>
-            <DatePagerSelector color={AppColors.fontColor} date={date} onSelectDate={setDate} borderBottomDisplayed={true} />
+          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
+            <Center>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Quels jours voyagez-vous ?</AppText>
+            </Center>
           </Animated.View>
         )}
 
-        {editable && isRecurrent && (
+        {editable && (
           <Animated.View
             style={{ alignItems: "center" }}
             exiting={FadeOutRight.delay(40).duration(150)}
             entering={SlideInRight.delay(550).duration(300).springify().damping(20)}>
             <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
-            <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} minDate={!isRecurrent ? initialMinDate : undefined} />
+            <AppText style={{ flexShrink: 1, paddingRight: 0, fontSize: 16, alignSelf: "flex-start", paddingHorizontal: 12 }}>
+              {daysMessage ?? "Sélectionnez un jour"}
+            </AppText>
           </Animated.View>
         )}
 
@@ -353,8 +381,99 @@ const DateStepView = ({
               style={styles.validateButton}
               disabled={cannotValidate}
               onPress={() => {
-                const departureTime = isRecurrent ? getFirstFutureDate(date, daysOfTheWeek) : date;
-                onChange({ date: departureTime!, recurrence: isRecurrent ? daysOfTheWeek : null });
+                onChange({ recurrence: daysOfTheWeek });
+              }}>
+              <Center>
+                <Row spacing={4}>
+                  <AppText style={styles.validateText}>Suivant</AppText>
+                </Row>
+              </Center>
+            </AppPressableOverlay>
+          </Row>
+        )}
+      </Column>
+    </Pressable>
+  );
+};
+
+const TimeConstraintView = ({ title, onChange, value }: { title: string; value: Date | undefined | null; onChange: (v: Date | null) => void }) => {
+  return (
+    <View style={{ borderColor: AppColors.primaryColor, borderWidth: 4, borderRadius: 12, padding: 8, flex: 1 }}>
+      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <AppText style={{ fontWeight: "bold", paddingVertical: 4 }}>{title}</AppText>
+        {!!value && <AppPressableIcon name={"trash-2-outline"} onPress={() => onChange(null)} />}
+      </Row>
+      {!value ? (
+        <Pressable onPress={() => onChange(new Date())}>
+          <Center style={{ paddingVertical: 32 }}>
+            <AppIcon name={"plus-circle-outline"} size={32} />
+          </Center>
+        </Pressable>
+      ) : (
+        <Animated.View exiting={FadeOut.duration(150)} entering={FadeIn.duration(150).springify().damping(20)}>
+          <TimeWheelPicker date={value || new Date()} minuteStep={15} onChange={onChange} minDate={undefined} />
+        </Animated.View>
+      )}
+    </View>
+  );
+};
+
+const TimeStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<TimeIntervalConstraint>) => {
+  const [arriveBefore, setArriveBefore] = useState(initialValue?.arriveBefore);
+  const [leaveAfter, setLeaveAfter] = useState(initialValue?.leaveAfter);
+  const daysMessage = useMemo(() => {
+    if (!!arriveBefore && !!leaveAfter) {
+      return `Entre ${AppLocalization.formatTime(leaveAfter)} et ${AppLocalization.formatTime(arriveBefore)}`;
+    } else if (arriveBefore) {
+      `Arrivée avant ${AppLocalization.formatTime(arriveBefore)}`;
+    } else if (leaveAfter) {
+      `Départ à partir de ${AppLocalization.formatTime(leaveAfter)}`;
+    } else {
+      return "Journée entière";
+    }
+  }, [arriveBefore, leaveAfter]);
+
+  return (
+    <Pressable disabled={editable} onPress={onRequestEdit}>
+      {!editable && (
+        <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
+          <Row style={styles.stepResumeContainer} spacing={8}>
+            <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>{daysMessage}</AppText>
+
+            <AppIcon name={"edit-2"} color={AppColors.white} />
+          </Row>
+        </Animated.View>
+      )}
+
+      <Column spacing={8}>
+        {editable && (
+          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
+            <Center>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Quels sont vos horaires ?</AppText>
+            </Center>
+
+            <Center>
+              <AppText>{daysMessage}</AppText>
+            </Center>
+          </Animated.View>
+        )}
+
+        {editable && (
+          <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
+            <Row spacing={16} style={{ padding: 16 }}>
+              <TimeConstraintView title={"Partir après"} value={leaveAfter} onChange={setLeaveAfter} />
+              <TimeConstraintView title={"Arriver avant"} value={arriveBefore} onChange={setArriveBefore} />
+            </Row>
+          </Animated.View>
+        )}
+
+        {editable && (
+          <Row spacing={8} style={styles.validateContainer}>
+            <AppPressableOverlay
+              backgroundStyle={[styles.validateButtonBackground, { backgroundColor: AppColors.primaryColor }]}
+              style={styles.validateButton}
+              onPress={() => {
+                onChange({ leaveAfter, arriveBefore });
               }}>
               <Center>
                 <Row spacing={4}>
@@ -370,14 +489,16 @@ const DateStepView = ({
 };
 
 const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<number>) => {
-  const [seats, setSeats] = useState(initialValue || 1);
+  //const [seats, setSeats] = useState(initialValue || 1);
+
+  const seats = initialValue || 1;
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       <Column spacing={2}>
         {editable && (
           <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
             <Center>
-              <AppText style={[AppStyles.title, styles.stepTitle]}>Combien de places proposez-vous ?</AppText>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Pouvez-vous être conducteur ?</AppText>
             </Center>
           </Animated.View>
         )}
@@ -385,13 +506,13 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
         {!editable && (
           <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
             <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppText style={[styles.stepResume]}>{seats} places disponibles</AppText>
+              <AppText style={[styles.stepResume]}>{seats > 0 ? "Je peux conduire" : "Je suis passager"}</AppText>
               <AppIcon name={"edit-2"} color={AppColors.white} />
             </Row>
           </Animated.View>
         )}
 
-        {editable && (
+        {/*editable && (
           <Animated.View entering={FadeInDown.delay(1100)}>
             <Column style={styles.flexStretch}>
               <View style={styles.vehicleStepSeatsContainer}>
@@ -399,14 +520,27 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
               </View>
             </Column>
           </Animated.View>
-        )}
+        )*/}
 
         {editable && (
           <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(seats)}>
+            <AppPressableOverlay
+              backgroundStyle={styles.cancelButtonBackground}
+              style={styles.validateButton}
+              onPress={() => {
+                // setDate(null);
+                onChange(-1);
+              }}>
               <Center>
                 <Row spacing={4}>
-                  <AppText style={styles.validateText}>Suivant</AppText>
+                  <AppText style={styles.cancelText}>Non</AppText>
+                </Row>
+              </Center>
+            </AppPressableOverlay>
+            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(1)}>
+              <Center>
+                <Row spacing={4}>
+                  <AppText style={styles.validateText}>Oui</AppText>
                 </Row>
               </Center>
             </AppPressableOverlay>
@@ -417,16 +551,14 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
   );
 };
 
-const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onRequestEdit, after }: StepProps<Date | null> & { after: Date }) => {
-  const [date, setDate] = useState(initialDate);
-  const initialMinDate = new Date(after.getTime() + 60000);
+const ReturnStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<TimeIntervalConstraint | null>) => {
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       <Column spacing={8}>
         {editable && (
           <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
             <Center>
-              <AppText style={[AppStyles.title, styles.stepTitle]}>Quand repartez-vous ?</AppText>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Prévoyez-vous un retour ?</AppText>
             </Center>
           </Animated.View>
         )}
@@ -434,15 +566,9 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
         {!editable && (
           <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
             <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppText style={styles.stepResume}>{date ? "Retour à " + AppLocalization.formatTime(date) : "Pas de retour"}</AppText>
+              <AppText style={styles.stepResume}>{initialValue ? "Aller-retour prévu" : "Pas de retour"}</AppText>
               <AppIcon name={"edit-2"} color={AppColors.white} />
             </Row>
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
-            <TimeWheelPicker date={date || after} minuteStep={5} onChange={setDate} minDate={initialMinDate} />
           </Animated.View>
         )}
 
@@ -452,8 +578,66 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
               backgroundStyle={styles.cancelButtonBackground}
               style={styles.validateButton}
               onPress={() => {
-                setDate(null);
                 onChange(null);
+              }}>
+              <Center>
+                <Row spacing={4}>
+                  <AppText style={styles.cancelText}>Non</AppText>
+                </Row>
+              </Center>
+            </AppPressableOverlay>
+            <AppPressableOverlay
+              backgroundStyle={styles.validateButtonBackground}
+              style={styles.validateButton}
+              onPress={() => onChange({ leaveAfter: null, arriveBefore: null })}>
+              <Center>
+                <Row spacing={4}>
+                  <AppText style={styles.validateText}>Oui</AppText>
+                </Row>
+              </Center>
+            </AppPressableOverlay>
+          </Row>
+        )}
+      </Column>
+    </Pressable>
+  );
+};
+
+const NameStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<string | undefined>) => {
+  const [name, setName] = useState(initialValue);
+  return (
+    <Pressable disabled={editable} onPress={onRequestEdit}>
+      <Column spacing={8}>
+        {editable && (
+          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
+            <Center>
+              <AppText style={[AppStyles.title, styles.stepTitle]}>Nommer ce trajet ?</AppText>
+            </Center>
+          </Animated.View>
+        )}
+
+        {!editable && (
+          <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
+            <Row style={styles.stepResumeContainer} spacing={8}>
+              <AppText style={styles.stepResume}>{initialValue || "Pas de libellé"}</AppText>
+              <AppIcon name={"edit-2"} color={AppColors.white} />
+            </Row>
+          </Animated.View>
+        )}
+
+        {editable && (
+          <View style={{ marginHorizontal: 16, padding: 8, borderRadius: 12, backgroundColor: AppColors.grayBackground }}>
+            <AppTextInput value={name} onChangeText={setName} />
+          </View>
+        )}
+
+        {editable && (
+          <Row spacing={8} style={styles.validateContainer}>
+            <AppPressableOverlay
+              backgroundStyle={styles.cancelButtonBackground}
+              style={styles.validateButton}
+              onPress={() => {
+                onChange(undefined);
               }}>
               <Center>
                 <Row spacing={4}>
@@ -461,13 +645,10 @@ const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onReque
                 </Row>
               </Center>
             </AppPressableOverlay>
-            <AppPressableOverlay
-              backgroundStyle={styles.validateButtonBackground}
-              style={styles.validateButton}
-              onPress={() => onChange(date || null)}>
+            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(name)}>
               <Center>
                 <Row spacing={4}>
-                  <AppText style={styles.validateText}>Suivant</AppText>
+                  <AppText style={styles.validateText}>Valider</AppText>
                 </Row>
               </Center>
             </AppPressableOverlay>
