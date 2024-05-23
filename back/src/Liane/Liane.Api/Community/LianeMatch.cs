@@ -7,7 +7,7 @@ namespace Liane.Api.Community;
 
 public sealed record LianeMatch(
   LianeRequest LianeRequest,
-  ImmutableList<Match.Group> JoindedLianes,
+  ImmutableList<Match.Group> JoinedLianes,
   ImmutableList<Match> Matches
 );
 
@@ -20,8 +20,8 @@ public abstract record Match
 
   public abstract string Name { get; init; }
   public abstract DayOfWeekFlag WeekDays { get; init; }
-  public abstract Ref<RallyingPoint> Pickup { get; init; }
-  public abstract Ref<RallyingPoint> Deposit { get; init; }
+  public abstract RallyingPoint Pickup { get; init; }
+  public abstract RallyingPoint Deposit { get; init; }
   public abstract float Score { get; init; }
 
   public sealed record Single(
@@ -29,8 +29,8 @@ public abstract record Match
     Ref<LianeRequest> LianeRequest,
     Ref<User> User,
     DayOfWeekFlag WeekDays,
-    Ref<RallyingPoint> Pickup,
-    Ref<RallyingPoint> Deposit,
+    RallyingPoint Pickup,
+    RallyingPoint Deposit,
     float Score
   ) : Match;
 
@@ -39,8 +39,8 @@ public abstract record Match
     Liane Liane,
     ImmutableList<Single> Matches,
     DayOfWeekFlag WeekDays,
-    Ref<RallyingPoint> Pickup,
-    Ref<RallyingPoint> Deposit,
+    RallyingPoint Pickup,
+    RallyingPoint Deposit,
     float Score
   ) : Match;
 }

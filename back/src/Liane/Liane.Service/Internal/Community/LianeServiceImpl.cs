@@ -57,7 +57,7 @@ public sealed class LianeServiceImpl(
     return new LianeRequest(
       lianeRequestDb.Id.ToString(),
       lianeRequestDb.Name,
-      lianeRequestDb.WayPoints.AsRef<RallyingPoint>(),
+      await lianeRequestDb.WayPoints.AsRef<RallyingPoint>(rallyingPointService.Get),
       lianeRequestDb.RoundTrip,
       lianeRequestDb.CanDrive,
       lianeRequestDb.WeekDays,

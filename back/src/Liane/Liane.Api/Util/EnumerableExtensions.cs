@@ -9,7 +9,6 @@ namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
-
   public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> input, T until) where T : notnull
   {
     bool found;
@@ -55,7 +54,7 @@ public static class EnumerableExtensions
       .Where(e => e is not null)
       .Select(e => e!.Value);
   }
-  
+
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer, bool parallel = false)
   {
     var outs = ImmutableList.CreateBuilder<TOut>();
@@ -63,6 +62,18 @@ public static class EnumerableExtensions
     foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
     {
       outs.Add(await task);
+    }
+
+    return outs.ToImmutableList();
+  }
+
+  public static async Task<ImmutableList<TOut>> SelectManyAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<IEnumerable<TOut>>> transformer, bool parallel = false)
+  {
+    var outs = ImmutableList.CreateBuilder<TOut>();
+
+    foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
+    {
+      outs.AddRange(await task);
     }
 
     return outs.ToImmutableList();
@@ -78,6 +89,20 @@ public static class EnumerableExtensions
     }
 
     return outs.ToImmutableList();
+  }
+
+  public static async Task<ImmutableDictionary<TKey, TOutput>> GroupByAsync<TKey, T, TOutput>(
+    this IEnumerable<T> enumerable,
+    Func<T, TKey> keySelector,
+    Func<IGrouping<TKey, T>, Task<TOutput>> groupMapper) where TKey : notnull
+  {
+    var outputs = new Dictionary<TKey, TOutput>();
+    foreach (var g in enumerable.GroupBy(keySelector))
+    {
+      outputs.Add(g.Key, await groupMapper(g));
+    }
+
+    return outputs.ToImmutableDictionary();
   }
 
   private static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)

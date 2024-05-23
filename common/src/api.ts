@@ -15,10 +15,6 @@ export type Entity = Identity & {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type Ref<T extends Identity> = string;
 
-export type Resolved<T, K extends keyof T> = Omit<T, K> & {
-  [P in K]: T[P] extends Ref<infer U> ? U : T[P];
-};
-
 export type AuthUser = Readonly<{
   id: string;
   isAdmin: boolean;
@@ -80,17 +76,16 @@ export const RallyingPointLocationTypes = [
 
 export type LocationType = (typeof RallyingPointLocationTypes)[number];
 
-export type RallyingPoint = Identity &
-  Readonly<{
-    location: LatLng;
-    label: string;
-    type: LocationType;
-    address: string;
-    zipCode: string;
-    city: string;
-    placeCount?: number;
-    isActive: boolean;
-  }>;
+export type RallyingPoint = Identity & {
+  location: LatLng;
+  label: string;
+  type: LocationType;
+  address: string;
+  zipCode: string;
+  city: string;
+  placeCount?: number;
+  isActive: boolean;
+};
 
 export type RallyingPointRequest = { point: Omit<Omit<RallyingPoint, "isActive">, "id">; comment: string } & Entity;
 

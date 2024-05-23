@@ -5,14 +5,16 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Liane.Api.Trip;
 using Liane.Api.Util;
+using Liane.Api.Util.Ref;
 using Match = Liane.Api.Community.Match;
 using LianeRawMatch =
-  (System.Guid, System.Guid, string, string, string[], bool, float, Liane.Api.Trip.DayOfWeekFlag, Liane.Api.Routing.LatLng, Liane.Api.Routing.LatLng, string?, string?, System.Guid[]?);
+  (System.Guid, System.Guid, string, string, string[], bool, float, Liane.Api.Trip.DayOfWeekFlag, Liane.Api.Routing.LatLng, Liane.Api.Routing.LatLng, string, string, System.Guid[]?);
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeMatcher(LianeFetcher fetcher)
+public sealed class LianeMatcher(LianeFetcher fetcher, IRallyingPointService rallyingPointService)
 {
   public async Task<ImmutableDictionary<Guid, LianeMatcherResult>> FindMatches(
     IDbConnection connection,
@@ -26,12 +28,11 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
       .Distinct();
     var lianes = (await fetcher.FetchLianes(connection, allLianes))
       .ToImmutableDictionary(l => Guid.Parse(l.Id));
-    return rawMatches
-      .GroupBy(m => m.Item1)
-      .ToImmutableDictionary(g => g.Key, g =>
+    return await rawMatches
+      .GroupByAsync(m => m.Item1, async g =>
       {
         var joinedLianesIds = joinedLianeIds.GetValueOrDefault(g.Key, ImmutableHashSet<Guid>.Empty);
-        return GroupMatchByLiane(g, joinedLianesIds, lianes)
+        return (await GroupMatchByLiane(g, joinedLianesIds, lianes))
           .Split(joinedLianesIds);
       });
   }
@@ -86,38 +87,39 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
     );
   }
 
-  private static ImmutableList<Match> GroupMatchByLiane(IEnumerable<LianeRawMatch> matches, ImmutableHashSet<Guid> joinedLianeIds, ImmutableDictionary<Guid, Api.Community.Liane> lianes)
-    => matches
-      .SelectMany(m => m.Item13 is null
-        ? ImmutableList.Create(new LianeRawMatchByLiane(null, m))
-        : m.Item13.Select(l => new LianeRawMatchByLiane(l, m)))
-      .Where(ml => ml.Match.Item6 || (ml.Liane is not null && joinedLianeIds.Contains(ml.Liane.Value)))
-      .GroupBy(m => m.Liane)
-      .SelectMany(g =>
-      {
-        if (g.Key is null)
+  private async Task<ImmutableList<Match>> GroupMatchByLiane(IEnumerable<LianeRawMatch> matches, ImmutableHashSet<Guid> joinedLianeIds, ImmutableDictionary<Guid, Api.Community.Liane> lianes)
+    => (await matches
+        .SelectMany(m => m.Item13 is null
+          ? ImmutableList.Create(new LianeRawMatchByLiane(null, m))
+          : m.Item13.Select(l => new LianeRawMatchByLiane(l, m)))
+        .Where(ml => ml.Match.Item6 || (ml.Liane is not null && joinedLianeIds.Contains(ml.Liane.Value)))
+        .GroupBy(m => m.Liane)
+        .SelectManyAsync<IGrouping<Guid?, LianeRawMatchByLiane>, Match>(async g =>
         {
-          return g.Select(m => (Match)ToSingleMatch(m.Match));
-        }
+          if (g.Key is null)
+          {
+            return await g
+              .SelectAsync(async m => (Match)await ToSingleMatch(m.Match));
+          }
 
-        var groupedMatches = g.Select(m => ToSingleMatch(m.Match))
-          .ToImmutableList();
-        var liane = lianes.GetValueOrDefault(g.Key!.Value);
-        if (liane is null)
-        {
-          return ImmutableList<Match>.Empty;
-        }
+          var groupedMatches = await g
+            .SelectAsync(m => ToSingleMatch(m.Match));
+          var liane = lianes.GetValueOrDefault(g.Key!.Value);
+          if (liane is null)
+          {
+            return ImmutableList<Match>.Empty;
+          }
 
-        var first = groupedMatches.First();
-        return ImmutableList.Create(new Match.Group(
-          liane.Name,
-          liane,
-          groupedMatches,
-          first.WeekDays,
-          first.Pickup,
-          first.Deposit,
-          first.Score));
-      })
+          var first = groupedMatches.First();
+          return ImmutableList.Create(new Match.Group(
+            liane.Name,
+            liane,
+            groupedMatches,
+            first.WeekDays,
+            first.Pickup,
+            first.Deposit,
+            first.Score));
+        }))
       .OrderByDescending(m => m.Score)
       .ThenByDescending(m => m switch
       {
@@ -133,15 +135,15 @@ public sealed class LianeMatcher(LianeFetcher fetcher)
       })
       .ToImmutableList();
 
-  private static Match.Single ToSingleMatch(LianeRawMatch match)
+  private async Task<Match.Single> ToSingleMatch(LianeRawMatch match)
   {
     return new Match.Single(
       match.Item3,
       match.Item2.ToString(),
       match.Item4,
       match.Item8,
-      match.Item11,
-      match.Item12,
+      await match.Item11.AsRef<RallyingPoint>(rallyingPointService.Get),
+      await match.Item12.AsRef<RallyingPoint>(rallyingPointService.Get),
       match.Item7
     );
   }

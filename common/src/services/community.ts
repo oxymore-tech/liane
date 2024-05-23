@@ -18,8 +18,10 @@ export type CoLianeRequest = Entity & {
   isEnabled: boolean;
 };
 
+export type ResolvedLianeRequest = Omit<CoLianeRequest, "wayPoints"> & { wayPoints: RallyingPoint[] };
+
 export type CoLianeMatch = {
-  lianeRequest: CoLianeRequest;
+  lianeRequest: ResolvedLianeRequest;
   joinedLianes: MatchGroup[];
   matches: CoMatch[];
 };
@@ -29,8 +31,8 @@ export type MatchSingle = {
   lianeRequest: Ref<CoLianeRequest>;
   user: Ref<User>;
   weekDays: DayOfWeekFlag;
-  pickup: Ref<RallyingPoint>;
-  deposit: Ref<RallyingPoint>;
+  pickup: RallyingPoint;
+  deposit: RallyingPoint;
   score: number;
 };
 
@@ -39,15 +41,15 @@ export type MatchGroup = {
   liane: CoLiane;
   matches: MatchSingle[];
   weekDays: DayOfWeekFlag;
-  pickup: Ref<RallyingPoint>;
-  deposit: Ref<RallyingPoint>;
+  pickup: RallyingPoint;
+  deposit: RallyingPoint;
   score: number;
 };
 
-export type CoLiane = Entity &
-  CoLianeUpdate & {
-    members: CoLianeMember[];
-  };
+export type CoLiane = Entity & {
+  name: string;
+  members: CoLianeMember[];
+};
 
 export type CoLianeUpdate = {
   name: string;
@@ -70,19 +72,26 @@ export type LianeMessage = Entity & { content: MessageContent };
 
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;
+
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
+
   update(lianeRequestId: string, request: CoLianeRequest): Promise<CoLianeRequest>;
+
   delete(lianeRequestId: string): Promise<void>;
 
   joinNew(lianeRequestId: string, foreignLianeRequest: string): Promise<CoLiane>;
+
   join(lianeRequestId: string, liane: string): Promise<CoLiane>;
+
   updateLiane(lianeRequestId: string, request: CoLianeUpdate): Promise<CoLianeUpdate>;
+
   leave(liane: string): Promise<boolean>;
 
   getMessages(liane: string, pagination?: PaginatedRequestParams): Promise<PaginatedResponse<LianeMessage>>;
+
   sendMessage(liane: string, content: MessageContent): Promise<LianeMessage>;
 
-  getUnreadLianes(): Promise<Record<Ref<CoLiane>, number>>;
+  getUnreadLianes(): Promise<Record<string, number>>;
 }
 
 export class CommunityServiceClient implements CommunityService {
@@ -129,6 +138,6 @@ export class CommunityServiceClient implements CommunityService {
   }
 
   getUnreadLianes() {
-    return this.http.get<Record<Ref<CoLiane>, number>>("/community/liane/unread");
+    return this.http.get<Record<string, number>>("/community/liane/unread");
   }
 }
