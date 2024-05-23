@@ -17,7 +17,8 @@ import {
   UnionUtils,
   MatchGroup,
   CoMatch,
-  CoLianeRequest
+  CoLianeRequest,
+  CoLiane
 } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
@@ -33,7 +34,7 @@ export type NavigationParamList = {
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
-  CommunitiesChat: { group?: MatchGroup | CoMatch };
+  CommunitiesChat: { group?: CoMatch; liane?: CoLiane };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
@@ -45,7 +46,7 @@ export type NavigationParamList = {
   //OpenValidateTrip: { liane: Liane };
   Notifications: undefined;
   RallyingPointRequests: undefined;
-  CommunitiesDetails: { group: GroupeCovoiturage };
+  CommunitiesDetails: { liane: CoLiane };
   ListGroups: { groups: CoMatch[]; lianeRequest: CoLianeRequest };
 };
 

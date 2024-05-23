@@ -1,4 +1,4 @@
-import { capitalize, ChatMessage, ConversationGroup, PaginatedResponse, Ref, User } from "@liane/common";
+import { capitalize, ChatMessage, CoLiane, CoMatch, ConversationGroup, MatchGroup, PaginatedResponse, Ref, User } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -70,8 +70,6 @@ const MessageBubble = ({
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
-  const lianeId = route.params.lianeId;
-  const group = route.params.group;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -79,30 +77,29 @@ export const CommunitiesChatScreen = () => {
   const [conversation, setConversation] = useState<ConversationGroup>();
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
-  const [showMoreModal, setShowMoreModal] = useState(false);
   const [isSending, setIsSending] = useState(false);
-
-  const membersNames = useMemo(
-    () =>
-      conversation
-        ? conversation.members
-            .filter(m => m.user.id !== user!.id)
-            .map(m => m.user.pseudo)
-            .join(", ")
-        : "",
-    [conversation, user]
-  );
+  const [group, setGroup] = useState<CoMatch | undefined>(undefined);
+  const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
 
   const members: { [k: string]: User } | undefined = useMemo(
     () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
     [conversation?.members]
   );
 
+  const sendMessage = async (inputValue: string) => {
+    // TODO si groupe => join liane puis envoie message
+    if (inputValue && inputValue.length > 0) {
+      setIsSending(true);
+      await services.realTimeHub.send({ text: inputValue });
+      setIsSending(false);
+    }
+  };
+
   const appendMessage = (m: ChatMessage) => {
     // console.log([m, ...messages]);
     setMessages(oldList => [m, ...oldList]);
     setInputValue("");
-    services.realTimeHub.readConversation(conversationId, new Date().toISOString()).catch(e => console.warn(e));
+    liane && liane.id && services.realTimeHub.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage>) => {
@@ -111,8 +108,8 @@ export const CommunitiesChatScreen = () => {
   };
 
   const fetchNextPage = async () => {
-    if (paginationCursor) {
-      const paginatedResult = await services.realTimeHub.list(conversationId, { cursor: paginationCursor, limit: 15 });
+    if (paginationCursor && liane && liane.id) {
+      const paginatedResult = await services.realTimeHub.list(liane.id, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
@@ -121,35 +118,43 @@ export const CommunitiesChatScreen = () => {
   };
 
   useEffect(() => {
-    services.realTimeHub
-      .connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
-      .then(conv => {
-        /* if (__DEV__) {
-          console.debug("Joined conversation", conv);
-        } */
-        setConversation(conv);
-      })
-      .catch(e => setError(e));
+    if (route.params.liane) {
+      setLiane(route.params.liane);
+    }
+    if (route.params.group) {
+      setGroup(route.params.group);
+    }
+  }, [route.params]);
 
+  useEffect(() => {
+    if (liane && liane.id) {
+      services.realTimeHub
+        .connectToChat(liane.id, onReceiveLatestMessages, appendMessage)
+        .then(conv => {
+          /* if (__DEV__) {
+            console.debug("Joined conversation", conv);
+          } */
+          setConversation(conv);
+        })
+        .catch(e => setError(e));
+    }
     return () => {
-      services.realTimeHub.disconnectFromChat(route.params.conversationId).catch(e => {
-        if (__DEV__) {
-          console.warn(e);
-        }
-      });
+      if (liane && liane.id) {
+        services.realTimeHub.disconnectFromChat(liane.id).catch(e => {
+          if (__DEV__) {
+            console.warn(e);
+          }
+        });
+      }
     };
-  }, [route.params.conversationId, services.realTimeHub]);
+  }, [liane, services.realTimeHub]);
 
   const sendButton = (
     <View style={{ maxWidth: 45 }}>
       <AppPressableIcon
         style={{ alignSelf: "flex-end" }}
         onPress={async () => {
-          if (inputValue && inputValue.length > 0) {
-            setIsSending(true);
-            await services.realTimeHub.send({ text: inputValue });
-            setIsSending(false);
-          }
+          await sendMessage(inputValue);
         }}
         iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
         name={"navigation-outline"}
@@ -178,7 +183,7 @@ export const CommunitiesChatScreen = () => {
           onEndReached={() => fetchNextPage()}
         />
       )}
-      {!conversation && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
+      {!conversation && !group && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
       {error && (
         <Center style={{ flex: 1 }}>
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
@@ -198,7 +203,7 @@ export const CommunitiesChatScreen = () => {
           <Row>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
 
-            {group?.covoitureurs.length && (
+            {liane && (
               <View
                 style={{
                   justifyContent: "center"
@@ -211,15 +216,16 @@ export const CommunitiesChatScreen = () => {
                     lineHeight: 27,
                     color: AppColors.primaryColor
                   }}>
-                  {group.nomGroupe}
+                  {liane?.name}
                 </AppText>
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
-                  {group.covoitureurs.map(user => user.prenom).join(", ")}
+                  {liane.members?.map(item => item.user.pseudo).join(", ")}
                 </AppText>
               </View>
             )}
-            {!group?.covoitureurs.length && (
+
+            {group && (
               <View
                 style={{
                   justifyContent: "center"
@@ -232,24 +238,23 @@ export const CommunitiesChatScreen = () => {
                     lineHeight: 27,
                     color: AppColors.primaryColor
                   }}>
-                  {`${group?.depart} ➔ ${group?.arrivee}`}
+                  {`${group?.pickup} ➔ ${group?.deposit}`}
                 </AppText>
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
-                  {`${extractDays(group?.recurrence)} ${group?.heureDepart}`}
+                  {`${extractDays(group?.weekDays)} `}
                 </AppText>
               </View>
             )}
           </Row>
           <Row>
-            {group && (
-              <Pressable onPress={() => navigation.navigate("CommunitiesDetails", { group: group })}>
+            {liane && (
+              <Pressable onPress={() => navigation.navigate("CommunitiesDetails", { liane: liane })}>
                 <AppIcon name={"info"} />
               </Pressable>
             )}
           </Row>
         </Row>
-        {/* TODO attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />*/}
         {conversation && <DebugIdView object={conversation} />}
       </View>
 
@@ -289,22 +294,6 @@ export const CommunitiesChatScreen = () => {
           </Row>
         </View>
       </KeyboardAvoidingView>
-      <SimpleModal visible={showMoreModal} setVisible={setShowMoreModal} backgroundColor={AppColors.white}>
-        <Column>
-          <AppPressableOverlay style={{ paddingVertical: 12 }}>
-            <Row spacing={24} style={{ alignItems: "center" }}>
-              <AppIcon name={"image-outline"} />
-              <AppText>Partager une image</AppText>
-            </Row>
-          </AppPressableOverlay>
-          <AppPressableOverlay style={{ paddingVertical: 12 }}>
-            <Row spacing={24} style={{ alignItems: "center" }}>
-              <AppIcon name={"pin-outline"} />
-              <AppText>Partager une position</AppText>
-            </Row>
-          </AppPressableOverlay>
-        </Column>
-      </SimpleModal>
     </View>
   );
 };
