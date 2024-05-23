@@ -1,4 +1,4 @@
-import { DayOfWeekFlag, Entity, Liane, LianeMember, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
+import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
 import { HttpClient } from "./http";
 import { TimeRange } from "./time";
 
@@ -20,7 +20,7 @@ export type CoLianeRequest = Entity & {
 
 export type CoLianeMatch = {
   lianeRequest: CoLianeRequest;
-  joindedLianes: MatchGroup[];
+  joinedLianes: MatchGroup[];
   matches: CoMatch[];
 };
 
@@ -46,11 +46,11 @@ export type MatchGroup = {
 
 export type CoLiane = Entity & {
   name: string;
-  members: LianeMember[];
+  members: CoLianeMember[];
 };
 
 export type CoLianeMember = {
-  User: User;
+  user: User;
   lianeRequest: Ref<CoLianeRequest>;
   joinedAt: UTCDateTime;
   lastReadAt?: UTCDateTime;
@@ -65,7 +65,7 @@ export type MessageContent = MessageContentText | MessageContentTrip;
 export type LianeMessage = Entity & { content: MessageContent };
 
 export interface CommunityService {
-  list(): Promise<CoLianeRequest[]>;
+  list(): Promise<CoLianeMatch[]>;
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
   setEnabled(lianeRequestId: string, isEnabled: boolean): Promise<void>;
 
@@ -83,7 +83,7 @@ export class CommunityServiceClient implements CommunityService {
   constructor(protected http: HttpClient) {}
 
   list() {
-    return this.http.get<CoLianeRequest[]>("/community/liane");
+    return this.http.get<CoLianeMatch[]>("/community/liane");
   }
 
   create(lianeRequest: CoLianeRequest) {

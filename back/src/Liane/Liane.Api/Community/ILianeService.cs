@@ -13,6 +13,7 @@ public interface ILianeService
 
   Task<Liane> JoinNew(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
   Task<Liane> Join(Ref<LianeRequest> mine, Ref<Liane> liane);
+  //Task Update(Ref<Liane> id, Liane liane);
   Task<bool> Leave(Ref<Liane> liane);
 
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);
@@ -21,3 +22,11 @@ public interface ILianeService
 
   Task<ImmutableDictionary<Ref<Liane>, int>> GetUnreadLianes();
 }
+
+// TODO
+// Update liane (only title ??)
+// ReadConversation for liane message (via hub)
+// send notification on SendMessage
+
+// delete liane request
+// Update liane request
