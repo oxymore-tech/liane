@@ -7,7 +7,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, Event, Notification, JoinRequest, User, UnionUtils } from "@liane/common";
+import { JoinLianeRequestDetailed, Liane, Event, Notification, JoinRequest, User, UnionUtils, MatchGroup, CoMatch } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
@@ -22,7 +22,7 @@ export type NavigationParamList = {
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
-  CommunitiesChat: { conversationId: string; group?: GroupeCovoiturage };
+  CommunitiesChat: { lianeId?: string; group?: MatchGroup };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
@@ -35,7 +35,7 @@ export type NavigationParamList = {
   Notifications: undefined;
   RallyingPointRequests: undefined;
   CommunitiesDetails: { group: GroupeCovoiturage };
-  ListGroups: { groups: GroupeCovoiturage[] };
+  ListGroups: { groups: CoMatch[] };
 };
 
 export const NavigationScreenTitles = {

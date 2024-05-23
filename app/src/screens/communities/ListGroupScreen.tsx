@@ -20,7 +20,7 @@ export const ListGroupScreen = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
 
   const GroupItem = ({ group }: any) => (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { conversationId: group.conversationId, group: group })}>
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { lianeId: group.conversationId, group: group })}>
       <View style={styles.memberContainer}>
         <View style={styles.memberInfo}>
           <View style={styles.textContainer}>

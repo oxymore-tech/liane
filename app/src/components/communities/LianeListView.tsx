@@ -1,27 +1,36 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
-import { JoinLianeRequestDetailed, Liane, Ref, User, WayPoint } from "@liane/common";
+import {
+  CoLiane,
+  CoLianeMatch,
+  CoLianeRequest,
+  JoinLianeRequestDetailed,
+  Liane,
+  MatchGroup,
+  RallyingPoint,
+  Ref,
+  User,
+  WayPoint
+} from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolocationProvider";
-import { getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
 import { useObservable } from "@/util/hooks/subscription";
 import Eye from "@/assets/images/eye-fill.svg";
 import EyeOff from "@/assets/images/eye-off-fill.svg";
 import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
-import { GroupsView } from "@/components/communities/GroupsView";
+import { GroupView } from "@/components/communities/GroupView";
 import { AppLogger } from "@/api/logger";
 
-export interface TripSection extends SectionBase<Liane | JoinLianeRequestDetailed> {}
+export interface TripSection extends SectionBase<CoLianeMatch> {}
 
 export interface LianeListViewProps {
-  data: (Liane | JoinLianeRequestDetailed)[];
+  data: CoLianeMatch[];
   isFetching?: boolean;
   onRefresh?: () => void;
   reverseSort?: boolean;
@@ -29,8 +38,6 @@ export interface LianeListViewProps {
 }
 
 export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: LianeListViewProps) => {
-  //const insets = useSafeAreaInsets();
-  const bottom = 32; //96 + insets.bottom;
   const { user } = useContext(AppContext);
   const userId = user!.id!;
   const sections = useMemo(() => {
@@ -43,7 +50,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
       sections={sections}
       showsVerticalScrollIndicator={false}
       renderItem={renderItem}
-      keyExtractor={item => item.id!}
+      keyExtractor={item => item.lianeRequest.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
       renderSectionHeader={renderSectionHeader}
@@ -51,11 +58,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
   );
 };
 
-const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): item is JoinLianeRequestDetailed => {
-  return (item as JoinLianeRequestDetailed).targetLiane !== undefined;
-};
-
-const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
+const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
   data.map(
     item =>
       ({
@@ -63,34 +66,23 @@ const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], membe
       } as TripSection)
   );
 
-const LianeItem = ({ item }: { item: Liane }) => {
+const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   const { services, user } = useContext(AppContext);
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
-  const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
-  const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
+
+  console.log("################### item", item);
+  const daysReccurence = extractDays(item.lianeRequest.weekDays);
+  const { to, from, steps } = useMemo(() => extractData(item.lianeRequest.wayPoints), [item.lianeRequest.wayPoints]);
+  const localeTime = `${item.lianeRequest.timeConstraints[0].when.start.hour}h${item.lianeRequest.timeConstraints[0].when.start.minute}`;
 
   // TODO ajouter de vrais données
-  const daysReccurence = extractDays(item.recurrence?.days);
   const LianeStatucActivate = true;
-  const { to, from, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
-  const date = new Date(item.departureTime);
-  const options = { timeZone: "Europe/Paris", hour12: false, hour: "2-digit", minute: "2-digit" };
-  const localeTime = date.toLocaleTimeString("fr-FR", options as any);
-  const [myGroups, setMyGroups] = useState<GroupeCovoiturage[] | null>(null);
-  const [otherGroups, setOtherGroups] = useState<GroupeCovoiturage[] | null>(null);
   const { navigation } = useAppNavigation();
 
   const deleteLiane = () => {
-    AppLogger.debug("COMMUNITIES", "Delete Liane", item.id);
+    AppLogger.debug("COMMUNITIES", "Delete Liane", item);
   };
-
-  useEffect(() => {
-    const lianeGroups = trierGroupesParAppartenance(groups, 3);
-
-    setMyGroups(lianeGroups.myGroups);
-    setOtherGroups(lianeGroups.otherGroups);
-  }, [groups]);
 
   return (
     <View>
@@ -119,7 +111,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
                     flexShrink: 1,
                     lineHeight: 27,
                     color: "black"
-                  }}>{`${from?.rallyingPoint?.label} ➔ ${to?.rallyingPoint?.label}`}</AppText>
+                  }}>{`${from} ➔ ${to}`}</AppText>
                 <AppText
                   style={{
                     fontSize: 14,
@@ -134,15 +126,15 @@ const LianeItem = ({ item }: { item: Liane }) => {
         </Row>
 
         <View style={styles.lianeContainer}>
-          {myGroups &&
-            myGroups.map((group, index) => {
+          {item.joinedLianes &&
+            item.joinedLianes.map((group, index) => {
               return (
                 <View
                   style={{
                     backgroundColor: AppColors.backgroundColor,
                     width: "100%"
                   }}>
-                  <GroupsView key={index} group={group} />
+                  <GroupView key={index} group={group} />
                 </View>
               );
             })}
@@ -153,7 +145,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
         <Row style={{ flex: 1, alignItems: "center", marginTop: 20, marginBottom: 20, marginLeft: 5 }} spacing={8}>
           <Pressable
             style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}
-            onPress={() => navigation.navigate("ListGroups", { groups: otherGroups ?? [] })}>
+            onPress={() => navigation.navigate("ListGroups", { groups: item.matches ?? [] })}>
             <Row>
               <View style={styles.notificationDotContainer}>
                 <View style={styles.notificationDot} />
@@ -166,7 +158,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
                   color: AppColors.orange,
                   marginLeft: 5
                 }}>
-                {`Voir les ${myGroups?.length}`} groupes disponibles
+                {`Voir les ${item.matches?.length}`} groupes disponibles
               </AppText>
             </Row>
             <Row>
@@ -210,7 +202,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
   );
 };
 
-const extractData = (wayPoints: WayPoint[]) => {
+const extractData = (wayPoints: WayPoint[] | RallyingPoint[] | string[]) => {
   //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
   const from = wayPoints[0];
   const to = wayPoints[wayPoints.length - 1];
@@ -240,26 +232,20 @@ const trierGroupesParAppartenance = (
   };
 };
 
-const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
-  const { navigation } = useAppNavigation();
-
+const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<CoLianeMatch, TripSection>) => {
   return (
     <View style={[styles.item, styles.grayBorder, styles.itemLast]}>
-      <TripGeolocationProvider liane={item}>
-        <LianeItem item={item} />
-      </TripGeolocationProvider>
+      <LianeRequestItem item={item} />
     </View>
   );
 };
 
-const renderItem = ({ item, index, section }: SectionListRenderItemInfo<Liane | any, TripSection>) => {
+const renderItem = ({ item, index, section }: SectionListRenderItemInfo<CoLianeMatch, TripSection>) => {
   // @ts-ignore
   return renderLianeItem({ item, index, section });
 };
 
-const renderSectionHeader = ({ section: {} }: { section: SectionListData<Liane | JoinLianeRequestDetailed, TripSection> }) => (
-  <View style={styles.header} />
-);
+const renderSectionHeader = ({ section: {} }: { section: SectionListData<CoLianeMatch, TripSection> }) => <View style={styles.header} />;
 
 const styles = StyleSheet.create({
   container: {

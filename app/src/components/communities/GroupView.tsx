@@ -1,21 +1,21 @@
 import React from "react";
-import { Pressable, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { GroupeCovoiturage } from "@/util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
 import { AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
-import { Liane } from "@liane/common";
+import { MatchGroup } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
-import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider";
-import { TripSection } from "@/screens/user/TripListView";
 
 export interface GroupsViewProps {
-  group: GroupeCovoiturage;
+  group: MatchGroup;
 }
 
 const RenderGroupsView = ({ group }: GroupsViewProps) => {
+  const nouveauxMessages = true;
+
   return (
     <Row style={{ alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: AppColors.grayBackground }} spacing={8}>
       <View style={{ flexGrow: 1, flexShrink: 1 }}>
@@ -28,9 +28,9 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
               lineHeight: 27,
               color: "black"
             }}>
-            {group.nomGroupe}
+            {group.name}
           </AppText>
-          {group.nouveauxMessages && (
+          {nouveauxMessages && (
             <View style={styles.notificationDotContainer}>
               <View style={styles.notificationDot} />
             </View>
@@ -43,14 +43,14 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
             flexShrink: 1,
             lineHeight: 27,
             color: "black"
-          }}>{`${group.depart} ➔ ${group.arrivee}`}</AppText>
+          }}>{`${group.pickup} ➔ ${group.deposit}`}</AppText>
         <AppText
           style={{
             fontSize: 14,
             fontWeight: "400",
             flexShrink: 1,
             lineHeight: 16
-          }}>{`${extractDays(group.recurrence)} ${group.heureDepart}`}</AppText>
+          }}>{`${extractDays(group.weekDays)}`}</AppText>
         <View
           style={{
             flex: 1,
@@ -59,8 +59,8 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
             marginTop: 5,
             marginBottom: 15
           }}>
-          {group.covoitureurs.map(user => (
-            <UserPicture key={user.id} size={24} url={null} id={user.id.toString()} style={{ marginLeft: -10 }} />
+          {group.matches.map(match => (
+            <UserPicture key={match.user} size={24} url={null} id={match.user} style={{ marginLeft: -10 }} />
           ))}
         </View>
       </View>
@@ -68,11 +68,11 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
   );
 };
 
-export const GroupsView = ({ group }: GroupsViewProps) => {
+export const GroupView = ({ group }: { group: MatchGroup }) => {
   const { navigation } = useAppNavigation();
 
   return (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { conversationId: group.conversationId, group: group })}>
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: group })}>
       <RenderGroupsView group={group} />
     </Pressable>
   );

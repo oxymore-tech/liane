@@ -1,24 +1,18 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useQueries, useQueryClient, UseQueryResult } from "react-query";
-import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
+import { useQueries, UseQueryResult } from "react-query";
+import { CoLianeMatch, UnauthorizedError } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
-import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
-import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
-import { FutureStates } from "@/components/context/QueryUpdateProvider";
-import { useIsFocused } from "@react-navigation/native";
-import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { useObservable } from "@/util/hooks/subscription";
-import { LianeGeolocation } from "@/api/service/location";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -49,54 +43,26 @@ const Header = () => {
 
 export const CommunitiesScreen = () => {
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
 
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
-    { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
     {
       queryKey: LianeQueryKey,
       queryFn: async () => {
-        const lianes = await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
-        await services.reminder.syncReminders(lianes.data);
-        return lianes;
+        const coLianes = await services.community.list();
+        console.log("Community lianes", coLianes);
+        return coLianes;
       }
     }
   ]);
-
-  const { shouldShow, showTutorial } = useContext(AppModalNavigationContext);
-  const focused = useIsFocused();
-
-  useEffect(() => {
-    if (shouldShow === "passenger" && focused) {
-      showTutorial("passenger");
-    }
-    // do not add function 'showTutorial' to dependencies
-  }, [focused, shouldShow]);
-
-  // Cancel pings if necessary
-  useEffect(() => {
-    LianeGeolocation.currentLiane().then(async current => {
-      if (!current) {
-        return;
-      }
-      const liane = await services.liane.get(current);
-      if (liane.state !== "Started") {
-        await LianeGeolocation.stopSendingPings();
-      }
-    });
-  }, [services.liane]);
 
   const isLoading = queriesData.some(q => q.isLoading);
   const error: any = queriesData.find(q => q.error)?.error;
   const isFetching = queriesData.some(q => q.isFetching);
 
   // Create section list from a list of Liane objects
-  const data: (JoinLianeRequestDetailed | Liane)[] = useMemo(() => {
-    if (queriesData[0].data && queriesData[1].data) {
-      return [...queriesData[0].data!.data, ...queriesData[1].data!.data];
-    }
-    return [];
+  const data: CoLianeMatch[] = useMemo(() => {
+    return queriesData[0].data ?? [];
   }, [queriesData]);
 
   if (isLoading) {
@@ -151,30 +117,9 @@ const NoLiane = () => {
 
 export const LianePastQueryKey = "getPastTrips";
 
-const PastLianeListView = WithFetchPaginatedResponse<Liane>(
-  ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
-    return (
-      <>
-        <LianeListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
-        {isFetchingNextPage && (
-          <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
-            <ActivityIndicator style={AppStyles.center} color={AppColors.primaryColor} size="large" />
-          </View>
-        )}
-      </>
-    );
-  },
-  (repository, params, cursor) => repository.liane.list(["Finished", "Archived"], { cursor, limit: 10, asc: false }),
-  LianePastQueryKey,
-  NoLiane
-);
-
 const refetch = (queriesData: UseQueryResult[]) => {
   if (queriesData[0].error) {
     queriesData[0].refetch();
-  }
-  if (queriesData[1].error) {
-    queriesData[1].refetch();
   }
 };
 
@@ -190,8 +135,5 @@ const styles = StyleSheet.create({
   }
 });
 
-export const LianeQueryKey = "getLianes";
-export const LianeDetailQueryKey = (id: Ref<Liane>) => ["liane", id];
-export const JoinRequestsQueryKey = "getJoinRequests";
-export const JoinRequestDetailQueryKey = (id: Ref<Liane>) => ["join_request", id];
+export const LianeQueryKey = "getCoLianes";
 export default CommunitiesScreen;
