@@ -112,7 +112,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
 
     currentContext.SetCurrentUser(jayBee);
-    await tested.SetEnabled(lianeJayBee.Id, false);
+    await tested.Update(lianeJayBee.Id, lianeJayBee with { IsEnabled = false });
 
     currentContext.SetCurrentUser(mathilde);
     var actual = await tested.List();
@@ -201,7 +201,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // jaybee disable its liane
     {
       currentContext.SetCurrentUser(jayBee);
-      await tested.SetEnabled(lianeJayBee.Id, false);
+      await tested.Update(lianeJayBee.Id, lianeJayBee with { IsEnabled = false });
     }
 
     // Gugu liane request is attached to the liane
@@ -241,7 +241,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       Assert.AreEqual("Pain", exisitingLiane.Name);
     }
 
-    // Mathilde does't appears anymore in jaybee matches
+    // Mathilde doesn't appears anymore in jaybee matches
     {
       currentContext.SetCurrentUser(jayBee);
       var list = await tested.List();
@@ -259,7 +259,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         );
     }
 
-    // JayBee does't appears anymore in mathilde matches
+    // JayBee doesn't appears anymore in mathilde matches
     {
       currentContext.SetCurrentUser(mathilde);
       var list = await tested.List();
@@ -567,7 +567,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var lianeGugu = await CreateLianeRequest(gugu, "Boulot", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Monday | DayOfWeekFlag.Tuesday | DayOfWeekFlag.Thursday);
     var lianeJayBee = await CreateLianeRequest(jayBee, "Pain", LabeledPositions.Cocures, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Monday);
-    var lianeMathilde = await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, weekDays: DayOfWeekFlag.Wednesday);
+    /*var lianeMathilde =*/
+    await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, weekDays: DayOfWeekFlag.Wednesday);
 
     currentContext.SetCurrentUser(gugu);
     var actual = await tested.List();

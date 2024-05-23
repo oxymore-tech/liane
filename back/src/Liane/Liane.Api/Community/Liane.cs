@@ -12,3 +12,5 @@ public sealed record Liane(
   DateTime? CreatedAt,
   ImmutableList<LianeMember> Members
 ) : IEntity<string>, ISharedResource<LianeMember>;
+
+public sealed record LianeUpdate(string Name);

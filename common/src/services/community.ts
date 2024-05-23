@@ -44,9 +44,13 @@ export type MatchGroup = {
   score: number;
 };
 
-export type CoLiane = Entity & {
+export type CoLiane = Entity &
+  CoLianeUpdate & {
+    members: CoLianeMember[];
+  };
+
+export type CoLianeUpdate = {
   name: string;
-  members: CoLianeMember[];
 };
 
 export type CoLianeMember = {
@@ -67,10 +71,12 @@ export type LianeMessage = Entity & { content: MessageContent };
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
-  setEnabled(lianeRequestId: string, isEnabled: boolean): Promise<void>;
+  update(lianeRequestId: string, request: CoLianeRequest): Promise<CoLianeRequest>;
+  delete(lianeRequestId: string): Promise<void>;
 
   joinNew(lianeRequestId: string, foreignLianeRequest: string): Promise<CoLiane>;
   join(lianeRequestId: string, liane: string): Promise<CoLiane>;
+  updateLiane(lianeRequestId: string, request: CoLianeUpdate): Promise<CoLianeUpdate>;
   leave(liane: string): Promise<boolean>;
 
   getMessages(liane: string, pagination?: PaginatedRequestParams): Promise<PaginatedResponse<LianeMessage>>;
@@ -90,8 +96,12 @@ export class CommunityServiceClient implements CommunityService {
     return this.http.postAs<CoLianeRequest>("/community/liane", { body: lianeRequest });
   }
 
-  async setEnabled(lianeRequestId: string, isEnabled: boolean) {
-    await this.http.post(`/community/liane/${lianeRequestId}/${isEnabled}`);
+  async delete(lianeRequestId: string) {
+    await this.http.del(`/community/liane/request/${lianeRequestId}`);
+  }
+
+  update(lianeRequestId: string, request: CoLianeRequest) {
+    return this.http.postAs<CoLianeRequest>(`/community/liane/request/${lianeRequestId}`, { body: request });
   }
 
   joinNew(id: string, lianeRequest: string) {
@@ -100,6 +110,10 @@ export class CommunityServiceClient implements CommunityService {
 
   join(id: string, liane: string) {
     return this.http.postAs<CoLiane>(`/community/liane/${id}/join/${liane}`);
+  }
+
+  updateLiane(lianeId: string, request: CoLianeUpdate) {
+    return this.http.postAs<CoLiane>(`/community/liane/${lianeId}`, { body: request });
   }
 
   leave(liane: string) {

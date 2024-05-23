@@ -9,6 +9,7 @@ using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Postgis.Db;
@@ -17,6 +18,7 @@ using Liane.Service.Internal.Util.Sql;
 using UuidExtensions;
 using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
+using LianeUpdate = Liane.Api.Community.LianeUpdate;
 
 namespace Liane.Service.Internal.Community;
 
@@ -28,20 +30,58 @@ public sealed class LianeServiceImpl(
   LianeFetcher fetcher,
   LianeMatcher matcher) : ILianeService
 {
-  public async Task SetEnabled(Ref<LianeRequest> id, bool isEnabled)
+  public async Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request)
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
     var lianeRequestId = Guid.Parse(id);
 
     var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
-      .Set(r => r.IsEnabled, isEnabled)
+      .Set(r => r.Name, request.Name)
+      .Set(r => r.IsEnabled, request.IsEnabled)
+      .Set(r => r.RoundTrip, request.RoundTrip)
       .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
       .And(r => r.CreatedBy, ComparisonOperator.Eq, userId));
 
     if (updated == 0)
     {
       throw new UnauthorizedAccessException("User is not the owner of the liane request");
+    }
+
+    var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId);
+
+    var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
+        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.Eq, lianeRequestId))))
+      .Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList();
+
+    return new LianeRequest(
+      lianeRequestDb.Id.ToString(),
+      lianeRequestDb.Name,
+      lianeRequestDb.WayPoints.AsRef<RallyingPoint>(),
+      lianeRequestDb.RoundTrip,
+      lianeRequestDb.CanDrive,
+      lianeRequestDb.WeekDays,
+      constraints,
+      lianeRequestDb.IsEnabled,
+      lianeRequestDb.CreatedBy,
+      lianeRequestDb.CreatedAt
+    );
+  }
+
+  public async Task Delete(Ref<LianeRequest> id)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+    var lianeRequestId = Guid.Parse(id);
+
+    var deleted = await connection.DeleteAsync(
+      Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
+      & Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)
+    );
+
+    if (deleted == 0)
+    {
+      throw new ResourceNotFoundException($"Liane request '{lianeRequestId}' not found or not belong to current user");
     }
   }
 
@@ -176,6 +216,28 @@ public sealed class LianeServiceImpl(
     var createdLiane = await fetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
     return createdLiane;
+  }
+
+  public async Task<Api.Community.Liane> Update(Ref<Api.Community.Liane> id, LianeUpdate liane)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
+    var lianeId = Guid.Parse(id);
+    await CheckIsMember(connection, lianeId, userId, tx);
+
+    var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
+      .Set(r => r.Name, liane.Name)
+      .Where(r => r.Id, ComparisonOperator.Eq, lianeId), tx);
+
+    if (updated == 0)
+    {
+      throw new ResourceNotFoundException($"Liane '{lianeId}' not found");
+    }
+
+    var updatedLiane = await fetcher.FetchLiane(connection, lianeId, tx);
+    tx.Commit();
+    return updatedLiane;
   }
 
   public async Task<bool> Leave(Ref<Api.Community.Liane> liane)

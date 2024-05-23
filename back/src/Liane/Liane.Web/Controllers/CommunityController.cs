@@ -29,11 +29,18 @@ public sealed class CommunityController(ILianeService lianeService)
     return await lianeService.Create(request);
   }
 
-  [HttpPost("liane/{id}/{enabled}")]
+  [HttpPost("liane/request/{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRequest))]
-  public Task Create(string id, bool enabled)
+  public Task UpdateRequest(string id, [FromBody] LianeRequest request)
   {
-    return lianeService.SetEnabled(id, enabled);
+    return lianeService.Update(id, request);
+  }
+
+  [HttpDelete("liane/request/{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRequest))]
+  public Task DeleteRequest(string id)
+  {
+    return lianeService.Delete(id);
   }
 
   [HttpPost("liane/{id}/join_new/{lianeRequest}")]
@@ -48,6 +55,13 @@ public sealed class CommunityController(ILianeService lianeService)
   public Task<Api.Community.Liane> Join(string id, string liane)
   {
     return lianeService.Join(id, liane);
+  }
+
+  [HttpPost("liane/{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Community.Liane))]
+  public Task Update(string id, [FromBody] LianeUpdate lianeUpdate)
+  {
+    return lianeService.Update(id, lianeUpdate);
   }
 
   [HttpPost("liane/{id}/leave")]
