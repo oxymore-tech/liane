@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     padding: 6,
     paddingBottom: 12,
     height: 32,
-    backgroundColor: AppColors.lightGrayBackground
+    backgroundColor: "transparent"
   },
   headerTitle: {
     fontSize: 17,

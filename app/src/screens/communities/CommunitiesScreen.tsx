@@ -182,7 +182,8 @@ const refetch = (queriesData: UseQueryResult[]) => {
 const styles = StyleSheet.create({
   headerContainer: {
     padding: 12,
-    backgroundColor: AppColors.backgroundColor
+    backgroundColor: AppColors.backgroundColor,
+    zIndex: 3
   },
   container: {
     marginHorizontal: 16,
