@@ -73,8 +73,10 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
 
   console.log("################### item", item);
   const daysReccurence = extractDays(item.lianeRequest.weekDays);
-  const { to, from, steps } = useMemo(() => extractData(item.lianeRequest.wayPoints), [item.lianeRequest.wayPoints]);
-  const localeTime = `${item.lianeRequest.timeConstraints[0].when.start.hour}h${item.lianeRequest.timeConstraints[0].when.start.minute}`;
+  const { to, from, steps } = useMemo(() => extractData(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
+  const localeTime = item.lianeRequest?.timeConstraints[0]
+    ? `${item.lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${item.lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
+    : "";
 
   // TODO ajouter de vrais données
   const LianeStatucActivate = true;

@@ -70,7 +70,7 @@ const MessageBubble = ({
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
-  const conversationId = route.params.conversationId;
+  const lianeId = route.params.lianeId;
   const group = route.params.group;
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
