@@ -8,7 +8,6 @@ import Animated, {
   FadeOutRight,
   SlideInDown,
   SlideInLeft,
-  SlideInRight,
   SlideOutLeft,
   useAnimatedStyle,
   useSharedValue,
@@ -363,7 +362,7 @@ const DaysStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
           <Animated.View
             style={{ alignItems: "center" }}
             exiting={FadeOutRight.delay(40).duration(150)}
-            entering={SlideInRight.delay(550).duration(300).springify().damping(20)}>
+            entering={FadeIn.delay(550).duration(150).springify().damping(20)}>
             <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
             <AppText style={{ flexShrink: 1, paddingRight: 0, fontSize: 16, alignSelf: "flex-start", paddingHorizontal: 12 }}>
               {daysMessage ?? "Sélectionnez un jour"}
@@ -396,6 +395,12 @@ const DaysStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
   );
 };
 
+const getRoundedTime = (n: number) => {
+  const now = new Date();
+  const m = now.getMinutes();
+  return new Date(now.setMinutes((m / 60) * n));
+};
+
 const TimeConstraintView = ({ title, onChange, value }: { title: string; value: Date | undefined | null; onChange: (v: Date | null) => void }) => {
   return (
     <View style={{ borderColor: AppColors.primaryColor, borderWidth: 4, borderRadius: 12, padding: 8, flex: 1 }}>
@@ -411,7 +416,7 @@ const TimeConstraintView = ({ title, onChange, value }: { title: string; value: 
         </Pressable>
       ) : (
         <Animated.View exiting={FadeOut.duration(150)} entering={FadeIn.duration(150).springify().damping(20)}>
-          <TimeWheelPicker date={value || new Date()} minuteStep={15} onChange={onChange} minDate={undefined} />
+          <TimeWheelPicker date={value || getRoundedTime(15)} minuteStep={15} onChange={onChange} minDate={undefined} />
         </Animated.View>
       )}
     </View>
@@ -421,18 +426,19 @@ const TimeConstraintView = ({ title, onChange, value }: { title: string; value: 
 const TimeStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<TimeIntervalConstraint>) => {
   const [arriveBefore, setArriveBefore] = useState(initialValue?.arriveBefore);
   const [leaveAfter, setLeaveAfter] = useState(initialValue?.leaveAfter);
+  console.log(arriveBefore, leaveAfter);
   const daysMessage = useMemo(() => {
     if (!!arriveBefore && !!leaveAfter) {
       return `Entre ${AppLocalization.formatTime(leaveAfter)} et ${AppLocalization.formatTime(arriveBefore)}`;
     } else if (arriveBefore) {
-      `Arrivée avant ${AppLocalization.formatTime(arriveBefore)}`;
+      return `Arrivée avant ${AppLocalization.formatTime(arriveBefore)}`;
     } else if (leaveAfter) {
-      `Départ à partir de ${AppLocalization.formatTime(leaveAfter)}`;
+      return `Départ à partir de ${AppLocalization.formatTime(leaveAfter)}`;
     } else {
       return "Journée entière";
     }
   }, [arriveBefore, leaveAfter]);
-
+  console.log(arriveBefore, leaveAfter, daysMessage);
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       {!editable && (
