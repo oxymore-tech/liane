@@ -19,7 +19,6 @@ import { useIsFocused } from "@react-navigation/native";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { useObservable } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
-import { TripListView } from "@/screens/user/TripListView";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -181,7 +180,7 @@ const refetch = (queriesData: UseQueryResult[]) => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    padding: 12,
+    padding: 16,
     backgroundColor: AppColors.backgroundColor,
     zIndex: 3
   },

@@ -11,6 +11,7 @@ import { AppColors, ContextualColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { Logger } from "@maplibre/maplibre-react-native";
 import { AppLogger } from "@/api/logger";
+import { extractDays } from "@/util/hooks/days";
 
 export const ListGroupScreen = () => {
   const { navigation, route } = useAppNavigation<"ListGroups">();
@@ -18,24 +19,21 @@ export const ListGroupScreen = () => {
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
 
-  console.log("groups", groups);
-
-  const MemberItem = ({ member }: any) => (
-    <View style={styles.memberContainer}>
-      <View style={styles.memberInfo}>
-        <View style={styles.avatarContainer}>
-          <UserPicture key={member.id} size={50} url={null} id={member.image} />
+  const GroupItem = ({ group }: any) => (
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { conversationId: group.conversationId, group: group })}>
+      <View style={styles.memberContainer}>
+        <View style={styles.memberInfo}>
+          <View style={styles.textContainer}>
+            <AppText style={styles.nameText}>{`${group.depart} ➔ ${group.arrivee}`}</AppText>
+            <AppText style={styles.locationText}>{`${extractDays(group.recurrence)} ${group.heureDepart}`}</AppText>
+            <AppText style={styles.timeText}>{`${group.covoitureurs?.length} membre${group.covoitureurs?.length ? "s" : ""}`}</AppText>
+          </View>
         </View>
-        <View style={styles.textContainer}>
-          <AppText style={styles.nameText}>{member.name}</AppText>
-          <AppText style={styles.locationText}>{member.location}</AppText>
-          <AppText style={styles.timeText}>{member.time}</AppText>
+        <View style={{ paddingRight: 10 }}>
+          <AppIcon name={"arrow-right"} />
         </View>
       </View>
-      <Pressable onPress={() => null}>
-        <AppIcon name={"more-vertical"} />
-      </Pressable>
-    </View>
+    </Pressable>
   );
 
   return (
@@ -48,10 +46,17 @@ export const ListGroupScreen = () => {
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
+          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>
+            Lianes compatibles
+          </AppText>
+        </View>
+        <View style={styles.headerSubContent}>
+          <AppText style={{ paddingLeft: 35, fontWeight: "bold", fontSize: 14, lineHeight: 27, color: AppColors.white }}>Mendes Ispagnac</AppText>
+          <AppText style={{ paddingLeft: 15, fontWeight: "400", fontSize: 12, lineHeight: 27, color: AppColors.white }}>Lun, Mar. 9h30</AppText>
         </View>
       </View>
       <View style={styles.membersContainer}>
-        <FlatList data={groups} renderItem={({ item }) => <MemberItem member={item} />} />
+        <FlatList data={groups} renderItem={({ item }) => <GroupItem group={item} />} />
       </View>
     </View>
   );
@@ -72,14 +77,24 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    right: 0,
-    padding: 16
+    right: 0
   },
   headerContent: {
     flex: 1,
-    flexDirection: "column",
-    alignItems: "flex-start",
-    width: "100%"
+    flexDirection: "row",
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    alignItems: "center"
+  },
+  headerSubContent: {
+    flex: 1,
+    flexDirection: "row",
+    width: "100%",
+    backgroundColor: AppColors.primaryColor,
+    paddingHorizontal: 16,
+    paddingVertical: 2,
+    alignItems: "center"
   },
   groupName: {
     fontSize: 24,
@@ -128,8 +143,8 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   membersContainer: {
-    marginTop: 340,
-    marginLeft: 15
+    marginTop: 170,
+    height: "100%"
   },
   membersTitle: {
     marginLeft: 5,
@@ -145,7 +160,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginHorizontal: 16,
     marginBottom: 10,
-    borderRadius: 8
+    borderRadius: 8,
+    paddingLeft: 15,
+    paddingVertical: 10,
+    backgroundColor: AppColors.white
   },
   memberInfo: {
     flexDirection: "row",
