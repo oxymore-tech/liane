@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -12,21 +12,31 @@ import { SimpleModal } from "@/components/modal/SimpleModal";
 import { Logger } from "@maplibre/maplibre-react-native";
 import { AppLogger } from "@/api/logger";
 import { extractDays } from "@/util/hooks/days";
+import { CoLianeMatch, CoMatch, MatchGroup } from "@liane/common";
+import { extractWaypointFromTo } from "@/components/communities/LianeListView";
 
 export const ListGroupScreen = () => {
   const { navigation, route } = useAppNavigation<"ListGroups">();
   const groups = route.params.groups;
+  const lianeRequest = route.params.lianeRequest;
+
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
-
-  const GroupItem = ({ group }: any) => (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { lianeId: group.conversationId, group: group })}>
+  const { to, from, steps } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
+  const daysReccurence = extractDays(lianeRequest.weekDays);
+  const localeTime = lianeRequest?.timeConstraints[0]
+    ? `${lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
+    : "";
+  const GroupItem = ({ group }: { group: CoMatch }) => (
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: group })}>
       <View style={styles.memberContainer}>
         <View style={styles.memberInfo}>
           <View style={styles.textContainer}>
-            <AppText style={styles.nameText}>{`${group.depart} ➔ ${group.arrivee}`}</AppText>
-            <AppText style={styles.locationText}>{`${extractDays(group.recurrence)} ${group.heureDepart}`}</AppText>
-            <AppText style={styles.timeText}>{`${group.covoitureurs?.length} membre${group.covoitureurs?.length ? "s" : ""}`}</AppText>
+            <AppText style={styles.nameText}>{`${group.pickup} ➔ ${group.deposit}`}</AppText>
+            <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
+            <AppText style={styles.timeText}>{`${(group as MatchGroup).matches?.length ?? 1} membre${
+              (group as MatchGroup).matches?.length ? "s" : ""
+            }`}</AppText>
           </View>
         </View>
         <View style={{ paddingRight: 10 }}>
@@ -51,8 +61,15 @@ export const ListGroupScreen = () => {
           </AppText>
         </View>
         <View style={styles.headerSubContent}>
-          <AppText style={{ paddingLeft: 35, fontWeight: "bold", fontSize: 14, lineHeight: 27, color: AppColors.white }}>Mendes Ispagnac</AppText>
-          <AppText style={{ paddingLeft: 15, fontWeight: "400", fontSize: 12, lineHeight: 27, color: AppColors.white }}>Lun, Mar. 9h30</AppText>
+          <AppText style={{ paddingLeft: 35, fontWeight: "bold", fontSize: 14, lineHeight: 27, color: AppColors.white }}>{`${from} ➔ ${to}`}</AppText>
+          <AppText
+            style={{
+              paddingLeft: 15,
+              fontWeight: "400",
+              fontSize: 12,
+              lineHeight: 27,
+              color: AppColors.white
+            }}>{`${daysReccurence} ${localeTime}`}</AppText>
         </View>
       </View>
       <View style={styles.membersContainer}>

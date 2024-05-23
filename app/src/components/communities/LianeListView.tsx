@@ -73,7 +73,7 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
 
   console.log("################### item", item);
   const daysReccurence = extractDays(item.lianeRequest.weekDays);
-  const { to, from, steps } = useMemo(() => extractData(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
+  const { to, from, steps } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
   const localeTime = item.lianeRequest?.timeConstraints[0]
     ? `${item.lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${item.lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
     : "";
@@ -147,7 +147,7 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
         <Row style={{ flex: 1, alignItems: "center", marginTop: 20, marginBottom: 20, marginLeft: 5 }} spacing={8}>
           <Pressable
             style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}
-            onPress={() => navigation.navigate("ListGroups", { groups: item.matches ?? [] })}>
+            onPress={() => navigation.navigate("ListGroups", { groups: item.matches ?? [], lianeRequest: item.lianeRequest })}>
             <Row>
               <View style={styles.notificationDotContainer}>
                 <View style={styles.notificationDot} />
@@ -204,7 +204,7 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   );
 };
 
-const extractData = (wayPoints: WayPoint[] | RallyingPoint[] | string[]) => {
+export const extractWaypointFromTo = (wayPoints: WayPoint[] | RallyingPoint[] | string[]) => {
   //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
   const from = wayPoints[0];
   const to = wayPoints[wayPoints.length - 1];
