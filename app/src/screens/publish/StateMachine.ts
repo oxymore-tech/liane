@@ -1,12 +1,22 @@
 import { assign, createMachine, Interpreter, StateMachine } from "xstate";
 import React from "react";
-import { createStateSequence, CreateSubmittingState, DayOfWeekFlag, Liane, RallyingPoint, ServiceDoneEvent, SubmittingEvents } from "@liane/common";
+import {
+  CoLianeRequest,
+  createStateSequence,
+  CreateSubmittingState,
+  DayOfWeekFlag,
+  Liane,
+  RallyingPoint,
+  ServiceDoneEvent,
+  SubmittingEvents
+} from "@liane/common";
 
-export const PublishStateSequence = ["trip", "date", "vehicle"] as const;
+export const PublishStateSequence = ["trip", "days", "time", "vehicle"] as const;
+export const PublishStateCount = PublishStateSequence.length;
 
 export type PublishStepsKeys = (typeof PublishStateSequence)[number];
 
-type StateKeys = PublishStepsKeys | "return" | "overview" | "submitting";
+type StateKeys = PublishStepsKeys | "return" | "name" | "overview" | "submitting";
 
 type Schema = {
   states: {
@@ -14,13 +24,15 @@ type Schema = {
   };
 };
 
+export type TimeIntervalConstraint = { leaveAfter: Date | undefined | null; arriveBefore: Date | undefined | null };
 export type InternalLianeRequest = {
   to: RallyingPoint;
   from: RallyingPoint;
-  departureTime: Date;
-  availableSeats: number;
-  returnTime: Date | null | undefined;
   recurrence: DayOfWeekFlag | null;
+  availableSeats: number;
+  departureConstraints: TimeIntervalConstraint;
+  returnConstraints: TimeIntervalConstraint | null | undefined;
+  name: string;
 };
 
 export type PublishContext = {
@@ -37,9 +49,10 @@ type PublishEvent = { type: "PUBLISH" };
 type OpenMapEvent = { type: "MAP"; data: "from" | "to" };
 type BackEvent = { type: "BACK" };
 type ReturnEvent = { type: "RETURN"; data: null | undefined | Date };
+type NameEvent = { type: "NAME"; data: null | undefined | string };
 type InternalEvents = ServiceDoneEvent<Liane>;
 
-type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent | OpenMapEvent | BackEvent | ReturnEvent;
+type Event = SubmittingEvents | PublishEvent | NextEvent | EditEvent | UpdateEvent | OpenMapEvent | BackEvent | ReturnEvent | NameEvent;
 
 export type PublishStateMachine = StateMachine<PublishContext, Schema, Event | InternalEvents>;
 
@@ -107,13 +120,14 @@ const createState = <T>(nextTarget: string, nextCondition?: (context: T) => bool
 };
 
 export const CreatePublishLianeMachine = (
-  submit: (formData: PublishContext) => Promise<Liane>,
+  submit: (formData: PublishContext) => Promise<CoLianeRequest>,
   initialValue?: Partial<InternalLianeRequest> | undefined
 ): PublishStateMachine => {
   const states = createStateSequence<PublishContext, PublishStepsKeys>(
     {
       trip: { validation: context => !!context.request.from && !!context.request.to && context.request.from.id !== context.request.to.id },
-      date: { validation: context => !!context.request.departureTime },
+      days: { validation: context => context.request.recurrence !== "0000000" },
+      time: { validation: context => !!context.request.departureConstraints },
       vehicle: { validation: context => !!context.request.availableSeats }
     },
     "overview",
@@ -172,6 +186,17 @@ export const CreatePublishLianeMachine = (
             }
           }
         },
+        name: {
+          on: {
+            BACK: {
+              target: "#publish.overview.enter"
+            },
+            UPDATE: {
+              actions: ["set"],
+              target: "#publish.overview.enter"
+            }
+          }
+        },
         overview: {
           initial: "enter",
           states: { enter: {} },
@@ -187,6 +212,10 @@ export const CreatePublishLianeMachine = (
             },
             RETURN: {
               target: "#publish.return",
+              actions: ["set"]
+            },
+            NAME: {
+              target: "#publish.name",
               actions: ["set"]
             }
           }

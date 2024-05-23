@@ -7,12 +7,14 @@ import {
   LianeServiceClient,
   NotificationService,
   NotificationServiceClient,
+  CommunityServiceClient,
   RallyingPointClient,
   RallyingPointService,
   RoutingService,
   RoutingServiceClient,
   HubServiceClient,
   LocationService,
+  CommunityService,
   DEFAULT_TLS,
   AppLogger,
   ConversationService,
@@ -34,6 +36,7 @@ export type AppServices = {
   routing: RoutingService;
   notification: NotificationService;
   reminder: ReminderService;
+  community: CommunityService;
   conversation: ConversationService;
 };
 
@@ -49,5 +52,6 @@ export const CreateAppServices = (): AppServices => ({
   location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
   notification: new NotificationServiceClient(http),
+  community: new CommunityServiceClient(http),
   conversation: new ConversationServiceClient(http)
 });
