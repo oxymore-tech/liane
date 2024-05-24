@@ -10,12 +10,11 @@ namespace Liane.Service.Internal.Mongo.Serialization;
 
 internal static class RefBsonSerializer
 {
-  internal static readonly ImmutableHashSet<Type> TypesWithStringId = ImmutableHashSet.Create(typeof(RallyingPoint));
+  internal static readonly ImmutableHashSet<Type> TypesWithStringId = ImmutableHashSet.Create(typeof(RallyingPoint), typeof(Api.Community.Liane));
 }
 
 internal sealed class RefBsonSerializer<T> : SerializerBase<Ref<T>?> where T : class, IIdentity
 {
-
   public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Ref<T>? value)
   {
     if (value is not null)

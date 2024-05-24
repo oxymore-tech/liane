@@ -5,7 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using GeoJSON.Text.Geometry;
+using Liane.Api.Auth;
 using Liane.Api.Community;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -29,7 +31,9 @@ public sealed class LianeServiceImpl(
   IRallyingPointService rallyingPointService,
   LianeFetcher lianeFetcher,
   LianeRequestFetcher lianeRequestFetcher,
-  LianeMatcher matcher) : ILianeService
+  LianeMatcher matcher,
+  INotificationService notificationService,
+  IUserService userService) : ILianeService
 {
   public async Task<LianeRequest> Create(LianeRequest request)
   {
@@ -242,10 +246,20 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var lianeId = Guid.Parse(liane.Id);
     await CheckIsMember(connection, lianeId, userId, tx);
-
+    var resolvedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     var id = Uuid7.Guid();
     var now = DateTime.UtcNow;
     await connection.InsertAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
+    var recipients = resolvedLiane.Members.Where(m => m.User.Id != userId).Select(m => new Recipient(m.User)).ToImmutableList();
+    var sender = await userService.Get(userId);
+
+    var text = content switch
+    {
+      MessageContent.Text t => t.Value,
+      MessageContent.Trip => "Nouveau trajet posté",
+      _ => throw new ArgumentOutOfRangeException($"MessageContent type not {content.GetType()} supported")
+    };
+    await notificationService.Create(new Notification.LianeMessage(null, userId, now, recipients, ImmutableHashSet<Answer>.Empty, sender.Pseudo, text, resolvedLiane));
     tx.Commit();
     return new LianeMessage(id.ToString(), userId, now, content);
   }

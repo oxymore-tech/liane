@@ -62,6 +62,26 @@ public abstract record Notification : IEntity<string>
       init { }
     }
   }
+  
+  public sealed record LianeMessage(
+    string? Id,
+    Ref<Auth.User>? CreatedBy,
+    DateTime? CreatedAt,
+    ImmutableList<Recipient> Recipients,
+    ImmutableHashSet<Answer> Answers,
+    string Title,
+    string Message,
+    Ref<Community.Liane> Liane,
+    DateTime? SeenAt = null
+  ) : Notification
+  {
+    public override string? Uri
+    {
+      get => "liane://community/" + Liane.Id;
+      init { }
+    }
+  }
+
 
   public sealed record Reminder(
     string? Id,
