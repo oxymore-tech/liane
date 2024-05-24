@@ -1,4 +1,16 @@
-import { capitalize, ChatMessage, CoLiane, CoMatch, ConversationGroup, MatchGroup, PaginatedResponse, Ref, User } from "@liane/common";
+import {
+  capitalize,
+  ChatMessage,
+  CoLiane,
+  CoMatch,
+  ConversationGroup,
+  MatchGroup,
+  MatchSingle,
+  MessageContentText,
+  PaginatedResponse,
+  Ref,
+  User
+} from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -16,6 +28,8 @@ import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
 import { AppStyles } from "@/theme/styles";
 import { extractDays } from "@/util/hooks/days";
+import { useQueries } from "react-query";
+import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen";
 
 const MessageBubble = ({
   message,
@@ -87,12 +101,29 @@ export const CommunitiesChatScreen = () => {
   );
 
   const sendMessage = async (inputValue: string) => {
-    // TODO si groupe => join liane puis envoie message
-    if (inputValue && inputValue.length > 0) {
-      setIsSending(true);
-      await services.realTimeHub.send({ text: inputValue });
-      setIsSending(false);
+    let lianeTemp;
+    setIsSending(true);
+
+    if (group) {
+      const lianeRequest = (group as MatchSingle).lianeRequest ?? (group as MatchGroup).matches[0].lianeRequest;
+      const coLiane = await services.community.join(lianeRequest, lianeRequest);
+      setGroup(undefined);
+      setLiane(coLiane);
+      lianeTemp = coLiane;
+    } else {
+      lianeTemp = liane;
     }
+
+    if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
+      await services.community.sendMessage(lianeTemp.id, {
+        type: "text",
+        value: inputValue
+      });
+    } else {
+      setError(new Error("Message non envoyé suite à une erreur"));
+    }
+
+    setIsSending(false);
   };
 
   const appendMessage = (m: ChatMessage) => {
