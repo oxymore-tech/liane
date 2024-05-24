@@ -96,6 +96,7 @@ public static class Startup
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<LianeTrackerCache>();
     
+    services.AddService<LianeRequestFetcher>();
     services.AddService<LianeFetcher>();
     services.AddService<LianeMatcher>();
     services.AddService<LianeServiceImpl>();

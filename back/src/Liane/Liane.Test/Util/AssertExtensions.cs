@@ -16,7 +16,7 @@ public static class AssertExtensions
   public static void AreRefEquivalent<T>(this IEnumerable<string?> expected, IEnumerable<T> actual)
     where T : class, IIdentity<string>
   {
-    AreRefEquivalent(expected, actual.FilterSelect(a => (Ref<T>?)a.Id));
+    AreRefEquivalent(expected.FilterSelect(r => (Ref<T>)r), actual.FilterSelect(a => (Ref<T>?)a.Id));
   }
 
   public static void AssertDeepEqual<T>(this IEnumerable<T> actual, params T[] expected)
@@ -24,10 +24,17 @@ public static class AssertExtensions
     expected.WithDeepEqual(actual).Assert();
   }
 
+
+  public static void AreRefEquivalent<T>(this IEnumerable<Ref<T>?> expected, IEnumerable<Ref<T>> actual)
+    where T : class, IIdentity<string>
+  {
+    AreRefEquivalent(expected.FilterSelect(r => r?.ToString()), actual);
+  }
+
   public static void AreRefEquivalent<T>(this IEnumerable<string?> expected, IEnumerable<Ref<T>> actual)
     where T : class, IIdentity<string>
   {
-    CollectionAssert.AreEquivalent(expected.Select(r => (Ref<T>)r), actual);
+    CollectionAssert.AreEquivalent(expected.FilterSelect(r => r?.ToString()), actual.Select(r => r.ToString()));
   }
 
   public static Stream ReadTestResource(string expectedFile, Assembly assembly)

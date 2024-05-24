@@ -27,110 +27,10 @@ public sealed class LianeServiceImpl(
   ICurrentContext currentContext,
   IRoutingService routingService,
   IRallyingPointService rallyingPointService,
-  LianeFetcher fetcher,
+  LianeFetcher lianeFetcher,
+  LianeRequestFetcher lianeRequestFetcher,
   LianeMatcher matcher) : ILianeService
 {
-  public async Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    using var connection = db.NewConnection();
-    var lianeRequestId = Guid.Parse(id);
-
-    var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
-      .Set(r => r.Name, request.Name)
-      .Set(r => r.IsEnabled, request.IsEnabled)
-      .Set(r => r.RoundTrip, request.RoundTrip)
-      .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
-      .And(r => r.CreatedBy, ComparisonOperator.Eq, userId));
-
-    if (updated == 0)
-    {
-      throw new UnauthorizedAccessException("User is not the owner of the liane request");
-    }
-
-    var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId);
-
-    var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
-        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.Eq, lianeRequestId))))
-      .Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList();
-
-    return new LianeRequest(
-      lianeRequestDb.Id.ToString(),
-      lianeRequestDb.Name,
-      await lianeRequestDb.WayPoints.AsRef<RallyingPoint>(rallyingPointService.Get),
-      lianeRequestDb.RoundTrip,
-      lianeRequestDb.CanDrive,
-      lianeRequestDb.WeekDays,
-      constraints,
-      lianeRequestDb.IsEnabled,
-      lianeRequestDb.CreatedBy,
-      lianeRequestDb.CreatedAt
-    );
-  }
-
-  public async Task Delete(Ref<LianeRequest> id)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    using var connection = db.NewConnection();
-    var lianeRequestId = Guid.Parse(id);
-
-    var deleted = await connection.DeleteAsync(
-      Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
-      & Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)
-    );
-
-    if (deleted == 0)
-    {
-      throw new ResourceNotFoundException($"Liane request '{lianeRequestId}' not found or not belong to current user");
-    }
-  }
-
-  public async Task<ImmutableList<LianeMatch>> List()
-  {
-    var userId = currentContext.CurrentUser().Id;
-    using var connection = db.NewConnection();
-
-    var lianeRequests = await connection.QueryAsync(Query.Select<LianeRequestDb>()
-      .Where(Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId))
-      .OrderBy(r => r.Id));
-
-    var joinedLianeIds = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
-        .Where(Filter<LianeMemberDb>.Where(m => m.UserId, ComparisonOperator.Eq, userId))
-        .OrderBy(r => r.JoinedAt)))
-      .GroupBy(m => m.LianeRequestId)
-      .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId).ToImmutableHashSet());
-
-    var lianeRequestsId = lianeRequests.Select(l => l.Id);
-    var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
-        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.In, lianeRequestsId))))
-      .GroupBy(c => c.LianeRequestId)
-      .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
-
-    var matches = await matcher.FindMatches(connection, lianeRequestsId, joinedLianeIds);
-
-    return lianeRequests.Select(l =>
-    {
-      var lianeRequest = new LianeRequest(
-        l.Id.ToString(),
-        l.Name,
-        l.WayPoints.AsRef<RallyingPoint>(),
-        l.RoundTrip,
-        l.CanDrive,
-        l.WeekDays,
-        constraints.GetValueOrDefault(l.Id, ImmutableList<TimeConstraint>.Empty),
-        l.IsEnabled,
-        l.CreatedBy,
-        l.CreatedAt
-      );
-      var result = matches.GetValueOrDefault(l.Id, LianeMatcherResult.Empty);
-      return new LianeMatch(
-        lianeRequest,
-        result.JoindedLianes,
-        result.Matches
-      );
-    }).ToImmutableList();
-  }
-
   public async Task<LianeRequest> Create(LianeRequest request)
   {
     var wayPoints = request.WayPoints.Distinct().ToImmutableList();
@@ -162,19 +62,91 @@ public sealed class LianeServiceImpl(
     var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.IsEnabled, userId, now);
     await connection.InsertAsync(lianeRequestDb, tx);
 
+    var created = await lianeRequestFetcher.FetchLianeRequest(connection, id, tx);
+
     tx.Commit();
+    return created;
+  }
+
+  public async Task<ImmutableList<LianeMatch>> List()
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+
+    var lianeRequests = await lianeRequestFetcher.FetchLianeRequests(connection, Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId));
+
+    var joinedLianeIds = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
+        .Where(Filter<LianeMemberDb>.Where(m => m.UserId, ComparisonOperator.Eq, userId))
+        .OrderBy(r => r.JoinedAt)))
+      .GroupBy(m => m.LianeRequestId)
+      .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId).ToImmutableHashSet());
+
+    var matches = await matcher.FindMatches(connection, lianeRequests.Select(r => r.Id), joinedLianeIds);
+
+    return lianeRequests.Select(r =>
+    {
+      var result = matches.GetValueOrDefault(r.Id, LianeMatcherResult.Empty);
+      return new LianeMatch(
+        r,
+        result.JoindedLianes,
+        result.Matches
+      );
+    }).ToImmutableList();
+  }
+
+  public async Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+    var lianeRequestId = Guid.Parse(id);
+
+    var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
+      .Set(r => r.Name, request.Name)
+      .Set(r => r.IsEnabled, request.IsEnabled)
+      .Set(r => r.RoundTrip, request.RoundTrip)
+      .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
+      .And(r => r.CreatedBy, ComparisonOperator.Eq, userId));
+
+    if (updated == 0)
+    {
+      throw new UnauthorizedAccessException("User is not the owner of the liane request");
+    }
+
+    var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId);
+
+    var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
+        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.Eq, lianeRequestId))))
+      .Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList();
+
     return new LianeRequest(
-      id.ToString(),
+      lianeRequestDb.Id,
       lianeRequestDb.Name,
-      request.WayPoints,
+      await lianeRequestDb.WayPoints.AsRef<RallyingPoint>(rallyingPointService.Get),
       lianeRequestDb.RoundTrip,
       lianeRequestDb.CanDrive,
       lianeRequestDb.WeekDays,
-      request.TimeConstraints,
+      constraints,
       lianeRequestDb.IsEnabled,
       lianeRequestDb.CreatedBy,
       lianeRequestDb.CreatedAt
     );
+  }
+
+  public async Task Delete(Ref<LianeRequest> id)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+    var lianeRequestId = Guid.Parse(id);
+
+    var deleted = await connection.DeleteAsync(
+      Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
+      & Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)
+    );
+
+    if (deleted == 0)
+    {
+      throw new ResourceNotFoundException($"Liane request '{lianeRequestId}' not found or not belong to current user");
+    }
   }
 
   public async Task<Api.Community.Liane> Join(Ref<LianeRequest> mine, Ref<Api.Community.Liane> liane)
@@ -191,7 +163,7 @@ public sealed class LianeServiceImpl(
 
     await connection.InsertAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
 
-    var existingLiane = await fetcher.FetchLiane(connection, lianeId, tx);
+    var existingLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
     return existingLiane;
   }
@@ -213,7 +185,7 @@ public sealed class LianeServiceImpl(
     await connection.InsertAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
     await connection.InsertAsync(new LianeMemberDb(lianeId, to.Id, to.CreatedBy, now, null), tx);
 
-    var createdLiane = await fetcher.FetchLiane(connection, lianeId, tx);
+    var createdLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
     return createdLiane;
   }
@@ -235,7 +207,7 @@ public sealed class LianeServiceImpl(
       throw new ResourceNotFoundException($"Liane '{lianeId}' not found");
     }
 
-    var updatedLiane = await fetcher.FetchLiane(connection, lianeId, tx);
+    var updatedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
     return updatedLiane;
   }

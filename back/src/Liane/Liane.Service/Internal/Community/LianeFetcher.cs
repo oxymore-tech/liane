@@ -6,11 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Community;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util.Sql;
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeFetcher
+public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher)
 {
   public async Task<Api.Community.Liane> FetchLiane(IDbConnection connection, Guid lianeId, IDbTransaction? tx = null)
   {
@@ -29,6 +30,9 @@ public sealed class LianeFetcher
     var memberDbs = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter)), tx))
       .GroupBy(lm => lm.LianeId)
       .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
+    var lianeRequestFilter = memberDbs.Values.SelectMany(l => l.Select(m => m.LianeRequestId)).ToImmutableList();
+    var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeRequestFilter, tx))
+      .ToImmutableDictionary(r => r.Id);
     return lianeDbs.Select(l =>
     {
       var members = memberDbs.GetValueOrDefault(l.Id, ImmutableList<LianeMemberDb>.Empty);
@@ -37,7 +41,11 @@ public sealed class LianeFetcher
         l.Name,
         l.CreatedBy,
         l.CreatedAt,
-        members.Select(m => new LianeMember(m.UserId, m.LianeRequestId.ToString(), m.JoinedAt, m.LastReadAt)).ToImmutableList()
+        members.Select(m =>
+        {
+          var lianeRequest = fetchLianeRequests.GetValueOrDefault(m.LianeRequestId) ?? (Ref<LianeRequest>)m.LianeRequestId;
+          return new LianeMember(m.UserId, lianeRequest, m.JoinedAt, m.LastReadAt);
+        }).ToImmutableList()
       );
     }).ToImmutableList();
   }

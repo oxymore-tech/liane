@@ -6,7 +6,7 @@ namespace Liane.Api.Community;
 
 public sealed record LianeMember(
   [property: SerializeAsResolvedRef] Ref<Auth.User> User,
-  Ref<LianeRequest> LianeRequest,
+  [property: SerializeAsResolvedRef] Ref<LianeRequest> LianeRequest,
   DateTime JoinedAt,
   DateTime? LastReadAt = null
 ) : IResourceMember;

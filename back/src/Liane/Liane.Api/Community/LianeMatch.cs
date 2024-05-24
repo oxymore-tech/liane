@@ -20,15 +20,17 @@ public abstract record Match
 
   public abstract string Name { get; init; }
   public abstract DayOfWeekFlag WeekDays { get; init; }
+  public abstract TimeRange When { get; init; }
   public abstract RallyingPoint Pickup { get; init; }
   public abstract RallyingPoint Deposit { get; init; }
   public abstract float Score { get; init; }
 
   public sealed record Single(
     string Name,
-    Ref<LianeRequest> LianeRequest,
+    LianeRequest LianeRequest,
     Ref<User> User,
     DayOfWeekFlag WeekDays,
+    TimeRange When,
     RallyingPoint Pickup,
     RallyingPoint Deposit,
     float Score
@@ -39,6 +41,7 @@ public abstract record Match
     Liane Liane,
     ImmutableList<Single> Matches,
     DayOfWeekFlag WeekDays,
+    TimeRange When,
     RallyingPoint Pickup,
     RallyingPoint Deposit,
     float Score

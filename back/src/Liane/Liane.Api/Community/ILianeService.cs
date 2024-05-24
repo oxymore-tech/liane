@@ -29,4 +29,8 @@ public interface ILianeService
 // Update liane request
 // delete liane request
 // ReadConversation for liane message (via hub)
-// send notification on SendMessage
+// rajouter when: TimeRange; dans les Match
+// CoLianeMember résoudre la LianeRequest dans les matchs
+
+// Send notification on SendMessage
+// pb de match sur Roques ?

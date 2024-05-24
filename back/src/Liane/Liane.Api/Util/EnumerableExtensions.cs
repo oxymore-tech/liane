@@ -55,6 +55,22 @@ public static class EnumerableExtensions
       .Select(e => e!.Value);
   }
 
+  public static async Task<IEnumerable<TOut>> FilterSelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut?>> transformer)
+    where TOut : notnull
+  {
+    return (await enumerable.SelectAsync(transformer))
+      .Where(e => e is not null)
+      .Select(e => e!);
+  }
+
+  public static async Task<IEnumerable<TOut>> FilterSelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut?>> transformer)
+    where TOut : struct
+  {
+    return (await enumerable.SelectAsync(transformer))
+      .Where(e => e is not null)
+      .Select(e => e!.Value);
+  }
+
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer, bool parallel = false)
   {
     var outs = ImmutableList.CreateBuilder<TOut>();

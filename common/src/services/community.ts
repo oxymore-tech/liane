@@ -28,9 +28,10 @@ export type CoLianeMatch = {
 
 export type MatchSingle = {
   name: string;
-  lianeRequest: Ref<CoLianeRequest>;
+  lianeRequest: ResolvedLianeRequest;
   user: Ref<User>;
   weekDays: DayOfWeekFlag;
+  when: TimeRange;
   pickup: RallyingPoint;
   deposit: RallyingPoint;
   score: number;
@@ -41,6 +42,7 @@ export type MatchGroup = {
   liane: CoLiane;
   matches: MatchSingle[];
   weekDays: DayOfWeekFlag;
+  when: TimeRange;
   pickup: RallyingPoint;
   deposit: RallyingPoint;
   score: number;

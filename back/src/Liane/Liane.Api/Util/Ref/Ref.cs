@@ -17,6 +17,7 @@ public abstract record Ref<T>
   public static implicit operator string(Ref<T> @ref) => @ref.Id;
 
 #nullable disable
+  public static implicit operator Ref<T>(Guid? id) => id?.ToString();
   public static implicit operator Ref<T>(string id) => id is null ? null : new Unresolved(id);
 
   public static implicit operator Ref<T>(T value) => new Resolved(value);
@@ -40,6 +41,7 @@ public abstract record Ref<T>
     return Id.GetHashCode();
   }
 
+  public Guid IdAsGuid => Guid.Parse(Id);
   public abstract string Id { get; init; }
   public abstract T? Value { get; init; }
 

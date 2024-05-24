@@ -115,6 +115,7 @@ public abstract class BaseIntegrationTest
     services.AddService<DeleteAccountServiceImpl>();
     services.AddService<LianeTrackerCache>();
 
+    services.AddService<LianeRequestFetcher>();
     services.AddService<LianeFetcher>();
     services.AddService<LianeMatcher>();
     services.AddService<LianeServiceImpl>();
