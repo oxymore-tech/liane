@@ -59,7 +59,7 @@ export type CoLianeUpdate = {
 
 export type CoLianeMember = {
   user: User;
-  lianeRequest: Ref<CoLianeRequest>;
+  lianeRequest: CoLianeRequest;
   joinedAt: UTCDateTime;
   lastReadAt?: UTCDateTime;
 };

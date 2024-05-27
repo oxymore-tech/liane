@@ -1,67 +1,51 @@
-import React, { useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
-import { Logger } from "@maplibre/maplibre-react-native";
 import { AppLogger } from "@/api/logger";
-
-const members = [
-  {
-    id: "1",
-    name: "Moi",
-    location: "Mende → Ispagnac",
-    time: "Lun, Mar. 10h",
-    isMe: true
-  },
-  {
-    id: "2",
-    name: "Jacques N.",
-    location: "Mende → Ispagnac",
-    time: "Lun, Mar. 10h",
-    isMe: false
-  },
-  {
-    id: "3",
-    name: "Samuel T.",
-    location: "Mende → Balsièges",
-    time: "Lun, Mar. 10h",
-    isMe: false
-  }
-];
+import { CoLianeMember, User } from "@liane/common";
+import { extractDays } from "@/util/hooks/days";
+import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
+import { AppContext } from "@/components/context/ContextProvider";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
-  const group = route.params.group;
+  const { services, user } = useContext(AppContext);
+  const group = route.params.liane;
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [currentMember, setCurrentMember] = useState<any>(null);
+  const [currentMember, setCurrentMember] = useState<User | undefined>(undefined);
 
-  const MemberItem = ({ member }: any) => (
-    <View style={styles.memberContainer}>
-      <View style={styles.memberInfo}>
-        <View style={styles.avatarContainer}>
-          <UserPicture key={member.id} size={50} url={null} id={member.image} />
+  const MemberItem = ({ member }: { member: CoLianeMember }) => {
+    const { to, from, steps } = useMemo(() => extractWaypointFromTo(member.lianeRequest.wayPoints), [member.lianeRequest]);
+
+    return (
+      <View style={styles.memberContainer}>
+        <View style={styles.memberInfo}>
+          <View style={styles.avatarContainer}>
+            <UserPicture key={member.user.id} size={50} url={member.user.pictureUrl} id={member.user.id} />
+          </View>
+          <View style={styles.textContainer}>
+            <AppText style={styles.nameText}>{member.user.pseudo}</AppText>
+            <AppText style={styles.locationText}>{`${from} ➔ ${to}`}</AppText>
+            <AppText style={styles.timeText}>{extractDaysTimes(member.lianeRequest)}</AppText>
+          </View>
         </View>
-        <View style={styles.textContainer}>
-          <AppText style={styles.nameText}>{member.name}</AppText>
-          <AppText style={styles.locationText}>{member.location}</AppText>
-          <AppText style={styles.timeText}>{member.time}</AppText>
-        </View>
+        <Pressable onPress={() => (member.user.id === user?.id ? setMyModalVisible(true) : openModalUser(member.user))}>
+          <AppIcon name={"more-vertical"} />
+        </Pressable>
       </View>
-      <Pressable onPress={() => (member.isMe ? setMyModalVisible(true) : openModalUser(member))}>
-        <AppIcon name={"more-vertical"} />
-      </Pressable>
-    </View>
-  );
+    );
+  };
 
   const openModalUser = (user: any) => {
     setModalVisible(true);
@@ -70,7 +54,7 @@ export const CommunitiesDetailScreen = () => {
 
   const closeModalUser = () => {
     setModalVisible(false);
-    setCurrentMember(null);
+    setCurrentMember(undefined);
   };
 
   const reportUser = () => {
@@ -79,16 +63,36 @@ export const CommunitiesDetailScreen = () => {
     // TODO report user
   };
 
-  const leaveLiane = () => {
-    AppLogger.debug("COMMUNITIES", "Leave Liane");
+  const leaveLiane = async () => {
     setMyModalVisible(false);
-    // TODO service quitter Liane
+    if (group && group.id) {
+      try {
+        const result = await services.community.leave(group.id);
+        AppLogger.debug("COMMUNITIES", "Lien quittée avec succès", result);
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Au moment de quitter la liane, une erreur c'est produite", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la tentative de départ de la liane", group);
+    }
   };
 
-  const changeParams = () => {
-    AppLogger.debug("COMMUNITIES", "Change params", currentMember);
+  const changeParams = async () => {
     setMyModalVisible(false);
-    // TODO service ouvrir la fenêtre de changement des params
+    const liane = group;
+
+    if (liane && liane.id) {
+      // Todo changement a apporter
+
+      try {
+        const updatedLianeRequest = await services.community.updateLiane(liane.id, liane);
+        AppLogger.debug("COMMUNITIES", "Mise a jour de la liane fait avec succès", updatedLianeRequest);
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la modification de la liane", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de liane lors de la modification de ses paramètres", group);
+    }
   };
 
   return (
@@ -103,7 +107,7 @@ export const CommunitiesDetailScreen = () => {
           <View style={{ flexDirection: "row", width: "100%" }}>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />
           </View>
-          <AppText style={styles.groupName}>{group.nomGroupe}</AppText>
+          <AppText style={styles.groupName}>{group.name}</AppText>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <View style={styles.iconContainer}>
@@ -123,15 +127,15 @@ export const CommunitiesDetailScreen = () => {
         </View>
       </View>
       <View style={styles.membersContainer}>
-        <AppText style={styles.membersTitle}>Membres ({group.covoitureurs.length})</AppText>
-        <FlatList data={members} renderItem={({ item }) => <MemberItem member={item} />} keyExtractor={item => item.id} />
+        <AppText style={styles.membersTitle}>Membres ({group.members.length})</AppText>
+        <FlatList data={group.members} renderItem={({ item }) => <MemberItem member={item} />} keyExtractor={item => item.user?.id || "id"} />
       </View>
       <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
         <Column>
-          <Pressable style={{ marginHorizontal: 16, marginBottom: 10, flexDirection: "row" }} onPress={changeParams}>
+          {/*<Pressable style={{ marginHorizontal: 16, marginBottom: 10, flexDirection: "row" }} onPress={changeParams}>
             <AppIcon name={"swap"} />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Modifier mes contraintes</AppText>
-          </Pressable>
+          </Pressable>*/}
           <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={leaveLiane}>
             <AppIcon color={AppColors.primaryColor} name={"log-out"} />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.primaryColor }}>

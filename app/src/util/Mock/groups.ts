@@ -1,4 +1,4 @@
-import { DayOfTheWeekFlag } from "@liane/common";
+import { DayOfWeekFlag } from "@liane/common";
 
 export type CoVoitureur = {
   id: number; // Identifiant unique du covoitureur
@@ -17,7 +17,7 @@ export type GroupeCovoiturage = {
   nouveauxMessages: boolean;
   demandeNouveauGroupe: boolean;
   admin: boolean;
-  recurrence: DayOfTheWeekFlag;
+  recurrence: DayOfWeekFlag;
   conversationId: string;
 };
 

@@ -13,7 +13,7 @@ import { Logger } from "@maplibre/maplibre-react-native";
 import { AppLogger } from "@/api/logger";
 import { extractDays } from "@/util/hooks/days";
 import { CoLianeMatch, CoMatch, MatchGroup } from "@liane/common";
-import { extractWaypointFromTo } from "@/components/communities/LianeListView";
+import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 
 export const ListGroupScreen = () => {
   const { navigation, route } = useAppNavigation<"ListGroups">();

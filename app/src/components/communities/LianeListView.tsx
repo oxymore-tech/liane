@@ -26,6 +26,7 @@ import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
 import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
 import { AppLogger } from "@/api/logger";
+import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 
 export interface TripSection extends SectionBase<CoLianeMatch> {}
 
@@ -73,11 +74,7 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
 
   console.log("################### item", item);
-  const daysReccurence = extractDays(item.lianeRequest.weekDays);
   const { to, from, steps } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
-  const localeTime = item.lianeRequest?.timeConstraints[0]
-    ? `${item.lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${item.lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
-    : "";
 
   const deleteLiane = async () => {
     const lianeRequest = item.lianeRequest;
@@ -147,7 +144,9 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
                     flexShrink: 1,
                     lineHeight: 16,
                     color: "black"
-                  }}>{`${daysReccurence} ${localeTime}`}</AppText>
+                  }}>
+                  {extractDaysTimes(item.lianeRequest)}
+                </AppText>
               </View>
             </View>
           </Row>
@@ -228,36 +227,6 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
       )}
     </View>
   );
-};
-
-export const extractWaypointFromTo = (wayPoints: WayPoint[] | RallyingPoint[] | string[]) => {
-  //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
-  const from = wayPoints[0];
-  const to = wayPoints[wayPoints.length - 1];
-  const steps = wayPoints.slice(1, -1);
-
-  return {
-    from,
-    to,
-    steps
-  };
-};
-
-const trierGroupesParAppartenance = (
-  groupes: GroupeCovoiturage[],
-  idUtilisateur: number
-): { myGroups: GroupeCovoiturage[]; otherGroups: GroupeCovoiturage[] } => {
-  // Filtre les groupes pour ne conserver que ceux auxquels l'utilisateur appartient
-  return {
-    myGroups: groupes.filter(groupe => {
-      // Vérifie si l'identifiant de l'utilisateur est présent parmi les covoitureurs du groupe
-      return groupe.covoitureurs.some(covoitureur => covoitureur.id === idUtilisateur);
-    }),
-    otherGroups: groupes.filter(groupe => {
-      // Vérifie si l'identifiant de l'utilisateur est présent parmi les covoitureurs du groupe
-      return groupe.covoitureurs.some(covoitureur => covoitureur.id !== idUtilisateur);
-    })
-  };
 };
 
 const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<CoLianeMatch, TripSection>) => {

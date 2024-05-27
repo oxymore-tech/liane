@@ -1,6 +1,6 @@
-import { DayOfTheWeekFlag } from "@liane/common";
+import { DayOfWeekFlag } from "@liane/common";
 
-export const extractDays = (days: DayOfTheWeekFlag | undefined) => {
+export const extractDays = (days: DayOfWeekFlag | undefined) => {
   if (!days) {
     return "";
   }
