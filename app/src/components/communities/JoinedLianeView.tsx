@@ -43,7 +43,7 @@ const RenderGroupsView = ({ joinedLiane }: GroupsViewProps) => {
             flexShrink: 1,
             lineHeight: 27,
             color: "black"
-          }}>{`${joinedLiane.pickup} ➔ ${joinedLiane.deposit}`}</AppText>
+          }}>{`${joinedLiane.pickup.label} ➔ ${joinedLiane.deposit.label}`}</AppText>
         <AppText
           style={{
             fontSize: 14,
@@ -68,7 +68,7 @@ const RenderGroupsView = ({ joinedLiane }: GroupsViewProps) => {
   );
 };
 
-export const GroupView = ({ joinedLiane }: { joinedLiane: MatchGroup }) => {
+export const JoinedLianeView = ({ joinedLiane }: { joinedLiane: MatchGroup }) => {
   const { navigation } = useAppNavigation();
 
   return (

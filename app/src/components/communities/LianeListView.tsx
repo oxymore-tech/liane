@@ -24,7 +24,7 @@ import Eye from "@/assets/images/eye-fill.svg";
 import EyeOff from "@/assets/images/eye-off-fill.svg";
 import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
-import { GroupView } from "@/components/communities/GroupView";
+import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
 import { AppLogger } from "@/api/logger";
 
 export interface TripSection extends SectionBase<CoLianeMatch> {}
@@ -148,7 +148,7 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
                     backgroundColor: AppColors.backgroundColor,
                     width: "100%"
                   }}>
-                  <GroupView key={index} joinedLiane={joinedLiane} />
+                  <JoinedLianeView key={index} joinedLiane={joinedLiane} />
                 </View>
               );
             })}
