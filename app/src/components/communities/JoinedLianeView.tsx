@@ -11,11 +11,10 @@ import { useAppNavigation } from "@/components/context/routing";
 
 export interface GroupsViewProps {
   joinedLiane: MatchGroup;
+  unreadMessage?: boolean;
 }
 
-const RenderGroupsView = ({ joinedLiane }: GroupsViewProps) => {
-  const nouveauxMessages = true;
-
+const RenderGroupsView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
   return (
     <Row style={{ alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: AppColors.grayBackground }} spacing={8}>
       <View style={{ flexGrow: 1, flexShrink: 1 }}>
@@ -30,7 +29,7 @@ const RenderGroupsView = ({ joinedLiane }: GroupsViewProps) => {
             }}>
             {joinedLiane.name}
           </AppText>
-          {nouveauxMessages && (
+          {unreadMessage && (
             <View style={styles.notificationDotContainer}>
               <View style={styles.notificationDot} />
             </View>
@@ -68,12 +67,12 @@ const RenderGroupsView = ({ joinedLiane }: GroupsViewProps) => {
   );
 };
 
-export const JoinedLianeView = ({ joinedLiane }: { joinedLiane: MatchGroup }) => {
+export const JoinedLianeView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
   const { navigation } = useAppNavigation();
 
   return (
     <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: joinedLiane, liane: joinedLiane.liane })}>
-      <RenderGroupsView joinedLiane={joinedLiane} />
+      <RenderGroupsView joinedLiane={joinedLiane} unreadMessage={unreadMessage} />
     </Pressable>
   );
 };

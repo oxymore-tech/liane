@@ -10,6 +10,7 @@ import {
   MessageContentText,
   PaginatedResponse,
   Ref,
+  ResolvedLianeRequest,
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -96,7 +97,7 @@ export const CommunitiesChatScreen = () => {
   const [isSending, setIsSending] = useState(false);
   const [group, setGroup] = useState<CoMatch | undefined>(undefined);
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
-  const [request, setRequest] = useState<CoLianeRequest | undefined>(undefined);
+  const [request, setRequest] = useState<CoLianeRequest | ResolvedLianeRequest | undefined>(undefined);
 
   const members: { [k: string]: User } | undefined = useMemo(
     () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),

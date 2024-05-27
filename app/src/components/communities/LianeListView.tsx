@@ -70,8 +70,11 @@ const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseS
 const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   const { services, user } = useContext(AppContext);
   const { navigation } = useAppNavigation();
+  const unreadLianes = useMemo(async () => {
+    return await services.community.getUnreadLianes();
+  }, []);
 
-  const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
+  /*const unread = useObservable(services.realTimeHub.unreadConversations, undefined);*/
 
   console.log("################### item", item);
   const { to, from, steps } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
@@ -161,7 +164,11 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
                     backgroundColor: AppColors.backgroundColor,
                     width: "100%"
                   }}>
-                  <JoinedLianeView key={index} joinedLiane={joinedLiane} />
+                  <JoinedLianeView
+                    key={index}
+                    joinedLiane={joinedLiane}
+                    unreadMessage={!!(joinedLiane?.liane?.id && joinedLiane?.liane?.id in unreadLianes)}
+                  />
                 </View>
               );
             })}
