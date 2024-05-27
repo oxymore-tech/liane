@@ -20,6 +20,8 @@ export const ListGroupScreen = () => {
   const groups = route.params.groups;
   const lianeRequest = route.params.lianeRequest;
 
+  console.log("GRRRRR", groups);
+
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
   const { to, from, steps } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
@@ -27,12 +29,13 @@ export const ListGroupScreen = () => {
   const localeTime = lianeRequest?.timeConstraints[0]
     ? `${lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
     : "";
+
   const GroupItem = ({ group }: { group: CoMatch }) => (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: group })}>
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: group, request: lianeRequest })}>
       <View style={styles.memberContainer}>
         <View style={styles.memberInfo}>
           <View style={styles.textContainer}>
-            <AppText style={styles.nameText}>{`${group.pickup} ➔ ${group.deposit}`}</AppText>
+            <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
             <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
             <AppText style={styles.timeText}>{`${(group as MatchGroup).matches?.length ?? 1} membre${
               (group as MatchGroup).matches?.length ? "s" : ""

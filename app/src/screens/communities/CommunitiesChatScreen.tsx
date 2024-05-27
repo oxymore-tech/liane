@@ -2,6 +2,7 @@ import {
   capitalize,
   ChatMessage,
   CoLiane,
+  CoLianeRequest,
   CoMatch,
   ConversationGroup,
   MatchGroup,
@@ -30,6 +31,7 @@ import { AppStyles } from "@/theme/styles";
 import { extractDays } from "@/util/hooks/days";
 import { useQueries } from "react-query";
 import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen";
+import { AppLogger } from "@/api/logger";
 
 const MessageBubble = ({
   message,
@@ -94,6 +96,7 @@ export const CommunitiesChatScreen = () => {
   const [isSending, setIsSending] = useState(false);
   const [group, setGroup] = useState<CoMatch | undefined>(undefined);
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
+  const [request, setRequest] = useState<CoLianeRequest | undefined>(undefined);
 
   const members: { [k: string]: User } | undefined = useMemo(
     () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
@@ -105,20 +108,50 @@ export const CommunitiesChatScreen = () => {
     setIsSending(true);
 
     if (group) {
-      const lianeRequest = (group as MatchSingle).lianeRequest ?? (group as MatchGroup).matches[0].lianeRequest;
-      const coLiane = await services.community.join(lianeRequest, lianeRequest);
-      setGroup(undefined);
-      setLiane(coLiane);
-      lianeTemp = coLiane;
+      // Dans le cas ou on envoie un message dans le chat et que nous avons juste l'information du group et non de la liane
+      // Cela signifie que nous n'avous pas encore rejoint le groupe
+      // Il faut donc le rejoindre avant d'envoyer le message
+      // Si c'est un MatchSingle, il faut faire un joinNew
+      // Si c'est un MatchGroup, il faut faire un join
+
+      if ((group as MatchGroup).matches?.length) {
+        // Dans le cas d'un MatchGroup
+        const lianeCible = (group as MatchGroup).liane.id;
+        if (request && request.id && lianeCible) {
+          const coLiane = await services.community.join(request.id, lianeCible);
+          setGroup(undefined);
+          setLiane(coLiane);
+          lianeTemp = coLiane;
+        }
+      } else {
+        const lianeRequest = (group as MatchSingle).lianeRequest;
+        if (request && request.id && lianeRequest) {
+          const coLiane = await services.community.joinNew(request.id, lianeRequest.toString());
+          setGroup(undefined);
+          setLiane(coLiane);
+          lianeTemp = coLiane;
+        }
+      }
     } else {
       lianeTemp = liane;
     }
 
     if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
-      await services.community.sendMessage(lianeTemp.id, {
-        type: "text",
-        value: inputValue
-      });
+      services.community
+        .sendMessage(lianeTemp.id, {
+          type: "text",
+          value: inputValue
+        })
+        .then(
+          value => {
+            AppLogger.debug("COMMUNITIES", "Join liane avec succès", value);
+          },
+          reason => {
+            setError(new Error("Message non envoyé suite à une erreur"));
+            AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", reason);
+            setIsSending(false);
+          }
+        );
     } else {
       setError(new Error("Message non envoyé suite à une erreur"));
     }
@@ -154,6 +187,9 @@ export const CommunitiesChatScreen = () => {
     }
     if (route.params.group) {
       setGroup(route.params.group);
+    }
+    if (route.params.request) {
+      setRequest(route.params.request);
     }
   }, [route.params]);
 
@@ -269,7 +305,7 @@ export const CommunitiesChatScreen = () => {
                     lineHeight: 27,
                     color: AppColors.primaryColor
                   }}>
-                  {`${group?.pickup} ➔ ${group?.deposit}`}
+                  {`${group?.pickup.label} ➔ ${group?.deposit.label}`}
                 </AppText>
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>

@@ -82,8 +82,20 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   const LianeStatucActivate = true;
   const { navigation } = useAppNavigation();
 
-  const deleteLiane = () => {
+  const deleteLiane = async () => {
     AppLogger.debug("COMMUNITIES", "Delete Liane", item);
+    if (item.lianeRequest && item.lianeRequest.id) {
+      services.community.delete(item.lianeRequest.id).then(
+        value => {
+          AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec Succès", value);
+        },
+        reason => {
+          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de la suppression d'une liane", reason);
+        }
+      );
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la suppression d'une liane", item);
+    }
   };
 
   return (
@@ -174,7 +186,7 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
           </Pressable>
         </Row>
       )}
-      {groups && (
+      {!item.joinedLianes?.length && (
         <Pressable
           style={{
             flex: 1,
