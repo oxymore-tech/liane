@@ -104,7 +104,7 @@ export const CommunitiesChatScreen = () => {
   );
 
   const sendMessage = async (inputValue: string) => {
-    let lianeTemp;
+    let lianeTemp = liane;
     setIsSending(true);
 
     if (group) {
@@ -132,26 +132,20 @@ export const CommunitiesChatScreen = () => {
           lianeTemp = coLiane;
         }
       }
-    } else {
-      lianeTemp = liane;
     }
 
     if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
-      services.community
-        .sendMessage(lianeTemp.id, {
+      try {
+        const updatedLianeRequest = await services.community.sendMessage(lianeTemp.id, {
           type: "text",
           value: inputValue
-        })
-        .then(
-          value => {
-            AppLogger.debug("COMMUNITIES", "Join liane avec succès", value);
-          },
-          reason => {
-            setError(new Error("Message non envoyé suite à une erreur"));
-            AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", reason);
-            setIsSending(false);
-          }
-        );
+        });
+        AppLogger.debug("COMMUNITIES", "Join liane avec succès", updatedLianeRequest);
+      } catch (error) {
+        setError(new Error("Message non envoyé suite à une erreur"));
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
+        setIsSending(false);
+      }
     } else {
       setError(new Error("Message non envoyé suite à une erreur"));
     }

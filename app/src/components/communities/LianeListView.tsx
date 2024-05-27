@@ -68,6 +68,7 @@ const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseS
 
 const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   const { services, user } = useContext(AppContext);
+  const { navigation } = useAppNavigation();
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
 
@@ -78,23 +79,35 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
     ? `${item.lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${item.lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
     : "";
 
-  // TODO ajouter de vrais données
-  const LianeStatucActivate = true;
-  const { navigation } = useAppNavigation();
-
   const deleteLiane = async () => {
-    AppLogger.debug("COMMUNITIES", "Delete Liane", item);
-    if (item.lianeRequest && item.lianeRequest.id) {
-      services.community.delete(item.lianeRequest.id).then(
-        value => {
-          AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec Succès", value);
-        },
-        reason => {
-          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de la suppression d'une liane", reason);
-        }
-      );
+    const lianeRequest = item.lianeRequest;
+
+    if (lianeRequest && lianeRequest.id) {
+      try {
+        const result = await services.community.delete(lianeRequest.id);
+        AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", error);
+      }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la suppression d'une liane", item);
+    }
+  };
+
+  const switchLianeRequestStatus = async () => {
+    const lianeRequest = item.lianeRequest;
+
+    if (lianeRequest && lianeRequest.id) {
+      lianeRequest.isEnabled = !lianeRequest.isEnabled;
+
+      try {
+        const updatedLianeRequest = await services.community.update(lianeRequest.id, lianeRequest);
+        AppLogger.debug("COMMUNITIES", "Changement du status d'une liane fait avec succès", updatedLianeRequest);
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors du changement du status d'une liane", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest lors du changement du status d'une liane", lianeRequest);
     }
   };
 
@@ -104,19 +117,20 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
         <Row style={styles.driverContainer}>
           <Row spacing={8} style={{}}>
             <View style={styles.headerContainer}>
-              <View
+              <Pressable
                 style={{
                   height: 48,
                   width: 48,
-                  backgroundColor: LianeStatucActivate ? AppColors.primaryColor : "#979797",
+                  backgroundColor: item.lianeRequest?.isEnabled ? AppColors.primaryColor : "#979797",
                   marginLeft: -16,
                   marginTop: 10,
                   borderRadius: 16,
                   justifyContent: "center",
                   alignItems: "center"
-                }}>
-                {LianeStatucActivate ? <Eye width={20} height={20} /> : <EyeOff width={20} height={20} />}
-              </View>
+                }}
+                onPress={switchLianeRequestStatus}>
+                {item.lianeRequest?.isEnabled ? <Eye width={20} height={20} /> : <EyeOff width={20} height={20} />}
+              </Pressable>
               <View style={{ padding: 10 }}>
                 <AppText
                   style={{
