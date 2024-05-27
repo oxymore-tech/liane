@@ -10,10 +10,10 @@ import { MatchGroup } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 
 export interface GroupsViewProps {
-  group: MatchGroup;
+  joinedLiane: MatchGroup;
 }
 
-const RenderGroupsView = ({ group }: GroupsViewProps) => {
+const RenderGroupsView = ({ joinedLiane }: GroupsViewProps) => {
   const nouveauxMessages = true;
 
   return (
@@ -28,7 +28,7 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
               lineHeight: 27,
               color: "black"
             }}>
-            {group.name}
+            {joinedLiane.name}
           </AppText>
           {nouveauxMessages && (
             <View style={styles.notificationDotContainer}>
@@ -43,14 +43,14 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
             flexShrink: 1,
             lineHeight: 27,
             color: "black"
-          }}>{`${group.pickup} ➔ ${group.deposit}`}</AppText>
+          }}>{`${joinedLiane.pickup} ➔ ${joinedLiane.deposit}`}</AppText>
         <AppText
           style={{
             fontSize: 14,
             fontWeight: "400",
             flexShrink: 1,
             lineHeight: 16
-          }}>{`${extractDays(group.weekDays)}`}</AppText>
+          }}>{`${extractDays(joinedLiane.weekDays)}`}</AppText>
         <View
           style={{
             flex: 1,
@@ -59,7 +59,7 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
             marginTop: 5,
             marginBottom: 15
           }}>
-          {group.matches.map(match => (
+          {joinedLiane.matches.map(match => (
             <UserPicture key={match.user} size={24} url={null} id={match.user} style={{ marginLeft: -10 }} />
           ))}
         </View>
@@ -68,12 +68,12 @@ const RenderGroupsView = ({ group }: GroupsViewProps) => {
   );
 };
 
-export const GroupView = ({ group }: { group: MatchGroup }) => {
+export const GroupView = ({ joinedLiane }: { joinedLiane: MatchGroup }) => {
   const { navigation } = useAppNavigation();
 
   return (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: group })}>
-      <RenderGroupsView group={group} />
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { liane: joinedLiane })}>
+      <RenderGroupsView joinedLiane={joinedLiane} />
     </Pressable>
   );
 };

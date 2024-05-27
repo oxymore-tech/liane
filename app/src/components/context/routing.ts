@@ -36,7 +36,7 @@ export type NavigationParamList = {
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
-  CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest };
+  CommunitiesChat: { group?: CoMatch; liane?: MatchGroup; request?: CoLianeRequest };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;

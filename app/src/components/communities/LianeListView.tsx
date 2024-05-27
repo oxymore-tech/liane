@@ -141,14 +141,14 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
 
         <View style={styles.lianeContainer}>
           {item.joinedLianes &&
-            item.joinedLianes.map((group, index) => {
+            item.joinedLianes.map((joinedLiane, index) => {
               return (
                 <View
                   style={{
                     backgroundColor: AppColors.backgroundColor,
                     width: "100%"
                   }}>
-                  <GroupView key={index} group={group} />
+                  <GroupView key={index} joinedLiane={joinedLiane} />
                 </View>
               );
             })}
