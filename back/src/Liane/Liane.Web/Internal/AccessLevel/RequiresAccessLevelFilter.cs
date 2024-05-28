@@ -26,7 +26,10 @@ public sealed class RequiresAccessLevelFilter(
     {
       // Get Resolver service for given public resource type 
       var resolver = serviceProvider.GetService(typeof(IResourceResolverService<>).MakeGenericType(resourceType))!;
-
+      if (resolver is null)
+      {
+        throw new ForbiddenException($"Unable to find service IResourceResolverService<{resourceType}>");
+      }
       // Get corresponding internal resource type 
 
       var internalResolverInterface = resolver.GetType().GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IInternalResourceResolverService<,>));
@@ -70,7 +73,7 @@ public sealed class RequiresAccessLevelFilter(
     }
     catch (System.Exception e)
     {
-      var logger = (ILogger?)serviceProvider.GetService(typeof(ILogger<RequiresAccessLevelFilter>).MakeGenericType(resourceType))!;
+      var logger = (ILogger?)serviceProvider.GetService(typeof(ILogger<RequiresAccessLevelFilter>))!;
       context.Result = HttpExceptionMapping.Map(e, context.ModelState, logger);
     }
   }

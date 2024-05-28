@@ -44,14 +44,14 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
     })!;
   }
 
-  public async Task<Dictionary<string, RallyingPoint>> GetMany(ImmutableList<Ref<RallyingPoint>> references)
+  public async Task<ImmutableDictionary<string, RallyingPoint>> GetMany(ImmutableList<Ref<RallyingPoint>> references)
   {
     using var connection = db.NewConnection();
 
     var query = Query.Select<RallyingPoint>()
       .Where(Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, references));
     var results = await connection.QueryAsync(query);
-    return results.ToDictionary(r => r.Id!);
+    return results.ToImmutableDictionary(r => r.Id!);
   }
 
   private static Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)

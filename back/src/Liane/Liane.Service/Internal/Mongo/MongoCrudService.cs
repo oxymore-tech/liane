@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,11 +36,11 @@ public abstract class BaseMongoCrudService<TDb, TOut>(IMongoDatabase mongo) : II
     return await MapEntity(resolved);
   }
 
-  public virtual async Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references)
+  public virtual async Task<ImmutableDictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references)
   {
     var query = Collection.Find(Builders<TDb>.Filter.In(f => f.Id, references.Select(r => (string)r).ToImmutableList()));
     var resolved = await query.SelectAsync(MapEntity);
-    return resolved.ToDictionary(v => v.Id!);
+    return resolved.ToImmutableDictionary(v => v.Id!);
   }
 
   public virtual async Task<bool> Delete(Ref<TOut> reference)
