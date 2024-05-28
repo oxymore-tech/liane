@@ -41,7 +41,7 @@ public abstract record Ref<T>
     return Id.GetHashCode();
   }
 
-  public Guid IdAsGuid => Guid.Parse(Id);
+  public Guid IdAsGuid() => Guid.Parse(Id);
   public abstract string Id { get; init; }
   public abstract T? Value { get; init; }
 

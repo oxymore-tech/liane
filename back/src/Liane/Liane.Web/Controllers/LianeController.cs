@@ -70,7 +70,6 @@ public sealed class LianeController(
     return NoContent();
   }
 
-
   [HttpPost("{id}/leave")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public async Task<IActionResult> LeaveLiane([FromRoute] string id)
@@ -96,7 +95,6 @@ public sealed class LianeController(
     return NoContent();
   }
 
-
   [HttpGet("{id}/geolocation")]
   public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id, [FromQuery] bool raw = true)
   {
@@ -118,8 +116,7 @@ public sealed class LianeController(
   {
     return tripService.ForceSyncDatabase();
   }
-
-
+  
   [HttpPost("match")]
   [DebugRequest]
   public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
@@ -167,8 +164,7 @@ public sealed class LianeController(
 
     return await mockService.GenerateLianes(count, from, to, radius);
   }
-
-
+  
   [HttpGet("recurrence")]
   public Task<ImmutableList<LianeRecurrence>> ListRecurrences()
   {
@@ -180,7 +176,6 @@ public sealed class LianeController(
   {
     return lianeRecurrenceService.GetWithResolvedRefs(id);
   }
-
 
   [HttpDelete("recurrence/{id}")]
   [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]

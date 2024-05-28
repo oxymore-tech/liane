@@ -344,7 +344,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         (jayBee.Id, lianeJayBee.Id),
         (mathilde.Id, lianeMathilde.Id),
         (gugu.Id, lianeGugu.Id)
-      ), joinedLiane.Members.Select(m => (m.User.Id, m.LianeRequest.IdAsGuid)));
+      ), joinedLiane.Members.Select(m => (m.User.Id, m.LianeRequest.IdAsGuid())));
     }
   }
 
